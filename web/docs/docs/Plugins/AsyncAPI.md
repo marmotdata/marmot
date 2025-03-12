@@ -1,0 +1,63 @@
+---
+title: AsyncAPI
+description: This plugin enables fetching data from AsyncAPI specifications.
+status: experimental
+---
+
+# AsyncAPI
+
+This plugin enables fetching data from AsyncAPI specifications.
+
+**Status:** experimental
+
+## Example Configuration
+
+```yaml
+
+spec_path: "./specs"
+tags:
+  - "asyncapi"
+  - "api"
+resolve_external_docs: true
+
+```
+
+## Configuration
+The following configuration options are available:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| spec_path | string | false |  |
+| resolve_external_docs | bool | false |  |
+
+## Available Metadata
+
+The following metadata fields are available:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| cleanup_policy | []string | Topic cleanup policies |
+| cluster_id | string | Kafka cluster ID |
+| content_deduplication | bool | Whether content-based deduplication is enabled |
+| deduplication_scope | string | Scope of deduplication if enabled |
+| delete_retention_ms | int64 | Time to retain deleted messages |
+| delivery_delay | int | Delivery delay in seconds |
+| description | string | Description of the resource |
+| dlq_name | string | Name of the Dead Letter Queue |
+| environment | string | Environment the resource belongs to |
+| fifo_queue | bool | Whether this is a FIFO queue |
+| fifo_throughput_limit | string | FIFO throughput limit type |
+| max_message_bytes | int | Maximum message size |
+| max_receive_count | int | Maximum receives before sending to DLQ |
+| message_retention_period | int | Message retention period in seconds |
+| name | string | Name of the SQS queue |
+| ordering_type | string | SNS topic ordering type |
+| partitions | int | Number of partitions |
+| receive_message_wait_time | int | Long polling wait time in seconds |
+| replicas | int | Number of replicas |
+| retention_bytes | int64 | Maximum size of the topic |
+| retention_ms | int64 | Message retention period in milliseconds |
+| service_name | string | Name of the service that owns the resource |
+| service_version | string | Version of the service |
+| topic_arn | string | SNS Topic Name/ARN |
+| visibility_timeout | int | Visibility timeout in seconds |
