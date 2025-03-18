@@ -1,7 +1,10 @@
 # Marmot
+
 <div style="text-align: center;">
 <img src="./marmot.svg" width="200">
 </div>
+
+> ❗ This project is currently in active development and subject to change. It's not recommended you deploy this in production. You may encounter bugs and data may not be accurate.
 
 Marmot is an open-source data catalog that helps teams discover, understand, and govern their data assets. It's designed for modern data ecosystems where data flows through multiple systems, formats, and teams.
 
@@ -11,7 +14,7 @@ Marmot was designed with the following in mind:
 - **Performance**: Fast search and efficient processing
 - **Extensibility**: Document almost anything with the flexible API
 
-## Features:
+## ✨ Features:
 
 ### Powerful Queries:
 
