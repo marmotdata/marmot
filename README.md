@@ -23,7 +23,6 @@ Marmot was designed with the following in mind:
 
 ### Flexible Integrations
 
-- Connect all your data assets
 - CLI, API, Terraform, and Pulumi integrations.
 
 ### Lineage Visualization:
