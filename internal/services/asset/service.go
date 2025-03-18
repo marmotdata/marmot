@@ -1,0 +1,614 @@
+package asset
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	validator "github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
+	"github.com/rs/zerolog/log"
+)
+
+type AssetSource struct {
+	Name       string                 `json:"name"`
+	LastSyncAt time.Time              `json:"last_sync_at"`
+	Properties map[string]interface{} `json:"properties"`
+	Priority   int                    `json:"priority"`
+}
+
+type ExternalLink struct {
+	Name string `json:"name"`
+	Icon string `json:"icon"`
+	URL  string `json:"url"`
+}
+
+type Asset struct {
+	ID            string                 `json:"id,omitempty"`
+	ParentMRN     *string                `json:"parent_mrn,omitempty"`
+	Name          *string                `json:"name,omitempty"`
+	Description   *string                `json:"description,omitempty"`
+	Type          string                 `json:"type"`
+	Providers     []string               `json:"providers"`
+	MRN           *string                `json:"mrn,omitempty"`
+	Schema        map[string]interface{} `json:"schema,omitempty"`
+	Metadata      map[string]interface{} `json:"metadata,omitempty"`
+	Sources       []AssetSource          `json:"sources,omitempty"`
+	Tags          []string               `json:"tags,omitempty"`
+	Environments  map[string]Environment `json:"environments,omitempty"`
+	ExternalLinks []ExternalLink         `json:"external_links,omitempty"`
+	CreatedAt     time.Time              `json:"created_at,omitempty"`
+	UpdatedAt     time.Time              `json:"updated_at,omitempty"`
+	LastSyncAt    time.Time              `json:"last_sync_at,omitempty"`
+	CreatedBy     string                 `json:"created_by,omitempty"`
+}
+
+type Environment struct {
+	Name     string                 `json:"name"`
+	Path     string                 `json:"path"`
+	Metadata map[string]interface{} `json:"metadata,omitempty"`
+}
+
+type CreateInput struct {
+	Name          *string                `json:"name" validate:"required"`
+	MRN           *string                `json:"mrn" validate:"required"`
+	Type          string                 `json:"type" validate:"required"`
+	Providers     []string               `json:"providers" validate:"required"`
+	Description   *string                `json:"description"`
+	Metadata      map[string]interface{} `json:"metadata"`
+	Schema        map[string]interface{} `json:"schema"`
+	Tags          []string               `json:"tags"`
+	CreatedBy     string                 `json:"created_by" validate:"required"`
+	Sources       []AssetSource          `json:"sources"`
+	Environments  map[string]Environment `json:"environments"`
+	ExternalLinks []ExternalLink         `json:"external_links"`
+}
+
+type UpdateInput struct {
+	Name          *string                `json:"name"`
+	Description   *string                `json:"description"`
+	Metadata      map[string]interface{} `json:"metadata"`
+	Type          string                 `json:"type"`
+	Providers     []string               `json:"providers"`
+	Schema        map[string]interface{} `json:"schema"`
+	Tags          []string               `json:"tags"`
+	Sources       []AssetSource          `json:"sources"`
+	Environments  map[string]Environment `json:"environments"`
+	ExternalLinks []ExternalLink         `json:"external_links"`
+}
+
+type Filter struct {
+	Types        []string   `json:"types,omitempty"`
+	Providers    []string   `json:"providers,omitempty"`
+	Tags         []string   `json:"tags,omitempty"`
+	ParentMRN    *string    `json:"parent_mrn,omitempty"`
+	UpdatedAt    *time.Time `json:"updated_at,omitempty"`
+	UpdatedAfter *time.Time `json:"updated_after,omitempty"`
+	Limit        int        `json:"limit,omitempty"`
+	Offset       int        `json:"offset,omitempty"`
+	Environment  *string    `json:"environment,omitempty"`
+}
+
+type SearchFilter struct {
+	Query     string   `json:"query" validate:"omitempty"`
+	Types     []string `json:"types" validate:"omitempty"`
+	Providers []string `json:"providers" validate:"omitempty"`
+	Tags      []string `json:"tags" validate:"omitempty"`
+	Limit     int      `json:"limit" validate:"omitempty,gte=0"`
+	Offset    int      `json:"offset" validate:"omitempty,gte=0"`
+}
+
+type MetadataContext struct {
+	Query   string            `json:"query"`
+	Filters map[string]string `json:"filters"`
+}
+
+// MetadataFieldSuggestion represents a suggestion for a metadata field
+type MetadataFieldSuggestion struct {
+	Field     string      `json:"field"`
+	Type      string      `json:"type"`
+	Count     int         `json:"count"`
+	Example   interface{} `json:"example"`
+	PathParts []string    `json:"path_parts"`
+	Types     []string    `json:"types"`
+}
+
+// MetadataValueSuggestion represents a suggestion for a metadata field value
+type MetadataValueSuggestion struct {
+	Value   string `json:"value"`
+	Count   int    `json:"count"`             // number of assets using this value
+	Example *Asset `json:"example,omitempty"` // optional example asset
+}
+
+var (
+	ErrInvalidInput  = errors.New("invalid input")
+	ErrAssetNotFound = errors.New("asset not found")
+	ErrAlreadyExists = errors.New("asset already exists")
+)
+
+type Service interface {
+	Create(ctx context.Context, input CreateInput) (*Asset, error)
+	Get(ctx context.Context, id string) (*Asset, error)
+	GetByMRN(ctx context.Context, qualifiedName string) (*Asset, error)
+	List(ctx context.Context, offset, limit int) (*ListResult, error)
+	Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error)
+	Summary(ctx context.Context) (*AssetSummary, error)
+	Update(ctx context.Context, id string, input UpdateInput) (*Asset, error)
+	Delete(ctx context.Context, id string) error
+	AddTag(ctx context.Context, id string, tag string) (*Asset, error)
+	RemoveTag(ctx context.Context, id string, tag string) (*Asset, error)
+	ListByPattern(ctx context.Context, pattern string, assetType string) ([]*Asset, error)
+	GetByMRNs(ctx context.Context, mrns []string) (map[string]*Asset, error)
+	GetByTypeAndName(ctx context.Context, assetType, name string) (*Asset, error)
+	GetMetadataFields(ctx context.Context, queryContext *MetadataContext) ([]MetadataFieldSuggestion, error)
+	GetMetadataValues(ctx context.Context, field string, prefix string, limit int, queryContext *MetadataContext) ([]MetadataValueSuggestion, error)
+	GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error)
+}
+
+type service struct {
+	repo      Repository
+	validator *validator.Validate
+	metrics   MetricsClient
+}
+
+type Logger interface {
+	Info(msg string, fields ...interface{})
+	Error(msg string, err error, fields ...interface{})
+}
+
+type MetricsClient interface {
+	Count(name string, value int64, tags ...string)
+	Timing(name string, value time.Duration, tags ...string)
+}
+
+type ServiceOption func(*service)
+
+func NewService(repo Repository, opts ...ServiceOption) Service {
+	s := &service{
+		repo:      repo,
+		validator: validator.New(),
+	}
+
+	for _, opt := range opts {
+		opt(s)
+	}
+
+	return s
+}
+
+func WithMetrics(metrics MetricsClient) ServiceOption {
+	return func(s *service) {
+		s.metrics = metrics
+	}
+}
+
+func (s *service) GetMetadataFields(ctx context.Context, queryContext *MetadataContext) ([]MetadataFieldSuggestion, error) {
+	if queryContext == nil || queryContext.Query == "" {
+		// If no context, return all fields (existing behavior)
+		return s.repo.GetMetadataFields(ctx)
+	}
+
+	// Get fields based on the query context
+	fields, err := s.repo.GetMetadataFieldsWithContext(ctx, queryContext)
+	if err != nil {
+		return nil, fmt.Errorf("getting metadata fields with context: %w", err)
+	}
+
+	return fields, nil
+}
+
+func (s *service) GetMetadataValues(ctx context.Context, field string, prefix string, limit int, queryContext *MetadataContext) ([]MetadataValueSuggestion, error) {
+	if queryContext == nil || queryContext.Query == "" {
+		// If no context, return all values (existing behavior)
+		return s.repo.GetMetadataValues(ctx, field, prefix, limit)
+	}
+
+	// Get values based on the query context
+	values, err := s.repo.GetMetadataValuesWithContext(ctx, field, prefix, limit, queryContext)
+	if err != nil {
+		return nil, fmt.Errorf("getting metadata values with context: %w", err)
+	}
+
+	return values, nil
+}
+
+func (s *service) GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error) {
+	// Normalize limit
+	if limit <= 0 {
+		limit = 10
+	} else if limit > 100 {
+		limit = 100
+	}
+
+	// Get tags from repository
+	tags, err := s.repo.GetTagSuggestions(ctx, prefix, limit)
+	if err != nil {
+		return nil, fmt.Errorf("getting tag suggestions: %w", err)
+	}
+
+	// Filter out empty or invalid tags
+	validTags := make([]string, 0, len(tags))
+	for _, tag := range tags {
+		if tag = strings.TrimSpace(tag); tag != "" {
+			validTags = append(validTags, tag)
+		}
+	}
+
+	return validTags, nil
+}
+
+// Helper function to remove sensitive data from example assets
+func sanitizeAsset(asset *Asset) {
+	if asset == nil {
+		return
+	}
+
+	// Remove sensitive metadata fields
+	sensitiveFields := []string{"password", "secret", "key", "token", "credential"}
+	for _, field := range sensitiveFields {
+		delete(asset.Metadata, field)
+	}
+
+	// Clear other potentially sensitive fields
+	asset.Schema = nil
+	asset.Sources = nil
+	asset.ParentMRN = nil
+
+	// Truncate long descriptions
+	if asset.Description != nil && len(*asset.Description) > 100 {
+		truncated := (*asset.Description)[:97] + "..."
+		asset.Description = &truncated
+	}
+}
+
+func (s *service) GetByMRNs(ctx context.Context, mrns []string) (map[string]*Asset, error) {
+	assets, err := s.repo.GetByMRNs(ctx, mrns)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[string]*Asset)
+	for _, ast := range assets {
+		if ast.MRN != nil {
+			result[*ast.MRN] = ast
+		}
+	}
+	return result, nil
+}
+
+func (s *service) ListByPattern(ctx context.Context, pattern string, assetType string) ([]*Asset, error) {
+	assets, err := s.repo.ListByPattern(ctx, pattern, assetType)
+	if err != nil {
+		return nil, fmt.Errorf("listing assets by pattern: %w", err)
+	}
+	return assets, nil
+}
+
+// Create creates a new asset
+func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error) {
+	if err := s.validator.Struct(input); err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
+	existing, err := s.repo.GetByMRN(ctx, *input.MRN)
+	if err != nil && !errors.Is(err, ErrNotFound) {
+		return nil, fmt.Errorf("checking existing asset: %w", err)
+	}
+
+	if existing != nil {
+		return nil, ErrAlreadyExists
+	}
+
+	now := time.Now()
+	asset := &Asset{
+		ID:            uuid.New().String(),
+		Name:          input.Name,
+		MRN:           input.MRN,
+		Type:          input.Type,
+		Providers:     input.Providers,
+		Description:   input.Description,
+		Metadata:      input.Metadata,
+		Schema:        input.Schema,
+		Sources:       input.Sources,
+		Environments:  input.Environments,
+		Tags:          input.Tags,
+		ExternalLinks: input.ExternalLinks,
+		CreatedBy:     input.CreatedBy,
+		CreatedAt:     now,
+		UpdatedAt:     now,
+		LastSyncAt:    now,
+	}
+	if asset.Tags == nil {
+		asset.Tags = []string{}
+	}
+
+	if err := s.repo.Create(ctx, asset); err != nil {
+		if errors.Is(err, ErrConflict) {
+			return nil, ErrAlreadyExists
+		}
+		return nil, fmt.Errorf("failed to create asset: %w", err)
+	}
+
+	return asset, nil
+}
+
+// GetByTypeAndName gets an asset by its type and name
+func (s *service) GetByTypeAndName(ctx context.Context, assetType, name string) (*Asset, error) {
+	asset, err := s.repo.GetByTypeAndName(ctx, assetType, name)
+	if err != nil {
+		return nil, errors.New("asset not found")
+	}
+	return asset, nil
+}
+
+// Get gets an asset by its ID
+func (s *service) Get(ctx context.Context, id string) (*Asset, error) {
+	asset, err := s.repo.Get(ctx, id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil, ErrAssetNotFound
+		}
+		return nil, fmt.Errorf("failed to get asset: %w", err)
+	}
+	return asset, nil
+}
+
+// GetByMRN gets an asset by its MRN
+func (s *service) GetByMRN(ctx context.Context, qualifiedName string) (*Asset, error) {
+	asset, err := s.repo.GetByMRN(ctx, qualifiedName)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil, ErrAssetNotFound
+		}
+		return nil, fmt.Errorf("failed to get asset by MRN: %w", err)
+	}
+	return asset, nil
+}
+
+// List lists all available assets with optional filters
+func (s *service) List(ctx context.Context, offset, limit int) (*ListResult, error) {
+	result, err := s.repo.List(ctx, offset, limit)
+	if err != nil {
+		return nil, fmt.Errorf("listing assets: %w", err)
+	}
+	return result, nil
+}
+
+// Search searches all available assets based on a provided filter
+func (s *service) Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error) {
+	if err := s.validator.Struct(filter); err != nil {
+		return nil, 0, AvailableFilters{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
+	assets, total, availableFilters, err := s.repo.Search(ctx, filter, calculateCounts)
+	if err != nil {
+		return nil, 0, AvailableFilters{}, fmt.Errorf("failed to search assets: %w", err)
+	}
+
+	return assets, total, availableFilters, nil
+}
+
+// Summary returns a global summary of all assets
+func (s *service) Summary(ctx context.Context) (*AssetSummary, error) {
+	summary, err := s.repo.Summary(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get summary: %w", err)
+	}
+	return summary, nil
+}
+
+func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*Asset, error) {
+	if err := s.validator.Struct(input); err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
+	asset, err := s.repo.Get(ctx, id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil, ErrAssetNotFound
+		}
+		return nil, fmt.Errorf("getting asset: %w", err)
+	}
+
+	updated := false
+
+	if input.Name != nil {
+		asset.Name = input.Name
+		updated = true
+	}
+	if input.Description != nil {
+		asset.Description = input.Description
+		updated = true
+	}
+	if input.Metadata != nil {
+		asset.Metadata = input.Metadata
+		updated = true
+	}
+	if input.Schema != nil {
+		asset.Schema = input.Schema
+		updated = true
+	}
+	if input.Tags != nil {
+		asset.Tags = input.Tags
+		updated = true
+	}
+	if input.Sources != nil {
+		// Always update sources by merging
+		asset.Sources = UpdateSources(asset.Sources, input.Sources)
+		updated = true
+	}
+	if input.Environments != nil {
+		if asset.Environments == nil {
+			asset.Environments = make(map[string]Environment)
+		}
+		for k, v := range input.Environments {
+			asset.Environments[k] = v
+		}
+		updated = true
+	}
+
+	if input.ExternalLinks != nil {
+		asset.ExternalLinks = input.ExternalLinks
+		updated = true
+	}
+
+	if !updated {
+		return asset, nil
+	}
+
+	asset.UpdatedAt = time.Now()
+
+	if err := s.repo.Update(ctx, asset); err != nil {
+		return nil, fmt.Errorf("failed to update asset: %w", err)
+	}
+
+	return asset, nil
+}
+
+func UpdateSources(existing, new []AssetSource) []AssetSource {
+	sourceMap := make(map[string]AssetSource)
+
+	// First index existing sources with valid names
+	for _, src := range existing {
+		if src.Name != "" {
+			sourceMap[src.Name] = src
+		}
+	}
+
+	// Update or add new sources if they have valid names
+	for _, src := range new {
+		if src.Name == "" {
+			continue
+		}
+
+		// Get existing or create new
+		existingSource := sourceMap[src.Name]
+
+		// Update properties
+		if src.Properties != nil {
+			existingSource.Properties = src.Properties
+		}
+		if !src.LastSyncAt.IsZero() {
+			existingSource.LastSyncAt = src.LastSyncAt
+		}
+		if src.Priority != 0 {
+			existingSource.Priority = src.Priority
+		}
+
+		// Ensure name is set
+		existingSource.Name = src.Name
+
+		// Update in map
+		sourceMap[src.Name] = existingSource
+	}
+
+	// Convert map back to slice
+	result := make([]AssetSource, 0, len(sourceMap))
+	for _, src := range sourceMap {
+		result = append(result, src)
+	}
+
+	return result
+}
+
+// Delete deletes an existing asset
+func (s *service) Delete(ctx context.Context, id string) error {
+	if err := s.repo.Delete(ctx, id); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return ErrAssetNotFound
+		}
+		return fmt.Errorf("failed to delete asset: %w", err)
+	}
+
+	log.Info().
+		Str("asset_id", id).
+		Msg("Asset deleted")
+
+	if s.metrics != nil {
+		s.metrics.Count("asset.deleted", 1)
+	}
+
+	return nil
+}
+
+// RemoveTag adds a specified tag to an existing asset
+func (s *service) AddTag(ctx context.Context, id string, tag string) (*Asset, error) {
+	asset, err := s.repo.Get(ctx, id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil, ErrAssetNotFound
+		}
+		return nil, fmt.Errorf("getting asset: %w", err)
+	}
+
+	// Check if tag already exists
+	for _, existingTag := range asset.Tags {
+		if existingTag == tag {
+			return asset, nil
+		}
+	}
+
+	asset.Tags = append(asset.Tags, tag)
+	asset.UpdatedAt = time.Now()
+
+	if err := s.repo.Update(ctx, asset); err != nil {
+		return nil, fmt.Errorf("failed to add tag to asset: %w", err)
+	}
+
+	log.Debug().
+		Str("asset_id", id).
+		Str("tag", tag).
+		Msg("Asset tag added")
+
+	if s.metrics != nil {
+		s.metrics.Count("asset.tag.added", 1)
+	}
+
+	return asset, nil
+}
+
+// RemoveTag removes a specified tag from an existing asset
+func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*Asset, error) {
+	asset, err := s.repo.Get(ctx, assetId)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return nil, ErrAssetNotFound
+		}
+		return nil, fmt.Errorf("getting asset: %w", err)
+	}
+
+	// Remove tag if it exists
+	found := false
+	newTags := make([]string, 0, len(asset.Tags))
+	for _, existingTag := range asset.Tags {
+		if existingTag != tag {
+			newTags = append(newTags, existingTag)
+		} else {
+			found = true
+		}
+	}
+
+	if !found {
+		return asset, nil
+	}
+
+	asset.Tags = newTags
+	asset.UpdatedAt = time.Now()
+
+	if err := s.repo.Update(ctx, asset); err != nil {
+		return nil, fmt.Errorf("failed to remove tag from asset: %w", err)
+	}
+
+	log.Debug().
+		Str("asset_id", assetId).
+		Str("tag", tag).
+		Msg("Asset tag removed")
+
+	if s.metrics != nil {
+		s.metrics.Count("asset.tag.removed", 1)
+	}
+
+	return asset, nil
+}

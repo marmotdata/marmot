@@ -1,0 +1,6 @@
+issues:
+  exclude-rules:
+    - path: ../../golang/pkg/mod/.*
+      linters:
+        - "typecheck"
+        - "undefined"

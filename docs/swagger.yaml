@@ -1,0 +1,1778 @@
+basePath: /api/v1
+definitions:
+  asset.Asset:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      environments:
+        additionalProperties:
+          $ref: '#/definitions/asset.Environment'
+        type: object
+      external_links:
+        items:
+          $ref: '#/definitions/asset.ExternalLink'
+        type: array
+      id:
+        type: string
+      last_sync_at:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      mrn:
+        type: string
+      name:
+        type: string
+      parent_mrn:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      schema:
+        additionalProperties: true
+        type: object
+      sources:
+        items:
+          $ref: '#/definitions/asset.AssetSource'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  asset.AssetSource:
+    properties:
+      last_sync_at:
+        type: string
+      name:
+        type: string
+      priority:
+        type: integer
+      properties:
+        additionalProperties: true
+        type: object
+    type: object
+  asset.AvailableFilters:
+    properties:
+      providers:
+        additionalProperties:
+          type: integer
+        type: object
+      tags:
+        additionalProperties:
+          type: integer
+        type: object
+      types:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  asset.Environment:
+    properties:
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      path:
+        type: string
+    type: object
+  asset.ExternalLink:
+    properties:
+      icon:
+        type: string
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  asset.ListResult:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/asset.Asset'
+        type: array
+      filters:
+        $ref: '#/definitions/asset.AvailableFilters'
+      total:
+        type: integer
+    type: object
+  asset.MetadataFieldSuggestion:
+    properties:
+      count:
+        type: integer
+      example: {}
+      field:
+        type: string
+      path_parts:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      types:
+        items:
+          type: string
+        type: array
+    type: object
+  asset.MetadataValueSuggestion:
+    properties:
+      count:
+        description: number of assets using this value
+        type: integer
+      example:
+        allOf:
+        - $ref: '#/definitions/asset.Asset'
+        description: optional example asset
+      value:
+        type: string
+    type: object
+  assetdocs.Documentation:
+    properties:
+      content:
+        type: string
+      created_at:
+        type: string
+      global_docs:
+        items:
+          type: string
+        type: array
+      id:
+        type: string
+      mrn:
+        type: string
+      source:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  assets.AssetSummaryResponse:
+    properties:
+      services:
+        additionalProperties:
+          type: integer
+        type: object
+      tags:
+        additionalProperties:
+          type: integer
+        type: object
+      types:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  assets.BatchAssetResult:
+    properties:
+      asset:
+        $ref: '#/definitions/asset.Asset'
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  assets.BatchCreateRequest:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/assets.CreateRequest'
+        minItems: 1
+        type: array
+      config:
+        $ref: '#/definitions/plugin.RawPluginConfig'
+    required:
+    - assets
+    type: object
+  assets.BatchCreateResponse:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/assets.BatchAssetResult'
+        type: array
+    type: object
+  assets.BatchDocumentationRequest:
+    properties:
+      documentation:
+        items:
+          $ref: '#/definitions/assetdocs.Documentation'
+        minItems: 1
+        type: array
+    required:
+    - documentation
+    type: object
+  assets.BatchDocumentationResponse:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/assets.BatchDocumentationResult'
+        type: array
+    type: object
+  assets.BatchDocumentationResult:
+    properties:
+      documentation:
+        $ref: '#/definitions/assetdocs.Documentation'
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  assets.CreateRequest:
+    properties:
+      description:
+        type: string
+      environments:
+        additionalProperties:
+          $ref: '#/definitions/asset.Environment'
+        type: object
+      external_links:
+        items:
+          $ref: '#/definitions/asset.ExternalLink'
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      schema:
+        additionalProperties: true
+        type: object
+      sources:
+        items:
+          $ref: '#/definitions/asset.AssetSource'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    required:
+    - name
+    - providers
+    - type
+    type: object
+  assets.DocumentationCreateRequest:
+    properties:
+      content:
+        type: string
+      mrn:
+        type: string
+      source:
+        type: string
+    required:
+    - content
+    - mrn
+    - source
+    type: object
+  assets.SearchResponse:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/asset.Asset'
+        type: array
+      filters:
+        $ref: '#/definitions/asset.AvailableFilters'
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  assets.TagRequest:
+    properties:
+      tag:
+        type: string
+    required:
+    - tag
+    type: object
+  assets.UpdateRequest:
+    properties:
+      description:
+        type: string
+      environments:
+        additionalProperties:
+          $ref: '#/definitions/asset.Environment'
+        type: object
+      external_links:
+        items:
+          $ref: '#/definitions/asset.ExternalLink'
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      schema:
+        additionalProperties: true
+        type: object
+      sources:
+        items:
+          $ref: '#/definitions/asset.AssetSource'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  auth.AuthConfig:
+    properties:
+      enabled_providers:
+        items:
+          type: string
+        type: array
+    type: object
+  common.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  lineage.BatchLineageResult:
+    properties:
+      edge:
+        $ref: '#/definitions/lineage.LineageEdge'
+      status:
+        description: '"created", "duplicate", or "existing"'
+        type: string
+    type: object
+  lineage.LineageEdge:
+    properties:
+      id:
+        type: string
+      job_mrn:
+        type: string
+      source:
+        type: string
+      target:
+        type: string
+      type:
+        type: string
+    type: object
+  lineage.LineageNode:
+    properties:
+      asset:
+        $ref: '#/definitions/asset.Asset'
+      depth:
+        type: integer
+      id:
+        type: string
+      type:
+        type: string
+    type: object
+  lineage.LineageResponse:
+    properties:
+      edges:
+        items:
+          $ref: '#/definitions/lineage.LineageEdge'
+        type: array
+      nodes:
+        items:
+          $ref: '#/definitions/lineage.LineageNode'
+        type: array
+    type: object
+  plugin.RawPluginConfig:
+    additionalProperties: true
+    type: object
+  user.APIKey:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      key:
+        type: string
+      last_used_at:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  user.CreateUserInput:
+    properties:
+      name:
+        type: string
+      oauth_provider:
+        description: OAuth-related fields
+        type: string
+      oauth_provider_data:
+        additionalProperties: true
+        type: object
+      oauth_provider_id:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      role_names:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      username:
+        maxLength: 255
+        minLength: 3
+        type: string
+    required:
+    - name
+    - role_names
+    - username
+    type: object
+  user.Permission:
+    properties:
+      action:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      resource_type:
+        type: string
+    type: object
+  user.Role:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      permissions:
+        items:
+          $ref: '#/definitions/user.Permission'
+        type: array
+    type: object
+  user.UpdateUserInput:
+    properties:
+      active:
+        type: boolean
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      preferences:
+        additionalProperties: true
+        type: object
+      role_names:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    type: object
+  user.User:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      preferences:
+        additionalProperties: true
+        type: object
+      roles:
+        items:
+          $ref: '#/definitions/user.Role'
+        type: array
+      updated_at:
+        type: string
+      username:
+        type: string
+    type: object
+  users.CreateAPIKeyRequest:
+    properties:
+      expires_in_days:
+        type: integer
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  users.ListUsersResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/user.User'
+        type: array
+    type: object
+  users.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  users.OAuthLinkRequest:
+    properties:
+      provider:
+        type: string
+      provider_user_id:
+        type: string
+      user_id:
+        type: string
+      user_info:
+        additionalProperties: true
+        type: object
+    required:
+    - provider
+    - provider_user_id
+    - user_id
+    - user_info
+    type: object
+  users.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      token_type:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API for interacting with Marmot
+  license:
+    name: MIT
+    url: https://opensource.org/license/MIT
+  title: Marmot API
+  version: "0.1"
+paths:
+  /assets:
+    post:
+      consumes:
+      - application/json
+      description: Create a new asset in the system
+      parameters:
+      - description: Asset creation request
+        in: body
+        name: asset
+        required: true
+        schema:
+          $ref: '#/definitions/assets.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/asset.Asset'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Create a new asset
+      tags:
+      - assets
+  /assets/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an asset from the system
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Delete an asset
+      tags:
+      - assets
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/asset.Asset'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get an asset by ID
+      tags:
+      - assets
+    put:
+      consumes:
+      - application/json
+      description: Update an existing asset's information
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Asset update request
+        in: body
+        name: asset
+        required: true
+        schema:
+          $ref: '#/definitions/assets.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/asset.Asset'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Update an asset
+      tags:
+      - assets
+  /assets/{id}/tags:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a tag from an existing asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag to remove
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/assets.TagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/asset.Asset'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Remove tag from asset
+      tags:
+      - assets
+    post:
+      consumes:
+      - application/json
+      description: Add a new tag to an existing asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag to add
+        in: body
+        name: tag
+        required: true
+        schema:
+          $ref: '#/definitions/assets.TagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/asset.Asset'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Add tag to asset
+      tags:
+      - assets
+  /assets/batch:
+    post:
+      consumes:
+      - application/json
+      description: Create or update multiple assets in a single request
+      parameters:
+      - description: Batch creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/assets.BatchCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assets.BatchCreateResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Batch create assets
+      tags:
+      - assets
+  /assets/documentation:
+    post:
+      consumes:
+      - application/json
+      description: Create or update documentation for an asset
+      parameters:
+      - description: Documentation creation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/assets.DocumentationCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assetdocs.Documentation'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Create asset documentation
+      tags:
+      - assets
+  /assets/documentation/{mrn}:
+    get:
+      description: Get documentation for a specific asset
+      parameters:
+      - description: Asset MRN
+        format: url
+        in: path
+        name: mrn
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/assetdocs.Documentation'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get asset documentation
+      tags:
+      - assets
+  /assets/documentation/batch:
+    post:
+      consumes:
+      - application/json
+      description: Create or update documentation for multiple assets
+      parameters:
+      - description: Batch documentation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/assets.BatchDocumentationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assets.BatchDocumentationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Batch create documentation
+      tags:
+      - assets
+  /assets/list:
+    get:
+      description: Get a paginated list of assets
+      parameters:
+      - description: Offset for pagination
+        in: query
+        name: offset
+        type: integer
+      - description: Limit for pagination
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/asset.ListResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: List assets with pagination
+      tags:
+      - assets
+  /assets/lookup/{type}/{name}:
+    get:
+      description: Get an asset using its type and name
+      parameters:
+      - description: Asset type
+        in: path
+        name: type
+        required: true
+        type: string
+      - description: Asset name
+        in: path
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/asset.Asset'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Lookup asset by type and name
+      tags:
+      - assets
+  /assets/match-pattern:
+    get:
+      description: Find assets matching a pattern
+      parameters:
+      - description: Asset pattern to match
+        in: query
+        name: pattern
+        required: true
+        type: string
+      - description: Asset type
+        in: query
+        name: type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/asset.Asset'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Match asset pattern
+      tags:
+      - assets
+  /assets/qualified-name/{qualifiedName}:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific asset using its qualified
+        name
+      parameters:
+      - description: Asset qualified name
+        in: path
+        name: qualifiedName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/asset.Asset'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get an asset by qualified name
+      tags:
+      - assets
+  /assets/search:
+    get:
+      consumes:
+      - application/json
+      description: Search for assets using query string and filters
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - collectionFormat: csv
+        description: Filter by asset types
+        in: query
+        items:
+          type: string
+        name: types
+        type: array
+      - collectionFormat: csv
+        description: Filter by services
+        in: query
+        items:
+          type: string
+        name: services
+        type: array
+      - collectionFormat: csv
+        description: Filter by tags
+        in: query
+        items:
+          type: string
+        name: tags
+        type: array
+      - default: 50
+        description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      - default: false
+        description: Calculate filter counts
+        in: query
+        name: calculateCounts
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assets.SearchResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Search assets
+      tags:
+      - assets
+  /assets/suggestions/metadata/fields:
+    get:
+      description: Get suggestions for metadata fields and their types
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/asset.MetadataFieldSuggestion'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get metadata field suggestions
+      tags:
+      - assets
+  /assets/suggestions/metadata/values:
+    get:
+      description: Get suggestions for values of a specific metadata field
+      parameters:
+      - description: Metadata field name
+        in: query
+        name: field
+        required: true
+        type: string
+      - description: Value prefix to filter by
+        in: query
+        name: prefix
+        type: string
+      - default: 10
+        description: Maximum number of suggestions
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/asset.MetadataValueSuggestion'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get metadata value suggestions
+      tags:
+      - assets
+  /assets/suggestions/tags:
+    get:
+      description: Get suggestions for asset tags
+      parameters:
+      - description: Tag prefix to filter by
+        in: query
+        name: prefix
+        type: string
+      - default: 10
+        description: Maximum number of suggestions
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              type: string
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get tag suggestions
+      tags:
+      - assets
+  /assets/summary:
+    get:
+      consumes:
+      - application/json
+      description: Get the total count of assets by type
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assets.AssetSummaryResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get asset summary
+      tags:
+      - assets
+  /auth/config:
+    get:
+      description: Returns the enabled auth providers without sensitive data
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.AuthConfig'
+      summary: Get auth configuration
+      tags:
+      - auth
+  /auth/okta/callback:
+    get:
+      description: Processes the OAuth callback from Okta
+      parameters:
+      - description: Authorization code
+        in: query
+        name: code
+        required: true
+        type: string
+      - description: State parameter for CSRF protection
+        in: query
+        name: state
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "307":
+          description: Temporary Redirect
+          schema:
+            type: string
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Handle Okta OAuth callback
+      tags:
+      - auth
+  /auth/okta/login:
+    get:
+      description: Redirects the user to Okta for authentication
+      produces:
+      - application/json
+      responses:
+        "307":
+          description: Temporary Redirect
+          schema:
+            type: string
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Initiate Okta OAuth login
+      tags:
+      - auth
+  /lineage/assets/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get upstream and downstream lineage for a specific asset
+      parameters:
+      - description: Asset ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 10
+        description: Maximum depth of lineage graph
+        in: query
+        name: limit
+        type: integer
+      - default: both
+        description: Direction of lineage (upstream, downstream, or both)
+        enum:
+        - upstream
+        - downstream
+        - both
+        in: query
+        name: direction
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lineage.LineageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get asset lineage
+      tags:
+      - lineage
+  /lineage/batch:
+    post:
+      consumes:
+      - application/json
+      description: Create lineage edges in batch
+      parameters:
+      - description: Array of lineage edges to create
+        in: body
+        name: edges
+        required: true
+        schema:
+          items:
+            $ref: '#/definitions/lineage.LineageEdge'
+          type: array
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/lineage.BatchLineageResult'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Batch create lineage edges
+      tags:
+      - lineage
+  /lineage/direct:
+    post:
+      consumes:
+      - application/json
+      description: Create a direct lineage connection between two assets and returns
+        the created edge
+      parameters:
+      - description: Lineage edge to create
+        in: body
+        name: edge
+        required: true
+        schema:
+          $ref: '#/definitions/lineage.LineageEdge'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lineage.LineageEdge'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Create direct lineage
+      tags:
+      - lineage
+  /lineage/direct/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a direct lineage connection by its ID
+      parameters:
+      - description: Edge ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Delete direct lineage
+      tags:
+      - lineage
+    get:
+      consumes:
+      - application/json
+      description: Get a specific direct lineage connection by its ID
+      parameters:
+      - description: Edge ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/lineage.LineageEdge'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get direct lineage by ID
+      tags:
+      - lineage
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of users with optional filtering
+      parameters:
+      - default: 50
+        description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      - description: Search query for username or email
+        in: query
+        name: query
+        type: string
+      - collectionFormat: csv
+        description: Filter by role IDs
+        in: query
+        items:
+          type: string
+        name: role_ids
+        type: array
+      - description: Filter by active status
+        in: query
+        name: active
+        type: boolean
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.ListUsersResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: List users
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new user in the system
+      parameters:
+      - description: User creation request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/user.CreateUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Create a new user
+      tags:
+      - users
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a user from the system
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Delete a user
+      tags:
+      - users
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about a specific user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get a user by ID
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      description: Update user information
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User update request
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/user.UpdateUserInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Update a user
+      tags:
+      - users
+  /users/apikeys:
+    get:
+      consumes:
+      - application/json
+      description: Get all API keys for a user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/user.APIKey'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: List API keys
+      tags:
+      - users
+    post:
+      consumes:
+      - application/json
+      description: Create a new API key for a user
+      parameters:
+      - description: API key creation request
+        in: body
+        name: key
+        required: true
+        schema:
+          $ref: '#/definitions/users.CreateAPIKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.APIKey'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Create API key
+      tags:
+      - users
+  /users/apikeys/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an API key
+      parameters:
+      - description: API key ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Delete API key
+      tags:
+      - users
+  /users/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticate a user with username/email and password
+      parameters:
+      - description: Login credentials
+        in: body
+        name: credentials
+        required: true
+        schema:
+          $ref: '#/definitions/users.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Login user
+      tags:
+      - users
+  /users/me:
+    get:
+      consumes:
+      - application/json
+      description: Get detailed information about the currently authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/user.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get current user profile
+      tags:
+      - users
+  /users/oauth/link:
+    post:
+      consumes:
+      - application/json
+      description: Link an OAuth account to an existing user
+      parameters:
+      - description: OAuth account link request
+        in: body
+        name: link
+        required: true
+        schema:
+          $ref: '#/definitions/users.OAuthLinkRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Link OAuth account
+      tags:
+      - users
+  /users/oauth/unlink/{id}/{provider}:
+    delete:
+      consumes:
+      - application/json
+      description: Unlink an OAuth account from a user
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: OAuth provider
+        in: path
+        name: provider
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Unlink OAuth account
+      tags:
+      - users
+  /users/preferences:
+    put:
+      consumes:
+      - application/json
+      description: Update preferences for the current user
+      parameters:
+      - description: User preferences
+        in: body
+        name: preferences
+        required: true
+        schema:
+          additionalProperties: true
+          type: object
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Update user preferences
+      tags:
+      - users
+swagger: "2.0"
