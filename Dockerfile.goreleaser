@@ -1,0 +1,18 @@
+FROM alpine:3.18
+
+RUN apk add --no-cache ca-certificates tzdata
+RUN adduser -D -u 10001 marmot
+
+WORKDIR /app
+
+# Copy binary from the goreleaser build
+COPY marmot /usr/local/bin/
+RUN chmod +x /usr/local/bin/marmot && \
+    chown marmot:marmot /usr/local/bin/marmot
+
+USER marmot
+
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/marmot"]
+CMD ["run"]
