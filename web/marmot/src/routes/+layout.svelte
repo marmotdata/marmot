@@ -12,9 +12,6 @@
 	let isAdmin = false;
 
 	onMount(() => {
-		const bannerState = localStorage.getItem('alphaBannerDismissed');
-		showBanner = bannerState !== 'true';
-
 		// Check if user has admin role
 		if (browser && $auth) {
 			isAdmin = auth.hasRole('admin');
@@ -44,7 +41,6 @@
 
 	function dismissBanner() {
 		showBanner = false;
-		localStorage.setItem('alphaBannerDismissed', 'true');
 	}
 
 	function handleLogout() {
@@ -56,55 +52,6 @@
 <svelte:window on:click={closeDropdown} />
 
 <div class="h-screen flex flex-col">
-	{#if showBanner !== null && showBanner}
-		<div class="bg-orange-500 text-white flex-none">
-			<div class="max-w-14xl mx-auto py-3 px-4 sm:px-6 lg:px-8">
-				<div class="flex items-center justify-between flex-wrap">
-					<div class="w-0 flex-1 flex items-center">
-						<span class="flex p-2">
-							<svg
-								class="h-6 w-6 text-white"
-								xmlns="http://www.w3.org/2000/svg"
-								fill="none"
-								viewBox="0 0 24 24"
-								stroke="currentColor"
-							>
-								<path
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-									d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-								/>
-							</svg>
-						</span>
-						<p class="ml-3 font-medium">
-							This software is in alpha state. You may encounter bugs and data may not be accurate.
-						</p>
-					</div>
-					<div class="shrink-0">
-						<button
-							type="button"
-							class="flex rounded-md p-2 hover:bg-orange-600 transition-colors focus:outline-none focus:ring-2 focus:ring-white"
-							on:click={dismissBanner}
-						>
-							<svg
-								class="h-5 w-5 text-white"
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 20 20"
-								fill="currentColor"
-							>
-								<path
-									fill-rule="evenodd"
-									d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-									clip-rule="evenodd"
-								/>
-							</svg>
-						</button>
-					</div>
-				</div>
-			</div>
-		</div>
-	{/if}
 	{#if !$page.url.pathname.startsWith('/login')}
 		<nav class="bg-earthy-brown-50 dark:bg-gray-900 flex-none">
 			<div class="max-w-14xl mx-auto px-4 sm:px-6 lg:px-8">
