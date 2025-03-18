@@ -8,8 +8,8 @@ Marmot is an open-source data catalog that helps teams discover, understand, and
 
 Marmot was designed with the following in mind:
 
-- **Simplicity**: Single binary deployment
-- **Performance**: Fast search and efficient processing
+- **Simplicity**: Single binary deployment and only a single PostgreSQL database as an external dependency
+- **Performance**: Fast and efficient search and querying
 - **Extensibility**: Document almost anything with the flexible API
 
 ## Features
