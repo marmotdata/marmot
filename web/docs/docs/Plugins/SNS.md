@@ -1,0 +1,57 @@
+---
+title: SNS
+description: This plugin discovers SNS topics from AWS accounts.
+status: experimental
+---
+
+# SNS
+
+This plugin discovers SNS topics from AWS accounts.
+
+**Status:** experimental
+
+## Example Configuration
+
+```yaml
+
+credentials:
+  region: "us-west-2"
+  profile: "default"
+  # Optional: manual credentials
+  id: ""
+  secret: ""
+  token: ""
+  # Optional: role assumption
+  role: ""
+  role_external_id: ""
+tags_to_metadata: true
+include_tags:
+  - "Environment"
+  - "Team"
+  - "Cost-Center"
+tags:
+  - "sns"
+  - "aws"
+filter:
+  include:
+    - "^prod-.*"
+    - "^staging-.*"
+  exclude:
+    - ".*-test$"
+    - ".*-dev$"
+
+```
+
+## Available Metadata
+
+The following metadata fields are available:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| display_name | string | Display name of the topic |
+| owner | string | AWS account ID that owns the topic |
+| policy | string | Access policy of the topic |
+| subscriptions_confirmed | string | Number of confirmed subscriptions |
+| subscriptions_pending | string | Number of pending subscriptions |
+| tags | map[string]string | AWS resource tags |
+| topic_arn | string | The ARN of the SNS topic |

@@ -1,0 +1,93 @@
+project_name: marmot
+
+env:
+  - GO111MODULE=on
+  - CGO_ENABLED=0
+
+before:
+  hooks:
+    - make clean
+    - make frontend-build
+    - make swagger
+    - go mod tidy
+    - go mod download
+
+builds:
+  - id: marmot
+    main: ./cmd/main.go
+    binary: marmot
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/marmotdata/marmot/internal/cmd.Version={{.Version}}
+    ignore:
+      - goos: windows
+        goarch: arm64
+
+archives:
+  - id: marmot
+    format: tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+    files:
+      - README.md
+      - LICENSE
+
+checksum:
+  name_template: "{{ .ProjectName }}_{{ .Version }}_checksums.txt"
+  algorithm: sha256
+
+dockers:
+  - image_templates:
+      - "ghcr.io/marmotdata/marmot:latest"
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}"
+      - "ghcr.io/marmotdata/marmot:{{ .Major }}.{{ .Minor }}"
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: amd64
+    use: docker
+  - image_templates:
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-arm64"
+      - "ghcr.io/marmotdata/marmot:latest-arm64"
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: arm64
+    use: docker
+
+docker_manifests:
+  - name_template: "ghcr.io/marmotdata/marmot:{{ .Version }}"
+    image_templates:
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}"
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-arm64"
+  - name_template: "ghcr.io/marmotdata/marmot:latest"
+    image_templates:
+      - "ghcr.io/marmotdata/marmot:latest"
+      - "ghcr.io/marmotdata/marmot:latest-arm64"
+
+release:
+  github:
+    owner: marmotdata
+    name: marmot
+  prerelease: auto
+  draft: false
+  name_template: "Marmot v{{.Version}}"
