@@ -3,11 +3,21 @@ name: E2E Tests
 on:
   issue_comment:
     types: [created]
+  # Also run on PR creation and updates to show as a check
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+# Add permissions block
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+  checks: write
 
 jobs:
   check-comment:
     runs-on: ubuntu-latest
-    if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '/test e2e') }}
+    if: ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '/test e2e') }}
     outputs:
       should-run: ${{ steps.check-permissions.outputs.result }}
       ref: ${{ steps.get-ref.outputs.ref }}
@@ -67,12 +77,16 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
-            github.rest.reactions.createForIssueComment({
-              owner,
-              repo,
-              comment_id: context.payload.comment.id,
-              content: 'rocket'
-            });
+            try {
+              await github.rest.reactions.createForIssueComment({
+                owner,
+                repo,
+                comment_id: context.payload.comment.id,
+                content: 'rocket'
+              });
+            } catch (error) {
+              console.log('Unable to add reaction, continuing workflow:', error);
+            }
 
       - name: Notify if permission denied
         if: steps.check-permissions.outputs.result != 'true'
@@ -81,24 +95,82 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
-            github.rest.issues.createComment({
+            await github.rest.issues.createComment({
               owner,
               repo,
               issue_number: context.issue.number,
               body: '⚠️ Only PR authors and repository maintainers can trigger E2E tests.'
             });
-            github.rest.reactions.createForIssueComment({
+            try {
+              await github.rest.reactions.createForIssueComment({
+                owner,
+                repo,
+                comment_id: context.payload.comment.id,
+                content: '-1'
+              });
+            } catch (error) {
+              console.log('Unable to add reaction, continuing workflow:', error);
+            }
+
+  pr-check:
+    # This job runs automatically on PR events
+    if: ${{ github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create pending check
+        uses: actions/github-script@v6
+        id: create-check
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const { data: check } = await github.rest.checks.create({
               owner,
               repo,
-              comment_id: context.payload.comment.id,
-              content: '-1'
+              name: 'E2E Tests',
+              head_sha: context.payload.pull_request.head.sha,
+              status: 'completed',
+              conclusion: 'neutral',
+              output: {
+                title: 'E2E Tests',
+                summary: 'To run E2E tests, comment `/test e2e` on this PR'
+              }
             });
+            return check.id;
 
   e2e-test:
-    needs: check-comment
+    needs: [check-comment]
     if: ${{ needs.check-comment.outputs.should-run == 'true' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Create in-progress check
+        uses: actions/github-script@v6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            
+            // Get the PR details to get the HEAD SHA
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: issue_number
+            });
+            
+            // Create a check run
+            await github.rest.checks.create({
+              owner,
+              repo,
+              name: 'E2E Tests',
+              head_sha: pr.head.sha,
+              status: 'in_progress',
+              output: {
+                title: 'E2E Tests',
+                summary: 'Running E2E tests...'
+              }
+            });
+
       - name: Checkout code
         uses: actions/checkout@v3
         with:
@@ -123,17 +195,53 @@ jobs:
         run: make e2e-client
 
       - name: Run E2E tests
+        id: e2e-tests
         run: make e2e-test
+        continue-on-error: true
 
-      - name: Notify completion
+      - name: Update check with results
+        if: always()
         uses: actions/github-script@v6
-        if: ${{ always() }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
             const { owner, repo } = context.repo;
-            const status = '${{ job.status }}' === 'success' ? '✅ passed' : '❌ failed';
-            github.rest.issues.createComment({
+            const issue_number = context.issue.number;
+            
+            // Get the PR details to get the HEAD SHA
+            const { data: pr } = await github.rest.pulls.get({
+              owner,
+              repo,
+              pull_number: issue_number
+            });
+            
+            const testsPassed = '${{ steps.e2e-tests.outcome }}' === 'success';
+            
+            // Update the check run
+            await github.rest.checks.create({
+              owner,
+              repo,
+              name: 'E2E Tests',
+              head_sha: pr.head.sha,
+              status: 'completed',
+              conclusion: testsPassed ? 'success' : 'failure',
+              output: {
+                title: testsPassed ? 'E2E Tests Passed' : 'E2E Tests Failed',
+                summary: testsPassed ? 
+                  '✅ All E2E tests passed successfully!' : 
+                  '❌ Some E2E tests failed. Check the logs for details.'
+              }
+            });
+
+      - name: Notify completion
+        uses: actions/github-script@v6
+        if: always()
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { owner, repo } = context.repo;
+            const status = '${{ steps.e2e-tests.outcome }}' === 'success' ? '✅ passed' : '❌ failed';
+            await github.rest.issues.createComment({
               owner,
               repo,
               issue_number: context.issue.number,
