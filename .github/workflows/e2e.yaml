@@ -185,8 +185,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Install Swagger
-        run: go install github.com/swaggo/swag/cmd/swag@latest
+      - name: Install dev dependencies
+        run: make dev-deps
 
       - name: Generate Swagger docs
         run: make swagger
