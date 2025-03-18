@@ -61,13 +61,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate release notes
-        run: |
-          echo "# Marmot ${{ github.ref_name }}" > .release-notes.md
-          echo "" >> .release-notes.md
-          echo "## Changes" >> .release-notes.md
-          git log $(git describe --tags --abbrev=0 $(git rev-list --tags --skip=1 --max-count=1))..HEAD --pretty=format:"* %s" >> .release-notes.md
-
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
