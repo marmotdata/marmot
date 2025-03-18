@@ -186,7 +186,7 @@ jobs:
         run: sudo echo "127.0.0.1 redpanda-test" | sudo tee -a /etc/hosts
 
       - name: Create client directory structure
-        run: mkdir -p tests/e2e/internal/client
+        run: mkdir -p test/e2e/internal/client
         
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
