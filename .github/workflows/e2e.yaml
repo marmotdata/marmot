@@ -182,11 +182,19 @@ jobs:
           go-version: "1.23"
           cache: true
 
+      - name: Add hostname entry
+        run: sudo echo "127.0.0.1 redpanda-test" | sudo tee -a /etc/hosts
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Install dev dependencies
         run: make dev-deps
+
+      - name: Install Swagger CLI
+        run: |
+          go install github.com/swaggo/swag/cmd/swag@latest
+          go install github.com/go-swagger/go-swagger/cmd/swagger@latest
 
       - name: Generate Swagger docs
         run: make swagger
