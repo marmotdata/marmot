@@ -502,13 +502,11 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 		}
 
 		objectKey := fmt.Sprintf("%s.%s.%s", dbName, schemaName, objectName)
-		mrnValue := mrn.New(assetType, "PostgreSQL", objectKey)
 
 		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
-			Name:        &objectName,
-			MRN:         &mrnValue,
+			Name:        &objectKey,
 			Type:        assetType,
 			Providers:   []string{"PostgreSQL"},
 			Description: &assetDesc,

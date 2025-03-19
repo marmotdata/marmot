@@ -43,9 +43,8 @@
 		selectedAsset = null;
 	}
 
-	async function onNodeClick(event: CustomEvent) {
-		const nodeId = event?.detail?.node?.data?.id;
-		if (nodeId && nodeId !== currentAsset.id) {
+  async function handleNodeClick(nodeId: string) {
+    if (nodeId && nodeId !== currentAsset.id) {
 			try {
 				const [assetResponse, lineageResponse] = await Promise.all([
 					fetchApi(`/assets/${nodeId}`),
@@ -213,21 +212,22 @@
 				hasUpstream: false,
 				hasDownstream: false
 			};
-			return {
-				id: node.id,
-				type: 'custom',
-				data: {
-					id: node.asset.id,
-					name: node.asset.name || '',
-					type: getNodeIconType(node),
-					provider: node.asset.provider,
-					isCurrent: node.id === currentAsset.mrn,
-					depth: node.depth,
-					hasUpstream: nodeConnections.hasUpstream,
-					hasDownstream: nodeConnections.hasDownstream
-				},
-				position: { x: 0, y: 0 }
-			};
+      return {
+          id: node.id,
+          type: 'custom',
+          data: {
+              id: node.asset.id,
+              name: node.asset.name || '',
+              type: getNodeIconType(node),
+              provider: node.asset.provider,
+              isCurrent: node.id === currentAsset.mrn,
+              depth: node.depth,
+              hasUpstream: nodeConnections.hasUpstream,
+              hasDownstream: nodeConnections.hasDownstream,
+              nodeClickHandler: handleNodeClick  // Add this line
+          },
+          position: { x: 0, y: 0 }
+      };
 		});
 
 		const edges = data.edges.map((edge) => ({
@@ -333,7 +333,7 @@
 						{nodes}
 						{edges}
 						{nodeTypes}
-						on:nodeclick={onNodeClick}
+    nodeClick={handleNodeClick}
 						fitView
 						minZoom={0.2}
 						maxZoom={1}

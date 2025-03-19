@@ -61,5 +61,14 @@ func (h *Handler) Routes() []common.Route {
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
+		{
+			Path:    "/api/v1/lineage/batch",
+			Method:  http.MethodPost,
+			Handler: h.batchCreateLineage,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
 	}
 }
