@@ -80,7 +80,7 @@ func NewPostgresRepository(db *pgxpool.Pool) Repository {
 	return &PostgresRepository{db: db}
 }
 
-// TODO: this is ugly and smelly
+// TODO: this is ugly and smelly but I dont have any better ideas
 // Helper method for JSON marshaling of common fields
 func marshalAssetFields(asset *Asset) ([]byte, []byte, []byte, []byte, []byte, error) {
 	metadataJSON, err := json.Marshal(asset.Metadata)

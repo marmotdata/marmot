@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/internal/services/asset"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/rs/zerolog/log"
 )
 

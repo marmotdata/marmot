@@ -4,7 +4,7 @@ import (
 	"sort"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/services/asset"
+	"github.com/marmotdata/marmot/internal/core/asset"
 )
 
 // mergeSources merges source information, preferring sources with higher priority

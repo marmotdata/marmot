@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/internal/services/lineage"
+	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/rs/zerolog/log"
 )
 

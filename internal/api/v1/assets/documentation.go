@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/internal/services/assetdocs"
+	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/rs/zerolog/log"
 )
 

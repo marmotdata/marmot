@@ -4,8 +4,8 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/internal/services/auth"
-	"github.com/marmotdata/marmot/internal/services/user"
+	"github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/user"
 )
 
 type Handler struct {

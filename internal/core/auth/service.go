@@ -9,7 +9,7 @@ import (
 	"time"
 
 	jwt "github.com/golang-jwt/jwt/v5"
-	"github.com/marmotdata/marmot/internal/services/user"
+	"github.com/marmotdata/marmot/internal/core/user"
 )
 
 const JWTSigningKeyID = "jwt_signing_key"

@@ -8,7 +8,7 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/kafka"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/services/asset"
+	"github.com/marmotdata/marmot/internal/core/asset"
 )
 
 type KafkaTopic struct {
