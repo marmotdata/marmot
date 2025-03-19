@@ -3,7 +3,7 @@ package auth
 import (
 	"context"
 
-	"github.com/marmotdata/marmot/internal/services/user"
+	"github.com/marmotdata/marmot/internal/core/user"
 )
 
 type OAuthProvider interface {

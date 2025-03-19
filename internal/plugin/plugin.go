@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/marmotdata/marmot/internal/services/asset"
-	"github.com/marmotdata/marmot/internal/services/assetdocs"
-	"github.com/marmotdata/marmot/internal/services/lineage"
+	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/assetdocs"
+	"github.com/marmotdata/marmot/internal/core/lineage"
 	"sigs.k8s.io/yaml"
 )
 
@@ -55,7 +55,6 @@ type MergeConfig struct {
 
 // ExternalLink defines an external resource link
 
-// TODO: use JSON TAGS
 type ExternalLink struct {
 	Name string `json:"name"`
 	Icon string `json:"icon"`

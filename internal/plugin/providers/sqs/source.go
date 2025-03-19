@@ -16,8 +16,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/services/asset"
-	"github.com/marmotdata/marmot/internal/services/lineage"
+	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/rs/zerolog/log"
 )
 

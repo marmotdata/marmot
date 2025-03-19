@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/services/asset"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"sigs.k8s.io/yaml"
 )
 

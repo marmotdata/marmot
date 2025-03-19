@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/services/asset"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/sync"
 	"github.com/stretchr/testify/assert"
 )

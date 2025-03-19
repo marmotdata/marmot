@@ -9,7 +9,7 @@ import (
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
-	"github.com/marmotdata/marmot/internal/services/asset"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/rs/zerolog/log"
 )
 
@@ -70,11 +70,7 @@ func (s *service) GetDirectLineage(ctx context.Context, edgeID string) (*Lineage
 }
 
 func (s *service) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string) (string, error) {
-	//TODO: do we really need this?
-	normalizedSource := normalizeMRNName(sourceMRN)
-	normalizedTarget := normalizeMRNName(targetMRN)
-
-	return s.repo.CreateDirectLineage(ctx, normalizedSource, normalizedTarget)
+	return s.repo.CreateDirectLineage(ctx, sourceMRN, targetMRN)
 }
 
 func (s *service) DeleteDirectLineage(ctx context.Context, edgeID string) error {
@@ -83,18 +79,6 @@ func (s *service) DeleteDirectLineage(ctx context.Context, edgeID string) error 
 
 func (s *service) EdgeExists(ctx context.Context, source, target string) (bool, error) {
 	return s.repo.EdgeExists(ctx, source, target)
-}
-
-// TODO: CONSOLIDATE THIS
-func normalizeMRNName(mrn string) string {
-	parts := strings.Split(mrn, "/")
-	if len(parts) >= 4 {
-		// Keep namespace, type and service as-is, normalize only the resource name
-		resourceName := parts[len(parts)-1]
-		parts[len(parts)-1] = strings.ToLower(resourceName)
-		return strings.Join(parts, "/")
-	}
-	return strings.ToLower(mrn)
 }
 
 func (s *service) HandleLineageEvent(ctx context.Context, event interface{}) error {

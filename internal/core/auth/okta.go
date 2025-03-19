@@ -8,7 +8,7 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/marmotdata/marmot/internal/config"
-	"github.com/marmotdata/marmot/internal/services/user"
+	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2"
 )
