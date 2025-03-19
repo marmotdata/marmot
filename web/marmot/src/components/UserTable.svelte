@@ -3,11 +3,19 @@
 	import EditUserForm from './EditUserForm.svelte';
 	import DeleteModal from './DeleteModal.svelte';
 
-	export let users: any[] = [];
-	export let editingUserId: string | null = null;
-	export let onEdit: (userId: string | null) => void;
-	export let onUpdate: (user: any) => void;
-	export let onDelete: (userId: string) => void;
+	let { 
+		users = [], 
+		editingUserId = null, 
+		onEdit, 
+		onUpdate, 
+		onDelete 
+	} = $props<{
+		users: any[];
+		editingUserId: string | null;
+		onEdit: (userId: string | null) => void;
+		onUpdate: (user: any) => void;
+		onDelete: (userId: string) => void;
+	}>();
 
 	let showDeleteModal = false;
 	let userToDelete: any = null;

@@ -172,7 +172,7 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
             event_id, 
             event_time, 
             event_type, 
-            event_data, 
+            event_data 
         )
         VALUES ($1, $2, $3, $4)`,
 		eventID,

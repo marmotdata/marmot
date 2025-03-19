@@ -1,24 +1,25 @@
 <script lang="ts">
 	import { Handle, Position } from '@xyflow/svelte';
-	import { createEventDispatcher } from 'svelte';
 	import Icon from './Icon.svelte';
 
-	const dispatch = createEventDispatcher();
+  let { data } = $props<{
+      data: {
+          name: string;
+          type: string;
+          service: string;
+          isCurrent: boolean;
+          id: string;
+          hasUpstream: boolean;
+          hasDownstream: boolean;
+          nodeClickHandler: (id: string) => void;
+      };
+  }>();
 
-	export let data: {
-		name: string;
-		type: string;
-		service: string;
-		isCurrent: boolean;
-		id: string;
-		hasUpstream: boolean;
-		hasDownstream: boolean;
-	};
-
-	function handleClick() {
-		dispatch('nodeClick', { id: data.id });
-	}
+  function handleClick() {
+      data.nodeClickHandler(data.id);
+  }
 </script>
+
 
 {#if data.hasUpstream}
 	<Handle type="target" position={Position.Left} style="background: #696969;" />

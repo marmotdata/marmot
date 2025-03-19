@@ -1,10 +1,12 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
 	import { fetchApi } from '$lib/api';
 
-	const dispatch = createEventDispatcher();
-
-	export let user: any;
+	let { user, onCancel, onUpdate } = $props<{
+		user: any;
+		onCancel: () => void;
+		onUpdate: (updatedUser: any) => void;
+	}>();
+	
 	let loading = false;
 	let error: string | null = null;
 	let editedUser = { ...user };
@@ -26,7 +28,7 @@
 			}
 
 			const updatedUser = await response.json();
-			dispatch('update', updatedUser);
+			onUpdate(updatedUser);
 		} catch (err: any) {
 			error = err.message;
 		} finally {
@@ -84,7 +86,7 @@
 			<button
 				type="button"
 				class="px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:bg-gray-900 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:focus:ring-orange-400"
-				on:click={() => dispatch('cancel')}
+				on:click={onCancel}
 			>
 				Cancel
 			</button>
