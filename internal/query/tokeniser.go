@@ -85,19 +85,6 @@ func (t *Tokeniser) Tokenise(query string) ([]string, error) {
 	return cleanTokens(tokens), nil
 }
 
-func isOperator(s string) bool {
-	operators := []string{":", "=", "!=", "<>", ">", "<", ">=", "<="}
-	for _, op := range operators {
-		if s == op {
-			return true
-		}
-	}
-	return false
-}
-func isOperatorChar(r rune) bool {
-	return strings.ContainsRune(":=<>!", r)
-}
-
 func cleanTokens(tokens []string) []string {
 	var cleaned []string
 	for _, token := range tokens {

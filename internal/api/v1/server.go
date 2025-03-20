@@ -1,7 +1,6 @@
 package v1
 
 import (
-	"net"
 	"net/http"
 	"strings"
 
@@ -30,8 +29,6 @@ import (
 // @license.name MIT
 // @license.url https://opensource.org/license/MIT
 type Server struct {
-	ln     net.Listener
-	server *http.Server
 	config *config.Config
 
 	handlers []interface{ Routes() []common.Route }
