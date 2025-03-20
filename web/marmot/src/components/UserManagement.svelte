@@ -52,21 +52,19 @@
 		}
 	}
 
-	async function handleUserUpdated(event: CustomEvent<any>) {
-		users = users.map((u) => (u.id === event.detail.id ? event.detail : u));
+	async function handleUserUpdated(updatedUser: any) {
+		users = users.map((u) => (u.id === updatedUser.id ? updatedUser : u));
 		editingUserId = null;
-
 		await fetchUsers();
 	}
 
-	async function handleUserDeleted(event: CustomEvent<any>) {
-		users = users.filter((u) => u.id !== event.detail);
-
+	async function handleUserDeleted(userId: string) {
+		users = users.filter((u) => u.id !== userId);
 		await fetchUsers();
 	}
 </script>
 
-<div class="bg-earthy-brown-50 dark:bg-gray-900 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 dark:border-gray-700">
+<div class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
 	<div class="p-6">
 		<div class="flex justify-between items-center mb-6">
 			<div class="flex-1 max-w-md">
@@ -74,7 +72,7 @@
 					type="text"
 					placeholder="Search users..."
 					bind:value={userQuery}
-					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 dark:border-gray-600 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
 				/>
 			</div>
 			<button
@@ -99,8 +97,8 @@
 			</div>
 		{:else}
 			<UserTable
-				{users}
-				{editingUserId}
+				users={users}
+				editingUserId={editingUserId}
 				onEdit={(userId) => (editingUserId = userId)}
 				onUpdate={handleUserUpdated}
 				onDelete={handleUserDeleted}
@@ -108,19 +106,19 @@
 
 			<div class="mt-4 flex items-center justify-between">
 				<div class="flex-1 flex justify-between items-center">
-					<p class="text-sm text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300">
+					<p class="text-sm text-gray-700 dark:text-gray-300">
 						Showing {offset + 1} to {Math.min(offset + users.length, totalUsers)} of {totalUsers} users
 					</p>
 					<div class="flex space-x-2">
 						<button
-							class="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md text-sm disabled:opacity-50"
+							class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm disabled:opacity-50"
 							disabled={offset === 0}
 							on:click={() => (offset = Math.max(0, offset - limit))}
 						>
 							Previous
 						</button>
 						<button
-							class="px-3 py-1 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md text-sm disabled:opacity-50"
+							class="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm disabled:opacity-50"
 							disabled={offset + users.length >= totalUsers}
 							on:click={() => (offset = offset + limit)}
 						>

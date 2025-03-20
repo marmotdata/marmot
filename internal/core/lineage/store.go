@@ -208,8 +208,8 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 func (r *PostgresRepository) ensureAssetsExist(ctx context.Context, tx pgx.Tx, sourceMRN, targetMRN string) error {
 	var count int
 	err := tx.QueryRow(ctx, `
-		SELECT COUNT(*) FROM assets 
-		WHERE mrn IN ($1, $2)`, sourceMRN, targetMRN).Scan(&count)
+        SELECT COUNT(*) FROM assets 
+        WHERE mrn = ANY($1)`, []string{sourceMRN, targetMRN}).Scan(&count)
 	if err != nil {
 		return fmt.Errorf("checking assets existence: %w", err)
 	}

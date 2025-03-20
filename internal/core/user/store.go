@@ -287,6 +287,27 @@ func (r *PostgresRepository) UpdateUser(ctx context.Context, id string, updates 
 		return nil
 	}
 
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Check column names against actual table columns
+	for field := range updates {
+		var exists bool
+		err := tx.QueryRow(ctx,
+			"SELECT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'users' AND column_name = $1)",
+			field).Scan(&exists)
+		if err != nil {
+			return fmt.Errorf("validating column: %w", err)
+		}
+		if !exists {
+			return fmt.Errorf("invalid column name: %s", field)
+		}
+	}
+
+	// Now build the query with verified column names
 	setStatements := make([]string, 0, len(updates))
 	args := make([]interface{}, 0, len(updates)+1)
 	argNum := 1
@@ -297,22 +318,22 @@ func (r *PostgresRepository) UpdateUser(ctx context.Context, id string, updates 
 		argNum++
 	}
 
-	// Add updated_at only if it's not already being updated
+	// Add updated_at
 	if _, ok := updates["updated_at"]; !ok {
 		setStatements = append(setStatements, "updated_at = NOW()")
 	}
 
 	query := fmt.Sprintf(`
-		UPDATE users
-		SET %s
-		WHERE id = $%d`,
+        UPDATE users
+        SET %s
+        WHERE id = $%d`,
 		strings.Join(setStatements, ", "),
 		argNum,
 	)
 
 	args = append(args, id)
 
-	commandTag, err := r.db.Exec(ctx, query, args...)
+	commandTag, err := tx.Exec(ctx, query, args...)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
@@ -325,7 +346,7 @@ func (r *PostgresRepository) UpdateUser(ctx context.Context, id string, updates 
 		return ErrUserNotFound
 	}
 
-	return nil
+	return tx.Commit(ctx)
 }
 
 func (r *PostgresRepository) UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error {

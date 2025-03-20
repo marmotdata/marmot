@@ -5,6 +5,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"unicode"
 )
 
 // Parser handles parsing of search queries into structured formats
@@ -182,6 +183,23 @@ func (p *Parser) parseFilter(tokens []string) (Filter, int, error) {
 	fieldPath := strings.Split(strings.TrimPrefix(tokens[0], "@metadata."), ".")
 	if len(fieldPath) > 5 { // Optional depth limit
 		return Filter{}, 0, fmt.Errorf("metadata nesting depth exceeds limit of 5")
+	}
+
+	// Validate each field name
+	for _, field := range fieldPath {
+		if field == "" {
+			return Filter{}, 0, fmt.Errorf("empty field name is not allowed")
+		}
+
+		// Check for valid chars
+		for i, char := range field {
+			if i == 0 && !unicode.IsLetter(char) && char != '_' {
+				return Filter{}, 0, fmt.Errorf("field name must start with a letter or underscore: %s", field)
+			}
+			if !unicode.IsLetter(char) && !unicode.IsDigit(char) && char != '_' {
+				return Filter{}, 0, fmt.Errorf("field name contains invalid character: %c in %s", char, field)
+			}
+		}
 	}
 
 	op := tokens[1]
