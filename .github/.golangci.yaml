@@ -1,6 +1,2 @@
-issues:
-  exclude-rules:
-    - path: ../../golang/pkg/mod/.*
-      linters:
-        - "typecheck"
-        - "undefined"
+run:
+  timeout: 2m
