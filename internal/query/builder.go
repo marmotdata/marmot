@@ -3,6 +3,7 @@ package query
 import (
 	"fmt"
 	"strings"
+	"unicode"
 )
 
 // Builder handles converting queries into SQL
@@ -128,7 +129,14 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 	var condition string
 	var params []interface{}
 
-	// Build JSON path without quotes for ->
+	// Validate field names
+	for _, field := range filter.Field {
+		if !isValidIdentifier(field) {
+			return "", nil, paramCount, fmt.Errorf("invalid field name: %s", field)
+		}
+	}
+
+	// Build JSON path with validated field names
 	jsonPath := ""
 	if len(filter.Field) > 1 {
 		for i, field := range filter.Field[:len(filter.Field)-1] {
@@ -203,4 +211,20 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 	}
 
 	return condition, params, paramCount + 1, nil
+}
+
+// isValidIdentifier checks if a field name contains only allowed characters
+func isValidIdentifier(s string) bool {
+	if s == "" {
+		return false
+	}
+
+	// Only allow alphanumeric characters and underscores
+	// Can be adjusted to allow more characters if needed
+	for _, char := range s {
+		if !unicode.IsLetter(char) && !unicode.IsDigit(char) && char != '_' {
+			return false
+		}
+	}
+	return true
 }
