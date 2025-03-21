@@ -239,30 +239,6 @@ func (s *service) GetTagSuggestions(ctx context.Context, prefix string, limit in
 	return validTags, nil
 }
 
-// Helper function to remove sensitive data from example assets
-func sanitizeAsset(asset *Asset) {
-	if asset == nil {
-		return
-	}
-
-	// Remove sensitive metadata fields
-	sensitiveFields := []string{"password", "secret", "key", "token", "credential"}
-	for _, field := range sensitiveFields {
-		delete(asset.Metadata, field)
-	}
-
-	// Clear other potentially sensitive fields
-	asset.Schema = nil
-	asset.Sources = nil
-	asset.ParentMRN = nil
-
-	// Truncate long descriptions
-	if asset.Description != nil && len(*asset.Description) > 100 {
-		truncated := (*asset.Description)[:97] + "..."
-		asset.Description = &truncated
-	}
-}
-
 func (s *service) GetByMRNs(ctx context.Context, mrns []string) (map[string]*Asset, error) {
 	assets, err := s.repo.GetByMRNs(ctx, mrns)
 	if err != nil {

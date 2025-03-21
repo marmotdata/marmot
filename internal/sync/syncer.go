@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/plugin"
 	"sigs.k8s.io/yaml"
 )
 
@@ -151,53 +151,6 @@ func (s *AssetSyncer) mergeMetadata(existing, new map[string]interface{}, allowe
 	}
 
 	return result
-}
-
-// mergeTags merges tags based on the specified strategy
-func (s *AssetSyncer) mergeTags(existing, new []string, strategy string) []string {
-	switch strategy {
-	case "append":
-		return uniqueAppend(existing, new)
-	case "append_only":
-		// Only add new tags that don't exist
-		return uniqueAppend(existing, new)
-	case "overwrite":
-		if len(new) > 0 {
-			result := make([]string, len(new))
-			copy(result, new)
-			return result
-		}
-		return existing
-	case "keep_first":
-		if len(existing) > 0 {
-			return existing
-		}
-		return new
-	default:
-		return existing
-	}
-}
-
-// generateTagsFromMetadata generates tags from specified metadata fields
-func (s *AssetSyncer) generateTagsFromMetadata(metadata map[string]interface{}, fields []string) []string {
-	var tags []string
-	for _, field := range fields {
-		if value, ok := metadata[field]; ok {
-			switch v := value.(type) {
-			case string:
-				if v != "" {
-					tags = append(tags, v)
-				}
-			case float64:
-				tags = append(tags, fmt.Sprintf("%v", v))
-			case bool:
-				tags = append(tags, fmt.Sprintf("%v", v))
-			case int:
-				tags = append(tags, fmt.Sprintf("%v", v))
-			}
-		}
-	}
-	return tags
 }
 
 // processExternalLinks processes external link templates

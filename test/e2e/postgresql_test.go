@@ -7,7 +7,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/go-openapi/strfmt"
 	"github.com/marmotdata/marmot/tests/e2e/internal/client/client/assets"
+	"github.com/marmotdata/marmot/tests/e2e/internal/client/client/lineage"
 	"github.com/marmotdata/marmot/tests/e2e/internal/utils"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -32,6 +34,7 @@ runs:
       user: "postgres"
       password: "postgres"
       ssl_mode: "disable"
+      discover_foreign_keys: true
       tags:
         - "postgres"
         - "test"
@@ -87,7 +90,10 @@ runs:
 	metadata := usersTable.Metadata.(map[string]interface{})
 	t.Logf("Table metadata: %+v", metadata)
 
-	assert.Equal(t, "public", metadata["schema"])
+	schema, ok := metadata["schema"].(string)
+	assert.True(t, ok, "schema not found or not a string in metadata")
+	assert.Equal(t, "public", schema, "expected 'public' schema")
+
 	assert.Equal(t, "users", metadata["table_name"])
 	assert.Equal(t, "postgres", metadata["owner"])
 
@@ -99,12 +105,18 @@ runs:
 	// Find id column
 	var idColumn map[string]interface{}
 	for _, col := range columns {
-		colMap := col.(map[string]interface{})
-		if colMap["column_name"] == "id" {
+		colMap, ok := col.(map[string]interface{})
+		require.True(t, ok, "column is not a map")
+
+		colName, ok := colMap["column_name"].(string)
+		require.True(t, ok, "column_name not found or not a string")
+
+		if colName == "id" {
 			idColumn = colMap
 			break
 		}
 	}
+
 	require.NotNil(t, idColumn, "id column not found")
 	assert.Equal(t, "integer", idColumn["data_type"])
 	assert.Equal(t, true, idColumn["is_primary_key"])
@@ -112,6 +124,28 @@ runs:
 	// Verify orders table
 	ordersTable := utils.FindAssetByName(resp.Payload.Assets, "orders")
 	require.NotNil(t, ordersTable, "asset orders not found")
+
+	// Check lineage between orders and users table
+	orderUUID := strfmt.UUID(ordersTable.ID)
+	lineageParams := lineage.NewGetLineageAssetsIDParams().WithID(orderUUID)
+	lineageResp, err := env.APIClient.Lineage.GetLineageAssetsID(lineageParams)
+	require.NoError(t, err, "failed to get lineage for orders table")
+
+	t.Logf("Lineage edges for orders table: %d", len(lineageResp.Payload.Edges))
+
+	// Find the foreign key relationship to users table
+	var fkFound bool
+	for _, edge := range lineageResp.Payload.Edges {
+		t.Logf("Edge: Source=%s, Target=%s, Type=%s", edge.Source, edge.Target, edge.Type)
+
+		// Check for FOREIGN_KEY relation to users table
+		if edge.Type == "FOREIGN_KEY" && strings.Contains(edge.Target, usersTable.ID) {
+			fkFound = true
+			break
+		}
+	}
+
+	assert.True(t, fkFound, "foreign key relationship from orders to users not found")
 
 	// Clean up assets
 	_, err = env.APIClient.Assets.DeleteAssetsID(assets.NewDeleteAssetsIDParams().WithID(database.ID))

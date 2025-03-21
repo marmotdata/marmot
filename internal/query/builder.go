@@ -39,7 +39,6 @@ func (b *Builder) BuildSQL(q *Query, baseQuery string) (string, []interface{}, e
 	if q.FreeText != "" {
 		conditions = append(conditions, fmt.Sprintf("(search_text @@ websearch_to_tsquery('english', $%d) OR similarity(name, $%d) > 0.3)", paramCount, paramCount))
 		params = append(params, q.FreeText)
-		paramCount++
 	}
 
 	// Build the complete query

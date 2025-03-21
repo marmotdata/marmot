@@ -164,24 +164,6 @@ func (d *OutputDataset) DetectAsset() (*asset.CreateInput, error) {
 	return detectDatasetAsset(d.Namespace, d.Name, d.OutputFacets)
 }
 
-func extractTableName(name string) string {
-	parts := strings.Split(name, ".")
-	if len(parts) > 0 {
-		return parts[len(parts)-1]
-	}
-	return name
-}
-
-func extractDataSource(namespace string) string {
-	if strings.Contains(namespace, "://") {
-		parts := strings.Split(namespace, "://")
-		if len(parts) > 0 {
-			return strings.Split(parts[0], ":")[0]
-		}
-	}
-	return namespace
-}
-
 func detectDatasetAsset(namespace, name string, facets map[string]json.RawMessage) (*asset.CreateInput, error) {
 	detector := NewDatasetDetector(namespace, name, facets)
 

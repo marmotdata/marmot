@@ -12,10 +12,10 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/mrn"
+	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 )
 
@@ -379,7 +379,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 }
 
 func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]asset.Asset, error) {
-	// Query for tables and views
 	query := `
 		SELECT
 			n.nspname AS schema_name,
@@ -440,19 +439,15 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			Str("owner", owner).
 			Msg("Found database object")
 
-		// Apply schema filter if configured
 		if s.config.SchemaFilter != nil && !plugin.ShouldIncludeResource(schemaName, *s.config.SchemaFilter) {
 			log.Debug().Str("schema", schemaName).Msg("Skipping schema due to filter")
 			continue
 		}
-
-		// Apply table filter if configured
 		if s.config.TableFilter != nil && !plugin.ShouldIncludeResource(objectName, *s.config.TableFilter) {
 			log.Debug().Str("object", objectName).Msg("Skipping object due to filter")
 			continue
 		}
 
-		// Initialize metadata map
 		metadata := make(map[string]interface{})
 		metadata["host"] = s.config.Host
 		metadata["port"] = s.config.Port
@@ -475,7 +470,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			metadata["size"] = size.Int64
 		}
 
-		// Get column information if configured
 		if s.config.IncludeColumns {
 			columns, err := s.getColumnInfo(ctx, schemaName, objectName)
 			if err != nil {
@@ -485,7 +479,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			}
 		}
 
-		// Determine asset type based on the object type
 		var assetType string
 		var assetDesc string
 
@@ -497,16 +490,16 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			assetType = "View"
 			assetDesc = fmt.Sprintf("PostgreSQL view %s.%s in database %s", schemaName, objectName, dbName)
 		default:
-			// Skip unknown types
 			continue
 		}
 
-		objectKey := fmt.Sprintf("%s.%s.%s", dbName, schemaName, objectName)
+		mrnValue := mrn.New(assetType, "PostgreSQL", objectName)
 
 		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
-			Name:        &objectKey,
+			Name:        &objectName,
+			MRN:         &mrnValue,
 			Type:        assetType,
 			Providers:   []string{"PostgreSQL"},
 			Description: &assetDesc,
@@ -528,33 +521,33 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 	return assets, nil
 }
 
-func (s *Source) getColumnInfo(ctx context.Context, schemaName, tableName string) ([]map[string]interface{}, error) {
+func (s *Source) getColumnInfo(ctx context.Context, schemaName, tableName string) ([]interface{}, error) {
 	query := `
-		SELECT
-			a.attname AS column_name,
-			pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type,
-			CASE WHEN a.attnotnull THEN false ELSE true END AS is_nullable,
-			pg_catalog.pg_get_expr(d.adbin, d.adrelid) AS column_default,
-			CASE WHEN EXISTS (
-				SELECT 1 FROM pg_catalog.pg_constraint c
-				WHERE c.conrelid = a.attrelid
-				AND a.attnum = ANY(c.conkey)
-				AND c.contype = 'p'
-			) THEN true ELSE false END AS is_primary_key,
-			col_description(a.attrelid, a.attnum) AS comment
-		FROM
-			pg_catalog.pg_attribute a
-			JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
-			JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
-			LEFT JOIN pg_catalog.pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
-		WHERE
-			n.nspname = $1
-			AND c.relname = $2
-			AND a.attnum > 0
-			AND NOT a.attisdropped
-		ORDER BY
-			a.attnum
-	`
+  SELECT
+    a.attname AS column_name,
+    pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type,
+    CASE WHEN a.attnotnull THEN false ELSE true END AS is_nullable,
+    pg_catalog.pg_get_expr(d.adbin, d.adrelid) AS column_default,
+    CASE WHEN EXISTS (
+      SELECT 1 FROM pg_catalog.pg_constraint c
+      WHERE c.conrelid = a.attrelid
+      AND a.attnum = ANY(c.conkey)
+      AND c.contype = 'p'
+    ) THEN true ELSE false END AS is_primary_key,
+    col_description(a.attrelid, a.attnum) AS comment
+  FROM
+    pg_catalog.pg_attribute a
+    JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
+    JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+    LEFT JOIN pg_catalog.pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+  WHERE
+    n.nspname = $1
+    AND c.relname = $2
+    AND a.attnum > 0
+    AND NOT a.attisdropped
+  ORDER BY
+    a.attnum
+`
 
 	rows, err := s.pool.Query(ctx, query, schemaName, tableName)
 	if err != nil {
@@ -562,7 +555,7 @@ func (s *Source) getColumnInfo(ctx context.Context, schemaName, tableName string
 	}
 	defer rows.Close()
 
-	var columns []map[string]interface{}
+	var columns []interface{}
 
 	for rows.Next() {
 		var (

@@ -23,9 +23,8 @@ jobs:
       - name: Install dev dependencies
         run: make dev-deps
 
-      # TODO: enable code quality lints
-      # - name: Run linting
-      #   run: make lint
+      - name: Run linting
+        run: make lint
 
       - name: Run tests
         run: make test

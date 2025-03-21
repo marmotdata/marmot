@@ -231,10 +231,6 @@ func processStructFields(st *ast.StructType) []PropertyDoc {
 	var fields []PropertyDoc
 	for _, field := range st.Fields.List {
 		if len(field.Names) == 0 {
-			// Handle embedded types
-			if _, ok := field.Type.(*ast.Ident); ok {
-				continue // Skip embedding, fields will be flattened
-			}
 			continue
 		}
 
@@ -298,76 +294,6 @@ func parseFieldType(expr ast.Expr) string {
 		return "interface{}"
 	default:
 		return "interface{}"
-	}
-}
-
-func deduplicateFields(fields []PropertyDoc) []PropertyDoc {
-	seen := make(map[string]bool)
-	var result []PropertyDoc
-	for _, field := range fields {
-		if !seen[field.Name] {
-			seen[field.Name] = true
-			result = append(result, field)
-		}
-	}
-	return result
-}
-
-func processPackageMarkers(doc *PluginDoc, markers map[string]string) {
-	if name, ok := markers["name"]; ok {
-		doc.Name = strings.ReplaceAll(strings.ToLower(name), " ", "-")
-	}
-	if desc, ok := markers["description"]; ok {
-		doc.Description = desc
-	}
-	if services, ok := markers["services"]; ok {
-		doc.SupportedServices = strings.Split(services, ",")
-	}
-	if status, ok := markers["status"]; ok {
-		doc.Status = status
-	} else {
-		doc.Status = "stable"
-	}
-
-	// Handle additional sections
-	for key, value := range markers {
-		if !isStandardMarker(key) {
-			doc.AdditionalSections = append(doc.AdditionalSections, AdditionalSection{
-				Title:   strings.ToTitle(strings.ReplaceAll(key, "-", " ")),
-				Content: value,
-			})
-		}
-	}
-}
-
-func isStandardMarker(key string) bool {
-	return key == "name" || key == "description" ||
-		key == "services" || key == "status" ||
-		strings.HasPrefix(key, "example-config")
-}
-
-func hasMetadataMarker(docText string) bool {
-	return strings.Contains(docText, "+marmot:metadata")
-}
-
-func processExampleConfig(decl *ast.GenDecl, pluginDoc *PluginDoc) {
-	for _, spec := range decl.Specs {
-		if valueSpec, ok := spec.(*ast.ValueSpec); ok {
-			for _, name := range valueSpec.Names {
-				if name.Name == "_" && valueSpec.Doc != nil {
-					markers := parseMarkers(valueSpec.Doc.Text())
-					if _, ok := markers["example-config"]; ok {
-						if len(valueSpec.Values) > 0 {
-							if basicLit, ok := valueSpec.Values[0].(*ast.BasicLit); ok && basicLit.Kind == token.STRING {
-								configValue := strings.Trim(basicLit.Value, "`")
-								pluginDoc.ExampleConfig = strings.TrimSpace(configValue)
-								return
-							}
-						}
-					}
-				}
-			}
-		}
 	}
 }
 

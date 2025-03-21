@@ -2,10 +2,7 @@ package query
 
 import (
 	"fmt"
-	"regexp"
-	"strconv"
 	"strings"
-	"time"
 )
 
 // Helper functions for parsing and validation
@@ -41,43 +38,4 @@ func parseOperator(op string) (Operator, error) {
 	default:
 		return "", fmt.Errorf("unknown operator: %q", op)
 	}
-}
-
-func parseRelativeTime(value string) (time.Time, error) {
-	if value == "now" {
-		return time.Now(), nil
-	}
-
-	re := regexp.MustCompile(`now([+-])(\d+)([hdwmy])`)
-	matches := re.FindStringSubmatch(value)
-	if matches == nil {
-		return time.Time{}, fmt.Errorf("invalid relative time format: %s", value)
-	}
-
-	operator := matches[1]
-	amount, _ := strconv.Atoi(matches[2])
-	unit := matches[3]
-
-	now := time.Now()
-	var duration time.Duration
-
-	switch unit {
-	case "h":
-		duration = time.Hour * time.Duration(amount)
-	case "d":
-		duration = time.Hour * 24 * time.Duration(amount)
-	case "w":
-		duration = time.Hour * 24 * 7 * time.Duration(amount)
-	case "m":
-		duration = time.Hour * 24 * 30 * time.Duration(amount)
-	case "y":
-		duration = time.Hour * 24 * 365 * time.Duration(amount)
-	default:
-		return time.Time{}, fmt.Errorf("invalid time unit: %s", unit)
-	}
-
-	if operator == "+" {
-		return now.Add(duration), nil
-	}
-	return now.Add(-duration), nil
 }

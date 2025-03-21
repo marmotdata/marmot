@@ -3,8 +3,8 @@ package sync_test
 import (
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/sync"
 	"github.com/stretchr/testify/assert"
 )
@@ -216,13 +216,4 @@ func TestSummary(t *testing.T) {
 	assert.Equal(t, 2, summary.CountByType(summary.Lineage, sync.Created)+
 		summary.CountByType(summary.Lineage, sync.NoChange))
 	assert.Equal(t, 1, summary.CountByType(summary.Documentation, sync.Updated))
-}
-
-// Helper function to create a test asset
-func createTestAsset(name string, metadata map[string]interface{}, tags []string) *asset.Asset {
-	return &asset.Asset{
-		Name:     &name,
-		Metadata: metadata,
-		Tags:     tags,
-	}
 }

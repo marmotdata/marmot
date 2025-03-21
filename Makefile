@@ -40,7 +40,7 @@ generate:
 	go generate ./...
 
 lint:
-	golangci-lint run ./... -v
+	golangci-lint run --config=./.github/.golangci.yaml ./... -v
 
 docker-build:
 	docker build -t marmot -f deployments/docker/Dockerfile.backend .
