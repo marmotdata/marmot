@@ -219,7 +219,6 @@ func isValidIdentifier(s string) bool {
 	}
 
 	// Only allow alphanumeric characters and underscores
-	// Can be adjusted to allow more characters if needed
 	for _, char := range s {
 		if !unicode.IsLetter(char) && !unicode.IsDigit(char) && char != '_' {
 			return false

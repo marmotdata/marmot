@@ -6,9 +6,9 @@ import (
 
 	"github.com/charlie-haley/asyncapi-go/asyncapi2"
 	"github.com/charlie-haley/asyncapi-go/bindings/kafka"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/core/asset"
 )
 
 type KafkaTopic struct {
@@ -48,13 +48,11 @@ func (s *Source) createKafkaTopic(spec *asyncapi2.Document, channelName string, 
 		kafkaFields.MaxMessageBytes = binding.TopicConfiguration.MaxMessageBytes
 	}
 
-	// Combine metadata
 	metadata := plugin.MapToMetadata(sharedFields)
 	for k, v := range plugin.MapToMetadata(kafkaFields) {
 		metadata[k] = v
 	}
 
-	// Process tags with interpolation
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{

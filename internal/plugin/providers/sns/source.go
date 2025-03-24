@@ -13,9 +13,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/aws/aws-sdk-go-v2/service/sns/types"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/rs/zerolog/log"
 	"sigs.k8s.io/yaml"
 )
@@ -72,7 +72,6 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
 	}
 	s.config = config
 
-	// Extract AWS config
 	var awsCfg plugin.AWSConfig
 	if cfgBytes, err := yaml.Marshal(rawConfig); err == nil {
 		if err := yaml.Unmarshal(cfgBytes, &awsCfg); err == nil {
@@ -80,7 +79,6 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
 		}
 	}
 
-	// Validate AWS config if present
 	if s.awsCfg != nil {
 		if err := s.awsCfg.Validate(); err != nil {
 			return fmt.Errorf("validating AWS config: %w", err)
@@ -95,16 +93,13 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("validating config: %w", err)
 	}
 
-	// Initialize AWS config
 	awsCfg, err := plugin.NewAWSConfig(ctx, pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("loading AWS config: %w", err)
 	}
 
-	// Create SNS client
 	s.client = sns.NewFromConfig(awsCfg)
 
-	// Discover SNS topics
 	topics, err := s.discoverTopics(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("discovering topics: %w", err)
@@ -114,7 +109,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	for _, topic := range topics {
 		name := extractTopicName(*topic.TopicArn)
 
-		// Apply filter if AWSConfig is present
 		if s.awsCfg != nil && !plugin.ShouldIncludeResource(name, s.awsCfg.Filter) {
 			log.Debug().Str("topic", name).Msg("Skipping topic due to filter")
 			continue
@@ -134,10 +128,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 }
 
 func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (asset.Asset, error) {
-	// Initialize metadata map
 	metadata := make(map[string]interface{})
 
-	// Get topic attributes
 	attrs, err := s.client.GetTopicAttributes(ctx, &sns.GetTopicAttributesInput{
 		TopicArn: topic.TopicArn,
 	})
@@ -145,7 +137,6 @@ func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (asset
 		return asset.Asset{}, fmt.Errorf("getting topic attributes: %w", err)
 	}
 
-	// Convert AWS tags to metadata if configured
 	if s.awsCfg != nil && s.awsCfg.TagsToMetadata {
 		tagsOutput, err := s.client.ListTagsForResource(ctx, &sns.ListTagsForResourceInput{
 			ResourceArn: topic.TopicArn,
@@ -161,7 +152,6 @@ func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (asset
 		}
 	}
 
-	// Add standard attributes to metadata
 	metadata["topic_arn"] = attrs.Attributes["TopicArn"]
 	metadata["owner"] = attrs.Attributes["Owner"]
 	metadata["policy"] = attrs.Attributes["Policy"]

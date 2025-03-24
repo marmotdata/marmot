@@ -62,19 +62,16 @@ func MapToMetadata(source interface{}) map[string]interface{} {
 
 		value := v.Field(i).Interface()
 
-		// Skip nil values
 		if isNilValue(value) {
 			continue
 		}
 
-		// Recursively handle nested structs
 		if field.Type.Kind() == reflect.Struct {
 			nestedMetadata := MapToMetadata(value)
 			for k, v := range nestedMetadata {
-				setNestedValue(metadata, metadataTag+"."+k, v) // Handle nested fields
+				setNestedValue(metadata, metadataTag+"."+k, v)
 			}
 		} else if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
-			// Handle slices of structs
 			sliceValue := v.Field(i)
 			for j := 0; j < sliceValue.Len(); j++ {
 				nestedMetadata := MapToMetadata(sliceValue.Index(j).Interface())

@@ -18,10 +18,10 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/sns"
 	"github.com/charlie-haley/asyncapi-go/bindings/sqs"
 	"github.com/charlie-haley/asyncapi-go/spec"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/mrn"
+	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 )
 
@@ -103,25 +103,21 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 			return nil
 		}
 
-		// Type assert to asyncapi2.Document
 		spec, ok := doc.(*asyncapi2.Document)
 		if !ok {
 			log.Warn().Str("path", path).Msg("Document is not AsyncAPI 2.x")
 			return nil
 		}
 
-		// Create service asset
 		serviceAsset := s.createServiceAsset(spec)
 		serviceMRN := *serviceAsset.MRN
 		s.addUniqueAsset(&assets, serviceAsset, seenAssets)
 
-		// Process channels
 		for channelName, channel := range spec.Channels {
 			if channel.Bindings == nil {
 				continue
 			}
 
-			// Process Kafka binding
 			if kafkaBinding, err := asyncapi.ParseBindings[kafka.ChannelBinding](channel.Bindings, "kafka"); err == nil {
 				kafkaAsset := s.createKafkaTopic(spec, channelName, kafkaBinding)
 				kafkaMRN := *kafkaAsset.MRN
@@ -129,7 +125,6 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 				s.createLineageEdge(serviceMRN, kafkaMRN, determineEdgeType(channel), seenAssets, seenEdges, &lineages)
 			}
 
-			// Process SNS binding
 			if snsBinding, err := asyncapi.ParseBindings[sns.ChannelBinding](channel.Bindings, "sns"); err == nil {
 				snsAsset := s.createSNSTopic(spec, channelName, snsBinding)
 				snsMRN := *snsAsset.MRN
@@ -137,7 +132,6 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 				s.createLineageEdge(serviceMRN, snsMRN, determineEdgeType(channel), seenAssets, seenEdges, &lineages)
 			}
 
-			// Process SQS binding
 			if sqsBinding, err := asyncapi.ParseBindings[sqs.ChannelBinding](channel.Bindings, "sqs"); err == nil {
 				if sqsBinding.Queue != nil {
 					sqsAsset := s.createSQSQueue(spec, channelName, sqsBinding)
@@ -190,7 +184,6 @@ func (s *Source) createServiceAsset(spec *asyncapi2.Document) asset.Asset {
 		}
 	}
 
-	// Process tags with interpolation
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
