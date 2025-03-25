@@ -78,6 +78,7 @@ tags:
   - "database"
 `
 
+// Source represents the PostgreSQL plugin
 type Source struct {
 	config *Config
 	pool   *pgxpool.Pool
@@ -104,10 +105,9 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
 	}
 
 	if config.SSLMode == "" {
-		config.SSLMode = "disable" // Default to disabled for simplicity
+		config.SSLMode = "disable"
 	}
 
-	// Set defaults for discovery options to true if not explicitly set
 	if !config.IncludeDatabases {
 		config.IncludeDatabases = true
 	}
@@ -163,13 +163,12 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		}
 
 		dbName := *dbAsset.Name
-		//TODO: make this configurable, but set defaults
-		if dbName == "postgres" || dbName == "template0" || dbName == "template1" {
+		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(dbName, *s.config.DatabaseFilter) {
+			log.Debug().Str("database", dbName).Msg("Skipping database due to filter")
 			continue
 		}
 
-		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(dbName, *s.config.DatabaseFilter) {
-			log.Debug().Str("database", dbName).Msg("Skipping database due to filter")
+		if dbName == "template0" || dbName == "template1" {
 			continue
 		}
 
@@ -187,6 +186,15 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		} else {
 			assets = append(assets, objectAssets...)
 			log.Debug().Int("count", len(objectAssets)).Msg("Discovered tables and views")
+
+			// Create lineage between database and its tables/views
+			for _, objAsset := range objectAssets {
+				lineages = append(lineages, lineage.LineageEdge{
+					Source: *dbAsset.MRN,
+					Target: *objAsset.MRN,
+					Type:   "CONTAINS",
+				})
+			}
 		}
 
 		if s.config.DiscoverForeignKeys {
@@ -244,7 +252,6 @@ func (s *Source) initConnection(ctx context.Context, database string) error {
 		return fmt.Errorf("creating connection pool: %w", err)
 	}
 
-	// Test the connection with timeout
 	if err := pool.Ping(timeoutCtx); err != nil {
 		pool.Close()
 		return fmt.Errorf("pinging database: %w", err)
@@ -273,7 +280,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		Int("port", s.config.Port).
 		Msg("Discovering databases")
 
-	// Use a query compatible with Postgres 14+
 	query := `
 		SELECT
 			datname AS database_name,
@@ -333,13 +339,11 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 			Int64("size", size).
 			Msg("Found database")
 
-		// Apply database filter if configured
 		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(name, *s.config.DatabaseFilter) {
 			log.Debug().Str("database", name).Msg("Skipping database due to filter")
 			continue
 		}
 
-		// Initialize metadata map
 		metadata := make(map[string]interface{})
 		metadata["host"] = s.config.Host
 		metadata["port"] = s.config.Port
@@ -352,7 +356,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		metadata["is_template"] = isTemplate
 		metadata["allow_connections"] = allowConn
 		metadata["connection_limit"] = connectionLimit
-		metadata["created"] = currentTime // Using current time as creation time is not directly available
+		metadata["created"] = currentTime
 
 		if description.Valid {
 			metadata["comment"] = description.String
@@ -392,7 +396,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	// Main query for tables and views remains the same
 	query := `
         SELECT
             n.nspname AS schema_name,
@@ -568,7 +571,6 @@ func (s *Source) getBulkColumnInfo(ctx context.Context, schemaTables []struct {
 	schema string
 	table  string
 }) (map[string][]interface{}, error) {
-	// Create timeout context
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -724,6 +726,12 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 			continue
 		}
 
+		log.Debug().
+			Str("source", fmt.Sprintf("%s.%s.%s", sourceSchema, sourceTable, sourceColumn)).
+			Str("target", fmt.Sprintf("%s.%s.%s", targetSchema, targetTable, targetColumn)).
+			Str("constraint", constraintName).
+			Msg("Found foreign key relationship")
+
 		if s.config.SchemaFilter != nil {
 			if !plugin.ShouldIncludeResource(sourceSchema, *s.config.SchemaFilter) ||
 				!plugin.ShouldIncludeResource(targetSchema, *s.config.SchemaFilter) {
@@ -738,17 +746,14 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 			}
 		}
 
-		sourceKey := fmt.Sprintf("%s.%s.%s", dbName, sourceSchema, sourceTable)
-		targetKey := fmt.Sprintf("%s.%s.%s", dbName, targetSchema, targetTable)
+		sourceMRN := mrn.New("Table", "PostgreSQL", sourceTable)
+		targetMRN := mrn.New("Table", "PostgreSQL", targetTable)
 
-		relationKey := sourceKey + ":" + targetKey
+		relationKey := fmt.Sprintf("%s:%s", sourceMRN, targetMRN)
 		if _, exists := uniqueRelations[relationKey]; exists {
 			continue
 		}
 		uniqueRelations[relationKey] = struct{}{}
-
-		sourceMRN := mrn.New("Table", "PostgreSQL", sourceKey)
-		targetMRN := mrn.New("Table", "PostgreSQL", targetKey)
 
 		lineages = append(lineages, lineage.LineageEdge{
 			Source: sourceMRN,
