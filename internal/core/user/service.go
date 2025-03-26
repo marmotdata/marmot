@@ -210,23 +210,6 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, err
 	return s.Get(ctx, user.ID)
 }
 
-// validateInput handles the conditional validation logic
-func (s *service) validateInput(input CreateUserInput) error {
-	if input.OAuthProvider == "" {
-		// Regular user validation
-		if err := s.validator.Struct(input); err != nil {
-			return fmt.Errorf("%w: %v", ErrInvalidInput, err)
-		}
-	} else {
-		// OAuth user validation
-		validate := validator.New()
-		if err := validate.StructExcept(input, "Password"); err != nil {
-			return fmt.Errorf("%w: %v", ErrInvalidInput, err)
-		}
-	}
-	return nil
-}
-
 func (s *service) Update(ctx context.Context, id string, input UpdateUserInput) (*User, error) {
 	if err := s.validator.Struct(input); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)

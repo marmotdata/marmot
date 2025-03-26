@@ -16,9 +16,9 @@ import (
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/rs/zerolog/log"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
@@ -128,20 +128,17 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("validating config: %w", err)
 	}
 
-	// Initialize Kafka client
 	if err := s.initClient(ctx); err != nil {
 		return nil, fmt.Errorf("initializing Kafka client: %w", err)
 	}
 	defer s.closeClient()
 
-	// Initialize Schema Registry client if configured
 	if s.config.SchemaRegistry != nil && s.config.SchemaRegistry.Enabled {
 		if err := s.initSchemaRegistry(); err != nil {
 			log.Warn().Err(err).Msg("Failed to initialize Schema Registry client")
 		}
 	}
 
-	// Discover topics
 	topics, err := s.discoverTopics(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("discovering topics: %w", err)
@@ -149,7 +146,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	var assets []asset.Asset
 	for _, topic := range topics {
-		// Apply filter if configured
 		if s.config.TopicFilter != nil && !plugin.ShouldIncludeResource(topic, *s.config.TopicFilter) {
 			log.Debug().Str("topic", topic).Msg("Skipping topic due to filter")
 			continue
@@ -169,7 +165,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 }
 
 func (s *Source) initClient(ctx context.Context) error {
-	// Setup client options
 	opts := []kgo.Opt{
 		kgo.SeedBrokers(strings.Split(s.config.BootstrapServers, ",")...),
 	}
@@ -183,7 +178,6 @@ func (s *Source) initClient(ctx context.Context) error {
 		opts = append(opts, kgo.RequestTimeoutOverhead(timeout))
 	}
 
-	// Configure authentication
 	if s.config.Authentication != nil {
 		authOpts, err := s.configureAuthentication()
 		if err != nil {
@@ -192,14 +186,12 @@ func (s *Source) initClient(ctx context.Context) error {
 		opts = append(opts, authOpts...)
 	}
 
-	// Create Kafka client
 	client, err := kgo.NewClient(opts...)
 	if err != nil {
 		return fmt.Errorf("creating Kafka client: %w", err)
 	}
 	s.client = client
 
-	// Create admin client
 	s.admin = kadm.NewClient(client)
 
 	return nil
@@ -210,15 +202,12 @@ func (s *Source) initSchemaRegistry() error {
 		return fmt.Errorf("schema registry URL is required")
 	}
 
-	// Create configuration for schema registry client
 	conf := schemaregistry.NewConfig(s.config.SchemaRegistry.URL)
 
-	// Apply custom schema registry config for authentication
 	if userInfo, ok := s.config.SchemaRegistry.Config["basic.auth.user.info"]; ok {
 		conf.BasicAuthUserInfo = userInfo
 	}
 
-	// Apply other custom configs
 	if timeout, ok := s.config.SchemaRegistry.Config["request.timeout.ms"]; ok {
 		if val, err := strconv.Atoi(timeout); err == nil {
 			conf.RequestTimeoutMs = val
@@ -231,7 +220,6 @@ func (s *Source) initSchemaRegistry() error {
 		}
 	}
 
-	// Create Schema Registry client
 	client, err := schemaregistry.NewClient(conf)
 	if err != nil {
 		return fmt.Errorf("creating Schema Registry client: %w", err)
@@ -295,7 +283,6 @@ func (s *Source) configureAuthentication() ([]kgo.Opt, error) {
 
 		opts = append(opts, kgo.SASL(mechanism))
 
-		// Setup TLS
 		tlsConfig, err := s.configureTLS()
 		if err != nil {
 			return nil, fmt.Errorf("configuring TLS: %w", err)
@@ -303,7 +290,6 @@ func (s *Source) configureAuthentication() ([]kgo.Opt, error) {
 		opts = append(opts, kgo.DialTLSConfig(tlsConfig))
 
 	case "ssl":
-		// Setup TLS
 		tlsConfig, err := s.configureTLS()
 		if err != nil {
 			return nil, fmt.Errorf("configuring TLS: %w", err)
@@ -327,7 +313,6 @@ func (s *Source) configureTLS() (*tls.Config, error) {
 		tlsConfig.InsecureSkipVerify = true
 	}
 
-	// Configure CA certificate
 	if s.config.Authentication.TLSCACertPath != "" {
 		caCert, err := os.ReadFile(s.config.Authentication.TLSCACertPath)
 		if err != nil {
@@ -341,7 +326,6 @@ func (s *Source) configureTLS() (*tls.Config, error) {
 		tlsConfig.RootCAs = certPool
 	}
 
-	// Configure client certificate if provided
 	if s.config.Authentication.TLSCertPath != "" && s.config.Authentication.TLSKeyPath != "" {
 		cert, err := tls.LoadX509KeyPair(
 			s.config.Authentication.TLSCertPath,
@@ -377,23 +361,19 @@ func (s *Source) discoverTopics(ctx context.Context) ([]string, error) {
 }
 
 func (s *Source) createTopicAsset(ctx context.Context, topic string) (asset.Asset, error) {
-	// Initialize metadata map
 	metadata := make(map[string]interface{})
 	metadata["topic_name"] = topic
 
-	// Get topic details
 	topicDetails, err := s.getTopicDetails(ctx, topic)
 	if err != nil {
 		return asset.Asset{}, fmt.Errorf("getting topic details: %w", err)
 	}
 
-	// Add partition information
 	if s.config.IncludePartitionInfo {
 		metadata["partition_count"] = topicDetails.partitionCount
 		metadata["replication_factor"] = topicDetails.replicationFactor
 	}
 
-	// Get topic configuration
 	if s.config.IncludeTopicConfig {
 		topicConfig, err := s.getTopicConfig(ctx, topic)
 		if err != nil {
@@ -405,7 +385,6 @@ func (s *Source) createTopicAsset(ctx context.Context, topic string) (asset.Asse
 		}
 	}
 
-	// Add schema information if Schema Registry is enabled
 	if s.schemaRegistry != nil {
 		if err := s.enrichWithSchemaRegistry(topic, metadata); err != nil {
 			log.Warn().Err(err).Str("topic", topic).Msg("Failed to get schema information")
@@ -453,7 +432,7 @@ func (s *Source) getTopicDetails(ctx context.Context, topic string) (*TopicDetai
 
 	partitionCount := len(topicMetadata.Partitions)
 
-	// Get replication factor from first partition (should be the same for all)
+	// Get replication factor from first partition
 	var replicationFactor int
 	if partitionCount > 0 {
 		replicationFactor = len(topicMetadata.Partitions[0].Replicas)
@@ -525,14 +504,4 @@ func (s *Source) enrichWithSchemaRegistry(topic string, metadata map[string]inte
 	}
 
 	return nil
-}
-
-// Helper function to check if a string is in a slice
-func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
 }

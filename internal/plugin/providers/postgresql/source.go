@@ -9,13 +9,15 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/mrn"
+	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 )
 
@@ -76,6 +78,7 @@ tags:
   - "database"
 `
 
+// Source represents the PostgreSQL plugin
 type Source struct {
 	config *Config
 	pool   *pgxpool.Pool
@@ -102,10 +105,9 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
 	}
 
 	if config.SSLMode == "" {
-		config.SSLMode = "disable" // Default to disabled for simplicity
+		config.SSLMode = "disable"
 	}
 
-	// Set defaults for discovery options to true if not explicitly set
 	if !config.IncludeDatabases {
 		config.IncludeDatabases = true
 	}
@@ -127,11 +129,13 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
+
 	if err := s.Validate(pluginConfig); err != nil {
 		return nil, fmt.Errorf("validating config: %w", err)
 	}
 
-	// Initialize connection to the postgres database to get list of all databases
 	if err := s.initConnection(ctx, "postgres"); err != nil {
 		return nil, fmt.Errorf("initializing database connection: %w", err)
 	}
@@ -140,55 +144,62 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
 
-	// Always discover databases
 	log.Debug().Msg("Starting database discovery")
 	databaseAssets, err := s.discoverDatabases(ctx)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to discover databases")
+		return &plugin.DiscoveryResult{
+			Assets:  assets,
+			Lineage: lineages,
+		}, fmt.Errorf("failed to discover databases: %w", err)
 	} else {
 		assets = append(assets, databaseAssets...)
 		log.Debug().Int("count", len(databaseAssets)).Msg("Discovered databases")
 	}
 
-	// For each database, discover tables, views, and foreign keys
 	for _, dbAsset := range databaseAssets {
 		if dbAsset.Type != "Database" {
 			continue
 		}
 
 		dbName := *dbAsset.Name
-		// Skip system databases
-		if dbName == "postgres" || dbName == "template0" || dbName == "template1" {
-			continue
-		}
-
-		// Apply database filter if configured
 		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(dbName, *s.config.DatabaseFilter) {
 			log.Debug().Str("database", dbName).Msg("Skipping database due to filter")
 			continue
 		}
 
-		// Close existing connection and connect to this database
-		s.closeConnection()
-		if err := s.initConnection(ctx, dbName); err != nil {
-			log.Warn().Err(err).Str("database", dbName).Msg("Failed to connect to database")
+		if dbName == "template0" || dbName == "template1" {
 			continue
 		}
 
-		// Discover tables and views
+		dbCtx, dbCancel := context.WithTimeout(ctx, 2*time.Minute)
+		if err := s.initConnection(dbCtx, dbName); err != nil {
+			log.Warn().Err(err).Str("database", dbName).Msg("Failed to connect to database")
+			dbCancel()
+			continue
+		}
+
 		log.Debug().Str("database", dbName).Msg("Starting table and view discovery")
-		objectAssets, err := s.discoverTablesAndViews(ctx, dbName)
+		objectAssets, err := s.discoverTablesAndViews(dbCtx, dbName)
 		if err != nil {
 			log.Warn().Err(err).Str("database", dbName).Msg("Failed to discover tables and views")
 		} else {
 			assets = append(assets, objectAssets...)
 			log.Debug().Int("count", len(objectAssets)).Msg("Discovered tables and views")
+
+			// Create lineage between database and its tables/views
+			for _, objAsset := range objectAssets {
+				lineages = append(lineages, lineage.LineageEdge{
+					Source: *dbAsset.MRN,
+					Target: *objAsset.MRN,
+					Type:   "CONTAINS",
+				})
+			}
 		}
 
-		// Discover foreign key relationships
 		if s.config.DiscoverForeignKeys {
 			log.Debug().Str("database", dbName).Msg("Starting foreign key discovery")
-			fkLineages, err := s.discoverForeignKeys(ctx, dbName)
+			fkLineages, err := s.discoverForeignKeys(dbCtx, dbName)
 			if err != nil {
 				log.Warn().Err(err).Str("database", dbName).Msg("Failed to discover foreign key relationships")
 			} else {
@@ -197,8 +208,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 			}
 		}
 
-		// Close this database connection before moving to the next
 		s.closeConnection()
+		dbCancel()
 	}
 
 	return &plugin.DiscoveryResult{
@@ -208,6 +219,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 }
 
 func (s *Source) initConnection(ctx context.Context, database string) error {
+	s.closeConnection()
+
+	timeoutCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
 	connStr := fmt.Sprintf(
 		"postgres://%s:%s@%s:%d/%s?sslmode=%s",
 		s.config.User,
@@ -223,19 +239,20 @@ func (s *Source) initConnection(ctx context.Context, database string) error {
 		return fmt.Errorf("parsing connection string: %w", err)
 	}
 
-	// Set reasonable connection pool settings
-	config.MaxConns = 10
-	config.MinConns = 2
-	config.MaxConnLifetime = 5 * time.Minute
-	config.MaxConnIdleTime = 1 * time.Minute
+	config.MaxConns = 5
+	config.MinConns = 1
+	config.MaxConnLifetime = 2 * time.Minute
+	config.MaxConnIdleTime = 30 * time.Second
 
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	config.ConnConfig.DefaultQueryExecMode = pgx.QueryExecModeSimpleProtocol
+	config.ConnConfig.RuntimeParams["statement_timeout"] = "30000"
+
+	pool, err := pgxpool.NewWithConfig(timeoutCtx, config)
 	if err != nil {
 		return fmt.Errorf("creating connection pool: %w", err)
 	}
 
-	// Test the connection
-	if err := pool.Ping(ctx); err != nil {
+	if err := pool.Ping(timeoutCtx); err != nil {
 		pool.Close()
 		return fmt.Errorf("pinging database: %w", err)
 	}
@@ -263,7 +280,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		Int("port", s.config.Port).
 		Msg("Discovering databases")
 
-	// Use a query compatible with Postgres 14+
 	query := `
 		SELECT
 			datname AS database_name,
@@ -323,13 +339,11 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 			Int64("size", size).
 			Msg("Found database")
 
-		// Apply database filter if configured
 		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(name, *s.config.DatabaseFilter) {
 			log.Debug().Str("database", name).Msg("Skipping database due to filter")
 			continue
 		}
 
-		// Initialize metadata map
 		metadata := make(map[string]interface{})
 		metadata["host"] = s.config.Host
 		metadata["port"] = s.config.Port
@@ -342,7 +356,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		metadata["is_template"] = isTemplate
 		metadata["allow_connections"] = allowConn
 		metadata["connection_limit"] = connectionLimit
-		metadata["created"] = currentTime // Using current time as creation time is not directly available
+		metadata["created"] = currentTime
 
 		if description.Valid {
 			metadata["comment"] = description.String
@@ -379,39 +393,45 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 }
 
 func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]asset.Asset, error) {
-	// Query for tables and views
-	query := `
-		SELECT
-			n.nspname AS schema_name,
-			c.relname AS name,
-			CASE 
-				WHEN c.relkind = 'r' THEN 'table'
-				WHEN c.relkind = 'v' THEN 'view'
-				WHEN c.relkind = 'm' THEN 'materialized_view'
-			END AS object_type,
-			pg_catalog.pg_get_userbyid(c.relowner) AS owner,
-			c.reltuples AS estimated_row_count,
-			pg_catalog.obj_description(c.oid, 'pg_class') AS description,
-			pg_catalog.pg_table_size(c.oid) AS size,
-			to_char(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS') AS current_time
-		FROM
-			pg_catalog.pg_class c
-			JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
-		WHERE
-			c.relkind IN ('r', 'v', 'm')
-			AND (n.nspname NOT LIKE 'pg\\_%' OR NOT $1)
-			AND n.nspname != 'information_schema'
-		ORDER BY
-			n.nspname, c.relname
-	`
+	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
-	rows, err := s.pool.Query(ctx, query, s.config.ExcludeSystemSchemas)
+	query := `
+        SELECT
+            n.nspname AS schema_name,
+            c.relname AS name,
+            CASE 
+                WHEN c.relkind = 'r' THEN 'table'
+                WHEN c.relkind = 'v' THEN 'view'
+                WHEN c.relkind = 'm' THEN 'materialized_view'
+            END AS object_type,
+            pg_catalog.pg_get_userbyid(c.relowner) AS owner,
+            c.reltuples AS estimated_row_count,
+            pg_catalog.obj_description(c.oid, 'pg_class') AS description,
+            pg_catalog.pg_table_size(c.oid) AS size,
+            to_char(CURRENT_TIMESTAMP, 'YYYY-MM-DD HH24:MI:SS') AS current_time
+        FROM
+            pg_catalog.pg_class c
+            JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+        WHERE
+            c.relkind IN ('r', 'v', 'm')
+            AND (n.nspname NOT LIKE 'pg\\_%' OR NOT $1)
+            AND n.nspname != 'information_schema'
+        ORDER BY
+            n.nspname, c.relname
+    `
+
+	rows, err := s.pool.Query(queryCtx, query, s.config.ExcludeSystemSchemas)
 	if err != nil {
 		return nil, fmt.Errorf("querying tables: %w", err)
 	}
 	defer rows.Close()
 
 	var assets []asset.Asset
+	var schemaTables []struct {
+		schema string
+		table  string
+	}
 
 	for rows.Next() {
 		var (
@@ -440,19 +460,15 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			Str("owner", owner).
 			Msg("Found database object")
 
-		// Apply schema filter if configured
 		if s.config.SchemaFilter != nil && !plugin.ShouldIncludeResource(schemaName, *s.config.SchemaFilter) {
 			log.Debug().Str("schema", schemaName).Msg("Skipping schema due to filter")
 			continue
 		}
-
-		// Apply table filter if configured
 		if s.config.TableFilter != nil && !plugin.ShouldIncludeResource(objectName, *s.config.TableFilter) {
 			log.Debug().Str("object", objectName).Msg("Skipping object due to filter")
 			continue
 		}
 
-		// Initialize metadata map
 		metadata := make(map[string]interface{})
 		metadata["host"] = s.config.Host
 		metadata["port"] = s.config.Port
@@ -475,17 +491,16 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			metadata["size"] = size.Int64
 		}
 
-		// Get column information if configured
 		if s.config.IncludeColumns {
-			columns, err := s.getColumnInfo(ctx, schemaName, objectName)
-			if err != nil {
-				log.Warn().Err(err).Str("object", objectName).Msg("Failed to get column information")
-			} else {
-				metadata["columns"] = columns
-			}
+			schemaTables = append(schemaTables, struct {
+				schema string
+				table  string
+			}{
+				schema: schemaName,
+				table:  objectName,
+			})
 		}
 
-		// Determine asset type based on the object type
 		var assetType string
 		var assetDesc string
 
@@ -497,16 +512,16 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			assetType = "View"
 			assetDesc = fmt.Sprintf("PostgreSQL view %s.%s in database %s", schemaName, objectName, dbName)
 		default:
-			// Skip unknown types
 			continue
 		}
 
-		objectKey := fmt.Sprintf("%s.%s.%s", dbName, schemaName, objectName)
+		mrnValue := mrn.New(assetType, "PostgreSQL", objectName)
 
 		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
-			Name:        &objectKey,
+			Name:        &objectName,
+			MRN:         &mrnValue,
 			Type:        assetType,
 			Providers:   []string{"PostgreSQL"},
 			Description: &assetDesc,
@@ -525,47 +540,88 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 		return nil, fmt.Errorf("iterating table rows: %w", err)
 	}
 
+	if s.config.IncludeColumns && len(schemaTables) > 0 {
+		columnInfoMap, err := s.getBulkColumnInfo(ctx, schemaTables)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to get bulk column information")
+		} else {
+			for i := range assets {
+				schemaName, ok := assets[i].Metadata["schema"].(string)
+				if !ok {
+					continue
+				}
+
+				tableName, ok := assets[i].Metadata["table_name"].(string)
+				if !ok {
+					continue
+				}
+
+				key := schemaName + "." + tableName
+				if columns, exists := columnInfoMap[key]; exists {
+					assets[i].Metadata["columns"] = columns
+				}
+			}
+		}
+	}
+
 	return assets, nil
 }
 
-func (s *Source) getColumnInfo(ctx context.Context, schemaName, tableName string) ([]map[string]interface{}, error) {
-	query := `
-		SELECT
-			a.attname AS column_name,
-			pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type,
-			CASE WHEN a.attnotnull THEN false ELSE true END AS is_nullable,
-			pg_catalog.pg_get_expr(d.adbin, d.adrelid) AS column_default,
-			CASE WHEN EXISTS (
-				SELECT 1 FROM pg_catalog.pg_constraint c
-				WHERE c.conrelid = a.attrelid
-				AND a.attnum = ANY(c.conkey)
-				AND c.contype = 'p'
-			) THEN true ELSE false END AS is_primary_key,
-			col_description(a.attrelid, a.attnum) AS comment
-		FROM
-			pg_catalog.pg_attribute a
-			JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
-			JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
-			LEFT JOIN pg_catalog.pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
-		WHERE
-			n.nspname = $1
-			AND c.relname = $2
-			AND a.attnum > 0
-			AND NOT a.attisdropped
-		ORDER BY
-			a.attnum
-	`
+func (s *Source) getBulkColumnInfo(ctx context.Context, schemaTables []struct {
+	schema string
+	table  string
+}) (map[string][]interface{}, error) {
+	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
-	rows, err := s.pool.Query(ctx, query, schemaName, tableName)
+	query := `
+    SELECT
+        n.nspname AS schema_name,
+        c.relname AS table_name,
+        a.attname AS column_name,
+        pg_catalog.format_type(a.atttypid, a.atttypmod) AS data_type,
+        CASE WHEN a.attnotnull THEN false ELSE true END AS is_nullable,
+        pg_catalog.pg_get_expr(d.adbin, d.adrelid) AS column_default,
+        CASE WHEN EXISTS (
+            SELECT 1 FROM pg_catalog.pg_constraint con
+            WHERE con.conrelid = a.attrelid
+            AND a.attnum = ANY(con.conkey)
+            AND con.contype = 'p'
+        ) THEN true ELSE false END AS is_primary_key,
+        col_description(a.attrelid, a.attnum) AS comment
+    FROM
+        pg_catalog.pg_attribute a
+        JOIN pg_catalog.pg_class c ON a.attrelid = c.oid
+        JOIN pg_catalog.pg_namespace n ON c.relnamespace = n.oid
+        LEFT JOIN pg_catalog.pg_attrdef d ON a.attrelid = d.adrelid AND a.attnum = d.adnum
+    WHERE
+        a.attnum > 0
+        AND NOT a.attisdropped
+        AND (n.nspname, c.relname) IN (
+    `
+
+	placeholders := make([]string, 0, len(schemaTables))
+	params := make([]interface{}, 0, len(schemaTables)*2)
+
+	for i, st := range schemaTables {
+		placeholders = append(placeholders, fmt.Sprintf("($%d, $%d)", i*2+1, i*2+2))
+		params = append(params, st.schema, st.table)
+	}
+
+	query += strings.Join(placeholders, ", ") + ") ORDER BY n.nspname, c.relname, a.attnum"
+
+	rows, err := s.pool.Query(queryCtx, query, params...)
 	if err != nil {
-		return nil, fmt.Errorf("querying column information: %w", err)
+		return nil, fmt.Errorf("querying bulk column information: %w", err)
 	}
 	defer rows.Close()
 
-	var columns []map[string]interface{}
+	result := make(map[string][]interface{})
 
 	for rows.Next() {
 		var (
+			schemaName    string
+			tableName     string
 			columnName    string
 			dataType      string
 			isNullable    bool
@@ -575,12 +631,14 @@ func (s *Source) getColumnInfo(ctx context.Context, schemaName, tableName string
 		)
 
 		if err := rows.Scan(
-			&columnName, &dataType, &isNullable, &columnDefault,
-			&isPrimaryKey, &comment,
+			&schemaName, &tableName, &columnName, &dataType, &isNullable,
+			&columnDefault, &isPrimaryKey, &comment,
 		); err != nil {
 			log.Warn().Err(err).Msg("Failed to scan column row")
 			continue
 		}
+
+		key := schemaName + "." + tableName
 
 		column := map[string]interface{}{
 			"column_name":    columnName,
@@ -597,46 +655,56 @@ func (s *Source) getColumnInfo(ctx context.Context, schemaName, tableName string
 			column["comment"] = comment.String
 		}
 
-		columns = append(columns, column)
+		if _, exists := result[key]; !exists {
+			result[key] = make([]interface{}, 0)
+		}
+
+		result[key] = append(result[key], column)
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating column rows: %w", err)
+		return nil, fmt.Errorf("iterating bulk column rows: %w", err)
 	}
 
-	return columns, nil
+	return result, nil
 }
 
 func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]lineage.LineageEdge, error) {
-	query := `
-		SELECT
-			kcu.table_schema AS source_schema,
-			kcu.table_name AS source_table,
-			kcu.column_name AS source_column,
-			ccu.table_schema AS target_schema,
-			ccu.table_name AS target_table,
-			ccu.column_name AS target_column,
-			tc.constraint_name
-		FROM
-			information_schema.table_constraints AS tc
-			JOIN information_schema.key_column_usage AS kcu
-				ON tc.constraint_name = kcu.constraint_name
-				AND tc.table_schema = kcu.table_schema
-			JOIN information_schema.constraint_column_usage AS ccu
-				ON ccu.constraint_name = tc.constraint_name
-				AND ccu.table_schema = tc.table_schema
-		WHERE
-			tc.constraint_type = 'FOREIGN KEY'
-			AND (kcu.table_schema NOT LIKE 'pg\\_%' OR NOT $1)
-	`
+	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
 
-	rows, err := s.pool.Query(ctx, query, s.config.ExcludeSystemSchemas)
+	query := `
+    SELECT
+        kcu.table_schema AS source_schema,
+        kcu.table_name AS source_table,
+        kcu.column_name AS source_column,
+        ccu.table_schema AS target_schema,
+        ccu.table_name AS target_table,
+        ccu.column_name AS target_column,
+        tc.constraint_name
+    FROM
+        information_schema.table_constraints AS tc
+        JOIN information_schema.key_column_usage AS kcu
+            ON tc.constraint_name = kcu.constraint_name
+            AND tc.table_schema = kcu.table_schema
+        JOIN information_schema.constraint_column_usage AS ccu
+            ON ccu.constraint_name = tc.constraint_name
+            AND ccu.table_schema = tc.table_schema
+    WHERE
+        tc.constraint_type = 'FOREIGN KEY'
+        AND (kcu.table_schema NOT LIKE 'pg\\_%' OR NOT $1)
+        AND kcu.table_schema NOT IN ('information_schema')
+    LIMIT 1000
+`
+
+	rows, err := s.pool.Query(queryCtx, query, s.config.ExcludeSystemSchemas)
 	if err != nil {
 		return nil, fmt.Errorf("querying foreign keys: %w", err)
 	}
 	defer rows.Close()
 
 	var lineages []lineage.LineageEdge
+	uniqueRelations := make(map[string]struct{})
 
 	for rows.Next() {
 		var (
@@ -658,7 +726,12 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 			continue
 		}
 
-		// Apply schema and table filters
+		log.Debug().
+			Str("source", fmt.Sprintf("%s.%s.%s", sourceSchema, sourceTable, sourceColumn)).
+			Str("target", fmt.Sprintf("%s.%s.%s", targetSchema, targetTable, targetColumn)).
+			Str("constraint", constraintName).
+			Msg("Found foreign key relationship")
+
 		if s.config.SchemaFilter != nil {
 			if !plugin.ShouldIncludeResource(sourceSchema, *s.config.SchemaFilter) ||
 				!plugin.ShouldIncludeResource(targetSchema, *s.config.SchemaFilter) {
@@ -673,13 +746,15 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 			}
 		}
 
-		sourceKey := fmt.Sprintf("%s.%s.%s", dbName, sourceSchema, sourceTable)
-		targetKey := fmt.Sprintf("%s.%s.%s", dbName, targetSchema, targetTable)
+		sourceMRN := mrn.New("Table", "PostgreSQL", sourceTable)
+		targetMRN := mrn.New("Table", "PostgreSQL", targetTable)
 
-		sourceMRN := mrn.New("Table", "PostgreSQL", sourceKey)
-		targetMRN := mrn.New("Table", "PostgreSQL", targetKey)
+		relationKey := fmt.Sprintf("%s:%s", sourceMRN, targetMRN)
+		if _, exists := uniqueRelations[relationKey]; exists {
+			continue
+		}
+		uniqueRelations[relationKey] = struct{}{}
 
-		// Create lineage edge
 		lineages = append(lineages, lineage.LineageEdge{
 			Source: sourceMRN,
 			Target: targetMRN,

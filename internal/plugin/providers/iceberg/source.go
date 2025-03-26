@@ -10,9 +10,9 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/rs/zerolog/log"
 )
 
@@ -181,12 +181,10 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("validating config: %w", err)
 	}
 
-	// Initialize client based on catalog type
 	if err := s.initClient(ctx); err != nil {
 		return nil, fmt.Errorf("initializing %s client: %w", s.config.CatalogType, err)
 	}
 
-	// Discover namespaces
 	namespaces, err := s.discoverNamespaces(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("discovering namespaces: %w", err)
@@ -194,13 +192,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	var assets []asset.Asset
 	for _, namespace := range namespaces {
-		// Apply namespace filter if configured
 		if s.config.NamespaceFilter != nil && !plugin.ShouldIncludeResource(namespace, *s.config.NamespaceFilter) {
 			log.Debug().Str("namespace", namespace).Msg("Skipping namespace due to filter")
 			continue
 		}
 
-		// Discover tables in namespace
 		tables, err := s.discoverTables(ctx, namespace)
 		if err != nil {
 			log.Warn().Err(err).Str("namespace", namespace).Msg("Failed to discover tables in namespace")
@@ -208,7 +204,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		}
 
 		for _, table := range tables {
-			// Apply table filter if configured
 			if s.config.TableFilter != nil && !plugin.ShouldIncludeResource(table, *s.config.TableFilter) {
 				log.Debug().Str("table", table).Msg("Skipping table due to filter")
 				continue
@@ -277,13 +272,11 @@ func (s *Source) getTableMetadata(ctx context.Context, namespace, table string) 
 
 // createTableAsset creates an asset for a table
 func (s *Source) createTableAsset(ctx context.Context, namespace, table string) (asset.Asset, error) {
-	// Get table metadata
 	metadata, err := s.getTableMetadata(ctx, namespace, table)
 	if err != nil {
 		return asset.Asset{}, fmt.Errorf("getting table metadata: %w", err)
 	}
 
-	// Convert metadata to map
 	metadataMap := make(map[string]interface{})
 	metadataMap["identifier"] = metadata.Identifier
 	metadataMap["namespace"] = metadata.Namespace
@@ -347,13 +340,11 @@ func (s *Source) createTableAsset(ctx context.Context, namespace, table string) 
 		metadataMap["sort_order_json"] = metadata.SortOrderJSON
 	}
 
-	// Last commit time as human-readable
 	if metadata.LastUpdatedMs > 0 {
 		lastCommitTime := time.Unix(0, metadata.LastUpdatedMs*int64(time.Millisecond)).Format(time.RFC3339)
 		metadataMap["last_commit_time"] = lastCommitTime
 	}
 
-	// Create asset
 	description := fmt.Sprintf("Iceberg table %s.%s", namespace, table)
 	mrnValue := mrn.New("Table", "Iceberg", fmt.Sprintf("%s.%s", namespace, table))
 

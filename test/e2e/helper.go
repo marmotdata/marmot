@@ -48,22 +48,21 @@ func SetupTestEnvironment(t *testing.T) (*TestEnvironment, error) {
 
 	config := utils.NewDefaultConfig()
 
-	// Build Marmot
+	// Build
 	projectRoot := filepath.Join("..", "..")
 	require.NoError(t, cm.BuildMarmot(ctx, projectRoot))
 
-	// Start Postgres
+	// Start postgres
 	_, err = cm.StartPostgres(config)
 	require.NoError(t, err)
 	require.NoError(t, utils.WaitForPostgres(config))
 
-	// Start PostgreSQL for testing
 	postgresID, postgresPort, err := startPostgres(ctx, cm, config.NetworkName)
 	require.NoError(t, err)
 	require.NoError(t, waitForPostgres(postgresPort))
 	config.PostgresContainerName = postgresID
 
-	// Start Marmot
+	// Start marmot
 	_, err = cm.StartMarmotContainer(config)
 	require.NoError(t, err)
 	require.NoError(t, utils.WaitForApplication(config.ApplicationPort))
@@ -72,7 +71,6 @@ func SetupTestEnvironment(t *testing.T) (*TestEnvironment, error) {
 	transport := httptransport.New("localhost:"+config.ApplicationPort, "/api/v1", []string{"http"})
 	apiClient := client.New(transport, nil)
 
-	// Login and create API key
 	username := "admin"
 	password := "admin"
 	loginParams := users.NewPostUsersLoginParams()
@@ -101,7 +99,6 @@ func SetupTestEnvironment(t *testing.T) (*TestEnvironment, error) {
 	require.NoError(t, err)
 	require.NoError(t, waitForLocalstack())
 
-	// Initialize test environment
 	env := &TestEnvironment{
 		Config:           config,
 		ContainerManager: cm,
@@ -116,12 +113,10 @@ func SetupTestEnvironment(t *testing.T) (*TestEnvironment, error) {
 }
 
 func (env *TestEnvironment) Cleanup() {
-	// Close Kafka client if it exists
 	if env.KafkaClient != nil {
 		env.KafkaClient.Close()
 	}
 
-	// Clean up all containers
 	env.ContainerManager.Close()
 }
 
@@ -134,10 +129,8 @@ func (env *TestEnvironment) EnsureRedpandaStarted(ctx context.Context, withSchem
 			env.ContainerManager.CleanupContainer(env.RedpandaID)
 			env.RedpandaID = ""
 		} else if !withSchemaRegistry && env.HasSchemaRegistry {
-			// Using existing instance is fine, schema registry is a bonus
 			return nil
 		} else {
-			// Already started with correct configuration
 			return nil
 		}
 	}
@@ -173,15 +166,12 @@ func (env *TestEnvironment) EnsureRedpandaStarted(ctx context.Context, withSchem
 
 // EnsurePostgresStarted ensures the PostgreSQL container is started for testing
 func (env *TestEnvironment) EnsurePostgresStarted(ctx context.Context) error {
-	// Use the PostgreSQL instance that was started during environment setup
 	if env.Config.PostgresContainerName == "" || env.PostgresPort == "" {
-		// If PostgreSQL wasn't started during setup, start it now
 		postgresID, postgresPort, err := startPostgres(ctx, env.ContainerManager, env.Config.NetworkName)
 		if err != nil {
 			return fmt.Errorf("failed to start PostgreSQL: %w", err)
 		}
 
-		// Wait for PostgreSQL to be ready
 		if err := waitForPostgres(postgresPort); err != nil {
 			return fmt.Errorf("PostgreSQL failed to become ready: %w", err)
 		}
@@ -190,16 +180,13 @@ func (env *TestEnvironment) EnsurePostgresStarted(ctx context.Context) error {
 		env.Config.PostgresContainerName = postgresID
 	}
 
-	// Check if PostgreSQL is running
 	if err := checkPostgresConnection("localhost:"+env.PostgresPort, 10*time.Second); err != nil {
-		// If not running, restart it
 		env.ContainerManager.CleanupContainer(env.Config.PostgresContainerName)
 		postgresID, postgresPort, err := startPostgres(ctx, env.ContainerManager, env.Config.NetworkName)
 		if err != nil {
 			return fmt.Errorf("failed to restart PostgreSQL: %w", err)
 		}
 
-		// Wait for PostgreSQL to be ready
 		if err := waitForPostgres(postgresPort); err != nil {
 			return fmt.Errorf("PostgreSQL failed to become ready after restart: %w", err)
 		}
@@ -217,10 +204,9 @@ func (env *TestEnvironment) EnsureIcebergRESTStarted(ctx context.Context) error 
 		// Already started, check if it's still healthy
 		err := waitForIcebergRESTServer(fmt.Sprintf("localhost:%s", env.IcebergRESTPort), 10*time.Second)
 		if err == nil {
-			return nil // Container is healthy
+			return nil
 		}
 
-		// Container doesn't seem to be responsive, let's recreate it
 		env.ContainerManager.CleanupContainer(env.IcebergRESTID)
 		env.IcebergRESTID = ""
 	}
@@ -230,7 +216,6 @@ func (env *TestEnvironment) EnsureIcebergRESTStarted(ctx context.Context) error 
 		return fmt.Errorf("failed to start Iceberg REST server: %w", err)
 	}
 
-	// Wait for server to be ready
 	err = waitForIcebergRESTServer(fmt.Sprintf("localhost:%s", icebergRESTPort), 120*time.Second)
 	if err != nil {
 		env.ContainerManager.CleanupContainer(icebergRESTID)
@@ -245,7 +230,6 @@ func (env *TestEnvironment) EnsureIcebergRESTStarted(ctx context.Context) error 
 
 // startLocalstack starts a Localstack container for AWS service mocking
 func startLocalstack(ctx context.Context, cm *utils.ContainerManager, networkName string) (string, string, error) {
-	// Setup Localstack container with AWS services enabled
 	localstackConfig := &container.Config{
 		Image: "localstack/localstack:latest",
 		Env: []string{
@@ -275,7 +259,6 @@ func startLocalstack(ctx context.Context, cm *utils.ContainerManager, networkNam
 
 // startPostgres starts a PostgreSQL container for testing
 func startPostgres(ctx context.Context, cm *utils.ContainerManager, networkName string) (string, string, error) {
-	// Setup PostgreSQL container
 	postgresConfig := &container.Config{
 		Image: "postgres:14",
 		Env: []string{
@@ -290,7 +273,7 @@ func startPostgres(ctx context.Context, cm *utils.ContainerManager, networkName 
 	postgresHostConfig := &container.HostConfig{
 		NetworkMode: container.NetworkMode(networkName),
 		PortBindings: nat.PortMap{
-			"5432/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "5433"}}, // Changed port to 5433
+			"5432/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "5433"}},
 		},
 	}
 
@@ -401,7 +384,6 @@ func startRedpanda(ctx context.Context, cm *utils.ContainerManager, networkName 
 
 // startRedpandaWithSchemaRegistry starts Redpanda with Schema Registry enabled
 func startRedpandaWithSchemaRegistry(ctx context.Context, cm *utils.ContainerManager, networkName string) (string, string, string, error) {
-	// Setup Redpanda container with Schema Registry
 	redpandaConfig := &container.Config{
 		Image: "redpandadata/redpanda:latest",
 		Cmd: []string{
@@ -436,7 +418,6 @@ func startRedpandaWithSchemaRegistry(ctx context.Context, cm *utils.ContainerMan
 		return "", "", "", fmt.Errorf("failed to start Redpanda container: %w", err)
 	}
 
-	// Wait for Redpanda and Schema Registry to start
 	time.Sleep(15 * time.Second)
 
 	bootstrapServer := "redpanda-test:9092"
@@ -444,7 +425,6 @@ func startRedpandaWithSchemaRegistry(ctx context.Context, cm *utils.ContainerMan
 		return "", "", "", fmt.Errorf("kafka broker not ready: %w", err)
 	}
 
-	// Check if Schema Registry is up
 	timeout := 60 * time.Second
 	schemaRegistryURL := fmt.Sprintf("http://localhost:8081")
 	if err := waitForSchemaRegistry(schemaRegistryURL, timeout); err != nil {
@@ -492,7 +472,6 @@ func waitForIcebergRESTServer(endpoint string, timeout time.Duration) error {
 		Timeout: 5 * time.Second,
 	}
 
-	// Test multiple endpoints to ensure the service is fully ready
 	urls := []string{
 		fmt.Sprintf("http://%s/v1/config", endpoint),
 		fmt.Sprintf("http://%s/v1/namespaces", endpoint),
@@ -524,7 +503,6 @@ func waitForIcebergRESTServer(endpoint string, timeout time.Duration) error {
 			return nil
 		}
 
-		// Backoff with a cap of 5 seconds
 		backoffTime := float64(attempt * 500)
 		if backoffTime > 5000 {
 			backoffTime = 5000
@@ -543,7 +521,6 @@ func createKafkaClient(bootstrapServer string) (*kgo.Client, error) {
 		kgo.ClientID("marmot-kafka-test-client"),
 	}
 
-	// Create Kafka client
 	client, err := kgo.NewClient(opts...)
 	if err != nil {
 		return nil, fmt.Errorf("creating Kafka client: %w", err)

@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"testing"
 	"time"
 
@@ -21,11 +20,10 @@ import (
 func TestKafkaTopicIngestion(t *testing.T) {
 	ctx := context.Background()
 
-	// Ensure Redpanda/Kafka is started
 	err := env.EnsureRedpandaStarted(ctx, false)
 	require.NoError(t, err)
 
-	// Create test topics with different configurations
+	// Create test topics
 	testTopics := []struct {
 		name           string
 		partitions     int
@@ -60,8 +58,6 @@ func TestKafkaTopicIngestion(t *testing.T) {
 			},
 		},
 	}
-
-	// Create topics
 	for _, topic := range testTopics {
 		configs := make(map[string]*string)
 
@@ -78,11 +74,8 @@ func TestKafkaTopicIngestion(t *testing.T) {
 		_, err := env.KafkaAdminClient.CreateTopic(ctx, int32(topic.partitions), int16(topic.replicas), configs, topic.name)
 		require.NoError(t, err, "Failed to create topic: %s", topic.name)
 	}
-
-	// Ensure topics are created
 	time.Sleep(2 * time.Second)
 
-	// Create test config file
 	configContent := fmt.Sprintf(`
 runs:
   - kafka:
@@ -103,14 +96,13 @@ runs:
           - "^_.*"
 `, env.RedpandaPort)
 
-	// Run ingest command
+	// Ingest
 	err = env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContent,
 	)
 	require.NoError(t, err)
 
-	// Allow time for ingestion
 	time.Sleep(5 * time.Second)
 
 	// Fetch all assets
@@ -118,11 +110,8 @@ runs:
 	resp, err := env.APIClient.Assets.GetAssetsList(params)
 	require.NoError(t, err)
 
-	// Verify first topic (basic)
 	topic1 := utils.FindAssetByName(resp.Payload.Assets, "test-topic-basic")
 	require.NotNil(t, topic1, "asset test-topic-basic not found")
-
-	// Now check for specific fields
 	assert.Equal(t, "Topic", topic1.Type)
 	assert.Contains(t, topic1.Providers, "Kafka")
 	assert.Contains(t, topic1.Tags, "kafka")
@@ -130,7 +119,6 @@ runs:
 	assert.Contains(t, topic1.Tags, "env-prod")
 	assert.Contains(t, topic1.Tags, "team-platform")
 
-	// Verify basic topic metadata
 	metadata1 := topic1.Metadata.(map[string]interface{})
 	t.Logf("Topic metadata: %+v", metadata1)
 
@@ -171,22 +159,18 @@ runs:
           - "^_.*"
 `, env.RedpandaPort)
 
-	// Run ingest command for the custom topic
 	err = env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContentCustom,
 	)
 	require.NoError(t, err)
 
-	// Allow time for ingestion
 	time.Sleep(5 * time.Second)
 
-	// Fetch all assets again
 	params = assets.NewGetAssetsListParams()
 	resp, err = env.APIClient.Assets.GetAssetsList(params)
 	require.NoError(t, err)
 
-	// Verify second topic (custom)
 	topic2 := utils.FindAssetByName(resp.Payload.Assets, "test-topic-custom")
 	require.NotNil(t, topic2, "asset test-topic-custom not found")
 
@@ -197,7 +181,6 @@ runs:
 	assert.Contains(t, topic2.Tags, "env-staging")
 	assert.Contains(t, topic2.Tags, "team-orders")
 
-	// Verify custom topic metadata
 	metadata2 := topic2.Metadata.(map[string]interface{})
 	partitionCount2, ok := metadata2["partition_count"]
 	require.True(t, ok, "partition_count not found in metadata")
@@ -219,10 +202,8 @@ runs:
 	require.True(t, ok, "max.message.bytes not found in metadata")
 	assert.Equal(t, "2097152", maxMessageBytes)
 
-	// Test with different authentication configuration
 	testAuthConfig(t)
 
-	// Clean up assets
 	_, err = env.APIClient.Assets.DeleteAssetsID(assets.NewDeleteAssetsIDParams().WithID(topic1.ID))
 	assert.NoError(t, err, "failed to delete asset", topic1.ID)
 	_, err = env.APIClient.Assets.DeleteAssetsID(assets.NewDeleteAssetsIDParams().WithID(topic2.ID))
@@ -230,16 +211,14 @@ runs:
 }
 
 // testAuthConfig tests different authentication configurations
-// TODO: test actual auth configs
+// TODO: test actual auth configs use SASL/certs etc.
 func testAuthConfig(t *testing.T) {
 	ctx := context.Background()
 
-	// Create a topic for testing with authentication
 	authTopicName := "test-topic-auth"
 	_, err := env.KafkaAdminClient.CreateTopic(ctx, 1, 1, nil, authTopicName)
 	require.NoError(t, err)
 
-	// Ensure topic is created
 	time.Sleep(2 * time.Second)
 
 	// Test with plaintext auth config
@@ -261,22 +240,18 @@ runs:
           - "^test-topic-auth$"
 `, env.RedpandaPort)
 
-	// Run ingest command
 	err = env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContent,
 	)
 	require.NoError(t, err)
 
-	// Allow time for ingestion
 	time.Sleep(5 * time.Second)
 
-	// Fetch all assets
 	params := assets.NewGetAssetsListParams()
 	resp, err := env.APIClient.Assets.GetAssetsList(params)
 	require.NoError(t, err)
 
-	// Verify auth topic
 	authTopic := utils.FindAssetByName(resp.Payload.Assets, "test-topic-auth")
 	require.NotNil(t, authTopic, "asset test-topic-auth not found")
 
@@ -285,37 +260,26 @@ runs:
 	assert.Contains(t, authTopic.Tags, "kafka")
 	assert.Contains(t, authTopic.Tags, "auth-test")
 
-	// Clean up asset
 	_, err = env.APIClient.Assets.DeleteAssetsID(assets.NewDeleteAssetsIDParams().WithID(authTopic.ID))
 	assert.NoError(t, err, "failed to delete asset", authTopic.ID)
 }
 
 // TestKafkaSchemaRegistry tests integration with Schema Registry
 func TestKafkaSchemaRegistry(t *testing.T) {
-	// Skip this test in CI environment where schema registry might not be available
-	if _, ok := os.LookupEnv("CI"); ok {
-		t.Skip("Skipping schema registry test in CI environment")
-	}
-
 	ctx := context.Background()
 
-	// Ensure Redpanda/Kafka is started with Schema Registry
 	err := env.EnsureRedpandaStarted(ctx, true)
 	require.NoError(t, err)
 
-	// Create topic
 	schemaTopicName := "test-topic-schema"
 	_, err = env.KafkaAdminClient.CreateTopic(ctx, 1, 1, nil, schemaTopicName)
 	require.NoError(t, err)
 
-	// Ensure topic is created
 	time.Sleep(5 * time.Second)
 
-	// Create Schema Registry client
 	schemaRegistryURL := fmt.Sprintf("http://localhost:%s", env.SchemaRegistryPort)
 	schemaClient := NewSchemaRegistryClient(schemaRegistryURL)
 
-	// Register value schema
 	valueSchema := Schema{
 		Schema: `{
 			"type": "record",
@@ -353,7 +317,6 @@ func TestKafkaSchemaRegistry(t *testing.T) {
 	require.NoError(t, err, "Failed to register key schema")
 	t.Logf("Registered key schema with ID: %d", keySchemaResp.ID)
 
-	// Create test config file with Schema Registry enabled
 	configContent := fmt.Sprintf(`
 runs:
   - kafka:
@@ -373,22 +336,18 @@ runs:
           - "^test-topic-schema$"
 `, env.RedpandaPort, env.SchemaRegistryPort)
 
-	// Run ingest command
 	err = env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContent,
 	)
 	require.NoError(t, err)
 
-	// Allow time for ingestion
 	time.Sleep(5 * time.Second)
 
-	// Fetch all assets
 	params := assets.NewGetAssetsListParams()
 	resp, err := env.APIClient.Assets.GetAssetsList(params)
 	require.NoError(t, err)
 
-	// Verify schema topic
 	schemaTopic := utils.FindAssetByName(resp.Payload.Assets, schemaTopicName)
 	require.NotNil(t, schemaTopic, "asset test-topic-schema not found")
 
@@ -397,10 +356,8 @@ runs:
 	assert.Contains(t, schemaTopic.Tags, "kafka")
 	assert.Contains(t, schemaTopic.Tags, "schema-test")
 
-	// Verify schema-related metadata
 	metadata := schemaTopic.Metadata.(map[string]interface{})
 
-	// Value schema validations
 	valueSchemaID, ok := metadata["value_schema_id"]
 	require.True(t, ok, "value_schema_id not found in metadata")
 	assert.Equal(t, fmt.Sprintf("%d", valueSchemaResp.ID), valueSchemaID.(json.Number).String(), "Value schema ID doesn't match")
@@ -413,10 +370,10 @@ runs:
 	require.True(t, ok, "value_schema_type not found in metadata")
 	assert.Equal(t, valueSchemaResp.SchemaType, valueSchemaType, "Value schema type doesn't match")
 
-	// Validate schema content
 	valueSchemaContent, ok := metadata["value_schema"]
 	require.True(t, ok, "value_schema not found in metadata")
-	// Normalize both schemas for comparison (remove whitespace, etc.)
+
+	// Normalize both schemas for comparison
 	var parsedValueSchema, parsedReturnedValueSchema interface{}
 	err = json.Unmarshal([]byte(valueSchemaResp.Schema), &parsedValueSchema)
 	require.NoError(t, err, "Error parsing value schema JSON")
@@ -424,7 +381,6 @@ runs:
 	require.NoError(t, err, "Error parsing returned value schema JSON")
 	assert.Equal(t, parsedValueSchema, parsedReturnedValueSchema, "Value schema content doesn't match")
 
-	// Key schema validations
 	keySchemaID, ok := metadata["key_schema_id"]
 	require.True(t, ok, "key_schema_id not found in metadata")
 	assert.Equal(t, fmt.Sprintf("%d", keySchemaResp.ID), keySchemaID.(json.Number).String(), "Key schema ID doesn't match")
@@ -437,9 +393,9 @@ runs:
 	require.True(t, ok, "key_schema_type not found in metadata")
 	assert.Equal(t, keySchemaResp.SchemaType, keySchemaType, "Key schema type doesn't match")
 
-	// Validate key schema content
 	keySchemaContent, ok := metadata["key_schema"]
 	require.True(t, ok, "key_schema not found in metadata")
+
 	// Normalize both schemas for comparison
 	var parsedKeySchema, parsedReturnedKeySchema interface{}
 	err = json.Unmarshal([]byte(keySchemaResp.Schema), &parsedKeySchema)
@@ -448,7 +404,6 @@ runs:
 	require.NoError(t, err, "Error parsing returned key schema JSON")
 	assert.Equal(t, parsedKeySchema, parsedReturnedKeySchema, "Key schema content doesn't match")
 
-	// Clean up asset
 	_, err = env.APIClient.Assets.DeleteAssetsID(assets.NewDeleteAssetsIDParams().WithID(schemaTopic.ID))
 	assert.NoError(t, err, "failed to delete asset", schemaTopic.ID)
 }
@@ -512,7 +467,6 @@ func (c *SchemaRegistryClient) RegisterSchema(subject string, schema Schema) (*S
 		return nil, fmt.Errorf("decoding response: %w", err)
 	}
 
-	// Request the schema details to get the full response
 	return c.GetSchemaBySubject(subject)
 }
 

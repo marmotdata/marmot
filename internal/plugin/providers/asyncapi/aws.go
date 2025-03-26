@@ -7,9 +7,9 @@ import (
 	"github.com/charlie-haley/asyncapi-go/asyncapi2"
 	"github.com/charlie-haley/asyncapi-go/bindings/sns"
 	"github.com/charlie-haley/asyncapi-go/bindings/sqs"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/core/asset"
 )
 
 type SNS struct {
@@ -35,7 +35,6 @@ func (s *Source) createSNSTopic(spec *asyncapi2.Document, channelName string, bi
 	description := fmt.Sprintf("SNS topic for channel %s", channelName)
 	mrnValue := mrn.New("Topic", "SNS", name)
 
-	// Initialize metadata map
 	metadata := map[string]interface{}{
 		"service_name":    spec.Info.Title,
 		"service_version": spec.Info.Version,
@@ -54,7 +53,6 @@ func (s *Source) createSNSTopic(spec *asyncapi2.Document, channelName string, bi
 		}
 	}
 
-	// Process tags with interpolation
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
@@ -92,14 +90,12 @@ func (s *Source) createSQSQueue(spec *asyncapi2.Document, channelName string, bi
 	description := fmt.Sprintf("SQS queue for channel %s", channelName)
 	mrnValue := mrn.New("Queue", "SQS", name)
 
-	// Initialize metadata map
 	metadata := map[string]interface{}{
 		"service_name":    spec.Info.Title,
 		"service_version": spec.Info.Version,
 		"description":     description,
 	}
 
-	// Add SQS-specific fields
 	if binding.Queue != nil {
 		metadata["name"] = binding.Queue.Name
 		metadata["fifo_queue"] = binding.Queue.FifoQueue
@@ -124,7 +120,6 @@ func (s *Source) createSQSQueue(spec *asyncapi2.Document, channelName string, bi
 		}
 	}
 
-	// Process tags with interpolation
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
