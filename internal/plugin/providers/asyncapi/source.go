@@ -14,6 +14,7 @@ import (
 
 	"github.com/charlie-haley/asyncapi-go"
 	"github.com/charlie-haley/asyncapi-go/asyncapi2"
+	"github.com/charlie-haley/asyncapi-go/bindings/amqp"
 	"github.com/charlie-haley/asyncapi-go/bindings/kafka"
 	"github.com/charlie-haley/asyncapi-go/bindings/sns"
 	"github.com/charlie-haley/asyncapi-go/bindings/sqs"
@@ -138,6 +139,15 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 					sqsMRN := *sqsAsset.MRN
 					s.addUniqueAsset(&assets, sqsAsset, seenAssets)
 					s.createLineageEdge(serviceMRN, sqsMRN, determineEdgeType(channel), seenAssets, seenEdges, &lineages)
+				}
+			}
+
+			if amqpBinding, err := asyncapi.ParseBindings[amqp.ChannelBinding](channel.Bindings, "amqp"); err == nil {
+				if amqpBinding.Queue != nil {
+					amqpAsset := s.createAMQPQueue(spec, channelName, amqpBinding)
+					amqpMRN := *amqpAsset.MRN
+					s.addUniqueAsset(&assets, amqpAsset, seenAssets)
+					s.createLineageEdge(serviceMRN, amqpMRN, determineEdgeType(channel), seenAssets, seenEdges, &lineages)
 				}
 			}
 		}
