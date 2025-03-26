@@ -26,51 +26,44 @@ type GlueConfig struct {
 }
 
 func (s *Source) initGlueClient(ctx context.Context) error {
-	// Get AWS config (region, credentials, etc.)
 	awsConfig, err := s.getAWSConfig(ctx)
 	if err != nil {
 		return fmt.Errorf("getting AWS config: %w", err)
 	}
 
-	// Create Glue client
 	glueClient := glue.NewFromConfig(awsConfig)
 	s.client = glueClient
 
 	return nil
 }
 
+// TODO: move to shared logic across all AWS plugins
 func (s *Source) getAWSConfig(ctx context.Context) (aws.Config, error) {
-	// Start with config options for region and credentials
 	var opts []func(*config.LoadOptions) error
 
-	// Configure region
 	if s.config.Glue.Region != "" {
 		opts = append(opts, config.WithRegion(s.config.Glue.Region))
 	}
 
-	// Configure credentials if access key and secret key are provided
 	if s.config.Glue.AccessKey != "" && s.config.Glue.SecretKey != "" {
 		opts = append(opts, config.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(
 				s.config.Glue.AccessKey,
 				s.config.Glue.SecretKey,
-				"", // Optional session token
+				"",
 			),
 		))
 	}
 
-	// Load specific profile if specified
 	if s.config.Glue.CredentialsProfile != "" {
 		opts = append(opts, config.WithSharedConfigProfile(s.config.Glue.CredentialsProfile))
 	}
 
-	// Load the AWS config
 	cfg, err := config.LoadDefaultConfig(ctx, opts...)
 	if err != nil {
 		return aws.Config{}, fmt.Errorf("loading AWS config: %w", err)
 	}
 
-	// Configure custom endpoint if provided
 	// TODO: remove the deprecated here, use generic AWS config for all AWS plugins
 	if s.config.Glue.Endpoint != "" {
 		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
@@ -80,18 +73,14 @@ func (s *Source) getAWSConfig(ctx context.Context) (aws.Config, error) {
 					SigningRegion: region,
 				}, nil
 			}
-			// Fallback to default resolver for other services
 			return aws.Endpoint{}, &aws.EndpointNotFoundError{}
 		})
 		cfg.EndpointResolverWithOptions = customResolver
 	}
 
-	// Assume role if an ARN is provided
 	if s.config.Glue.AssumeRoleARN != "" {
-		// Create STS client using the base config
 		stsClient := sts.NewFromConfig(cfg)
 
-		// Assume role
 		resp, err := stsClient.AssumeRole(ctx, &sts.AssumeRoleInput{
 			RoleArn:         aws.String(s.config.Glue.AssumeRoleARN),
 			RoleSessionName: aws.String("IcebergDiscoverySession"),
@@ -100,7 +89,6 @@ func (s *Source) getAWSConfig(ctx context.Context) (aws.Config, error) {
 			return aws.Config{}, fmt.Errorf("assuming role: %w", err)
 		}
 
-		// Create new credentials provider with the temporary credentials
 		cfg.Credentials = credentials.NewStaticCredentialsProvider(
 			*resp.Credentials.AccessKeyId,
 			*resp.Credentials.SecretAccessKey,
@@ -114,9 +102,7 @@ func (s *Source) getAWSConfig(ctx context.Context) (aws.Config, error) {
 func (s *Source) discoverGlueDatabases(ctx context.Context) ([]string, error) {
 	glueClient := s.client.(*glue.Client)
 
-	// If a specific database is configured, return just that
 	if s.config.Glue.Database != "" {
-		// Verify the database exists
 		_, err := glueClient.GetDatabase(ctx, &glue.GetDatabaseInput{
 			Name: aws.String(s.config.Glue.Database),
 		})
@@ -126,7 +112,6 @@ func (s *Source) discoverGlueDatabases(ctx context.Context) ([]string, error) {
 		return []string{s.config.Glue.Database}, nil
 	}
 
-	// List all databases in Glue catalog
 	var databases []string
 	var nextToken *string
 
@@ -154,7 +139,6 @@ func (s *Source) discoverGlueDatabases(ctx context.Context) ([]string, error) {
 func (s *Source) discoverGlueTables(ctx context.Context, database string) ([]string, error) {
 	glueClient := s.client.(*glue.Client)
 
-	// List all tables in the specified database
 	var tables []string
 	var nextToken *string
 
@@ -188,7 +172,6 @@ func (s *Source) discoverGlueTables(ctx context.Context, database string) ([]str
 func (s *Source) getGlueTableMetadata(ctx context.Context, database, table string) (*IcebergMetadata, error) {
 	glueClient := s.client.(*glue.Client)
 
-	// Get table metadata
 	tableResp, err := glueClient.GetTable(ctx, &glue.GetTableInput{
 		DatabaseName: aws.String(database),
 		Name:         aws.String(table),
@@ -203,7 +186,6 @@ func (s *Source) getGlueTableMetadata(ctx context.Context, database, table strin
 
 	glueTable := tableResp.Table
 
-	// Verify this is an Iceberg table
 	isIceberg := false
 	if glueTable.Parameters != nil {
 		if format, ok := glueTable.Parameters["table_type"]; ok && strings.EqualFold(format, "iceberg") {
@@ -215,7 +197,6 @@ func (s *Source) getGlueTableMetadata(ctx context.Context, database, table strin
 		return nil, fmt.Errorf("table %s.%s is not an Iceberg table", database, table)
 	}
 
-	// Create metadata object
 	metadata := &IcebergMetadata{
 		Identifier:  fmt.Sprintf("%s.%s", database, table),
 		Namespace:   database,
@@ -223,53 +204,41 @@ func (s *Source) getGlueTableMetadata(ctx context.Context, database, table strin
 		CatalogType: "glue",
 	}
 
-	// Extract location
 	if glueTable.StorageDescriptor != nil && glueTable.StorageDescriptor.Location != nil {
 		metadata.Location = *glueTable.StorageDescriptor.Location
 	}
 
-	// Extract properties from Glue table parameters
 	if glueTable.Parameters != nil {
 		metadata.Properties = make(map[string]string)
 
-		// Copy all parameters to properties
 		for k, v := range glueTable.Parameters {
 			metadata.Properties[k] = v
 		}
 
-		// Extract format version
 		if formatVersion, ok := glueTable.Parameters["format-version"]; ok {
 			if version, err := parseInt(formatVersion); err == nil {
 				metadata.FormatVersion = version
 			}
 		}
 
-		// Extract UUID
 		if uuid, ok := glueTable.Parameters["uuid"]; ok {
 			metadata.UUID = uuid
 		}
 
-		// Extract snapshot info if included
 		if s.config.IncludeSnapshotInfo {
-			// Current snapshot ID
 			if snapshotID, ok := glueTable.Parameters["current-snapshot-id"]; ok {
 				if id, err := parseInt64(snapshotID); err == nil {
 					metadata.CurrentSnapshotID = id
 				}
 			}
 
-			// Last updated timestamp
 			if lastUpdated, ok := glueTable.Parameters["last-updated-ms"]; ok {
 				if ms, err := parseInt64(lastUpdated); err == nil {
 					metadata.LastUpdatedMs = ms
 				}
 			}
-
-			// Number of snapshots - harder to get from just the parameters
-			// Would need to read the actual metadata file
 		}
 
-		// Extract statistics if included and available
 		if s.config.IncludeStatistics {
 			if rowCount, ok := glueTable.Parameters["total-records"]; ok {
 				if count, err := parseInt64(rowCount); err == nil {
@@ -291,9 +260,7 @@ func (s *Source) getGlueTableMetadata(ctx context.Context, database, table strin
 		}
 	}
 
-	// Extract schema info if included
 	if s.config.IncludeSchemaInfo && glueTable.StorageDescriptor != nil {
-		// Convert Glue columns to Iceberg schema
 		if len(glueTable.StorageDescriptor.Columns) > 0 {
 			schema := extractSchemaFromGlueColumns(glueTable.StorageDescriptor.Columns)
 			if schema != nil {
@@ -304,7 +271,6 @@ func (s *Source) getGlueTableMetadata(ctx context.Context, database, table strin
 			}
 		}
 
-		// Extract partition info if included
 		if s.config.IncludePartitionInfo && len(glueTable.PartitionKeys) > 0 {
 			partSpec := extractPartitionSpecFromGluePartitionKeys(glueTable.PartitionKeys)
 			if partSpec != nil {
@@ -313,7 +279,6 @@ func (s *Source) getGlueTableMetadata(ctx context.Context, database, table strin
 					metadata.PartitionSpec = string(partSpecJSON)
 					metadata.NumPartitions = len(partSpec)
 
-					// Extract transformers
 					var transformers []string
 					for _, p := range partSpec {
 						if transform, ok := p["transform"].(string); ok {
@@ -344,8 +309,6 @@ func extractSchemaFromGlueColumns(columns []types.Column) map[string]interface{}
 			"type": convertGlueTypeToIcebergType(*col.Type),
 		}
 
-		// In AWS SDK v2, IsNullable is not a method but may be in the Parameters map
-		// Default to nullable (required: false) unless explicitly marked as non-nullable
 		isRequired := false
 		if val, exists := col.Parameters["NULLABLE"]; exists && strings.ToLower(val) == "false" {
 			isRequired = true
@@ -376,10 +339,10 @@ func extractPartitionSpecFromGluePartitionKeys(partitionKeys []types.Column) []m
 
 	for i, key := range partitionKeys {
 		spec := map[string]interface{}{
-			"source-id": i + 1,    // Match with field ID from schema
-			"field-id":  1000 + i, // Convention for partition field IDs
+			"source-id": i + 1,
+			"field-id":  1000 + i,
 			"name":      *key.Name,
-			"transform": "identity", // Default transform is identity
+			"transform": "identity",
 		}
 
 		partSpec = append(partSpec, spec)
@@ -390,7 +353,7 @@ func extractPartitionSpecFromGluePartitionKeys(partitionKeys []types.Column) []m
 
 // Helper function to convert Glue data types to Iceberg types
 func convertGlueTypeToIcebergType(glueType string) string {
-	// This is a simplified mapping, would need to be expanded for complex types
+	// This needs expanding to support maps/arrays/structs
 	switch strings.ToLower(glueType) {
 	case "string":
 		return "string"
@@ -409,8 +372,6 @@ func convertGlueTypeToIcebergType(glueType string) string {
 	case "binary":
 		return "binary"
 	default:
-		// For complex types like maps, arrays, structs
-		// would need more sophisticated parsing
 		return glueType
 	}
 }

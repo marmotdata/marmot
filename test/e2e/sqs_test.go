@@ -13,7 +13,7 @@ import (
 )
 
 func TestSQSIngestion(t *testing.T) {
-	// Create test queues using the shared Localstack instance
+	// Create test queues on localstack
 	testQueues := []utils.TestQueue{
 		{
 			Name: "test-queue-1",
@@ -30,10 +30,8 @@ func TestSQSIngestion(t *testing.T) {
 			},
 		},
 	}
-
 	require.NoError(t, utils.CreateTestQueues(context.Background(), testQueues))
 
-	// Create test config file
 	configContent := fmt.Sprintf(`
 runs:
   - sqs:
@@ -51,22 +49,18 @@ runs:
         - Team
 `, env.LocalstackPort)
 
-	// Run ingest command
 	err := env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContent,
 	)
 	require.NoError(t, err)
 
-	// Allow time for ingestion
 	time.Sleep(5 * time.Second)
 
-	// Fetch all assets
 	params := assets.NewGetAssetsListParams()
 	resp, err := env.APIClient.Assets.GetAssetsList(params)
 	require.NoError(t, err)
 
-	// Verify first queue
 	queue1 := utils.FindAssetByName(resp.Payload.Assets, "test-queue-1")
 	require.NotNil(t, queue1, "asset test-queue-1 not found")
 
@@ -90,7 +84,7 @@ runs:
 	// assert.Equal(t, "staging", queue2.Metadata["Environment"])
 	// assert.Equal(t, "orders", queue2.Metadata["Team"])
 
-	// Delete the test assets
+	// Tidy up
 	_, err = env.APIClient.Assets.DeleteAssetsID(assets.NewDeleteAssetsIDParams().WithID(queue1.ID))
 	assert.NoError(t, err, "failed to delete asset", queue1.ID)
 	_, err = env.APIClient.Assets.DeleteAssetsID(assets.NewDeleteAssetsIDParams().WithID(queue2.ID))

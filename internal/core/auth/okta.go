@@ -29,11 +29,13 @@ type OktaProvider struct {
 
 // NewOktaProvider creates a new OktaProvider.
 func NewOktaProvider(cfg *config.Config, userService user.Service, authService Service) *OktaProvider {
-	providerCfg := cfg.Auth.Providers["okta"]
-	if providerCfg == nil {
+	providerCfg, ok := cfg.Auth.Providers["okta"]
+	if !ok || providerCfg == nil {
 		log.Fatal().Msg("okta provider config not found")
+		return nil // Unreachable but makes linter happy
 	}
 
+	// We can now safely use providerCfg
 	p := &OktaProvider{
 		clientID:     providerCfg.ClientID,
 		clientSecret: providerCfg.ClientSecret,
@@ -58,6 +60,7 @@ func NewOktaProvider(cfg *config.Config, userService user.Service, authService S
 	p.oidcProvider, err = oidc.NewProvider(context.Background(), providerCfg.URL)
 	if err != nil {
 		log.Fatal().Err(err).Msg("failed to create OIDC provider")
+		return nil // Unreachable but makes linter happy
 	}
 
 	p.verifier = p.oidcProvider.Verifier(&oidc.Config{

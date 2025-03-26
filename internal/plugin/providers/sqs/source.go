@@ -14,10 +14,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/mrn"
+	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 )
 
@@ -87,23 +87,19 @@ func (s *Source) Validate(pluginConfig plugin.RawPluginConfig) error {
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	// Unmarshal the raw config into the Config struct
 	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 	s.config = config
 
-	// Initialize AWS config
 	awsCfg, err := plugin.NewAWSConfig(ctx, pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("loading AWS config: %w", err)
 	}
 
-	// Create SQS client
 	s.client = sqs.NewFromConfig(awsCfg)
 
-	// Discover SQS queues
 	queues, err := s.discoverQueues(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("discovering queues: %w", err)
@@ -111,14 +107,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
-	queueArns := make(map[string]string) // Map of queue name to ARN for DLQ lineage
+	queueArns := make(map[string]string)
 
-	// First pass: Create assets and build queue ARN map
 	for _, queueURL := range queues {
-		// Extract queue name for filtering
 		name := extractQueueName(queueURL)
 
-		// Apply filter
 		if config.AWSConfig != nil {
 			if !plugin.ShouldIncludeResource(name, config.AWSConfig.Filter) {
 				log.Debug().Str("queue", name).Msg("Skipping queue due to filter")
@@ -135,7 +128,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		queueArns[name] = arn
 	}
 
-	// Second pass: Create DLQ lineage if enabled
 	if s.config.DiscoverDLQ {
 		dlqLineages, err := s.discoverDLQLineage(ctx, queues, queueArns)
 		if err != nil {
@@ -150,6 +142,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		Lineage: lineages,
 	}, nil
 }
+
 func (s *Source) discoverQueues(ctx context.Context) ([]string, error) {
 	var queues []string
 	var nextToken *string
@@ -174,7 +167,6 @@ func (s *Source) discoverQueues(ctx context.Context) ([]string, error) {
 }
 
 func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.Asset, string, error) {
-	// Get queue attributes
 	attrs, err := s.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 		QueueUrl: &queueURL,
 		AttributeNames: []types.QueueAttributeName{
@@ -185,7 +177,6 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 		return asset.Asset{}, "", fmt.Errorf("getting queue attributes: %w", err)
 	}
 
-	// Convert AWS tags to metadata if enabled
 	var metadata map[string]interface{}
 	if s.config.TagsToMetadata {
 		tagsOutput, err := s.client.ListQueueTags(ctx, &sqs.ListQueueTagsInput{
@@ -202,7 +193,6 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 		}
 	}
 
-	// Add standard attributes to metadata
 	metadata["queue_arn"] = attrs.Attributes[string(types.QueueAttributeNameQueueArn)]
 	metadata["visibility_timeout"] = attrs.Attributes[string(types.QueueAttributeNameVisibilityTimeout)]
 	metadata["message_retention_period"] = attrs.Attributes[string(types.QueueAttributeNameMessageRetentionPeriod)]
@@ -224,12 +214,10 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 		}
 	}
 
-	// Dead Letter Queue attributes
 	if redrivePolicy, ok := attrs.Attributes[string(types.QueueAttributeNameRedrivePolicy)]; ok {
 		metadata["redrive_policy"] = redrivePolicy
 	}
 
-	// Extract queue name from URL
 	name := extractQueueName(queueURL)
 	mrnValue := mrn.New("Queue", "SQS", name)
 	description := fmt.Sprintf("SQS queue %s", name)

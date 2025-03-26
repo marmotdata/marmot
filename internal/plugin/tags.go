@@ -21,17 +21,14 @@ func InterpolateTags(tags TagsConfig, metadata map[string]interface{}) []string 
 			continue
 		}
 
-		// If no interpolation needed, add as-is
 		if !strings.Contains(tag, "${") {
 			result = append(result, tag)
 			continue
 		}
 
-		// Process interpolation
 		interpolated := interpolationRegex.ReplaceAllStringFunc(tag, func(match string) string {
 			varName := match[2 : len(match)-1]
 
-			// Get value from metadata
 			if value, ok := getNestedValue(metadata, varName); ok {
 				return fmt.Sprintf("%v", value)
 			}
