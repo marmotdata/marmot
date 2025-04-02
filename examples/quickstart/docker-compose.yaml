@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: marmot-postgres
+    environment:
+      POSTGRES_USER: marmot
+      POSTGRES_PASSWORD: marmot
+      POSTGRES_DB: marmot
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U marmot"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  marmot:
+    image: ghcr.io/marmotdata/marmot:0.1.0-preview2
+    container_name: marmot-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=marmot
+      - DB_PASSWORD=marmot
+      - DB_NAME=marmot
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:
+    name: marmot-postgres-data

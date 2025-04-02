@@ -30,7 +30,7 @@ export default function Integrations(): JSX.Element {
             title="CLI"
             description="Quick integration via command line"
             href="/docs/cli/getting-started"
-            color="bg-earthy-brown-50 dark:bg-amber-900/20"
+            color="bg-earthy-brown-50 dark:bg-gray-900"
             large={true}
           />
 
@@ -39,7 +39,7 @@ export default function Integrations(): JSX.Element {
             title="API"
             description="Integrate with anything using the API"
             href="/docs/api/introduction"
-            color="bg-earthy-brown-50 dark:bg-amber-900/20"
+            color="bg-earthy-brown-50 dark:bg-gray-900"
             large={true}
           />
 
@@ -49,7 +49,7 @@ export default function Integrations(): JSX.Element {
             title="Terraform"
             description="Infrastructure as code support for all your resources"
             href="/docs/integrations/terraform"
-            color="bg-earthy-brown-50 dark:bg-amber-900/20"
+            color="bg-earthy-brown-50 dark:bg-gray-900"
             large={true}
           />
 
@@ -58,7 +58,7 @@ export default function Integrations(): JSX.Element {
             title="Pulumi"
             description="Modern IaC with your favorite programming language"
             href="/docs/integrations/pulumi"
-            color="bg-earthy-brown-50 dark:bg-amber-900/20"
+            color="bg-earthy-brown-50 dark:bg-gray-900"
             large={true}
           />
         </div>

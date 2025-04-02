@@ -16,26 +16,22 @@ Marmot was designed with the following in mind:
 
 ## ✨ Features:
 
-### Powerful Queries:
+- **Find anything fast with flexible queries**: Boolean, text, metadata, and comparison operators for powerful search capabilities
+- **Connect through multiple interfaces:** CLI, API, Terraform, and Pulumi integrations for seamless workflow integration
+- **Visualize data flows with interactive graphs:** Track dependencies and analyze impact through comprehensive lineage visualization
+- **Documentation and governance:** Markdown documentation support with tagging and classification capabilities
 
-- Find anything fast with flexible queries.
-- Boolean, text, metadata, and comparisons.
+## 🔌Supported Data Sources
 
-### Flexible Integrations
+Marmot supports ingesting assets through its CLI, API as well as Terraform and Pulumi integrations for Infrastructure-as-code. Marmot's ecosystem of plugins for ingestion through the CLI is constantly growing with current support for Kafka, AsyncAPI, PostgresSQL, SQS, SNS, Iceberg and many more. However, you can ingest almost any asset you want through the flexible API and IaC providers.
 
-- CLI, API, Terraform, and Pulumi integrations.
+## 📚 Documentation
 
-### Lineage Visualization:
+If you want to get started with Marmot quickly following the [quickstart guide in the documentation]() to get up and running in minutes.
 
-- See data flow with interactive graphs.
-- Track dependencies and analyze impact.
+You can also check out the [API documentation]() to help with building custom integrations.
 
-### Documentation & Governance:
-
-- Markdown documentation support
-- Tagging and classification
-
-## Local Development 🛠️
+## 🛠️ Local Development
 
 1. Start PostgreSQL:
 
@@ -68,14 +64,10 @@ The app will be available at:
 - Backend API: http://localhost:8080
 - API Documentation: http://localhost:8080/swagger/index.html
 
-## Documentation 📚
-
-See the [docs](./docs) directory for detailed documentation.
-
-## Contributing 🤝
+## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
 
-## License ⚖️
+## ⚖️License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

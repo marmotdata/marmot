@@ -50,40 +50,48 @@ checksum:
 
 dockers:
   - image_templates:
-      - "ghcr.io/marmotdata/marmot:latest"
-      - "ghcr.io/marmotdata/marmot:{{ .Version }}"
-      - "ghcr.io/marmotdata/marmot:{{ .Major }}.{{ .Minor }}"
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-amd64"
+      - "ghcr.io/marmotdata/marmot:latest-amd64"
     dockerfile: Dockerfile.goreleaser
+    use: buildx
     build_flag_templates:
+      - "--platform=linux/amd64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
     goos: linux
     goarch: amd64
-    use: docker
+
   - image_templates:
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-arm64"
       - "ghcr.io/marmotdata/marmot:latest-arm64"
     dockerfile: Dockerfile.goreleaser
+    use: buildx
     build_flag_templates:
+      - "--platform=linux/arm64"
       - "--label=org.opencontainers.image.created={{.Date}}"
       - "--label=org.opencontainers.image.title={{.ProjectName}}"
       - "--label=org.opencontainers.image.revision={{.FullCommit}}"
       - "--label=org.opencontainers.image.version={{.Version}}"
     goos: linux
     goarch: arm64
-    use: docker
 
 docker_manifests:
   - name_template: "ghcr.io/marmotdata/marmot:{{ .Version }}"
     image_templates:
-      - "ghcr.io/marmotdata/marmot:{{ .Version }}"
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-amd64"
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-arm64"
+
   - name_template: "ghcr.io/marmotdata/marmot:latest"
     image_templates:
-      - "ghcr.io/marmotdata/marmot:latest"
+      - "ghcr.io/marmotdata/marmot:latest-amd64"
       - "ghcr.io/marmotdata/marmot:latest-arm64"
+
+  - name_template: "ghcr.io/marmotdata/marmot:{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-amd64"
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-arm64"
 
 release:
   github:
