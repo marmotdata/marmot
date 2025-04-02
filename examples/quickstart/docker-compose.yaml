@@ -25,11 +25,9 @@ services:
       postgres:
         condition: service_healthy
     environment:
-      - DB_HOST=postgres
-      - DB_PORT=5432
-      - DB_USER=marmot
-      - DB_PASSWORD=marmot
-      - DB_NAME=marmot
+      - MARMOT_DATABASE_HOST=postgres
+      - MARMOT_DATABASE_USER=marmot
+      - MARMOT_DATABASE_PASSWORD=marmot
     ports:
       - "8080:8080"
 
