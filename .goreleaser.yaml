@@ -8,12 +8,8 @@ env:
 before:
   hooks:
     - make clean
-    - cd web/marmot && pnpm install && pnpm build
-    - mkdir -p internal/staticfiles/build
-    - cp -r web/marmot/build/* internal/staticfiles/build/
     - make swagger
-    - go mod tidy
-    - go mod download
+    - make frontend-build
 
 builds:
   - id: marmot
