@@ -21,7 +21,7 @@ Marmot was designed with the following in mind:
 
 ## Next Steps
 
-- [Quick Start Guide](./quickstart.md
+- [Quick Start Guide](./quickstart.md)
 - [Data Ingestion Guide](./data-ingestion.md)
 - [Query Language Reference](./query-language.md)
 - [Integration Options](./integration.md)
