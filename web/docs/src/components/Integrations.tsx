@@ -18,9 +18,6 @@ export default function Integrations(): JSX.Element {
             deploy virtually any asset type imaginable.
           </p>
         </div>
-
-        <IconsScroll />
-
         <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {/* Example using different styling options */}
 
@@ -29,7 +26,7 @@ export default function Integrations(): JSX.Element {
             icon={IconTerminal}
             title="CLI"
             description="Quick integration via command line"
-            href="/docs/cli/getting-started"
+            href="/docs/populating/cli"
             color="bg-earthy-brown-50 dark:bg-gray-900"
             large={true}
           />
@@ -38,7 +35,7 @@ export default function Integrations(): JSX.Element {
             icon={IconAPI}
             title="API"
             description="Integrate with anything using the API"
-            href="/docs/api/introduction"
+            href="/docs/populating/api"
             color="bg-earthy-brown-50 dark:bg-gray-900"
             large={true}
           />
@@ -48,7 +45,7 @@ export default function Integrations(): JSX.Element {
             icon="terraform"
             title="Terraform"
             description="Infrastructure as code support for all your resources"
-            href="/docs/integrations/terraform"
+            href="/docs/populating/terraform"
             color="bg-earthy-brown-50 dark:bg-gray-900"
             large={true}
           />
@@ -57,7 +54,7 @@ export default function Integrations(): JSX.Element {
             icon="pulumi"
             title="Pulumi"
             description="Modern IaC with your favorite programming language"
-            href="/docs/integrations/pulumi"
+            href="/docs/populating/pulumi"
             color="bg-earthy-brown-50 dark:bg-gray-900"
             large={true}
           />

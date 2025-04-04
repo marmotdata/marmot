@@ -21,12 +21,13 @@
 }
 
 :root {
+  --ifm-breadcrumb-color-active: rgb(217 119 6 / var(--tw-bg-opacity, 1));
+  --ifm-color-primary: rgb(217 119 6 / var(--tw-bg-opacity, 1)) !important;
   --ifm-footer-background-color: #f0ece8;
   --ifm-navbar-background-color: #fefdf8;
   --ifm-background-color: #fefdf8;
   --ifm-navbar-shadow: none;
-  --ifm-link-color: #5d4037;
-  --ifm-color-primary: #5d4037;
+  --ifm-link-color: rgb(217 119 6 / var(--tw-bg-opacity, 1));
 }
 
 /* Animation keyframes for seamless infinite scrolling */

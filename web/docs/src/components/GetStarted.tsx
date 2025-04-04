@@ -20,7 +20,7 @@ export default function GetStarted(): JSX.Element {
                 </p>
                 <div className="mt-8">
                   <a
-                    href="/docs/getting-started"
+                    href="/docs/introduction"
                     className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm bg-white text-amber-600 hover:bg-gray-50 transition-colors duration-150"
                   >
                     Explore the docs

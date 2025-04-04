@@ -17,19 +17,19 @@ Marmot was designed with the following in mind:
 ## ✨ Features:
 
 - **Find anything fast with flexible queries**: Boolean, text, metadata, and comparison operators for powerful search capabilities
-- **Connect through multiple interfaces:** CLI, API, Terraform, and Pulumi integrations for seamless workflow integration
+- **Integrate seamlessly with your data stack:** CLI, API, Terraform, and Pulumi integrations for seamless workflow integration
 - **Visualize data flows with interactive graphs:** Track dependencies and analyze impact through comprehensive lineage visualization
 - **Documentation and governance:** Markdown documentation support with tagging and classification capabilities
 
 ## 🔌Supported Data Sources
 
-Marmot supports ingesting assets through its CLI, API as well as Terraform and Pulumi integrations for Infrastructure-as-code. Marmot's ecosystem of plugins for ingestion through the CLI is constantly growing with current support for Kafka, AsyncAPI, PostgresSQL, SQS, SNS, Iceberg and many more. However, you can ingest almost any asset you want through the flexible API and IaC providers.
+Marmot offers multiple ways to ingest assets: through its CLI, API, or infrastructure-as-code solutions like Terraform and Pulumi. The CLI features a growing ecosystem of plugins with current support for Kafka, AsyncAPI, PostgreSQL, SQS, SNS, Iceberg, and many others. For assets not covered by existing plugins, Marmot's flexible API and infrastructure-as-code providers enable ingestion of virtually any asset type you need.
 
 ## 📚 Documentation
 
-If you want to get started with Marmot quickly following the [quickstart guide in the documentation]() to get up and running in minutes.
+If you want to get started with Marmot quickly following the [quickstart guide in the documentation](https://marmotdata.io/docs/quick-start) to get up and running in minutes.
 
-You can also check out the [API documentation]() to help with building custom integrations.
+You can also check out the [API documentation](https://marmotdata.io/api) to help with building custom integrations.
 
 ## 🛠️ Local Development
 
