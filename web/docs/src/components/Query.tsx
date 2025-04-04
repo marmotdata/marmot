@@ -38,7 +38,7 @@ export default function QueryLanguage(): JSX.Element {
 
           <div className="mt-10 lg:mt-0 relative">
             <div className="rounded-lg shadow dark:shadow-white/20 overflow-hidden max-h-[300px]">
-              <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-600">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-16">
@@ -73,7 +73,7 @@ export default function QueryLanguage(): JSX.Element {
                 </div>
               </div>
 
-              <div className="p-4 border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600 cursor-pointer">
+              <div className="p-4 border-b border-gray-200 dark:border-gray-600">
                 <div className="flex justify-between items-start">
                   <div className="flex items-center gap-3">
                     <div className="w-16 h-16">

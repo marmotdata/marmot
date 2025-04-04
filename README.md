@@ -10,20 +10,20 @@ Marmot is an open-source data catalog that helps teams discover, understand, and
 
 Marmot was designed with the following in mind:
 
-- **Simplicity**: Single binary deployment
+- **Simplicity**: Easy to use UI, single binary deployment
 - **Performance**: Fast search and efficient processing
 - **Extensibility**: Document almost anything with the flexible API
 
 ## ✨ Features:
 
 - **Find anything fast with flexible queries**: Boolean, text, metadata, and comparison operators for powerful search capabilities
-- **Integrate seamlessly with your data stack:** CLI, API, Terraform, and Pulumi integrations for seamless workflow integration
+- **Populate assets with your preferred technology:** CLI, API, Terraform, and Pulumi integrations
 - **Visualize data flows with interactive graphs:** Track dependencies and analyze impact through comprehensive lineage visualization
 - **Documentation and governance:** Markdown documentation support with tagging and classification capabilities
 
 ## 🔌Supported Data Sources
 
-Marmot offers multiple ways to ingest assets: through its CLI, API, or infrastructure-as-code solutions like Terraform and Pulumi. The CLI features a growing ecosystem of plugins with current support for Kafka, AsyncAPI, PostgreSQL, SQS, SNS, Iceberg, and many others. For assets not covered by existing plugins, Marmot's flexible API and infrastructure-as-code providers enable ingestion of virtually any asset type you need.
+Marmot offers multiple ways to ingest assets: through its CLI, API, or infrastructure-as-code solutions like Terraform and Pulumi. The CLI features a growing ecosystem of plugins with current support for Kafka, AsyncAPI, PostgreSQL, SQS, SNS, and many others. For assets not covered by existing plugins, Marmot's flexible API and infrastructure-as-code providers enable ingestion of virtually any asset type you need.
 
 ## 📚 Documentation
 
