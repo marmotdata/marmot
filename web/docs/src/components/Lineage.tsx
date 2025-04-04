@@ -18,7 +18,7 @@ function LineageNode({
         node p-4 rounded-lg cursor-pointer min-w-[150px] border-solid
         ${isCurrent
           ? "bg-orange-50 border-2 border-orange-600 dark:bg-[#4d4d4d]"
-          : "bg-[#fefdf8] border border-[#dfdfdf] dark:bg-[#2e2e2e] dark:border-[#4d4d4d] hover:border-[#fb923c] hover:bg-[#fff7ed] dark:hover:bg-[#4d4d4d]"
+          : "bg-[#fefdf8] border border-[#dfdfdf] dark:bg-[#2e2e2e] dark:border-[#4d4d4d]"
         }
         transition-all duration-150
       `}
