@@ -15,7 +15,7 @@ Marmot was designed with the following in mind:
 ## ✨ Features:
 
 - **Find anything fast with flexible queries**: Boolean, text, metadata, and comparison operators for powerful search capabilities
-- **Connect through multiple interfaces:** CLI, API, Terraform, and Pulumi integrations for seamless workflow integration
+- **Integrate seamlessly with your data stack:** CLI, API, Terraform, and Pulumi integrations for seamless workflow integration
 - **Visualize data flows with interactive graphs:** Track dependencies and analyze impact through comprehensive lineage visualization
 - **Documentation and governance:** Markdown documentation support with tagging and classification capabilities
 

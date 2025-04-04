@@ -10,8 +10,6 @@ services:
       POSTGRES_DB: marmot
     ports:
       - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U marmot"]
       interval: 5s
@@ -19,7 +17,7 @@ services:
       retries: 5
 
   marmot:
-    image: ghcr.io/marmotdata/marmot:0.1.0-preview2
+    image: ghcr.io/marmotdata/marmot:0.1.0
     container_name: marmot-service
     depends_on:
       postgres:
@@ -30,7 +28,22 @@ services:
       - MARMOT_DATABASE_PASSWORD=marmot
     ports:
       - "8080:8080"
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 8080 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
-volumes:
-  postgres_data:
-    name: marmot-postgres-data
+  # Comment this is out avoid creating test data
+  asset-creator:
+    image: alpine:3.18
+    container_name: marmot-asset-creator
+    depends_on:
+      marmot:
+        condition: service_healthy
+    volumes:
+      - ./create-assets.sh:/create-assets.sh:ro
+    command: ["/bin/sh", "/create-assets.sh"]
+    environment:
+      - MARMOT_API_URL=http://marmot:8080/api/v1

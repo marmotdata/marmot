@@ -16,6 +16,7 @@ import MongoDBIcon from '~icons/logos/mongodb-icon';
 import S3Icon from '~icons/logos/aws-s3';
 import SparkIcon from '~icons/logos/apache-spark';
 import SnowflakeIcon from '~icons/logos/snowflake-icon';
+import KubernetesIcon from '~icons/logos/kubernetes';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -23,6 +24,7 @@ import CodeBracketIcon from '~icons/heroicons/code-bracket-16-solid';
 import DatabaseOutlineIcon from '~icons/material-symbols/database-outline';
 import TableOutlineIcon from '~icons/material-symbols/table-outline';
 import ViewOutlineIcon from '~icons/material-symbols/view-list-outline';
+import HomeStorageOutlineIcon from '~icons/material-symbols/home-storage-outline';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
 
@@ -50,11 +52,13 @@ const iconMap: Record<
   s3: { default: S3Icon },
   spark: { default: SparkIcon },
   snowflake: { default: SnowflakeIcon },
+  kubernetes: { default: KubernetesIcon },
   queue: { default: QueueListIcon, class: 'text-gray-900 dark:text-gray-100' },
   topic: { default: ChatBubbleIcon, class: 'text-gray-900 dark:text-gray-100' },
   service: { default: CodeBracketIcon, class: 'text-gray-900 dark:text-gray-100' },
   database: { default: DatabaseOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
   table: { default: TableOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
+  bucket: { default: HomeStorageOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
   view: { default: ViewOutlineIcon, class: 'text-gray-900 dark:text-gray-100' }
 };
 

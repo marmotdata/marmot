@@ -1,10 +1,10 @@
 ---
-sidebar_position: 3
+sidebar_position: 5
 ---
 
 # Queries
 
-The query language allows you to search and filter assets using both free text and structured metadata queries. This guide explains the available query features and syntax.
+The query language allows you to search and filter assets using both free text and structured metadata queries.
 
 ## Basic Queries
 
