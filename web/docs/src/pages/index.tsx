@@ -34,7 +34,6 @@ export default function Home(): JSX.Element {
         <Query />
         <Lineage />
         <Integrations />
-        <GetStarted />
       </div>
     </Layout>
   );

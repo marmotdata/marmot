@@ -80,7 +80,7 @@ const config: Config = {
       respectPrefersColorScheme: true,
     },
     //TODO: replace with social card
-    image: "img/docusaurus-social-card.jpg",
+    image: "img/marmot.svg",
     navbar: {
       title: "Marmot",
       logo: {
@@ -112,7 +112,7 @@ const config: Config = {
             },
             {
               label: "Plugins",
-              to: "/docs/AsyncAPI",
+              to: "/docs/plugins",
             },
           ],
         },
@@ -130,7 +130,7 @@ const config: Config = {
           items: [
             {
               label: "GitHub",
-              href: "https://github.com/facebook/docusaurus",
+              href: "https://github.com/marmotdata/marmot/",
             },
           ],
         },
