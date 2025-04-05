@@ -21,6 +21,8 @@ docker run -d \
   ghcr.io/marmotdata/marmot:0.1.0
 ```
 
+> __The default username and password is admin:admin__
+
 ## Configuration
 
 You can configure Marmot using environment variables or by mounting a configuration file. You can read more about [available configuration options here.](/docs/configure)

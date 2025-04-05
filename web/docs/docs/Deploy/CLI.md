@@ -34,6 +34,8 @@ If you prefer to install manually:
 marmot run --config /path/to/config.yaml
 ```
 
+> __The default username and password is admin:admin__
+
 ## Configuration
 
 Create a `config.yaml` file with your database connection details. You can read more about [available configuration options here.](/docs/configure)

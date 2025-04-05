@@ -33,6 +33,8 @@ docker compose up
 
 4. Once started, you should be able to acces to the Marmot UI at [http://localhost:8080](http://localhost:8080)
 
+> __The default username and password is admin:admin__
+
 ## What's created?
 
 The quick start automatically creates a few assets with schemas and lineage to showcase its functionality. The following assets are created with lineage connecting them:
