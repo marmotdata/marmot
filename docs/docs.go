@@ -2467,7 +2467,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "oauth_provider": {
-                    "description": "OAuth-related fields",
                     "type": "string"
                 },
                 "oauth_provider_data": {

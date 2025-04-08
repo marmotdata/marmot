@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/auth"
@@ -17,15 +18,17 @@ type Handler struct {
 	userService      user.Service
 	authService      auth.Service
 	syncer           *sync.AssetSyncer
+	config           *config.Config
 }
 
-func NewHandler(assetService asset.Service, assetDocsService assetdocs.Service, syncer *sync.AssetSyncer, userService user.Service, authService auth.Service) *Handler {
+func NewHandler(assetService asset.Service, assetDocsService assetdocs.Service, syncer *sync.AssetSyncer, userService user.Service, authService auth.Service, config *config.Config) *Handler {
 	return &Handler{
 		assetService:     assetService,
 		assetDocsService: assetDocsService,
 		userService:      userService,
 		authService:      authService,
 		syncer:           syncer,
+		config:           config,
 	}
 }
 
@@ -36,7 +39,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.listAssets,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -45,7 +48,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodPost,
 			Handler: h.createAsset,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
@@ -54,7 +57,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.getAsset,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -63,7 +66,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodPut,
 			Handler: h.updateAsset,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
@@ -72,7 +75,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodDelete,
 			Handler: h.deleteAsset,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
@@ -81,7 +84,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.searchAssets,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -90,7 +93,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.summaryAssets,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -99,7 +102,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.getAssetByMRN,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -108,7 +111,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodPost,
 			Handler: h.addTag,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
@@ -117,7 +120,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodDelete,
 			Handler: h.removeTag,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
@@ -126,7 +129,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.getAssetDocumentation,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -135,7 +138,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodPost,
 			Handler: h.createAssetDocumentation,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
@@ -144,7 +147,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodPost,
 			Handler: h.batchCreateAssets,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
@@ -153,7 +156,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodPost,
 			Handler: h.batchCreateDocumentation,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
@@ -162,7 +165,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.matchAssetPattern,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -171,7 +174,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.getMetadataFieldSuggestions,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -180,7 +183,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.getMetadataValueSuggestions,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -189,7 +192,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.getTagSuggestions,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
@@ -198,7 +201,7 @@ func (h *Handler) Routes() []common.Route {
 			Method:  http.MethodGet,
 			Handler: h.lookupAsset,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService),
+				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},

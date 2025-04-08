@@ -52,7 +52,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	// Configure OAuth providers
 	if config.Auth.Providers != nil {
-		if oktaConfig, exists := config.Auth.Providers["okta"]; exists && oktaConfig != nil {
+		if oktaConfig, exists := config.Auth.Providers["okta"]; exists && oktaConfig != nil && oktaConfig.Enabled {
 			if oktaConfig.ClientID != "" && oktaConfig.ClientSecret != "" && oktaConfig.URL != "" {
 				oktaProvider := authService.NewOktaProvider(config, userSvc, authSvc)
 				oauthManager.RegisterProvider(oktaProvider)
@@ -66,12 +66,11 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		config: config,
 	}
 
-	// Initialize handlers
 	server.handlers = []interface{ Routes() []common.Route }{
-		assets.NewHandler(assetSvc, assetDocsSvc, sync.NewAssetSyncer(), userSvc, authSvc),
-		users.NewHandler(userSvc, authSvc),
+		assets.NewHandler(assetSvc, assetDocsSvc, sync.NewAssetSyncer(), userSvc, authSvc, config),
+		users.NewHandler(userSvc, authSvc, config),
 		auth.NewHandler(authSvc, oauthManager, userSvc, config),
-		lineage.NewHandler(lineageSvc, userSvc, authSvc),
+		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
 	}
 
 	return server
