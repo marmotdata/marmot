@@ -12,8 +12,10 @@ import (
 
 var (
 	ErrUserNotFound     = errors.New("user not found")
+	ErrRoleNotFound     = errors.New("role not found")
 	ErrInvalidInput     = errors.New("invalid input")
 	ErrAlreadyExists    = errors.New("user already exists")
+	ErrReservedUsername = errors.New("reserved username")
 	ErrInvalidPassword  = errors.New("invalid password")
 	ErrUnauthorized     = errors.New("unauthorized")
 	ErrInvalidAPIKey    = errors.New("invalid API key")
@@ -52,7 +54,6 @@ type CreateUserInput struct {
 	Password  string   `json:"password" validate:"required_without=OAuthProvider,min=8"`
 	RoleNames []string `json:"role_names" validate:"required,min=1"`
 
-	// OAuth-related fields
 	OAuthProvider     string                 `json:"oauth_provider,omitempty"`
 	OAuthProviderID   string                 `json:"oauth_provider_id,omitempty"`
 	OAuthProviderData map[string]interface{} `json:"oauth_provider_data,omitempty"`
@@ -87,6 +88,7 @@ type Service interface {
 	Authenticate(ctx context.Context, username, password string) (*User, error)
 	ValidateAPIKey(ctx context.Context, apiKey string) (*User, error)
 	HasPermission(ctx context.Context, userID string, resourceType string, action string) (bool, error)
+	GetPermissionsByRoleName(ctx context.Context, roleName string) ([]Permission, error)
 
 	// OAuth
 	AuthenticateOAuth(ctx context.Context, provider string, providerUserID string, userInfo map[string]interface{}) (*User, error)
@@ -121,6 +123,10 @@ func NewService(repo Repository, opts ...ServiceOption) Service {
 	return s
 }
 
+func (s *service) GetPermissionsByRoleName(ctx context.Context, roleName string) ([]Permission, error) {
+	return s.repo.GetPermissionsByRoleName(ctx, roleName)
+}
+
 func (s *service) UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error {
 	if err := s.repo.UpdatePreferences(ctx, userID, preferences); err != nil {
 		return fmt.Errorf("updating user preferences: %w", err)
@@ -130,20 +136,17 @@ func (s *service) UpdatePreferences(ctx context.Context, userID string, preferen
 }
 
 func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, error) {
-	// Only validate password if this is not an OAuth user
 	if input.OAuthProvider == "" {
 		if err := s.validator.Struct(input); err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 		}
 	} else {
-		// Create a new validator for OAuth users that skips password validation
 		validate := validator.New()
 		if err := validate.StructExcept(input, "Password"); err != nil {
 			return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 		}
 	}
 
-	// Check if username exists
 	exists, err := s.repo.UsernameExists(ctx, input.Username)
 	if err != nil {
 		return nil, fmt.Errorf("checking username existence: %w", err)
@@ -152,10 +155,12 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, err
 		return nil, fmt.Errorf("%w: username already taken", ErrAlreadyExists)
 	}
 
-	// Handle password for non-OAuth users
+	if input.Username == "anonymous" {
+		return nil, fmt.Errorf("%w: cannot create user with reserved username", ErrAlreadyExists)
+	}
+
 	var passwordHash string
 	if input.OAuthProvider == "" {
-		// For non-OAuth users, password is required
 		if input.Password == "" {
 			return nil, ErrPasswordRequired
 		}
@@ -175,19 +180,15 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, err
 		Preferences: make(map[string]interface{}),
 	}
 
-	// Create the user
 	if err := s.repo.CreateUser(ctx, user, passwordHash); err != nil {
 		return nil, fmt.Errorf("creating user: %w", err)
 	}
 
-	// Assign roles
 	if err := s.repo.AssignRoles(ctx, user.ID, input.RoleNames); err != nil {
-		// If role assignment fails, try to clean up the user
 		_ = s.repo.DeleteUser(ctx, user.ID)
 		return nil, fmt.Errorf("assigning roles: %w", err)
 	}
 
-	// Handle OAuth identity if present
 	if input.OAuthProvider != "" {
 		identity := &UserIdentity{
 			UserID:         user.ID,
@@ -200,13 +201,11 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, err
 		}
 
 		if err := s.repo.CreateUserIdentity(ctx, identity); err != nil {
-			// If identity creation fails, clean up the user
 			_ = s.repo.DeleteUser(ctx, user.ID)
 			return nil, fmt.Errorf("creating user identity: %w", err)
 		}
 	}
 
-	// Get the complete user object with roles
 	return s.Get(ctx, user.ID)
 }
 

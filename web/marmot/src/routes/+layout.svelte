@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import '../app.css';
 	import { page } from '$app/stores';
-	import { auth } from '$lib/stores/auth';
+	import { auth, isAnonymousMode } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import UserIcon from '~icons/heroicons/user-16-solid';
@@ -10,23 +10,35 @@
 	let showBanner: boolean | null = null;
 	let isDropdownOpen = false;
 	let isAdmin = false;
+	let checkingAnonymousMode = true;
+	let manualNavigation = false;
 
-	onMount(() => {
-		// Check if user has admin role
+	onMount(async () => {
+		checkingAnonymousMode = true;
+		await auth.checkAnonymousMode();
+		checkingAnonymousMode = false;
+
 		if (browser && $auth) {
 			isAdmin = auth.hasRole('admin');
 		}
 	});
 
-	// Update isAdmin whenever auth changes
 	$: if (browser && $auth) {
 		isAdmin = auth.hasRole('admin');
 	}
 
-	$: if (browser && $auth !== undefined) {
+	function withManualNav(fn: () => void) {
+		manualNavigation = true;
+		fn();
+		setTimeout(() => {
+			manualNavigation = false;
+		}, 100);
+	}
+
+	$: if (browser && !checkingAnonymousMode && !manualNavigation) {
 		if ($auth && $page.url.pathname.startsWith('/login')) {
 			goto('/');
-		} else if (!$auth && !$page.url.pathname.startsWith('/login')) {
+		} else if (!$auth && !$page.url.pathname.startsWith('/login') && !$isAnonymousMode) {
 			goto('/login');
 		}
 	}
@@ -44,8 +56,16 @@
 	}
 
 	function handleLogout() {
-		auth.clearToken();
-		goto('/login');
+		withManualNav(() => {
+			auth.clearToken();
+			window.location.href = '/';
+		});
+	}
+
+	function handleLogin() {
+		withManualNav(() => {
+			goto('/login');
+		});
 	}
 </script>
 
@@ -86,26 +106,39 @@
 									aria-orientation="vertical"
 									aria-labelledby="user-menu"
 								>
-									<a
-										href="/profile"
-										class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-										role="menuitem">Profile</a
-									>
-									{#if isAdmin}
+									{#if $auth}
+										<!-- User is authenticated -->
 										<a
-											href="/admin"
+											href="/profile"
 											class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-											role="menuitem">Admin</a
+											role="menuitem">Profile</a
 										>
+										{#if isAdmin}
+											<a
+												href="/admin"
+												class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+												role="menuitem">Admin</a
+											>
+										{/if}
+										<a
+											href="#"
+											on:click|preventDefault={handleLogout}
+											class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+											role="menuitem"
+										>
+											Logout
+										</a>
+									{:else}
+										<!-- User is in anonymous mode -->
+										<a
+											href="#"
+											on:click|preventDefault={handleLogin}
+											class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+											role="menuitem"
+										>
+											Login
+										</a>
 									{/if}
-									<a
-										href="#"
-										on:click|preventDefault={handleLogout}
-										class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-										role="menuitem"
-									>
-										Logout
-									</a>
 								</div>
 							{/if}
 						</div>

@@ -37,6 +37,7 @@ type Repository interface {
 	AssignRoles(ctx context.Context, userID string, roleNames []string) error
 	UpdateRoles(ctx context.Context, userID string, roleNames []string) error
 	HasPermission(ctx context.Context, userID string, resourceType string, action string) (bool, error)
+	GetPermissionsByRoleName(ctx context.Context, roleName string) ([]Permission, error)
 	ValidatePassword(ctx context.Context, userID string, password string) error
 
 	UsernameExists(ctx context.Context, username string) (bool, error)
@@ -781,4 +782,41 @@ func (r *PostgresRepository) ListAPIKeys(ctx context.Context, userID string) ([]
 	}
 
 	return keys, nil
+}
+
+func (r *PostgresRepository) GetPermissionsByRoleName(ctx context.Context, roleName string) ([]Permission, error) {
+	query := `
+		SELECT p.id, p.name, p.description, p.resource_type, p.action
+		FROM permissions p
+		JOIN role_permissions rp ON p.id = rp.permission_id
+		JOIN roles r ON rp.role_id = r.id
+		WHERE r.name = $1`
+
+	rows, err := r.db.Query(ctx, query, roleName)
+	if err != nil {
+		return nil, fmt.Errorf("querying permissions by role name: %w", err)
+	}
+	defer rows.Close()
+
+	var permissions []Permission
+	for rows.Next() {
+		var permission Permission
+		err := rows.Scan(
+			&permission.ID,
+			&permission.Name,
+			&permission.Description,
+			&permission.ResourceType,
+			&permission.Action,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning permission: %w", err)
+		}
+		permissions = append(permissions, permission)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating permissions: %w", err)
+	}
+
+	return permissions, nil
 }

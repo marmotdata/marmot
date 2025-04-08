@@ -12,6 +12,11 @@ type AuthConfig struct {
 	Providers map[string]*OAuthProviderConfig `mapstructure:"providers"`
 }
 
+type AnonymousAuthConfig struct {
+	Enabled bool   `mapstructure:"enabled"`
+	Role    string `mapstructure:"role"`
+}
+
 type OAuthProviderConfig struct {
 	Enabled      bool             `mapstructure:"enabled"`
 	Type         string           `mapstructure:"type"`
@@ -58,6 +63,7 @@ type Config struct {
 
 	Auth struct {
 		Providers map[string]*OAuthProviderConfig `mapstructure:"providers"`
+		Anonymous AnonymousAuthConfig             `mapstructure:"anonymous"`
 	} `mapstructure:"auth"`
 }
 
@@ -117,6 +123,9 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.providers.okta.name")
 	v.BindEnv("auth.providers.okta.allow_signup")
 
+	v.BindEnv("auth.anonymous.enabled")
+	v.BindEnv("auth.anonymous.role")
+
 	// Set defaults
 	setDefaults(v)
 
@@ -144,6 +153,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("database.max_conns", 25)
 	v.SetDefault("database.idle_conns", 5)
 	v.SetDefault("database.conn_lifetime", 5) // minutes
+
+	v.SetDefault("auth.anonymous.role", "user")
 
 	// Logging defaults
 	v.SetDefault("logging.level", "info")
