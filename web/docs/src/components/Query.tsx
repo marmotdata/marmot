@@ -58,7 +58,7 @@ export default function QueryLanguage(): JSX.Element {
                   </span>
                 </div>
                 <p className="text-gray-600 dark:text-gray-400 mt-2 leading-tight">
-                  A steam of real-time order transaction events across the e-commerce platform.
+                  A stream of real-time order transaction events across the e-commerce platform.
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className="inline-flex px-2 py-1 text-xs rounded-full bg-gray-50 dark:bg-gray-800 text-gray-600 dark:text-gray-300">
