@@ -82,6 +82,13 @@
 			console.error('Failed to delete API key:', err);
 		}
 	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' && newKeyName && !isGenerating) {
+			event.preventDefault();
+			createApiKey();
+		}
+	}
 </script>
 
 <div
@@ -125,6 +132,7 @@
 							type="text"
 							id="key-name"
 							bind:value={newKeyName}
+							on:keydown={handleKeydown}
 							class="block w-full px-4 py-3 bg-white dark:bg-gray-800 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 sm:text-sm border-gray-300 dark:border-gray-600"
 							placeholder="Enter a descriptive name for your key"
 						/>
