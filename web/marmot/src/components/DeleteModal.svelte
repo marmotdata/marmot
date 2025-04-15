@@ -14,25 +14,53 @@
 	$: if (!show) {
 		inputText = '';
 	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (event.key === 'Enter' && isConfirmEnabled) {
+			event.preventDefault();
+			onConfirm();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			onCancel();
+		}
+	}
 </script>
 
 {#if show}
 	<div class="fixed z-50 inset-0 overflow-y-auto">
 		<div class="flex items-center justify-center min-h-screen p-4">
-			<div class="fixed inset-0 bg-gray-50 dark:bg-gray-800 dark:bg-gray-9000 bg-opacity-75 transition-opacity" on:click={onCancel} />
+			<div
+				class="fixed inset-0 bg-gray-50 dark:bg-gray-800 dark:bg-gray-9000 bg-opacity-75 transition-opacity"
+				on:click={onCancel}
+			/>
 
 			<div
+				role="dialog"
+				aria-modal="true"
+				aria-labelledby="modal-title"
 				class="relative bg-earthy-brown-50 dark:bg-gray-900 dark:bg-gray-900 rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full sm:p-6"
 			>
 				<div class="sm:flex sm:items-start">
 					<div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
-						<h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200">{title}</h3>
+						<h3
+							id="modal-title"
+							class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200"
+						>
+							{title}
+						</h3>
 						<div class="mt-2">
-							<p class="text-sm text-gray-500 dark:text-gray-500 dark:text-gray-500 dark:text-gray-500 dark:text-gray-500 dark:text-gray-500">{message}</p>
+							<p
+								class="text-sm text-gray-500 dark:text-gray-500 dark:text-gray-500 dark:text-gray-500 dark:text-gray-500 dark:text-gray-500"
+							>
+								{message}
+							</p>
 						</div>
 						{#if requireConfirmation}
 							<div class="mt-4">
-								<label for="confirm-text" class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300">
+								<label
+									for="confirm-text"
+									class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
+								>
 									Type "{resourceName}" to confirm deletion
 								</label>
 								<input
@@ -40,6 +68,7 @@
 									id="confirm-text"
 									bind:value={inputText}
 									class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 sm:text-sm"
+									on:keydown={handleKeydown}
 								/>
 							</div>
 						{/if}

@@ -3,8 +3,6 @@
 // +marmot:status=experimental
 package iceberg
 
-//go:generate go run ../../../docgen/cmd/main.go
-
 import (
 	"context"
 	"fmt"

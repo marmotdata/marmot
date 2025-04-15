@@ -17,7 +17,6 @@ import (
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
-	"sigs.k8s.io/yaml"
 )
 
 // Config for SNS plugin
@@ -60,42 +59,33 @@ filter:
 type Source struct {
 	config *Config
 	client *sns.Client
-	awsCfg *plugin.AWSConfig
 }
 
 func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting SNS config validation")
-
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
 		return fmt.Errorf("unmarshaling config: %w", err)
 	}
 	s.config = config
 
-	var awsCfg plugin.AWSConfig
-	if cfgBytes, err := yaml.Marshal(rawConfig); err == nil {
-		if err := yaml.Unmarshal(cfgBytes, &awsCfg); err == nil {
-			s.awsCfg = &awsCfg
-		}
-	}
-
-	if s.awsCfg != nil {
-		if err := s.awsCfg.Validate(); err != nil {
-			return fmt.Errorf("validating AWS config: %w", err)
-		}
-	}
-
 	return nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	if err := s.Validate(pluginConfig); err != nil {
-		return nil, fmt.Errorf("validating config: %w", err)
+	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
+	}
+	s.config = config
+
+	awsConfig, err := plugin.ExtractAWSConfig(pluginConfig)
+	if err != nil {
+		return nil, fmt.Errorf("extracting AWS config: %w", err)
 	}
 
-	awsCfg, err := plugin.NewAWSConfig(ctx, pluginConfig)
+	awsCfg, err := awsConfig.NewAWSConfig(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("loading AWS config: %w", err)
+		return nil, fmt.Errorf("creating AWS config: %w", err)
 	}
 
 	s.client = sns.NewFromConfig(awsCfg)
@@ -109,7 +99,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	for _, topic := range topics {
 		name := extractTopicName(*topic.TopicArn)
 
-		if s.awsCfg != nil && !plugin.ShouldIncludeResource(name, s.awsCfg.Filter) {
+		if s.config.AWSConfig != nil && !plugin.ShouldIncludeResource(name, s.config.AWSConfig.Filter) {
 			log.Debug().Str("topic", name).Msg("Skipping topic due to filter")
 			continue
 		}
@@ -127,6 +117,21 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}, nil
 }
 
+func (s *Source) discoverTopics(ctx context.Context) ([]types.Topic, error) {
+	var topics []types.Topic
+	paginator := sns.NewListTopicsPaginator(s.client, &sns.ListTopicsInput{})
+
+	for paginator.HasMorePages() {
+		output, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("listing topics: %w", err)
+		}
+		topics = append(topics, output.Topics...)
+	}
+
+	return topics, nil
+}
+
 func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (asset.Asset, error) {
 	metadata := make(map[string]interface{})
 
@@ -137,7 +142,7 @@ func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (asset
 		return asset.Asset{}, fmt.Errorf("getting topic attributes: %w", err)
 	}
 
-	if s.awsCfg != nil && s.awsCfg.TagsToMetadata {
+	if s.config.AWSConfig != nil && s.config.TagsToMetadata {
 		tagsOutput, err := s.client.ListTagsForResource(ctx, &sns.ListTagsForResourceInput{
 			ResourceArn: topic.TopicArn,
 		})
@@ -148,7 +153,7 @@ func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (asset
 			for _, tag := range tagsOutput.Tags {
 				tagMap[*tag.Key] = *tag.Value
 			}
-			metadata = plugin.ProcessAWSTags(s.awsCfg.TagsToMetadata, s.awsCfg.IncludeTags, tagMap)
+			metadata = plugin.ProcessAWSTags(s.config.TagsToMetadata, s.config.IncludeTags, tagMap)
 		}
 	}
 
@@ -187,21 +192,6 @@ func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (asset
 			Priority:   1,
 		}},
 	}, nil
-}
-
-func (s *Source) discoverTopics(ctx context.Context) ([]types.Topic, error) {
-	var topics []types.Topic
-	paginator := sns.NewListTopicsPaginator(s.client, &sns.ListTopicsInput{})
-
-	for paginator.HasMorePages() {
-		output, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("listing topics: %w", err)
-		}
-		topics = append(topics, output.Topics...)
-	}
-
-	return topics, nil
 }
 
 func extractTopicName(arn string) string {
