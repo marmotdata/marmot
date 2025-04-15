@@ -36,6 +36,7 @@ The following metadata fields are available:
 
 | Field | Type | Description |
 |-------|------|-------------|
+| binding_is | string | AMQP binding type (queue or routingKey) |
 | cleanup_policy | []string | Topic cleanup policies |
 | cluster_id | string | Kafka cluster ID |
 | content_deduplication | bool | Whether content-based deduplication is enabled |
@@ -45,6 +46,10 @@ The following metadata fields are available:
 | description | string | Description of the resource |
 | dlq_name | string | Name of the Dead Letter Queue |
 | environment | string | Environment the resource belongs to |
+| exchange_auto_delete | bool | Exchange auto delete flag |
+| exchange_durable | bool | Exchange durability flag |
+| exchange_name | string | Exchange name |
+| exchange_type | string | Exchange type (topic, fanout, direct, etc.) |
 | fifo_queue | bool | Whether this is a FIFO queue |
 | fifo_throughput_limit | string | FIFO throughput limit type |
 | max_message_bytes | int | Maximum message size |
@@ -53,6 +58,11 @@ The following metadata fields are available:
 | name | string | Name of the SQS queue |
 | ordering_type | string | SNS topic ordering type |
 | partitions | int | Number of partitions |
+| queue_auto_delete | bool | Queue auto delete flag |
+| queue_durable | bool | Queue durability flag |
+| queue_exclusive | bool | Queue exclusivity flag |
+| queue_name | string | Queue name |
+| queue_vhost | string | Queue virtual host |
 | receive_message_wait_time | int | Long polling wait time in seconds |
 | replicas | int | Number of replicas |
 | retention_bytes | int64 | Maximum size of the topic |

@@ -22,6 +22,12 @@ authentication:
   username: "username"
   password: "password"
   mechanism: "PLAIN"
+tls:
+  enabled: true
+  cert_path: "/path/to/cert.pem"
+  key_path: "/path/to/key.pem"
+  ca_cert_path: "/path/to/ca.pem"
+  skip_verify: false
 schema_registry:
   url: "http://localhost:8081"
   enabled: true
@@ -52,6 +58,7 @@ The following configuration options are available:
 | authentication | AuthConfig | false | Authentication configuration |
 | consumer_config | map[string]string | false | Additional consumer configuration |
 | client_timeout_seconds | int | false | Request timeout in seconds |
+| tls | TLSConfig | false | TLS configuration |
 | schema_registry | SchemaRegistryConfig | false | Schema Registry configuration |
 | topic_filter | plugin.Filter | false | Filter configuration for topics |
 | include_partition_info | bool | false | Whether to include partition information in metadata |

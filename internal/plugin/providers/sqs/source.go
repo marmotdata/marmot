@@ -27,7 +27,6 @@ type Config struct {
 	plugin.BaseConfig `json:",inline"`
 	*plugin.AWSConfig `json:",inline" yaml:",inline"`
 
-	// Whether to discover Dead Letter Queue relationships
 	DiscoverDLQ bool `json:"discover_dlq,omitempty" yaml:"discover_dlq,omitempty" description:"Discover Dead Letter Queue relationships"`
 }
 
@@ -67,20 +66,10 @@ type Source struct {
 	client *sqs.Client
 }
 
-// TODO: use YAML
 func (s *Source) Validate(pluginConfig plugin.RawPluginConfig) error {
-	configBytes, err := json.Marshal(pluginConfig)
+	_, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
 	if err != nil {
-		return fmt.Errorf("marshaling config: %w", err)
-	}
-
-	var cfg Config
-	if err := json.Unmarshal(configBytes, &cfg); err != nil {
-		return fmt.Errorf("invalid config: %w", err)
-	}
-
-	if cfg.Credentials.Region == "" {
-		return fmt.Errorf("region is required")
+		return fmt.Errorf("unmarshaling config: %w", err)
 	}
 
 	return nil
@@ -93,9 +82,14 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	s.config = config
 
-	awsCfg, err := plugin.NewAWSConfig(ctx, pluginConfig)
+	awsConfig, err := plugin.ExtractAWSConfig(pluginConfig)
 	if err != nil {
-		return nil, fmt.Errorf("loading AWS config: %w", err)
+		return nil, fmt.Errorf("extracting AWS config: %w", err)
+	}
+
+	awsCfg, err := awsConfig.NewAWSConfig(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("creating AWS config: %w", err)
 	}
 
 	s.client = sqs.NewFromConfig(awsCfg)
@@ -177,7 +171,7 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 		return asset.Asset{}, "", fmt.Errorf("getting queue attributes: %w", err)
 	}
 
-	var metadata map[string]interface{}
+	metadata := make(map[string]interface{})
 	if s.config.TagsToMetadata {
 		tagsOutput, err := s.client.ListQueueTags(ctx, &sqs.ListQueueTagsInput{
 			QueueUrl: &queueURL,
@@ -200,7 +194,6 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 	metadata["delay_seconds"] = attrs.Attributes[string(types.QueueAttributeNameDelaySeconds)]
 	metadata["receive_message_wait_time_seconds"] = attrs.Attributes[string(types.QueueAttributeNameReceiveMessageWaitTimeSeconds)]
 
-	// FIFO queue attributes
 	if fifoQueue, ok := attrs.Attributes[string(types.QueueAttributeNameFifoQueue)]; ok {
 		metadata["fifo_queue"] = fifoQueue
 		if contentDeduplication, ok := attrs.Attributes[string(types.QueueAttributeNameContentBasedDeduplication)]; ok {
