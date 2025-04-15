@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"net/url"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -10,28 +11,26 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
+	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"sigs.k8s.io/yaml"
 )
 
-// AWSCredentials represents AWS authentication configuration
 type AWSCredentials struct {
 	Profile        string `json:"profile,omitempty" description:"AWS profile to use from shared credentials file"`
 	ID             string `json:"id,omitempty" description:"AWS access key ID"`
 	Secret         string `json:"secret,omitempty" description:"AWS secret access key"`
-	Endpoint       string `json:"endpoint,omitempty" description:"AWS endpoint"`
 	Token          string `json:"token,omitempty" description:"AWS session token"`
 	Role           string `json:"role,omitempty" description:"AWS IAM role ARN to assume"`
 	RoleExternalID string `json:"role_external_id,omitempty" description:"External ID for cross-account role assumption"`
-	Region         string `json:"region" description:"AWS region for services" required:"true"`
+	Region         string `json:"region,omitempty" description:"AWS region for services"`
+	Endpoint       string `json:"endpoint,omitempty" description:"Custom endpoint URL for AWS services"`
 }
 
-// Filter represents include/exclude patterns for AWS resources
 type Filter struct {
 	Include []string `json:"include,omitempty" description:"Include patterns for resource names (regex)"`
 	Exclude []string `json:"exclude,omitempty" description:"Exclude patterns for resource names (regex)"`
 }
 
-// AWSConfig represents common AWS configuration for plugins
 type AWSConfig struct {
 	Credentials    AWSCredentials `json:"credentials" description:"AWS credentials configuration"`
 	TagsToMetadata bool           `json:"tags_to_metadata,omitempty" description:"Convert AWS tags to Marmot metadata"`
@@ -39,11 +38,7 @@ type AWSConfig struct {
 	Filter         Filter         `json:"filter,omitempty" description:"Filter patterns for AWS resources"`
 }
 
-// Validate validates the AWSConfig
 func (a *AWSConfig) Validate() error {
-	if a.Credentials.Region == "" {
-		return fmt.Errorf("AWS region is required")
-	}
 	return nil
 }
 
@@ -52,42 +47,41 @@ type AWSPlugin struct {
 	BaseConfig `json:",inline"`
 }
 
-// NewAWSConfig loads AWS configuration with the provided credentials
-func NewAWSConfig(ctx context.Context, rawConfig map[string]interface{}) (aws.Config, error) {
-	// Directly unmarshal into AWSConfig
+// ErrEndpointNotFound is returned when an endpoint can't be resolved
+var ErrEndpointNotFound = fmt.Errorf("endpoint not found")
+
+func ExtractAWSConfig(rawConfig map[string]interface{}) (*AWSConfig, error) {
 	var awsCfg AWSConfig
 	configBytes, err := yaml.Marshal(rawConfig)
 	if err != nil {
-		return aws.Config{}, fmt.Errorf("marshaling raw config: %w", err)
-	}
-	if err := yaml.Unmarshal(configBytes, &awsCfg); err != nil {
-		return aws.Config{}, fmt.Errorf("unmarshaling into AWSConfig: %w", err)
+		return nil, fmt.Errorf("marshaling raw config: %w", err)
 	}
 
+	if err := yaml.Unmarshal(configBytes, &awsCfg); err != nil {
+		return nil, fmt.Errorf("unmarshaling into AWSConfig: %w", err)
+	}
+
+	return &awsCfg, nil
+}
+
+func (a *AWSConfig) NewAWSConfig(ctx context.Context) (aws.Config, error) {
 	var opts []func(*config.LoadOptions) error
 
-	// Always set the region
-	opts = append(opts, config.WithRegion(awsCfg.Credentials.Region))
-
-	// Handle custom endpoint
-	if awsCfg.Credentials.Endpoint != "" {
-		customResolver := aws.EndpointResolverWithOptionsFunc(func(service, region string, options ...interface{}) (aws.Endpoint, error) {
-			return aws.Endpoint{
-				URL: awsCfg.Credentials.Endpoint,
-			}, nil
-		})
-		opts = append(opts, config.WithEndpointResolverWithOptions(customResolver))
+	if a.Credentials.Region != "" {
+		opts = append(opts, config.WithRegion(a.Credentials.Region))
 	}
 
-	// Handle static credentials
-	if awsCfg.Credentials.ID != "" && awsCfg.Credentials.Secret != "" {
-		provider := credentials.NewStaticCredentialsProvider(awsCfg.Credentials.ID, awsCfg.Credentials.Secret, awsCfg.Credentials.Token)
+	if a.Credentials.ID != "" && a.Credentials.Secret != "" {
+		provider := credentials.NewStaticCredentialsProvider(
+			a.Credentials.ID,
+			a.Credentials.Secret,
+			a.Credentials.Token,
+		)
 		opts = append(opts, config.WithCredentialsProvider(provider))
 	}
 
-	// Handle profile
-	if awsCfg.Credentials.Profile != "" {
-		opts = append(opts, config.WithSharedConfigProfile(awsCfg.Credentials.Profile))
+	if a.Credentials.Profile != "" {
+		opts = append(opts, config.WithSharedConfigProfile(a.Credentials.Profile))
 	}
 
 	// Load the configuration
@@ -97,20 +91,26 @@ func NewAWSConfig(ctx context.Context, rawConfig map[string]interface{}) (aws.Co
 	}
 
 	// Handle role assumption
-	if awsCfg.Credentials.Role != "" {
+	if a.Credentials.Role != "" {
 		stsClient := sts.NewFromConfig(cfg)
-		provider := stscreds.NewAssumeRoleProvider(stsClient, awsCfg.Credentials.Role, func(o *stscreds.AssumeRoleOptions) {
-			if awsCfg.Credentials.RoleExternalID != "" {
-				o.ExternalID = &awsCfg.Credentials.RoleExternalID
+		assumeRoleOpts := func(o *stscreds.AssumeRoleOptions) {
+			if a.Credentials.RoleExternalID != "" {
+				o.ExternalID = aws.String(a.Credentials.RoleExternalID)
 			}
-		})
-		cfg.Credentials = provider
+		}
+
+		provider := stscreds.NewAssumeRoleProvider(stsClient, a.Credentials.Role, assumeRoleOpts)
+		cfg.Credentials = aws.NewCredentialsCache(provider)
+	}
+
+	// Configure custom endpoint if specified
+	if a.Credentials.Endpoint != "" {
+		cfg.BaseEndpoint = aws.String(a.Credentials.Endpoint)
 	}
 
 	return cfg, nil
 }
 
-// ProcessAWSTags converts AWS tags to metadata based on configuration
 func ProcessAWSTags(tagsToMetadata bool, includeTags []string, tags map[string]string) map[string]interface{} {
 	metadata := make(map[string]interface{})
 
@@ -119,7 +119,6 @@ func ProcessAWSTags(tagsToMetadata bool, includeTags []string, tags map[string]s
 	}
 
 	for key, value := range tags {
-		// Skip if tag is not in include list (if specified)
 		if len(includeTags) > 0 {
 			included := false
 			for _, includeTag := range includeTags {
@@ -139,9 +138,7 @@ func ProcessAWSTags(tagsToMetadata bool, includeTags []string, tags map[string]s
 	return metadata
 }
 
-// ShouldIncludeResource checks if a resource should be included based on filter patterns
 func ShouldIncludeResource(name string, filter Filter) bool {
-	// If no filters are specified, include everything
 	if len(filter.Include) == 0 && len(filter.Exclude) == 0 {
 		return true
 	}

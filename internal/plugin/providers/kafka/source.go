@@ -7,25 +7,14 @@ package kafka
 
 import (
 	"context"
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
-	"os"
-	"strconv"
-	"strings"
-	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/schemaregistry"
 	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
-	"github.com/twmb/franz-go/pkg/kmsg"
-	"github.com/twmb/franz-go/pkg/sasl"
-	"github.com/twmb/franz-go/pkg/sasl/plain"
-	"github.com/twmb/franz-go/pkg/sasl/scram"
 )
 
 // Config for Kafka plugin
@@ -33,34 +22,37 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	// Connection configuration
 	BootstrapServers string            `json:"bootstrap_servers" yaml:"bootstrap_servers" description:"Comma-separated list of bootstrap servers"`
 	ClientID         string            `json:"client_id" yaml:"client_id" description:"Client ID for the consumer"`
 	Authentication   *AuthConfig       `json:"authentication,omitempty" yaml:"authentication,omitempty" description:"Authentication configuration"`
 	ConsumerConfig   map[string]string `json:"consumer_config,omitempty" yaml:"consumer_config,omitempty" description:"Additional consumer configuration"`
 	ClientTimeout    int               `json:"client_timeout_seconds" yaml:"client_timeout_seconds" description:"Request timeout in seconds"`
+	TLS              *TLSConfig        `json:"tls,omitempty" yaml:"tls,omitempty" description:"TLS configuration"`
 
-	// Schema Registry configuration (optional)
 	SchemaRegistry *SchemaRegistryConfig `json:"schema_registry,omitempty" yaml:"schema_registry,omitempty" description:"Schema Registry configuration"`
 
-	// Topic patterns for filtering
 	TopicFilter *plugin.Filter `json:"topic_filter,omitempty" yaml:"topic_filter,omitempty" description:"Filter configuration for topics"`
 
-	// Metadata extraction
-	IncludePartitionInfo bool `json:"include_partition_info" yaml:"include_partition_info" description:"Whether to include partition information in metadata"`
-	IncludeTopicConfig   bool `json:"include_topic_config" yaml:"include_topic_config" description:"Whether to include topic configuration in metadata"`
+	IncludePartitionInfo bool `json:"include_partition_info" yaml:"include_partition_info" description:"Whether to include partition information in metadata" default:"true"`
+
+	IncludeTopicConfig bool `json:"include_topic_config" yaml:"include_topic_config" description:"Whether to include topic configuration in metadata" default:"true"`
 }
 
 // Authentication configuration
 type AuthConfig struct {
-	Type          string `json:"type" yaml:"type" description:"Authentication type: none, sasl_plaintext, sasl_ssl, ssl"`
-	Username      string `json:"username,omitempty" yaml:"username,omitempty" description:"SASL username"`
-	Password      string `json:"password,omitempty" yaml:"password,omitempty" description:"SASL password"`
-	Mechanism     string `json:"mechanism,omitempty" yaml:"mechanism,omitempty" description:"SASL mechanism: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512"`
-	TLSCertPath   string `json:"tls_cert_path,omitempty" yaml:"tls_cert_path,omitempty" description:"Path to TLS certificate file"`
-	TLSKeyPath    string `json:"tls_key_path,omitempty" yaml:"tls_key_path,omitempty" description:"Path to TLS key file"`
-	TLSCACertPath string `json:"tls_ca_cert_path,omitempty" yaml:"tls_ca_cert_path,omitempty" description:"Path to TLS CA certificate file"`
-	TLSSkipVerify bool   `json:"tls_skip_verify,omitempty" yaml:"tls_skip_verify,omitempty" description:"Skip TLS verification"`
+	Type      string `json:"type" yaml:"type" description:"Authentication type: none, sasl_plaintext, sasl_ssl, ssl"`
+	Username  string `json:"username,omitempty" yaml:"username,omitempty" description:"SASL username"`
+	Password  string `json:"password,omitempty" yaml:"password,omitempty" description:"SASL password"`
+	Mechanism string `json:"mechanism,omitempty" yaml:"mechanism,omitempty" description:"SASL mechanism: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512"`
+}
+
+// TLS configuration
+type TLSConfig struct {
+	Enabled    bool   `json:"enabled" yaml:"enabled" description:"Whether to enable TLS"`
+	CertPath   string `json:"cert_path,omitempty" yaml:"cert_path,omitempty" description:"Path to TLS certificate file"`
+	KeyPath    string `json:"key_path,omitempty" yaml:"key_path,omitempty" description:"Path to TLS key file"`
+	CACertPath string `json:"ca_cert_path,omitempty" yaml:"ca_cert_path,omitempty" description:"Path to TLS CA certificate file"`
+	SkipVerify bool   `json:"skip_verify,omitempty" yaml:"skip_verify,omitempty" description:"Skip TLS verification"`
 }
 
 // Schema Registry configuration
@@ -81,6 +73,12 @@ authentication:
   username: "username"
   password: "password"
   mechanism: "PLAIN"
+tls:
+  enabled: true
+  cert_path: "/path/to/cert.pem"
+  key_path: "/path/to/key.pem"
+  ca_cert_path: "/path/to/ca.pem"
+  skip_verify: false
 schema_registry:
   url: "http://localhost:8081"
   enabled: true
@@ -107,16 +105,51 @@ type Source struct {
 	schemaRegistry schemaregistry.Client
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting Kafka config validation")
+func (c *Config) ApplyDefaults() {
+	c.IncludePartitionInfo = true
+	c.IncludeTopicConfig = true
 
+	if c.TLS == nil {
+		c.TLS = &TLSConfig{
+			Enabled: true,
+		}
+	}
+}
+
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
 		return fmt.Errorf("unmarshaling config: %w", err)
 	}
 
+	config.ApplyDefaults()
+
 	if config.BootstrapServers == "" {
 		return fmt.Errorf("bootstrap_servers is required")
+	}
+
+	if config.Authentication != nil {
+		sanitizedConfig := rawConfig.MaskSensitiveInfo(config.Authentication.Password)
+		log.Debug().Interface("raw_config", sanitizedConfig).Msg("Starting Kafka config validation")
+
+		authType := config.Authentication.Type
+		switch authType {
+		case "sasl_plaintext", "sasl_ssl", "ssl":
+			if authType == "sasl_plaintext" || authType == "sasl_ssl" {
+				if config.Authentication.Username == "" {
+					return fmt.Errorf("username is required for %s authentication", authType)
+				}
+				if config.Authentication.Password == "" {
+					return fmt.Errorf("password is required for %s authentication", authType)
+				}
+				if config.Authentication.Mechanism == "" {
+					return fmt.Errorf("mechanism is required for %s authentication", authType)
+				}
+			}
+		case "none", "":
+		default:
+			return fmt.Errorf("unsupported authentication type: %s. Valid types are: sasl_plaintext, sasl_ssl, ssl, none", authType)
+		}
 	}
 
 	s.config = config
@@ -162,346 +195,4 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	return &plugin.DiscoveryResult{
 		Assets: assets,
 	}, nil
-}
-
-func (s *Source) initClient(ctx context.Context) error {
-	opts := []kgo.Opt{
-		kgo.SeedBrokers(strings.Split(s.config.BootstrapServers, ",")...),
-	}
-
-	if s.config.ClientID != "" {
-		opts = append(opts, kgo.ClientID(s.config.ClientID))
-	}
-
-	if s.config.ClientTimeout > 0 {
-		timeout := time.Duration(s.config.ClientTimeout) * time.Second
-		opts = append(opts, kgo.RequestTimeoutOverhead(timeout))
-	}
-
-	if s.config.Authentication != nil {
-		authOpts, err := s.configureAuthentication()
-		if err != nil {
-			return fmt.Errorf("configuring authentication: %w", err)
-		}
-		opts = append(opts, authOpts...)
-	}
-
-	client, err := kgo.NewClient(opts...)
-	if err != nil {
-		return fmt.Errorf("creating Kafka client: %w", err)
-	}
-	s.client = client
-
-	s.admin = kadm.NewClient(client)
-
-	return nil
-}
-
-func (s *Source) initSchemaRegistry() error {
-	if s.config.SchemaRegistry.URL == "" {
-		return fmt.Errorf("schema registry URL is required")
-	}
-
-	conf := schemaregistry.NewConfig(s.config.SchemaRegistry.URL)
-
-	if userInfo, ok := s.config.SchemaRegistry.Config["basic.auth.user.info"]; ok {
-		conf.BasicAuthUserInfo = userInfo
-	}
-
-	if timeout, ok := s.config.SchemaRegistry.Config["request.timeout.ms"]; ok {
-		if val, err := strconv.Atoi(timeout); err == nil {
-			conf.RequestTimeoutMs = val
-		}
-	}
-
-	if cacheCapacity, ok := s.config.SchemaRegistry.Config["cache.capacity"]; ok {
-		if val, err := strconv.Atoi(cacheCapacity); err == nil {
-			conf.CacheCapacity = val
-		}
-	}
-
-	client, err := schemaregistry.NewClient(conf)
-	if err != nil {
-		return fmt.Errorf("creating Schema Registry client: %w", err)
-	}
-
-	s.schemaRegistry = client
-	return nil
-}
-
-func (s *Source) configureAuthentication() ([]kgo.Opt, error) {
-	var opts []kgo.Opt
-
-	switch s.config.Authentication.Type {
-	case "sasl_plaintext":
-		var mechanism sasl.Mechanism
-
-		switch s.config.Authentication.Mechanism {
-		case "PLAIN":
-			mechanism = plain.Auth{
-				User: s.config.Authentication.Username,
-				Pass: s.config.Authentication.Password,
-			}.AsMechanism()
-		case "SCRAM-SHA-256":
-			mechanism = scram.Auth{
-				User: s.config.Authentication.Username,
-				Pass: s.config.Authentication.Password,
-			}.AsSha256Mechanism()
-		case "SCRAM-SHA-512":
-			mechanism = scram.Auth{
-				User: s.config.Authentication.Username,
-				Pass: s.config.Authentication.Password,
-			}.AsSha512Mechanism()
-		default:
-			return nil, fmt.Errorf("unsupported SASL mechanism: %s", s.config.Authentication.Mechanism)
-		}
-
-		opts = append(opts, kgo.SASL(mechanism))
-
-	case "sasl_ssl":
-		var mechanism sasl.Mechanism
-
-		switch s.config.Authentication.Mechanism {
-		case "PLAIN":
-			mechanism = plain.Auth{
-				User: s.config.Authentication.Username,
-				Pass: s.config.Authentication.Password,
-			}.AsMechanism()
-		case "SCRAM-SHA-256":
-			mechanism = scram.Auth{
-				User: s.config.Authentication.Username,
-				Pass: s.config.Authentication.Password,
-			}.AsSha256Mechanism()
-		case "SCRAM-SHA-512":
-			mechanism = scram.Auth{
-				User: s.config.Authentication.Username,
-				Pass: s.config.Authentication.Password,
-			}.AsSha512Mechanism()
-		default:
-			return nil, fmt.Errorf("unsupported SASL mechanism: %s", s.config.Authentication.Mechanism)
-		}
-
-		opts = append(opts, kgo.SASL(mechanism))
-
-		tlsConfig, err := s.configureTLS()
-		if err != nil {
-			return nil, fmt.Errorf("configuring TLS: %w", err)
-		}
-		opts = append(opts, kgo.DialTLSConfig(tlsConfig))
-
-	case "ssl":
-		tlsConfig, err := s.configureTLS()
-		if err != nil {
-			return nil, fmt.Errorf("configuring TLS: %w", err)
-		}
-		opts = append(opts, kgo.DialTLSConfig(tlsConfig))
-
-	case "none", "":
-		// No authentication
-
-	default:
-		return nil, fmt.Errorf("unsupported authentication type: %s", s.config.Authentication.Type)
-	}
-
-	return opts, nil
-}
-
-func (s *Source) configureTLS() (*tls.Config, error) {
-	tlsConfig := &tls.Config{}
-
-	if s.config.Authentication.TLSSkipVerify {
-		tlsConfig.InsecureSkipVerify = true
-	}
-
-	if s.config.Authentication.TLSCACertPath != "" {
-		caCert, err := os.ReadFile(s.config.Authentication.TLSCACertPath)
-		if err != nil {
-			return nil, fmt.Errorf("reading CA cert file: %w", err)
-		}
-
-		certPool := x509.NewCertPool()
-		if !certPool.AppendCertsFromPEM(caCert) {
-			return nil, fmt.Errorf("failed to append CA cert to pool")
-		}
-		tlsConfig.RootCAs = certPool
-	}
-
-	if s.config.Authentication.TLSCertPath != "" && s.config.Authentication.TLSKeyPath != "" {
-		cert, err := tls.LoadX509KeyPair(
-			s.config.Authentication.TLSCertPath,
-			s.config.Authentication.TLSKeyPath,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("loading client cert/key: %w", err)
-		}
-		tlsConfig.Certificates = []tls.Certificate{cert}
-	}
-
-	return tlsConfig, nil
-}
-
-func (s *Source) closeClient() {
-	if s.client != nil {
-		s.client.Close()
-	}
-}
-
-func (s *Source) discoverTopics(ctx context.Context) ([]string, error) {
-	metadata, err := s.admin.ListTopics(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("listing topics: %w", err)
-	}
-
-	var topics []string
-	for topic := range metadata {
-		topics = append(topics, topic)
-	}
-
-	return topics, nil
-}
-
-func (s *Source) createTopicAsset(ctx context.Context, topic string) (asset.Asset, error) {
-	metadata := make(map[string]interface{})
-	metadata["topic_name"] = topic
-
-	topicDetails, err := s.getTopicDetails(ctx, topic)
-	if err != nil {
-		return asset.Asset{}, fmt.Errorf("getting topic details: %w", err)
-	}
-
-	if s.config.IncludePartitionInfo {
-		metadata["partition_count"] = topicDetails.partitionCount
-		metadata["replication_factor"] = topicDetails.replicationFactor
-	}
-
-	if s.config.IncludeTopicConfig {
-		topicConfig, err := s.getTopicConfig(ctx, topic)
-		if err != nil {
-			log.Warn().Err(err).Str("topic", topic).Msg("Failed to get topic config")
-		} else {
-			for key, value := range topicConfig {
-				metadata[key] = value
-			}
-		}
-	}
-
-	if s.schemaRegistry != nil {
-		if err := s.enrichWithSchemaRegistry(topic, metadata); err != nil {
-			log.Warn().Err(err).Str("topic", topic).Msg("Failed to get schema information")
-		}
-	}
-
-	description := fmt.Sprintf("Kafka topic %s", topic)
-	mrnValue := mrn.New("Topic", "Kafka", topic)
-
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
-
-	return asset.Asset{
-		Name:        &topic,
-		MRN:         &mrnValue,
-		Type:        "Topic",
-		Providers:   []string{"Kafka"},
-		Description: &description,
-		Metadata:    metadata,
-		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
-			Name:       "Kafka",
-			LastSyncAt: time.Now(),
-			Properties: metadata,
-			Priority:   1,
-		}},
-	}, nil
-}
-
-// TopicDetails holds information about a Kafka topic
-type TopicDetails struct {
-	partitionCount    int
-	replicationFactor int
-}
-
-func (s *Source) getTopicDetails(ctx context.Context, topic string) (*TopicDetails, error) {
-	metadata, err := s.admin.ListTopics(ctx, topic)
-	if err != nil {
-		return nil, fmt.Errorf("describing topic: %w", err)
-	}
-
-	topicMetadata, exists := metadata[topic]
-	if !exists {
-		return nil, fmt.Errorf("topic %s not found in metadata", topic)
-	}
-
-	partitionCount := len(topicMetadata.Partitions)
-
-	// Get replication factor from first partition
-	var replicationFactor int
-	if partitionCount > 0 {
-		replicationFactor = len(topicMetadata.Partitions[0].Replicas)
-	}
-
-	return &TopicDetails{
-		partitionCount:    partitionCount,
-		replicationFactor: replicationFactor,
-	}, nil
-}
-
-func (s *Source) getTopicConfig(ctx context.Context, topic string) (map[string]string, error) {
-	configs, err := s.admin.DescribeTopicConfigs(ctx, topic)
-	if err != nil {
-		return nil, fmt.Errorf("describing topic configs: %w", err)
-	}
-
-	if len(configs) == 0 {
-		return nil, fmt.Errorf("no config found for topic %s", topic)
-	}
-
-	configMap := make(map[string]string)
-	for _, config := range configs[0].Configs {
-		if config.Source == kmsg.ConfigSourceDefaultConfig {
-			continue
-		}
-		if config.Value != nil {
-			configMap[config.Key] = *config.Value
-		}
-	}
-
-	return configMap, nil
-}
-
-// ConsumerGroupDetails holds information about a Kafka consumer group
-type ConsumerGroupDetails struct {
-	State        string
-	Protocol     string
-	ProtocolType string
-	Members      []ConsumerGroupMember
-}
-
-// ConsumerGroupMember holds information about a member of a consumer group
-type ConsumerGroupMember struct {
-	ClientID        string
-	ClientHost      string
-	TopicPartitions map[string][]int
-}
-
-func (s *Source) enrichWithSchemaRegistry(topic string, metadata map[string]interface{}) error {
-	// Check for value schema
-	valueSubject := topic + "-value"
-	valueMetadata, err := s.schemaRegistry.GetLatestSchemaMetadata(valueSubject)
-	if err == nil {
-		metadata["value_schema_id"] = valueMetadata.ID
-		metadata["value_schema_version"] = valueMetadata.Version
-		metadata["value_schema_type"] = valueMetadata.SchemaType
-		metadata["value_schema"] = valueMetadata.Schema
-	}
-
-	// Check for key schema
-	keySubject := topic + "-key"
-	keyMetadata, err := s.schemaRegistry.GetLatestSchemaMetadata(keySubject)
-	if err == nil {
-		metadata["key_schema_id"] = keyMetadata.ID
-		metadata["key_schema_version"] = keyMetadata.Version
-		metadata["key_schema_type"] = keyMetadata.SchemaType
-		metadata["key_schema"] = keyMetadata.Schema
-	}
-
-	return nil
 }
