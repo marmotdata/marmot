@@ -82,37 +82,32 @@ func NewPostgresRepository(db *pgxpool.Pool) Repository {
 
 // TODO: this is ugly and smelly but I dont have any better ideas
 // Helper method for JSON marshaling of common fields
-func marshalAssetFields(asset *Asset) ([]byte, []byte, []byte, []byte, []byte, error) {
+func marshalAssetFields(asset *Asset) ([]byte, []byte, []byte, []byte, error) {
 	metadataJSON, err := json.Marshal(asset.Metadata)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("marshaling metadata: %w", err)
-	}
-
-	schemaJSON, err := json.Marshal(asset.Schema)
-	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("marshaling schema: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("marshaling metadata: %w", err)
 	}
 
 	sourcesJSON, err := json.Marshal(asset.Sources)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("marshaling sources: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("marshaling sources: %w", err)
 	}
 
 	environmentsJSON, err := json.Marshal(asset.Environments)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("marshaling environments: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("marshaling environments: %w", err)
 	}
 
 	externalLinksJSON, err := json.Marshal(asset.ExternalLinks)
 	if err != nil {
-		return nil, nil, nil, nil, nil, fmt.Errorf("marshaling external links: %w", err)
+		return nil, nil, nil, nil, fmt.Errorf("marshaling external links: %w", err)
 	}
 
-	return metadataJSON, schemaJSON, sourcesJSON, environmentsJSON, externalLinksJSON, nil
+	return metadataJSON, sourcesJSON, environmentsJSON, externalLinksJSON, nil
 }
 
 func (r *PostgresRepository) Create(ctx context.Context, asset *Asset) error {
-	metadataJSON, schemaJSON, sourcesJSON, environmentsJSON, externalLinksJSON, err := marshalAssetFields(asset)
+	metadataJSON, sourcesJSON, environmentsJSON, externalLinksJSON, err := marshalAssetFields(asset)
 	if err != nil {
 		return err
 	}
@@ -126,7 +121,7 @@ func (r *PostgresRepository) Create(ctx context.Context, asset *Asset) error {
 
 	_, err = r.db.Exec(ctx, query,
 		asset.ID, asset.Name, asset.MRN, asset.Type, asset.Providers,
-		environmentsJSON, asset.Description, metadataJSON, schemaJSON,
+		environmentsJSON, asset.Description, metadataJSON, asset.Schema,
 		sourcesJSON, asset.Tags, externalLinksJSON,
 		asset.CreatedBy, asset.CreatedAt, asset.UpdatedAt, asset.LastSyncAt)
 
@@ -206,7 +201,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 }
 
 func (r *PostgresRepository) Update(ctx context.Context, asset *Asset) error {
-	metadataJSON, schemaJSON, sourcesJSON, environmentsJSON, externalLinksJSON, err := marshalAssetFields(asset)
+	metadataJSON, sourcesJSON, environmentsJSON, externalLinksJSON, err := marshalAssetFields(asset)
 	if err != nil {
 		return err
 	}
@@ -220,7 +215,7 @@ func (r *PostgresRepository) Update(ctx context.Context, asset *Asset) error {
 		WHERE id = $13`
 
 	commandTag, err := r.db.Exec(ctx, query,
-		asset.Name, asset.Description, metadataJSON, schemaJSON,
+		asset.Name, asset.Description, metadataJSON, asset.Schema,
 		asset.Tags, asset.UpdatedAt, sourcesJSON, environmentsJSON,
 		externalLinksJSON, asset.Providers, asset.MRN,
 		asset.Type, asset.ID)
@@ -249,10 +244,9 @@ func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// Scanning helpers
 func (r *PostgresRepository) scanAsset(row pgx.Row) (*Asset, error) {
 	var asset Asset
-	var metadataJSON, schemaJSON, sourcesJSON, environmentsJSON, externalLinksJSON []byte
+	var metadataJSON, sourcesJSON, environmentsJSON, externalLinksJSON, schemaJSON []byte
 
 	err := row.Scan(
 		&asset.ID, &asset.Name, &asset.MRN, &asset.Type, &asset.Providers,
@@ -269,12 +263,8 @@ func (r *PostgresRepository) scanAsset(row pgx.Row) (*Asset, error) {
 		return nil, fmt.Errorf("scanning asset: %w", err)
 	}
 
-	// Initialize maps and slices if nil
 	if asset.Metadata == nil {
 		asset.Metadata = make(map[string]interface{})
-	}
-	if asset.Schema == nil {
-		asset.Schema = make(map[string]interface{})
 	}
 	if asset.Environments == nil {
 		asset.Environments = make(map[string]Environment)
@@ -285,6 +275,9 @@ func (r *PostgresRepository) scanAsset(row pgx.Row) (*Asset, error) {
 	if asset.ExternalLinks == nil {
 		asset.ExternalLinks = make([]ExternalLink, 0)
 	}
+	if asset.Schema == nil {
+		asset.Schema = make(map[string]string)
+	}
 	if asset.Tags == nil {
 		asset.Tags = make([]string, 0)
 	}
@@ -292,17 +285,18 @@ func (r *PostgresRepository) scanAsset(row pgx.Row) (*Asset, error) {
 		asset.Providers = make([]string, 0)
 	}
 
-	// Unmarshal JSON fields
 	if len(metadataJSON) > 0 {
 		if err := json.Unmarshal(metadataJSON, &asset.Metadata); err != nil {
 			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
 		}
 	}
+
 	if len(schemaJSON) > 0 {
 		if err := json.Unmarshal(schemaJSON, &asset.Schema); err != nil {
 			return nil, fmt.Errorf("unmarshaling schema: %w", err)
 		}
 	}
+
 	if len(sourcesJSON) > 0 {
 		if err := json.Unmarshal(sourcesJSON, &asset.Sources); err != nil {
 			return nil, fmt.Errorf("unmarshaling sources: %w", err)

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import Icons from 'unplugin-icons/vite';
+import { nodePolyfills } from 'vite-plugin-node-polyfills';
 
 export default defineConfig({
   plugins: [
@@ -8,6 +9,9 @@ export default defineConfig({
     Icons({
       compiler: 'svelte',
       autoInstall: true
+    }),
+    nodePolyfills({
+      protocolImports: true
     })
   ],
   server: {

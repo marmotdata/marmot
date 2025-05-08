@@ -1887,7 +1887,9 @@ const docTemplate = `{
                 },
                 "schema": {
                     "type": "object",
-                    "additionalProperties": true
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "sources": {
                     "type": "array",
@@ -2216,7 +2218,9 @@ const docTemplate = `{
                 },
                 "schema": {
                     "type": "object",
-                    "additionalProperties": true
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "sources": {
                     "type": "array",
@@ -2321,7 +2325,9 @@ const docTemplate = `{
                 },
                 "schema": {
                     "type": "object",
-                    "additionalProperties": true
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "sources": {
                     "type": "array",

@@ -181,19 +181,6 @@ func (s *Source) createServiceAsset(spec *asyncapi2.Document) asset.Asset {
 		"description":      description,
 	}
 
-	componentsMap := make(map[string]interface{})
-	if spec.Components != nil {
-		if spec.Components.Messages != nil {
-			componentsMap["messages"] = spec.Components.Messages
-		}
-		if spec.Components.Schemas != nil {
-			componentsMap["schemas"] = spec.Components.Schemas
-		}
-		if spec.Components.Servers != nil {
-			componentsMap["servers"] = spec.Components.Servers
-		}
-	}
-
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
@@ -202,7 +189,6 @@ func (s *Source) createServiceAsset(spec *asyncapi2.Document) asset.Asset {
 		Type:        "Service",
 		Providers:   []string{"AsyncAPI"},
 		Description: &description,
-		Schema:      componentsMap,
 		Metadata:    metadata,
 		Tags:        processedTags,
 		Sources: []asset.AssetSource{{

@@ -7,9 +7,9 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -19,7 +19,7 @@ type CreateRequest struct {
 	Providers     []string                     `json:"providers" validate:"required"`
 	Description   *string                      `json:"description"`
 	Metadata      map[string]interface{}       `json:"metadata"`
-	Schema        map[string]interface{}       `json:"schema"`
+	Schema        map[string]string            `json:"schema"`
 	Tags          []string                     `json:"tags"`
 	Sources       []asset.AssetSource          `json:"sources"`
 	Environments  map[string]asset.Environment `json:"environments"`
@@ -32,7 +32,7 @@ type UpdateRequest struct {
 	Metadata      map[string]interface{}       `json:"metadata"`
 	Type          string                       `json:"type"`
 	Providers     []string                     `json:"providers"`
-	Schema        map[string]interface{}       `json:"schema"`
+	Schema        map[string]string            `json:"schema"`
 	Tags          []string                     `json:"tags"`
 	Sources       []asset.AssetSource          `json:"sources"`
 	Environments  map[string]asset.Environment `json:"environments"`
