@@ -34,7 +34,8 @@ definitions:
           type: string
         type: array
       schema:
-        additionalProperties: true
+        additionalProperties:
+          type: string
         type: object
       sources:
         items:
@@ -246,7 +247,8 @@ definitions:
           type: string
         type: array
       schema:
-        additionalProperties: true
+        additionalProperties:
+          type: string
         type: object
       sources:
         items:
@@ -320,7 +322,8 @@ definitions:
           type: string
         type: array
       schema:
-        additionalProperties: true
+        additionalProperties:
+          type: string
         type: object
       sources:
         items:

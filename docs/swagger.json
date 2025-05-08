@@ -1880,7 +1880,9 @@
                 },
                 "schema": {
                     "type": "object",
-                    "additionalProperties": true
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "sources": {
                     "type": "array",
@@ -2209,7 +2211,9 @@
                 },
                 "schema": {
                     "type": "object",
-                    "additionalProperties": true
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "sources": {
                     "type": "array",
@@ -2314,7 +2318,9 @@
                 },
                 "schema": {
                     "type": "object",
-                    "additionalProperties": true
+                    "additionalProperties": {
+                        "type": "string"
+                    }
                 },
                 "sources": {
                     "type": "array",

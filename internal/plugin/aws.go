@@ -3,7 +3,6 @@ package plugin
 import (
 	"context"
 	"fmt"
-	"net/url"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -11,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 	"github.com/aws/aws-sdk-go-v2/credentials/stscreds"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
-	smithyendpoints "github.com/aws/smithy-go/endpoints"
 	"sigs.k8s.io/yaml"
 )
 
@@ -84,13 +82,11 @@ func (a *AWSConfig) NewAWSConfig(ctx context.Context) (aws.Config, error) {
 		opts = append(opts, config.WithSharedConfigProfile(a.Credentials.Profile))
 	}
 
-	// Load the configuration
 	cfg, err := config.LoadDefaultConfig(ctx, opts...)
 	if err != nil {
 		return aws.Config{}, fmt.Errorf("loading AWS config: %w", err)
 	}
 
-	// Handle role assumption
 	if a.Credentials.Role != "" {
 		stsClient := sts.NewFromConfig(cfg)
 		assumeRoleOpts := func(o *stscreds.AssumeRoleOptions) {
@@ -103,7 +99,6 @@ func (a *AWSConfig) NewAWSConfig(ctx context.Context) (aws.Config, error) {
 		cfg.Credentials = aws.NewCredentialsCache(provider)
 	}
 
-	// Configure custom endpoint if specified
 	if a.Credentials.Endpoint != "" {
 		cfg.BaseEndpoint = aws.String(a.Credentials.Endpoint)
 	}

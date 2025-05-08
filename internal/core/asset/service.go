@@ -33,7 +33,7 @@ type Asset struct {
 	Type          string                 `json:"type"`
 	Providers     []string               `json:"providers"`
 	MRN           *string                `json:"mrn,omitempty"`
-	Schema        map[string]interface{} `json:"schema,omitempty"`
+	Schema        map[string]string      `json:"schema,omitempty"`
 	Metadata      map[string]interface{} `json:"metadata,omitempty"`
 	Sources       []AssetSource          `json:"sources,omitempty"`
 	Tags          []string               `json:"tags,omitempty"`
@@ -58,7 +58,7 @@ type CreateInput struct {
 	Providers     []string               `json:"providers" validate:"required"`
 	Description   *string                `json:"description"`
 	Metadata      map[string]interface{} `json:"metadata"`
-	Schema        map[string]interface{} `json:"schema"`
+	Schema        map[string]string      `json:"schema"`
 	Tags          []string               `json:"tags"`
 	CreatedBy     string                 `json:"created_by" validate:"required"`
 	Sources       []AssetSource          `json:"sources"`
@@ -72,7 +72,7 @@ type UpdateInput struct {
 	Metadata      map[string]interface{} `json:"metadata"`
 	Type          string                 `json:"type"`
 	Providers     []string               `json:"providers"`
-	Schema        map[string]interface{} `json:"schema"`
+	Schema        map[string]string      `json:"schema"`
 	Tags          []string               `json:"tags"`
 	Sources       []AssetSource          `json:"sources"`
 	Environments  map[string]Environment `json:"environments"`
