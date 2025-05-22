@@ -11,15 +11,17 @@ import (
 )
 
 var (
-	ErrUserNotFound     = errors.New("user not found")
-	ErrRoleNotFound     = errors.New("role not found")
-	ErrInvalidInput     = errors.New("invalid input")
-	ErrAlreadyExists    = errors.New("user already exists")
-	ErrReservedUsername = errors.New("reserved username")
-	ErrInvalidPassword  = errors.New("invalid password")
-	ErrUnauthorized     = errors.New("unauthorized")
-	ErrInvalidAPIKey    = errors.New("invalid API key")
-	ErrPasswordRequired = errors.New("password is required for non-OAuth users")
+	ErrUserNotFound      = errors.New("user not found")
+	ErrRoleNotFound      = errors.New("role not found")
+	ErrInvalidInput      = errors.New("invalid input")
+	ErrAlreadyExists     = errors.New("user already exists")
+	ErrReservedUsername  = errors.New("reserved username")
+	ErrInvalidPassword   = errors.New("invalid password")
+	ErrUnauthorized      = errors.New("unauthorized")
+	ErrInvalidAPIKey     = errors.New("invalid API key")
+	ErrPasswordRequired  = errors.New("password is required for non-OAuth users")
+	ErrCannotDeleteSelf  = errors.New("user can't delete self")
+	ErrCannotDeleteAdmin = errors.New("can't delete admin user")
 )
 
 type User struct {
@@ -79,7 +81,7 @@ type Filter struct {
 type Service interface {
 	Create(ctx context.Context, input CreateUserInput) (*User, error)
 	Update(ctx context.Context, id string, input UpdateUserInput) (*User, error)
-	Delete(ctx context.Context, id string) error
+	Delete(ctx context.Context, currentUserId string, id string) error
 	Get(ctx context.Context, id string) (*User, error)
 	GetUserByUsername(ctx context.Context, username string) (*User, error)
 	List(ctx context.Context, filter Filter) ([]*User, int, error)
@@ -260,7 +262,20 @@ func (s *service) Update(ctx context.Context, id string, input UpdateUserInput) 
 	return s.Get(ctx, id)
 }
 
-func (s *service) Delete(ctx context.Context, id string) error {
+func (s *service) Delete(ctx context.Context, currentUserId string, id string) error {
+	if currentUserId == id {
+		return ErrCannotDeleteSelf
+	}
+
+	user, err := s.repo.GetUser(ctx, id)
+	if err != nil {
+		return fmt.Errorf("getting user for deletion: %w", err)
+	}
+
+	if user.Username == "admin" {
+		return ErrCannotDeleteAdmin
+	}
+
 	if err := s.repo.DeleteUser(ctx, id); err != nil {
 		return fmt.Errorf("deleting user: %w", err)
 	}

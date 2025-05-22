@@ -191,7 +191,13 @@ func (h *Handler) deleteUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.userService.Delete(r.Context(), id)
+	usr, ok := common.GetAuthenticatedUser(r.Context())
+	if !ok {
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	err := h.userService.Delete(r.Context(), usr.ID, id)
 	if err != nil {
 		switch err {
 		case user.ErrUserNotFound:

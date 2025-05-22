@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
+	import { auth } from '$lib/stores/auth';
 	import EditUserForm from './EditUserForm.svelte';
 	import DeleteModal from './DeleteModal.svelte';
 
@@ -11,6 +12,8 @@
 
 	let showDeleteModal = false;
 	let userToDelete = null;
+
+	$: currentUserId = auth.getCurrentUserId();
 
 	async function handleDelete() {
 		if (!userToDelete) return;
@@ -91,23 +94,27 @@
 							</span>
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-							<button
-								type="button"
-								class="text-amber-600 hover:text-amber-900 mr-3"
-								on:click={() => onEdit(user.id)}
-							>
-								Edit
-							</button>
-							<button
-								type="button"
-								class="text-red-600 hover:text-red-900"
-								on:click={() => {
-									userToDelete = user;
-									showDeleteModal = true;
-								}}
-							>
-								Delete
-							</button>
+							{#if currentUserId !== user.id}
+								<button
+									type="button"
+									class="text-amber-600 hover:text-amber-900 mr-3"
+									on:click={() => onEdit(user.id)}
+								>
+									Edit
+								</button>
+							{/if}
+							{#if currentUserId !== user.id && user.username !== 'admin'}
+								<button
+									type="button"
+									class="text-red-600 hover:text-red-900"
+									on:click={() => {
+										userToDelete = user;
+										showDeleteModal = true;
+									}}
+								>
+									Delete
+								</button>
+							{/if}
 						</td>
 					{/if}
 				</tr>

@@ -421,12 +421,10 @@ func (r *PostgresRepository) AssignRoles(ctx context.Context, userID string, rol
 	}
 	defer tx.Rollback(ctx)
 
-	// Delete existing roles
 	if _, err := tx.Exec(ctx, "DELETE FROM user_roles WHERE user_id = $1", userID); err != nil {
 		return fmt.Errorf("deleting existing roles: %w", err)
 	}
 
-	// Insert new roles
 	query := `
 		INSERT INTO user_roles (user_id, role_id)
 		SELECT $1, id FROM roles WHERE name = ANY($2)`
