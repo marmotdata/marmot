@@ -11,28 +11,30 @@ import (
 )
 
 var (
-	ErrUserNotFound      = errors.New("user not found")
-	ErrRoleNotFound      = errors.New("role not found")
-	ErrInvalidInput      = errors.New("invalid input")
-	ErrAlreadyExists     = errors.New("user already exists")
-	ErrReservedUsername  = errors.New("reserved username")
-	ErrInvalidPassword   = errors.New("invalid password")
-	ErrUnauthorized      = errors.New("unauthorized")
-	ErrInvalidAPIKey     = errors.New("invalid API key")
-	ErrPasswordRequired  = errors.New("password is required for non-OAuth users")
-	ErrCannotDeleteSelf  = errors.New("user can't delete self")
-	ErrCannotDeleteAdmin = errors.New("can't delete admin user")
+	ErrUserNotFound           = errors.New("user not found")
+	ErrRoleNotFound           = errors.New("role not found")
+	ErrInvalidInput           = errors.New("invalid input")
+	ErrAlreadyExists          = errors.New("user already exists")
+	ErrReservedUsername       = errors.New("reserved username")
+	ErrInvalidPassword        = errors.New("invalid password")
+	ErrUnauthorized           = errors.New("unauthorized")
+	ErrInvalidAPIKey          = errors.New("invalid API key")
+	ErrPasswordRequired       = errors.New("password is required for non-OAuth users")
+	ErrCannotDeleteSelf       = errors.New("user can't delete self")
+	ErrCannotDeleteAdmin      = errors.New("can't delete admin user")
+	ErrPasswordChangeRequired = errors.New("password change required")
 )
 
 type User struct {
-	ID          string                 `json:"id"`
-	Username    string                 `json:"username"`
-	Name        string                 `json:"name"`
-	Active      bool                   `json:"active"`
-	Preferences map[string]interface{} `json:"preferences"`
-	Roles       []Role                 `json:"roles"`
-	CreatedAt   time.Time              `json:"created_at"`
-	UpdatedAt   time.Time              `json:"updated_at"`
+	ID                 string                 `json:"id"`
+	Username           string                 `json:"username"`
+	Name               string                 `json:"name"`
+	Active             bool                   `json:"active"`
+	MustChangePassword bool                   `json:"must_change_password"`
+	Preferences        map[string]interface{} `json:"preferences"`
+	Roles              []Role                 `json:"roles"`
+	CreatedAt          time.Time              `json:"created_at"`
+	UpdatedAt          time.Time              `json:"updated_at"`
 }
 
 type Role struct {
@@ -103,6 +105,7 @@ type Service interface {
 	ListAPIKeys(ctx context.Context, userID string) ([]*APIKey, error)
 
 	UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error
+	UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error)
 }
 
 type service struct {
@@ -338,4 +341,27 @@ func (s *service) HasPermission(ctx context.Context, userID string, resourceType
 	}
 
 	return hasPermission, nil
+}
+
+func (s *service) UpdatePassword(ctx context.Context, userID string, newPassword string) (*User, error) {
+	if err := s.validator.Var(newPassword, "required,min=8"); err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, fmt.Errorf("hashing password: %w", err)
+	}
+
+	updates := map[string]interface{}{
+		"password_hash":        string(hash),
+		"must_change_password": false,
+		"updated_at":           time.Now(),
+	}
+
+	if err := s.repo.UpdateUser(ctx, userID, updates); err != nil {
+		return nil, fmt.Errorf("updating user password: %w", err)
+	}
+
+	return s.Get(ctx, userID)
 }

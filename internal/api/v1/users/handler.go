@@ -134,5 +134,13 @@ func (h *Handler) Routes() []common.Route {
 				common.WithAuth(h.userService, h.authService, h.config),
 			},
 		},
+		{
+			Path:    "/api/v1/users/update-password",
+			Method:  http.MethodPost,
+			Handler: h.updatePassword,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+			},
+		},
 	}
 }

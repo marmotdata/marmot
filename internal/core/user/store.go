@@ -61,6 +61,7 @@ func scanUser(row pgx.Row) (*User, error) {
 		&user.Username,
 		&user.Name,
 		&user.Active,
+		&user.MustChangePassword,
 		&preferencesJSON,
 		&user.CreatedAt,
 		&user.UpdatedAt,
@@ -74,7 +75,6 @@ func scanUser(row pgx.Row) (*User, error) {
 		return nil, fmt.Errorf("scanning user: %w", err)
 	}
 
-	// Initialize preferences map
 	user.Preferences = make(map[string]interface{})
 	if preferencesJSON != nil {
 		if err := json.Unmarshal(preferencesJSON, &user.Preferences); err != nil {
@@ -100,6 +100,7 @@ func scanUsers(rows pgx.Rows) ([]*User, error) {
 			&user.Username,
 			&user.Name,
 			&user.Active,
+			&user.MustChangePassword,
 			&preferencesJSON,
 			&user.CreatedAt,
 			&user.UpdatedAt,
@@ -109,7 +110,6 @@ func scanUsers(rows pgx.Rows) ([]*User, error) {
 			return nil, fmt.Errorf("scanning user: %w", err)
 		}
 
-		// Initialize preferences map
 		user.Preferences = make(map[string]interface{})
 		if preferencesJSON != nil {
 			if err := json.Unmarshal(preferencesJSON, &user.Preferences); err != nil {
@@ -150,8 +150,8 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, user *User, passwor
 	}
 
 	query := `
-    INSERT INTO users (username, name, password_hash, active, preferences, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+    INSERT INTO users (username, name, password_hash, active, must_change_password, preferences, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING id`
 
 	err = r.db.QueryRow(ctx, query,
@@ -159,6 +159,7 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, user *User, passwor
 		user.Name,
 		passwordHash,
 		user.Active,
+		user.MustChangePassword,
 		preferencesJSON,
 		user.CreatedAt,
 		user.UpdatedAt,
@@ -201,7 +202,7 @@ func (r *PostgresRepository) GetUser(ctx context.Context, id string) (*User, err
 			WHERE ur.user_id = $1
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -258,7 +259,7 @@ func (r *PostgresRepository) ListUsers(ctx context.Context, filter Filter) ([]*U
 			JOIN roles r ON r.id = ur.role_id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -491,7 +492,7 @@ func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username str
 			JOIN roles r ON r.id = ur.role_id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -513,7 +514,7 @@ func (r *PostgresRepository) GetUserByProviderID(ctx context.Context, provider s
 			JOIN roles r ON r.id = ur.role_id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.active, u.must_change_password, .preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		JOIN user_identities ui ON ui.user_id = u.id

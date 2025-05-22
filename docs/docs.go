@@ -1700,6 +1700,52 @@ const docTemplate = `{
                 }
             }
         },
+        "/users/update-password": {
+            "post": {
+                "description": "Update current user's password",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "users"
+                ],
+                "summary": "Update user password",
+                "parameters": [
+                    {
+                        "description": "Password update request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/users.UpdatePasswordRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/users.TokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users/{id}": {
             "get": {
                 "description": "Get detailed information about a specific user",
@@ -2581,6 +2627,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "must_change_password": {
+                    "type": "boolean"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -2684,8 +2733,23 @@ const docTemplate = `{
                 "expires_in": {
                     "type": "integer"
                 },
+                "requires_password_change": {
+                    "type": "boolean"
+                },
                 "token_type": {
                     "type": "string"
+                }
+            }
+        },
+        "users.UpdatePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
                 }
             }
         }

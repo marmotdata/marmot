@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS users (
     name VARCHAR(255) NOT NULL,
     password_hash VARCHAR(255),
     active BOOLEAN NOT NULL DEFAULT true,
+    must_change_password BOOLEAN NOT NULL DEFAULT false,
     preferences JSONB DEFAULT '{"theme": "auto"}'::jsonb,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
@@ -110,9 +111,9 @@ SELECT
 FROM permissions 
 WHERE name = 'view_assets';
 
--- Create initial admin user (password: admin)
-INSERT INTO users (username, name, password_hash) VALUES 
-('admin', 'Admin User', '$2a$10$x1SOwsT4cwN5NFOnZMri3Ox2RKpdPa/zA8UHUzsFw0X5BHjHVZK22');
+-- Create initial admin user (password: admin) with forced password change
+INSERT INTO users (username, name, password_hash, must_change_password) VALUES 
+('admin', 'Admin User', '$2a$10$x1SOwsT4cwN5NFOnZMri3Ox2RKpdPa/zA8UHUzsFw0X5BHjHVZK22', true);
 
 -- Assign admin role to admin user
 INSERT INTO user_roles (user_id, role_id)
