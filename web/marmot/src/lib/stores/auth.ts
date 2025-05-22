@@ -67,7 +67,7 @@ function createAuthStore() {
         }
 
         // Try to access a protected endpoint without authentication
-        // TODO: this is very crude, we should consider adding an status endpoint
+        // TODO: this is very crude, we should consider adding a status endpoint
         const response = await fetch('/api/v1/assets/list');
 
         if (response.ok) {
@@ -81,6 +81,15 @@ function createAuthStore() {
         isAnonymousMode.set(false);
         return false;
       }
+    },
+    getCurrentUserId: (): string | null => {
+      if (browser) {
+        const payload = auth.getPayload();
+        if (payload && payload.sub) {
+          return payload.sub;
+        }
+      }
+      return null;
     }
   };
 }
