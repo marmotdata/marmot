@@ -10,15 +10,20 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type UpdatePasswordRequest struct {
+	NewPassword string `json:"new_password" validate:"required,min=8"`
+}
+
 type LoginRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
 type TokenResponse struct {
-	AccessToken string `json:"access_token"`
-	TokenType   string `json:"token_type"`
-	ExpiresIn   int64  `json:"expires_in"`
+	AccessToken            string `json:"access_token"`
+	TokenType              string `json:"token_type"`
+	ExpiresIn              int64  `json:"expires_in"`
+	RequiresPasswordChange bool   `json:"requires_password_change"`
 }
 
 type OAuthLinkRequest struct {
@@ -76,9 +81,10 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := TokenResponse{
-		AccessToken: token,
-		TokenType:   "Bearer",
-		ExpiresIn:   24 * 60 * 60, // 24 hours
+		AccessToken:            token,
+		TokenType:              "Bearer",
+		ExpiresIn:              24 * 60 * 60,
+		RequiresPasswordChange: authenticatedUser.MustChangePassword,
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)
@@ -144,4 +150,60 @@ func (h *Handler) unlinkOAuthAccount(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// @Summary Update user password
+// @Description Update current user's password
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body UpdatePasswordRequest true "Password update request"
+// @Success 200 {object} TokenResponse
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 401 {object} common.ErrorResponse
+// @Router /users/update-password [post]
+func (h *Handler) updatePassword(w http.ResponseWriter, r *http.Request) {
+	var input UpdatePasswordRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	usr, ok := common.GetAuthenticatedUser(r.Context())
+	if !ok {
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	updatedUser, err := h.userService.UpdatePassword(r.Context(), usr.ID, input.NewPassword)
+	if err != nil {
+		log.Error().Err(err).Str("user_id", usr.ID).Msg("Failed to update password")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to update password")
+		return
+	}
+
+	theme := ""
+	if updatedUser.Preferences != nil {
+		if themeVal, ok := updatedUser.Preferences["theme"].(string); ok {
+			theme = themeVal
+		}
+	}
+
+	extraClaims := map[string]interface{}{
+		"theme": theme,
+	}
+
+	token, err := h.authService.GenerateToken(r.Context(), updatedUser, extraClaims)
+	if err != nil {
+		common.RespondError(w, http.StatusInternalServerError, "Failed to generate token")
+		return
+	}
+
+	response := TokenResponse{
+		AccessToken: token,
+		TokenType:   "Bearer",
+		ExpiresIn:   24 * 60 * 60,
+	}
+
+	common.RespondJSON(w, http.StatusOK, response)
 }

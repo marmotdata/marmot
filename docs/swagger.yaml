@@ -493,6 +493,8 @@ definitions:
         type: string
       id:
         type: string
+      must_change_password:
+        type: boolean
       name:
         type: string
       preferences:
@@ -562,8 +564,18 @@ definitions:
         type: string
       expires_in:
         type: integer
+      requires_password_change:
+        type: boolean
       token_type:
         type: string
+    type: object
+  users.UpdatePasswordRequest:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+    required:
+    - new_password
     type: object
 info:
   contact: {}
@@ -1775,6 +1787,36 @@ paths:
           schema:
             $ref: '#/definitions/common.ErrorResponse'
       summary: Update user preferences
+      tags:
+      - users
+  /users/update-password:
+    post:
+      consumes:
+      - application/json
+      description: Update current user's password
+      parameters:
+      - description: Password update request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users.UpdatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/users.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Update user password
       tags:
       - users
 swagger: "2.0"
