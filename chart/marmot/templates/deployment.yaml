@@ -1,0 +1,170 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "marmot.fullname" . }}
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "marmot.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "marmot.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "marmot.serviceAccountName" . }}
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ .Chart.Name }}
+          {{- with .Values.securityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.service.port }}
+              protocol: TCP
+          env:
+            # Server configuration
+            - name: MARMOT_SERVER_PORT
+              value: {{ .Values.config.server.port | quote }}
+            - name: MARMOT_SERVER_HOST
+              value: {{ .Values.config.server.host | quote }}
+            {{- if .Values.config.server.rootUrl }}
+            - name: MARMOT_SERVER_ROOT_URL
+              value: {{ .Values.config.server.rootUrl | quote }}
+            {{- end }}
+            
+            # Database configuration
+            - name: MARMOT_DATABASE_HOST
+              value: {{ .Values.config.database.host | quote }}
+            - name: MARMOT_DATABASE_PORT
+              value: {{ .Values.config.database.port | quote }}
+            - name: MARMOT_DATABASE_USER
+              value: {{ .Values.config.database.user | quote }}
+            - name: MARMOT_DATABASE_NAME
+              value: {{ .Values.config.database.name | quote }}
+            - name: MARMOT_DATABASE_SSLMODE
+              value: {{ .Values.config.database.sslmode | quote }}
+            - name: MARMOT_DATABASE_MAX_CONNS
+              value: {{ .Values.config.database.maxConns | quote }}
+            - name: MARMOT_DATABASE_IDLE_CONNS
+              value: {{ .Values.config.database.idleConns | quote }}
+            - name: MARMOT_DATABASE_CONN_LIFETIME
+              value: {{ .Values.config.database.connLifetime | quote }}
+            
+            # Database password - prefer secretRef, fallback to direct value
+            - name: MARMOT_DATABASE_PASSWORD
+              {{- if .Values.config.database.passwordSecretRef }}
+              {{- if and .Values.config.database.password .Values.config.database.passwordSecretRef }}
+              {{- fail "Cannot specify both config.database.password and config.database.passwordSecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.database.passwordSecretRef.name }}
+                  key: {{ .Values.config.database.passwordSecretRef.key }}
+              {{- else }}
+              value: {{ .Values.config.database.password | quote }}
+              {{- end }}
+            
+            # Logging configuration
+            - name: MARMOT_LOGGING_LEVEL
+              value: {{ .Values.config.logging.level | quote }}
+            - name: MARMOT_LOGGING_FORMAT
+              value: {{ .Values.config.logging.format | quote }}
+            
+            # Auth configuration
+            - name: MARMOT_AUTH_ANONYMOUS_ENABLED
+              value: {{ .Values.config.auth.anonymous.enabled | quote }}
+            - name: MARMOT_AUTH_ANONYMOUS_ROLE
+              value: {{ .Values.config.auth.anonymous.role | quote }}
+            
+            # OAuth provider configuration
+            {{- if and .Values.config.auth.providers .Values.config.auth.providers.okta .Values.config.auth.providers.okta.enabled }}
+            - name: MARMOT_AUTH_PROVIDERS_OKTA_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_PROVIDERS_OKTA_TYPE
+              value: {{ .Values.config.auth.providers.okta.type | quote }}
+            - name: MARMOT_AUTH_PROVIDERS_OKTA_NAME
+              value: {{ .Values.config.auth.providers.okta.name | quote }}
+            - name: MARMOT_AUTH_PROVIDERS_OKTA_CLIENT_ID
+              value: {{ .Values.config.auth.providers.okta.clientId | quote }}
+            - name: MARMOT_AUTH_PROVIDERS_OKTA_URL
+              value: {{ .Values.config.auth.providers.okta.url | quote }}
+            - name: MARMOT_AUTH_PROVIDERS_OKTA_REDIRECT_URL
+              value: {{ .Values.config.auth.providers.okta.redirectUrl | quote }}
+            - name: MARMOT_AUTH_PROVIDERS_OKTA_ALLOW_SIGNUP
+              value: {{ .Values.config.auth.providers.okta.allowSignup | quote }}
+            
+            # OAuth client secret - prefer secretRef, fallback to direct value
+            - name: MARMOT_AUTH_PROVIDERS_OKTA_CLIENT_SECRET
+              {{- if .Values.config.auth.providers.okta.clientSecretRef }}
+              {{- if and .Values.config.auth.providers.okta.clientSecret .Values.config.auth.providers.okta.clientSecretRef }}
+              {{- fail "Cannot specify both config.auth.providers.okta.clientSecret and config.auth.providers.okta.clientSecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.auth.providers.okta.clientSecretRef.name }}
+                  key: {{ .Values.config.auth.providers.okta.clientSecretRef.key }}
+              {{- else }}
+              value: {{ .Values.config.auth.providers.okta.clientSecret | quote }}
+              {{- end }}
+            {{- end }}
+            
+            # Additional environment variables
+            {{- range $key, $value := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

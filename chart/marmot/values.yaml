@@ -1,0 +1,117 @@
+# Default values for marmot.
+# This is a YAML-formatted file.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/marmotdata/marmot
+  pullPolicy: IfNotPresent
+  tag: "0.1.0"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 65534
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 65534
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: false
+  className: ""
+  annotations:
+    {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: marmot.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: marmot-tls
+  #    hosts:
+  #      - marmot.local
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Marmot application configuration
+config:
+  # Server configuration
+  server:
+    port: 8080
+    host: "0.0.0.0"
+    rootUrl: ""
+    customResponseHeaders: {}
+
+  # Database configuration
+  database:
+    host: "postgresql"
+    port: 5432
+    user: "marmot"
+    # Use either password OR passwordSecretRef (not both)
+    password: ""
+    # passwordSecretRef:
+    #   name: "marmot-database-secret"
+    #   key: "password"
+    name: "marmot"
+    sslmode: "disable"
+    maxConns: 25
+    idleConns: 5
+    connLifetime: 5
+
+  # Logging configuration
+  logging:
+    level: "info"
+    format: "json"
+
+  # Authentication configuration
+  auth:
+    anonymous:
+      enabled: false
+      role: "user"
+
+# Additional environment variables
+env: {}
