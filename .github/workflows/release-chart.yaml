@@ -63,7 +63,7 @@ jobs:
         id: tag_version
         uses: mathieudutour/github-tag-action@v6.2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.CHARTS_REPO_TOKEN }}
           custom_tag: ${{ steps.chart_version.outputs.CHART_VERSION }}
           tag_prefix: "chart-"
         if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
