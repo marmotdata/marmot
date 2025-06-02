@@ -27,14 +27,12 @@ func (s *Source) createKafkaTopic(spec *asyncapi2.Document, channelName string, 
 	description := fmt.Sprintf("Kafka topic for channel %s", channelName)
 	mrnValue := mrn.New("Topic", "Kafka", name)
 
-	// Set shared fields
 	sharedFields := SharedFields{
 		ServiceName:    spec.Info.Title,
 		ServiceVersion: spec.Info.Version,
 		Description:    description,
 	}
 
-	// Set Kafka fields
 	kafkaFields := KafkaFields{
 		Partitions: binding.Partitions,
 		Replicas:   binding.Replicas,

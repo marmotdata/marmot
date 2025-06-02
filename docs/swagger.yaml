@@ -128,12 +128,9 @@ definitions:
   asset.MetadataValueSuggestion:
     properties:
       count:
-        description: number of assets using this value
         type: integer
       example:
-        allOf:
-        - $ref: '#/definitions/asset.Asset'
-        description: optional example asset
+        $ref: '#/definitions/asset.Asset'
       value:
         type: string
     type: object

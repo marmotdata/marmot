@@ -11,5 +11,4 @@ function tailwindPlugin(context, options) {
     },
   };
 }
-
 module.exports = tailwindPlugin;
