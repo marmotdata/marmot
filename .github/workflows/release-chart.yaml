@@ -1,0 +1,92 @@
+name: Release Chart
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "charts/marmot/Chart.yaml"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name marmot-helm-bot
+          git config user.email marmot-helm-bot@marmotdata.com
+
+      - name: Get chart version
+        id: chart_version
+        run: |
+          cd charts/marmot
+          echo "CHART_VERSION=$(grep -o 'version: [0-9.]*' Chart.yaml | awk '{print $2}')" >> $GITHUB_OUTPUT
+
+      - name: Check if version changed
+        id: version_check
+        run: |
+          PREV_VERSION=$(git show HEAD~1:charts/marmot/Chart.yaml | grep -o 'version: [0-9.]*' | awk '{print $2}' || echo "0.0.0")
+          CURRENT_VERSION="${{ steps.chart_version.outputs.CHART_VERSION }}"
+
+          if [ "$PREV_VERSION" != "$CURRENT_VERSION" ]; then
+            echo "VERSION_CHANGED=true" >> $GITHUB_OUTPUT
+            echo "Chart version changed from $PREV_VERSION to $CURRENT_VERSION"
+          else
+            echo "VERSION_CHANGED=false" >> $GITHUB_OUTPUT
+            echo "Chart version unchanged: $CURRENT_VERSION"
+          fi
+
+      - name: Check if tag exists
+        id: tag_exists
+        if: steps.version_check.outputs.VERSION_CHANGED == 'true'
+        run: |
+          if git show-ref --verify --quiet "refs/tags/chart-${{ steps.chart_version.outputs.CHART_VERSION }}"; then
+            echo "TAG_EXISTS=true" >> $GITHUB_OUTPUT
+          else
+            echo "TAG_EXISTS=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Lint chart
+        if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
+        run: make chart-lint
+
+      - name: Test chart
+        if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
+        run: make chart-test
+
+      - name: Tag release
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          custom_tag: ${{ steps.chart_version.outputs.CHART_VERSION }}
+          tag_prefix: "chart-"
+        if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
+
+      - name: Create release
+        if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.tag_version.outputs.new_tag }}
+          name: ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+
+      - name: Publish Helm chart
+        if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
+        uses: stefanprodan/helm-gh-pages@master
+        with:
+          token: ${{ secrets.CHARTS_REPO_TOKEN }}
+          owner: marmotdata
+          repository: charts
+          branch: main
+          target_dir: marmot
+          index_dir: .
+          charts_dir: charts/marmot
+          charts_url: https://marmotdata.github.io/charts
+          commit_username: marmot-helm-bot
+          commit_email: marmot-helm-bot@marmotdata.com

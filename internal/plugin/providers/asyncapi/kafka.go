@@ -14,8 +14,8 @@ import (
 type KafkaTopic struct {
 	ResourceName string `json:"resourceName"`
 	DisplayName  string `json:"displayName"`
-	SharedFields        // Embedding SharedFields
-	KafkaFields         // Embedding KafkaFields
+	SharedFields
+	KafkaFields
 }
 
 func (s *Source) createKafkaTopic(spec *asyncapi2.Document, channelName string, binding *kafka.ChannelBinding) asset.Asset {

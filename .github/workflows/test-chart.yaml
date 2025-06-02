@@ -1,0 +1,26 @@
+name: Chart PR
+
+on:
+  pull_request:
+    paths:
+      - "charts/**"
+
+jobs:
+  chart-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name marmot-helm-bot
+          git config user.email marmot-helm-bot@marmotdata.com
+
+      - name: Lint chart
+        run: make chart-lint
+
+      - name: Test chart
+        run: make chart-test

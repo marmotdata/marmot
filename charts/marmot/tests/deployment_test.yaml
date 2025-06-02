@@ -1,0 +1,145 @@
+suite: test deployment
+templates:
+  - deployment.yaml
+tests:
+  - it: should render deployment with default values
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-marmot
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "ghcr.io/marmotdata/marmot:0.1.0"
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 80
+
+  - it: should set correct environment variables
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_SERVER_PORT
+            value: "8080"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_HOST
+            value: "postgresql"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_LOGGING_LEVEL
+            value: "info"
+
+  - it: should use external database configuration by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_HOST
+            value: "postgresql"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_USER
+            value: "marmot"
+
+  - it: should use postgresql subchart when enabled
+    set:
+      postgresql.enabled: true
+      postgresql.auth.username: "testuser"
+      postgresql.auth.database: "testdb"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_HOST
+            value: "RELEASE-NAME-marmot-postgresql"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_USER
+            value: "testuser"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_NAME
+            value: "testdb"
+
+  - it: should use password secret for postgresql subchart
+    set:
+      postgresql.enabled: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: RELEASE-NAME-marmot-postgresql
+                key: postgres-password
+
+  - it: should use custom database password secret
+    set:
+      config.database.passwordSecretRef:
+        name: custom-secret
+        key: db-password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: custom-secret
+                key: db-password
+
+  - it: should fail with both password and passwordSecretRef
+    set:
+      config.database.password: "plaintext"
+      config.database.passwordSecretRef:
+        name: secret
+        key: password
+    asserts:
+      - failedTemplate:
+          errorMessage: "Cannot specify both config.database.password and config.database.passwordSecretRef"
+
+  - it: should set security context
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 65534
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+
+  - it: should set custom image tag
+    set:
+      image.tag: "custom-tag"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "ghcr.io/marmotdata/marmot:custom-tag"
+
+  - it: should set custom resources
+    set:
+      resources:
+        limits:
+          cpu: 1000m
+          memory: 1Gi
+        requests:
+          cpu: 200m
+          memory: 256Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 1000m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 256Mi

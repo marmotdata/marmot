@@ -55,15 +55,31 @@ spec:
               value: {{ .Values.config.server.rootUrl | quote }}
             {{- end }}
             
-            # Database configuration
+            # Database configuration - use subchart values if enabled
             - name: MARMOT_DATABASE_HOST
+              {{- if .Values.postgresql.enabled }}
+              value: {{ include "marmot.fullname" . }}-postgresql
+              {{- else }}
               value: {{ .Values.config.database.host | quote }}
+              {{- end }}
             - name: MARMOT_DATABASE_PORT
+              {{- if .Values.postgresql.enabled }}
+              value: "5432"
+              {{- else }}
               value: {{ .Values.config.database.port | quote }}
+              {{- end }}
             - name: MARMOT_DATABASE_USER
+              {{- if .Values.postgresql.enabled }}
+              value: {{ .Values.postgresql.auth.username | quote }}
+              {{- else }}
               value: {{ .Values.config.database.user | quote }}
+              {{- end }}
             - name: MARMOT_DATABASE_NAME
+              {{- if .Values.postgresql.enabled }}
+              value: {{ .Values.postgresql.auth.database | quote }}
+              {{- else }}
               value: {{ .Values.config.database.name | quote }}
+              {{- end }}
             - name: MARMOT_DATABASE_SSLMODE
               value: {{ .Values.config.database.sslmode | quote }}
             - name: MARMOT_DATABASE_MAX_CONNS
@@ -72,10 +88,13 @@ spec:
               value: {{ .Values.config.database.idleConns | quote }}
             - name: MARMOT_DATABASE_CONN_LIFETIME
               value: {{ .Values.config.database.connLifetime | quote }}
-            
-            # Database password - prefer secretRef, fallback to direct value
             - name: MARMOT_DATABASE_PASSWORD
-              {{- if .Values.config.database.passwordSecretRef }}
+              {{- if .Values.postgresql.enabled }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "marmot.fullname" . }}-postgresql
+                  key: postgres-password
+              {{- else if .Values.config.database.passwordSecretRef }}
               {{- if and .Values.config.database.password .Values.config.database.passwordSecretRef }}
               {{- fail "Cannot specify both config.database.password and config.database.passwordSecretRef" }}
               {{- end }}

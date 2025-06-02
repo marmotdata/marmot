@@ -52,3 +52,9 @@ dev-deps:
 e2e-client: swagger
 	rm -rf test/e2e/internal/client/*
 	cd test/e2e && swagger generate client -f ../../docs/swagger.yaml -A marmot --target internal/client
+
+chart-test:
+	docker run ${DOCKER_ARGS} --user root --entrypoint /bin/sh --rm -v $(CURDIR):/charts -w /charts helmunittest/helm-unittest:3.17.3-0.8.2 /charts/.github/test.sh
+
+chart-lint:
+	docker run ${DOCKER_ARGS} --env GIT_SAFE_DIR="true" --entrypoint /bin/sh --rm -v $(CURDIR):/charts -w /charts quay.io/helmpack/chart-testing:v3.13.0 /charts/.github/lint.sh

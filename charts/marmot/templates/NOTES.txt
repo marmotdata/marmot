@@ -1,3 +1,19 @@
+{{- if .Values.postgresql.enabled }}
+⚠️  WARNING: You are using the embedded PostgreSQL database.
+⚠️  This is NOT recommended for production use!
+⚠️  For production deployments, please use an external PostgreSQL instance.
+
+PostgreSQL Database Information:
+- Host: {{ include "marmot.fullname" . }}-postgresql
+- Port: 5432
+- Database: {{ .Values.postgresql.auth.database }}
+- Username: {{ .Values.postgresql.auth.username }}
+
+To get the PostgreSQL password, run:
+  export POSTGRES_PASSWORD=$(kubectl get secret --namespace {{ .Release.Namespace }} {{ include "marmot.fullname" . }}-postgresql -o jsonpath="{.data.postgres-password}" | base64 -d)
+
+{{- end }}
+
 1. Get the application URL by running these commands:
 {{- if .Values.ingress.enabled }}
 {{- range $host := .Values.ingress.hosts }}

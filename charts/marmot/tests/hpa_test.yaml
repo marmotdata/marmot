@@ -1,0 +1,48 @@
+suite: test hpa
+templates:
+  - hpa.yaml
+tests:
+  - it: should not render hpa by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render hpa when enabled
+    set:
+      autoscaling.enabled: true
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+      - equal:
+          path: spec.scaleTargetRef.name
+          value: RELEASE-NAME-marmot
+      - equal:
+          path: spec.minReplicas
+          value: 1
+      - equal:
+          path: spec.maxReplicas
+          value: 100
+
+  - it: should configure cpu and memory metrics
+    set:
+      autoscaling.enabled: true
+      autoscaling.targetMemoryUtilizationPercentage: 70
+    asserts:
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 80
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: memory
+              target:
+                type: Utilization
+                averageUtilization: 70

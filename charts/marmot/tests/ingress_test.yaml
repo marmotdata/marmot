@@ -1,0 +1,51 @@
+suite: test ingress
+templates:
+  - ingress.yaml
+tests:
+  - it: should not render ingress by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ingress when enabled
+    set:
+      ingress.enabled: true
+    asserts:
+      - isKind:
+          of: Ingress
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-marmot
+      - equal:
+          path: spec.rules[0].host
+          value: marmot.local
+      - equal:
+          path: spec.rules[0].http.paths[0].path
+          value: /
+      - equal:
+          path: spec.rules[0].http.paths[0].backend.service.name
+          value: RELEASE-NAME-marmot
+
+  - it: should render ingress with TLS
+    set:
+      ingress.enabled: true
+      ingress.tls:
+        - secretName: marmot-tls
+          hosts:
+            - marmot.local
+    asserts:
+      - equal:
+          path: spec.tls[0].secretName
+          value: marmot-tls
+      - contains:
+          path: spec.tls[0].hosts
+          content: marmot.local
+
+  - it: should render ingress with custom className
+    set:
+      ingress.enabled: true
+      ingress.className: nginx
+    asserts:
+      - equal:
+          path: spec.ingressClassName
+          value: nginx
