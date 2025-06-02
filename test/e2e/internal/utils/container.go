@@ -333,8 +333,7 @@ func (cm *ContainerManager) CleanupContainer(containerID string) error {
 	return nil
 }
 
-func (cm *ContainerManager) RunMarmotCommandWithConfig(config TestConfig, command []string, configContent string) error {
-	// Create the config in a mounted tmp directory
+func (cm *ContainerManager) RunMarmotCommandWithConfig(config TestConfig, command []string, configContent string, volumeMounts ...string) error {
 	tmpDir, err := os.MkdirTemp("", "marmot-config-*")
 	if err != nil {
 		return err
@@ -352,9 +351,15 @@ func (cm *ContainerManager) RunMarmotCommandWithConfig(config TestConfig, comman
 		WorkingDir: "/tmp",
 	}
 
+	// Start with the config file bind
+	binds := []string{fmt.Sprintf("%s:/tmp/config.yaml:ro", configFile)}
+
+	// Add any additional volume mounts
+	binds = append(binds, volumeMounts...)
+
 	hostConfig := &container.HostConfig{
 		NetworkMode: container.NetworkMode(config.NetworkName),
-		Binds:       []string{fmt.Sprintf("%s:/tmp/config.yaml:ro", configFile)},
+		Binds:       binds,
 	}
 
 	containerID, err := cm.StartContainer(containerConfig, hostConfig, "")
