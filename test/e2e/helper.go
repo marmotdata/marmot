@@ -35,8 +35,6 @@ type TestEnvironment struct {
 	SchemaRegistryPort string
 	KafkaClient        *kgo.Client
 	KafkaAdminClient   *kadm.Client
-	IcebergRESTID      string
-	IcebergRESTPort    string
 	HasSchemaRegistry  bool
 	PostgresPort       string
 }
@@ -198,36 +196,6 @@ func (env *TestEnvironment) EnsurePostgresStarted(ctx context.Context) error {
 	return nil
 }
 
-// EnsureIcebergRESTStarted ensures the Iceberg REST server is started
-func (env *TestEnvironment) EnsureIcebergRESTStarted(ctx context.Context) error {
-	if env.IcebergRESTID != "" {
-		// Already started, check if it's still healthy
-		err := waitForIcebergRESTServer(fmt.Sprintf("localhost:%s", env.IcebergRESTPort), 10*time.Second)
-		if err == nil {
-			return nil
-		}
-
-		env.ContainerManager.CleanupContainer(env.IcebergRESTID)
-		env.IcebergRESTID = ""
-	}
-
-	icebergRESTID, icebergRESTPort, err := startIcebergRESTServer(ctx, env.ContainerManager, env.Config.NetworkName)
-	if err != nil {
-		return fmt.Errorf("failed to start Iceberg REST server: %w", err)
-	}
-
-	err = waitForIcebergRESTServer(fmt.Sprintf("localhost:%s", icebergRESTPort), 120*time.Second)
-	if err != nil {
-		env.ContainerManager.CleanupContainer(icebergRESTID)
-		return fmt.Errorf("Iceberg REST server failed to become ready: %w", err)
-	}
-
-	env.IcebergRESTID = icebergRESTID
-	env.IcebergRESTPort = icebergRESTPort
-
-	return nil
-}
-
 // startLocalstack starts a Localstack container for AWS service mocking
 func startLocalstack(ctx context.Context, cm *utils.ContainerManager, networkName string) (string, string, error) {
 	localstackConfig := &container.Config{
@@ -273,7 +241,7 @@ func startPostgres(ctx context.Context, cm *utils.ContainerManager, networkName 
 	postgresHostConfig := &container.HostConfig{
 		NetworkMode: container.NetworkMode(networkName),
 		PortBindings: nat.PortMap{
-			"5432/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "5433"}},
+			"5432/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "5435"}},
 		},
 	}
 
@@ -282,7 +250,7 @@ func startPostgres(ctx context.Context, cm *utils.ContainerManager, networkName 
 		return "", "", fmt.Errorf("failed to start PostgreSQL container: %w", err)
 	}
 
-	return postgresID, "5433", nil
+	return postgresID, "5435", nil
 }
 
 func waitForLocalstack() error {
@@ -432,86 +400,6 @@ func startRedpandaWithSchemaRegistry(ctx context.Context, cm *utils.ContainerMan
 	}
 
 	return redpandaID, "9092", "8081", nil
-}
-
-// startIcebergRESTServer starts an Iceberg REST catalog server
-func startIcebergRESTServer(ctx context.Context, cm *utils.ContainerManager, networkName string) (string, string, error) {
-	// We'll use Tabular's REST service for this test
-	// Create a volume for local storage instead of using S3
-	icebergRESTConfig := &container.Config{
-		Image: "tabulario/iceberg-rest:0.5.0",
-		Env: []string{
-			"CATALOG_BACKEND=memory",
-			"CATALOG_WAREHOUSE=/tmp/warehouse",
-			"WAREHOUSE_PATH=/tmp/warehouse",
-			"CATALOG_IMPL=org.apache.iceberg.rest.RESTCatalog",
-		},
-		ExposedPorts: nat.PortSet{
-			"8181/tcp": struct{}{},
-		},
-	}
-
-	icebergRESTHostConfig := &container.HostConfig{
-		NetworkMode: container.NetworkMode(networkName),
-		PortBindings: nat.PortMap{
-			"8181/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "8181"}},
-		},
-	}
-
-	icebergRESTID, err := cm.StartContainer(icebergRESTConfig, icebergRESTHostConfig, "rest-test")
-	if err != nil {
-		return "", "", fmt.Errorf("failed to start Iceberg REST server container: %w", err)
-	}
-
-	return icebergRESTID, "8181", nil
-}
-
-// waitForIcebergRESTServer waits for the Iceberg REST server to be ready
-func waitForIcebergRESTServer(endpoint string, timeout time.Duration) error {
-	client := &http.Client{
-		Timeout: 5 * time.Second,
-	}
-
-	urls := []string{
-		fmt.Sprintf("http://%s/v1/config", endpoint),
-		fmt.Sprintf("http://%s/v1/namespaces", endpoint),
-	}
-
-	deadline := time.Now().Add(timeout)
-	attempt := 0
-
-	for time.Now().Before(deadline) {
-		attempt++
-		allEndpointsOk := true
-
-		for _, url := range urls {
-			resp, err := client.Get(url)
-			if err != nil {
-				allEndpointsOk = false
-				break
-			}
-
-			defer resp.Body.Close()
-
-			if resp.StatusCode != http.StatusOK {
-				allEndpointsOk = false
-				break
-			}
-		}
-
-		if allEndpointsOk {
-			return nil
-		}
-
-		backoffTime := float64(attempt * 500)
-		if backoffTime > 5000 {
-			backoffTime = 5000
-		}
-		sleepTime := time.Duration(backoffTime) * time.Millisecond
-		time.Sleep(sleepTime)
-	}
-
-	return fmt.Errorf("timeout waiting for Iceberg REST server at %s after %d attempts", endpoint, attempt)
 }
 
 // Kafka helper functions

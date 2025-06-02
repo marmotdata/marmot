@@ -18,24 +18,11 @@ type AMQPQueue struct {
 	AMQPFields
 }
 
-// AMQPFields represents AMQP-specific metadata fields
-// +marmot:metadata
-type AMQPFields struct {
-	BindingIs          string `json:"binding_is" description:"AMQP binding type (queue or routingKey)"`
-	ExchangeName       string `json:"exchange_name" description:"Exchange name"`
-	ExchangeType       string `json:"exchange_type" description:"Exchange type (topic, fanout, direct, etc.)"`
-	ExchangeDurable    bool   `json:"exchange_durable" description:"Exchange durability flag"`
-	ExchangeAutoDelete bool   `json:"exchange_auto_delete" description:"Exchange auto delete flag"`
-	QueueName          string `json:"queue_name" description:"Queue name"`
-	QueueVHost         string `json:"queue_vhost" description:"Queue virtual host"`
-	QueueDurable       bool   `json:"queue_durable" description:"Queue durability flag"`
-	QueueExclusive     bool   `json:"queue_exclusive" description:"Queue exclusivity flag"`
-	QueueAutoDelete    bool   `json:"queue_auto_delete" description:"Queue auto delete flag"`
-}
-
 func (s *Source) createAMQPQueue(spec *asyncapi2.Document, channelName string, binding *amqp.ChannelBinding) asset.Asset {
-	name := channelName
-	if binding.Queue != nil && binding.Queue.Name != "" {
+	name := ""
+	if binding.Exchange != nil && binding.Exchange.Name != "" {
+		name = binding.Exchange.Name
+	} else if binding.Queue != nil && binding.Queue.Name != "" {
 		name = binding.Queue.Name
 	}
 
@@ -69,7 +56,6 @@ func (s *Source) createAMQPQueue(spec *asyncapi2.Document, channelName string, b
 		amqpFields.QueueVHost = binding.Queue.VHost
 	}
 
-	// Create metadata map from structs
 	metadata := plugin.MapToMetadata(sharedFields)
 	for k, v := range plugin.MapToMetadata(amqpFields) {
 		metadata[k] = v

@@ -2075,16 +2075,10 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "count": {
-                    "description": "number of assets using this value",
                     "type": "integer"
                 },
                 "example": {
-                    "description": "optional example asset",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/asset.Asset"
-                        }
-                    ]
+                    "$ref": "#/definitions/asset.Asset"
                 },
                 "value": {
                     "type": "string"

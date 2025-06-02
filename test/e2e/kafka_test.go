@@ -130,11 +130,11 @@ runs:
 	require.True(t, ok, "replication_factor not found in metadata")
 	assert.Equal(t, "1", replicationFactor1.(json.Number).String())
 
-	retentionMs1, ok := metadata1["retention.ms"] // No prefix
+	retentionMs1, ok := metadata1["retention_ms"]
 	require.True(t, ok, "retention.ms not found in metadata")
 	assert.Equal(t, "86400000", retentionMs1)
 
-	cleanupPolicy1, ok := metadata1["cleanup.policy"] // No prefix
+	cleanupPolicy1, ok := metadata1["cleanup_policy"]
 	require.True(t, ok, "cleanup.policy not found in metadata")
 	assert.Equal(t, "delete", cleanupPolicy1)
 
@@ -190,16 +190,16 @@ runs:
 	require.True(t, ok, "replication_factor not found in metadata")
 	assert.Equal(t, "1", replicationFactor2.(json.Number).String())
 
-	retentionMs2, ok := metadata2["retention.ms"]
-	require.True(t, ok, "retention.ms not found in metadata")
+	retentionMs2, ok := metadata2["retention_ms"]
+	require.True(t, ok, "retention_ms not found in metadata")
 	assert.Equal(t, "604800000", retentionMs2)
 
-	cleanupPolicy2, ok := metadata2["cleanup.policy"]
-	require.True(t, ok, "cleanup.policy not found in metadata")
+	cleanupPolicy2, ok := metadata2["cleanup_policy"]
+	require.True(t, ok, "cleanup_policy not found in metadata")
 	assert.Equal(t, "compact", cleanupPolicy2)
 
-	maxMessageBytes, ok := metadata2["max.message.bytes"]
-	require.True(t, ok, "max.message.bytes not found in metadata")
+	maxMessageBytes, ok := metadata2["max_message_bytes"]
+	require.True(t, ok, "max_message_bytes not found in metadata")
 	assert.Equal(t, "2097152", maxMessageBytes)
 
 	testAuthConfig(t)

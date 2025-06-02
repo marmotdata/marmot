@@ -1,13 +1,12 @@
 name: E2E Tests
 
 on:
+  workflow_dispatch:
   issue_comment:
     types: [created]
-  # Also run on PR creation and updates to show as a check
   pull_request:
     types: [opened, synchronize, reopened]
 
-# Add permissions block
 permissions:
   contents: read
   pull-requests: write
@@ -150,14 +149,14 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
-            
+
             // Get the PR details to get the HEAD SHA
             const { data: pr } = await github.rest.pulls.get({
               owner,
               repo,
               pull_number: issue_number
             });
-            
+
             // Create a check run
             await github.rest.checks.create({
               owner,
@@ -187,7 +186,7 @@ jobs:
 
       - name: Create client directory structure
         run: mkdir -p test/e2e/internal/client
-        
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
@@ -218,16 +217,16 @@ jobs:
           script: |
             const { owner, repo } = context.repo;
             const issue_number = context.issue.number;
-            
+
             // Get the PR details to get the HEAD SHA
             const { data: pr } = await github.rest.pulls.get({
               owner,
               repo,
               pull_number: issue_number
             });
-            
+
             const testsPassed = '${{ steps.e2e-tests.outcome }}' === 'success';
-            
+
             // Update the check run
             await github.rest.checks.create({
               owner,

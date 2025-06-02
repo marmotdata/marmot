@@ -27,7 +27,7 @@ release: clean swagger frontend-build
 test:
 	go test -v ./...
 
-e2e-test: e2e-client
+e2e-test: build test e2e-client
 	cd test/e2e && go test -v -timeout 1h ./...
 
 clean:

@@ -118,8 +118,8 @@ type MetadataFieldSuggestion struct {
 // MetadataValueSuggestion represents a suggestion for a metadata field value
 type MetadataValueSuggestion struct {
 	Value   string `json:"value"`
-	Count   int    `json:"count"`             // number of assets using this value
-	Example *Asset `json:"example,omitempty"` // optional example asset
+	Count   int    `json:"count"`
+	Example *Asset `json:"example,omitempty"`
 }
 
 var (
@@ -186,11 +186,9 @@ func WithMetrics(metrics MetricsClient) ServiceOption {
 
 func (s *service) GetMetadataFields(ctx context.Context, queryContext *MetadataContext) ([]MetadataFieldSuggestion, error) {
 	if queryContext == nil || queryContext.Query == "" {
-		// If no context, return all fields (existing behavior)
 		return s.repo.GetMetadataFields(ctx)
 	}
 
-	// Get fields based on the query context
 	fields, err := s.repo.GetMetadataFieldsWithContext(ctx, queryContext)
 	if err != nil {
 		return nil, fmt.Errorf("getting metadata fields with context: %w", err)
@@ -201,11 +199,9 @@ func (s *service) GetMetadataFields(ctx context.Context, queryContext *MetadataC
 
 func (s *service) GetMetadataValues(ctx context.Context, field string, prefix string, limit int, queryContext *MetadataContext) ([]MetadataValueSuggestion, error) {
 	if queryContext == nil || queryContext.Query == "" {
-		// If no context, return all values (existing behavior)
 		return s.repo.GetMetadataValues(ctx, field, prefix, limit)
 	}
 
-	// Get values based on the query context
 	values, err := s.repo.GetMetadataValuesWithContext(ctx, field, prefix, limit, queryContext)
 	if err != nil {
 		return nil, fmt.Errorf("getting metadata values with context: %w", err)
@@ -215,20 +211,17 @@ func (s *service) GetMetadataValues(ctx context.Context, field string, prefix st
 }
 
 func (s *service) GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error) {
-	// Normalize limit
 	if limit <= 0 {
 		limit = 10
 	} else if limit > 100 {
 		limit = 100
 	}
 
-	// Get tags from repository
 	tags, err := s.repo.GetTagSuggestions(ctx, prefix, limit)
 	if err != nil {
 		return nil, fmt.Errorf("getting tag suggestions: %w", err)
 	}
 
-	// Filter out empty or invalid tags
 	validTags := make([]string, 0, len(tags))
 	for _, tag := range tags {
 		if tag = strings.TrimSpace(tag); tag != "" {
@@ -262,7 +255,6 @@ func (s *service) ListByPattern(ctx context.Context, pattern string, assetType s
 	return assets, nil
 }
 
-// Create creates a new asset
 func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error) {
 	if err := s.validator.Struct(input); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
@@ -275,6 +267,11 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 
 	if existing != nil {
 		return nil, ErrAlreadyExists
+	}
+
+	// Initialize schema if nil to avoid database constraint violation
+	if input.Schema == nil {
+		input.Schema = make(map[string]string)
 	}
 
 	now := time.Now()
@@ -310,7 +307,6 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 	return asset, nil
 }
 
-// GetByTypeAndName gets an asset by its type and name
 func (s *service) GetByTypeAndName(ctx context.Context, assetType, name string) (*Asset, error) {
 	asset, err := s.repo.GetByTypeAndName(ctx, assetType, name)
 	if err != nil {
@@ -319,7 +315,6 @@ func (s *service) GetByTypeAndName(ctx context.Context, assetType, name string) 
 	return asset, nil
 }
 
-// Get gets an asset by its ID
 func (s *service) Get(ctx context.Context, id string) (*Asset, error) {
 	asset, err := s.repo.Get(ctx, id)
 	if err != nil {
@@ -331,7 +326,6 @@ func (s *service) Get(ctx context.Context, id string) (*Asset, error) {
 	return asset, nil
 }
 
-// GetByMRN gets an asset by its MRN
 func (s *service) GetByMRN(ctx context.Context, qualifiedName string) (*Asset, error) {
 	asset, err := s.repo.GetByMRN(ctx, qualifiedName)
 	if err != nil {
@@ -343,7 +337,6 @@ func (s *service) GetByMRN(ctx context.Context, qualifiedName string) (*Asset, e
 	return asset, nil
 }
 
-// List lists all available assets with optional filters
 func (s *service) List(ctx context.Context, offset, limit int) (*ListResult, error) {
 	result, err := s.repo.List(ctx, offset, limit)
 	if err != nil {
@@ -352,7 +345,6 @@ func (s *service) List(ctx context.Context, offset, limit int) (*ListResult, err
 	return result, nil
 }
 
-// Search searches all available assets based on a provided filter
 func (s *service) Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error) {
 	if err := s.validator.Struct(filter); err != nil {
 		return nil, 0, AvailableFilters{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
@@ -366,7 +358,6 @@ func (s *service) Search(ctx context.Context, filter SearchFilter, calculateCoun
 	return assets, total, availableFilters, nil
 }
 
-// Summary returns a global summary of all assets
 func (s *service) Summary(ctx context.Context) (*AssetSummary, error) {
 	summary, err := s.repo.Summary(ctx)
 	if err != nil {
@@ -403,6 +394,10 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		updated = true
 	}
 	if input.Schema != nil {
+		// Initialize schema if nil to avoid database constraint violation
+		if input.Schema == nil {
+			input.Schema = make(map[string]string)
+		}
 		asset.Schema = input.Schema
 		updated = true
 	}
@@ -411,7 +406,6 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		updated = true
 	}
 	if input.Sources != nil {
-		// Always update sources by merging
 		asset.Sources = UpdateSources(asset.Sources, input.Sources)
 		updated = true
 	}
@@ -446,23 +440,19 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 func UpdateSources(existing, new []AssetSource) []AssetSource {
 	sourceMap := make(map[string]AssetSource)
 
-	// First index existing sources with valid names
 	for _, src := range existing {
 		if src.Name != "" {
 			sourceMap[src.Name] = src
 		}
 	}
 
-	// Update or add new sources if they have valid names
 	for _, src := range new {
 		if src.Name == "" {
 			continue
 		}
 
-		// Get existing or create new
 		existingSource := sourceMap[src.Name]
 
-		// Update properties
 		if src.Properties != nil {
 			existingSource.Properties = src.Properties
 		}
@@ -473,14 +463,10 @@ func UpdateSources(existing, new []AssetSource) []AssetSource {
 			existingSource.Priority = src.Priority
 		}
 
-		// Ensure name is set
 		existingSource.Name = src.Name
-
-		// Update in map
 		sourceMap[src.Name] = existingSource
 	}
 
-	// Convert map back to slice
 	result := make([]AssetSource, 0, len(sourceMap))
 	for _, src := range sourceMap {
 		result = append(result, src)
@@ -489,7 +475,6 @@ func UpdateSources(existing, new []AssetSource) []AssetSource {
 	return result
 }
 
-// Delete deletes an existing asset
 func (s *service) Delete(ctx context.Context, id string) error {
 	if err := s.repo.Delete(ctx, id); err != nil {
 		if errors.Is(err, ErrNotFound) {
@@ -509,7 +494,6 @@ func (s *service) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-// RemoveTag adds a specified tag to an existing asset
 func (s *service) AddTag(ctx context.Context, id string, tag string) (*Asset, error) {
 	asset, err := s.repo.Get(ctx, id)
 	if err != nil {
@@ -519,7 +503,6 @@ func (s *service) AddTag(ctx context.Context, id string, tag string) (*Asset, er
 		return nil, fmt.Errorf("getting asset: %w", err)
 	}
 
-	// Check if tag already exists
 	for _, existingTag := range asset.Tags {
 		if existingTag == tag {
 			return asset, nil
@@ -545,7 +528,6 @@ func (s *service) AddTag(ctx context.Context, id string, tag string) (*Asset, er
 	return asset, nil
 }
 
-// RemoveTag removes a specified tag from an existing asset
 func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*Asset, error) {
 	asset, err := s.repo.Get(ctx, assetId)
 	if err != nil {
@@ -555,7 +537,6 @@ func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*A
 		return nil, fmt.Errorf("getting asset: %w", err)
 	}
 
-	// Remove tag if it exists
 	found := false
 	newTags := make([]string, 0, len(asset.Tags))
 	for _, existingTag := range asset.Tags {
@@ -588,3 +569,4 @@ func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*A
 
 	return asset, nil
 }
+
