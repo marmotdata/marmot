@@ -13,7 +13,9 @@ maintainers:
 keywords:
   - marmot
   - data
-  - application
+  - data catalog
+  - lineage
+  - catalog
 
 dependencies:
   - name: postgresql
