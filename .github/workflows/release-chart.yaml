@@ -99,7 +99,7 @@ jobs:
           branch: main
           target_dir: marmot
           index_dir: .
-          charts_dir: charts/marmot
+          charts_dir: charts/
           charts_url: https://marmotdata.github.io/charts
           commit_username: marmot-helm-bot
           commit_email: marmot-helm-bot@marmotdata.com
