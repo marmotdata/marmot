@@ -2,8 +2,6 @@
 sidebar_position: 1
 ---
 
-This guide covers deploying Marmot using Docker.
-
 ## Simple Deployment
 
 Run Marmot with environment variables for configuration:
@@ -21,7 +19,7 @@ docker run -d \
   ghcr.io/marmotdata/marmot:0.1.0
 ```
 
-> __The default username and password is admin:admin__
+> **The default username and password is admin:admin**
 
 ## Configuration
 
