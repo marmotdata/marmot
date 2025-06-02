@@ -88,6 +88,7 @@ config:
 
   # Database configuration
   database:
+    # When postgresql.enabled is true, these values are automatically populated
     host: "postgresql"
     port: 5432
     user: "marmot"
@@ -115,3 +116,24 @@ config:
 
 # Additional environment variables
 env: {}
+
+# PostgreSQL subchart configuration
+postgresql:
+  enabled: false
+  auth:
+    username: "marmot"
+    database: "marmot"
+    # If not specified, a random password will be generated
+    # password: "changeme"
+  primary:
+    persistence:
+      enabled: true
+      size: 8Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+  # See here for additional config: https://github.com/bitnami/charts/tree/main/bitnami/postgresql

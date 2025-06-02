@@ -14,3 +14,9 @@ keywords:
   - marmot
   - data
   - application
+
+dependencies:
+  - name: postgresql
+    version: "16.7.8"
+    repository: "https://charts.bitnami.com/bitnami"
+    condition: postgresql.enabled
