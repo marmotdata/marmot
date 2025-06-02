@@ -41,11 +41,15 @@ jobs:
             echo "Chart version unchanged: $CURRENT_VERSION"
           fi
 
-      - name: Check if tag exists
+      - name: Check if tag exists in charts repo
         id: tag_exists
         if: steps.version_check.outputs.VERSION_CHANGED == 'true'
         run: |
-          if git show-ref --verify --quiet "refs/tags/chart-${{ steps.chart_version.outputs.CHART_VERSION }}"; then
+          TAG_EXISTS=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token ${{ secrets.CHARTS_REPO_TOKEN }}" \
+            "https://api.github.com/repos/marmotdata/charts/git/refs/tags/marmot-${{ steps.chart_version.outputs.CHART_VERSION }}")
+
+          if [ "$TAG_EXISTS" = "200" ]; then
             echo "TAG_EXISTS=true" >> $GITHUB_OUTPUT
           else
             echo "TAG_EXISTS=false" >> $GITHUB_OUTPUT
@@ -59,22 +63,31 @@ jobs:
         if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
         run: make chart-test
 
-      - name: Tag release
-        id: tag_version
-        uses: mathieudutour/github-tag-action@v6.2
-        with:
-          github_token: ${{ secrets.CHARTS_REPO_TOKEN }}
-          custom_tag: ${{ steps.chart_version.outputs.CHART_VERSION }}
-          tag_prefix: "chart-"
+      - name: Create tag and release in charts repo
         if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
+        run: |
+          TAG_NAME="marmot-${{ steps.chart_version.outputs.CHART_VERSION }}"
 
-      - name: Create release
-        if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
-        uses: ncipollo/release-action@v1
-        with:
-          tag: ${{ steps.tag_version.outputs.new_tag }}
-          name: ${{ steps.tag_version.outputs.new_tag }}
-          body: ${{ steps.tag_version.outputs.changelog }}
+          # Create tag
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.CHARTS_REPO_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/marmotdata/charts/git/refs \
+            -d "{
+              \"ref\": \"refs/tags/$TAG_NAME\",
+              \"sha\": \"$(curl -s -H 'Authorization: token ${{ secrets.CHARTS_REPO_TOKEN }}' https://api.github.com/repos/marmotdata/charts/git/refs/heads/main | jq -r .object.sha)\"
+            }"
+
+          # Create release
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.CHARTS_REPO_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            https://api.github.com/repos/marmotdata/charts/releases \
+            -d "{
+              \"tag_name\": \"$TAG_NAME\",
+              \"name\": \"Marmot Chart v${{ steps.chart_version.outputs.CHART_VERSION }}\",
+              \"body\": \"Marmot Helm Chart v${{ steps.chart_version.outputs.CHART_VERSION }}\\n\\nInstall with:\\n\\\`\\\`\\\`bash\\nhelm repo add marmotdata https://marmotdata.github.io/charts\\nhelm install marmot marmotdata/marmot --version ${{ steps.chart_version.outputs.CHART_VERSION }}\\n\\\`\\\`\\\`\"
+            }"
 
       - name: Publish Helm chart
         if: steps.version_check.outputs.VERSION_CHANGED == 'true' && steps.tag_exists.outputs.TAG_EXISTS == 'false'
