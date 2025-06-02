@@ -2,8 +2,6 @@
 sidebar_position: 4
 ---
 
-This guide covers deploying Marmot using the command-line interface.
-
 ## Installation
 
 ### Automatic Installation
@@ -34,7 +32,7 @@ If you prefer to install manually:
 marmot run --config /path/to/config.yaml
 ```
 
-> __The default username and password is admin:admin__
+> **The default username and password is admin:admin**
 
 ## Configuration
 
