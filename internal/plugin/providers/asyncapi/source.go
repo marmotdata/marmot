@@ -143,11 +143,27 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 			}
 
 			if amqpBinding, err := asyncapi.ParseBindings[amqp.ChannelBinding](channel.Bindings, "amqp"); err == nil {
+				var exchangeMRN string
+
+				if amqpBinding.Exchange != nil {
+					exchangeAsset := s.createAMQPExchange(spec, channelName, amqpBinding)
+					exchangeMRN = *exchangeAsset.MRN
+					s.addUniqueAsset(&assets, exchangeAsset, seenAssets)
+					s.createLineageEdge(serviceMRN, exchangeMRN, determineEdgeType(channel), seenAssets, seenEdges, &lineages)
+				}
+
 				if amqpBinding.Queue != nil {
-					amqpAsset := s.createAMQPQueue(spec, channelName, amqpBinding)
-					amqpMRN := *amqpAsset.MRN
-					s.addUniqueAsset(&assets, amqpAsset, seenAssets)
-					s.createLineageEdge(serviceMRN, amqpMRN, determineEdgeType(channel), seenAssets, seenEdges, &lineages)
+					queueAsset := s.createAMQPQueue(spec, channelName, amqpBinding)
+					queueMRN := *queueAsset.MRN
+					s.addUniqueAsset(&assets, queueAsset, seenAssets)
+
+					if amqpBinding.Exchange == nil {
+						s.createLineageEdge(serviceMRN, queueMRN, determineEdgeType(channel), seenAssets, seenEdges, &lineages)
+					}
+
+					if amqpBinding.Exchange != nil && exchangeMRN != "" {
+						s.createLineageEdge(exchangeMRN, queueMRN, "ROUTES", seenAssets, seenEdges, &lineages)
+					}
 				}
 			}
 		}

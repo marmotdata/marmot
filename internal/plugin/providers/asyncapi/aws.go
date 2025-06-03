@@ -15,15 +15,15 @@ import (
 type SNS struct {
 	ResourceName string `json:"resourceName"`
 	DisplayName  string `json:"displayName"`
-	SharedFields        // Embedding SharedFields
-	SNSFields           // Embedding SNSFields
+	SharedFields
+	SNSFields
 }
 
 type SQS struct {
 	ResourceName string `json:"resourceName"`
 	DisplayName  string `json:"displayName"`
-	SharedFields        // Embedding SharedFields
-	SQSFields           // Embedding SQSFields
+	SharedFields
+	SQSFields
 }
 
 func (s *Source) createSNSTopic(spec *asyncapi2.Document, channelName string, binding *sns.ChannelBinding) asset.Asset {

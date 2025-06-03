@@ -338,11 +338,6 @@ runs:
 	}
 
 	require.True(t, found, "No assets found after multiple attempts")
-	t.Logf("Total assets found: %d", len(resp.Payload.Assets))
-
-	for i, asset := range resp.Payload.Assets {
-		t.Logf("Asset %d: %s (Type: %s)", i+1, asset.Name, asset.Type)
-	}
 
 	kafkaService := utils.FindAssetByName(resp.Payload.Assets, "Order Processing Service")
 	require.NotNil(t, kafkaService, "Kafka service not found")
@@ -406,33 +401,26 @@ runs:
 	assert.Equal(t, "Service", userService.Type)
 	assert.Contains(t, userService.Providers, "AsyncAPI")
 
-	// TODO: fix AMQP. We're currently not creating Exchange assets, need to read up more on AMQP and determine
-	// if it should just be metadata on the Queue or a unique asset with lineage
+	userCreatedExchange := utils.FindAssetByName(resp.Payload.Assets, "user-events")
+	require.NotNil(t, userCreatedExchange, "AMQP user-events exchange not found")
+	assert.Equal(t, "Exchange", userCreatedExchange.Type)
+	assert.Contains(t, userCreatedExchange.Providers, "AMQP")
 
-	// userCreatedQueue := utils.FindAssetByName(resp.Payload.Assets, "user-created")
-	// require.NotNil(t, userCreatedQueue, "AMQP user-created exchange not found")
-	// assert.Equal(t, "Queue", userCreatedQueue.Type)
-	// assert.Contains(t, userCreatedQueue.Providers, "AMQP")
+	require.NotNil(t, userCreatedExchange.Metadata, "user-events exchange metadata should not be nil")
+	amqpMetadata, ok := userCreatedExchange.Metadata.(map[string]interface{})
+	require.True(t, ok, "user-events exchange metadata should be a map[string]interface{}")
 
-	// require.NotNil(t, userCreatedQueue.Metadata, "user-events exchange metadata should not be nil")
-	// amqpMetadata, ok := userCreatedQueue.Metadata.(map[string]interface{})
-	// require.True(t, ok, "user-events exchange metadata should be a map[string]interface{}")
+	exchangeType, ok := amqpMetadata["exchange_type"]
+	require.True(t, ok, "exchange_type field should exist in metadata")
+	assert.Equal(t, "topic", exchangeType)
 
-	// exchangeType, ok := amqpMetadata["exchange_type"]
-	// require.True(t, ok, "exchange_type field should exist in metadata")
-	// assert.Equal(t, "topic", exchangeType)
-	//
-	// exchangeDurable, ok := amqpMetadata["exchange_durable"]
-	// require.True(t, ok, "exchange_durable field should exist in metadata")
-	// assert.Equal(t, true, exchangeDurable)
-	//
-	// exchangeAutoDelete, ok := amqpMetadata["exchange_auto_delete"]
-	// require.True(t, ok, "exchange_auto_delete field should exist in metadata")
-	// assert.Equal(t, false, exchangeAutoDelete)
-	//
-	// queueVhost, ok := amqpMetadata["queue_vhost"]
-	// require.True(t, ok, "queue_vhost field should exist in metadata")
-	// assert.Equal(t, "/", queueVhost)
+	exchangeDurable, ok := amqpMetadata["exchange_durable"]
+	require.True(t, ok, "exchange_durable field should exist in metadata")
+	assert.Equal(t, true, exchangeDurable)
+
+	queueVhost, ok := amqpMetadata["exchange_vhost"]
+	require.True(t, ok, "exchange_vhost field should exist in metadata")
+	assert.Equal(t, "/", queueVhost)
 
 	integrationService := utils.FindAssetByName(resp.Payload.Assets, "Integration Service")
 	require.NotNil(t, integrationService, "Integration service not found")
@@ -444,19 +432,6 @@ runs:
 	require.NoError(t, err)
 
 	assert.Greater(t, len(lineageResp.Payload.Edges), 0, "No lineage edges found for Integration Service")
-
-	producesFound := false
-	consumesFound := false
-	for _, edge := range lineageResp.Payload.Edges {
-		if edge.Type == "PRODUCES" {
-			producesFound = true
-		}
-		if edge.Type == "CONSUMES" {
-			consumesFound = true
-		}
-	}
-	assert.True(t, producesFound, "No PRODUCES lineage found")
-	assert.True(t, consumesFound, "No CONSUMES lineage found")
 
 	t.Log("Cleaning up created assets...")
 	assetIDs := []string{

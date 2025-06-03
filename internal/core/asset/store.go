@@ -20,7 +20,6 @@ var (
 	ErrInvalidQuery = errors.New("invalid search query")
 )
 
-// Common SQL fragments
 const (
 	baseSelectAsset = `
 		SELECT 
@@ -230,15 +229,41 @@ func (r *PostgresRepository) Update(ctx context.Context, asset *Asset) error {
 
 	return nil
 }
-
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
-	commandTag, err := r.db.Exec(ctx, "DELETE FROM assets WHERE id = $1", id)
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var mrn string
+	err = tx.QueryRow(ctx, "SELECT mrn FROM assets WHERE id = $1", id).Scan(&mrn)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrNotFound
+		}
+		return fmt.Errorf("getting asset MRN: %w", err)
+	}
+
+	// Delete associated lineage edges
+	_, err = tx.Exec(ctx, `
+		DELETE FROM lineage_edges 
+		WHERE source_mrn = $1 OR target_mrn = $1`, mrn)
+	if err != nil {
+		return fmt.Errorf("deleting lineage edges: %w", err)
+	}
+
+	commandTag, err := tx.Exec(ctx, "DELETE FROM assets WHERE id = $1", id)
 	if err != nil {
 		return fmt.Errorf("deleting asset: %w", err)
 	}
 
 	if commandTag.RowsAffected() == 0 {
 		return ErrNotFound
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("committing transaction: %w", err)
 	}
 
 	return nil

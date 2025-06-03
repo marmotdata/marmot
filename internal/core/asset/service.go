@@ -569,4 +569,3 @@ func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*A
 
 	return asset, nil
 }
-

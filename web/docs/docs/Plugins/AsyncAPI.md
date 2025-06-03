@@ -50,6 +50,7 @@ The following metadata fields are available:
 | exchange_durable | bool | Exchange durability flag |
 | exchange_name | string | Exchange name |
 | exchange_type | string | Exchange type (topic, fanout, direct, etc.) |
+| exchange_vhost | string | Exchange virtual host |
 | fifo_queue | bool | Whether this is a FIFO queue |
 | fifo_throughput_limit | string | FIFO throughput limit type |
 | max_message_bytes | int | Maximum message size |
