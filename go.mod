@@ -6,7 +6,6 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.36.3
 	github.com/aws/aws-sdk-go-v2/config v1.29.14
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.67
-	github.com/aws/aws-sdk-go-v2/service/glue v1.107.1
 	github.com/aws/aws-sdk-go-v2/service/sns v1.33.20
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.15
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.19
@@ -14,6 +13,7 @@ require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
 	github.com/coreos/go-oidc/v3 v3.12.0
 	github.com/go-playground/validator/v10 v10.22.1
+	github.com/go-sql-driver/mysql v1.5.0
 	github.com/golang-jwt/jwt/v5 v5.2.2
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0

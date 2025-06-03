@@ -15,6 +15,7 @@ require (
 	github.com/go-openapi/strfmt v0.23.0
 	github.com/go-openapi/swag v0.23.0
 	github.com/go-openapi/validate v0.24.0
+	github.com/go-sql-driver/mysql v1.9.2
 	github.com/lib/pq v1.10.9
 	github.com/stretchr/testify v1.9.0
 	github.com/twmb/franz-go v1.18.1
@@ -23,6 +24,7 @@ require (
 )
 
 require (
+	filippo.io/edwards25519 v1.1.0 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20240806141605-e8a1dd7889d6 // indirect
 	github.com/Microsoft/go-winio v0.4.14 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect

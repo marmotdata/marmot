@@ -13,6 +13,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/go-connections/nat"
 	httptransport "github.com/go-openapi/runtime/client"
+	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
 	"github.com/marmotdata/marmot/tests/e2e/internal/client/client"
 	"github.com/marmotdata/marmot/tests/e2e/internal/client/client/users"
@@ -40,6 +41,8 @@ type TestEnvironment struct {
 	KafkaAdminClient   *kadm.Client
 	HasSchemaRegistry  bool
 	PostgresPort       string
+	MySQLID            string
+	MySQLPort          string
 }
 
 func SetupTestEnvironment(t *testing.T) (*TestEnvironment, error) {
@@ -521,6 +524,103 @@ func checkMongoDBConnection(endpoint string, timeout time.Duration) error {
 	defer client.Disconnect(ctx)
 
 	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (env *TestEnvironment) EnsureMySQLStarted(ctx context.Context) error {
+	if env.MySQLID == "" || env.MySQLPort == "" {
+		mysqlID, mysqlPort, err := startMySQL(ctx, env.ContainerManager, env.Config.NetworkName)
+		if err != nil {
+			return fmt.Errorf("failed to start MySQL: %w", err)
+		}
+
+		if err := waitForMySQL(mysqlPort); err != nil {
+			return fmt.Errorf("MySQL failed to become ready: %w", err)
+		}
+
+		env.MySQLID = mysqlID
+		env.MySQLPort = mysqlPort
+	}
+
+	if err := checkMySQLConnection("localhost:"+env.MySQLPort, 10*time.Second); err != nil {
+		env.ContainerManager.CleanupContainer(env.MySQLID)
+		mysqlID, mysqlPort, err := startMySQL(ctx, env.ContainerManager, env.Config.NetworkName)
+		if err != nil {
+			return fmt.Errorf("failed to restart MySQL: %w", err)
+		}
+
+		if err := waitForMySQL(mysqlPort); err != nil {
+			return fmt.Errorf("MySQL failed to become ready after restart: %w", err)
+		}
+
+		env.MySQLID = mysqlID
+		env.MySQLPort = mysqlPort
+	}
+
+	return nil
+}
+
+func startMySQL(ctx context.Context, cm *utils.ContainerManager, networkName string) (string, string, error) {
+	mysqlConfig := &container.Config{
+		Image: "mysql:8.0",
+		Env: []string{
+			"MYSQL_ROOT_PASSWORD=mysql",
+			"MYSQL_DATABASE=test",
+		},
+		ExposedPorts: nat.PortSet{
+			"3306/tcp": struct{}{},
+		},
+	}
+
+	mysqlHostConfig := &container.HostConfig{
+		NetworkMode: container.NetworkMode(networkName),
+		PortBindings: nat.PortMap{
+			"3306/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "3307"}},
+		},
+	}
+
+	mysqlID, err := cm.StartContainer(mysqlConfig, mysqlHostConfig, "mysql-test-plugin")
+	if err != nil {
+		return "", "", fmt.Errorf("failed to start MySQL container: %w", err)
+	}
+
+	return mysqlID, "3307", nil
+}
+
+func waitForMySQL(port string) error {
+	endpoint := fmt.Sprintf("localhost:%s", port)
+	deadline := time.Now().Add(60 * time.Second)
+
+	for time.Now().Before(deadline) {
+		if err := checkMySQLConnection(endpoint, 5*time.Second); err == nil {
+			return nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return fmt.Errorf("timeout waiting for MySQL to become ready")
+}
+
+func checkMySQLConnection(endpoint string, timeout time.Duration) error {
+	parts := strings.Split(endpoint, ":")
+	if len(parts) != 2 {
+		return fmt.Errorf("invalid endpoint format")
+	}
+
+	dsn := fmt.Sprintf("root:mysql@tcp(%s)/", endpoint)
+	db, err := sql.Open("mysql", dsn)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	if err := db.PingContext(ctx); err != nil {
 		return err
 	}
 
