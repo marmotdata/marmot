@@ -50,6 +50,7 @@ type SQSFields struct {
 type AMQPFields struct {
 	BindingIs          string `json:"binding_is" metadata:"binding_is" description:"AMQP binding type (queue or routingKey)"`
 	ExchangeName       string `json:"exchange_name" metadata:"exchange_name" description:"Exchange name"`
+	ExchangeVHost      string `json:"exchange_vhost" metadata:"exchange_vhost" description:"Exchange virtual host"`
 	ExchangeType       string `json:"exchange_type" metadata:"exchange_type" description:"Exchange type (topic, fanout, direct, etc.)"`
 	ExchangeDurable    bool   `json:"exchange_durable" metadata:"exchange_durable" description:"Exchange durability flag"`
 	ExchangeAutoDelete bool   `json:"exchange_auto_delete" metadata:"exchange_auto_delete" description:"Exchange auto delete flag"`

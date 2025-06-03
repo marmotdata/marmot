@@ -21,6 +21,9 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
+	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
 type TestEnvironment struct {
@@ -465,4 +468,61 @@ func waitForSchemaRegistry(baseURL string, timeout time.Duration) error {
 	}
 
 	return fmt.Errorf("timeout waiting for Schema Registry to be ready")
+}
+
+// startMongoDB starts a MongoDB container for testing
+func startMongoDB(ctx context.Context, cm *utils.ContainerManager, networkName string) (string, string, error) {
+	mongoConfig := &container.Config{
+		Image: "mongo:7.0",
+		ExposedPorts: nat.PortSet{
+			"27017/tcp": struct{}{},
+		},
+	}
+
+	mongoHostConfig := &container.HostConfig{
+		NetworkMode: container.NetworkMode(networkName),
+		PortBindings: nat.PortMap{
+			"27017/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "27017"}},
+		},
+	}
+
+	mongoID, err := cm.StartContainer(mongoConfig, mongoHostConfig, "mongodb-test")
+	if err != nil {
+		return "", "", fmt.Errorf("failed to start MongoDB container: %w", err)
+	}
+
+	return mongoID, "27017", nil
+}
+
+// waitForMongoDB waits for MongoDB to be ready
+func waitForMongoDB(port string) error {
+	endpoint := fmt.Sprintf("mongodb://localhost:%s", port)
+	deadline := time.Now().Add(60 * time.Second)
+
+	for time.Now().Before(deadline) {
+		if err := checkMongoDBConnection(endpoint, 5*time.Second); err == nil {
+			return nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return fmt.Errorf("timeout waiting for MongoDB to become ready")
+}
+
+// checkMongoDBConnection checks if MongoDB is responding to connections
+func checkMongoDBConnection(endpoint string, timeout time.Duration) error {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	client, err := mongo.Connect(ctx, options.Client().ApplyURI(endpoint))
+	if err != nil {
+		return err
+	}
+	defer client.Disconnect(ctx)
+
+	if err := client.Ping(ctx, readpref.Primary()); err != nil {
+		return err
+	}
+
+	return nil
 }
