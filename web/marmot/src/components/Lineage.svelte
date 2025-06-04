@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
 	import { onMount } from 'svelte';
-	import { writable } from 'svelte/store';
 	import type { Asset } from '$lib/assets/types';
 	import { page } from '$app/stores';
 	import { SvelteFlow, Background, type Node, type Edge, type NodeTypes } from '@xyflow/svelte';
@@ -11,17 +10,17 @@
 	import CustomNode from './CustomNode.svelte';
 	import Button from './Button.svelte';
 
-	export let currentAsset: Asset;
+	let { currentAsset }: { currentAsset: Asset } = $props();
 	let selectedAsset: Asset | null = null;
 	let loading = true;
 	let error: string | null = null;
 	let mounted = false;
 	let lineageData: LineageResponse | null = null;
-	let depth = 10;
+	let depth = $state(10);
 	let initialLoad = true;
 
-	const nodes = writable<Node[]>([]);
-	const edges = writable<Edge[]>([]);
+	let nodes = $state<Node[]>([]);
+	let edges = $state<Edge[]>([]);
 
 	function getNodeIconType(node: any): string {
 		if (
@@ -38,13 +37,13 @@
 		custom: CustomNode
 	};
 
-	$: {
+	$effect(() => {
 		$page;
 		selectedAsset = null;
-	}
+	});
 
-  async function handleNodeClick(nodeId: string) {
-    if (nodeId && nodeId !== currentAsset.id) {
+	async function handleNodeClick(nodeId: string) {
+		if (nodeId && nodeId !== currentAsset.id) {
 			try {
 				const [assetResponse, lineageResponse] = await Promise.all([
 					fetchApi(`/assets/${nodeId}`),
@@ -62,11 +61,13 @@
 		}
 	}
 
-	function findCycles(edges: Edge[]): Map<string, Set<string>> {
+	function findCycles(edgeArray: Edge[]): Map<string, Set<string>> {
 		const cycleMap = new Map<string, Set<string>>();
 
-		edges.forEach((edge) => {
-			const reverseEdge = edges.find((e) => e.source === edge.target && e.target === edge.source);
+		edgeArray.forEach((edge) => {
+			const reverseEdge = edgeArray.find(
+				(e) => e.source === edge.target && e.target === edge.source
+			);
 			if (reverseEdge) {
 				if (!cycleMap.has(edge.source)) {
 					cycleMap.set(edge.source, new Set());
@@ -82,7 +83,7 @@
 		return cycleMap;
 	}
 
-	function getLayoutedElements(nodes: Node[], edges: Edge[]) {
+	function getLayoutedElements(nodeArray: Node[], edgeArray: Edge[]) {
 		const g = new dagre.graphlib.Graph();
 		g.setGraph({
 			rankdir: 'LR',
@@ -93,12 +94,11 @@
 		});
 
 		g.setDefaultEdgeLabel(() => ({}));
-		const cycles = findCycles(edges);
-		const primaryNodes = findPrimaryNodes(nodes, edges, cycles);
+		const cycles = findCycles(edgeArray);
+		const primaryNodes = findPrimaryNodes(nodeArray, edgeArray, cycles);
 		const verticalGap = 150;
 
-		// Add nodes to graph first
-		nodes.forEach((node) => {
+		nodeArray.forEach((node) => {
 			const dimensions = {
 				width: Math.max(180, node.data.name.length * 10 + 60),
 				height: 80
@@ -106,8 +106,7 @@
 			g.setNode(node.id, dimensions);
 		});
 
-		// Add non-cyclic edges
-		edges.forEach((edge) => {
+		edgeArray.forEach((edge) => {
 			const sourceCycles = cycles.get(edge.source);
 			const targetCycles = cycles.get(edge.target);
 
@@ -118,8 +117,7 @@
 
 		dagre.layout(g);
 
-		// Now position nodes
-		return nodes.map((node) => {
+		return nodeArray.map((node) => {
 			const nodeWithPosition = g.node(node.id);
 			const baseX = nodeWithPosition.x - nodeWithPosition.width / 2;
 			const baseY = nodeWithPosition.y - nodeWithPosition.height / 2;
@@ -149,14 +147,14 @@
 	}
 
 	function findPrimaryNodes(
-		nodes: Node[],
-		edges: Edge[],
+		nodeArray: Node[],
+		edgeArray: Edge[],
 		cycles: Map<string, Set<string>>
 	): Set<string> {
 		const primaryNodes = new Set<string>();
 
-		nodes.forEach((node) => {
-			const incomingEdges = edges.filter((e) => e.target === node.id);
+		nodeArray.forEach((node) => {
+			const incomingEdges = edgeArray.filter((e) => e.target === node.id);
 			const hasNonCyclicInput = incomingEdges.some(
 				(edge) => !cycles.has(edge.source) || !cycles.get(edge.source)?.has(node.id)
 			);
@@ -171,9 +169,9 @@
 
 	function generateElements(data: LineageResponse) {
 		const connections = new Map<string, { hasUpstream: boolean; hasDownstream: boolean }>();
+		const edgeArray = data.edges || [];
 
-		// If there's no edges, create a single node for the current asset
-		if (!data.edges || data.edges.length === 0) {
+		if (edgeArray.length === 0) {
 			return {
 				nodes: [
 					{
@@ -187,7 +185,8 @@
 							isCurrent: true,
 							depth: 0,
 							hasUpstream: false,
-							hasDownstream: false
+							hasDownstream: false,
+							nodeClickHandler: handleNodeClick
 						},
 						position: { x: 0, y: 0 }
 					}
@@ -196,7 +195,7 @@
 			};
 		}
 
-		data.edges.forEach((edge) => {
+		edgeArray.forEach((edge) => {
 			connections.set(edge.source, {
 				hasUpstream: connections.get(edge.source)?.hasUpstream || false,
 				hasDownstream: true
@@ -207,30 +206,30 @@
 			});
 		});
 
-		const nodes = data.nodes.map((node) => {
+		const nodeArray = data.nodes.map((node) => {
 			const nodeConnections = connections.get(node.id) || {
 				hasUpstream: false,
 				hasDownstream: false
 			};
-      return {
-          id: node.id,
-          type: 'custom',
-          data: {
-              id: node.asset.id,
-              name: node.asset.name || '',
-              type: getNodeIconType(node),
-              provider: node.asset.provider,
-              isCurrent: node.id === currentAsset.mrn,
-              depth: node.depth,
-              hasUpstream: nodeConnections.hasUpstream,
-              hasDownstream: nodeConnections.hasDownstream,
-              nodeClickHandler: handleNodeClick  // Add this line
-          },
-          position: { x: 0, y: 0 }
-      };
+			return {
+				id: node.id,
+				type: 'custom',
+				data: {
+					id: node.asset.id,
+					name: node.asset.name || '',
+					type: getNodeIconType(node),
+					provider: node.asset.provider,
+					isCurrent: node.id === currentAsset.mrn,
+					depth: node.depth,
+					hasUpstream: nodeConnections.hasUpstream,
+					hasDownstream: nodeConnections.hasDownstream,
+					nodeClickHandler: handleNodeClick
+				},
+				position: { x: 0, y: 0 }
+			};
 		});
 
-		const edges = data.edges.map((edge) => ({
+		const flowEdges = edgeArray.map((edge) => ({
 			id: `${edge.source}-${edge.target}`,
 			source: edge.source,
 			target: edge.target,
@@ -239,8 +238,8 @@
 			style: edge.job_mrn ? 'stroke: #22c55e; stroke-width: 2px;' : 'stroke: #94a3b8;'
 		}));
 
-		const layoutedNodes = getLayoutedElements(nodes, edges);
-		return { nodes: layoutedNodes, edges };
+		const layoutedNodes = getLayoutedElements(nodeArray, flowEdges);
+		return { nodes: layoutedNodes, edges: flowEdges };
 	}
 
 	async function fetchLineage() {
@@ -255,7 +254,6 @@
 
 			const data = await response.json();
 
-			// Only check node count and override depth on initial load
 			if (initialLoad && data.nodes.length > 50 && depth > 1) {
 				depth = 1;
 				initialLoad = false;
@@ -265,8 +263,8 @@
 
 			initialLoad = false;
 			const elements = generateElements(data);
-			$nodes = elements.nodes;
-			$edges = elements.edges;
+			nodes = elements.nodes;
+			edges = elements.edges;
 		} catch (err) {
 			console.error('Error fetching lineage:', err);
 			error = err instanceof Error ? err.message : 'Failed to load lineage';
@@ -279,13 +277,14 @@
 		mounted = true;
 	});
 
-	$: if (mounted && $page.url.searchParams.get('tab') === 'lineage') {
-		fetchLineage();
-	}
+	$effect(() => {
+		if (mounted && $page.url.searchParams.get('tab') === 'lineage') {
+			fetchLineage();
+		}
+	});
 </script>
 
 <div class="w-full h-[800px] relative">
-	<!-- Depth Control - Always visible -->
 	<div class="absolute right-4 top-4 z-[5] flex flex-col items-end gap-1">
 		<span class="text-xs text-gray-600 dark:text-gray-400 px-1">Depth</span>
 		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
@@ -296,7 +295,6 @@
 					class="!p-1"
 					click={() => {
 						depth = depth + 1;
-						fetchLineage();
 					}}
 				/>
 				<div class="py-1 text-sm text-gray-600 dark:text-gray-300">{depth}</div>
@@ -307,50 +305,50 @@
 					disabled={depth <= 1}
 					click={() => {
 						depth = depth - 1;
-						fetchLineage();
 					}}
 				/>
 			</div>
 		</div>
 	</div>
 
-	<!-- Graph container with its own loading state -->
 	<div
-		class="h-full bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+		class="h-full bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 relative"
 	>
-		{#if loading}
-			<div class="flex items-center justify-center h-full">
+		{#if loading && (!nodes || nodes.length === 0)}
+			<div class="absolute inset-0 flex items-center justify-center bg-inherit z-10">
 				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600" />
 			</div>
-		{:else if error}
-			<div class="flex items-center justify-center h-full text-red-600 dark:text-red-400">
-				{error}
-			</div>
-		{:else}
-			<div class="h-full w-full">
-				{#if $nodes}
-					<SvelteFlow
-						{nodes}
-						{edges}
-						{nodeTypes}
-    nodeClick={handleNodeClick}
-						fitView
-						minZoom={0.2}
-						maxZoom={1}
-						initialZoom={0.7}
-						defaultEdgeOptions={{
-							type: 'smoothstep',
-							animated: true,
-							style: 'stroke-width: 2; stroke: #d1d5db;'
-						}}
-						nodesConnectable={false}
-						elementsSelectable={true}
-					>
-						<Background gap={16} variant="dots" />
-					</SvelteFlow>
-				{/if}
+		{/if}
+
+		{#if error}
+			<div class="absolute inset-0 flex items-center justify-center bg-inherit z-10">
+				<div class="text-red-600 dark:text-red-400">{error}</div>
 			</div>
 		{/if}
+
+		<div class="h-full w-full">
+			{#if nodes && nodes.length > 0}
+				<SvelteFlow
+					bind:nodes
+					bind:edges
+					{nodeTypes}
+					on:nodeclick={(event) => handleNodeClick(event.detail.node.id)}
+					fitView
+					minZoom={0.2}
+					maxZoom={1}
+					initialZoom={0.7}
+					defaultEdgeOptions={{
+						type: 'smoothstep',
+						animated: true,
+						style: 'stroke-width: 2; stroke: #d1d5db;'
+					}}
+					nodesConnectable={false}
+					elementsSelectable={true}
+				>
+					<Background gap={16} variant="dots" />
+				</SvelteFlow>
+			{/if}
+		</div>
 	</div>
 </div>
 

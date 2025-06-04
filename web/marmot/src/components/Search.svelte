@@ -41,32 +41,56 @@
 		}
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
-		if (!queryInput.showDropdown) {
-			if (event.key === 'Enter') {
-				event.preventDefault();
-				handleSubmit();
-				return;
-			}
+	function isIncompleteMetadataQuery(query: string): boolean {
+		if (!query.includes('@metadata.')) return false;
 
-			if (showResults && searchResults.length > 0) {
-				if (event.key === 'ArrowDown') {
-					event.preventDefault();
-					selectedSearchIndex = (selectedSearchIndex + 1) % searchResults.length;
-				} else if (event.key === 'ArrowUp') {
-					event.preventDefault();
-					selectedSearchIndex =
-						selectedSearchIndex <= 0 ? searchResults.length - 1 : selectedSearchIndex - 1;
-				} else if (event.key === 'Enter' && selectedSearchIndex >= 0) {
-					event.preventDefault();
-					handleAssetClick(searchResults[selectedSearchIndex]);
-				}
+		const lastMetadataIndex = query.lastIndexOf('@metadata.');
+		const restOfQuery = query.slice(lastMetadataIndex);
+
+		if (restOfQuery.match(/@metadata\.[a-zA-Z0-9_.]+\s*[:<>=]+\s*[^:\s]+/)) {
+			return false;
+		}
+
+		if (restOfQuery.startsWith('@metadata.')) {
+			return (
+				!restOfQuery.includes(':') ||
+				/:\s*$/.test(restOfQuery) ||
+				restOfQuery === '@metadata.' ||
+				restOfQuery.split(':')[1]?.trim() === ''
+			);
+		}
+
+		return false;
+	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		if (queryInput?.showDropdown) {
+			return;
+		}
+
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			handleSubmit();
+			return;
+		}
+
+		if (showResults && searchResults.length > 0) {
+			if (event.key === 'ArrowDown') {
+				event.preventDefault();
+				selectedSearchIndex = (selectedSearchIndex + 1) % searchResults.length;
+			} else if (event.key === 'ArrowUp') {
+				event.preventDefault();
+				selectedSearchIndex =
+					selectedSearchIndex <= 0 ? searchResults.length - 1 : selectedSearchIndex - 1;
+			} else if (event.key === 'Enter' && selectedSearchIndex >= 0) {
+				event.preventDefault();
+				handleAssetClick(searchResults[selectedSearchIndex]);
 			}
 		}
 	}
 
 	function handleSubmit() {
-		if (searchQuery.trim()) {
+		if (searchQuery.trim() && !isIncompleteMetadataQuery(searchQuery)) {
 			goto(`/assets?q=${encodeURIComponent(searchQuery)}`);
 		}
 	}

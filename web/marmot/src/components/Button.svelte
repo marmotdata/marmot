@@ -43,7 +43,7 @@
 		{disabled ? 'opacity-50' : ''} 
 		{className}"
 		class:cursor-not-allowed={loading || disabled}
-		on:click={handleClick}
+		onclick={handleClick}
 	>
 		{#if icon}
 			<span class="w-4 h-4 mr-1.5">
@@ -64,7 +64,7 @@
 		{disabled ? 'opacity-50' : ''} 
 		{className}"
 		class:cursor-not-allowed={loading || disabled}
-		on:click={handleClick}
+		onclick={handleClick}
 		{disabled}
 	>
 		{#if loading}

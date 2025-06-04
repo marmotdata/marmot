@@ -768,3 +768,4 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 
 	return lineages, nil
 }
+
