@@ -11,11 +11,11 @@
 	import Button from './Button.svelte';
 
 	let { currentAsset }: { currentAsset: Asset } = $props();
-	let selectedAsset: Asset | null = null;
+	let selectedAsset: Asset | null = $state(null);
 	let loading = true;
 	let error: string | null = null;
 	let mounted = false;
-	let lineageData: LineageResponse | null = null;
+	let lineageData: LineageResponse | null = $state(null);
 	let depth = $state(10);
 	let initialLoad = true;
 
@@ -43,11 +43,15 @@
 	});
 
 	async function handleNodeClick(nodeId: string) {
-		if (nodeId && nodeId !== currentAsset.id) {
+		const clickedNode = nodes.find((n) => n.id === nodeId);
+		const assetId = clickedNode?.data?.id || nodeId;
+
+		if (assetId && assetId !== currentAsset.id) {
 			try {
+				const encodedAssetId = encodeURIComponent(assetId);
 				const [assetResponse, lineageResponse] = await Promise.all([
-					fetchApi(`/assets/${nodeId}`),
-					fetchApi(`/lineage/assets/${nodeId}`)
+					fetchApi(`/assets/${encodedAssetId}`),
+					fetchApi(`/lineage/assets/${encodedAssetId}`)
 				]);
 
 				if (!assetResponse.ok) throw new Error('Failed to fetch asset');
@@ -55,6 +59,9 @@
 
 				selectedAsset = await assetResponse.json();
 				lineageData = await lineageResponse.json();
+
+				console.log('Selected asset set:', selectedAsset);
+				console.log('Lineage data set:', lineageData);
 			} catch (error) {
 				console.error('Error fetching asset/lineage:', error);
 			}
@@ -180,7 +187,8 @@
 						data: {
 							id: currentAsset.id,
 							name: currentAsset.name || '',
-							type: currentAsset.providers?.[0] || currentAsset.type,
+							type: currentAsset.type,
+							iconType: currentAsset.providers?.[0] || currentAsset.type,
 							provider: currentAsset.provider,
 							isCurrent: true,
 							depth: 0,
@@ -217,7 +225,8 @@
 				data: {
 					id: node.asset.id,
 					name: node.asset.name || '',
-					type: getNodeIconType(node),
+					type: node.asset.type,
+					iconType: getNodeIconType(node),
 					provider: node.asset.provider,
 					isCurrent: node.id === currentAsset.mrn,
 					depth: node.depth,
@@ -286,7 +295,7 @@
 
 <div class="w-full h-[800px] relative">
 	<div class="absolute right-4 top-4 z-[5] flex flex-col items-end gap-1">
-		<span class="text-xs text-gray-600 dark:text-gray-400 px-1">Depth</span>
+		<span class="text-xs text-gray-600 dark:text-gray-400 px-1 select-none">Depth</span>
 		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
 			<div class="flex flex-col items-center p-1">
 				<Button
@@ -297,7 +306,7 @@
 						depth = depth + 1;
 					}}
 				/>
-				<div class="py-1 text-sm text-gray-600 dark:text-gray-300">{depth}</div>
+				<div class="py-1 text-sm text-gray-600 dark:text-gray-300 select-none">{depth}</div>
 				<Button
 					variant="clear"
 					text="-"
@@ -332,7 +341,7 @@
 					bind:nodes
 					bind:edges
 					{nodeTypes}
-					on:nodeclick={(event) => handleNodeClick(event.detail.node.id)}
+					onnodeclick={(event) => handleNodeClick(event.node.id)}
 					fitView
 					minZoom={0.2}
 					maxZoom={1}

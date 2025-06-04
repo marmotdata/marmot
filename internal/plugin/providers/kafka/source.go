@@ -22,44 +22,44 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	BootstrapServers string            `json:"bootstrap_servers" yaml:"bootstrap_servers" description:"Comma-separated list of bootstrap servers"`
-	ClientID         string            `json:"client_id" yaml:"client_id" description:"Client ID for the consumer"`
-	Authentication   *AuthConfig       `json:"authentication,omitempty" yaml:"authentication,omitempty" description:"Authentication configuration"`
-	ConsumerConfig   map[string]string `json:"consumer_config,omitempty" yaml:"consumer_config,omitempty" description:"Additional consumer configuration"`
-	ClientTimeout    int               `json:"client_timeout_seconds" yaml:"client_timeout_seconds" description:"Request timeout in seconds"`
-	TLS              *TLSConfig        `json:"tls,omitempty" yaml:"tls,omitempty" description:"TLS configuration"`
+	BootstrapServers string            `json:"bootstrap_servers" description:"Comma-separated list of bootstrap servers"`
+	ClientID         string            `json:"client_id" description:"Client ID for the consumer"`
+	Authentication   *AuthConfig       `json:"authentication,omitempty" description:"Authentication configuration"`
+	ConsumerConfig   map[string]string `json:"consumer_config,omitempty" description:"Additional consumer configuration"`
+	ClientTimeout    int               `json:"client_timeout_seconds" description:"Request timeout in seconds"`
+	TLS              *TLSConfig        `json:"tls,omitempty" description:"TLS configuration"`
 
-	SchemaRegistry *SchemaRegistryConfig `json:"schema_registry,omitempty" yaml:"schema_registry,omitempty" description:"Schema Registry configuration"`
+	SchemaRegistry *SchemaRegistryConfig `json:"schema_registry,omitempty" description:"Schema Registry configuration"`
 
-	TopicFilter *plugin.Filter `json:"topic_filter,omitempty" yaml:"topic_filter,omitempty" description:"Filter configuration for topics"`
+	TopicFilter *plugin.Filter `json:"topic_filter,omitempty" description:"Filter configuration for topics"`
 
-	IncludePartitionInfo bool `json:"include_partition_info" yaml:"include_partition_info" description:"Whether to include partition information in metadata" default:"true"`
+	IncludePartitionInfo bool `json:"include_partition_info" description:"Whether to include partition information in metadata" default:"true"`
 
-	IncludeTopicConfig bool `json:"include_topic_config" yaml:"include_topic_config" description:"Whether to include topic configuration in metadata" default:"true"`
+	IncludeTopicConfig bool `json:"include_topic_config" description:"Whether to include topic configuration in metadata" default:"true"`
 }
 
 // Authentication configuration
 type AuthConfig struct {
-	Type      string `json:"type" yaml:"type" description:"Authentication type: none, sasl_plaintext, sasl_ssl, ssl"`
-	Username  string `json:"username,omitempty" yaml:"username,omitempty" description:"SASL username"`
-	Password  string `json:"password,omitempty" yaml:"password,omitempty" description:"SASL password"`
-	Mechanism string `json:"mechanism,omitempty" yaml:"mechanism,omitempty" description:"SASL mechanism: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512"`
+	Type      string `json:"type" description:"Authentication type: none, sasl_plaintext, sasl_ssl, ssl"`
+	Username  string `json:"username,omitempty" description:"SASL username"`
+	Password  string `json:"password,omitempty" description:"SASL password"`
+	Mechanism string `json:"mechanism,omitempty" description:"SASL mechanism: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512"`
 }
 
 // TLS configuration
 type TLSConfig struct {
-	Enabled    bool   `json:"enabled" yaml:"enabled" description:"Whether to enable TLS"`
-	CertPath   string `json:"cert_path,omitempty" yaml:"cert_path,omitempty" description:"Path to TLS certificate file"`
-	KeyPath    string `json:"key_path,omitempty" yaml:"key_path,omitempty" description:"Path to TLS key file"`
-	CACertPath string `json:"ca_cert_path,omitempty" yaml:"ca_cert_path,omitempty" description:"Path to TLS CA certificate file"`
-	SkipVerify bool   `json:"skip_verify,omitempty" yaml:"skip_verify,omitempty" description:"Skip TLS verification"`
+	Enabled    bool   `json:"enabled" description:"Whether to enable TLS"`
+	CertPath   string `json:"cert_path,omitempty" description:"Path to TLS certificate file"`
+	KeyPath    string `json:"key_path,omitempty" description:"Path to TLS key file"`
+	CACertPath string `json:"ca_cert_path,omitempty" description:"Path to TLS CA certificate file"`
+	SkipVerify bool   `json:"skip_verify,omitempty" description:"Skip TLS verification"`
 }
 
 // Schema Registry configuration
 type SchemaRegistryConfig struct {
-	URL     string            `json:"url" yaml:"url" description:"Schema Registry URL"`
-	Config  map[string]string `json:"config,omitempty" yaml:"config,omitempty" description:"Additional Schema Registry configuration"`
-	Enabled bool              `json:"enabled" yaml:"enabled" description:"Whether to use Schema Registry"`
+	URL     string            `json:"url" description:"Schema Registry URL"`
+	Config  map[string]string `json:"config,omitempty" description:"Additional Schema Registry configuration"`
+	Enabled bool              `json:"enabled" description:"Whether to use Schema Registry"`
 }
 
 // Example configuration for the plugin

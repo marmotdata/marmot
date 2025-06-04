@@ -25,9 +25,9 @@ import (
 // +marmot:config
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
-	*plugin.AWSConfig `json:",inline" yaml:",inline"`
+	*plugin.AWSConfig `json:",inline"`
 
-	DiscoverDLQ bool `json:"discover_dlq,omitempty" yaml:"discover_dlq,omitempty" description:"Discover Dead Letter Queue relationships"`
+	DiscoverDLQ bool `json:"discover_dlq,omitempty" description:"Discover Dead Letter Queue relationships"`
 }
 
 // Example configuration for the plugin

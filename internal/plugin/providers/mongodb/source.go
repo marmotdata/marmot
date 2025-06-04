@@ -23,25 +23,25 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	ConnectionURI string `json:"connection_uri" yaml:"connection_uri" description:"MongoDB connection URI (overrides host/port/user/password)"`
-	Host          string `json:"host" yaml:"host" description:"MongoDB server hostname or IP address"`
-	Port          int    `json:"port" yaml:"port" description:"MongoDB server port (default: 27017)"`
-	User          string `json:"user" yaml:"user" description:"Username for authentication"`
-	Password      string `json:"password" yaml:"password" description:"Password for authentication"`
-	AuthSource    string `json:"auth_source" yaml:"auth_source" description:"Authentication database name"`
-	TLS           bool   `json:"tls" yaml:"tls" description:"Enable TLS/SSL for connection"`
-	TLSInsecure   bool   `json:"tls_insecure" yaml:"tls_insecure" description:"Skip verification of server certificate"`
+	ConnectionURI string `json:"connection_uri" description:"MongoDB connection URI (overrides host/port/user/password)"`
+	Host          string `json:"host" description:"MongoDB server hostname or IP address"`
+	Port          int    `json:"port" description:"MongoDB server port (default: 27017)"`
+	User          string `json:"user" description:"Username for authentication"`
+	Password      string `json:"password" description:"Password for authentication"`
+	AuthSource    string `json:"auth_source" description:"Authentication database name"`
+	TLS           bool   `json:"tls" description:"Enable TLS/SSL for connection"`
+	TLSInsecure   bool   `json:"tls_insecure" description:"Skip verification of server certificate"`
 
-	IncludeDatabases   bool           `json:"include_databases" yaml:"include_databases" description:"Whether to discover databases" default:"true"`
-	IncludeCollections bool           `json:"include_collections" yaml:"include_collections" description:"Whether to discover collections" default:"true"`
-	IncludeViews       bool           `json:"include_views" yaml:"include_views" description:"Whether to include views" default:"true"`
-	IncludeIndexes     bool           `json:"include_indexes" yaml:"include_indexes" description:"Whether to include index information" default:"true"`
-	SampleSchema       bool           `json:"sample_schema" yaml:"sample_schema" description:"Sample documents to infer schema" default:"true"`
-	SampleSize         int            `json:"sample_size" yaml:"sample_size" description:"Number of documents to sample (default: 1000, -1 for entire collection)" default:"1000"`
-	UseRandomSampling  bool           `json:"use_random_sampling" yaml:"use_random_sampling" description:"Use random sampling for schema inference" default:"true"`
-	DatabaseFilter     *plugin.Filter `json:"database_filter,omitempty" yaml:"database_filter,omitempty" description:"Filter configuration for databases"`
-	CollectionFilter   *plugin.Filter `json:"collection_filter,omitempty" yaml:"collection_filter,omitempty" description:"Filter configuration for collections"`
-	ExcludeSystemDbs   bool           `json:"exclude_system_dbs" yaml:"exclude_system_dbs" description:"Whether to exclude system databases (admin, config, local)" default:"true"`
+	IncludeDatabases   bool           `json:"include_databases" description:"Whether to discover databases" default:"true"`
+	IncludeCollections bool           `json:"include_collections" description:"Whether to discover collections" default:"true"`
+	IncludeViews       bool           `json:"include_views" description:"Whether to include views" default:"true"`
+	IncludeIndexes     bool           `json:"include_indexes" description:"Whether to include index information" default:"true"`
+	SampleSchema       bool           `json:"sample_schema" description:"Sample documents to infer schema" default:"true"`
+	SampleSize         int            `json:"sample_size" description:"Number of documents to sample (default: 1000, -1 for entire collection)" default:"1000"`
+	UseRandomSampling  bool           `json:"use_random_sampling" description:"Use random sampling for schema inference" default:"true"`
+	DatabaseFilter     *plugin.Filter `json:"database_filter,omitempty" description:"Filter configuration for databases"`
+	CollectionFilter   *plugin.Filter `json:"collection_filter,omitempty" description:"Filter configuration for collections"`
+	ExcludeSystemDbs   bool           `json:"exclude_system_dbs" description:"Whether to exclude system databases (admin, config, local)" default:"true"`
 }
 
 // Example configuration for the plugin

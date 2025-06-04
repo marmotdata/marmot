@@ -52,7 +52,7 @@ type Config struct {
     plugin.BaseConfig `json:",inline"`
 
     // Add a simple config option
-    Greeting string `json:"greeting" yaml:"greeting" description:"Optional custom greeting message"`
+    Greeting string `json:"greeting" description:"Optional custom greeting message"`
 }
 
 // Example configuration for the plugin

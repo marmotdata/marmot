@@ -25,17 +25,17 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	Host     string `json:"host" yaml:"host" description:"MySQL server hostname or IP address"`
-	Port     int    `json:"port" yaml:"port" description:"MySQL server port (default: 3306)"`
-	User     string `json:"user" yaml:"user" description:"Username for authentication"`
-	Password string `json:"password" yaml:"password" description:"Password for authentication"`
-	Database string `json:"database" yaml:"database" description:"Database name to connect to"`
-	TLS      string `json:"tls" yaml:"tls" description:"TLS configuration (false, true, skip-verify, preferred)"`
+	Host     string `json:"host" description:"MySQL server hostname or IP address"`
+	Port     int    `json:"port" description:"MySQL server port (default: 3306)"`
+	User     string `json:"user" description:"Username for authentication"`
+	Password string `json:"password" description:"Password for authentication"`
+	Database string `json:"database" description:"Database name to connect to"`
+	TLS      string `json:"tls" description:"TLS configuration (false, true, skip-verify, preferred)"`
 
-	IncludeColumns      bool           `json:"include_columns" yaml:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeRowCounts    bool           `json:"include_row_counts" yaml:"include_row_counts" description:"Whether to include approximate row counts" default:"true"`
-	DiscoverForeignKeys bool           `json:"discover_foreign_keys" yaml:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	TableFilter         *plugin.Filter `json:"table_filter,omitempty" yaml:"table_filter,omitempty" description:"Filter configuration for tables"`
+	IncludeColumns      bool           `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeRowCounts    bool           `json:"include_row_counts" description:"Whether to include approximate row counts" default:"true"`
+	DiscoverForeignKeys bool           `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
+	TableFilter         *plugin.Filter `json:"table_filter,omitempty" description:"Filter configuration for tables"`
 }
 
 // Example configuration for the plugin
