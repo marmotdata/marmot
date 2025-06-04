@@ -27,21 +27,21 @@ type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
 	// Connection configuration
-	Host     string `json:"host" yaml:"host" description:"PostgreSQL server hostname or IP address"`
-	Port     int    `json:"port" yaml:"port" description:"PostgreSQL server port (default: 5432)"`
-	User     string `json:"user" yaml:"user" description:"Username for authentication"`
-	Password string `json:"password" yaml:"password" description:"Password for authentication"`
-	SSLMode  string `json:"ssl_mode" yaml:"ssl_mode" description:"SSL mode (disable, require, verify-ca, verify-full)"`
+	Host     string `json:"host" description:"PostgreSQL server hostname or IP address"`
+	Port     int    `json:"port" description:"PostgreSQL server port (default: 5432)"`
+	User     string `json:"user" description:"Username for authentication"`
+	Password string `json:"password" description:"Password for authentication"`
+	SSLMode  string `json:"ssl_mode" description:"SSL mode (disable, require, verify-ca, verify-full)"`
 
 	// Discovery configuration
-	IncludeDatabases     bool           `json:"include_databases" yaml:"include_databases" description:"Whether to discover databases" default:"true"`
-	IncludeColumns       bool           `json:"include_columns" yaml:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeRowCounts     bool           `json:"include_row_counts" yaml:"include_row_counts" description:"Whether to include approximate row counts (requires analyze)" default:"true"`
-	DiscoverForeignKeys  bool           `json:"discover_foreign_keys" yaml:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	SchemaFilter         *plugin.Filter `json:"schema_filter,omitempty" yaml:"schema_filter,omitempty" description:"Filter configuration for schemas"`
-	TableFilter          *plugin.Filter `json:"table_filter,omitempty" yaml:"table_filter,omitempty" description:"Filter configuration for tables"`
-	DatabaseFilter       *plugin.Filter `json:"database_filter,omitempty" yaml:"database_filter,omitempty" description:"Filter configuration for databases"`
-	ExcludeSystemSchemas bool           `json:"exclude_system_schemas" yaml:"exclude_system_schemas" description:"Whether to exclude system schemas (pg_*)" default:"true"`
+	IncludeDatabases     bool           `json:"include_databases" description:"Whether to discover databases" default:"true"`
+	IncludeColumns       bool           `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeRowCounts     bool           `json:"include_row_counts" description:"Whether to include approximate row counts (requires analyze)" default:"true"`
+	DiscoverForeignKeys  bool           `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
+	SchemaFilter         *plugin.Filter `json:"schema_filter,omitempty" description:"Filter configuration for schemas"`
+	TableFilter          *plugin.Filter `json:"table_filter,omitempty" description:"Filter configuration for tables"`
+	DatabaseFilter       *plugin.Filter `json:"database_filter,omitempty" description:"Filter configuration for databases"`
+	ExcludeSystemSchemas bool           `json:"exclude_system_schemas" description:"Whether to exclude system schemas (pg_*)" default:"true"`
 }
 
 // Example configuration for the plugin
@@ -768,4 +768,3 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 
 	return lineages, nil
 }
-

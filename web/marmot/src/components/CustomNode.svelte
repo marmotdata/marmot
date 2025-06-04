@@ -2,34 +2,36 @@
 	import { Handle, Position } from '@xyflow/svelte';
 	import Icon from './Icon.svelte';
 
-  let { data } = $props<{
-      data: {
-          name: string;
-          type: string;
-          service: string;
-          isCurrent: boolean;
-          id: string;
-          hasUpstream: boolean;
-          hasDownstream: boolean;
-          nodeClickHandler: (id: string) => void;
-      };
-  }>();
+	let { data } = $props<{
+		data: {
+			name: string;
+			type: string;
+			iconType: string;
+			service: string;
+			isCurrent: boolean;
+			id: string;
+			hasUpstream: boolean;
+			hasDownstream: boolean;
+			nodeClickHandler: (id: string) => void;
+		};
+	}>();
 
-  function handleClick() {
-      data.nodeClickHandler(data.id);
-  }
+	function handleClick() {
+		data.nodeClickHandler(data.id);
+	}
 </script>
-
 
 {#if data.hasUpstream}
 	<Handle type="target" position={Position.Left} style="background: #696969;" />
 {/if}
 
 <div class="node {data.isCurrent ? 'current' : ''}" on:click={handleClick}>
-	<div class="name text-gray-900 dark:text-gray-100">{data.name}</div>
+	<div class="name text-gray-900 dark:text-gray-100 text-center">{data.name}</div>
+	<div class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">{data.provider}</div>
+	<div class="text-xs text-gray-900 dark:text-gray-300 font-bold text-center">{data.type}</div>
 	<div class="flex justify-center mt-2">
 		<div class="icon-wrapper p-2">
-			<Icon name={data.type} iconSize="sm" />
+			<Icon name={data.iconType} iconSize="sm" />
 		</div>
 	</div>
 </div>
