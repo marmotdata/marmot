@@ -25,7 +25,6 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	// Connection configuration
 	Host     string `json:"host" yaml:"host" description:"MySQL server hostname or IP address"`
 	Port     int    `json:"port" yaml:"port" description:"MySQL server port (default: 3306)"`
 	User     string `json:"user" yaml:"user" description:"Username for authentication"`
@@ -33,7 +32,6 @@ type Config struct {
 	Database string `json:"database" yaml:"database" description:"Database name to connect to"`
 	TLS      string `json:"tls" yaml:"tls" description:"TLS configuration (false, true, skip-verify, preferred)"`
 
-	// Discovery configuration
 	IncludeColumns      bool           `json:"include_columns" yaml:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
 	IncludeRowCounts    bool           `json:"include_row_counts" yaml:"include_row_counts" description:"Whether to include approximate row counts" default:"true"`
 	DiscoverForeignKeys bool           `json:"discover_foreign_keys" yaml:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
@@ -62,7 +60,6 @@ tags:
   - "database"
 `
 
-// Source represents the MySQL plugin
 type Source struct {
 	config *Config
 	db     *sql.DB
@@ -217,8 +214,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			TABLE_COLLATION as collation,
 			CREATE_TIME as created,
 			UPDATE_TIME as updated,
-			TABLE_COMMENT as description,
-			NOW() as current_time
+			TABLE_COMMENT as description
 		FROM information_schema.TABLES
 		WHERE TABLE_SCHEMA = ?
 		ORDER BY TABLE_SCHEMA, TABLE_NAME
@@ -231,10 +227,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 	defer rows.Close()
 
 	var assets []asset.Asset
-	var schemaTables []struct {
-		schema string
-		table  string
-	}
 
 	for rows.Next() {
 		var (
@@ -249,13 +241,12 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			created       sql.NullTime
 			updated       sql.NullTime
 			description   sql.NullString
-			currentTime   string
 		)
 
 		if err := rows.Scan(
 			&schemaName, &objectName, &objectType, &engine, &estimatedRows,
 			&dataLength, &indexLength, &collation, &created, &updated,
-			&description, &currentTime,
+			&description,
 		); err != nil {
 			log.Warn().Err(err).Msg("Failed to scan row")
 			continue
@@ -279,7 +270,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 		metadata["database"] = dbName
 		metadata["schema"] = schemaName
 		metadata["table_name"] = objectName
-		metadata["created"] = currentTime
+		metadata["created"] = time.Now().Format("2006-01-02 15:04:05")
 		metadata["object_type"] = strings.ToLower(objectType)
 
 		if engine.Valid {
@@ -312,16 +303,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 
 		if description.Valid {
 			metadata["comment"] = description.String
-		}
-
-		if s.config.IncludeColumns {
-			schemaTables = append(schemaTables, struct {
-				schema string
-				table  string
-			}{
-				schema: schemaName,
-				table:  objectName,
-			})
 		}
 
 		var assetType string
@@ -360,131 +341,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 		return nil, fmt.Errorf("iterating table rows: %w", err)
 	}
 
-	if s.config.IncludeColumns && len(schemaTables) > 0 {
-		columnInfoMap, err := s.getBulkColumnInfo(ctx, dbName, schemaTables)
-		if err != nil {
-			log.Warn().Err(err).Msg("Failed to get bulk column information")
-		} else {
-			for i := range assets {
-				schemaName, ok := assets[i].Metadata["schema"].(string)
-				if !ok {
-					continue
-				}
-
-				tableName, ok := assets[i].Metadata["table_name"].(string)
-				if !ok {
-					continue
-				}
-
-				key := schemaName + "." + tableName
-				if columns, exists := columnInfoMap[key]; exists {
-					assets[i].Metadata["columns"] = columns
-				}
-			}
-		}
-	}
-
 	return assets, nil
-}
-
-func (s *Source) getBulkColumnInfo(ctx context.Context, dbName string, schemaTables []struct {
-	schema string
-	table  string
-}) (map[string][]interface{}, error) {
-	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
-	defer cancel()
-
-	query := `
-		SELECT
-			TABLE_SCHEMA as schema_name,
-			TABLE_NAME as table_name,
-			COLUMN_NAME as column_name,
-			DATA_TYPE as data_type,
-			COLUMN_TYPE as column_type,
-			IS_NULLABLE as is_nullable,
-			COLUMN_DEFAULT as column_default,
-			COLUMN_KEY as column_key,
-			EXTRA as extra,
-			CHARACTER_SET_NAME as character_set,
-			COLLATION_NAME as collation,
-			COLUMN_COMMENT as comment
-		FROM information_schema.COLUMNS
-		WHERE TABLE_SCHEMA = ?
-		ORDER BY TABLE_SCHEMA, TABLE_NAME, ORDINAL_POSITION
-	`
-
-	rows, err := s.db.QueryContext(queryCtx, query, dbName)
-	if err != nil {
-		return nil, fmt.Errorf("querying bulk column information: %w", err)
-	}
-	defer rows.Close()
-
-	result := make(map[string][]interface{})
-
-	for rows.Next() {
-		var (
-			schemaName    string
-			tableName     string
-			columnName    string
-			dataType      string
-			columnType    string
-			isNullable    string
-			columnDefault sql.NullString
-			columnKey     string
-			extra         string
-			characterSet  sql.NullString
-			collation     sql.NullString
-			comment       sql.NullString
-		)
-
-		if err := rows.Scan(
-			&schemaName, &tableName, &columnName, &dataType, &columnType,
-			&isNullable, &columnDefault, &columnKey, &extra,
-			&characterSet, &collation, &comment,
-		); err != nil {
-			log.Warn().Err(err).Msg("Failed to scan column row")
-			continue
-		}
-
-		key := schemaName + "." + tableName
-
-		column := map[string]interface{}{
-			"column_name":       columnName,
-			"data_type":         dataType,
-			"column_type":       columnType,
-			"is_nullable":       strings.ToUpper(isNullable) == "YES",
-			"is_primary_key":    strings.Contains(columnKey, "PRI"),
-			"is_auto_increment": strings.Contains(extra, "auto_increment"),
-		}
-
-		if columnDefault.Valid {
-			column["column_default"] = columnDefault.String
-		}
-
-		if characterSet.Valid {
-			column["character_set"] = characterSet.String
-		}
-
-		if collation.Valid {
-			column["collation"] = collation.String
-		}
-
-		if comment.Valid {
-			column["comment"] = comment.String
-		}
-
-		if _, exists := result[key]; !exists {
-			result[key] = make([]interface{}, 0)
-		}
-
-		result[key] = append(result[key], column)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterating bulk column rows: %w", err)
-	}
-
-	return result, nil
 }
 
 func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]lineage.LineageEdge, error) {
@@ -561,6 +418,10 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 
 		sourceMRN := mrn.New("Table", "MySQL", sourceTable)
 		targetMRN := mrn.New("Table", "MySQL", targetTable.String)
+
+		if sourceMRN == targetMRN {
+			continue
+		}
 
 		relationKey := fmt.Sprintf("%s:%s", sourceMRN, targetMRN)
 		if _, exists := uniqueRelations[relationKey]; exists {

@@ -13,7 +13,6 @@
 		{ value: 'range', display: 'range', type: 'operator' }
 	];
 
-	// Cache for metadata fields
 	let metadataFieldsCache: MetadataFieldSuggestion[] | null = null;
 
 	export let value = '';
@@ -54,24 +53,43 @@
 	function calculatePixelOffset(position: number): { top: number; left: number } {
 		if (!input) return { top: 0, left: 0 };
 
-		const textBefore = value.substring(0, position);
-		const tempSpan = document.createElement('span');
-		tempSpan.style.cssText = window.getComputedStyle(input).cssText;
-		tempSpan.style.visibility = 'hidden';
-		tempSpan.style.whiteSpace = 'pre-wrap';
-		tempSpan.textContent = textBefore;
-
-		const inputRect = input.getBoundingClientRect();
-		document.body.appendChild(tempSpan);
-		const rect = tempSpan.getBoundingClientRect();
-		document.body.removeChild(tempSpan);
-
+		const tempDiv = document.createElement('div');
 		const inputStyle = window.getComputedStyle(input);
 
-		return {
-			top: inputRect.top + window.scrollY + rect.height + parseFloat(inputStyle.paddingTop),
-			left: inputRect.left + (rect.width % inputRect.width) + parseFloat(inputStyle.paddingLeft)
-		};
+		tempDiv.style.cssText = inputStyle.cssText;
+		tempDiv.style.position = 'absolute';
+		tempDiv.style.visibility = 'hidden';
+		tempDiv.style.height = 'auto';
+		tempDiv.style.whiteSpace = 'pre-wrap';
+		tempDiv.style.wordWrap = 'break-word';
+
+		document.body.appendChild(tempDiv);
+
+		const textBefore = value.substring(0, position);
+		tempDiv.textContent = textBefore;
+
+		const inputRect = input.getBoundingClientRect();
+
+		const lines = textBefore.split('\n');
+		const lastLine = lines[lines.length - 1];
+
+		const tempLine = document.createElement('span');
+		tempLine.style.cssText = inputStyle.cssText;
+		tempLine.style.position = 'absolute';
+		tempLine.style.visibility = 'hidden';
+		tempLine.style.whiteSpace = 'pre';
+		tempLine.textContent = lastLine;
+
+		document.body.appendChild(tempLine);
+		const lineRect = tempLine.getBoundingClientRect();
+
+		const top = inputRect.top + window.scrollY + inputRect.height + 4;
+		const left = inputRect.left + lineRect.width + parseFloat(inputStyle.paddingLeft);
+
+		document.body.removeChild(tempDiv);
+		document.body.removeChild(tempLine);
+
+		return { top, left };
 	}
 
 	function getHighlightedText(text: string): { text: string; class: string }[] {
@@ -216,6 +234,7 @@
 			needsOperator
 		};
 	}
+
 	async function fetchMetadataFields(): Promise<MetadataFieldSuggestion[]> {
 		if (metadataFieldsCache) {
 			return metadataFieldsCache;
@@ -297,14 +316,12 @@
 			} else {
 				const searchPathClean = searchPath.endsWith('.') ? searchPath.slice(0, -1) : searchPath;
 
-				// Filter fields that match our current path prefix
 				const filteredFields = fields.filter((f) => {
 					const fieldId = f.field.toLowerCase();
 					return fieldId.startsWith(searchPathClean + '.') && fieldId !== searchPathClean;
 				});
 
 				if (filteredFields.length === 0 && searchPath.endsWith('.')) {
-					// Only show operators if we have no child properties and the field isn't an object
 					const parentField = fields.find((f) => f.field.toLowerCase() === searchPathClean);
 					if (!parentField || parentField.type !== 'object') {
 						suggestions = operators;
@@ -342,7 +359,6 @@
 				}
 			}
 
-			// Update UI immediately after adding a dot for object types
 			if (searchPath.endsWith('.')) {
 				showDropdown = suggestions.length > 0;
 				return;
@@ -371,7 +387,6 @@
 	}
 
 	function handleInput() {
-		console.log('handleInput called', { value });
 		adjustTextareaHeight();
 		updateSuggestions();
 
@@ -386,7 +401,6 @@
 		const lastMetadataIndex = query.lastIndexOf('@metadata.');
 		const restOfQuery = query.slice(lastMetadataIndex);
 
-		// Don't consider a query incomplete if it has an operator and value
 		if (restOfQuery.match(/@metadata\.[a-zA-Z0-9_.]+\s*[:<>=]+\s*[^:\s]+/)) {
 			return false;
 		}
@@ -510,10 +524,8 @@
 			const beforeMetadata = value.substring(0, lastMetadataIndex);
 			const afterMetadata = value.substring(lastMetadataIndex + metadataPrefix.length);
 
-			// Get the current partial field if any
 			const currentField = afterMetadata.split(/[\s:]/)[0];
 
-			// Remove the partial field from the value
 			value =
 				beforeMetadata +
 				metadataPrefix +
@@ -604,7 +616,7 @@
 			class="fixed z-50 bg-earthy-brown-50 dark:bg-gray-900 dark:bg-gray-900 rounded-lg border border-earthy-brown-100 shadow-lg dark:shadow-lg-white overflow-y-auto max-h-[280px]"
 			style="left: {calculatePixelOffset(suggestionStartPos).left}px; top: {calculatePixelOffset(
 				suggestionStartPos
-			).top}px; min-width: 120px; width: auto; max-width: 400px;"
+			).top}px; min-width: 200px; width: auto; max-width: 400px;"
 		>
 			{#each suggestions as suggestion, i}
 				<button
