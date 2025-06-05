@@ -26,12 +26,21 @@
 {/if}
 
 <div class="node {data.isCurrent ? 'current' : ''}" on:click={handleClick}>
-	<div class="name text-gray-900 dark:text-gray-100 text-center">{data.name}</div>
+	<div
+		class="text-xs text-gray-500 dark:text-gray-400 font-bold text-center pb-2 border-b border-gray-200 dark:border-gray-600 flex items-center justify-center gap-1"
+	>
+		<div class="w-3 h-3 flex items-center justify-center overflow-hidden">
+			<div class="text-gray-500 dark:text-gray-400" style="filter: grayscale(1) opacity(0.6);">
+				<Icon name={data.type} size="s" showLabel={false} />
+			</div>
+		</div>
+		<span class="uppercase">{data.type}</span>
+	</div>
+	<div class="name text-gray-900 dark:text-gray-100 text-center mt-2">{data.name}</div>
 	<div class="text-xs text-gray-500 dark:text-gray-400 mt-1 text-center">{data.provider}</div>
-	<div class="text-xs text-gray-900 dark:text-gray-300 font-bold text-center">{data.type}</div>
 	<div class="flex justify-center mt-2">
 		<div class="icon-wrapper p-2">
-			<Icon name={data.iconType} iconSize="sm" />
+			<Icon name={data.iconType} size="sm" />
 		</div>
 	</div>
 </div>

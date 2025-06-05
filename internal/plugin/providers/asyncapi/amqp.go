@@ -25,19 +25,19 @@ func (s *Source) createAMQPQueue(spec *asyncapi2.Document, channelName string, b
 	}
 
 	amqpFields := AMQPFields{
-		BindingIs: binding.Is,
+		BindingIs:       binding.Is,
+		QueueName:       binding.Queue.Name,
+		QueueDurable:    binding.Queue.Durable,
+		QueueExclusive:  binding.Queue.Exclusive,
+		QueueAutoDelete: binding.Queue.AutoDelete,
+		QueueVHost:      binding.Queue.VHost,
 	}
-
-	amqpFields.QueueName = binding.Queue.Name
-	amqpFields.QueueDurable = binding.Queue.Durable
-	amqpFields.QueueExclusive = binding.Queue.Exclusive
-	amqpFields.QueueAutoDelete = binding.Queue.AutoDelete
-	amqpFields.QueueVHost = binding.Queue.VHost
 
 	metadata := plugin.MapToMetadata(sharedFields)
 	for k, v := range plugin.MapToMetadata(amqpFields) {
 		metadata[k] = v
 	}
+	metadata["binding_version"] = binding.BindingVersion
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
@@ -82,19 +82,19 @@ func (s *Source) createAMQPExchange(spec *asyncapi2.Document, channelName string
 	}
 
 	amqpFields := AMQPFields{
-		BindingIs: binding.Is,
+		BindingIs:          binding.Is,
+		ExchangeName:       binding.Exchange.Name,
+		ExchangeType:       binding.Exchange.Type,
+		ExchangeDurable:    binding.Exchange.Durable,
+		ExchangeAutoDelete: binding.Exchange.AutoDelete,
+		ExchangeVHost:      binding.Exchange.VHost,
 	}
-
-	amqpFields.ExchangeName = binding.Exchange.Name
-	amqpFields.ExchangeType = binding.Exchange.Type
-	amqpFields.ExchangeDurable = binding.Exchange.Durable
-	amqpFields.ExchangeAutoDelete = binding.Exchange.AutoDelete
-	amqpFields.ExchangeVHost = binding.Exchange.VHost
 
 	metadata := plugin.MapToMetadata(sharedFields)
 	for k, v := range plugin.MapToMetadata(amqpFields) {
 		metadata[k] = v
 	}
+	metadata["binding_version"] = binding.BindingVersion
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 

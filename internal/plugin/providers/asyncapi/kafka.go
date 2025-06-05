@@ -51,6 +51,11 @@ func (s *Source) createKafkaTopic(spec *asyncapi2.Document, channelName string, 
 		metadata[k] = v
 	}
 
+	metadata["topic_name"] = name
+	if binding.Topic != "" && binding.Topic != channelName {
+		metadata["overridden_topic_name"] = true
+	}
+
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
