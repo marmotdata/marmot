@@ -27,9 +27,20 @@ export function parseSchemaResponse(response: any): SchemaSection[] {
 
   if (typeof response === 'object') {
     Object.entries(response).forEach(([name, schemaContent]) => {
+      // Parse JSON strings that come from API responses
+      let parsedSchema = schemaContent;
+      if (typeof schemaContent === 'string') {
+        try {
+          parsedSchema = JSON.parse(schemaContent);
+        } catch (e) {
+          // Keep as string if it's not JSON (could be YAML, protobuf, etc.)
+          parsedSchema = schemaContent;
+        }
+      }
+
       sections.push({
         name: name,
-        schema: schemaContent
+        schema: parsedSchema
       });
     });
   }
@@ -121,7 +132,8 @@ export function detectSchemaType(schemaSection: any): SchemaType {
     return 'json';
   }
 
-  // Object-based detection logic
+  // Object-based detection logic - check JSON first since it's most common
+  if (isJsonSchema(schemaSection)) return 'json';
   if (isAvroSchema(schemaSection)) return 'avro';
   if (isProtobufSchema(schemaSection)) return 'protobuf';
   return 'json';
@@ -191,7 +203,13 @@ export function validateSchema(schema: any): any[] {
       try {
         cleanSchema = JSON.parse(schema);
       } catch (e) {
-        return [];
+        // If it's not JSON, check if it's a valid string schema format
+        if (isStringSchema(schema)) {
+          // For string schemas that aren't JSON, we can't easily validate
+          // Return empty array (no errors) for now
+          return [];
+        }
+        return [{ message: `Invalid schema format: ${e.message}` }];
       }
     }
 

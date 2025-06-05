@@ -40,6 +40,7 @@ func (s *Source) createSNSTopic(spec *asyncapi2.Document, channelName string, bi
 		"service_version": spec.Info.Version,
 		"description":     description,
 		"topic_arn":       binding.Name,
+		"binding_version": binding.BindingVersion,
 	}
 
 	if binding.Ordering != nil {
@@ -94,6 +95,7 @@ func (s *Source) createSQSQueue(spec *asyncapi2.Document, channelName string, bi
 		"service_name":    spec.Info.Title,
 		"service_version": spec.Info.Version,
 		"description":     description,
+		"binding_version": binding.BindingVersion,
 	}
 
 	if binding.Queue != nil {

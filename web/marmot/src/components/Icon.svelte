@@ -5,9 +5,10 @@
 
 	export let name: string;
 	export let showLabel: boolean = true;
-	export let size: 'sm' | 'md' | 'lg' = 'md';
+	export let size: 'xs' | 'sm' | 'md' | 'lg' = 'md';
 
 	const sizeClasses = {
+		xs: 'w-1 h-1',
 		sm: 'w-6 h-6',
 		md: 'w-8 h-8',
 		lg: 'w-12 h-12'

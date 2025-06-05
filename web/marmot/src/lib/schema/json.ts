@@ -245,22 +245,57 @@ export function processJsonSchema(schemaSection: any): Field[] {
     let fields: Field[] = [];
 
     if (schema.type === 'object' && schema.properties) {
-      fields.push({
-        name: schema.title || 'root',
-        type: 'object',
-        description: schema.description,
-        required: true,
-        indentLevel: 0
-      });
-
+      // Process properties directly without adding a "root" entry
       Object.entries(schema.properties).forEach(([fieldName, fieldSchema]) => {
-        fields.push({
+        const field: Field = {
           name: fieldName,
           type: getFieldType(fieldSchema),
           description: fieldSchema.description,
+          format: fieldSchema.format,
           required: (schema.required || []).includes(fieldName),
-          indentLevel: 1
-        });
+          enum: fieldSchema.enum,
+          default: fieldSchema.default,
+          pattern: fieldSchema.pattern,
+          minimum: fieldSchema.minimum,
+          maximum: fieldSchema.maximum,
+          minLength: fieldSchema.minLength,
+          maxLength: fieldSchema.maxLength,
+          indentLevel: 0
+        };
+
+        fields.push(field);
+
+        // Handle nested object properties
+        if (fieldSchema.type === 'object' && fieldSchema.properties) {
+          Object.entries(fieldSchema.properties).forEach(([nestedName, nestedSchema]) => {
+            fields.push(
+              ...processField(
+                `${fieldName}.${nestedName}`,
+                nestedSchema,
+                fieldSchema.required || [],
+                schema,
+                1
+              )
+            );
+          });
+        }
+
+        // Handle array with object items
+        if (fieldSchema.type === 'array' && fieldSchema.items) {
+          if (fieldSchema.items.type === 'object' && fieldSchema.items.properties) {
+            Object.entries(fieldSchema.items.properties).forEach(([itemName, itemSchema]) => {
+              fields.push(
+                ...processField(
+                  `${fieldName}[].${itemName}`,
+                  itemSchema,
+                  fieldSchema.items.required || [],
+                  schema,
+                  1
+                )
+              );
+            });
+          }
+        }
       });
     }
 

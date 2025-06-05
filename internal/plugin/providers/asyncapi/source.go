@@ -7,9 +7,11 @@ package asyncapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/charlie-haley/asyncapi-go"
@@ -24,6 +26,7 @@ import (
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
+	"sigs.k8s.io/yaml"
 )
 
 // +marmot:config
@@ -93,11 +96,16 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 			return nil
 		}
 
+		if !isAsyncAPI2x(data, path) {
+			return nil
+		}
+
 		var doc spec.Document
+		opts := asyncapi.ParseOptions{FilePath: config.SpecPath}
 		if filepath.Ext(path) == ".json" {
-			doc, err = asyncapi.ParseFromJSON(data)
+			doc, err = asyncapi.ParseFromJSON(data, opts)
 		} else {
-			doc, err = asyncapi.ParseFromYAML(data)
+			doc, err = asyncapi.ParseFromYAML(data, opts)
 		}
 		if err != nil {
 			log.Warn().Err(err).Str("path", path).Msg("Failed to parse AsyncAPI file")
@@ -166,6 +174,13 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 					}
 				}
 			}
+			if channel.Publish != nil && channel.Publish.Message != nil {
+				s.attachSchemasToChannelAssets(spec, channelName, channel.Publish.Message, "PUBLISH", &assets, seenAssets)
+			}
+
+			if channel.Subscribe != nil && channel.Subscribe.Message != nil {
+				s.attachSchemasToChannelAssets(spec, channelName, channel.Subscribe.Message, "SUBSCRIBE", &assets, seenAssets)
+			}
 		}
 
 		return nil
@@ -179,6 +194,105 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
+}
+
+func isAsyncAPI2x(data []byte, path string) bool {
+	var doc map[string]interface{}
+	var err error
+
+	if filepath.Ext(path) == ".json" {
+		err = json.Unmarshal(data, &doc)
+	} else {
+		err = yaml.Unmarshal(data, &doc)
+	}
+
+	if err != nil {
+		return false
+	}
+
+	version, ok := doc["asyncapi"].(string)
+	return ok && strings.HasPrefix(version, "2.")
+}
+
+func (s *Source) attachSchemasToChannelAssets(spec *asyncapi2.Document, channelName string, message *asyncapi2.Message, operationType string, assets *[]asset.Asset, seenAssets map[string]struct{}) {
+	schemas := s.extractMessageSchemas(message)
+	if len(schemas) == 0 {
+		return
+	}
+
+	serviceMRN := mrn.New("service", "asyncapi", spec.Info.Title)
+
+	for i := range *assets {
+		assetPtr := &(*assets)[i]
+		if assetPtr.MRN != nil && *assetPtr.MRN == serviceMRN {
+			s.attachSchemasToAsset(assetPtr, schemas, channelName, operationType)
+		}
+		if s.isChannelRelatedAsset(assetPtr, channelName) {
+			s.attachSchemasToAsset(assetPtr, schemas, channelName, operationType)
+		}
+	}
+}
+
+func (s *Source) extractMessageSchemas(message *asyncapi2.Message) map[string]string {
+	schemas := make(map[string]string)
+
+	if message.Payload != nil {
+		if payloadStr, err := s.convertSchemaToString(message.Payload); err == nil {
+			schemas["payload"] = payloadStr
+		}
+	}
+
+	if message.Headers != nil {
+		if headersStr, err := s.convertSchemaToString(message.Headers); err == nil {
+			schemas["headers"] = headersStr
+		}
+	}
+
+	return schemas
+}
+
+func (s *Source) convertSchemaToString(schema interface{}) (string, error) {
+	switch v := schema.(type) {
+	case string:
+		return v, nil
+	case map[string]interface{}, []interface{}:
+		if jsonBytes, err := json.Marshal(v); err == nil {
+			return string(jsonBytes), nil
+		}
+	}
+	return "", fmt.Errorf("unable to convert schema to string")
+}
+
+func (s *Source) attachSchemasToAsset(asset *asset.Asset, schemas map[string]string, channelName, operationType string) {
+	if asset.Schema == nil {
+		asset.Schema = make(map[string]string)
+	}
+
+	for schemaType, schemaContent := range schemas {
+		key := schemaType
+		if schemaType == "payload" {
+			key = "message"
+		}
+		asset.Schema[key] = schemaContent
+	}
+}
+
+func (s *Source) isChannelRelatedAsset(asset *asset.Asset, channelName string) bool {
+	if asset.Metadata == nil {
+		return false
+	}
+
+	if metaChannelName, exists := asset.Metadata["channel_name"]; exists {
+		if str, ok := metaChannelName.(string); ok && str == channelName {
+			return true
+		}
+	}
+
+	if asset.Name != nil && strings.Contains(*asset.Name, channelName) {
+		return true
+	}
+
+	return false
 }
 
 func (s *Source) createServiceAsset(spec *asyncapi2.Document) asset.Asset {
@@ -195,6 +309,17 @@ func (s *Source) createServiceAsset(spec *asyncapi2.Document) asset.Asset {
 		"service_name":     serviceName,
 		"service_version":  spec.Info.Version,
 		"description":      description,
+	}
+
+	if spec.Servers != nil {
+		for serverName, server := range spec.Servers {
+			if server.Bindings != nil {
+				for protocol, binding := range server.Bindings {
+					key := fmt.Sprintf("server_%s_%s_binding", serverName, protocol)
+					metadata[key] = binding
+				}
+			}
+		}
 	}
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
