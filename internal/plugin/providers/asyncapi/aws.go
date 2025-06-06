@@ -39,18 +39,25 @@ func (s *Source) createSNSTopic(spec *asyncapi2.Document, channelName string, bi
 		"service_name":    spec.Info.Title,
 		"service_version": spec.Info.Version,
 		"description":     description,
-		"topic_arn":       binding.Name,
 		"binding_version": binding.BindingVersion,
 	}
 
+	if binding.Name != "" {
+		metadata["topic_arn"] = binding.Name
+	}
+
 	if binding.Ordering != nil {
-		metadata["ordering_type"] = binding.Ordering.Type
+		if binding.Ordering.Type != "" {
+			metadata["ordering_type"] = binding.Ordering.Type
+		}
 		metadata["content_deduplication"] = binding.Ordering.ContentBasedDeduplication
 	}
 
 	if binding.Tags != nil {
 		for k, v := range binding.Tags {
-			metadata["tag_"+k] = v
+			if v != "" {
+				metadata["tag_"+k] = v
+			}
 		}
 	}
 
@@ -99,17 +106,26 @@ func (s *Source) createSQSQueue(spec *asyncapi2.Document, channelName string, bi
 	}
 
 	if binding.Queue != nil {
-		metadata["name"] = binding.Queue.Name
+		if binding.Queue.Name != "" {
+			metadata["name"] = binding.Queue.Name
+		}
+		if binding.Queue.DeduplicationScope != "" {
+			metadata["deduplication_scope"] = binding.Queue.DeduplicationScope
+		}
+		if binding.Queue.FifoThroughputLimit != "" {
+			metadata["fifo_throughput_limit"] = binding.Queue.FifoThroughputLimit
+		}
+
 		metadata["fifo_queue"] = binding.Queue.FifoQueue
-		metadata["deduplication_scope"] = binding.Queue.DeduplicationScope
-		metadata["fifo_throughput_limit"] = binding.Queue.FifoThroughputLimit
 		metadata["delivery_delay"] = binding.Queue.DeliveryDelay
 		metadata["visibility_timeout"] = binding.Queue.VisibilityTimeout
 		metadata["receive_message_wait_time"] = binding.Queue.ReceiveMessageWaitTime
 		metadata["message_retention_period"] = binding.Queue.MessageRetentionPeriod
 
 		if binding.Queue.RedrivePolicy != nil {
-			metadata["dlq_name"] = binding.Queue.RedrivePolicy.DeadLetterQueue.Name
+			if binding.Queue.RedrivePolicy.DeadLetterQueue.Name != "" {
+				metadata["dlq_name"] = binding.Queue.RedrivePolicy.DeadLetterQueue.Name
+			}
 			if binding.Queue.RedrivePolicy.MaxReceiveCount != nil {
 				metadata["max_receive_count"] = *binding.Queue.RedrivePolicy.MaxReceiveCount
 			}
@@ -117,7 +133,9 @@ func (s *Source) createSQSQueue(spec *asyncapi2.Document, channelName string, bi
 
 		if binding.Queue.Tags != nil {
 			for k, v := range binding.Queue.Tags {
-				metadata["tag_"+k] = v
+				if v != "" {
+					metadata["tag_"+k] = v
+				}
 			}
 		}
 	}

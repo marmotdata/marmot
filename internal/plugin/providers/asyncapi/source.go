@@ -220,13 +220,8 @@ func (s *Source) attachSchemasToChannelAssets(spec *asyncapi2.Document, channelN
 		return
 	}
 
-	serviceMRN := mrn.New("service", "asyncapi", spec.Info.Title)
-
 	for i := range *assets {
 		assetPtr := &(*assets)[i]
-		if assetPtr.MRN != nil && *assetPtr.MRN == serviceMRN {
-			s.attachSchemasToAsset(assetPtr, schemas, channelName, operationType)
-		}
 		if s.isChannelRelatedAsset(assetPtr, channelName) {
 			s.attachSchemasToAsset(assetPtr, schemas, channelName, operationType)
 		}

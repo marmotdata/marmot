@@ -30,12 +30,17 @@ func (s *Source) createAMQPQueue(spec *asyncapi2.Document, channelName string, b
 		QueueDurable:    binding.Queue.Durable,
 		QueueExclusive:  binding.Queue.Exclusive,
 		QueueAutoDelete: binding.Queue.AutoDelete,
-		QueueVHost:      binding.Queue.VHost,
+	}
+
+	if binding.Queue.VHost != "" {
+		amqpFields.QueueVHost = binding.Queue.VHost
 	}
 
 	metadata := plugin.MapToMetadata(sharedFields)
 	for k, v := range plugin.MapToMetadata(amqpFields) {
-		metadata[k] = v
+		if str, ok := v.(string); !ok || str != "" {
+			metadata[k] = v
+		}
 	}
 	metadata["binding_version"] = binding.BindingVersion
 
@@ -87,12 +92,17 @@ func (s *Source) createAMQPExchange(spec *asyncapi2.Document, channelName string
 		ExchangeType:       binding.Exchange.Type,
 		ExchangeDurable:    binding.Exchange.Durable,
 		ExchangeAutoDelete: binding.Exchange.AutoDelete,
-		ExchangeVHost:      binding.Exchange.VHost,
+	}
+
+	if binding.Exchange.VHost != "" {
+		amqpFields.ExchangeVHost = binding.Exchange.VHost
 	}
 
 	metadata := plugin.MapToMetadata(sharedFields)
 	for k, v := range plugin.MapToMetadata(amqpFields) {
-		metadata[k] = v
+		if str, ok := v.(string); !ok || str != "" {
+			metadata[k] = v
+		}
 	}
 	metadata["binding_version"] = binding.BindingVersion
 
