@@ -29,7 +29,7 @@
 	<div
 		class="text-xs text-gray-500 dark:text-gray-400 font-bold text-center pb-2 border-b border-gray-200 dark:border-gray-600 flex items-center justify-center gap-1"
 	>
-		<div class="w-3 h-3 flex items-center justify-center overflow-hidden">
+		<div class="flex items-center justify-center">
 			<div class="text-gray-500 dark:text-gray-400" style="filter: grayscale(1) opacity(0.6);">
 				<Icon name={data.type} size="s" showLabel={false} />
 			</div>
