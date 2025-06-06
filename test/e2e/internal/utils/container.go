@@ -333,7 +333,7 @@ func (cm *ContainerManager) CleanupContainer(containerID string) error {
 	return nil
 }
 
-func (cm *ContainerManager) RunMarmotCommandWithConfig(config TestConfig, command []string, configContent string, volumeMounts ...string) error {
+func (cm *ContainerManager) RunMarmotCommandWithConfig(config TestConfig, command []string, configContent string, entrypoint []string, volumeMounts ...string) error {
 	tmpDir, err := os.MkdirTemp("", "marmot-config-*")
 	if err != nil {
 		return err
@@ -349,6 +349,10 @@ func (cm *ContainerManager) RunMarmotCommandWithConfig(config TestConfig, comman
 		Image:      "marmot:test",
 		Cmd:        command,
 		WorkingDir: "/tmp",
+	}
+
+	if len(entrypoint) > 0 {
+		containerConfig.Entrypoint = entrypoint
 	}
 
 	// Start with the config file bind

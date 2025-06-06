@@ -96,10 +96,10 @@ runs:
           - "^_.*"
 `, env.RedpandaPort)
 
-	// Ingest
 	err = env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContent,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -162,6 +162,7 @@ runs:
 	err = env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContentCustom,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -243,6 +244,7 @@ runs:
 	err = env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContent,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -339,6 +341,7 @@ runs:
 	err = env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContent,
+		nil,
 	)
 	require.NoError(t, err)
 
