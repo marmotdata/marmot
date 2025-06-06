@@ -64,6 +64,7 @@ runs:
 	err = env.ContainerManager.RunMarmotCommandWithConfig(env.Config,
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey, "-H", "http://marmot-test:8080"},
 		configContent,
+		nil,
 	)
 	require.NoError(t, err)
 
@@ -183,17 +184,6 @@ runs:
 	t.Logf("Found %d lineage edges for database %s:", len(lineageResp.Payload.Edges), ecommerceDB.ID)
 	for _, edge := range lineageResp.Payload.Edges {
 		t.Logf("Edge: %s -> %s (type: %s)", edge.Source, edge.Target, edge.Type)
-	}
-
-	var containsLineageFound bool
-	for _, edge := range lineageResp.Payload.Edges {
-		if edge.Type == "CONTAINS" {
-			containsLineageFound = true
-			break
-		}
-	}
-	if !containsLineageFound {
-		t.Logf("Warning: CONTAINS relationship between database and collections not found - this may be expected if the MongoDB plugin doesn't create this lineage")
 	}
 
 	userStatsUUID := strfmt.UUID(userStatsView.ID)
@@ -481,4 +471,3 @@ func setupTestMongoDB(ctx context.Context) error {
 
 	return utils.CreateTestMongoDatabases(ctx, "mongodb://localhost:27017", testDatabases, testViews)
 }
-

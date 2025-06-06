@@ -18,6 +18,7 @@ import SparkIcon from '~icons/logos/apache-spark';
 import SnowflakeIcon from '~icons/logos/snowflake-icon';
 import KubernetesIcon from '~icons/logos/kubernetes';
 import AMQPIcon from '~icons/logos/rabbitmq-icon';
+import BigQueryIcon from '~icons/logos/google-cloud';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -27,6 +28,8 @@ import TableOutlineIcon from '~icons/material-symbols/table-outline';
 import ViewOutlineIcon from '~icons/material-symbols/view-list-outline';
 import HomeStorageOutlineIcon from '~icons/material-symbols/home-storage-outline';
 import PartnerExchangeOutlineRounded from '~icons/material-symbols/partner-exchange-outline-rounded';
+import DatasetOutlineRounded from '~icons/material-symbols/dataset-outline-rounded';
+import BackupTableRounded from '~icons/material-symbols/backup-table-rounded';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
 
@@ -55,6 +58,7 @@ const iconMap: Record<
   spark: { default: SparkIcon },
   snowflake: { default: SnowflakeIcon },
   kubernetes: { default: KubernetesIcon },
+  bigquery: { default: BigQueryIcon },
   amqp: { default: AMQPIcon },
   rabbitmq: { default: AMQPIcon },
   queue: { default: QueueListIcon, class: 'text-gray-900 dark:text-gray-100' },
@@ -64,7 +68,9 @@ const iconMap: Record<
   table: { default: TableOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
   bucket: { default: HomeStorageOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
   view: { default: ViewOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
-  exchange: { default: PartnerExchangeOutlineRounded, class: 'text-gray-900 dark:text-gray-100' }
+  exchange: { default: PartnerExchangeOutlineRounded, class: 'text-gray-900 dark:text-gray-100' },
+  dataset: { default: DatasetOutlineRounded, class: 'text-gray-900 dark:text-gray-100' },
+  collection: { default: BackupTableRounded, class: 'text-gray-900 dark:text-gray-100' }
 };
 
 export class IconLoader {

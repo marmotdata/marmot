@@ -28,21 +28,23 @@ import (
 )
 
 type TestEnvironment struct {
-	Config             utils.TestConfig
-	ContainerManager   *utils.ContainerManager
-	APIClient          *client.Marmot
-	APIKey             string
-	LocalstackID       string
-	LocalstackPort     string
-	RedpandaID         string
-	RedpandaPort       string
-	SchemaRegistryPort string
-	KafkaClient        *kgo.Client
-	KafkaAdminClient   *kadm.Client
-	HasSchemaRegistry  bool
-	PostgresPort       string
-	MySQLID            string
-	MySQLPort          string
+	Config               utils.TestConfig
+	ContainerManager     *utils.ContainerManager
+	APIClient            *client.Marmot
+	APIKey               string
+	LocalstackID         string
+	LocalstackPort       string
+	RedpandaID           string
+	RedpandaPort         string
+	SchemaRegistryPort   string
+	KafkaClient          *kgo.Client
+	KafkaAdminClient     *kadm.Client
+	HasSchemaRegistry    bool
+	PostgresPort         string
+	MySQLID              string
+	MySQLPort            string
+	BigQueryEmulatorID   string
+	BigQueryEmulatorPort string
 }
 
 func SetupTestEnvironment(t *testing.T) (*TestEnvironment, error) {
@@ -198,6 +200,102 @@ func (env *TestEnvironment) EnsurePostgresStarted(ctx context.Context) error {
 		env.PostgresPort = postgresPort
 		env.Config.PostgresContainerName = postgresID
 	}
+
+	return nil
+}
+
+// EnsureBigQueryStarted ensures the BigQuery emulator container is started
+func (env *TestEnvironment) EnsureBigQueryStarted(ctx context.Context) error {
+	if env.BigQueryEmulatorID == "" || env.BigQueryEmulatorPort == "" {
+		bigqueryID, bigqueryPort, err := startBigQueryEmulator(ctx, env.ContainerManager, env.Config.NetworkName)
+		if err != nil {
+			return fmt.Errorf("failed to start BigQuery emulator: %w", err)
+		}
+
+		if err := waitForBigQueryEmulator(bigqueryPort); err != nil {
+			return fmt.Errorf("BigQuery emulator failed to become ready: %w", err)
+		}
+
+		env.BigQueryEmulatorID = bigqueryID
+		env.BigQueryEmulatorPort = bigqueryPort
+	}
+
+	if err := checkBigQueryEmulatorConnection("localhost:"+env.BigQueryEmulatorPort, 10*time.Second); err != nil {
+		env.ContainerManager.CleanupContainer(env.BigQueryEmulatorID)
+		bigqueryID, bigqueryPort, err := startBigQueryEmulator(ctx, env.ContainerManager, env.Config.NetworkName)
+		if err != nil {
+			return fmt.Errorf("failed to restart BigQuery emulator: %w", err)
+		}
+
+		if err := waitForBigQueryEmulator(bigqueryPort); err != nil {
+			return fmt.Errorf("BigQuery emulator failed to become ready after restart: %w", err)
+		}
+
+		env.BigQueryEmulatorID = bigqueryID
+		env.BigQueryEmulatorPort = bigqueryPort
+	}
+
+	return nil
+}
+
+func startBigQueryEmulator(ctx context.Context, cm *utils.ContainerManager, networkName string) (string, string, error) {
+	bigqueryConfig := &container.Config{
+		Image: "ghcr.io/goccy/bigquery-emulator:latest",
+		Cmd: []string{
+			"--project=test-project",
+			"--dataset=production_analytics,staging_data,temp_test",
+		},
+		ExposedPorts: nat.PortSet{
+			"9050/tcp": struct{}{},
+		},
+	}
+
+	bigqueryHostConfig := &container.HostConfig{
+		NetworkMode: container.NetworkMode(networkName),
+		PortBindings: nat.PortMap{
+			"9050/tcp": []nat.PortBinding{{HostIP: "0.0.0.0", HostPort: "9050"}},
+		},
+	}
+
+	bigqueryID, err := cm.StartContainer(bigqueryConfig, bigqueryHostConfig, "bigquery-emulator-test")
+	if err != nil {
+		return "", "", fmt.Errorf("failed to start BigQuery emulator container: %w", err)
+	}
+
+	return bigqueryID, "9050", nil
+}
+
+func waitForBigQueryEmulator(port string) error {
+	endpoint := fmt.Sprintf("localhost:%s", port)
+	deadline := time.Now().Add(60 * time.Second)
+
+	for time.Now().Before(deadline) {
+		if err := checkBigQueryEmulatorConnection(endpoint, 5*time.Second); err == nil {
+			return nil
+		}
+		time.Sleep(1 * time.Second)
+	}
+
+	return fmt.Errorf("timeout waiting for BigQuery emulator to become ready")
+}
+
+func checkBigQueryEmulatorConnection(endpoint string, timeout time.Duration) error {
+	client := &http.Client{Timeout: timeout}
+	url := fmt.Sprintf("http://%s", endpoint)
+
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
 
 	return nil
 }

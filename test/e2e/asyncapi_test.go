@@ -297,6 +297,7 @@ runs:
 		[]string{"ingest", "-c", "/tmp/config.yaml", "-k", env.APIKey,
 			"-H", "http://marmot-test:8080"},
 		configContent,
+		nil,
 		fmt.Sprintf("%s:/tmp/asyncapi-specs", specsDir),
 	)
 	require.NoError(t, err)
