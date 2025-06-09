@@ -14,11 +14,11 @@ This plugin enables fetching data from AsyncAPI specifications.
 
 ```yaml
 
-spec_path: "./specs"
+spec_path: "/app/api-specs"
+resolve_external_docs: true
 tags:
   - "asyncapi"
-  - "api"
-resolve_external_docs: true
+  - "specifications"
 
 ```
 

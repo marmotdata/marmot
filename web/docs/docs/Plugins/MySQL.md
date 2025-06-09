@@ -14,23 +14,15 @@ This plugin discovers databases and tables from MySQL instances.
 
 ```yaml
 
-host: "localhost"
+host: "mysql-prod.internal"
 port: 3306
-user: "root"
-password: "mysecretpassword"
-database: "myapp"
-tls: "false"
-include_columns: true
-include_row_counts: true
-discover_foreign_keys: true
-table_filter:
-  include:
-    - ".*"
-  exclude:
-    - "^temp_.*"
+user: "marmot_user"
+password: "mysql_secure_pass"
+database: "ecommerce"
+tls: "true"
 tags:
   - "mysql"
-  - "database"
+  - "ecommerce"
 
 ```
 

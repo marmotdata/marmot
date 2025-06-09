@@ -14,35 +14,14 @@ This plugin discovers databases and tables from PostgreSQL instances.
 
 ```yaml
 
-host: "localhost"
+host: "prod-postgres.company.com"
 port: 5432
-user: "postgres"
-password: "mysecretpassword"
-ssl_mode: "disable"
-include_databases: true
-include_columns: true
-include_row_counts: true
-discover_foreign_keys: true
-exclude_system_schemas: true
-schema_filter:
-  include:
-    - "^public$"
-    - "^app_.*"
-  exclude:
-    - "^test_.*"
-table_filter:
-  include:
-    - ".*"
-  exclude:
-    - "^temp_.*"
-database_filter:
-  include:
-    - ".*"
-  exclude:
-    - "^template.*"
+user: "marmot_reader"
+password: "secure_password_123"
+ssl_mode: "require"
 tags:
   - "postgres"
-  - "database"
+  - "production"
 
 ```
 

@@ -34,31 +34,11 @@ type Config struct {
 // +marmot:example-config
 var _ = `
 credentials:
-  region: "us-west-2"
-  profile: "default"
-  # Optional: manual credentials
-  id: ""
-  secret: ""
-  token: ""
-  # Optional: role assumption
-  role: ""
-  role_external_id: ""
-tags_to_metadata: true
-include_tags:
-  - "Environment"
-  - "Team"
-  - "Cost-Center"
+  region: "us-east-1" 
+  id: "<aws-secret-id>"
+  secret: "<aws-secret-key>"
 tags:
-  - "sqs"
-  - "aws"
-discover_dlq: true
-filter:
-  include:
-    - "^prod-.*"
-    - "^staging-.*"
-  exclude:
-    - ".*-test$"
-    - ".*-dev$"
+  - "sns"
 `
 
 type Source struct {
