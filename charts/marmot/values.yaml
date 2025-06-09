@@ -6,7 +6,7 @@ replicaCount: 1
 image:
   repository: ghcr.io/marmotdata/marmot
   pullPolicy: IfNotPresent
-  tag: "0.1.0"
+  tag: "0.2"
 
 imagePullSecrets: []
 nameOverride: ""
@@ -36,7 +36,7 @@ securityContext:
 
 service:
   type: ClusterIP
-  port: 80
+  port: 8080
   targetPort: 8080
 
 ingress:
