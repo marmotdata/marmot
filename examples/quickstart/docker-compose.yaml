@@ -17,7 +17,7 @@ services:
       retries: 5
 
   marmot:
-    image: ghcr.io/marmotdata/marmot:0.1.0
+    image: ghcr.io/marmotdata/marmot:0.2
     container_name: marmot-service
     depends_on:
       postgres:
@@ -26,6 +26,7 @@ services:
       - MARMOT_DATABASE_HOST=postgres
       - MARMOT_DATABASE_USER=marmot
       - MARMOT_DATABASE_PASSWORD=marmot
+      - MARMOT_AUTH_ANONYMOUS_ENABLED=true
     ports:
       - "8080:8080"
     healthcheck:
