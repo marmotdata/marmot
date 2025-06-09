@@ -1,6 +1,9 @@
 import React from "react";
 import Icon from "./Icon";
 
+import CodeBracketIcon from "~icons/heroicons/code-bracket-16-solid";
+import ChatBubbleIcon from "~icons/heroicons/chat-bubble-left-ellipsis";
+
 interface LineageNodeProps {
   title: string;
   type: string;
@@ -8,14 +11,17 @@ interface LineageNodeProps {
 }
 
 function LineageNode({
-  title,
+  name,
+  provider,
   type,
+  iconType,
   isCurrent = false,
+  onClick,
 }: LineageNodeProps): JSX.Element {
   return (
     <div
       className={`
-        node p-4 rounded-lg cursor-pointer min-w-[150px] border-solid
+        node p-2 rounded-lg cursor-pointer min-w-[150px] border-solid
         ${isCurrent
           ? "bg-orange-50 border-2 border-orange-600 dark:bg-[#4d4d4d]"
           : "bg-[#fefdf8] border border-[#dfdfdf] dark:bg-[#2e2e2e] dark:border-[#4d4d4d]"
@@ -25,16 +31,35 @@ function LineageNode({
       style={{
         borderStyle: "solid",
       }}
+      onClick={onClick}
     >
-      <div className="text-gray-900 dark:text-gray-100 font-medium text-center">
-        {title}
+      <div
+        className="text-xs text-gray-500 dark:text-gray-400 font-bold text-center pb-1 flex items-center justify-center gap-1"
+        style={{ borderBottom: "1px solid #e5e7eb" }}
+      >
+        <div className="flex items-center justify-center">
+          <div
+            className="text-gray-500 dark:text-gray-400"
+            style={{ filter: "grayscale(1) opacity(0.6)" }}
+          >
+            <Icon type={iconType} size="sm" />
+          </div>
+        </div>
+        <span className="uppercase">{type}</span>
+      </div>
+      <div className="name text-gray-900 dark:text-gray-100 text-center mt-2">
+        {name}
       </div>
       <div className="flex justify-center mt-2">
-        <div className="p-2">
+        <div className="icon-wrapper p-1">
           <div className="flex flex-col items-center gap-2">
-            <Icon type={type} />
+            <Icon
+              type={provider}
+              size="md"
+              className="text-gray-900 dark:text-gray-100"
+            />
             <span className="font-medium text-gray-900 dark:text-gray-100 text-center">
-              {type}
+              {provider}
             </span>
           </div>
         </div>
@@ -71,21 +96,33 @@ export default function Lineage(): JSX.Element {
               <div className="relative z-10 flex justify-center items-center gap-20">
                 {/* Kafka Node */}
                 <div>
-                  <LineageNode title="orders" type="Kafka" />
+                  <LineageNode
+                    name="orders"
+                    provider="Kafka"
+                    type="Topic"
+                    iconType={ChatBubbleIcon}
+                  />
                 </div>
 
                 {/* OrderAPI Node */}
                 <div>
                   <LineageNode
-                    title="orderapi"
-                    type="AsyncAPI"
+                    name="orderapi"
+                    provider="AsyncAPI"
+                    type="Service"
+                    iconType={CodeBracketIcon}
                     isCurrent={true}
                   />
                 </div>
 
                 {/* SNS Node */}
                 <div>
-                  <LineageNode title="order-placed" type="SNS" />
+                  <LineageNode
+                    name="order-placed"
+                    provider="SNS"
+                    type="Topic"
+                    iconType={ChatBubbleIcon}
+                  />
                 </div>
               </div>
 
