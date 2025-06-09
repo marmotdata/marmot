@@ -21,6 +21,8 @@ Marmot was designed with the following in mind:
 - **Visualize data flows with interactive graphs:** Track dependencies and analyze impact through comprehensive lineage visualization
 - **Documentation and governance:** Markdown documentation support with tagging and classification capabilities
 
+https://github.com/user-attachments/assets/a4a72ca2-c0be-4c63-ab52-00c71adc4f4a
+
 ## 🔌Supported Data Sources
 
 Marmot offers multiple ways to ingest assets: through its CLI, API, or infrastructure-as-code solutions like Terraform and Pulumi. The CLI features a growing ecosystem of plugins with current support for Kafka, AsyncAPI, PostgreSQL, SQS, SNS, and many others. For assets not covered by existing plugins, Marmot's flexible API and infrastructure-as-code providers enable ingestion of virtually any asset type you need.
