@@ -39,11 +39,11 @@ type Config struct {
 // Example configuration for the plugin
 // +marmot:example-config
 var _ = `
-spec_path: "./specs"
+spec_path: "/app/api-specs"
+resolve_external_docs: true
 tags:
   - "asyncapi"
-  - "api"
-resolve_external_docs: true
+  - "specifications"
 `
 
 type Source struct {

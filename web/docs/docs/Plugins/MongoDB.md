@@ -14,32 +14,15 @@ This plugin discovers databases and collections from MongoDB instances.
 
 ```yaml
 
-host: "localhost"
+host: "mongo-cluster.company.com"
 port: 27017
-user: "mongoadmin"
-password: "secret"
-tls: false
-include_databases: true
-include_collections: true
-include_views: true
-include_indexes: true
-sample_schema: true
-sample_size: 1000
-use_random_sampling: true
-exclude_system_dbs: true
-database_filter:
-  include:
-    - ".*"
-  exclude:
-    - "^test_.*"
-collection_filter:
-  include:
-    - ".*"
-  exclude:
-    - "^system\\."
+user: "analytics_reader"
+password: "mongo_pass_456"
+auth_source: "admin"
+tls: true
 tags:
   - "mongodb"
-  - "nosql-database"
+  - "analytics"
 
 ```
 

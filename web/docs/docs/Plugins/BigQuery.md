@@ -14,28 +14,8 @@ This plugin discovers datasets and tables from Google BigQuery projects.
 
 ```yaml
 
-project_id: "my-gcp-project"
-credentials_path: "/path/to/service-account.json"
-use_default_credentials: false
-include_datasets: true
-include_table_stats: true
-include_views: true
-include_external_tables: true
-exclude_system_datasets: true
-max_concurrent_requests: 10
-dataset_filter:
-  include:
-    - "^prod_.*"
-    - "^analytics_.*"
-  exclude:
-    - "^temp_.*"
-    - "^test_.*"
-table_filter:
-  include:
-    - ".*"
-  exclude:
-    - "^_.*"
-    - "^temp_.*"
+project_id: "company-data-warehouse"
+credentials_path: "/etc/marmot/bq-service-account.json"
 tags:
   - "bigquery"
   - "data-warehouse"

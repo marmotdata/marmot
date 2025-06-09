@@ -65,37 +65,18 @@ type SchemaRegistryConfig struct {
 // Example configuration for the plugin
 // +marmot:example-config
 var _ = `
-bootstrap_servers: "localhost:9092"
-client_id: "marmot-kafka-plugin"
-client_timeout_seconds: 60
+bootstrap_servers: "kafka-1.prod.com:9092,kafka-2.prod.com:9092"
+client_id: "marmot-discovery"
 authentication:
-  type: "sasl_plaintext"
-  username: "username"
-  password: "password"
+  type: "sasl_ssl"
+  username: "marmot-service"
+  password: "kafka_secret_789"
   mechanism: "PLAIN"
 tls:
   enabled: true
-  cert_path: "/path/to/cert.pem"
-  key_path: "/path/to/key.pem"
-  ca_cert_path: "/path/to/ca.pem"
-  skip_verify: false
-schema_registry:
-  url: "http://localhost:8081"
-  enabled: true
-  config:
-    basic.auth.user.info: "username:password"
-topic_filter:
-  include:
-    - "^prod-.*"
-    - "^staging-.*"
-  exclude:
-    - ".*-test$"
-    - ".*-dev$"
-include_partition_info: true
-include_topic_config: true
 tags:
   - "kafka"
-  - "messaging"
+  - "streaming"
 `
 
 type Source struct {
