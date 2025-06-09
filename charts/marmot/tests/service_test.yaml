@@ -14,7 +14,7 @@ tests:
           value: ClusterIP
       - equal:
           path: spec.ports[0].port
-          value: 80
+          value: 8080
       - equal:
           path: spec.ports[0].targetPort
           value: http

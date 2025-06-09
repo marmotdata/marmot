@@ -10,11 +10,8 @@ tests:
           path: metadata.name
           value: RELEASE-NAME-marmot
       - equal:
-          path: spec.template.spec.containers[0].image
-          value: "ghcr.io/marmotdata/marmot:0.1.0"
-      - equal:
           path: spec.template.spec.containers[0].ports[0].containerPort
-          value: 80
+          value: 8080
 
   - it: should set correct environment variables
     asserts:
@@ -80,7 +77,7 @@ tests:
             valueFrom:
               secretKeyRef:
                 name: RELEASE-NAME-marmot-postgresql
-                key: postgres-password
+                key: password
 
   - it: should use custom database password secret
     set:

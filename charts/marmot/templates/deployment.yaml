@@ -93,7 +93,7 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "marmot.fullname" . }}-postgresql
-                  key: postgres-password
+                  key: password
               {{- else if .Values.config.database.passwordSecretRef }}
               {{- if and .Values.config.database.password .Values.config.database.passwordSecretRef }}
               {{- fail "Cannot specify both config.database.password and config.database.passwordSecretRef" }}
