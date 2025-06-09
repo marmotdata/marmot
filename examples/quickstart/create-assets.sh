@@ -2,7 +2,7 @@
 set -e
 
 echo "Installing required packages..."
-apk add --no-cache curl
+apk add --no-cache curl jq
 
 echo "Using Marmot API at: $MARMOT_API_URL"
 
@@ -152,7 +152,8 @@ create_lineage() {
 
 echo "Starting asset creation..."
 
-kafka_schema='{
+# Define schema as object, then stringify it
+kafka_schema_obj='{
   "message": {
     "type": "object",
     "required": ["event_id", "customer_id", "event_type", "timestamp"],
@@ -237,6 +238,11 @@ kafka_schema='{
   }
 }'
 
+# Create separate schema strings for message and headers
+kafka_message_schema=$(echo "$kafka_schema_obj" | jq -c '.message' | sed 's/"/\\"/g')
+kafka_headers_schema=$(echo "$kafka_schema_obj" | jq -c '.headers' | sed 's/"/\\"/g')
+kafka_schema='{"message": "'"$kafka_message_schema"'", "headers": "'"$kafka_headers_schema"'"}'
+
 kafka_environments='{
   "dev": {
     "name": "Development",
@@ -271,7 +277,8 @@ create_asset \
   "$kafka_schema" \
   "$kafka_environments"
 
-postgres_schema='{
+# Define postgres schema object
+postgres_schema_obj='{
   "message": {
     "type": "object",
     "properties": {
@@ -346,6 +353,10 @@ postgres_schema='{
     }
   }
 }'
+
+# Convert postgres schema to schema format expected by API
+postgres_schema_str=$(echo "$postgres_schema_obj" | jq -c '.message' | sed 's/"/\\"/g')
+postgres_schema='{"message": "'"$postgres_schema_str"'"}'
 
 postgres_environments='{
   "dev": {
