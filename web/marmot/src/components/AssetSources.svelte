@@ -43,11 +43,11 @@
 								</p>
 							</div>
 						</div>
-						<span
-							class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100"
-						>
-							Priority: {source.priority}
-						</span>
+						<!-- <span -->
+						<!-- 	class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-100" -->
+						<!-- > -->
+						<!-- 	Priority: {source.priority} -->
+						<!-- </span> -->
 					</div>
 					{#if expandedSources.has(source.name) && source.properties}
 						<div class="mt-4 pl-6">

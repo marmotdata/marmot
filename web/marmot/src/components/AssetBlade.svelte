@@ -144,7 +144,7 @@
 						</div>
 					</div>
 				{:else}
-					<a href={`/assets/${asset.id}`} class="block">
+					<a href={`${fullViewUrl}`} class="block">
 						<div
 							class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-orange-400 transition-colors"
 						>

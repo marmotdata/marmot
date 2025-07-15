@@ -44,6 +44,11 @@
 		activeTab = tabName;
 	}
 
+	function formatEnumDisplay(enumValues: string[]): string {
+		const joined = enumValues.join(', ');
+		return joined.length > 50 ? joined.substring(0, 47) + '...' : joined;
+	}
+
 	$: activeFields =
 		activeTab && processedSchemas[activeTab] ? processedSchemas[activeTab].fields : [];
 	$: activeExample =
@@ -186,8 +191,17 @@
 											{field.type}
 										</span>
 										{#if field.enum}
-											<div class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-												Enum: {field.enum.join(', ')}
+											<div class="mt-1 text-xs text-gray-500 dark:text-gray-400 relative group">
+												<span class="cursor-help">
+													{formatEnumDisplay(field.enum)}
+												</span>
+												<div
+													class="absolute z-10 invisible group-hover:visible bg-gray-900 dark:bg-gray-700 text-white text-xs rounded px-3 py-2 mt-1 left-0 min-w-max max-w-sm shadow-lg"
+												>
+													{#each field.enum as value}
+														<div class="py-0.5">{value}</div>
+													{/each}
+												</div>
 											</div>
 										{/if}
 									</td>
