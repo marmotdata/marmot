@@ -161,15 +161,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("logging.format", "json")
 
 	// Auth defaults
-	v.SetDefault("auth.providers", map[string]*OAuthProviderConfig{
-		"okta": {
-			Enabled:     false,
-			Type:        "okta",
-			Name:        "Okta",
-			AllowSignup: true,
-			Scopes:      []string{"openid", "profile", "email", "groups", "offline_access"},
-		},
-	})
+	v.SetDefault("auth.providers.okta.type", "okta")
+    	v.SetDefault("auth.providers.okta.name", "Okta")
+   	v.SetDefault("auth.providers.okta.allow_signup", true)
+    	v.SetDefault("auth.providers.okta.scopes", []string{"openid", "profile", "email", "groups", "offline_access"})
 }
 
 // BuildDSN builds a PostgreSQL connection string from config
