@@ -23,6 +23,23 @@ tags:
 
 ```
 
+## Configuration
+The following configuration options are available:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| aws | AWSConfig | false |  |
+| credentials | AWSCredentials | false | AWS credentials configuration |
+| external_links | []ExternalLink | false |  |
+| filter | Filter | false | Filter patterns for AWS resources |
+| global_documentation | []string | false |  |
+| global_documentation_position | string | false |  |
+| include_tags | []string | false | List of AWS tags to include as metadata |
+| merge | MergeConfig | false |  |
+| metadata | MetadataConfig | false |  |
+| tags | TagsConfig | false |  |
+| tags_to_metadata | bool | false | Convert AWS tags to Marmot metadata |
+
 ## Available Metadata
 
 The following metadata fields are available:

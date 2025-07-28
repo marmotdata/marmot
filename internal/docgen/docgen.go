@@ -82,10 +82,68 @@ type AdditionalSection struct {
 	Content string
 }
 
+// TypeRegistry holds all discovered types for resolution
+type TypeRegistry struct {
+	types map[string]*ast.TypeSpec
+	files map[string]*ast.File
+}
+
+func NewTypeRegistry() *TypeRegistry {
+	return &TypeRegistry{
+		types: make(map[string]*ast.TypeSpec),
+		files: make(map[string]*ast.File),
+	}
+}
+
+func (tr *TypeRegistry) addFile(file *ast.File) {
+	tr.files[file.Name.Name] = file
+
+	// Extract all type declarations
+	ast.Inspect(file, func(n ast.Node) bool {
+		if genDecl, ok := n.(*ast.GenDecl); ok && genDecl.Tok == token.TYPE {
+			for _, spec := range genDecl.Specs {
+				if typeSpec, ok := spec.(*ast.TypeSpec); ok {
+					// Store both local name and package-qualified name
+					tr.types[typeSpec.Name.Name] = typeSpec
+					if file.Name != nil {
+						tr.types[file.Name.Name+"."+typeSpec.Name.Name] = typeSpec
+					}
+				}
+			}
+		}
+		return true
+	})
+}
+
+func (tr *TypeRegistry) resolveType(typeName string) *ast.TypeSpec {
+	// Try direct lookup first
+	if typeSpec, ok := tr.types[typeName]; ok {
+		return typeSpec
+	}
+
+	// Try without package prefix if it exists
+	parts := strings.Split(typeName, ".")
+	if len(parts) > 1 {
+		simpleName := parts[len(parts)-1]
+		if typeSpec, ok := tr.types[simpleName]; ok {
+			return typeSpec
+		}
+		// Also try with the package prefix
+		packageName := parts[0]
+		if typeSpec, ok := tr.types[packageName+"."+simpleName]; ok {
+			return typeSpec
+		}
+	}
+
+	return nil
+}
+
 func GeneratePluginDocs(pluginPath string, outputDir string) error {
 	fset := token.NewFileSet()
 	pluginDoc := &PluginDoc{}
+	registry := NewTypeRegistry()
 
+	// First pass: collect all type definitions from plugin directory
 	err := filepath.Walk(pluginPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -96,8 +154,59 @@ func GeneratePluginDocs(pluginPath string, outputDir string) error {
 			if err != nil {
 				return fmt.Errorf("parsing file %s: %w", path, err)
 			}
+			registry.addFile(file)
+		}
+		return nil
+	})
 
-			processFile(pluginDoc, file)
+	if err != nil {
+		return fmt.Errorf("walking plugin directory for types: %w", err)
+	}
+
+	// Also scan for common plugin types in parent directories
+	pluginParent := filepath.Dir(pluginPath)
+	for i := 0; i < 3; i++ { // Look up to 3 levels up
+		pluginDir := filepath.Join(pluginParent, "plugin")
+		if _, err := os.Stat(pluginDir); err == nil {
+			err := filepath.Walk(pluginDir, func(path string, info os.FileInfo, err error) error {
+				if err != nil {
+					return err
+				}
+				if !info.IsDir() && strings.HasSuffix(path, ".go") {
+					file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+					if err != nil {
+						return nil // Skip files that don't parse
+					}
+					registry.addFile(file)
+				}
+				return nil
+			})
+			if err == nil {
+				break // Found and processed plugin directory
+			}
+		}
+		pluginParent = filepath.Dir(pluginParent)
+	}
+
+	// Debug: print found types
+	fmt.Printf("Found %d types in registry:\n", len(registry.types))
+	for typeName := range registry.types {
+		fmt.Printf("  - %s\n", typeName)
+	}
+
+	// Second pass: process files for documentation
+	err = filepath.Walk(pluginPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		if !info.IsDir() && strings.HasSuffix(path, ".go") {
+			file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+			if err != nil {
+				return fmt.Errorf("parsing file %s: %w", path, err)
+			}
+
+			processFile(pluginDoc, file, registry)
 		}
 
 		return nil
@@ -111,6 +220,12 @@ func GeneratePluginDocs(pluginPath string, outputDir string) error {
 		return fmt.Errorf("no plugin documentation found")
 	}
 
+	// Remove duplicates and sort
+	pluginDoc.ConfigProperties = removeDuplicateProperties(pluginDoc.ConfigProperties)
+	sort.Slice(pluginDoc.ConfigProperties, func(i, j int) bool {
+		return pluginDoc.ConfigProperties[i].Name < pluginDoc.ConfigProperties[j].Name
+	})
+
 	docsDir := filepath.Join(outputDir, "Plugins")
 	if err := os.MkdirAll(docsDir, 0755); err != nil {
 		return fmt.Errorf("creating docs directory: %w", err)
@@ -120,6 +235,20 @@ func GeneratePluginDocs(pluginPath string, outputDir string) error {
 	fmt.Printf("Writing documentation to: %s\n", fileName)
 
 	return writeDoc(pluginDoc, fileName)
+}
+
+func removeDuplicateProperties(properties []PropertyDoc) []PropertyDoc {
+	seen := make(map[string]bool)
+	var result []PropertyDoc
+
+	for _, prop := range properties {
+		if !seen[prop.Name] {
+			seen[prop.Name] = true
+			result = append(result, prop)
+		}
+	}
+
+	return result
 }
 
 func parseMarkers(text string) map[string]string {
@@ -140,7 +269,7 @@ func parseMarkers(text string) map[string]string {
 	return markers
 }
 
-func processFile(pluginDoc *PluginDoc, file *ast.File) {
+func processFile(pluginDoc *PluginDoc, file *ast.File, registry *TypeRegistry) {
 	// Package docs
 	if file.Doc != nil {
 		markers := parseMarkers(file.Doc.Text())
@@ -173,7 +302,7 @@ func processFile(pluginDoc *PluginDoc, file *ast.File) {
 
 						if hasConfigMarker || ts.Name.Name == "Config" {
 							if st, ok := ts.Type.(*ast.StructType); ok {
-								pluginDoc.ConfigProperties = processStructFields(st)
+								pluginDoc.ConfigProperties = processStructFieldsWithRegistry(st, registry, make(map[string]bool))
 							}
 						}
 
@@ -188,7 +317,7 @@ func processFile(pluginDoc *PluginDoc, file *ast.File) {
 
 						if hasMetadataMarker {
 							if st, ok := ts.Type.(*ast.StructType); ok {
-								fields := processStructFields(st)
+								fields := processStructFieldsWithRegistry(st, registry, make(map[string]bool))
 								pluginDoc.MetadataFields = append(pluginDoc.MetadataFields, fields...)
 							}
 						}
@@ -227,10 +356,25 @@ func processFile(pluginDoc *PluginDoc, file *ast.File) {
 	})
 }
 
-func processStructFields(st *ast.StructType) []PropertyDoc {
+func processStructFieldsWithRegistry(st *ast.StructType, registry *TypeRegistry, visited map[string]bool) []PropertyDoc {
 	var fields []PropertyDoc
+
 	for _, field := range st.Fields.List {
 		if len(field.Names) == 0 {
+			typeName := parseFieldTypeForLookup(field.Type)
+			fmt.Printf("Processing embedded field: %s\n", typeName)
+			if typeName != "" && !visited[typeName] {
+				visited[typeName] = true
+				if resolvedType := registry.resolveType(typeName); resolvedType != nil {
+					fmt.Printf("  Resolved %s successfully\n", typeName)
+					if embeddedStruct, ok := resolvedType.Type.(*ast.StructType); ok {
+						embeddedFields := processStructFieldsWithRegistry(embeddedStruct, registry, visited)
+						fields = append(fields, embeddedFields...)
+					}
+				} else {
+					fmt.Printf("  Failed to resolve %s\n", typeName)
+				}
+			}
 			continue
 		}
 
@@ -238,10 +382,10 @@ func processStructFields(st *ast.StructType) []PropertyDoc {
 		var jsonName string
 		var description string
 		var required bool
+		var name string
 
 		fieldType = parseFieldType(field.Type)
 
-		// Get description from field doc comment
 		if field.Doc != nil {
 			desc := field.Doc.Text()
 			desc = strings.TrimPrefix(desc, "//")
@@ -252,16 +396,36 @@ func processStructFields(st *ast.StructType) []PropertyDoc {
 		if field.Tag != nil {
 			tag := reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
 			if jsonTag := tag.Get("json"); jsonTag != "" && jsonTag != "-" {
-				jsonName = strings.Split(jsonTag, ",")[0]
+				parts := strings.Split(jsonTag, ",")
+				jsonName = parts[0]
+
+				for _, part := range parts {
+					if part == "inline" {
+						typeName := parseFieldTypeForLookup(field.Type)
+						fmt.Printf("Processing inline field: %s\n", typeName)
+						if typeName != "" && !visited[typeName] {
+							visited[typeName] = true
+							if resolvedType := registry.resolveType(typeName); resolvedType != nil {
+								fmt.Printf("  Resolved %s successfully\n", typeName)
+								if inlineStruct, ok := resolvedType.Type.(*ast.StructType); ok {
+									inlineFields := processStructFieldsWithRegistry(inlineStruct, registry, visited)
+									fields = append(fields, inlineFields...)
+								}
+							} else {
+								fmt.Printf("  Failed to resolve %s\n", typeName)
+							}
+						}
+						goto nextField
+					}
+				}
 			}
-			// Use tag description if available, otherwise keep doc comment
 			if tagDesc := tag.Get("description"); tagDesc != "" {
 				description = tagDesc
 			}
 			required = tag.Get("required") == "true"
 		}
 
-		name := jsonName
+		name = jsonName
 		if name == "" {
 			name = field.Names[0].Name
 		}
@@ -272,9 +436,28 @@ func processStructFields(st *ast.StructType) []PropertyDoc {
 			Description: description,
 			Required:    required,
 		})
+
+	nextField:
 	}
+
 	return fields
 }
+
+// parseFieldTypeForLookup extracts the type name for registry lookup
+func parseFieldTypeForLookup(expr ast.Expr) string {
+	switch t := expr.(type) {
+	case *ast.Ident:
+		return t.Name
+	case *ast.StarExpr:
+		return parseFieldTypeForLookup(t.X)
+	case *ast.SelectorExpr:
+		if ident, ok := t.X.(*ast.Ident); ok {
+			return fmt.Sprintf("%s.%s", ident.Name, t.Sel.Name)
+		}
+	}
+	return ""
+}
+
 func parseFieldType(expr ast.Expr) string {
 	switch t := expr.(type) {
 	case *ast.Ident:
@@ -315,3 +498,4 @@ func writeDoc(doc *PluginDoc, fileName string) error {
 
 	return nil
 }
+
