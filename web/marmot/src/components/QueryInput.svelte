@@ -28,6 +28,7 @@
 	let suggestions: { type: string; value: string; display: string; count?: number }[] = [];
 	let selectedIndex = -1;
 	let suggestionStartPos = 0;
+	let lastFetchedValues: { [key: string]: MetadataValueSuggestion[] } = {};
 
 	const tokenColors: { [key: string]: string } = {
 		field: 'text-blue-500',
@@ -271,7 +272,7 @@
 		}
 	}
 
-	const debouncedFetchMetadataValues = debounce(fetchMetadataValues, 300);
+	const debouncedFetchMetadataValues = debounce(fetchMetadataValues, 150);
 
 	async function updateSuggestions() {
 		if (!input) return;
@@ -315,46 +316,68 @@
 					.sort((a, b) => (b.count || 0) - (a.count || 0));
 			} else {
 				const searchPathClean = searchPath.endsWith('.') ? searchPath.slice(0, -1) : searchPath;
+				const searchParts = searchPathClean.split('.');
 
-				const filteredFields = fields.filter((f) => {
-					const fieldId = f.field.toLowerCase();
-					return fieldId.startsWith(searchPathClean + '.') && fieldId !== searchPathClean;
-				});
-
-				if (filteredFields.length === 0 && searchPath.endsWith('.')) {
-					const parentField = fields.find((f) => f.field.toLowerCase() === searchPathClean);
-					if (!parentField || parentField.type !== 'object') {
-						suggestions = operators;
-					}
-				} else {
-					suggestions = filteredFields
-						.map((f) => {
-							const remainingPath = f.field.substring(searchPathClean.length + 1);
-							const nextPart = remainingPath.split('.')[0];
-							const isObject =
-								f.types[0] === 'object' ||
-								fields.some((field) =>
-									field.field.toLowerCase().startsWith(f.field.toLowerCase() + '.')
-								);
-							return {
-								type: isObject ? 'object' : 'value',
-								value: searchPathClean + '.' + nextPart,
-								display: nextPart,
-								count: f.count
-							};
-						})
-						.filter((s) => s.display)
+				if (searchParts.length === 1) {
+					const currentTerm = searchParts[0];
+					suggestions = fields
+						.filter((f) => f.path_parts.length > 0)
+						.map((f) => ({
+							type: f.types[0],
+							value: f.path_parts[0],
+							display: f.path_parts[0],
+							count: f.count
+						}))
 						.filter(
 							(suggestion, index, self) =>
 								index === self.findIndex((s) => s.display === suggestion.display)
 						)
+						.filter((suggestion) => suggestion.display.toLowerCase().startsWith(currentTerm))
 						.sort((a, b) => (b.count || 0) - (a.count || 0));
+				} else {
+					const filteredFields = fields.filter((f) => {
+						const fieldId = f.field.toLowerCase();
+						return fieldId.startsWith(searchPathClean + '.') && fieldId !== searchPathClean;
+					});
 
-					if (!searchPath.endsWith('.') && parts[parts.length - 1]) {
-						const lastPart = parts[parts.length - 1].toLowerCase();
-						suggestions = suggestions.filter((suggestion) =>
-							suggestion.display.toLowerCase().startsWith(lastPart)
-						);
+					if (filteredFields.length === 0 && searchPath.endsWith('.')) {
+						const parentField = fields.find((f) => f.field.toLowerCase() === searchPathClean);
+						if (!parentField || parentField.type !== 'object') {
+							suggestions = operators;
+						}
+					} else {
+						suggestions = filteredFields
+							.map((f) => {
+								const remainingPath = f.field.substring(searchPathClean.length + 1);
+								const nextPart = remainingPath.split('.')[0];
+								const isObject =
+									f.types[0] === 'object' ||
+									fields.some((field) =>
+										field.field.toLowerCase().startsWith(f.field.toLowerCase() + '.')
+									);
+								return {
+									type: isObject ? 'object' : 'value',
+									value: searchPathClean + '.' + nextPart,
+									display: nextPart,
+									count: f.count
+								};
+							})
+							.filter((s) => s.display)
+							.filter(
+								(suggestion, index, self) =>
+									index === self.findIndex((s) => s.display === suggestion.display)
+							)
+							.sort((a, b) => (b.count || 0) - (a.count || 0));
+
+						if (!searchPath.endsWith('.') && parts.length > 0) {
+							const lastPart = parts[parts.length - 1];
+							if (lastPart && lastPart.length > 0) {
+								const filterTerm = lastPart.toLowerCase();
+								suggestions = suggestions.filter((suggestion) =>
+									suggestion.display.toLowerCase().startsWith(filterTerm)
+								);
+							}
+						}
 					}
 				}
 			}
@@ -365,8 +388,28 @@
 			}
 		} else if (fieldInfo.hasOperator) {
 			const prefix = fieldInfo.valuePrefix || '';
+			const fieldKey = fieldInfo.field!;
+
+			if (lastFetchedValues[fieldKey]) {
+				suggestions = lastFetchedValues[fieldKey]
+					.filter((v) => v.value !== null)
+					.map((v) => ({
+						type: 'value',
+						value: v.value,
+						display: v.value
+					}));
+
+				if (prefix && prefix.trim().length > 0) {
+					const filterTerm = prefix.toLowerCase();
+					suggestions = suggestions.filter((suggestion) =>
+						suggestion.display.toLowerCase().includes(filterTerm)
+					);
+				}
+			}
+
 			const values = await debouncedFetchMetadataValues(fieldInfo.field!, prefix);
 			if (values) {
+				lastFetchedValues[fieldKey] = values;
 				suggestions = values
 					.filter((v) => v.value !== null)
 					.map((v) => ({
@@ -374,6 +417,13 @@
 						value: v.value,
 						display: v.value
 					}));
+
+				if (prefix && prefix.trim().length > 0) {
+					const filterTerm = prefix.toLowerCase();
+					suggestions = suggestions.filter((suggestion) =>
+						suggestion.display.toLowerCase().includes(filterTerm)
+					);
+				}
 			}
 		}
 
@@ -415,28 +465,6 @@
 		}
 
 		return false;
-	}
-
-	function isValidQuery(query: string): boolean {
-		if (!query) return true;
-
-		if (query.includes('@metadata.')) {
-			const parts = query.split(' ');
-			for (const part of parts) {
-				if (part.startsWith('@metadata.')) {
-					if (!part.includes(':') || part.endsWith(':') || part === '@metadata.') {
-						return false;
-					}
-
-					const [, value] = part.split(':');
-					if (!value || value.trim() === '') {
-						return false;
-					}
-				}
-			}
-		}
-
-		return true;
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
