@@ -30,19 +30,26 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| host | string | false | PostgreSQL server hostname or IP address |
-| port | int | false | PostgreSQL server port (default: 5432) |
-| user | string | false | Username for authentication |
-| password | string | false | Password for authentication |
-| ssl_mode | string | false | SSL mode (disable, require, verify-ca, verify-full) |
-| include_databases | bool | false | Whether to discover databases |
-| include_columns | bool | false | Whether to include column information in table metadata |
-| include_row_counts | bool | false | Whether to include approximate row counts (requires analyze) |
-| discover_foreign_keys | bool | false | Whether to discover foreign key relationships |
-| schema_filter | plugin.Filter | false | Filter configuration for schemas |
-| table_filter | plugin.Filter | false | Filter configuration for tables |
+| aws | AWSConfig | false |  |
 | database_filter | plugin.Filter | false | Filter configuration for databases |
+| discover_foreign_keys | bool | false | Whether to discover foreign key relationships |
 | exclude_system_schemas | bool | false | Whether to exclude system schemas (pg_*) |
+| external_links | []ExternalLink | false |  |
+| global_documentation | []string | false |  |
+| global_documentation_position | string | false |  |
+| host | string | false | PostgreSQL server hostname or IP address |
+| include_columns | bool | false | Whether to include column information in table metadata |
+| include_databases | bool | false | Whether to discover databases |
+| include_row_counts | bool | false | Whether to include approximate row counts (requires analyze) |
+| merge | MergeConfig | false |  |
+| metadata | MetadataConfig | false |  |
+| password | string | false | Password for authentication |
+| port | int | false | PostgreSQL server port (default: 5432) |
+| schema_filter | plugin.Filter | false | Filter configuration for schemas |
+| ssl_mode | string | false | SSL mode (disable, require, verify-ca, verify-full) |
+| table_filter | plugin.Filter | false | Filter configuration for tables |
+| tags | TagsConfig | false |  |
+| user | string | false | Username for authentication |
 
 ## Available Metadata
 

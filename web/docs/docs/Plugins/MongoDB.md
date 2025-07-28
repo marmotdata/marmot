@@ -31,24 +31,31 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| connection_uri | string | false | MongoDB connection URI (overrides host/port/user/password) |
-| host | string | false | MongoDB server hostname or IP address |
-| port | int | false | MongoDB server port (default: 27017) |
-| user | string | false | Username for authentication |
-| password | string | false | Password for authentication |
 | auth_source | string | false | Authentication database name |
-| tls | bool | false | Enable TLS/SSL for connection |
-| tls_insecure | bool | false | Skip verification of server certificate |
-| include_databases | bool | false | Whether to discover databases |
+| aws | AWSConfig | false |  |
+| collection_filter | plugin.Filter | false | Filter configuration for collections |
+| connection_uri | string | false | MongoDB connection URI (overrides host/port/user/password) |
+| database_filter | plugin.Filter | false | Filter configuration for databases |
+| exclude_system_dbs | bool | false | Whether to exclude system databases (admin, config, local) |
+| external_links | []ExternalLink | false |  |
+| global_documentation | []string | false |  |
+| global_documentation_position | string | false |  |
+| host | string | false | MongoDB server hostname or IP address |
 | include_collections | bool | false | Whether to discover collections |
-| include_views | bool | false | Whether to include views |
+| include_databases | bool | false | Whether to discover databases |
 | include_indexes | bool | false | Whether to include index information |
+| include_views | bool | false | Whether to include views |
+| merge | MergeConfig | false |  |
+| metadata | MetadataConfig | false |  |
+| password | string | false | Password for authentication |
+| port | int | false | MongoDB server port (default: 27017) |
 | sample_schema | bool | false | Sample documents to infer schema |
 | sample_size | int | false | Number of documents to sample (default: 1000, -1 for entire collection) |
+| tags | TagsConfig | false |  |
+| tls | bool | false | Enable TLS/SSL for connection |
+| tls_insecure | bool | false | Skip verification of server certificate |
 | use_random_sampling | bool | false | Use random sampling for schema inference |
-| database_filter | plugin.Filter | false | Filter configuration for databases |
-| collection_filter | plugin.Filter | false | Filter configuration for collections |
-| exclude_system_dbs | bool | false | Whether to exclude system databases (admin, config, local) |
+| user | string | false | Username for authentication |
 
 ## Available Metadata
 

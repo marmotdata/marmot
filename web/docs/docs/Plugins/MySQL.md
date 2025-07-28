@@ -31,16 +31,23 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| host | string | false | MySQL server hostname or IP address |
-| port | int | false | MySQL server port (default: 3306) |
-| user | string | false | Username for authentication |
-| password | string | false | Password for authentication |
+| aws | AWSConfig | false |  |
 | database | string | false | Database name to connect to |
-| tls | string | false | TLS configuration (false, true, skip-verify, preferred) |
+| discover_foreign_keys | bool | false | Whether to discover foreign key relationships |
+| external_links | []ExternalLink | false |  |
+| global_documentation | []string | false |  |
+| global_documentation_position | string | false |  |
+| host | string | false | MySQL server hostname or IP address |
 | include_columns | bool | false | Whether to include column information in table metadata |
 | include_row_counts | bool | false | Whether to include approximate row counts |
-| discover_foreign_keys | bool | false | Whether to discover foreign key relationships |
+| merge | MergeConfig | false |  |
+| metadata | MetadataConfig | false |  |
+| password | string | false | Password for authentication |
+| port | int | false | MySQL server port (default: 3306) |
 | table_filter | plugin.Filter | false | Filter configuration for tables |
+| tags | TagsConfig | false |  |
+| tls | string | false | TLS configuration (false, true, skip-verify, preferred) |
+| user | string | false | Username for authentication |
 
 ## Available Metadata
 
