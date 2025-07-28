@@ -13,6 +13,8 @@
 	let checkingAnonymousMode = true;
 	let manualNavigation = false;
 
+	const appName = 'Marmot';
+
 	onMount(async () => {
 		checkingAnonymousMode = true;
 		await auth.checkAnonymousMode();
@@ -51,10 +53,6 @@
 		isDropdownOpen = false;
 	}
 
-	function dismissBanner() {
-		showBanner = false;
-	}
-
 	function handleLogout() {
 		withManualNav(() => {
 			auth.clearToken();
@@ -67,7 +65,23 @@
 			goto('/login');
 		});
 	}
+
+	function capitalizeWord(word: string): string {
+		return word.charAt(0).toUpperCase() + word.slice(1);
+	}
+
+	$: pathSegments = $page.url.pathname.split('/').filter(Boolean);
+	$: processedSegments = pathSegments.map((segment, index) =>
+		index < 2 ? capitalizeWord(segment) : segment
+	);
+	$: reversedSegments = [...processedSegments].reverse();
+	$: pageTitle = reversedSegments.join(' - ');
+	$: dynamicTitle = $page.url.pathname === '/' ? 'Marmot' : `${pageTitle} - Marmot`;
 </script>
+
+<svelte:head>
+	<title>{dynamicTitle}</title>
+</svelte:head>
 
 <svelte:window on:click={closeDropdown} />
 
