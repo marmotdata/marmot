@@ -139,25 +139,6 @@
 		return parts;
 	}
 
-	function getOperatorAtPosition(
-		value: string,
-		position: number
-	): { startPosition: number } | null {
-		const beforeCursor = value.substring(0, position);
-		const lastMetadataField = beforeCursor.lastIndexOf('@metadata.');
-
-		if (lastMetadataField === -1) return null;
-
-		const afterMetadata = value.substring(lastMetadataField);
-		const fieldMatch = afterMetadata.match(/^@metadata\.([a-zA-Z0-9_.]*)\s*$/);
-
-		if (!fieldMatch) return null;
-
-		return {
-			startPosition: lastMetadataField + fieldMatch[0].length
-		};
-	}
-
 	function getMetadataFieldAtPosition(
 		value: string,
 		position: number
@@ -521,11 +502,6 @@
 		}
 	}
 
-	function handleSubmit() {
-		showDropdown = false;
-		onSubmit();
-	}
-
 	function applySuggestion(suggestion: { type: string; value: string; display: string }) {
 		if (!input) return;
 
@@ -551,8 +527,6 @@
 			const lastMetadataIndex = value.lastIndexOf(metadataPrefix);
 			const beforeMetadata = value.substring(0, lastMetadataIndex);
 			const afterMetadata = value.substring(lastMetadataIndex + metadataPrefix.length);
-
-			const currentField = afterMetadata.split(/[\s:]/)[0];
 
 			value =
 				beforeMetadata +
