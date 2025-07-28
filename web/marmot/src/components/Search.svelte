@@ -64,7 +64,7 @@
 	}
 
 	function handleKeydown(event: KeyboardEvent) {
-		if (queryInput?.showDropdown) {
+		if (queryInput && 'showDropdown' in queryInput && queryInput.showDropdown) {
 			return;
 		}
 
@@ -74,7 +74,7 @@
 			return;
 		}
 
-		if (showResults && searchResults.length > 0) {
+		if (showResults && searchResults && searchResults.length > 0) {
 			if (event.key === 'ArrowDown') {
 				event.preventDefault();
 				selectedSearchIndex = (selectedSearchIndex + 1) % searchResults.length;
@@ -136,7 +136,7 @@
 		onSubmit={handleSubmit}
 	/>
 
-	{#if showResults && searchResults.length > 0}
+	{#if showResults && searchResults && searchResults.length > 0}
 		<div
 			class="absolute z-40 w-full mt-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 dark:border-gray-700 rounded-lg shadow-lg dark:shadow-lg-white overflow-hidden divide-y divide-gray-200 dark:divide-gray-700 dark:divide-gray-700 dark:divide-gray-700"
 		>
