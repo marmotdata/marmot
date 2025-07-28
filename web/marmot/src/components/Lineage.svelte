@@ -242,7 +242,7 @@
 			id: `${edge.source}-${edge.target}`,
 			source: edge.source,
 			target: edge.target,
-			type: 'smoothstep',
+			type: 'bezier',
 			animated: true,
 			style: edge.job_mrn ? 'stroke: #22c55e; stroke-width: 2px;' : 'stroke: #94a3b8;'
 		}));
@@ -347,7 +347,7 @@
 					maxZoom={1}
 					initialZoom={0.7}
 					defaultEdgeOptions={{
-						type: 'smoothstep',
+						type: 'bezier',
 						animated: true,
 						style: 'stroke-width: 2; stroke: #d1d5db;'
 					}}
