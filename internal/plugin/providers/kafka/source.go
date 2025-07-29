@@ -69,8 +69,8 @@ bootstrap_servers: "kafka-1.prod.com:9092,kafka-2.prod.com:9092"
 client_id: "marmot-discovery"
 authentication:
   type: "sasl_ssl"
-  username: "marmot-service"
-  password: "kafka_secret_789"
+  username: "your-api-key"
+  password: "your-api-secret"
   mechanism: "PLAIN"
 tls:
   enabled: true
