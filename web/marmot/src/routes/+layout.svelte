@@ -71,7 +71,8 @@
 	}
 
 	$: pathSegments = $page.url.pathname.split('/').filter(Boolean);
-	$: processedSegments = pathSegments.map((segment, index) =>
+	$: decodedSegments = pathSegments.map((segment) => decodeURIComponent(segment));
+	$: processedSegments = decodedSegments.map((segment, index) =>
 		index < 2 ? capitalizeWord(segment) : segment
 	);
 	$: reversedSegments = [...processedSegments].reverse();
