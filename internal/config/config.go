@@ -126,6 +126,8 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.anonymous.enabled")
 	v.BindEnv("auth.anonymous.role")
 
+	v.BindEnv("server.root_url")
+
 	// Set defaults
 	setDefaults(v)
 
