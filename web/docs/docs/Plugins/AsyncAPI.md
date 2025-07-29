@@ -6,8 +6,6 @@ status: experimental
 
 # AsyncAPI
 
-This plugin enables fetching data from AsyncAPI specifications.
-
 **Status:** experimental
 
 ## Example Configuration

@@ -6,8 +6,6 @@ status: experimental
 
 # PostgreSQL
 
-This plugin discovers databases and tables from PostgreSQL instances.
-
 **Status:** experimental
 
 ## Example Configuration

@@ -36,7 +36,8 @@ clean:
 
 generate:
 	# Cleanup old docs before generating
-	rm -r web/docs/docs/Plugins/*
+	find web/docs/docs/Plugins -type f ! -name "index.md" ! -name "_category_.json" -delete
+	find web/docs/docs/Plugins -type d -empty -delete
 	go generate ./...
 
 lint:

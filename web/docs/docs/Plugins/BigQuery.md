@@ -6,8 +6,6 @@ status: experimental
 
 # BigQuery
 
-This plugin discovers datasets and tables from Google BigQuery projects.
-
 **Status:** experimental
 
 ## Example Configuration

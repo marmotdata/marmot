@@ -6,8 +6,6 @@ status: experimental
 
 # MongoDB
 
-This plugin discovers databases and collections from MongoDB instances.
-
 **Status:** experimental
 
 ## Example Configuration

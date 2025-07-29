@@ -23,10 +23,9 @@ status: {{ .Status }}
 
 # {{ .Name }}
 
-{{ .Description }}
+**Status:** {{ .Status }}{{if .AdditionalContent}}
 
-**Status:** {{ .Status }}{{if .SupportedServices}}
-
+{{ .AdditionalContent }}{{end}}{{if .SupportedServices}}
 ## Supported Services{{range .SupportedServices}}
 - {{ . }}{{end}}{{end}}{{if .ExampleConfig}}
 
@@ -67,6 +66,7 @@ type PluginDoc struct {
 	SupportedServices  []string
 	ExampleConfig      string
 	Status             string
+	AdditionalContent  string
 	AdditionalSections []AdditionalSection
 }
 
@@ -188,12 +188,6 @@ func GeneratePluginDocs(pluginPath string, outputDir string) error {
 		pluginParent = filepath.Dir(pluginParent)
 	}
 
-	// Debug: print found types
-	fmt.Printf("Found %d types in registry:\n", len(registry.types))
-	for typeName := range registry.types {
-		fmt.Printf("  - %s\n", typeName)
-	}
-
 	// Second pass: process files for documentation
 	err = filepath.Walk(pluginPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil {
@@ -220,6 +214,8 @@ func GeneratePluginDocs(pluginPath string, outputDir string) error {
 		return fmt.Errorf("no plugin documentation found")
 	}
 
+	pluginDoc.AdditionalContent = loadAdditionalMarkdown(pluginDoc.Name, outputDir)
+
 	// Remove duplicates and sort
 	pluginDoc.ConfigProperties = removeDuplicateProperties(pluginDoc.ConfigProperties)
 	sort.Slice(pluginDoc.ConfigProperties, func(i, j int) bool {
@@ -235,6 +231,47 @@ func GeneratePluginDocs(pluginPath string, outputDir string) error {
 	fmt.Printf("Writing documentation to: %s\n", fileName)
 
 	return writeDoc(pluginDoc, fileName)
+}
+
+func loadAdditionalMarkdown(pluginName string, docsOutputDir string) string {
+	// Go up one level from docsOutputDir and then into plugin-docs
+	baseDir := filepath.Dir(docsOutputDir)
+	pluginDocsDir := filepath.Join(baseDir, "plugin-docs")
+
+	fmt.Printf("docsOutputDir: %s\n", docsOutputDir)
+	fmt.Printf("baseDir: %s\n", baseDir)
+	fmt.Printf("pluginDocsDir: %s\n", pluginDocsDir)
+
+	entries, err := os.ReadDir(pluginDocsDir)
+	if err != nil {
+		fmt.Printf("Error reading directory %s: %v\n", pluginDocsDir, err)
+		return ""
+	}
+
+	fmt.Printf("Files found in %s:\n", pluginDocsDir)
+	for _, entry := range entries {
+		fmt.Printf("  - %s\n", entry.Name())
+	}
+
+	targetFileName := strings.ToLower(pluginName + ".md")
+	fmt.Printf("Looking for file: %s\n", targetFileName)
+
+	for _, entry := range entries {
+		if !entry.IsDir() && strings.ToLower(entry.Name()) == targetFileName {
+			markdownFile := filepath.Join(pluginDocsDir, entry.Name())
+			fmt.Printf("Found match: %s\n", markdownFile)
+			content, err := os.ReadFile(markdownFile)
+			if err != nil {
+				fmt.Printf("Error reading file: %v\n", err)
+				return ""
+			}
+			fmt.Printf("Successfully loaded %d bytes\n", len(content))
+			return string(content)
+		}
+	}
+
+	fmt.Printf("No matching file found\n")
+	return ""
 }
 
 func removeDuplicateProperties(properties []PropertyDoc) []PropertyDoc {
@@ -498,4 +535,3 @@ func writeDoc(doc *PluginDoc, fileName string) error {
 
 	return nil
 }
-

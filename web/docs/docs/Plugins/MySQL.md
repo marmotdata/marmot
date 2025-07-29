@@ -6,8 +6,6 @@ status: experimental
 
 # MySQL
 
-This plugin discovers databases and tables from MySQL instances.
-
 **Status:** experimental
 
 ## Example Configuration
