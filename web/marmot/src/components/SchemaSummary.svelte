@@ -49,6 +49,37 @@
 		return joined.length > 50 ? joined.substring(0, 47) + '...' : joined;
 	}
 
+	function formatExamplesDisplay(examples: any[]): string {
+		if (!examples || examples.length === 0) return '';
+
+		const formatted = examples
+			.map((ex) => {
+				if (typeof ex === 'string') return `"${ex}"`;
+				return JSON.stringify(ex);
+			})
+			.join(', ');
+
+		return formatted.length > 60 ? formatted.substring(0, 57) + '...' : formatted;
+	}
+
+	function getTypeStyle(fieldType: string): string {
+		if (fieldType === 'anyOf')
+			return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-100';
+		if (fieldType === 'oneOf')
+			return 'bg-purple-100 dark:bg-purple-900/20 text-purple-800 dark:text-purple-100';
+		if (fieldType === 'allOf')
+			return 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-100';
+		if (fieldType === 'not') return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-100';
+		if (fieldType === 'error')
+			return 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-100';
+
+		return 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-100';
+	}
+
+	function isCompositionType(fieldType: string): boolean {
+		return ['anyOf', 'oneOf', 'allOf', 'not'].includes(fieldType);
+	}
+
 	$: activeFields =
 		activeTab && processedSchemas[activeTab] ? processedSchemas[activeTab].fields : [];
 	$: activeExample =
@@ -58,8 +89,6 @@
 	$: activeErrors = activeTab && validationErrors[activeTab] ? validationErrors[activeTab] : [];
 	$: hasValidationErrors = activeErrors.length > 0;
 	$: showSchemaTabs = schemaSections.length > 1;
-	$: hasExample =
-		activeExample && typeof activeExample === 'object' && Object.keys(activeExample).length > 0;
 </script>
 
 <div class="space-y-4">
@@ -186,11 +215,17 @@
 									</td>
 									<td class="px-6 py-4 whitespace-nowrap text-sm">
 										<span
-											class="px-2 py-1 text-xs font-medium bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-100 rounded-full"
+											class="px-2 py-1 text-xs font-medium rounded-full {getTypeStyle(field.type)}"
 										>
 											{field.type}
 										</span>
-										{#if field.enum}
+										{#if field.const !== undefined}
+											<div class="mt-1 font-mono text-xs text-purple-600 dark:text-purple-400">
+												{typeof field.const === 'string'
+													? `"${field.const}"`
+													: JSON.stringify(field.const)}
+											</div>
+										{:else if field.enum}
 											<div class="mt-1 text-xs text-gray-500 dark:text-gray-400 relative group">
 												<span class="cursor-help">
 													{formatEnumDisplay(field.enum)}
@@ -240,6 +275,20 @@
 											{field.description}
 										{:else if field.default !== undefined}
 											<span class="text-gray-400">Default: {JSON.stringify(field.default)}</span>
+										{:else if field.examples && field.examples.length > 0}
+											<div class="space-y-1">
+												<span class="text-gray-600 dark:text-gray-400">Examples:</span>
+												{#each field.examples.slice(0, 2) as example}
+													<div class="font-mono text-xs text-blue-600 dark:text-blue-400">
+														{typeof example === 'string' ? `"${example}"` : JSON.stringify(example)}
+													</div>
+												{/each}
+												{#if field.examples.length > 2}
+													<div class="text-xs text-gray-400">
+														...and {field.examples.length - 2} more
+													</div>
+												{/if}
+											</div>
 										{:else}
 											—
 										{/if}
@@ -250,7 +299,7 @@
 					</table>
 				</div>
 
-				{#if hasExample}
+				{#if activeExample && typeof activeExample === 'object' && Object.keys(activeExample).length > 0}
 					<div class="mt-6">
 						<h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 mb-4">
 							Example
