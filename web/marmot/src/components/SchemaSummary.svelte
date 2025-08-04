@@ -3,8 +3,6 @@
 	import {
 		parseSchemaResponse,
 		processSchema,
-		isSchemaAvailable,
-		detectSchemaType,
 		validateSchema,
 		prettyPrintSchema
 	} from '$lib/schema/utils';
@@ -49,19 +47,6 @@
 		return joined.length > 50 ? joined.substring(0, 47) + '...' : joined;
 	}
 
-	function formatExamplesDisplay(examples: any[]): string {
-		if (!examples || examples.length === 0) return '';
-
-		const formatted = examples
-			.map((ex) => {
-				if (typeof ex === 'string') return `"${ex}"`;
-				return JSON.stringify(ex);
-			})
-			.join(', ');
-
-		return formatted.length > 60 ? formatted.substring(0, 57) + '...' : formatted;
-	}
-
 	function getTypeStyle(fieldType: string): string {
 		if (fieldType === 'anyOf')
 			return 'bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-100';
@@ -76,8 +61,22 @@
 		return 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-100';
 	}
 
-	function isCompositionType(fieldType: string): boolean {
-		return ['anyOf', 'oneOf', 'allOf', 'not'].includes(fieldType);
+	function getSchemaExamples(schema: any): any[] {
+		const examples: any[] = [];
+
+		if (schema?.example !== undefined) {
+			examples.push(schema.example);
+		}
+
+		if (schema?.allOf) {
+			schema.allOf.forEach((subSchema: any) => {
+				if (subSchema?.example !== undefined) {
+					examples.push(subSchema.example);
+				}
+			});
+		}
+
+		return examples;
 	}
 
 	$: activeFields =
@@ -85,13 +84,13 @@
 	$: activeExample =
 		activeTab && processedSchemas[activeTab] ? processedSchemas[activeTab].example : null;
 	$: activeSchema = activeTab ? schemaSections.find((s) => s.name === activeTab)?.schema : null;
-	$: schemaType = activeSchema ? detectSchemaType(activeSchema) : 'json';
 	$: activeErrors = activeTab && validationErrors[activeTab] ? validationErrors[activeTab] : [];
 	$: hasValidationErrors = activeErrors.length > 0;
 	$: showSchemaTabs = schemaSections.length > 1;
+	$: schemaExamples = activeSchema ? getSchemaExamples(activeSchema) : [];
 </script>
 
-<div class="space-y-4">
+<div class="space-y-4 overflow-x-auto">
 	<div class="flex justify-between mb-4">
 		<div class="flex space-x-4 overflow-x-auto">
 			{#if showSchemaTabs}
@@ -171,7 +170,7 @@
 				<div
 					class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
 				>
-					<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+					<table class="w-full table-auto divide-y divide-gray-200 dark:divide-gray-700">
 						<thead class="bg-gray-50 dark:bg-gray-900">
 							<tr>
 								<th
@@ -275,20 +274,6 @@
 											{field.description}
 										{:else if field.default !== undefined}
 											<span class="text-gray-400">Default: {JSON.stringify(field.default)}</span>
-										{:else if field.examples && field.examples.length > 0}
-											<div class="space-y-1">
-												<span class="text-gray-600 dark:text-gray-400">Examples:</span>
-												{#each field.examples.slice(0, 2) as example}
-													<div class="font-mono text-xs text-blue-600 dark:text-blue-400">
-														{typeof example === 'string' ? `"${example}"` : JSON.stringify(example)}
-													</div>
-												{/each}
-												{#if field.examples.length > 2}
-													<div class="text-xs text-gray-400">
-														...and {field.examples.length - 2} more
-													</div>
-												{/if}
-											</div>
 										{:else}
 											—
 										{/if}
@@ -302,10 +287,18 @@
 				{#if activeExample && typeof activeExample === 'object' && Object.keys(activeExample).length > 0}
 					<div class="mt-6">
 						<h3 class="text-lg leading-6 font-medium text-gray-900 dark:text-gray-100 mb-4">
-							Example
+							{schemaExamples.length > 1 ? 'Examples' : 'Example'}
 						</h3>
 						<CodeBlock code={JSON.stringify(activeExample, null, 2)} />
 					</div>
+				{/if}
+
+				{#if schemaExamples.length > 1}
+					{#each schemaExamples.slice(1) as example, i}
+						<div class="mt-6">
+							<CodeBlock code={JSON.stringify(example, null, 2)} />
+						</div>
+					{/each}
 				{/if}
 			{:else}
 				<p class="text-gray-500 dark:text-gray-400 italic">
