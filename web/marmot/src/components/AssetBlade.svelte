@@ -59,7 +59,7 @@
 
 		loadingLineage = true;
 		try {
-			const response = await fetchApi(`/lineage/assets/${asset.id}?limit=1`);
+			const response = await fetchApi(`/lineage/assets/${asset.id}?depth=1`);
 			if (!response.ok) throw new Error('Failed to fetch lineage');
 			lineage = await response.json();
 		} catch (error) {
@@ -270,4 +270,3 @@
 		</div>
 	</div>
 {/if}
-

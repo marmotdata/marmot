@@ -116,7 +116,7 @@
 							</div>
 							{#if isDropdownOpen}
 								<div
-									class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow dark:shadow-white/10 bg-earthy-brown-50 dark:bg-gray-800 ring-1 ring-black ring-opacity-5"
+									class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow dark:shadow-white/10 bg-earthy-brown-50 dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50"
 									role="menu"
 									aria-orientation="vertical"
 									aria-labelledby="user-menu"

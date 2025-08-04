@@ -7,6 +7,10 @@ import { processProtobufSchema, isProtobufSchema, validateProtobufSchema } from 
  * Format example (ensures JSON is properly parsed if it's a string)
  */
 export function formatExample(example: any): any {
+  if (Array.isArray(example)) {
+    return example.length === 1 ? example[0] : example;
+  }
+
   if (typeof example === 'string') {
     try {
       return JSON.parse(example);
@@ -94,6 +98,9 @@ function isStringSchema(str: string): boolean {
   // JSON Schema in YAML
   if (str.includes('type: object') && str.includes('properties:')) return true;
 
+  // Pattern properties indicator
+  if (str.includes('patternProperties:') || str.includes('"patternProperties"')) return true;
+
   return false;
 }
 
@@ -150,12 +157,18 @@ export function processSchema(schemaSection: any): SchemaProcessingResult {
   if (typeof schemaSection === 'string') {
     try {
       processableSchema = JSON.parse(schemaSection);
-      if (processableSchema.example) {
+
+      if (processableSchema.examples) {
+        example = formatExample(processableSchema.examples);
+      } else if (processableSchema.example) {
         example = formatExample(processableSchema.example);
       }
     } catch (e) { }
   } else if (typeof schemaSection === 'object' && schemaSection !== null) {
-    if (schemaSection.example) {
+
+    if (schemaSection.examples) {
+      example = formatExample(schemaSection.examples);
+    } else if (schemaSection.example) {
       example = formatExample(schemaSection.example);
     }
   }
@@ -215,12 +228,29 @@ export function validateSchema(schema: any): any[] {
 
     if (typeof cleanSchema === 'object' && cleanSchema !== null) {
       cleanSchema = JSON.parse(JSON.stringify(cleanSchema));
+
+      // Remove examples for validation
       if (cleanSchema.example) delete cleanSchema.example;
+      if (cleanSchema.examples) delete cleanSchema.examples;
 
       if (cleanSchema.properties) {
         Object.keys(cleanSchema.properties).forEach((key) => {
           if (cleanSchema.properties[key].example) {
             delete cleanSchema.properties[key].example;
+          }
+          if (cleanSchema.properties[key].examples) {
+            delete cleanSchema.properties[key].examples;
+          }
+        });
+      }
+
+      if (cleanSchema.patternProperties) {
+        Object.keys(cleanSchema.patternProperties).forEach((pattern) => {
+          if (cleanSchema.patternProperties[pattern].example) {
+            delete cleanSchema.patternProperties[pattern].example;
+          }
+          if (cleanSchema.patternProperties[pattern].examples) {
+            delete cleanSchema.patternProperties[pattern].examples;
           }
         });
       }
