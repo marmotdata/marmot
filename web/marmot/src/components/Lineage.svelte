@@ -263,13 +263,6 @@
 
 			const data = await response.json();
 
-			if (initialLoad && data.nodes.length > 50 && depth > 1) {
-				depth = 1;
-				initialLoad = false;
-				await fetchLineage();
-				return;
-			}
-
 			initialLoad = false;
 			const elements = generateElements(data);
 			nodes = elements.nodes;
