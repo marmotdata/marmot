@@ -15,6 +15,7 @@ import (
 	"github.com/marmotdata/marmot/internal/plugin/providers/kafka"
 	"github.com/marmotdata/marmot/internal/plugin/providers/mongodb"
 	"github.com/marmotdata/marmot/internal/plugin/providers/mysql"
+	"github.com/marmotdata/marmot/internal/plugin/providers/openapi"
 	"github.com/marmotdata/marmot/internal/plugin/providers/postgresql"
 	"github.com/marmotdata/marmot/internal/plugin/providers/s3"
 	"github.com/marmotdata/marmot/internal/plugin/providers/sns"
@@ -283,4 +284,5 @@ var sourceRegistry = map[string]func() plugin.Source{
 	"mysql":      func() plugin.Source { return &mysql.Source{} },
 	"bigquery":   func() plugin.Source { return &bigquery.Source{} },
 	"s3":         func() plugin.Source { return &s3.Source{} },
+	"openapi":    func() plugin.Source { return &openapi.Source{} },
 }
