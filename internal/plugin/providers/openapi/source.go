@@ -30,7 +30,6 @@ type Source struct {
 // +marmot:config
 type Config struct {
 	plugin.BaseConfig 	`json:",inline"`
-	IncludeOpenAPITags	bool `json:"include_openapi_tags" description:"Inlcude tags from OpenAPI specification" default:"false"`	
 	SpecPath		string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications"`
 }
 
@@ -176,11 +175,6 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 	metadata := plugin.MapToMetadata(serviceFields)
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
-	if config.IncludeOpenAPITags && spec.Model.Tags != nil {
-		for _, tag := range spec.Model.Tags {
-			processedTags = append(processedTags, tag.Name)
-		}
-	}
 
 	externalLinks := []asset.ExternalLink{}
 	if spec.Model.ExternalDocs != nil {
