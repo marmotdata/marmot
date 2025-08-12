@@ -22,6 +22,10 @@ type OpenAPIFields struct {
 // EndpointFields represents endpoints in OpenAPI specifications
 // +marmot:metadata
 type EndpointFields struct {
-	Path		string `json:"path" metadata:"path" description:"Path"`
+	Description	string `json:"description" metadata:"description" description:"A verbose explanation of the operation behaviour."`
+	StatusCodes	[]string `json:"status_codes" metadata:"status_codes" description:"All HTTP response status codes that are returned for this endpoint."`
 	HTTPMethod	string `json:"http_method" metadata:"http_method" description:"HTTP method"`
+	OperationID	string `json:"operation_id" metadata:"operation_id" description:"Unique identifier of the operation"`
+	Path		string `json:"path" metadata:"path" description:"Path"`
+	Summary		string `json:"summary" metadata:"summary" description:"A short summary of what the operation does"`
 }

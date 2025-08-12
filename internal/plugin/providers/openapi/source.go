@@ -210,10 +210,22 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 			pathWithMethod := fmt.Sprintf("%s %s", strings.ToUpper(httpMethod), path)
 			mrnValue := mrn.New(typeEndpoint, serviceName, pathWithMethod)
 			description := op.Summary
+			if len(description) == 0 {
+				description = op.Description
+			}
+
+			statusCodes := []string{}
+			for code, _ := range op.Responses.Codes.FromOldest() {
+				statusCodes = append(statusCodes, code)
+			}
 
 			endpointFields := EndpointFields{
+				Description: op.Description,
 				HTTPMethod: strings.ToUpper(httpMethod),
+				OperationID: op.OperationId,
 				Path: path,
+				StatusCodes: statusCodes,
+				Summary: item.Summary,
 			}
 			metadata := plugin.MapToMetadata(endpointFields)
 			processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
