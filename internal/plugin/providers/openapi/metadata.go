@@ -11,6 +11,7 @@ type OpenAPIFields struct {
 	LicenseIdentifier	string `json:"license_identifier" metadata:"license_identifier" description:"SPDX license experession for the API"`
 	LicenseName	string `json:"license_name" metadata:"license_name" description:"Name of the license"`
 	LicenseURL	string `json:"license_url" metadata:"license_url" description:"URL of the license"`
+	NumDeprecatedEndpoints	int	`json:"num_deprecated_endpoints" metadata:"num_deprecated_endpoints" description:"Number of deprecated endpoints in the OpenAPI specification"`
 	NumEndpoints	int	`json:"num_endpoints" metadata:"num_endpoints" description:"Number of endpoints in the OpenAPI specification"`
 	OpenAPIVersion 	string `json:"openapi_version" metadata:"openapi_version" description:"Version of the OpenAPI spec"`
 	Servers		[]string `json:"servers" metadata:"servers" description:"URL of the servers of the API"`
@@ -22,6 +23,7 @@ type OpenAPIFields struct {
 // EndpointFields represents endpoints in OpenAPI specifications
 // +marmot:metadata
 type EndpointFields struct {
+	Deprecated	bool `json:"deprecated" metadata:"deprecated" description:"Is this endpoint deprecated"`
 	Description	string `json:"description" metadata:"description" description:"A verbose explanation of the operation behaviour."`
 	StatusCodes	[]string `json:"status_codes" metadata:"status_codes" description:"All HTTP response status codes that are returned for this endpoint."`
 	HTTPMethod	string `json:"http_method" metadata:"http_method" description:"HTTP method"`
