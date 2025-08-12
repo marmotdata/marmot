@@ -99,7 +99,12 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 			return nil
 		}
 
-		// TO-DO check if it is v3
+		openapiVersion := doc.GetSpecInfo().VersionNumeric
+		if openapiVersion < 3 {
+			log.Warn().Str("path", path).Msg(fmt.Sprintf("Unsupported OpenAPI version %f found", openapiVersion))
+			return nil
+		}
+
 		spec, parseErrors := doc.BuildV3Model()
 		if parseErrors != nil {
 			log.Warn().Err(err).Str("path", path).Msg("Failed to build OpenAPI v3 model")
@@ -194,6 +199,7 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		ExternalLinks: 	externalLinks,
 	}
 }
+
 
 func addUniqueAsset(assets *[]asset.Asset, newAsset asset.Asset, seen map[string]bool) {
 	if newAsset.MRN == nil {
