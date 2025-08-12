@@ -7,6 +7,7 @@ type OpenAPIFields struct {
 	ContactName	string `json:"contact_name" metadata:"contact_name" description:"Contact name"`
 	ContactURL	string `json:"contact_url" metadata:"contact_url" description:"Contact URL"`
 	Description	string `json:"description" metadata:"description" description:"Description of the API"`
+	ExternalDocs	string `json:"external_docs" metadata:"external_docs" description:"Link to the external documentation"`
 	LicenseIdentifier	string `json:"license_identifier" metadata:"license_identifier" description:"SPDX license experession for the API"`
 	LicenseName	string `json:"license_name" metadata:"license_name" description:"Name of the license"`
 	LicenseURL	string `json:"license_url" metadata:"license_url" description:"URL of the license"`

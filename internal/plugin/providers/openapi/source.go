@@ -158,6 +158,9 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		serviceFields.LicenseName = spec.Model.Info.License.Name
 		serviceFields.LicenseURL = spec.Model.Info.License.URL
 	}
+	if spec.Model.ExternalDocs != nil {
+		serviceFields.ExternalDocs = spec.Model.ExternalDocs.URL
+	}
 	metadata := plugin.MapToMetadata(serviceFields)
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
@@ -167,6 +170,17 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		}
 	}
 
+	externalLinks := []asset.ExternalLink{}
+	if spec.Model.ExternalDocs != nil {
+		name := spec.Model.ExternalDocs.Description
+		if len(name) == 0 {
+			name = spec.Model.ExternalDocs.URL
+		}
+		externalLinks = append(externalLinks, asset.ExternalLink{
+			Name: name,
+			URL: spec.Model.ExternalDocs.URL,
+		})
+	}
 
 	return asset.Asset{
 		Name: 		&serviceName,
@@ -177,6 +191,7 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		Metadata: 	metadata,
 		Tags: 		processedTags,
 		Sources: 	[]asset.AssetSource{},
+		ExternalLinks: 	externalLinks,
 	}
 }
 
