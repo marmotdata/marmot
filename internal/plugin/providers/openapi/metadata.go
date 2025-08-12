@@ -18,3 +18,10 @@ type OpenAPIFields struct {
 	ServiceVersion	string `json:"service_version" metadata:"service_version" description:"Version of the service"`
 	TermsOfService	string `json:"terms_of_service" metadata:"terms_of_service" description:"Link to the page that describes the terms of service"`
 }
+
+// EndpointFields represents endpoints in OpenAPI specifications
+// +marmot:metadata
+type EndpointFields struct {
+	Path		string `json:"path" metadata:"path" description:"Path"`
+	HTTPMethod	string `json:"http_method" metadata:"http_method" description:"HTTP method"`
+}

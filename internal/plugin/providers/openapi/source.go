@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
@@ -34,6 +35,7 @@ type Config struct {
 }
 
 const (
+	typeEndpoint = "Endpoint"
 	typeService = "Service"
 	openapiProvider = "OpenAPI"
 )
@@ -113,6 +115,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 		serviceAsset := s.createServiceAsset(spec, config)
 		addUniqueAsset(&assets, serviceAsset, seenAssets)
+
+		endpointAssets := s.createEndpointAssets(spec, config)
+		for _, asset := range endpointAssets {
+			addUniqueAsset(&assets, asset, seenAssets)
+		}
 
 		return nil
 	})
@@ -198,6 +205,41 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		Sources: 	[]asset.AssetSource{},
 		ExternalLinks: 	externalLinks,
 	}
+}
+
+func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document], config *Config) []asset.Asset {
+	assets := []asset.Asset{}
+	serviceName := spec.Model.Info.Title
+
+	for path, item := range spec.Model.Paths.PathItems.FromOldest() {
+		for httpMethod, op := range item.GetOperations().FromOldest() {
+			pathWithMethod := fmt.Sprintf("%s %s", strings.ToUpper(httpMethod), path)
+			mrnValue := mrn.New(typeEndpoint, serviceName, pathWithMethod)
+			description := op.Summary
+
+			endpointFields := EndpointFields{
+				HTTPMethod: strings.ToUpper(httpMethod),
+				Path: path,
+			}
+			metadata := plugin.MapToMetadata(endpointFields)
+			processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+			processedTags = append(processedTags, serviceName)
+
+			asset := asset.Asset{
+				Name: &pathWithMethod,
+				MRN: &mrnValue,
+				Type: typeEndpoint,
+				Providers: []string{openapiProvider},
+				Description: &description,
+				Metadata: metadata,
+				Tags: processedTags,
+				Sources: []asset.AssetSource{},
+			}
+			assets = append(assets, asset)
+		}
+	}
+
+	return assets
 }
 
 
