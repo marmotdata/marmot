@@ -247,6 +247,9 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 			processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 			processedTags = append(processedTags, serviceName)
 			processedTags = append(processedTags, op.Tags...)
+			if op.Deprecated != nil && *op.Deprecated {
+				processedTags = append(processedTags, "deprecated")
+			}
 
 			externalLinks := []asset.ExternalLink{}
 			if op.ExternalDocs != nil {
