@@ -151,12 +151,19 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 	}
 
 	numEndpoints := 0
+	numDeprecatedEndpoints := 0
 	for _, item := range spec.Model.Paths.PathItems.FromOldest() {
+		for _, op := range item.GetOperations().FromOldest() {
+			if op.Deprecated != nil && *op.Deprecated {
+				numDeprecatedEndpoints++ 
+			}
+		}
 		numEndpoints += item.GetOperations().Len()
 	}
 
 	serviceFields := OpenAPIFields{
 		Description: description,
+		NumDeprecatedEndpoints: numDeprecatedEndpoints,
 		NumEndpoints: numEndpoints,
 		OpenAPIVersion: openapiVersion,
 		Servers: servers,
@@ -220,9 +227,10 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 			}
 
 			statusCodes := []string{}
-			for code, _ := range op.Responses.Codes.FromOldest() {
+			for code := range op.Responses.Codes.FromOldest() {
 				statusCodes = append(statusCodes, code)
 			}
+
 
 			endpointFields := EndpointFields{
 				Description: op.Description,
@@ -232,9 +240,25 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 				StatusCodes: statusCodes,
 				Summary: item.Summary,
 			}
+			if op.Deprecated != nil {
+				endpointFields.Deprecated = *op.Deprecated
+			}
 			metadata := plugin.MapToMetadata(endpointFields)
 			processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 			processedTags = append(processedTags, serviceName)
+			processedTags = append(processedTags, op.Tags...)
+
+			externalLinks := []asset.ExternalLink{}
+			if op.ExternalDocs != nil {
+				name := op.ExternalDocs.Description
+				if len(name) == 0 {
+					name = op.ExternalDocs.URL
+				}
+				externalLinks = append(externalLinks, asset.ExternalLink{
+					Name: name,
+					URL: op.ExternalDocs.URL,
+				})
+			}
 
 			asset := asset.Asset{
 				Name: &pathWithMethod,
@@ -245,6 +269,7 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 				Metadata: metadata,
 				Tags: processedTags,
 				Sources: []asset.AssetSource{},
+				ExternalLinks: externalLinks,
 			}
 			assets = append(assets, asset)
 		}
