@@ -3,10 +3,17 @@ package openapi
 // OpenAPIFields represents OpenAPI-specific metadata fields
 // +marmot:metadata
 type OpenAPIFields struct {
+	ContactEmail	string `json:"contact_email" metadata:"contact_email" description:"Contact email"`
+	ContactName	string `json:"contact_name" metadata:"contact_name" description:"Contact name"`
+	ContactURL	string `json:"contact_url" metadata:"contact_url" description:"Contact URL"`
 	Description	string `json:"description" metadata:"description" description:"Description of the API"`
-	ServiceName	string `json:"service_name" metadata:"service_name" description:"Name of the service that owns the resource"`
-	ServiceVersion	string `json:"service_version" metadata:"service_version" description:"Version of the service"`
+	LicenseIdentifier	string `json:"license_identifier" metadata:"license_identifier" description:"SPDX license experession for the API"`
+	LicenseName	string `json:"license_name" metadata:"license_name" description:"Name of the license"`
+	LicenseURL	string `json:"license_url" metadata:"license_url" description:"URL of the license"`
+	NumPaths	int	`json:"num_paths" metadata:"num_paths" description:"Number of paths in the API"`
 	OpenAPIVersion 	string `json:"openapi_version" metadata:"openapi_version" description:"Version of the OpenAPI spec"`
 	Servers		[]string `json:"servers" metadata:"servers" description:"URL of the servers of the API"`
-	NumPaths	int	`json:"num_paths" metadata:"num_paths" description:"Number of paths in the API"`
+	ServiceName	string `json:"service_name" metadata:"service_name" description:"Name of the service that owns the resource"`
+	ServiceVersion	string `json:"service_version" metadata:"service_version" description:"Version of the service"`
+	TermsOfService	string `json:"terms_of_service" metadata:"terms_of_service" description:"Link to the page that describes the terms of service"`
 }
