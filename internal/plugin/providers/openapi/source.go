@@ -141,7 +141,7 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 
 	serviceFields := OpenAPIFields{
 		Description: description,
-		NumPaths: spec.Model.Paths.PathItems.Len(),
+		NumEndpoints: spec.Model.Paths.PathItems.Len(),
 		OpenAPIVersion: openapiVersion,
 		Servers: servers,
 		ServiceName: serviceName,
