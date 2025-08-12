@@ -29,11 +29,13 @@ type Source struct {
 // +marmot:config
 type Config struct {
 	plugin.BaseConfig 	`json:",inline"`
-	SpecPath		string `json:"spec_path"`
+	IncludeOpenAPITags	bool `json:"include_openapi_tags" description:"Inlcude tags from OpenAPI specification" default:"false"`	
+	SpecPath		string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications"`
 }
 
 const (
-	TypeAPI = "API"
+	typeService = "Service"
+	openapiProvider = "OpenAPI"
 )
 
 // Example configuration for the plugin
@@ -97,14 +99,14 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 			return nil
 		}
 
-		// TODO: Add support for v2
+		// TO-DO check if it is v3
 		spec, parseErrors := doc.BuildV3Model()
 		if parseErrors != nil {
 			log.Warn().Err(err).Str("path", path).Msg("Failed to build OpenAPI v3 model")
 			return nil
 		}
 
-		serviceAsset := s.createAPIAsset(spec)
+		serviceAsset := s.createServiceAsset(spec, config)
 		addUniqueAsset(&assets, serviceAsset, seenAssets)
 
 		return nil
@@ -120,14 +122,14 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}, nil
 }
 
-func (s *Source) createAPIAsset(spec *libopenapi.DocumentModel[v3.Document]) asset.Asset {
+func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document], config *Config) asset.Asset {
 	serviceName := spec.Model.Info.Title
 	description := spec.Model.Info.Description
 	if description == "" {
 		description = fmt.Sprintf("OpenAPI service: %s", serviceName)
 	}
 
-	mrnValue := mrn.New(TypeAPI, "openapi", serviceName)
+	mrnValue := mrn.New(typeService, "openapi", serviceName)
 	openapiVersion := spec.Model.Version
 
 	var servers []string
@@ -137,28 +139,40 @@ func (s *Source) createAPIAsset(spec *libopenapi.DocumentModel[v3.Document]) ass
 		}
 	}
 
-	apiFields := OpenAPIFields{
+	serviceFields := OpenAPIFields{
 		Description: description,
-		ServiceName: serviceName,
-		ServiceVersion: spec.Model.Info.Version,
+		NumPaths: spec.Model.Paths.PathItems.Len(),
 		OpenAPIVersion: openapiVersion,
 		Servers: servers,
-		NumPaths: spec.Model.Paths.PathItems.Len(),
+		ServiceName: serviceName,
+		ServiceVersion: spec.Model.Info.Version,
+		TermsOfService: spec.Model.Info.TermsOfService,
 	}
-	metadata := plugin.MapToMetadata(apiFields)
+	if spec.Model.Info.Contact != nil {
+		serviceFields.ContactEmail = spec.Model.Info.Contact.Email
+		serviceFields.ContactName = spec.Model.Info.Contact.Name
+		serviceFields.ContactURL = spec.Model.Info.Contact.URL
+	}
+	if spec.Model.Info.License != nil {
+		serviceFields.LicenseIdentifier = spec.Model.Info.License.Identifier
+		serviceFields.LicenseName = spec.Model.Info.License.Name
+		serviceFields.LicenseURL = spec.Model.Info.License.URL
+	}
+	metadata := plugin.MapToMetadata(serviceFields)
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
-	if spec.Model.Tags != nil {
+	if config.IncludeOpenAPITags && spec.Model.Tags != nil {
 		for _, tag := range spec.Model.Tags {
 			processedTags = append(processedTags, tag.Name)
 		}
 	}
 
+
 	return asset.Asset{
 		Name: 		&serviceName,
 		MRN: 		&mrnValue,
-		Type:		TypeAPI,
-		Providers: 	[]string{"OpenAPI"},
+		Type:		typeService,
+		Providers: 	[]string{openapiProvider},
 		Description: 	&description,
 		Metadata: 	metadata,
 		Tags: 		processedTags,
@@ -179,7 +193,7 @@ func addUniqueAsset(assets *[]asset.Asset, newAsset asset.Asset, seen map[string
 
 	*assets = append(*assets, newAsset)
 	seen[*newAsset.MRN] = true
-	log.Debug().
+	log.Info().
 		Str("mrn", *newAsset.MRN).
 		Str("type", newAsset.Type).
 		Str("service", newAsset.Providers[0]).
@@ -195,12 +209,3 @@ func isYAML(path string) bool {
 	ext := filepath.Ext(path)
 	return ext == ".yaml" || ext == ".yml"
 }
-
-func config() *datamodel.DocumentConfiguration {
-	// see https://pb33f.io/libopenapi/circular-references/
-	docConfig := datamodel.NewDocumentConfiguration()
-	docConfig.IgnoreArrayCircularReferences = true
-	docConfig.IgnorePolymorphicCircularReferences = true
-	return docConfig
-}
-
