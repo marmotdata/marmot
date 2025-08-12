@@ -1,5 +1,5 @@
 // +marmot:name=OpenAPI
-// +marmot:description=This plugin discovers OpenAPI v3.0 specifications.
+// +marmot:description=This plugin discovers OpenAPI v3 specifications.
 // +marmot:status=experimental
 package openapi
 

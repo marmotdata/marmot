@@ -1,6 +1,6 @@
 ---
 title: OpenAPI
-description: This plugin discovers OpenAPI v3.0 specifications.
+description: This plugin discovers OpenAPI v3 specifications.
 status: experimental
 ---
 
