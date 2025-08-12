@@ -24,7 +24,7 @@ require (
 	github.com/jackc/pgtype v1.14.4
 	github.com/jackc/pgx/v5 v5.5.5
 	github.com/lib/pq v1.10.9
-	github.com/pb33f/libopenapi v0.25.2
+	github.com/pb33f/libopenapi v0.25.3
 	github.com/rs/zerolog v1.33.0
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
