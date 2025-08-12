@@ -44,11 +44,14 @@ The following metadata fields are available:
 | contact_name | string | Contact name |
 | contact_url | string | Contact URL |
 | description | string | Description of the API |
+| external_docs | string | Link to the external documentation |
+| http_method | string | HTTP method |
 | license_identifier | string | SPDX license experession for the API |
 | license_name | string | Name of the license |
 | license_url | string | URL of the license |
-| num_paths | int | Number of paths in the API |
+| num_endpoints | int | Number of endpoints in the OpenAPI specification |
 | openapi_version | string | Version of the OpenAPI spec |
+| path | string | Path |
 | servers | []string | URL of the servers of the API |
 | service_name | string | Name of the service that owns the resource |
 | service_version | string | Version of the service |
