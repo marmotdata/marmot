@@ -3,6 +3,7 @@ package lineage
 import (
 	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -184,4 +185,59 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	common.RespondJSON(w, http.StatusOK, lineage)
+}
+
+// @Summary Ingest OpenLineage event
+// @Description Process OpenLineage run events and update assets/lineage accordingly
+// @Tags lineage
+// @Accept json
+// @Produce json
+// @Param event body RunEvent true "OpenLineage run event"
+// @Success 200 "Event processed successfully"
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /api/v1/lineage [post]
+func (h *Handler) ingestOpenLineageEvent(w http.ResponseWriter, r *http.Request) {
+	bodyBytes, err := io.ReadAll(r.Body)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to read request body")
+		common.RespondError(w, http.StatusBadRequest, "Failed to read request body")
+		return
+	}
+
+	log.Info().Str("body", string(bodyBytes)).Msg("Received OpenLineage event")
+
+	var event lineage.RunEvent
+	if err := json.Unmarshal(bodyBytes, &event); err != nil {
+		log.Error().Err(err).Msg("Failed to decode OpenLineage event")
+		common.RespondError(w, http.StatusBadRequest, "Invalid OpenLineage event format")
+		return
+	}
+
+	user, ok := common.GetAuthenticatedUser(r.Context())
+	if !ok {
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	// log.Info().
+	// 	Str("event_type", event.EventType).
+	// 	Str("run_id", event.Run.RunID).
+	// 	Str("job_namespace", event.Job.Namespace).
+	// 	Str("job_name", event.Job.Name).
+	// 	Int("inputs_count", len(event.Inputs)).
+	// 	Int("outputs_count", len(event.Outputs)).
+	// 	Str("producer", event.Producer).
+
+	if err := h.lineageService.ProcessOpenLineageEvent(r.Context(), &event, user.Name); err != nil {
+		log.Error().Err(err).
+			Str("event_type", event.EventType).
+			Str("run_id", event.Run.RunID).
+			Str("job", event.Job.Namespace+"."+event.Job.Name).
+			Msg("Failed to process OpenLineage event")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to process event")
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

@@ -11,6 +11,8 @@
 	import Lineage from '$lib/../components/Lineage.svelte';
 	import SchemaSummary from '$lib/../components/SchemaSummary.svelte';
 	import AssetEnvironmentsView from '$lib/../components/AssetEnvironmentsView.svelte';
+	import QueryPreview from '$lib/../components/QueryPreview.svelte';
+	import RunHistory from '$lib/../components/RunHistory.svelte';
 
 	let asset: Asset | null = null;
 	let loading = true;
@@ -49,17 +51,24 @@
 		goto('/assets');
 	}
 
-	$: visibleTabs = ['metadata', 'environments', 'schema', 'documentation', 'lineage'].filter(
-		(tab) => {
-			if (
-				tab === 'environments' &&
-				(!asset?.environments || Object.keys(asset.environments).length === 0)
-			)
-				return false;
-			if (tab === 'documentation' && !asset?.documentation) return false;
-			return true;
-		}
-	);
+	$: visibleTabs = [
+		'metadata',
+		'query',
+		'environments',
+		'schema',
+		'documentation',
+		'run-history',
+		'lineage'
+	].filter((tab) => {
+		if (
+			tab === 'environments' &&
+			(!asset?.environments || Object.keys(asset.environments).length === 0)
+		)
+			return false;
+		if (tab === 'documentation' && !asset?.documentation) return false;
+		if (tab === 'query' && (!asset?.query || !asset.query.trim())) return false;
+		return true;
+	});
 
 	$: {
 		if (assetType && assetName) {
@@ -137,7 +146,7 @@
 								aria-selected={activeTab === tab}
 								on:click={() => setActiveTab(tab)}
 							>
-								{tab.charAt(0).toUpperCase() + tab.slice(1)}
+								{tab === 'run-history' ? 'Run History' : tab.charAt(0).toUpperCase() + tab.slice(1)}
 							</button>
 						{/each}
 					</div>
@@ -165,6 +174,13 @@
 								</h3>
 								<AssetSources sources={asset.sources || []} />
 							</div>
+						{:else if activeTab === 'query'}
+							<div class="mt-6">
+								<QueryPreview
+									query={asset.query || ''}
+									queryLanguage={asset.query_language || 'sql'}
+								/>
+							</div>
 						{:else if activeTab === 'environments'}
 							<div class="mt-6">
 								{#if asset.environments && Object.keys(asset.environments).length > 0}
@@ -182,6 +198,10 @@
 						{:else if activeTab === 'documentation'}
 							<div class="mt-6">
 								<AssetDocumentation mrn={asset.mrn} />
+							</div>
+						{:else if activeTab === 'run-history'}
+							<div class="mt-6">
+								<RunHistory assetId={asset.id} />
 							</div>
 						{:else if activeTab === 'lineage'}
 							<div class="mt-6">

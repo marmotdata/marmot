@@ -38,6 +38,9 @@ type Asset struct {
 	Sources       []AssetSource          `json:"sources,omitempty"`
 	Tags          []string               `json:"tags,omitempty"`
 	Environments  map[string]Environment `json:"environments,omitempty"`
+	Query         *string                `json:"query,omitempty"`
+	QueryLanguage *string                `json:"query_language,omitempty"`
+	IsStub        bool                   `json:"is_stub"`
 	ExternalLinks []ExternalLink         `json:"external_links,omitempty"`
 	CreatedAt     time.Time              `json:"created_at,omitempty"`
 	UpdatedAt     time.Time              `json:"updated_at,omitempty"`
@@ -64,6 +67,9 @@ type CreateInput struct {
 	Sources       []AssetSource          `json:"sources"`
 	Environments  map[string]Environment `json:"environments"`
 	ExternalLinks []ExternalLink         `json:"external_links"`
+	Query         string                 `json:"query"`
+	QueryLanguage string                 `json:"query_language"`
+	IsStub        bool                   `json:"is_stub"`
 }
 
 type UpdateInput struct {
@@ -77,6 +83,8 @@ type UpdateInput struct {
 	Sources       []AssetSource          `json:"sources"`
 	Environments  map[string]Environment `json:"environments"`
 	ExternalLinks []ExternalLink         `json:"external_links"`
+	Query         string                 `json:"query"`
+	QueryLanguage string                 `json:"query_language"`
 }
 
 type Filter struct {
@@ -89,15 +97,17 @@ type Filter struct {
 	Limit        int        `json:"limit,omitempty"`
 	Offset       int        `json:"offset,omitempty"`
 	Environment  *string    `json:"environment,omitempty"`
+	IncludeStubs bool       `json:"include_stubs,omitempty"`
 }
 
 type SearchFilter struct {
-	Query     string   `json:"query" validate:"omitempty"`
-	Types     []string `json:"types" validate:"omitempty"`
-	Providers []string `json:"providers" validate:"omitempty"`
-	Tags      []string `json:"tags" validate:"omitempty"`
-	Limit     int      `json:"limit" validate:"omitempty,gte=0"`
-	Offset    int      `json:"offset" validate:"omitempty,gte=0"`
+	Query        string   `json:"query" validate:"omitempty"`
+	Types        []string `json:"types" validate:"omitempty"`
+	Providers    []string `json:"providers" validate:"omitempty"`
+	Tags         []string `json:"tags" validate:"omitempty"`
+	Limit        int      `json:"limit" validate:"omitempty,gte=0"`
+	Offset       int      `json:"offset" validate:"omitempty,gte=0"`
+	IncludeStubs bool     `json:"include_stubs,omitempty"`
 }
 
 type MetadataContext struct {
@@ -105,7 +115,6 @@ type MetadataContext struct {
 	Filters map[string]string `json:"filters"`
 }
 
-// MetadataFieldSuggestion represents a suggestion for a metadata field
 type MetadataFieldSuggestion struct {
 	Field     string      `json:"field"`
 	Type      string      `json:"type"`
@@ -115,11 +124,33 @@ type MetadataFieldSuggestion struct {
 	Types     []string    `json:"types"`
 }
 
-// MetadataValueSuggestion represents a suggestion for a metadata field value
 type MetadataValueSuggestion struct {
 	Value   string `json:"value"`
 	Count   int    `json:"count"`
 	Example *Asset `json:"example,omitempty"`
+}
+
+type RunHistory struct {
+	ID           string     `json:"id"`
+	RunID        string     `json:"run_id"`
+	JobName      string     `json:"job_name"`
+	JobNamespace string     `json:"job_namespace"`
+	Status       string     `json:"status"`
+	StartTime    *time.Time `json:"start_time,omitempty"`
+	EndTime      *time.Time `json:"end_time,omitempty"`
+	DurationMs   *int64     `json:"duration_ms,omitempty"`
+	Type         string     `json:"type"`
+	EventTime    time.Time  `json:"event_time"`
+}
+
+type HistogramBucket struct {
+	Date     string `json:"date"`
+	Total    int    `json:"total"`
+	Complete int    `json:"complete"`
+	Fail     int    `json:"fail"`
+	Running  int    `json:"running"`
+	Abort    int    `json:"abort"`
+	Other    int    `json:"other"`
 }
 
 var (
@@ -133,6 +164,7 @@ type Service interface {
 	Get(ctx context.Context, id string) (*Asset, error)
 	GetByMRN(ctx context.Context, qualifiedName string) (*Asset, error)
 	List(ctx context.Context, offset, limit int) (*ListResult, error)
+	ListWithStubs(ctx context.Context, offset, limit int, includeStubs bool) (*ListResult, error)
 	Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error)
 	Summary(ctx context.Context) (*AssetSummary, error)
 	Update(ctx context.Context, id string, input UpdateInput) (*Asset, error)
@@ -145,6 +177,8 @@ type Service interface {
 	GetMetadataFields(ctx context.Context, queryContext *MetadataContext) ([]MetadataFieldSuggestion, error)
 	GetMetadataValues(ctx context.Context, field string, prefix string, limit int, queryContext *MetadataContext) ([]MetadataValueSuggestion, error)
 	GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error)
+	GetRunHistory(ctx context.Context, assetID string, limit, offset int) ([]*RunHistory, int, error)
+	GetRunHistoryHistogram(ctx context.Context, assetID string, days int) ([]HistogramBucket, error)
 }
 
 type service struct {
@@ -182,6 +216,27 @@ func WithMetrics(metrics MetricsClient) ServiceOption {
 	return func(s *service) {
 		s.metrics = metrics
 	}
+}
+
+func (s *service) GetRunHistoryHistogram(ctx context.Context, assetID string, days int) ([]HistogramBucket, error) {
+	if days <= 0 || days > 365 {
+		return nil, fmt.Errorf("invalid days parameter: must be between 1 and 365")
+	}
+
+	return s.repo.GetRunHistoryHistogram(ctx, assetID, days)
+}
+
+func (s *service) GetRunHistory(ctx context.Context, assetID string, limit, offset int) ([]*RunHistory, int, error) {
+	if limit <= 0 {
+		limit = 10
+	} else if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	return s.repo.GetRunHistory(ctx, assetID, limit, offset)
 }
 
 func (s *service) GetMetadataFields(ctx context.Context, queryContext *MetadataContext) ([]MetadataFieldSuggestion, error) {
@@ -269,7 +324,6 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 		return nil, ErrAlreadyExists
 	}
 
-	// Initialize schema if nil to avoid database constraint violation
 	if input.Schema == nil {
 		input.Schema = make(map[string]string)
 	}
@@ -292,6 +346,9 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 		CreatedAt:     now,
 		UpdatedAt:     now,
 		LastSyncAt:    now,
+		Query:         &input.Query,
+		QueryLanguage: &input.QueryLanguage,
+		IsStub:        input.IsStub,
 	}
 	if asset.Tags == nil {
 		asset.Tags = []string{}
@@ -338,7 +395,15 @@ func (s *service) GetByMRN(ctx context.Context, qualifiedName string) (*Asset, e
 }
 
 func (s *service) List(ctx context.Context, offset, limit int) (*ListResult, error) {
-	result, err := s.repo.List(ctx, offset, limit)
+	result, err := s.repo.List(ctx, offset, limit, false)
+	if err != nil {
+		return nil, fmt.Errorf("listing assets: %w", err)
+	}
+	return result, nil
+}
+
+func (s *service) ListWithStubs(ctx context.Context, offset, limit int, includeStubs bool) (*ListResult, error) {
+	result, err := s.repo.List(ctx, offset, limit, includeStubs)
 	if err != nil {
 		return nil, fmt.Errorf("listing assets: %w", err)
 	}
@@ -394,7 +459,6 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		updated = true
 	}
 	if input.Schema != nil {
-		// Initialize schema if nil to avoid database constraint violation
 		if input.Schema == nil {
 			input.Schema = make(map[string]string)
 		}
@@ -418,9 +482,16 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		}
 		updated = true
 	}
-
 	if input.ExternalLinks != nil {
 		asset.ExternalLinks = input.ExternalLinks
+		updated = true
+	}
+	if input.Query != "" {
+		asset.Query = &input.Query
+		updated = true
+	}
+	if input.QueryLanguage != "" {
+		asset.QueryLanguage = &input.QueryLanguage
 		updated = true
 	}
 

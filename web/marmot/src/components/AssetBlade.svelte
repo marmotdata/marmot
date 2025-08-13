@@ -2,11 +2,13 @@
 	import { fetchApi } from '$lib/api';
 	import { onMount, afterUpdate } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
+	import { page } from '$app/stores';
 	import type { Asset } from '$lib/assets/types';
 	import type { LineageResponse } from '$lib/lineage/types';
 	import Button from './Button.svelte';
 	import LineageViewNode from './LineageViewNode.svelte';
 	import Icon from './Icon.svelte';
+	import RunHistory from './RunHistory.svelte';
 
 	export let asset: Asset | null = null;
 	export let lineage: LineageResponse | null = null;
@@ -16,7 +18,9 @@
 	let currentAssetId: string | null = null;
 	let mounted = false;
 
-	// Reset state when asset changes
+	$: isRunHistoryTab = $page.url.searchParams.get('tab') === 'run-history';
+	$: shouldHideRunHistory = staticPlacement && isRunHistoryTab;
+
 	$: if (asset?.id !== currentAssetId) {
 		currentAssetId = asset?.id || null;
 		lineage = null;
@@ -68,6 +72,15 @@
 			loadingLineage = false;
 		}
 	}
+	$: filteredLineage = lineage
+		? {
+				...lineage,
+				nodes: lineage.nodes.filter((node) => !node.asset?.is_stub)
+			}
+		: null;
+
+	$: hasNonCurrentNodes =
+		filteredLineage?.nodes && filteredLineage.nodes.filter((n) => n.depth !== 0).length > 0;
 
 	onMount(() => {
 		mounted = true;
@@ -86,9 +99,9 @@
 {#if isVisible && asset}
 	{#if !staticPlacement}
 		<div
-			role="link"
+			role="button"
 			class="fixed inset-0 bg-black bg-opacity-30 z-40"
-			on:click={onClose}
+			onclick={onClose}
 			transition:fade={{ duration: 200 }}
 		></div>
 	{/if}
@@ -99,7 +112,6 @@
 			: 'fixed right-0 top-0 h-full w-full max-w-2xl bg-earthy-brown-50 dark:bg-gray-900 shadow-lg dark:shadow-2xl z-50 flex flex-col'}
 		transition:fly={{ x: staticPlacement ? 0 : 400, duration: staticPlacement ? 0 : 200 }}
 	>
-		<!-- Header -->
 		<div
 			class="flex-none bg-earthy-brown-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center"
 		>
@@ -112,10 +124,8 @@
 			{/if}
 		</div>
 
-		<!-- Scrollable content -->
 		<div class="flex-1 overflow-y-auto min-h-0 pb-16">
 			<div class="px-6 py-4 space-y-6">
-				<!-- Asset Overview Card -->
 				{#if staticPlacement}
 					<div
 						class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
@@ -181,58 +191,63 @@
 					</div>
 				{/if}
 
-				<!-- Lineage Section -->
-				<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-					<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Data Lineage</h3>
+				{#if !shouldHideRunHistory}
+					<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+						<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Run History</h3>
+						<RunHistory assetId={asset.id} minimal={true} {asset} />
+					</div>
+				{/if}
 
-					{#if loadingLineage}
-						<div class="flex items-center justify-center p-8">
-							<div class="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full" />
-						</div>
-					{:else if lineageError}
-						<div class="p-4 text-red-600 dark:text-red-400">{lineageError}</div>
-					{:else if lineage}
-						<!-- Upstream Assets -->
-						{#if lineage.nodes.filter((n) => n.depth < 0).length > 0}
-							<div class="mt-6">
-								<h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-									Upstream Assets
-								</h4>
-								<div class="space-y-3">
-									{#each lineage.nodes.filter((n) => n.depth < 0) as node}
-										<LineageViewNode
-											{node}
-											expanded={expandedAssets.has(node.id)}
-											onClick={() => toggleAssetExpansion(node.id)}
-											maxMetadataDepth={1}
-										/>
-									{/each}
-								</div>
+				{#if hasNonCurrentNodes}
+					<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
+						<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Data Lineage</h3>
+
+						{#if loadingLineage}
+							<div class="flex items-center justify-center p-8">
+								<div class="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full" />
 							</div>
-						{/if}
-
-						<!-- Downstream Assets -->
-						{#if lineage.nodes.filter((n) => n.depth > 0).length > 0}
-							<div class="mt-6">
-								<h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-									Downstream Assets
-								</h4>
-								<div class="space-y-3">
-									{#each lineage.nodes.filter((n) => n.depth > 0) as node}
-										<LineageViewNode
-											{node}
-											expanded={expandedAssets.has(node.id)}
-											onClick={() => toggleAssetExpansion(node.id)}
-											maxMetadataDepth={1}
-										/>
-									{/each}
+						{:else if lineageError}
+							<div class="p-4 text-red-600 dark:text-red-400">{lineageError}</div>
+						{:else if lineage}
+							{#if lineage.nodes.filter((n) => n.depth < 0).length > 0}
+								<div class="mt-6">
+									<h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+										Upstream Assets
+									</h4>
+									<div class="space-y-3">
+										{#each filteredLineage.nodes.filter((n) => n.depth < 0) as node}
+											<LineageViewNode
+												{node}
+												expanded={expandedAssets.has(node.id)}
+												onClick={() => toggleAssetExpansion(node.id)}
+												maxMetadataDepth={1}
+											/>
+										{/each}
+									</div>
 								</div>
-							</div>
-						{/if}
-					{/if}
-				</div>
+							{/if}
 
-				<!-- Asset Details Section -->
+							{#if lineage.nodes.filter((n) => n.depth > 0).length > 0}
+								<div class="mt-6">
+									<h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
+										Downstream Assets
+									</h4>
+									<div class="space-y-3">
+										{#each filteredLineage.nodes.filter((n) => n.depth > 0) as node}
+											<LineageViewNode
+												{node}
+												expanded={expandedAssets.has(node.id)}
+												onClick={() => toggleAssetExpansion(node.id)}
+												maxMetadataDepth={1}
+											/>
+										{/each}
+									</div>
+								</div>
+							{/if}
+						{/if}
+					</div>
+				{/if}
+
 				<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
 					<h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
 						Additional Details

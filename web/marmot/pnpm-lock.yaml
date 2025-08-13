@@ -29,6 +29,9 @@ importers:
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
+      d3:
+        specifier: ^7.9.0
+        version: 7.9.0
       lucide-svelte:
         specifier: ^0.511.0
         version: 0.511.0(svelte@5.33.13)
@@ -75,6 +78,9 @@ importers:
       '@tailwindcss/typography':
         specifier: ^0.5.16
         version: 0.5.16(tailwindcss@3.4.14)
+      '@types/d3':
+        specifier: ^7.4.3
+        version: 7.4.3
       '@types/eslint':
         specifier: ^9.6.1
         version: 9.6.1

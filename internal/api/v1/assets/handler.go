@@ -205,6 +205,23 @@ func (h *Handler) Routes() []common.Route {
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
+		{
+			Path:    "/api/v1/assets/run-history/{id}",
+			Method:  http.MethodGet,
+			Handler: h.getRunHistory,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/run-history-histogram/{id}",
+			Method:  http.MethodGet,
+			Handler: h.getRunHistoryHistogram,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
 	}
-
 }

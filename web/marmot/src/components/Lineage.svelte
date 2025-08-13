@@ -9,6 +9,7 @@
 	import AssetBlade from './AssetBlade.svelte';
 	import FlowContent from './FlowContent.svelte';
 	import Button from './Button.svelte';
+	import IconifyIcon from '@iconify/svelte';
 
 	let { currentAsset }: { currentAsset: Asset } = $props();
 	let selectedAsset: Asset | null = $state(null);
@@ -41,6 +42,11 @@
 	async function handleNodeClick(nodeId: string) {
 		const clickedNode = nodes.find((n) => n.id === nodeId);
 		const assetId = clickedNode?.data?.id || nodeId;
+
+		// prevent node clicking for stub assets
+		if (clickedNode?.data?.isStub) {
+			return;
+		}
 
 		if (assetId && assetId !== currentAsset.id) {
 			try {
@@ -239,6 +245,7 @@
 					depth: node.depth,
 					hasUpstream: nodeConnections.hasUpstream,
 					hasDownstream: nodeConnections.hasDownstream,
+					isStub: node.asset.is_stub,
 					nodeClickHandler: handleNodeClick
 				},
 				position: { x: 0, y: 0 }
@@ -315,8 +322,15 @@
 		</div>
 
 		<div
-			class="absolute left-4 top-4 z-[5] flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400"
+			class="absolute left-4 top-4 z-[5] flex flex-col items-start gap-2 text-xs text-gray-600 dark:text-gray-400"
 		>
+			<div class="flex items-center gap-2">
+				<IconifyIcon
+					icon="bi:ticket-perforated-fill"
+					class="w-3 h-3 text-orange-600 dark:text-orange-400 rotate-12"
+				/>
+				<span class="text-gray-600 dark:text-gray-300">Stub Asset</span>
+			</div>
 			<div class="flex items-center gap-1">
 				<div class="w-4 h-0.5 bg-amber-500"></div>
 				<span>Returns to</span>
