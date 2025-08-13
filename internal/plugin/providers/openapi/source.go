@@ -232,19 +232,24 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 				statusCodes = append(statusCodes, code)
 			}
 
-
-			endpointFields := EndpointFields{
+			endpointField := EndpointField{
 				Description: op.Description,
 				HTTPMethod: strings.ToUpper(httpMethod),
 				OperationID: op.OperationId,
 				Path: path,
 				StatusCodes: statusCodes,
-				Summary: item.Summary,
+				Summary: op.Summary,
 			}
 			if op.Deprecated != nil {
-				endpointFields.Deprecated = *op.Deprecated
+				endpointField.Deprecated = *op.Deprecated
 			}
-			metadata := plugin.MapToMetadata(endpointFields)
+			if len(endpointField.Summary) == 0 {
+				endpointField.Summary = item.Summary
+			}
+			if len(endpointField.Description) == 0 {
+				endpointField.Description = item.Description
+			}
+			metadata := plugin.MapToMetadata(endpointField)
 			processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 			processedTags = append(processedTags, serviceName)
 			processedTags = append(processedTags, op.Tags...)
