@@ -140,7 +140,7 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		description = fmt.Sprintf("OpenAPI service: %s", serviceName)
 	}
 
-	mrnValue := mrn.New(typeService, "openapi", serviceName)
+	mrnValue := serviceMrnValue(spec)
 	openapiVersion := spec.Model.Version
 
 	var servers []string
@@ -215,6 +215,7 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 
 func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document], config *Config) []asset.Asset {
 	assets := []asset.Asset{}
+	parentMrn := serviceMrnValue(spec)
 	serviceName := spec.Model.Info.Title
 
 	for path, item := range spec.Model.Paths.PathItems.FromOldest() {
@@ -263,9 +264,11 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 				})
 			}
 
+
 			asset := asset.Asset{
 				Name: &pathWithMethod,
 				MRN: &mrnValue,
+				ParentMRN: &parentMrn,
 				Type: typeEndpoint,
 				Providers: []string{openapiProvider},
 				Description: &description,
@@ -300,6 +303,11 @@ func addUniqueAsset(assets *[]asset.Asset, newAsset asset.Asset, seen map[string
 		Str("type", newAsset.Type).
 		Str("service", newAsset.Providers[0]).
 		Msg("Added new asset")
+}
+
+func serviceMrnValue(spec *libopenapi.DocumentModel[v3.Document]) string {
+	serviceName := spec.Model.Info.Title
+	return mrn.New(typeService, "openapi", serviceName)
 }
 
 func isJSON(path string) bool {
