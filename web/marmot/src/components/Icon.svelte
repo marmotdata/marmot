@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { IconLoader, type IconResult } from '$lib/iconloader.ts';
-	import type { ComponentType, SvelteComponent } from 'svelte';
 
 	export let name: string;
 	export let showLabel: boolean = true;

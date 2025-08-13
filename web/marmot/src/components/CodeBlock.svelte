@@ -3,6 +3,7 @@
 	import Prism from 'prismjs';
 	import 'prism-themes/themes/prism-one-dark.css';
 	import 'prismjs/components/prism-json';
+	import 'prismjs/components/prism-sql';
 
 	export let code: any;
 	export let language: string = 'json';

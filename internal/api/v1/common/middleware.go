@@ -15,7 +15,6 @@ import (
 func WithAuth(userService user.Service, authService auth.Service, cfg *config.Config) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			// Check for API key authentication
 			apiKey := r.Header.Get("X-API-Key")
 			if apiKey != "" {
 				user, err := userService.ValidateAPIKey(r.Context(), apiKey)
@@ -32,24 +31,35 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				return
 			}
 
-			// Check for JWT/Bearer token authentication
 			authHeader := r.Header.Get("Authorization")
 			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 				tokenString := strings.TrimPrefix(authHeader, "Bearer ")
+
 				claims, err := authService.ValidateToken(r.Context(), tokenString)
-				if err != nil {
-					RespondError(w, http.StatusUnauthorized, "Invalid token")
+				if err == nil {
+					user, err := userService.Get(r.Context(), claims.Subject)
+					if err != nil {
+						RespondError(w, http.StatusUnauthorized, "Invalid token")
+						return
+					}
+
+					if !user.Active {
+						RespondError(w, http.StatusUnauthorized, "User account is inactive")
+						return
+					}
+
+					ctx := context.WithValue(r.Context(), UserContextKey, user)
+					next(w, r.WithContext(ctx))
 					return
 				}
 
-				user, err := userService.Get(r.Context(), claims.Subject)
+				user, err := userService.ValidateAPIKey(r.Context(), tokenString)
 				if err != nil {
+					log.Error().Err(err).
+						Str("endpoint", r.URL.Path).
+						Str("method", r.Method).
+						Msg("Failed to validate bearer token as JWT or API key")
 					RespondError(w, http.StatusUnauthorized, "Invalid token")
-					return
-				}
-
-				if !user.Active {
-					RespondError(w, http.StatusUnauthorized, "User account is inactive")
 					return
 				}
 

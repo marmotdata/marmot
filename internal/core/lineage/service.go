@@ -14,6 +14,7 @@ type Service interface {
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
 	GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error)
+	ProcessOpenLineageEvent(ctx context.Context, event *RunEvent, createdBy string) error
 }
 
 type Logger interface {

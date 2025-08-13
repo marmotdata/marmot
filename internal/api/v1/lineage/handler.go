@@ -73,5 +73,15 @@ func (h *Handler) Routes() []common.Route {
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
+		// OpenLineage endpoint
+		{
+			Path:    "/api/v1/lineage",
+			Method:  http.MethodPost,
+			Handler: h.ingestOpenLineageEvent,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
 	}
 }

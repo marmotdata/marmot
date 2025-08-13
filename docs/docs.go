@@ -19,6 +19,49 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/lineage": {
+            "post": {
+                "description": "Process OpenLineage run events and update assets/lineage accordingly",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lineage"
+                ],
+                "summary": "Ingest OpenLineage event",
+                "parameters": [
+                    {
+                        "description": "OpenLineage run event",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/lineage.RunEvent"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event processed successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/assets": {
             "post": {
                 "description": "Create a new asset in the system",
@@ -829,6 +872,121 @@ const docTemplate = `{
                     },
                     "409": {
                         "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/assets/{id}/run-history": {
+            "get": {
+                "description": "Get paginated run history for a specific asset",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get asset run history",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/assets.RunHistoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/assets/{id}/run-history/histogram": {
+            "get": {
+                "description": "Get histogram data for asset run history over specified period",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get asset run history histogram",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "30d",
+                        "description": "Time period (7d, 30d, 90d)",
+                        "name": "period",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/assets.HistogramResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/common.ErrorResponse"
                         }
@@ -1909,6 +2067,9 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "is_stub": {
+                    "type": "boolean"
+                },
                 "last_sync_at": {
                     "type": "string"
                 },
@@ -1930,6 +2091,12 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                },
+                "query": {
+                    "type": "string"
+                },
+                "query_language": {
+                    "type": "string"
                 },
                 "schema": {
                     "type": "object",
@@ -2027,6 +2194,32 @@ const docTemplate = `{
                 }
             }
         },
+        "asset.HistogramBucket": {
+            "type": "object",
+            "properties": {
+                "abort": {
+                    "type": "integer"
+                },
+                "complete": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "fail": {
+                    "type": "integer"
+                },
+                "other": {
+                    "type": "integer"
+                },
+                "running": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "asset.ListResult": {
             "type": "object",
             "properties": {
@@ -2081,6 +2274,41 @@ const docTemplate = `{
                     "$ref": "#/definitions/asset.Asset"
                 },
                 "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "asset.RunHistory": {
+            "type": "object",
+            "properties": {
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "event_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "job_name": {
+                    "type": "string"
+                },
+                "job_namespace": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "start_time": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -2298,6 +2526,40 @@ const docTemplate = `{
                 }
             }
         },
+        "assets.HistogramResponse": {
+            "type": "object",
+            "properties": {
+                "buckets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.HistogramBucket"
+                    }
+                },
+                "period": {
+                    "type": "string"
+                }
+            }
+        },
+        "assets.RunHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "run_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.RunHistory"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "assets.SearchResponse": {
             "type": "object",
             "properties": {
@@ -2417,6 +2679,44 @@ const docTemplate = `{
                 }
             }
         },
+        "lineage.Dataset": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "inputFacets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "outputFacets": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "lineage.Job": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                }
+            }
+        },
         "lineage.LineageEdge": {
             "type": "object",
             "properties": {
@@ -2468,6 +2768,53 @@ const docTemplate = `{
                     "items": {
                         "$ref": "#/definitions/lineage.LineageNode"
                     }
+                }
+            }
+        },
+        "lineage.Run": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "runId": {
+                    "type": "string"
+                }
+            }
+        },
+        "lineage.RunEvent": {
+            "type": "object",
+            "properties": {
+                "eventTime": {
+                    "type": "string"
+                },
+                "eventType": {
+                    "type": "string"
+                },
+                "inputs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lineage.Dataset"
+                    }
+                },
+                "job": {
+                    "$ref": "#/definitions/lineage.Job"
+                },
+                "outputs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lineage.Dataset"
+                    }
+                },
+                "producer": {
+                    "type": "string"
+                },
+                "run": {
+                    "$ref": "#/definitions/lineage.Run"
+                },
+                "schemaURL": {
+                    "type": "string"
                 }
             }
         },
