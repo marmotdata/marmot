@@ -24,7 +24,6 @@
 		try {
 			loading = true;
 			error = null;
-			// Updated API endpoint to use type and name
 			const response = await fetchApi(
 				`/assets/lookup/${assetType}/${encodeURIComponent(assetName)}`
 			);
@@ -50,6 +49,18 @@
 		goto('/assets');
 	}
 
+	$: visibleTabs = ['metadata', 'environments', 'schema', 'documentation', 'lineage'].filter(
+		(tab) => {
+			if (
+				tab === 'environments' &&
+				(!asset?.environments || Object.keys(asset.environments).length === 0)
+			)
+				return false;
+			if (tab === 'documentation' && !asset?.documentation) return false;
+			return true;
+		}
+	);
+
 	$: {
 		if (assetType && assetName) {
 			fetchAsset();
@@ -71,7 +82,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="flex-1 flex flex-col">
+		<div class="flex-1 flex flex-col min-w-0">
 			<div class="flex-none p-8">
 				<div class="mb-6">
 					<button
@@ -118,7 +129,7 @@
 					</div>
 
 					<div class="border-b border-gray-200 dark:border-gray-700">
-						{#each ['metadata', 'environments', 'schema', 'documentation', 'lineage'] as tab}
+						{#each visibleTabs as tab}
 							<button
 								class="py-3 px-2 border-b-2 font-medium text-sm {activeTab === tab
 									? 'border-orange-600 text-orange-600'
@@ -133,9 +144,9 @@
 				{/if}
 			</div>
 
-			<div class="flex-1 overflow-y-auto px-8">
+			<div class="flex-1 overflow-y-auto overflow-x-auto px-8">
 				<div class="pb-16">
-					<div class="rounded-lg">
+					<div class="rounded-lg max-w-full overflow-x-auto">
 						{#if !asset}
 							<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
 								<p class="text-gray-500 dark:text-gray-400">Loading asset information...</p>
