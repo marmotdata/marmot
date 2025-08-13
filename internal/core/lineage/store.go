@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-
 	"time"
 
 	"github.com/google/uuid"
@@ -19,6 +18,7 @@ type Repository interface {
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
 	GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error)
+	StoreRunHistory(ctx context.Context, entry *RunHistoryEntry) error
 }
 
 type LineageResponse struct {
@@ -105,7 +105,6 @@ func (r *PostgresRepository) DeleteDirectLineage(ctx context.Context, edgeID str
 	}
 	defer tx.Rollback(ctx)
 
-	// First get the event_id for this edge
 	var eventID string
 	err = tx.QueryRow(ctx, `
         SELECT event_id 
@@ -115,12 +114,11 @@ func (r *PostgresRepository) DeleteDirectLineage(ctx context.Context, edgeID str
 	).Scan(&eventID)
 	if err != nil {
 		if err == pgx.ErrNoRows {
-			return nil // Edge doesn't exist, nothing to delete
+			return nil
 		}
 		return fmt.Errorf("getting event ID: %w", err)
 	}
 
-	// Delete the edge
 	_, err = tx.Exec(ctx, `
         DELETE FROM lineage_edges 
         WHERE id = $1`,
@@ -130,7 +128,6 @@ func (r *PostgresRepository) DeleteDirectLineage(ctx context.Context, edgeID str
 		return fmt.Errorf("deleting edge: %w", err)
 	}
 
-	// Delete the associated event
 	_, err = tx.Exec(ctx, `
         DELETE FROM lineage_events 
         WHERE event_id = $1`,
@@ -144,18 +141,33 @@ func (r *PostgresRepository) DeleteDirectLineage(ctx context.Context, edgeID str
 }
 
 func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string) (string, error) {
+	// Check if edge already exists
+	exists, err := r.EdgeExists(ctx, sourceMRN, targetMRN)
+	if err != nil {
+		return "", fmt.Errorf("checking edge existence: %w", err)
+	}
+	if exists {
+		// Return existing edge ID
+		var edgeID string
+		err := r.db.QueryRow(ctx,
+			"SELECT id FROM lineage_edges WHERE source_mrn = $1 AND target_mrn = $2 LIMIT 1",
+			sourceMRN, targetMRN).Scan(&edgeID)
+		if err != nil {
+			return "", fmt.Errorf("getting existing edge ID: %w", err)
+		}
+		return edgeID, nil
+	}
+
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
 		return "", fmt.Errorf("starting transaction: %w", err)
 	}
 	defer tx.Rollback(ctx)
 
-	// Generate the event ID and edge ID
 	eventID := uuid.New()
 	edgeID := uuid.New()
 	now := time.Now()
 
-	// Create event data as JSON
 	eventData := map[string]interface{}{
 		"source": sourceMRN,
 		"target": targetMRN,
@@ -166,7 +178,6 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 		return "", fmt.Errorf("marshaling event data: %w", err)
 	}
 
-	// Create the event record
 	_, err = tx.Exec(ctx, `
         INSERT INTO lineage_events (
             event_id, 
@@ -188,7 +199,6 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 		return "", err
 	}
 
-	// Create the edge with its own ID
 	_, err = tx.Exec(ctx, `
         INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id)
         VALUES ($1, $2, $3, $4)`,
@@ -236,18 +246,16 @@ func (r *PostgresRepository) GetAssetLineage(ctx context.Context, assetID string
 		return nil, fmt.Errorf("getting asset mrn: %w", err)
 	}
 
-	// Get root node
 	nodes, err := r.scanLineageNodes(ctx, tx, `
-		SELECT id, name, mrn, type, providers, description,
-		metadata, schema, sources, tags,
-		created_by, created_at, updated_at, last_sync_at,
-		0 as depth
-		FROM assets WHERE mrn = $1`, mrn)
+	SELECT id, name, mrn, type, providers, description,
+	metadata, schema, sources, tags,
+	created_by, created_at, updated_at, last_sync_at, is_stub,
+	0 as depth
+	FROM assets WHERE mrn = $1`, mrn)
 	if err != nil {
 		return nil, fmt.Errorf("scanning root node: %w", err)
 	}
 
-	// Get upstream/downstream nodes based on direction
 	if direction != "downstream" {
 		upstreamNodes, err := r.getUpstreamNodes(ctx, tx, mrn, limit)
 		if err != nil {
@@ -264,7 +272,6 @@ func (r *PostgresRepository) GetAssetLineage(ctx context.Context, assetID string
 		nodes = append(nodes, downstreamNodes...)
 	}
 
-	// Get edges between nodes
 	edges, err := r.getLineageEdges(ctx, tx, nodes)
 	if err != nil {
 		return nil, err
@@ -282,67 +289,67 @@ func (r *PostgresRepository) GetAssetLineage(ctx context.Context, assetID string
 
 func (r *PostgresRepository) getUpstreamNodes(ctx context.Context, tx pgx.Tx, mrn string, limit int) ([]LineageNode, error) {
 	return r.scanLineageNodes(ctx, tx, `
-		WITH RECURSIVE upstream AS (
-			SELECT DISTINCT
-				source_mrn as mrn,
-				-1::integer as depth,
-				job_mrn
-			FROM lineage_edges
-			WHERE target_mrn = $1
+	WITH RECURSIVE upstream AS (
+		SELECT DISTINCT
+			source_mrn as mrn,
+			-1::integer as depth,
+			job_mrn
+		FROM lineage_edges
+		WHERE target_mrn = $1
 
-			UNION ALL
+		UNION ALL
 
-			SELECT DISTINCT
-				e.source_mrn,
-				(u.depth - 1)::integer as depth,
-				e.job_mrn
-			FROM lineage_edges e
-			JOIN upstream u ON e.target_mrn = u.mrn
-			WHERE e.source_mrn <> $1
-			AND u.depth > -$2::integer
-		)
-		SELECT DISTINCT ON (a.mrn)
-			a.id, a.name, a.mrn, a.type, a.providers, a.description,
-			a.metadata, a.schema, a.sources, a.tags,
-			a.created_by, a.created_at, a.updated_at, a.last_sync_at,
-			u.depth
-		FROM upstream u
-		JOIN assets a ON a.mrn = u.mrn
-		ORDER BY a.mrn, abs(u.depth)`, mrn, limit)
+		SELECT DISTINCT
+			e.source_mrn,
+			(u.depth - 1)::integer as depth,
+			e.job_mrn
+		FROM lineage_edges e
+		JOIN upstream u ON e.target_mrn = u.mrn
+		WHERE e.source_mrn <> $1
+		AND u.depth > -$2::integer
+	)
+	SELECT DISTINCT ON (a.mrn)
+		a.id, a.name, a.mrn, a.type, a.providers, a.description,
+		a.metadata, a.schema, a.sources, a.tags,
+		a.created_by, a.created_at, a.updated_at, a.last_sync_at, a.is_stub,
+		u.depth
+	FROM upstream u
+	JOIN assets a ON a.mrn = u.mrn
+	ORDER BY a.mrn, abs(u.depth)`, mrn, limit)
 }
 
 func (r *PostgresRepository) getDownstreamNodes(ctx context.Context, tx pgx.Tx, mrn string, limit int) ([]LineageNode, error) {
 	return r.scanLineageNodes(ctx, tx, `
-		WITH RECURSIVE downstream AS (
-			SELECT DISTINCT
-				target_mrn as mrn,
-				1 as depth,
-				job_mrn
-			FROM lineage_edges
-			WHERE source_mrn = $1
+	WITH RECURSIVE downstream AS (
+		SELECT DISTINCT
+			target_mrn as mrn,
+			1 as depth,
+			job_mrn
+		FROM lineage_edges
+		WHERE source_mrn = $1
 
-			UNION ALL
+		UNION ALL
 
-			SELECT DISTINCT
-				e.target_mrn,
-				CASE 
-					WHEN d.depth < $2 THEN d.depth + 1
-					ELSE d.depth
-				END as depth,
-				e.job_mrn
-			FROM lineage_edges e
-			JOIN downstream d ON e.source_mrn = d.mrn
-			WHERE e.target_mrn <> $1
-			AND d.depth < ($2)
-		)
-		SELECT DISTINCT ON (a.mrn)
-			a.id, a.name, a.mrn, a.type, a.providers, a.description,
-			a.metadata, a.schema, a.sources, a.tags,
-			a.created_by, a.created_at, a.updated_at, a.last_sync_at,
-			d.depth
-		FROM downstream d
-		JOIN assets a ON a.mrn = d.mrn
-		ORDER BY a.mrn, abs(d.depth)`, mrn, limit)
+		SELECT DISTINCT
+			e.target_mrn,
+			CASE 
+				WHEN d.depth < $2 THEN d.depth + 1
+				ELSE d.depth
+			END as depth,
+			e.job_mrn
+		FROM lineage_edges e
+		JOIN downstream d ON e.source_mrn = d.mrn
+		WHERE e.target_mrn <> $1
+		AND d.depth < ($2)
+	)
+	SELECT DISTINCT ON (a.mrn)
+		a.id, a.name, a.mrn, a.type, a.providers, a.description,
+		a.metadata, a.schema, a.sources, a.tags,
+		a.created_by, a.created_at, a.updated_at, a.last_sync_at, a.is_stub,
+		d.depth
+	FROM downstream d
+	JOIN assets a ON a.mrn = d.mrn
+	ORDER BY a.mrn, abs(d.depth)`, mrn, limit)
 }
 
 func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nodes []LineageNode) ([]LineageEdge, error) {
@@ -352,11 +359,16 @@ func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nod
 
 	nodeMRNs := make([]string, len(nodes))
 	for i, node := range nodes {
-		nodeMRNs[i] = node.ID
+		if node.Asset.MRN != nil && *node.Asset.MRN != "" {
+			nodeMRNs[i] = *node.Asset.MRN
+		} else {
+			nodeMRNs[i] = node.ID
+		}
 	}
 
 	rows, err := tx.Query(ctx, `
 		SELECT DISTINCT
+			e.id,
 			e.source_mrn,
 			e.target_mrn,
 			e.job_mrn,
@@ -379,7 +391,7 @@ func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nod
 	for rows.Next() {
 		var edge LineageEdge
 		var jobMRN *string
-		if err := rows.Scan(&edge.Source, &edge.Target, &jobMRN, &edge.Type); err != nil {
+		if err := rows.Scan(&edge.ID, &edge.Source, &edge.Target, &jobMRN, &edge.Type); err != nil {
 			return nil, fmt.Errorf("scanning edge: %w", err)
 		}
 		if jobMRN != nil {
@@ -422,13 +434,19 @@ func (r *PostgresRepository) scanLineageNodes(ctx context.Context, tx pgx.Tx, qu
 			&a.CreatedAt,
 			&a.UpdatedAt,
 			&a.LastSyncAt,
+			&a.IsStub,
 			&node.Depth,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scanning node: %w", err)
 		}
 
-		node.ID = *a.MRN
+		// Use MRN as the node ID for proper lineage relationships
+		if a.MRN != nil && *a.MRN != "" {
+			node.ID = *a.MRN
+		} else {
+			node.ID = a.ID
+		}
 		node.Type = a.Type
 		node.Asset = &a
 		nodes = append(nodes, node)
@@ -439,4 +457,46 @@ func (r *PostgresRepository) scanLineageNodes(ctx context.Context, tx pgx.Tx, qu
 	}
 
 	return nodes, nil
+}
+
+func (r *PostgresRepository) StoreRunHistory(ctx context.Context, entry *RunHistoryEntry) error {
+	runFacetsJSON, err := json.Marshal(entry.RunFacets)
+	if err != nil {
+		return fmt.Errorf("failed to marshal run facets: %w", err)
+	}
+
+	jobFacetsJSON, err := json.Marshal(entry.JobFacets)
+	if err != nil {
+		return fmt.Errorf("failed to marshal job facets: %w", err)
+	}
+
+	inputsJSON, err := json.Marshal(entry.Inputs)
+	if err != nil {
+		return fmt.Errorf("failed to marshal inputs: %w", err)
+	}
+
+	outputsJSON, err := json.Marshal(entry.Outputs)
+	if err != nil {
+		return fmt.Errorf("failed to marshal outputs: %w", err)
+	}
+
+	query := `
+		INSERT INTO run_history (
+			id, asset_id, run_id, job_namespace, job_name, 
+			event_type, event_time, producer, run_facets, job_facets, 
+			inputs, outputs, created_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	`
+
+	_, err = r.db.Exec(ctx, query,
+		entry.ID, entry.AssetID, entry.RunID, entry.JobNamespace, entry.JobName,
+		entry.EventType, entry.EventTime, entry.Producer, runFacetsJSON, jobFacetsJSON,
+		inputsJSON, outputsJSON, entry.CreatedAt,
+	)
+
+	if err != nil {
+		return fmt.Errorf("failed to store run history: %w", err)
+	}
+
+	return nil
 }
