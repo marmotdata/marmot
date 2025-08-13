@@ -11,6 +11,8 @@
 	import Lineage from '$lib/../components/Lineage.svelte';
 	import SchemaSummary from '$lib/../components/SchemaSummary.svelte';
 	import AssetEnvironmentsView from '$lib/../components/AssetEnvironmentsView.svelte';
+	import QueryPreview from '$lib/../components/QueryPreview.svelte';
+	import RunHistory from '$lib/../components/RunHistory.svelte';
 
 	let asset: Asset | null = null;
 	let loading = true;
@@ -24,7 +26,6 @@
 		try {
 			loading = true;
 			error = null;
-			// Updated API endpoint to use type and name
 			const response = await fetchApi(
 				`/assets/lookup/${assetType}/${encodeURIComponent(assetName)}`
 			);
@@ -50,6 +51,25 @@
 		goto('/assets');
 	}
 
+	$: visibleTabs = [
+		'metadata',
+		'query',
+		'environments',
+		'schema',
+		'documentation',
+		'run-history',
+		'lineage'
+	].filter((tab) => {
+		if (
+			tab === 'environments' &&
+			(!asset?.environments || Object.keys(asset.environments).length === 0)
+		)
+			return false;
+		if (tab === 'documentation' && !asset?.documentation) return false;
+		if (tab === 'query' && (!asset?.query || !asset.query.trim())) return false;
+		return true;
+	});
+
 	$: {
 		if (assetType && assetName) {
 			fetchAsset();
@@ -71,7 +91,7 @@
 			</div>
 		</div>
 	{:else}
-		<div class="flex-1 flex flex-col">
+		<div class="flex-1 flex flex-col min-w-0">
 			<div class="flex-none p-8">
 				<div class="mb-6">
 					<button
@@ -118,7 +138,7 @@
 					</div>
 
 					<div class="border-b border-gray-200 dark:border-gray-700">
-						{#each ['metadata', 'environments', 'schema', 'documentation', 'lineage'] as tab}
+						{#each visibleTabs as tab}
 							<button
 								class="py-3 px-2 border-b-2 font-medium text-sm {activeTab === tab
 									? 'border-orange-600 text-orange-600'
@@ -126,16 +146,16 @@
 								aria-selected={activeTab === tab}
 								on:click={() => setActiveTab(tab)}
 							>
-								{tab.charAt(0).toUpperCase() + tab.slice(1)}
+								{tab === 'run-history' ? 'Run History' : tab.charAt(0).toUpperCase() + tab.slice(1)}
 							</button>
 						{/each}
 					</div>
 				{/if}
 			</div>
 
-			<div class="flex-1 overflow-y-auto px-8">
+			<div class="flex-1 overflow-y-auto overflow-x-auto px-8">
 				<div class="pb-16">
-					<div class="rounded-lg">
+					<div class="rounded-lg max-w-full overflow-x-auto">
 						{#if !asset}
 							<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
 								<p class="text-gray-500 dark:text-gray-400">Loading asset information...</p>
@@ -154,6 +174,13 @@
 								</h3>
 								<AssetSources sources={asset.sources || []} />
 							</div>
+						{:else if activeTab === 'query'}
+							<div class="mt-6">
+								<QueryPreview
+									query={asset.query || ''}
+									queryLanguage={asset.query_language || 'sql'}
+								/>
+							</div>
 						{:else if activeTab === 'environments'}
 							<div class="mt-6">
 								{#if asset.environments && Object.keys(asset.environments).length > 0}
@@ -171,6 +198,10 @@
 						{:else if activeTab === 'documentation'}
 							<div class="mt-6">
 								<AssetDocumentation mrn={asset.mrn} />
+							</div>
+						{:else if activeTab === 'run-history'}
+							<div class="mt-6">
+								<RunHistory assetId={asset.id} />
 							</div>
 						{:else if activeTab === 'lineage'}
 							<div class="mt-6">

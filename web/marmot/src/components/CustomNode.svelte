@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Handle, Position } from '@xyflow/svelte';
 	import Icon from './Icon.svelte';
+	import IconifyIcon from '@iconify/svelte';
 
 	let { data } = $props<{
 		data: {
@@ -12,12 +13,15 @@
 			id: string;
 			hasUpstream: boolean;
 			hasDownstream: boolean;
+			isStub?: boolean;
 			nodeClickHandler: (id: string) => void;
 		};
 	}>();
 
 	function handleClick() {
-		data.nodeClickHandler(data.id);
+		if (!data.isStub) {
+			data.nodeClickHandler(data.id);
+		}
 	}
 </script>
 
@@ -25,7 +29,21 @@
 	<Handle type="target" position={Position.Left} style="background: #696969;" />
 {/if}
 
-<div class="node {data.isCurrent ? 'current' : ''}" on:click={handleClick}>
+<div
+	class="node {data.isCurrent ? 'current' : ''} {data.isStub ? 'stub' : ''}"
+	on:click={handleClick}
+	title={data.isStub ? 'Stub asset created by OpenLineage' : ''}
+>
+	{#if data.isStub}
+		<div class="stub-corner" title="Stub asset created by OpenLineage">
+			<IconifyIcon
+				icon="bi:ticket-perforated-fill"
+				class="w-4 h-4 text-white absolute"
+				style="transform: rotate(-45deg); top: -33px; left: 5px;"
+			/>
+		</div>
+	{/if}
+
 	<div
 		class="text-xs text-gray-500 dark:text-gray-400 font-bold text-center pb-2 border-b border-gray-200 dark:border-gray-600 flex items-center justify-center gap-1"
 	>
@@ -58,6 +76,8 @@
 		cursor: pointer;
 		min-width: 150px;
 		transition: all 150ms;
+		position: relative;
+		overflow: hidden;
 	}
 
 	:global(.dark) .node {
@@ -65,12 +85,12 @@
 		border-color: #4d4d4d;
 	}
 
-	.node:not(.current):hover {
+	.node:not(.current):not(.stub):hover {
 		border-color: #fb923c;
 		background: #fff7ed;
 	}
 
-	:global(.dark) .node:not(.current):hover {
+	:global(.dark) .node:not(.current):not(.stub):hover {
 		background: #4d4d4d;
 	}
 
@@ -83,8 +103,35 @@
 		background: #4d4d4d;
 	}
 
+	.node.stub {
+		cursor: default;
+		background: #f5f4ef;
+		border-color: #c9c9c9;
+	}
+
+	:global(.dark) .node.stub {
+		background: #252525;
+		border-color: #3d3d3d;
+	}
+
 	.name {
 		font-weight: 500;
+	}
+
+	.stub-corner {
+		position: absolute;
+		top: -1px;
+		left: -1px;
+		width: 0;
+		height: 0;
+		border-top: 40px solid #f97316;
+		border-right: 40px solid transparent;
+		z-index: 10;
+		opacity: 0.7;
+	}
+
+	:global(.dark) .stub-corner {
+		border-top-color: #fb923c;
 	}
 
 	:global(.svelte-flow__handle) {

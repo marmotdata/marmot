@@ -18,6 +18,8 @@ definitions:
         type: array
       id:
         type: string
+      is_stub:
+        type: boolean
       last_sync_at:
         type: string
       metadata:
@@ -33,6 +35,10 @@ definitions:
         items:
           type: string
         type: array
+      query:
+        type: string
+      query_language:
+        type: string
       schema:
         additionalProperties:
           type: string
@@ -96,6 +102,23 @@ definitions:
       url:
         type: string
     type: object
+  asset.HistogramBucket:
+    properties:
+      abort:
+        type: integer
+      complete:
+        type: integer
+      date:
+        type: string
+      fail:
+        type: integer
+      other:
+        type: integer
+      running:
+        type: integer
+      total:
+        type: integer
+    type: object
   asset.ListResult:
     properties:
       assets:
@@ -132,6 +155,29 @@ definitions:
       example:
         $ref: '#/definitions/asset.Asset'
       value:
+        type: string
+    type: object
+  asset.RunHistory:
+    properties:
+      duration_ms:
+        type: integer
+      end_time:
+        type: string
+      event_time:
+        type: string
+      id:
+        type: string
+      job_name:
+        type: string
+      job_namespace:
+        type: string
+      run_id:
+        type: string
+      start_time:
+        type: string
+      status:
+        type: string
+      type:
         type: string
     type: object
   assetdocs.Documentation:
@@ -275,6 +321,28 @@ definitions:
     - mrn
     - source
     type: object
+  assets.HistogramResponse:
+    properties:
+      buckets:
+        items:
+          $ref: '#/definitions/asset.HistogramBucket'
+        type: array
+      period:
+        type: string
+    type: object
+  assets.RunHistoryResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      run_history:
+        items:
+          $ref: '#/definitions/asset.RunHistory'
+        type: array
+      total:
+        type: integer
+    type: object
   assets.SearchResponse:
     properties:
       assets:
@@ -353,6 +421,32 @@ definitions:
         description: '"created", "duplicate", or "existing"'
         type: string
     type: object
+  lineage.Dataset:
+    properties:
+      facets:
+        additionalProperties: true
+        type: object
+      inputFacets:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      namespace:
+        type: string
+      outputFacets:
+        additionalProperties: true
+        type: object
+    type: object
+  lineage.Job:
+    properties:
+      facets:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      namespace:
+        type: string
+    type: object
   lineage.LineageEdge:
     properties:
       id:
@@ -387,6 +481,37 @@ definitions:
         items:
           $ref: '#/definitions/lineage.LineageNode'
         type: array
+    type: object
+  lineage.Run:
+    properties:
+      facets:
+        additionalProperties: true
+        type: object
+      runId:
+        type: string
+    type: object
+  lineage.RunEvent:
+    properties:
+      eventTime:
+        type: string
+      eventType:
+        type: string
+      inputs:
+        items:
+          $ref: '#/definitions/lineage.Dataset'
+        type: array
+      job:
+        $ref: '#/definitions/lineage.Job'
+      outputs:
+        items:
+          $ref: '#/definitions/lineage.Dataset'
+        type: array
+      producer:
+        type: string
+      run:
+        $ref: '#/definitions/lineage.Run'
+      schemaURL:
+        type: string
     type: object
   plugin.RawPluginConfig:
     additionalProperties: true
@@ -583,6 +708,34 @@ info:
   title: Marmot API
   version: "0.1"
 paths:
+  /api/v1/lineage:
+    post:
+      consumes:
+      - application/json
+      description: Process OpenLineage run events and update assets/lineage accordingly
+      parameters:
+      - description: OpenLineage run event
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/lineage.RunEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event processed successfully
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Ingest OpenLineage event
+      tags:
+      - lineage
   /assets:
     post:
       consumes:
@@ -712,6 +865,83 @@ paths:
           schema:
             $ref: '#/definitions/common.ErrorResponse'
       summary: Update an asset
+      tags:
+      - assets
+  /assets/{id}/run-history:
+    get:
+      description: Get paginated run history for a specific asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 10
+        description: Number of items per page
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assets.RunHistoryResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get asset run history
+      tags:
+      - assets
+  /assets/{id}/run-history/histogram:
+    get:
+      description: Get histogram data for asset run history over specified period
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 30d
+        description: Time period (7d, 30d, 90d)
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assets.HistogramResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get asset run history histogram
       tags:
       - assets
   /assets/{id}/tags:

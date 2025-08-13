@@ -3,6 +3,7 @@
 	import Prism from 'prismjs';
 	import 'prism-themes/themes/prism-one-dark.css';
 	import 'prismjs/components/prism-json';
+	import 'prismjs/components/prism-sql';
 
 	export let code: any;
 	export let language: string = 'json';
@@ -76,7 +77,7 @@
 			{/if}
 		</button>
 
-		<pre class="p-6 text-gray-900 dark:text-gray-100"><code
+		<pre class="p-6 text-gray-900 dark:text-gray-100 overflow-x-auto"><code
 				bind:this={element}
 				class="language-{language}">{formatted}</code
 			></pre>
@@ -89,14 +90,14 @@
 		background: transparent !important;
 	}
 	code {
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono',
-			'Courier New', monospace;
+		font-family:
+			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+			monospace;
 		font-size: 0.875rem;
 		background: transparent !important;
 		display: block;
-		overflow-x: auto;
 		white-space: pre;
 		width: max-content;
-		max-width: none;
+		min-width: 100%;
 	}
 </style>

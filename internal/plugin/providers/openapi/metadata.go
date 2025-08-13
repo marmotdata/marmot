@@ -20,9 +20,9 @@ type OpenAPIFields struct {
 	TermsOfService	string `json:"terms_of_service" metadata:"terms_of_service" description:"Link to the page that describes the terms of service"`
 }
 
-// EndpointFields represents endpoints in OpenAPI specifications
+// EndpointField represents endpoints in OpenAPI specifications
 // +marmot:metadata
-type EndpointFields struct {
+type EndpointField struct {
 	Deprecated	bool `json:"deprecated" metadata:"deprecated" description:"Is this endpoint deprecated"`
 	Description	string `json:"description" metadata:"description" description:"A verbose explanation of the operation behaviour."`
 	StatusCodes	[]string `json:"status_codes" metadata:"status_codes" description:"All HTTP response status codes that are returned for this endpoint."`

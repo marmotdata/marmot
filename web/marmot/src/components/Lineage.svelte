@@ -3,12 +3,13 @@
 	import { onMount } from 'svelte';
 	import type { Asset } from '$lib/assets/types';
 	import { page } from '$app/stores';
-	import { SvelteFlow, Background, type Node, type Edge, type NodeTypes } from '@xyflow/svelte';
+	import { SvelteFlowProvider, type Node, type Edge } from '@xyflow/svelte';
 	import '@xyflow/svelte/dist/style.css';
 	import dagre from '@dagrejs/dagre';
 	import AssetBlade from './AssetBlade.svelte';
-	import CustomNode from './CustomNode.svelte';
+	import FlowContent from './FlowContent.svelte';
 	import Button from './Button.svelte';
+	import IconifyIcon from '@iconify/svelte';
 
 	let { currentAsset }: { currentAsset: Asset } = $props();
 	let selectedAsset: Asset | null = $state(null);
@@ -19,8 +20,8 @@
 	let depth = $state(10);
 	let initialLoad = true;
 
-	let nodes = $state<Node[]>([]);
-	let edges = $state<Edge[]>([]);
+	let nodes = $state.raw<Node[]>([]);
+	let edges = $state.raw<Edge[]>([]);
 
 	function getNodeIconType(node: any): string {
 		if (
@@ -33,10 +34,6 @@
 		return node.asset.type;
 	}
 
-	const nodeTypes: NodeTypes = {
-		custom: CustomNode
-	};
-
 	$effect(() => {
 		$page;
 		selectedAsset = null;
@@ -45,6 +42,11 @@
 	async function handleNodeClick(nodeId: string) {
 		const clickedNode = nodes.find((n) => n.id === nodeId);
 		const assetId = clickedNode?.data?.id || nodeId;
+
+		// prevent node clicking for stub assets
+		if (clickedNode?.data?.isStub) {
+			return;
+		}
 
 		if (assetId && assetId !== currentAsset.id) {
 			try {
@@ -68,26 +70,40 @@
 		}
 	}
 
-	function findCycles(edgeArray: Edge[]): Map<string, Set<string>> {
-		const cycleMap = new Map<string, Set<string>>();
+	function findBackEdges(edgeArray: Edge[]): Set<string> {
+		const graph = new Map<string, string[]>();
+		const visited = new Set<string>();
+		const recursionStack = new Set<string>();
+		const backEdges = new Set<string>();
 
 		edgeArray.forEach((edge) => {
-			const reverseEdge = edgeArray.find(
-				(e) => e.source === edge.target && e.target === edge.source
-			);
-			if (reverseEdge) {
-				if (!cycleMap.has(edge.source)) {
-					cycleMap.set(edge.source, new Set());
+			if (!graph.has(edge.source)) graph.set(edge.source, []);
+			graph.get(edge.source)!.push(edge.target);
+		});
+
+		function dfs(node: string): void {
+			visited.add(node);
+			recursionStack.add(node);
+
+			const neighbors = graph.get(node) || [];
+			for (const neighbor of neighbors) {
+				if (recursionStack.has(neighbor)) {
+					backEdges.add(`${node}-${neighbor}`);
+				} else if (!visited.has(neighbor)) {
+					dfs(neighbor);
 				}
-				if (!cycleMap.has(edge.target)) {
-					cycleMap.set(edge.target, new Set());
-				}
-				cycleMap.get(edge.source)?.add(edge.target);
-				cycleMap.get(edge.target)?.add(edge.source);
+			}
+
+			recursionStack.delete(node);
+		}
+
+		graph.forEach((_, nodeId) => {
+			if (!visited.has(nodeId)) {
+				dfs(nodeId);
 			}
 		});
 
-		return cycleMap;
+		return backEdges;
 	}
 
 	function getLayoutedElements(nodeArray: Node[], edgeArray: Edge[]) {
@@ -101,25 +117,17 @@
 		});
 
 		g.setDefaultEdgeLabel(() => ({}));
-		const cycles = findCycles(edgeArray);
-		const primaryNodes = findPrimaryNodes(nodeArray, edgeArray, cycles);
-		const verticalGap = 150;
 
 		nodeArray.forEach((node) => {
 			const dimensions = {
-				width: Math.max(180, node.data.name.length * 10 + 60),
-				height: 80
+				width: node.type === 'cycleReturn' ? 120 : Math.max(180, node.data.name.length * 10 + 60),
+				height: node.type === 'cycleReturn' ? 60 : 80
 			};
 			g.setNode(node.id, dimensions);
 		});
 
 		edgeArray.forEach((edge) => {
-			const sourceCycles = cycles.get(edge.source);
-			const targetCycles = cycles.get(edge.target);
-
-			if (!sourceCycles?.has(edge.target) && !targetCycles?.has(edge.source)) {
-				g.setEdge(edge.source, edge.target);
-			}
+			g.setEdge(edge.source, edge.target);
 		});
 
 		dagre.layout(g);
@@ -129,49 +137,11 @@
 			const baseX = nodeWithPosition.x - nodeWithPosition.width / 2;
 			const baseY = nodeWithPosition.y - nodeWithPosition.height / 2;
 
-			if (cycles.has(node.id) && !primaryNodes.has(node.id)) {
-				const primaryNodeId = Array.from(cycles.get(node.id) || []).find((id) =>
-					primaryNodes.has(id)
-				);
-
-				if (primaryNodeId) {
-					const primaryPos = g.node(primaryNodeId);
-					return {
-						...node,
-						position: {
-							x: primaryPos.x - nodeWithPosition.width / 2,
-							y: primaryPos.y + verticalGap
-						}
-					};
-				}
-			}
-
 			return {
 				...node,
 				position: { x: baseX, y: baseY }
 			};
 		});
-	}
-
-	function findPrimaryNodes(
-		nodeArray: Node[],
-		edgeArray: Edge[],
-		cycles: Map<string, Set<string>>
-	): Set<string> {
-		const primaryNodes = new Set<string>();
-
-		nodeArray.forEach((node) => {
-			const incomingEdges = edgeArray.filter((e) => e.target === node.id);
-			const hasNonCyclicInput = incomingEdges.some(
-				(edge) => !cycles.has(edge.source) || !cycles.get(edge.source)?.has(node.id)
-			);
-
-			if (hasNonCyclicInput) {
-				primaryNodes.add(node.id);
-			}
-		});
-
-		return primaryNodes;
 	}
 
 	function generateElements(data: LineageResponse) {
@@ -203,7 +173,50 @@
 			};
 		}
 
+		const backEdges = findBackEdges(edgeArray);
+		const cycleReturnNodes = new Map<string, Node>();
+		const modifiedEdges: Edge[] = [];
+
 		edgeArray.forEach((edge) => {
+			const edgeKey = `${edge.source}-${edge.target}`;
+			if (backEdges.has(edgeKey)) {
+				const cycleReturnId = `cycle-return-${edge.source}-${edge.target}`;
+
+				if (!cycleReturnNodes.has(cycleReturnId)) {
+					const targetNode = data.nodes.find((n) => n.id === edge.target);
+					cycleReturnNodes.set(cycleReturnId, {
+						id: cycleReturnId,
+						type: 'cycleReturn',
+						data: {
+							targetId: edge.target,
+							targetName: targetNode?.asset.name || 'Unknown',
+							targetType: targetNode?.asset.type || 'unknown'
+						},
+						position: { x: 0, y: 0 }
+					});
+				}
+
+				modifiedEdges.push({
+					id: `${edge.source}-${cycleReturnId}`,
+					source: edge.source,
+					target: cycleReturnId,
+					type: 'bezier',
+					animated: true,
+					style: 'stroke: #f59e0b; stroke-width: 2px;'
+				});
+			} else {
+				modifiedEdges.push({
+					id: `${edge.source}-${edge.target}`,
+					source: edge.source,
+					target: edge.target,
+					type: 'bezier',
+					animated: true,
+					style: edge.job_mrn ? 'stroke: #22c55e; stroke-width: 2px;' : 'stroke: #94a3b8;'
+				});
+			}
+		});
+
+		modifiedEdges.forEach((edge) => {
 			connections.set(edge.source, {
 				hasUpstream: connections.get(edge.source)?.hasUpstream || false,
 				hasDownstream: true
@@ -232,23 +245,17 @@
 					depth: node.depth,
 					hasUpstream: nodeConnections.hasUpstream,
 					hasDownstream: nodeConnections.hasDownstream,
+					isStub: node.asset.is_stub,
 					nodeClickHandler: handleNodeClick
 				},
 				position: { x: 0, y: 0 }
 			};
 		});
 
-		const flowEdges = edgeArray.map((edge) => ({
-			id: `${edge.source}-${edge.target}`,
-			source: edge.source,
-			target: edge.target,
-			type: 'bezier',
-			animated: true,
-			style: edge.job_mrn ? 'stroke: #22c55e; stroke-width: 2px;' : 'stroke: #94a3b8;'
-		}));
+		const allNodes = [...nodeArray, ...Array.from(cycleReturnNodes.values())];
+		const layoutedNodes = getLayoutedElements(allNodes, modifiedEdges);
 
-		const layoutedNodes = getLayoutedElements(nodeArray, flowEdges);
-		return { nodes: layoutedNodes, edges: flowEdges };
+		return { nodes: layoutedNodes, edges: modifiedEdges };
 	}
 
 	async function fetchLineage() {
@@ -262,13 +269,6 @@
 			}
 
 			const data = await response.json();
-
-			if (initialLoad && data.nodes.length > 50 && depth > 1) {
-				depth = 1;
-				initialLoad = false;
-				await fetchLineage();
-				return;
-			}
 
 			initialLoad = false;
 			const elements = generateElements(data);
@@ -293,73 +293,83 @@
 	});
 </script>
 
-<div class="w-full h-[800px] relative">
-	<div class="absolute right-4 top-4 z-[5] flex flex-col items-end gap-1">
-		<span class="text-xs text-gray-600 dark:text-gray-400 px-1 select-none">Depth</span>
-		<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-			<div class="flex flex-col items-center p-1">
-				<Button
-					variant="clear"
-					text="+"
-					class="!p-1"
-					click={() => {
-						depth = depth + 1;
-					}}
-				/>
-				<div class="py-1 text-sm text-gray-600 dark:text-gray-300 select-none">{depth}</div>
-				<Button
-					variant="clear"
-					text="-"
-					class="!p-1"
-					disabled={depth <= 1}
-					click={() => {
-						depth = depth - 1;
-					}}
-				/>
+<SvelteFlowProvider>
+	<div class="w-full h-[800px] relative">
+		<div class="absolute right-4 top-4 z-[5] flex flex-col items-end gap-1">
+			<span class="text-xs text-gray-600 dark:text-gray-400 px-1 select-none">Depth</span>
+			<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+				<div class="flex flex-col items-center p-1">
+					<Button
+						variant="clear"
+						text="+"
+						class="!p-1"
+						click={() => {
+							depth = depth + 1;
+						}}
+					/>
+					<div class="py-1 text-sm text-gray-600 dark:text-gray-300 select-none">{depth}</div>
+					<Button
+						variant="clear"
+						text="-"
+						class="!p-1"
+						disabled={depth <= 1}
+						click={() => {
+							depth = depth - 1;
+						}}
+					/>
+				</div>
 			</div>
 		</div>
-	</div>
 
-	<div
-		class="h-full bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 relative"
-	>
-		{#if loading && (!nodes || nodes.length === 0)}
-			<div class="absolute inset-0 flex items-center justify-center bg-inherit z-10">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600" />
+		<div
+			class="absolute left-4 top-4 z-[5] flex flex-col items-start gap-2 text-xs text-gray-600 dark:text-gray-400"
+		>
+			<div class="flex items-center gap-2">
+				<IconifyIcon
+					icon="bi:ticket-perforated-fill"
+					class="w-3 h-3 text-orange-600 dark:text-orange-400 rotate-12"
+				/>
+				<span class="text-gray-600 dark:text-gray-300">Stub Asset</span>
 			</div>
-		{/if}
-
-		{#if error}
-			<div class="absolute inset-0 flex items-center justify-center bg-inherit z-10">
-				<div class="text-red-600 dark:text-red-400">{error}</div>
+			<div class="flex items-center gap-1">
+				<div class="w-4 h-0.5 bg-amber-500"></div>
+				<span>Returns to</span>
 			</div>
-		{/if}
+		</div>
 
-		<div class="h-full w-full">
-			{#if nodes && nodes.length > 0}
-				<SvelteFlow
-					bind:nodes
-					bind:edges
-					{nodeTypes}
-					onnodeclick={(event) => handleNodeClick(event.node.id)}
-					fitView
-					minZoom={0.2}
-					maxZoom={1}
-					initialZoom={0.7}
-					defaultEdgeOptions={{
-						type: 'bezier',
-						animated: true,
-						style: 'stroke-width: 2; stroke: #d1d5db;'
-					}}
-					nodesConnectable={false}
-					elementsSelectable={true}
-				>
-					<Background gap={16} variant="dots" />
-				</SvelteFlow>
+		<div
+			class="h-full bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 relative"
+		>
+			{#if loading && (!nodes || nodes.length === 0)}
+				<div class="absolute inset-0 flex items-center justify-center bg-inherit z-10">
+					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600" />
+				</div>
 			{/if}
+
+			{#if error}
+				<div class="absolute inset-0 flex items-center justify-center bg-inherit z-10">
+					<div class="text-red-600 dark:text-red-400">{error}</div>
+				</div>
+			{/if}
+
+			<div class="h-full w-full">
+				{#if nodes && nodes.length > 0}
+					<FlowContent
+						{nodes}
+						{edges}
+						{handleNodeClick}
+						onNodesChange={(updatedNodes) => {
+							nodes = updatedNodes;
+						}}
+						onEdgesChange={(updatedEdges) => {
+							edges = updatedEdges;
+						}}
+					/>
+				{/if}
+			</div>
 		</div>
 	</div>
-</div>
+</SvelteFlowProvider>
 
 {#if selectedAsset}
 	<div class="fixed inset-0 flex items-end justify-end z-50 pointer-events-none">
