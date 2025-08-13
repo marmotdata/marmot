@@ -454,7 +454,7 @@ export function processJsonSchema(schemaSection: any): Field[] {
 
     if (schema.anyOf || schema.oneOf || schema.allOf || schema.not) {
       fields.push(...processComposition('root', schema, schema, 0));
-    } else if (schema.type === 'object') {
+    } else if (schema.type === 'object' || (Array.isArray(schema.type) && schema.type.includes('object'))) {
       if (schema.properties) {
         Object.entries(schema.properties).forEach(([fieldName, fieldSchema]) => {
           const isRequired = (schema.required || []).includes(fieldName);
