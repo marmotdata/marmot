@@ -1,6 +1,6 @@
 // This E2E test needs fixing
 
-// package e2e
+package e2e
 
 // import (
 // 	"bytes"
