@@ -431,6 +431,14 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 			jSchema.Required = schema.Required
 		}
 
+		if schema.Enum != nil {
+			enum := []any{}
+			for _, e := range schema.Enum {
+				enum = append(enum, e.Value)
+			}
+			jSchema.Enum = enum
+		}
+
 		return &jSchema, nil
 	}
 

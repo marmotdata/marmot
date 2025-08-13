@@ -13,7 +13,6 @@ const (
 )
 
 type JsonSchema struct {
-	Enum		[]string `json:"enum,omitempty"`
 	Schema		*string	`json:"$schema,omitempty"`
 	Id          	*string `json:"id,omitempty"`
 	Title       	*string `json:"title,omitempty"`
@@ -27,6 +26,7 @@ type JsonSchema struct {
 	AnyOf		[]*JsonSchema `json:"anyOf,omitempty"`
 	OneOf		[]*JsonSchema `json:"oneOf,omitempty"`
 	Required	[]string `json:"required,omitempty"`
+	Enum		[]any `json:"enum,omitempty"`
 }
 
 func NewJsonSchema() JsonSchema {
