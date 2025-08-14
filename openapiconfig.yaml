@@ -1,0 +1,5 @@
+runs:
+- openapi:
+    spec_path: "app/openapi-specs"
+    tags: 
+    - lol
