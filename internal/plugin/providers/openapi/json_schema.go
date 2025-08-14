@@ -27,6 +27,7 @@ type JsonSchema struct {
 	OneOf		[]*JsonSchema `json:"oneOf,omitempty"`
 	Required	[]string `json:"required,omitempty"`
 	Enum		[]any `json:"enum,omitempty"`
+
 }
 
 func NewJsonSchema() JsonSchema {
@@ -35,7 +36,7 @@ func NewJsonSchema() JsonSchema {
 }
 
 func NewRootJsonSchema() JsonSchema {
-	schema := "http://json-schema.org/draft-04/schema#"
+	schema := "https://json-schema.org/draft/2020-12/schema"
 	return JsonSchema{
 		Schema: &schema,
 	}
