@@ -5,9 +5,11 @@ package openapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
@@ -16,6 +18,7 @@ import (
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel"
+	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/rs/zerolog/log"
 )
@@ -269,6 +272,18 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 				})
 			}
 
+			schema := make(map[string]string)
+			for code, response := range op.Responses.Codes.FromOldest() {
+				for content, mediaType := range response.Content.FromOldest() {
+					jsonSchema, err := toJsonSchema(mediaType.Schema)
+					jsonStr, err := json.Marshal(jsonSchema)
+					if err != nil {
+						log.Warn().Err(err).Msg("Failed to convert OpenAPI schema to json format")
+						continue
+					}
+					schema[code+":"+content] = string(jsonStr)
+				}
+			}
 
 			asset := asset.Asset{
 				Name: &pathWithMethod,
@@ -281,6 +296,7 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 				Tags: processedTags,
 				Sources: []asset.AssetSource{},
 				ExternalLinks: externalLinks,
+				Schema: schema,
 			}
 			assets = append(assets, asset)
 		}
@@ -323,4 +339,118 @@ func isJSON(path string) bool {
 func isYAML(path string) bool {
 	ext := filepath.Ext(path)
 	return ext == ".yaml" || ext == ".yml"
+}
+
+func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
+	root := NewRootJsonSchema()
+
+	var dfs func(p *base.SchemaProxy, r *JsonSchema, depth int) (*JsonSchema, error)
+	dfs = func(p *base.SchemaProxy, r *JsonSchema, depth int) (*JsonSchema, error) {
+		jSchema := NewJsonSchema()
+
+		if p == nil {
+			return &jSchema, nil
+		}
+
+		if depth > 5 {
+			description := "Maximum depth reached. Stop rendering schema"
+			jSchema.Description = &description
+			return &jSchema, nil
+		}
+
+		schema, err := p.BuildSchema()
+		if err != nil {
+			return nil, err
+		}
+		if len(schema.Type) > 0 {
+			jSchema.Type = schema.Type
+		}
+		jSchema.Description = &schema.Description
+
+		if schema.Nullable != nil && *schema.Nullable {
+			if jSchema.Type != nil {
+				jSchema.Type = append(jSchema.Type, "null")
+			} else {
+				jSchema.Type = []string{"null"}
+			}
+		}
+
+		if schema.Properties != nil {
+			jSchema.Properties = make(map[string]JsonSchema)
+			for name, prop := range schema.Properties.FromOldest() {
+				jSubSchema, err := dfs(prop, r, depth + 1)
+				if err != nil {
+					return nil, err
+				}
+				jSchema.Properties[name] = *jSubSchema
+			}
+		}
+
+		if schema.Items != nil && slices.Contains(schema.Type, "array") {
+			isSchemaProxy := schema.Items.IsA()
+			if isSchemaProxy {
+				jsonItemsSchema, err := dfs(schema.Items.A, r, depth + 1)
+				if err != nil {
+					return nil, err
+				}
+				jSchema.Items = jsonItemsSchema
+			} else {
+				jSchema.Items = schema.Items.B
+			}
+		}
+
+		if schema.AllOf != nil {
+			jSchema.AllOf = []*JsonSchema{}
+			for _, allOfSchema := range schema.AllOf {
+				jsonAllOfSchema, err := dfs(allOfSchema, r, depth + 1)
+				if err != nil {
+					return nil, err
+				}
+				jSchema.AllOf = append(jSchema.AllOf, jsonAllOfSchema)
+			}
+		}
+
+		if schema.AnyOf != nil {
+			jSchema.AnyOf = []*JsonSchema{}
+			for _, anyOfSchema := range schema.AnyOf {
+				jsonAnyOfSchema, err := dfs(anyOfSchema, r, depth + 1)
+				if err != nil {
+					return nil, err
+				}
+				jSchema.AnyOf = append(jSchema.AnyOf, jsonAnyOfSchema)
+			}
+		}
+
+		if schema.OneOf != nil {
+			jSchema.OneOf = []*JsonSchema{}
+			for _, oneOfSchema := range schema.OneOf {
+				jsonOneOfSchema, err := dfs(oneOfSchema, r, depth + 1)
+				if err != nil {
+					return nil, err
+				}
+				jSchema.OneOf = append(jSchema.OneOf, jsonOneOfSchema)
+			}
+		}
+
+		if schema.Required != nil {
+			jSchema.Required = schema.Required
+		}
+
+		if schema.Enum != nil {
+			enum := []any{}
+			for _, e := range schema.Enum {
+				enum = append(enum, e.Value)
+			}
+			jSchema.Enum = enum
+		}
+
+		return &jSchema, nil
+	}
+
+	jsonSchema, err := dfs(schemaProxy, &root, 0)
+	if err != nil {
+		return nil, err
+	}
+
+	return jsonSchema, nil 
 }
