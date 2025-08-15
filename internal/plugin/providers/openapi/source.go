@@ -20,6 +20,7 @@ import (
 	"github.com/pb33f/libopenapi/datamodel"
 	"github.com/pb33f/libopenapi/datamodel/high/base"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
+	"github.com/pb33f/libopenapi/renderer"
 	"github.com/rs/zerolog/log"
 )
 
@@ -343,6 +344,7 @@ func isYAML(path string) bool {
 
 func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 	root := NewRootJsonSchema()
+	mg := mockGenerator()
 
 	var dfs func(p *base.SchemaProxy, r *JsonSchema, depth int) (*JsonSchema, error)
 	dfs = func(p *base.SchemaProxy, r *JsonSchema, depth int) (*JsonSchema, error) {
@@ -444,6 +446,18 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 			jSchema.Enum = enum
 		}
 
+		jSchema.Pattern = schema.Pattern
+		jSchema.Maximum = schema.Maximum
+		jSchema.Minimum = schema.Minimum
+
+		mock, err := mg.GenerateMock(schema, "")
+		if err != nil {
+			if err.Error() != "unable to render schema for mock, it's empty" {
+				log.Warn().Err(err).Msg(fmt.Sprintf("Failed to generate mock for schema %s", schema.Title))
+			} 
+		}
+		jSchema.Example = string(mock)
+
 		return &jSchema, nil
 	}
 
@@ -453,4 +467,10 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 	}
 
 	return jsonSchema, nil 
+}
+
+func mockGenerator() *renderer.MockGenerator {
+	mg := renderer.NewMockGenerator(renderer.JSON)
+	mg.SetPretty()
+	return mg
 }

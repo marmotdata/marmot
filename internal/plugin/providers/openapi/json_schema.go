@@ -27,7 +27,11 @@ type JsonSchema struct {
 	OneOf		[]*JsonSchema `json:"oneOf,omitempty"`
 	Required	[]string `json:"required,omitempty"`
 	Enum		[]any `json:"enum,omitempty"`
-
+	Example		string `json:"example,omitempty"`
+	Pattern 	string `json:"pattern,omitempty"`
+	Maximum         *float64 `json:"maximum,renderZero,omitempty"`
+	Minimum         *float64 `json:"minimum,renderZero,omitempty,"`
+	Format          string `json:"format,omitempty"`
 }
 
 func NewJsonSchema() JsonSchema {
