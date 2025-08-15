@@ -277,6 +277,8 @@ github.com/lib/pq v1.2.0/go.mod h1:5WUZQaWbwv1U+lTReE5YruASi9Al49XbQIvNi/34Woo=
 github.com/lib/pq v1.10.2/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
+github.com/lucasjones/reggen v0.0.0-20200904144131-37ba4fa293bb h1:w1g9wNDIE/pHSTmAaUhv4TZQuPBS6GV3mMz5hkgziIU=
+github.com/lucasjones/reggen v0.0.0-20200904144131-37ba4fa293bb/go.mod h1:5ELEyG+X8f+meRWHuqUOewBOhvHkl7M76pdGEansxW4=
 github.com/magiconair/properties v1.8.10 h1:s31yESBquKXCV9a/ScB3ESkOjUYYv+X0rg8SYxI99mE=
 github.com/magiconair/properties v1.8.10/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/mailru/easyjson v0.9.0 h1:PrnmzHw7262yW8sTBwxi1PdJA3Iw/EKBa8psRf7d9a4=
@@ -306,8 +308,6 @@ github.com/opencontainers/go-digest v1.0.0 h1:apOUWs51W5PlhuyGyz9FCeeBIOUDA/6nW8
 github.com/opencontainers/go-digest v1.0.0/go.mod h1:0JzlMkj0TRzQZfJkVvzbP0HBR3IKzErnv2BNG4W4MAM=
 github.com/opencontainers/image-spec v1.1.0 h1:8SG7/vwALn54lVB/0yZ/MMwhFrPYtpEHQb2IpWsCzug=
 github.com/opencontainers/image-spec v1.1.0/go.mod h1:W4s4sFTMaBeK1BQLXbG4AdM2szdn85PY75RI83NrTrM=
-github.com/pb33f/libopenapi v0.25.2 h1:Jqup/1IOpEB2UnPD8Saw93geSpi8h1a28NtypvpVFqg=
-github.com/pb33f/libopenapi v0.25.2/go.mod h1:IefJDi7uJpflLs2wEnkiier/Y21w+dEbOrMCP5LB2aw=
 github.com/pb33f/libopenapi v0.25.3 h1:B0rf9Reo63tAx54gpoP9778Y84gk3JQoFtj7yg8vKfo=
 github.com/pb33f/libopenapi v0.25.3/go.mod h1:IefJDi7uJpflLs2wEnkiier/Y21w+dEbOrMCP5LB2aw=
 github.com/pb33f/ordered-map/v2 v2.2.0 h1:+6D6e0nkcEjVPh6kF48ynz2Cb+D/ECH/Q3AOunHtj7E=
