@@ -8,11 +8,12 @@ import (
 	highbase "github.com/pb33f/libopenapi/datamodel/high/base"
 	"github.com/pb33f/libopenapi/datamodel/low"
 	lowbase "github.com/pb33f/libopenapi/datamodel/low/base"
+	"github.com/rs/zerolog/log"
 	"github.com/stretchr/testify/assert"
 	"gopkg.in/yaml.v3"
 )
 
-func TestJsonSchemaFromOpenAPI(t *testing.T) {
+func TestJsonSchemaFromOpenAPISchema(t *testing.T) {
 	given := `type: [object]
 description: "I'm a Labubu"
 properties:
@@ -34,6 +35,36 @@ properties:
     }
   },
   "example": "{\"name\":\"labubu\"}"
+}`
+
+	proxy := getSchemaProxy([]byte(given))
+	compiled, err := NewJsonSchemaFromOpenAPISchema(proxy)
+	assert.NoError(t, err)
+	receivedJsonSchema, err := json.Marshal(compiled)
+	assert.NoError(t, err)
+	assert.JSONEq(t, expectedJsonSchema, string(receivedJsonSchema))
+}
+
+func TestJsonSchemaFromNullableOpenAPISchema(t *testing.T) {
+	given := `type: [object]
+description: ""
+properties:
+  name:
+    type: string
+    nullable: true
+    example: BigIntoEnergy`
+	expectedJsonSchema := `
+{
+  "type": "object",
+  "description": "",
+  "properties": {
+    "name": {
+      "type": ["string", "null"],
+      "description": "",
+      "example": "BigIntoEnergy"
+    }
+  },
+  "example": "{\"name\":\"BigIntoEnergy\"}"
 }`
 
 	proxy := getSchemaProxy([]byte(given))
