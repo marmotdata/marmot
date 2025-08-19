@@ -214,6 +214,7 @@ func (js JsonSchema) MarshalJSON() ([]byte, error) {
 		jsonSchemaAlias: jsonSchemaAlias(js),
 	}
 
+	// If js.Type contains a single element, unwrap it. Otherwise, use the slice as is.
 	if len(js.Type) == 1 {
 		aux.Type = js.Type[0]
 	} else if len(js.Type) > 1 {
