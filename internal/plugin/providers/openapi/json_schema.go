@@ -29,9 +29,20 @@ type JsonSchema struct {
 	Enum		[]any `json:"enum,omitempty"`
 	Example		string `json:"example,omitempty"`
 	Pattern 	string `json:"pattern,omitempty"`
+	Format          string `json:"format,omitempty"`
 	Maximum         *float64 `json:"maximum,renderZero,omitempty"`
 	Minimum         *float64 `json:"minimum,renderZero,omitempty,"`
-	Format          string `json:"format,omitempty"`
+	MaxLength       *int64 `json:"maxLength,omitempty"`
+	MinLength       *int64 `json:"minLength,omitempty"`
+	MaxItems        *int64`json:"maxItems,omitempty"`
+	MinItems        *int64 `json:"minItems,omitempty"`
+	UniqueItems     *bool `json:"uniqueItems,omitempty"`
+	MultipleOf      *float64 `json:"multipleOf,omitempty"`
+	Not		*JsonSchema `json:"not,omitempty"`
+	AdditionalProperties any `json:"additionalProperties,omitempty"`
+	MaxProperties   *int64 `json:"maxProperties,omitempty"`
+	MinProperties   *int64 `json:"minProperties,omitempty"`
+	Deprecated      *bool `json:"deprecated,omitempty"`
 }
 
 func NewJsonSchema() JsonSchema {

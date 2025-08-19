@@ -277,9 +277,13 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 			for code, response := range op.Responses.Codes.FromOldest() {
 				for content, mediaType := range response.Content.FromOldest() {
 					jsonSchema, err := toJsonSchema(mediaType.Schema)
+					if err != nil {
+						log.Warn().Err(err).Msg("Failed to convert OpenAPI schema to json schema")
+						continue
+					}
 					jsonStr, err := json.Marshal(jsonSchema)
 					if err != nil {
-						log.Warn().Err(err).Msg("Failed to convert OpenAPI schema to json format")
+						log.Warn().Err(err).Msg("Failed to marshal json schema")
 						continue
 					}
 					schema[code+":"+content] = string(jsonStr)
@@ -362,7 +366,7 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 
 		schema, err := p.BuildSchema()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed to build schema at line %d: %w", p.GetValueNode().Line, err)
 		}
 		if len(schema.Type) > 0 {
 			jSchema.Type = schema.Type
@@ -382,7 +386,7 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 			for name, prop := range schema.Properties.FromOldest() {
 				jSubSchema, err := dfs(prop, r, depth + 1)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("failed to render properties schema at line %d: %w", prop.GetValueNode().Line, err)
 				}
 				jSchema.Properties[name] = *jSubSchema
 			}
@@ -393,7 +397,7 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 			if isSchemaProxy {
 				jsonItemsSchema, err := dfs(schema.Items.A, r, depth + 1)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("failed to render items schema at line %d: %w", schema.Items.A.GetValueNode().Line, err)
 				}
 				jSchema.Items = jsonItemsSchema
 			} else {
@@ -406,7 +410,7 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 			for _, allOfSchema := range schema.AllOf {
 				jsonAllOfSchema, err := dfs(allOfSchema, r, depth + 1)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("failed to render AllOf schema at line %d: %w", allOfSchema.GetValueNode().Line, err)
 				}
 				jSchema.AllOf = append(jSchema.AllOf, jsonAllOfSchema)
 			}
@@ -417,7 +421,7 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 			for _, anyOfSchema := range schema.AnyOf {
 				jsonAnyOfSchema, err := dfs(anyOfSchema, r, depth + 1)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("failed to render AnyOf schema at line %d: %w", anyOfSchema.GetValueNode().Line, err)
 				}
 				jSchema.AnyOf = append(jSchema.AnyOf, jsonAnyOfSchema)
 			}
@@ -428,7 +432,7 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 			for _, oneOfSchema := range schema.OneOf {
 				jsonOneOfSchema, err := dfs(oneOfSchema, r, depth + 1)
 				if err != nil {
-					return nil, err
+					return nil, fmt.Errorf("failed to render OneOf schema at line %d: %w", oneOfSchema.GetValueNode().Line, err)
 				}
 				jSchema.OneOf = append(jSchema.OneOf, jsonOneOfSchema)
 			}
@@ -446,14 +450,40 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 			jSchema.Enum = enum
 		}
 
+		if schema.AdditionalProperties != nil {
+			if schema.AdditionalProperties.IsA() {
+				jSchema.AdditionalProperties = schema.AdditionalProperties.A
+			} else {
+				jSchema.AdditionalProperties = schema.AdditionalProperties.B
+			}
+		}
+
+		if schema.Not != nil {
+			jsonNotSchema, err := dfs(schema.Not, r, depth + 1)
+			if err != nil {
+				return nil, fmt.Errorf("failed to render Not schema at line %d: %w", schema.Not.GetValueNode().Line, err)
+			}
+			jSchema.Not = jsonNotSchema
+		}
+
 		jSchema.Pattern = schema.Pattern
+		jSchema.MultipleOf = schema.MultipleOf
 		jSchema.Maximum = schema.Maximum
 		jSchema.Minimum = schema.Minimum
+		jSchema.MaxLength = schema.MaxLength
+		jSchema.MinLength = schema.MinLength
+		jSchema.MaxItems = schema.MaxItems
+		jSchema.MinItems = schema.MinItems
+		jSchema.UniqueItems = schema.UniqueItems
+		jSchema.MaxProperties = schema.MaxProperties
+		jSchema.MinProperties = schema.MinProperties
+		jSchema.MinProperties = schema.MinProperties
+		jSchema.Deprecated = schema.Deprecated
 
 		mock, err := mg.GenerateMock(schema, "")
 		if err != nil {
 			if err.Error() != "unable to render schema for mock, it's empty" {
-				log.Warn().Err(err).Msg(fmt.Sprintf("Failed to generate mock for schema %s", schema.Title))
+				log.Warn().Err(err).Msg(fmt.Sprintf("Failed to generate mock for schema at line %d", p.GetValueNode().Line))
 			} 
 		}
 		jSchema.Example = string(mock)
@@ -463,7 +493,7 @@ func toJsonSchema(schemaProxy *base.SchemaProxy) (*JsonSchema, error) {
 
 	jsonSchema, err := dfs(schemaProxy, &root, 0)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("Failed to dive into schema at line %d: %w", schemaProxy.GetValueNode().Line, err)
 	}
 
 	return jsonSchema, nil 
