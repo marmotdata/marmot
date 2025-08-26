@@ -41,7 +41,7 @@ generate:
 	go generate ./...
 
 lint:
-	golangci-lint run --config=./.github/.golangci.yaml ./... -v
+	golangci-lint run --config=./.github/.golangci.yaml ./... -v --timeout 120
 
 docker-build:
 	docker build -t marmot -f deployments/docker/Dockerfile.backend .
