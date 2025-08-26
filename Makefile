@@ -47,7 +47,7 @@ docker-build:
 	docker build -t marmot -f deployments/docker/Dockerfile.backend .
 
 dev-deps:
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.60.1
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v2.3.0
 	go install github.com/swaggo/swag/cmd/swag@latest
 
 e2e-client: swagger
