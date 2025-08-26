@@ -1,15 +1,31 @@
-linters-settings:
-  errcheck:
-    exclude-functions:
-      - (github.com/jackc/pgx/v5.Tx).Rollback
-      - (*github.com/jackc/pgx/v5/pgxpool.Conn).Release
-      - (*github.com/spf13/viper.Viper).BindEnv
-      - (*github.com/spf13/cobra.Command).MarkFlagRequired
-  staticcheck:
-    checks:
-      # TODO: we should remove these... eventually
-      - "-SA1019" # Ignore deprecated function usage
-      - "-SA5011" # Ignore possible nil pointer dereference after nil check
-
-run:
-  timeout: 2m
+version: "2"
+linters:
+  settings:
+    errcheck:
+      exclude-functions:
+        - (github.com/jackc/pgx/v5.Tx).Rollback
+        - (*github.com/jackc/pgx/v5/pgxpool.Conn).Release
+        - (*github.com/spf13/viper.Viper).BindEnv
+        - (*github.com/spf13/cobra.Command).MarkFlagRequired
+    staticcheck:
+      checks:
+        - -SA1019
+        - -SA5011
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

@@ -162,7 +162,10 @@ func (s *service) createDAGTaskLineage(ctx context.Context, event *RunEvent, job
 			parentNamespace,
 			parentJobName)
 
-		s.ensureDAGAssetExists(ctx, dagMRN, parentJobName, parentNamespace, provider, createdBy)
+		err := s.ensureDAGAssetExists(ctx, dagMRN, parentJobName, parentNamespace, provider, createdBy)
+		if err != nil {
+			return err
+		}
 
 		if _, err := s.CreateDirectLineage(ctx, dagMRN, jobAssetMRN); err != nil {
 			log.Warn().Err(err).
