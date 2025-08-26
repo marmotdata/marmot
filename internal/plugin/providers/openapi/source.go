@@ -5,6 +5,7 @@ package openapi
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -269,6 +270,22 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 				})
 			}
 
+			schema := make(map[string]string)
+			for code, response := range op.Responses.Codes.FromOldest() {
+				for content, mediaType := range response.Content.FromOldest() {
+					jsonSchema, err := NewJsonSchemaFromOpenAPISchema(mediaType.Schema)
+					if err != nil {
+						log.Warn().Err(err).Msg("Failed to convert OpenAPI schema to json schema")
+						continue
+					}
+					jsonStr, err := json.Marshal(jsonSchema)
+					if err != nil {
+						log.Warn().Err(err).Msg("Failed to marshal json schema")
+						continue
+					}
+					schema[code+":"+content] = string(jsonStr)
+				}
+			}
 
 			asset := asset.Asset{
 				Name: &pathWithMethod,
@@ -281,6 +298,7 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 				Tags: processedTags,
 				Sources: []asset.AssetSource{},
 				ExternalLinks: externalLinks,
+				Schema: schema,
 			}
 			assets = append(assets, asset)
 		}
