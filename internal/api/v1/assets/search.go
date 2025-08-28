@@ -119,6 +119,18 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if searchQuery != "" {
+		recorder := h.metricsService.GetRecorder()
+		queryType := "full_text"
+		if len(filter.Types) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 {
+			queryType = "filtered"
+		}
+		err = recorder.RecordSearchQuery(r.Context(), queryType, searchQuery)
+		if err != nil {
+			log.Error().Err(err)
+		}
+	}
+
 	response := SearchResponse{
 		Assets:  results,
 		Total:   total,
@@ -245,6 +257,11 @@ func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
 			common.RespondError(w, http.StatusInternalServerError, "Failed to lookup asset")
 		}
 		return
+	}
+
+	err = h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
+	if err != nil {
+		log.Error().Err(err)
 	}
 
 	common.RespondJSON(w, http.StatusOK, result)

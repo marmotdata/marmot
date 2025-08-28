@@ -15,6 +15,7 @@ import (
 	"github.com/marmotdata/marmot/internal/config"
 	"github.com/marmotdata/marmot/internal/staticfiles"
 	"github.com/marmotdata/marmot/internal/store/postgres"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -65,6 +66,20 @@ func runMarmot(_ *cobra.Command) error {
 	mux := http.NewServeMux()
 	server := v1.New(cfg, db)
 	server.RegisterRoutes(mux)
+
+	if cfg.Metrics.Enabled {
+		go func() {
+			metricsMux := http.NewServeMux()
+			metricsMux.Handle("/metrics", promhttp.Handler())
+
+			metricsAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Metrics.Port)
+			log.Info().Str("address", metricsAddr).Msg("Metrics server started")
+
+			if err := http.ListenAndServe(metricsAddr, metricsMux); err != nil {
+				log.Error().Err(err).Msg("Metrics server failed")
+			}
+		}()
+	}
 
 	staticHandler := staticfiles.New()
 	if err := staticHandler.SetupRoutes(mux); err != nil {

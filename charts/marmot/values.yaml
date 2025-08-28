@@ -42,8 +42,7 @@ service:
 ingress:
   enabled: false
   className: ""
-  annotations:
-    {}
+  annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
@@ -86,6 +85,11 @@ config:
     rootUrl: ""
     customResponseHeaders: {}
 
+  # Metrics configuration
+  metrics:
+    enabled: false
+    port: 9090
+
   # Database configuration
   database:
     # When postgresql.enabled is true, these values are automatically populated
@@ -113,6 +117,15 @@ config:
     anonymous:
       enabled: false
       role: "user"
+
+monitoring:
+  serviceMonitor:
+    enabled: false
+    labels: {}
+    interval: 30s
+    scrapeTimeout: 10s
+    path: /metrics
+    annotations: {}
 
 # Additional environment variables
 env: {}

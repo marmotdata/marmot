@@ -55,6 +55,286 @@
                 }
             }
         },
+        "/api/v1/metrics": {
+            "get": {
+                "description": "Get aggregated metrics for dashboard display",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get metrics for UI",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "example": "2024-01-01T00:00:00Z",
+                        "description": "Start time (ISO 8601)",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "example": "2024-01-02T00:00:00Z",
+                        "description": "End time (ISO 8601)",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Filter by metric names",
+                        "name": "metric_names",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "avg",
+                            "sum",
+                            "max",
+                            "min"
+                        ],
+                        "type": "string",
+                        "default": "avg",
+                        "description": "Aggregation type",
+                        "name": "aggregation",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "1m",
+                            "5m",
+                            "1h",
+                            "1d"
+                        ],
+                        "type": "string",
+                        "description": "Time bucket size",
+                        "name": "bucket_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/metrics.GetMetricsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/by-owner": {
+            "get": {
+                "description": "Get asset counts grouped by owner",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get assets by owner",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/metrics.AssetsByOwnerResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/by-provider": {
+            "get": {
+                "description": "Get asset counts grouped by provider",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get assets by provider",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/metrics.AssetsByProviderResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/by-type": {
+            "get": {
+                "description": "Get asset counts grouped by type",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get assets by type",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/metrics.AssetsByTypeResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/total": {
+            "get": {
+                "description": "Get the total number of assets",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get total assets count",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/metrics.TotalAssetsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/with-schemas": {
+            "get": {
+                "description": "Get the count of assets that have schemas defined",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get assets with schemas count",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/metrics.AssetsWithSchemasResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/top-assets": {
+            "get": {
+                "description": "Get the most viewed assets",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get top viewed assets",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start time (ISO 8601)",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (ISO 8601)",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/metrics.AssetCount"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/top-queries": {
+            "get": {
+                "description": "Get the most popular search queries",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get top search queries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start time (ISO 8601)",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (ISO 8601)",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/metrics.QueryCount"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/assets": {
             "post": {
                 "description": "Create a new asset in the system",
@@ -2811,9 +3091,219 @@
                 }
             }
         },
+        "metrics.AggregatedMetric": {
+            "type": "object",
+            "properties": {
+                "aggregation_type": {
+                    "type": "string"
+                },
+                "bucket_end": {
+                    "type": "string"
+                },
+                "bucket_size": {
+                    "$ref": "#/definitions/time.Duration"
+                },
+                "bucket_start": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "metrics.AssetCount": {
+            "type": "object",
+            "properties": {
+                "asset_id": {
+                    "type": "string"
+                },
+                "asset_name": {
+                    "type": "string"
+                },
+                "asset_provider": {
+                    "type": "string"
+                },
+                "asset_type": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "metrics.AssetsByOwnerResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "metrics.AssetsByProviderResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "metrics.AssetsByTypeResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "metrics.AssetsWithSchemasResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "metrics.GetMetricsRequest": {
+            "type": "object",
+            "properties": {
+                "aggregation": {
+                    "type": "string"
+                },
+                "bucket_size": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "metric_names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "start": {
+                    "type": "string"
+                }
+            }
+        },
+        "metrics.GetMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "metrics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/metrics.AggregatedMetric"
+                    }
+                },
+                "query": {
+                    "$ref": "#/definitions/metrics.GetMetricsRequest"
+                }
+            }
+        },
+        "metrics.QueryCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "query_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "metrics.TotalAssetsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
         "plugin.RawPluginConfig": {
             "type": "object",
             "additionalProperties": true
+        },
+        "time.Duration": {
+            "type": "integer",
+            "enum": [
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000,
+                3600000000000
+            ],
+            "x-enum-varnames": [
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour",
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour",
+                "minDuration",
+                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute",
+                "Hour"
+            ]
         },
         "user.APIKey": {
             "type": "object",

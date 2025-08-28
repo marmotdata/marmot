@@ -44,6 +44,11 @@ type Config struct {
 		CustomResponseHeaders map[string]string `mapstructure:"customer_response_headers"`
 	} `mapstructure:"server"`
 
+	Metrics struct {
+		Enabled bool `mapstructure:"enabled"`
+		Port    int  `mapstructure:"port"`
+	} `mapstructure:"metrics"`
+
 	Database struct {
 		Host         string `mapstructure:"host"`
 		Port         int    `mapstructure:"port"`
@@ -145,6 +150,10 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("server.port", 8080)
 	v.SetDefault("server.host", "0.0.0.0")
 
+	// Metrics defaults
+	v.SetDefault("metrics.enabled", false)
+	v.SetDefault("metrics.port", 9090)
+
 	// Database defaults
 	v.SetDefault("database.host", "localhost")
 	v.SetDefault("database.port", 5432)
@@ -164,9 +173,9 @@ func setDefaults(v *viper.Viper) {
 
 	// Auth defaults
 	v.SetDefault("auth.providers.okta.type", "okta")
-    	v.SetDefault("auth.providers.okta.name", "Okta")
-   	v.SetDefault("auth.providers.okta.allow_signup", true)
-    	v.SetDefault("auth.providers.okta.scopes", []string{"openid", "profile", "email", "groups", "offline_access"})
+	v.SetDefault("auth.providers.okta.name", "Okta")
+	v.SetDefault("auth.providers.okta.allow_signup", true)
+	v.SetDefault("auth.providers.okta.scopes", []string{"openid", "profile", "email", "groups", "offline_access"})
 }
 
 // BuildDSN builds a PostgreSQL connection string from config

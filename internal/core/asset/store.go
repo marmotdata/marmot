@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/query"
 )
 
@@ -76,11 +77,15 @@ type AssetSummary struct {
 }
 
 type PostgresRepository struct {
-	db *pgxpool.Pool
+	db       *pgxpool.Pool
+	recorder metrics.Recorder
 }
 
-func NewPostgresRepository(db *pgxpool.Pool) Repository {
-	return &PostgresRepository{db: db}
+func NewPostgresRepository(db *pgxpool.Pool, recorder metrics.Recorder) *PostgresRepository {
+	return &PostgresRepository{
+		db:       db,
+		recorder: recorder,
+	}
 }
 
 func marshalAssetFields(asset *Asset) ([]byte, []byte, []byte, []byte, error) {
@@ -108,8 +113,11 @@ func marshalAssetFields(asset *Asset) ([]byte, []byte, []byte, []byte, error) {
 }
 
 func (r *PostgresRepository) Create(ctx context.Context, asset *Asset) error {
+	start := time.Now()
+
 	metadataJSON, sourcesJSON, environmentsJSON, externalLinksJSON, err := marshalAssetFields(asset)
 	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "asset_create", time.Since(start), false)
 		return err
 	}
 
@@ -128,14 +136,20 @@ func (r *PostgresRepository) Create(ctx context.Context, asset *Asset) error {
 		asset.CreatedBy, asset.CreatedAt, asset.UpdatedAt, asset.LastSyncAt,
 		asset.Query, asset.QueryLanguage, asset.IsStub)
 
+	duration := time.Since(start)
+	success := err == nil
+
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			r.recorder.RecordDBQuery(ctx, "asset_create", duration, true)
 			return ErrConflict
 		}
+		r.recorder.RecordDBQuery(ctx, "asset_create", duration, false)
 		return fmt.Errorf("inserting asset: %w", err)
 	}
 
+	r.recorder.RecordDBQuery(ctx, "asset_create", duration, success)
 	return nil
 }
 
@@ -279,7 +293,9 @@ func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (r *PostgresRepository) scanAsset(row pgx.Row) (*Asset, error) {
+func (r *PostgresRepository) scanAsset(ctx context.Context, row pgx.Row) (*Asset, error) {
+	start := time.Now()
+
 	var asset Asset
 	var metadataJSON, sourcesJSON, environmentsJSON, externalLinksJSON, schemaJSON []byte
 
@@ -292,9 +308,12 @@ func (r *PostgresRepository) scanAsset(row pgx.Row) (*Asset, error) {
 	)
 
 	if err != nil {
+		duration := time.Since(start)
 		if errors.Is(err, pgx.ErrNoRows) {
+			r.recorder.RecordDBQuery(ctx, "asset_scan", duration, true)
 			return nil, ErrNotFound
 		}
+		r.recorder.RecordDBQuery(ctx, "asset_scan", duration, false)
 		return nil, fmt.Errorf("scanning asset: %w", err)
 	}
 
@@ -322,37 +341,45 @@ func (r *PostgresRepository) scanAsset(row pgx.Row) (*Asset, error) {
 
 	if len(metadataJSON) > 0 {
 		if err := json.Unmarshal(metadataJSON, &asset.Metadata); err != nil {
+			r.recorder.RecordDBQuery(ctx, "asset_scan", time.Since(start), false)
 			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
 		}
 	}
 
 	if len(schemaJSON) > 0 {
 		if err := json.Unmarshal(schemaJSON, &asset.Schema); err != nil {
+			r.recorder.RecordDBQuery(ctx, "asset_scan", time.Since(start), false)
 			return nil, fmt.Errorf("unmarshaling schema: %w", err)
 		}
 	}
 
 	if len(sourcesJSON) > 0 {
 		if err := json.Unmarshal(sourcesJSON, &asset.Sources); err != nil {
+			r.recorder.RecordDBQuery(ctx, "asset_scan", time.Since(start), false)
 			return nil, fmt.Errorf("unmarshaling sources: %w", err)
 		}
 	}
+
 	if len(environmentsJSON) > 0 {
 		if err := json.Unmarshal(environmentsJSON, &asset.Environments); err != nil {
+			r.recorder.RecordDBQuery(ctx, "asset_scan", time.Since(start), false)
 			return nil, fmt.Errorf("unmarshaling environments: %w", err)
 		}
 	}
+
 	if len(externalLinksJSON) > 0 {
 		if err := json.Unmarshal(externalLinksJSON, &asset.ExternalLinks); err != nil {
+			r.recorder.RecordDBQuery(ctx, "asset_scan", time.Since(start), false)
 			return nil, fmt.Errorf("unmarshaling external links: %w", err)
 		}
 	}
 
+	r.recorder.RecordDBQuery(ctx, "asset_scan", time.Since(start), true)
 	return &asset, nil
 }
 
 func (r *PostgresRepository) scanSingleAsset(ctx context.Context, query string, args ...interface{}) (*Asset, error) {
-	return r.scanAsset(r.db.QueryRow(ctx, query, args...))
+	return r.scanAsset(ctx, r.db.QueryRow(ctx, query, args...))
 }
 
 func (r *PostgresRepository) scanMultipleAssets(ctx context.Context, query string, args ...interface{}) ([]*Asset, error) {
@@ -364,7 +391,7 @@ func (r *PostgresRepository) scanMultipleAssets(ctx context.Context, query strin
 
 	var assets []*Asset
 	for rows.Next() {
-		asset, err := r.scanAsset(rows)
+		asset, err := r.scanAsset(ctx, rows)
 		if err != nil {
 			return nil, err
 		}

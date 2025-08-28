@@ -9,6 +9,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/sync"
 )
 
@@ -17,16 +18,18 @@ type Handler struct {
 	assetDocsService assetdocs.Service
 	userService      user.Service
 	authService      auth.Service
+	metricsService   *metrics.Service
 	syncer           *sync.AssetSyncer
 	config           *config.Config
 }
 
-func NewHandler(assetService asset.Service, assetDocsService assetdocs.Service, syncer *sync.AssetSyncer, userService user.Service, authService auth.Service, config *config.Config) *Handler {
+func NewHandler(assetService asset.Service, assetDocsService assetdocs.Service, syncer *sync.AssetSyncer, userService user.Service, authService auth.Service, metricsService *metrics.Service, config *config.Config) *Handler {
 	return &Handler{
 		assetService:     assetService,
 		assetDocsService: assetDocsService,
 		userService:      userService,
 		authService:      authService,
+		metricsService:   metricsService,
 		syncer:           syncer,
 		config:           config,
 	}
@@ -53,7 +56,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets/",
+			Path:    "/api/v1/assets/{id}",
 			Method:  http.MethodGet,
 			Handler: h.getAsset,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{

@@ -131,6 +131,11 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
+	if err != nil {
+		log.Error().Err(err)
+	}
+
 	common.RespondJSON(w, http.StatusOK, result)
 }
 

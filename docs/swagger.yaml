@@ -513,9 +513,161 @@ definitions:
       schemaURL:
         type: string
     type: object
+  metrics.AggregatedMetric:
+    properties:
+      aggregation_type:
+        type: string
+      bucket_end:
+        type: string
+      bucket_size:
+        $ref: '#/definitions/time.Duration'
+      bucket_start:
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+      value:
+        type: number
+    type: object
+  metrics.AssetCount:
+    properties:
+      asset_id:
+        type: string
+      asset_name:
+        type: string
+      asset_provider:
+        type: string
+      asset_type:
+        type: string
+      count:
+        type: integer
+    type: object
+  metrics.AssetsByOwnerResponse:
+    properties:
+      assets:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  metrics.AssetsByProviderResponse:
+    properties:
+      assets:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  metrics.AssetsByTypeResponse:
+    properties:
+      assets:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  metrics.AssetsWithSchemasResponse:
+    properties:
+      count:
+        type: integer
+    type: object
+  metrics.GetMetricsRequest:
+    properties:
+      aggregation:
+        type: string
+      bucket_size:
+        type: string
+      end:
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+        type: object
+      metric_names:
+        items:
+          type: string
+        type: array
+      start:
+        type: string
+    type: object
+  metrics.GetMetricsResponse:
+    properties:
+      metrics:
+        items:
+          $ref: '#/definitions/metrics.AggregatedMetric'
+        type: array
+      query:
+        $ref: '#/definitions/metrics.GetMetricsRequest'
+    type: object
+  metrics.QueryCount:
+    properties:
+      count:
+        type: integer
+      query:
+        type: string
+      query_type:
+        type: string
+    type: object
+  metrics.TotalAssetsResponse:
+    properties:
+      count:
+        type: integer
+    type: object
   plugin.RawPluginConfig:
     additionalProperties: true
     type: object
+  time.Duration:
+    enum:
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    type: integer
+    x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
   user.APIKey:
     properties:
       created_at:
@@ -736,6 +888,195 @@ paths:
       summary: Ingest OpenLineage event
       tags:
       - lineage
+  /api/v1/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Get aggregated metrics for dashboard display
+      parameters:
+      - description: Start time (ISO 8601)
+        example: "2024-01-01T00:00:00Z"
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: End time (ISO 8601)
+        example: "2024-01-02T00:00:00Z"
+        in: query
+        name: end
+        required: true
+        type: string
+      - collectionFormat: csv
+        description: Filter by metric names
+        in: query
+        items:
+          type: string
+        name: metric_names
+        type: array
+      - default: avg
+        description: Aggregation type
+        enum:
+        - avg
+        - sum
+        - max
+        - min
+        in: query
+        name: aggregation
+        type: string
+      - description: Time bucket size
+        enum:
+        - 1m
+        - 5m
+        - 1h
+        - 1d
+        in: query
+        name: bucket_size
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/metrics.GetMetricsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get metrics for UI
+      tags:
+      - metrics
+  /api/v1/metrics/assets/by-owner:
+    get:
+      description: Get asset counts grouped by owner
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/metrics.AssetsByOwnerResponse'
+      summary: Get assets by owner
+      tags:
+      - metrics
+  /api/v1/metrics/assets/by-provider:
+    get:
+      description: Get asset counts grouped by provider
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/metrics.AssetsByProviderResponse'
+      summary: Get assets by provider
+      tags:
+      - metrics
+  /api/v1/metrics/assets/by-type:
+    get:
+      description: Get asset counts grouped by type
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/metrics.AssetsByTypeResponse'
+      summary: Get assets by type
+      tags:
+      - metrics
+  /api/v1/metrics/assets/total:
+    get:
+      description: Get the total number of assets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/metrics.TotalAssetsResponse'
+      summary: Get total assets count
+      tags:
+      - metrics
+  /api/v1/metrics/assets/with-schemas:
+    get:
+      description: Get the count of assets that have schemas defined
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/metrics.AssetsWithSchemasResponse'
+      summary: Get assets with schemas count
+      tags:
+      - metrics
+  /api/v1/metrics/top-assets:
+    get:
+      description: Get the most viewed assets
+      parameters:
+      - description: Start time (ISO 8601)
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: End time (ISO 8601)
+        in: query
+        name: end
+        required: true
+        type: string
+      - default: 10
+        description: Number of results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/metrics.AssetCount'
+            type: array
+      summary: Get top viewed assets
+      tags:
+      - metrics
+  /api/v1/metrics/top-queries:
+    get:
+      description: Get the most popular search queries
+      parameters:
+      - description: Start time (ISO 8601)
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: End time (ISO 8601)
+        in: query
+        name: end
+        required: true
+        type: string
+      - default: 10
+        description: Number of results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/metrics.QueryCount'
+            type: array
+      summary: Get top search queries
+      tags:
+      - metrics
   /assets:
     post:
       consumes:

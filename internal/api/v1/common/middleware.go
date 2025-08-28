@@ -19,7 +19,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 			if apiKey != "" {
 				user, err := userService.ValidateAPIKey(r.Context(), apiKey)
 				if err != nil {
-					log.Error().Err(err).
+					log.Debug().Err(err).
 						Str("endpoint", r.URL.Path).
 						Str("method", r.Method).
 						Msg("Failed to validate API key")
