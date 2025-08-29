@@ -174,10 +174,10 @@ func (s *PostgresStore) GetAssetsWithSchemas(ctx context.Context) (int64, error)
 func (s *PostgresStore) GetAssetsByOwner(ctx context.Context) (map[string]int64, error) {
 	query := `
    	SELECT 
-   		COALESCE(metadata->>'owner', metadata->>'ownedBy') as owner,
+   		COALESCE(metadata->>'owner', metadata->>'ownedBy', metadata->>'owningTeam') as owner,
    		COUNT(*)
    	FROM assets
-   	WHERE COALESCE(metadata->>'owner', metadata->>'ownedBy') IS NOT NULL
+   	WHERE COALESCE(metadata->>'owner', metadata->>'ownedBy', metadata->>'owningTeam') IS NOT NULL
    	GROUP BY owner ORDER BY COUNT(*) DESC`
 
 	result := make(map[string]int64)
