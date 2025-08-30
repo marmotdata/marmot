@@ -1,4 +1,4 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate lint frontend-build
+.PHONY: swagger build run test clean dev release docker-build dev-deps generate lint frontend-build actionlint
 
 # Build variables
 BINARY_NAME=marmot
@@ -43,12 +43,16 @@ generate:
 lint:
 	golangci-lint run --config=./.github/.golangci.yaml ./... -v
 
+actionlint:
+	actionlint
+
 docker-build:
 	docker build -t marmot -f deployments/docker/Dockerfile.backend .
 
 dev-deps:
 	curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b $$(go env GOPATH)/bin v2.4.0
 	go install github.com/swaggo/swag/cmd/swag@latest
+	go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
 e2e-client: swagger
 	rm -rf test/e2e/internal/client/*

@@ -23,7 +23,7 @@ jobs:
     steps:
       - name: Check if commenter has permissions
         id: check-permissions
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: string
@@ -53,7 +53,7 @@ jobs:
       - name: Get PR branch reference
         id: get-ref
         if: steps.check-permissions.outputs.result == 'true'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           result-encoding: string
@@ -71,7 +71,7 @@ jobs:
 
       - name: Add reaction to comment
         if: steps.check-permissions.outputs.result == 'true'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -89,7 +89,7 @@ jobs:
 
       - name: Notify if permission denied
         if: steps.check-permissions.outputs.result != 'true'
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -117,7 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create pending check
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         id: create-check
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -143,7 +143,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Create in-progress check
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -171,12 +171,12 @@ jobs:
             });
 
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v5
         with:
           ref: ${{ needs.check-comment.outputs.ref }}
 
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version: "1.23"
           cache: true
@@ -188,7 +188,7 @@ jobs:
         run: mkdir -p test/e2e/internal/client
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
+        uses: docker/setup-buildx-action@v3
 
       - name: Install dev dependencies
         run: make dev-deps
@@ -211,7 +211,7 @@ jobs:
 
       - name: Update check with results
         if: always()
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
@@ -244,7 +244,7 @@ jobs:
             });
 
       - name: Notify completion
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         if: always()
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
