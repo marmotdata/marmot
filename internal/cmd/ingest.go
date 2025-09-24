@@ -24,8 +24,6 @@ import (
 	"github.com/marmotdata/marmot/internal/plugin/providers/sqs"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/assetdocs"
-	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -253,57 +251,6 @@ func (c *apiClient) destroyPipeline(ctx context.Context, pipelineName string) (*
 	return &response, nil
 }
 
-func (c *apiClient) batchCreateLineage(ctx context.Context, edges []lineage.LineageEdge) (*Summary, error) {
-	req, err := c.newRequest(ctx, http.MethodPost, apiLineageBatch, edges)
-	if err != nil {
-		return nil, err
-	}
-
-	var results []struct {
-		Edge   lineage.LineageEdge `json:"edge"`
-		Status string              `json:"status"`
-	}
-	if err := c.do(req, &results); err != nil {
-		return nil, err
-	}
-
-	summary := &Summary{}
-	for _, r := range results {
-		switch r.Status {
-		case statusCreated:
-			summary.LineageCreated++
-		case statusUpdated:
-			summary.LineageUpdated++
-		}
-	}
-
-	return summary, nil
-}
-
-func (c *apiClient) batchCreateDocumentation(ctx context.Context, docs []assetdocs.Documentation) (*Summary, error) {
-	req, err := c.newRequest(ctx, http.MethodPost, apiDocsBatch, docs)
-	if err != nil {
-		return nil, err
-	}
-
-	var results []struct {
-		Documentation assetdocs.Documentation `json:"documentation"`
-		Status        string                  `json:"status"`
-	}
-	if err := c.do(req, &results); err != nil {
-		return nil, err
-	}
-
-	summary := &Summary{}
-	for _, r := range results {
-		if r.Status == statusCreated {
-			summary.DocumentationAdded++
-		}
-	}
-
-	return summary, nil
-}
-
 func (c *apiClient) newRequest(ctx context.Context, method, path string, body interface{}) (*http.Request, error) {
 	var buf bytes.Buffer
 	if body != nil {
@@ -472,7 +419,7 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 
 		if err != nil {
 			printError(fmt.Sprintf("Discovery failed: %v", err))
-			client.completeRun(ctx, CompleteRunRequest{
+			_ = client.completeRun(ctx, CompleteRunRequest{
 				RunID:  ingestionRun.RunID,
 				Status: plugin.StatusFailed,
 				Error:  err.Error(),
@@ -486,7 +433,7 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 				TotalEntities:   0,
 				DurationSeconds: int(discoveryTime.Seconds()),
 			}
-			client.completeRun(ctx, CompleteRunRequest{
+			_ = client.completeRun(ctx, CompleteRunRequest{
 				RunID:   ingestionRun.RunID,
 				Status:  plugin.StatusCompleted,
 				Summary: summary,
@@ -570,7 +517,7 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 			if err != nil {
 				clearProgress()
 				printError(fmt.Sprintf("Asset sync failed: %v", err))
-				client.completeRun(ctx, CompleteRunRequest{
+				_ = client.completeRun(ctx, CompleteRunRequest{
 					RunID:  ingestionRun.RunID,
 					Status: plugin.StatusFailed,
 					Error:  err.Error(),
@@ -832,3 +779,4 @@ var sourceRegistry = map[string]func() plugin.Source{
 	"s3":         func() plugin.Source { return &s3.Source{} },
 	"openapi":    func() plugin.Source { return &openapi.Source{} },
 }
+

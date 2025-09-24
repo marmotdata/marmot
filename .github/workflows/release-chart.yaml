@@ -34,10 +34,10 @@ jobs:
           CURRENT_VERSION="${{ steps.chart_version.outputs.CHART_VERSION }}"
 
           if [ "$PREV_VERSION" != "$CURRENT_VERSION" ]; then
-            echo "VERSION_CHANGED=true" >> $GITHUB_OUTPUT
+            echo "VERSION_CHANGED=true" >> "$GITHUB_OUTPUT"
             echo "Chart version changed from $PREV_VERSION to $CURRENT_VERSION"
           else
-            echo "VERSION_CHANGED=false" >> $GITHUB_OUTPUT
+            echo "VERSION_CHANGED=false" >> "$GITHUB_OUTPUT"          
             echo "Chart version unchanged: $CURRENT_VERSION"
           fi
 
@@ -50,9 +50,9 @@ jobs:
             "https://api.github.com/repos/marmotdata/charts/git/refs/tags/marmot-${{ steps.chart_version.outputs.CHART_VERSION }}")
 
           if [ "$TAG_EXISTS" = "200" ]; then
-            echo "TAG_EXISTS=true" >> $GITHUB_OUTPUT
+            echo "TAG_EXISTS=true" >> "$GITHUB_OUTPUT"
           else
-            echo "TAG_EXISTS=false" >> $GITHUB_OUTPUT
+            echo "TAG_EXISTS=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Lint chart
