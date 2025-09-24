@@ -28,7 +28,8 @@ const (
    		id, name, mrn, type, providers, environments, external_links,
    		description, metadata, schema, sources, tags,
    		created_at, created_by, updated_at, last_sync_at,
-   		query, query_language, is_stub
+   		query, query_language, is_stub,
+   		EXISTS(SELECT 1 FROM run_history WHERE asset_id = assets.id) as has_run_history
    	FROM assets`
 )
 
@@ -41,6 +42,7 @@ type Repository interface {
 	Summary(ctx context.Context) (*AssetSummary, error)
 	Update(ctx context.Context, asset *Asset) error
 	Delete(ctx context.Context, id string) error
+	DeleteByMRN(ctx context.Context, mrn string) error // Add this line
 	ListByPattern(ctx context.Context, pattern string, assetType string) ([]*Asset, error)
 	GetByMRNs(ctx context.Context, mrns []string) ([]*Asset, error)
 	GetByTypeAndName(ctx context.Context, assetType, name string) (*Asset, error)
@@ -254,6 +256,37 @@ func (r *PostgresRepository) Update(ctx context.Context, asset *Asset) error {
 	return nil
 }
 
+func (r *PostgresRepository) DeleteByMRN(ctx context.Context, mrn string) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Delete lineage edges first (foreign key constraint)
+	_, err = tx.Exec(ctx, `
+		DELETE FROM lineage_edges 
+		WHERE source_mrn = $1 OR target_mrn = $1`, mrn)
+	if err != nil {
+		return fmt.Errorf("deleting lineage edges: %w", err)
+	}
+
+	commandTag, err := tx.Exec(ctx, "DELETE FROM assets WHERE mrn = $1", mrn)
+	if err != nil {
+		return fmt.Errorf("deleting asset: %w", err)
+	}
+
+	if commandTag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("committing transaction: %w", err)
+	}
+
+	return nil
+}
+
 func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
@@ -304,7 +337,7 @@ func (r *PostgresRepository) scanAsset(ctx context.Context, row pgx.Row) (*Asset
 		&environmentsJSON, &externalLinksJSON, &asset.Description,
 		&metadataJSON, &schemaJSON, &sourcesJSON,
 		&asset.Tags, &asset.CreatedAt, &asset.CreatedBy, &asset.UpdatedAt,
-		&asset.LastSyncAt, &asset.Query, &asset.QueryLanguage, &asset.IsStub,
+		&asset.LastSyncAt, &asset.Query, &asset.QueryLanguage, &asset.IsStub, &asset.HasRunHistory,
 	)
 
 	if err != nil {
@@ -773,7 +806,8 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
           id, name, mrn, type, providers, environments, external_links,
           description, metadata, schema, sources, tags,
           created_at, created_by, updated_at, last_sync_at,
-          query, query_language, is_stub
+          query, query_language, is_stub,
+          EXISTS(SELECT 1 FROM run_history WHERE asset_id = search_results.id) as has_run_history
       FROM search_results
       ORDER BY 
           CASE WHEN name_similarity > 0.8 THEN name_similarity * 2

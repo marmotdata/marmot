@@ -16,6 +16,8 @@ definitions:
         items:
           $ref: '#/definitions/asset.ExternalLink'
         type: array
+      has_run_history:
+        type: boolean
       id:
         type: string
       is_stub:
@@ -214,34 +216,6 @@ definitions:
           type: integer
         type: object
     type: object
-  assets.BatchAssetResult:
-    properties:
-      asset:
-        $ref: '#/definitions/asset.Asset'
-      error:
-        type: string
-      status:
-        type: string
-    type: object
-  assets.BatchCreateRequest:
-    properties:
-      assets:
-        items:
-          $ref: '#/definitions/assets.CreateRequest'
-        minItems: 1
-        type: array
-      config:
-        $ref: '#/definitions/plugin.RawPluginConfig'
-    required:
-    - assets
-    type: object
-  assets.BatchCreateResponse:
-    properties:
-      assets:
-        items:
-          $ref: '#/definitions/assets.BatchAssetResult'
-        type: array
-    type: object
   assets.BatchDocumentationRequest:
     properties:
       documentation:
@@ -411,6 +385,43 @@ definitions:
   common.ErrorResponse:
     properties:
       error:
+        type: string
+    type: object
+  github_com_marmotdata_marmot_internal_api_v1_runs.DestroyRunResponse:
+    properties:
+      assets_deleted:
+        type: integer
+      deleted_entity_mrns:
+        items:
+          type: string
+        type: array
+      documentation_deleted:
+        type: integer
+      lineage_deleted:
+        type: integer
+    type: object
+  github_com_marmotdata_marmot_internal_api_v1_runs.DocumentationResult:
+    properties:
+      asset_mrn:
+        type: string
+      error:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    type: object
+  github_com_marmotdata_marmot_internal_api_v1_runs.LineageResult:
+    properties:
+      error:
+        type: string
+      source:
+        type: string
+      status:
+        type: string
+      target:
+        type: string
+      type:
         type: string
     type: object
   lineage.BatchLineageResult:
@@ -616,6 +627,237 @@ definitions:
   plugin.RawPluginConfig:
     additionalProperties: true
     type: object
+  plugin.Run:
+    properties:
+      completed_at:
+        type: string
+      config:
+        $ref: '#/definitions/plugin.RawPluginConfig'
+      created_by:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: string
+      pipeline_name:
+        type: string
+      run_id:
+        type: string
+      source_name:
+        type: string
+      started_at:
+        type: string
+      status:
+        $ref: '#/definitions/plugin.RunStatus'
+      summary:
+        $ref: '#/definitions/plugin.RunSummary'
+    type: object
+  plugin.RunStatus:
+    enum:
+    - running
+    - completed
+    - failed
+    - cancelled
+    type: string
+    x-enum-varnames:
+    - StatusRunning
+    - StatusCompleted
+    - StatusFailed
+    - StatusCancelled
+  plugin.RunSummary:
+    properties:
+      assets_created:
+        type: integer
+      assets_deleted:
+        type: integer
+      assets_updated:
+        type: integer
+      documentation_added:
+        type: integer
+      duration_seconds:
+        type: integer
+      errors_count:
+        type: integer
+      lineage_created:
+        type: integer
+      lineage_updated:
+        type: integer
+      total_entities:
+        type: integer
+    type: object
+  runs.BatchAssetResult:
+    properties:
+      asset: {}
+      error:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      provider:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    type: object
+  runs.BatchCreateRequest:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/runs.CreateAssetRequest'
+        minItems: 1
+        type: array
+      config:
+        $ref: '#/definitions/plugin.RawPluginConfig'
+      documentation:
+        items:
+          $ref: '#/definitions/runs.CreateDocRequest'
+        type: array
+      lineage:
+        items:
+          $ref: '#/definitions/runs.CreateLineageRequest'
+        type: array
+      pipeline_name:
+        type: string
+      run_id:
+        type: string
+      source_name:
+        type: string
+    required:
+    - assets
+    - pipeline_name
+    - run_id
+    - source_name
+    type: object
+  runs.BatchCreateResponse:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/runs.BatchAssetResult'
+        type: array
+      documentation:
+        items:
+          $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_runs.DocumentationResult'
+        type: array
+      lineage:
+        items:
+          $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_runs.LineageResult'
+        type: array
+      stale_entities_removed:
+        items:
+          type: string
+        type: array
+    type: object
+  runs.CompleteRunRequest:
+    properties:
+      error:
+        type: string
+      run_id:
+        type: string
+      status:
+        $ref: '#/definitions/plugin.RunStatus'
+      summary:
+        $ref: '#/definitions/plugin.RunSummary'
+    required:
+    - run_id
+    - status
+    type: object
+  runs.CreateAssetRequest:
+    properties:
+      description:
+        type: string
+      external_links:
+        items:
+          additionalProperties:
+            type: string
+          type: object
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      schema:
+        additionalProperties: true
+        type: object
+      sources:
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  runs.CreateDocRequest:
+    properties:
+      asset_mrn:
+        type: string
+      content:
+        type: string
+      type:
+        type: string
+    type: object
+  runs.CreateLineageRequest:
+    properties:
+      source:
+        type: string
+      target:
+        type: string
+      type:
+        type: string
+    type: object
+  runs.RunEntitiesResponse:
+    properties:
+      entities:
+        items:
+          $ref: '#/definitions/runs.RunEntity'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  runs.RunEntity:
+    properties:
+      created_at:
+        type: string
+      entity_mrn:
+        type: string
+      entity_name:
+        type: string
+      entity_type:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: string
+      run_id:
+        type: string
+      status:
+        type: string
+    type: object
+  runs.StartRunRequest:
+    properties:
+      config:
+        $ref: '#/definitions/plugin.RawPluginConfig'
+      pipeline_name:
+        type: string
+      source_name:
+        type: string
+    required:
+    - pipeline_name
+    - source_name
+    type: object
   time.Duration:
     enum:
     - -9223372036854775808
@@ -634,24 +876,8 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
     type: integer
     x-enum-varnames:
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
     - minDuration
     - maxDuration
     - Nanosecond
@@ -1354,40 +1580,6 @@ paths:
       summary: Add tag to asset
       tags:
       - assets
-  /assets/batch:
-    post:
-      consumes:
-      - application/json
-      description: Create or update multiple assets in a single request
-      parameters:
-      - description: Batch creation request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/assets.BatchCreateRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/assets.BatchCreateResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/common.ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/common.ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/common.ErrorResponse'
-      summary: Batch create assets
-      tags:
-      - assets
   /assets/documentation:
     post:
       consumes:
@@ -1997,6 +2189,209 @@ paths:
       summary: Get direct lineage by ID
       tags:
       - lineage
+  /pipelines/{pipelineName}:
+    delete:
+      description: Delete all resources ever created by a pipeline (across all sources)
+      parameters:
+      - description: Pipeline Name
+        in: path
+        name: pipelineName
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_runs.DestroyRunResponse'
+      summary: Destroy pipeline
+      tags:
+      - pipelines
+  /runs:
+    get:
+      description: Get paginated list of runs with filtering
+      parameters:
+      - description: Comma-separated list of pipeline names
+        in: query
+        name: pipelines
+        type: string
+      - description: Comma-separated list of statuses
+        in: query
+        name: statuses
+        type: string
+      - default: 50
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of results to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            properties:
+              limit:
+                type: integer
+              offset:
+                type: integer
+              pipelines:
+                items:
+                  type: string
+                type: array
+              runs:
+                items:
+                  $ref: '#/definitions/plugin.Run'
+                type: array
+              total:
+                type: integer
+            type: object
+      summary: List runs
+      tags:
+      - runs
+  /runs/{id}:
+    get:
+      description: Get a specific run by ID
+      parameters:
+      - description: Run ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/plugin.Run'
+      summary: Get run
+      tags:
+      - runs
+  /runs/{id}/entities:
+    get:
+      description: Get paginated list of entities for a specific run
+      parameters:
+      - description: Run ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Filter by entity type (asset, lineage, documentation)
+        in: query
+        name: entity_type
+        type: string
+      - description: Filter by status (created, updated, deleted, failed)
+        in: query
+        name: status
+        type: string
+      - default: 100
+        description: Number of results per page
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of results to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/runs.RunEntitiesResponse'
+      summary: Get run entities
+      tags:
+      - runs
+  /runs/assets/batch:
+    post:
+      consumes:
+      - application/json
+      description: Create/update assets within a run
+      parameters:
+      - description: Batch create request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/runs.BatchCreateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/runs.BatchCreateResponse'
+      summary: Batch create assets
+      tags:
+      - runs
+  /runs/cleanup:
+    post:
+      description: Mark runs as failed if they've been running too long without updates
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: integer
+            type: object
+      summary: Cleanup stale runs
+      tags:
+      - runs
+  /runs/complete:
+    post:
+      consumes:
+      - application/json
+      description: Complete a run with results
+      parameters:
+      - description: Complete run request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/runs.CompleteRunRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Complete run
+      tags:
+      - runs
+  /runs/start:
+    post:
+      consumes:
+      - application/json
+      description: Start a new run for tracking
+      parameters:
+      - description: Start run request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/runs.StartRunRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/plugin.Run'
+      summary: Start run
+      tags:
+      - runs
   /users:
     get:
       consumes:

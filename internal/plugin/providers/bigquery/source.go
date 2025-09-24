@@ -29,7 +29,7 @@ type Config struct {
 
 	ProjectID             string `json:"project_id" description:"Google Cloud Project ID"`
 	CredentialsPath       string `json:"credentials_path,omitempty" description:"Path to service account credentials JSON file"`
-	CredentialsJSON       string `json:"credentials_json,omitempty" description:"Service account credentials JSON content"`
+	CredentialsJSON       string `json:"credentials_json,omitempty" description:"Service account credentials JSON content" sensitive:"true"`
 	UseDefaultCredentials bool   `json:"use_default_credentials" description:"Use default Google Cloud credentials" default:"false"`
 
 	IncludeDatasets       bool           `json:"include_datasets" description:"Whether to discover datasets" default:"true"`
@@ -75,18 +75,18 @@ func (c *Config) ApplyDefaults() {
 	c.ExcludeSystemDatasets = true
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting BigQuery config validation")
-
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
-		return fmt.Errorf("unmarshaling config: %w", err)
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
+
+	log.Debug().Interface("raw_config", rawConfig).Msg("Starting BigQuery config validation")
 
 	config.ApplyDefaults()
 
 	if config.ProjectID == "" {
-		return fmt.Errorf("project_id is required")
+		return nil, fmt.Errorf("project_id is required")
 	}
 
 	authMethods := 0
@@ -101,23 +101,19 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
 	}
 
 	if authMethods == 0 {
-		return fmt.Errorf("at least one authentication method must be provided: credentials_path, credentials_json, or use_default_credentials")
+		return nil, fmt.Errorf("at least one authentication method must be provided: credentials_path, credentials_json, or use_default_credentials")
 	}
 	if authMethods > 1 {
-		return fmt.Errorf("only one authentication method should be provided")
+		return nil, fmt.Errorf("only one authentication method should be provided")
 	}
 
 	s.config = config
-	return nil
+	return rawConfig, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 	defer cancel()
-
-	if err := s.Validate(pluginConfig); err != nil {
-		return nil, fmt.Errorf("validating config: %w", err)
-	}
 
 	if err := s.initClient(ctx); err != nil {
 		return nil, fmt.Errorf("initializing BigQuery client: %w", err)

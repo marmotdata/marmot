@@ -43,13 +43,14 @@ type Source struct {
 	client *s3.Client
 }
 
-func (s *Source) Validate(pluginConfig plugin.RawPluginConfig) error {
-	_, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
+	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
-		return fmt.Errorf("unmarshaling config: %w", err)
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
+	s.config = config
 
-	return nil
+	return rawConfig, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {

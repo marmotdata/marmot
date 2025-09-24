@@ -387,58 +387,6 @@
                 }
             }
         },
-        "/assets/batch": {
-            "post": {
-                "description": "Create or update multiple assets in a single request",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Batch create assets",
-                "parameters": [
-                    {
-                        "description": "Batch creation request",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/assets.BatchCreateRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/assets.BatchCreateResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/assets/documentation": {
             "post": {
                 "description": "Create or update documentation for an asset",
@@ -1718,6 +1666,315 @@
                 }
             }
         },
+        "/pipelines/{pipelineName}": {
+            "delete": {
+                "description": "Delete all resources ever created by a pipeline (across all sources)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "pipelines"
+                ],
+                "summary": "Destroy pipeline",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Pipeline Name",
+                        "name": "pipelineName",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_runs.DestroyRunResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/runs": {
+            "get": {
+                "description": "Get paginated list of runs with filtering",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "runs"
+                ],
+                "summary": "List runs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Comma-separated list of pipeline names",
+                        "name": "pipelines",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma-separated list of statuses",
+                        "name": "statuses",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of results to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "properties": {
+                                "limit": {
+                                    "type": "integer"
+                                },
+                                "offset": {
+                                    "type": "integer"
+                                },
+                                "pipelines": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "runs": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/definitions/plugin.Run"
+                                    }
+                                },
+                                "total": {
+                                    "type": "integer"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/runs/assets/batch": {
+            "post": {
+                "description": "Create/update assets within a run",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "runs"
+                ],
+                "summary": "Batch create assets",
+                "parameters": [
+                    {
+                        "description": "Batch create request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/runs.BatchCreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/runs.BatchCreateResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/runs/cleanup": {
+            "post": {
+                "description": "Mark runs as failed if they've been running too long without updates",
+                "tags": [
+                    "runs"
+                ],
+                "summary": "Cleanup stale runs",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "integer"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/runs/complete": {
+            "post": {
+                "description": "Complete a run with results",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "runs"
+                ],
+                "summary": "Complete run",
+                "parameters": [
+                    {
+                        "description": "Complete run request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/runs.CompleteRunRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/runs/start": {
+            "post": {
+                "description": "Start a new run for tracking",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "runs"
+                ],
+                "summary": "Start run",
+                "parameters": [
+                    {
+                        "description": "Start run request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/runs.StartRunRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/plugin.Run"
+                        }
+                    }
+                }
+            }
+        },
+        "/runs/{id}": {
+            "get": {
+                "description": "Get a specific run by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "runs"
+                ],
+                "summary": "Get run",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Run ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/plugin.Run"
+                        }
+                    }
+                }
+            }
+        },
+        "/runs/{id}/entities": {
+            "get": {
+                "description": "Get paginated list of entities for a specific run",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "runs"
+                ],
+                "summary": "Get run entities",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Run ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by entity type (asset, lineage, documentation)",
+                        "name": "entity_type",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by status (created, updated, deleted, failed)",
+                        "name": "status",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 100,
+                        "description": "Number of results per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of results to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/runs.RunEntitiesResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "description": "Get a list of users with optional filtering",
@@ -2337,6 +2594,9 @@
                         "$ref": "#/definitions/asset.ExternalLink"
                     }
                 },
+                "has_run_history": {
+                    "type": "boolean"
+                },
                 "id": {
                     "type": "string"
                 },
@@ -2638,49 +2898,6 @@
                 }
             }
         },
-        "assets.BatchAssetResult": {
-            "type": "object",
-            "properties": {
-                "asset": {
-                    "$ref": "#/definitions/asset.Asset"
-                },
-                "error": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "assets.BatchCreateRequest": {
-            "type": "object",
-            "required": [
-                "assets"
-            ],
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/assets.CreateRequest"
-                    }
-                },
-                "config": {
-                    "$ref": "#/definitions/plugin.RawPluginConfig"
-                }
-            }
-        },
-        "assets.BatchCreateResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/assets.BatchAssetResult"
-                    }
-                }
-            }
-        },
         "assets.BatchDocumentationRequest": {
             "type": "object",
             "required": [
@@ -2936,6 +3153,63 @@
             "type": "object",
             "properties": {
                 "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_marmotdata_marmot_internal_api_v1_runs.DestroyRunResponse": {
+            "type": "object",
+            "properties": {
+                "assets_deleted": {
+                    "type": "integer"
+                },
+                "deleted_entity_mrns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "documentation_deleted": {
+                    "type": "integer"
+                },
+                "lineage_deleted": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_marmotdata_marmot_internal_api_v1_runs.DocumentationResult": {
+            "type": "object",
+            "properties": {
+                "asset_mrn": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_marmotdata_marmot_internal_api_v1_runs.LineageResult": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "type": {
                     "type": "string"
                 }
             }
@@ -3250,6 +3524,351 @@
             "type": "object",
             "additionalProperties": true
         },
+        "plugin.Run": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "config": {
+                    "$ref": "#/definitions/plugin.RawPluginConfig"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "pipeline_name": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "source_name": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/plugin.RunStatus"
+                },
+                "summary": {
+                    "$ref": "#/definitions/plugin.RunSummary"
+                }
+            }
+        },
+        "plugin.RunStatus": {
+            "type": "string",
+            "enum": [
+                "running",
+                "completed",
+                "failed",
+                "cancelled"
+            ],
+            "x-enum-varnames": [
+                "StatusRunning",
+                "StatusCompleted",
+                "StatusFailed",
+                "StatusCancelled"
+            ]
+        },
+        "plugin.RunSummary": {
+            "type": "object",
+            "properties": {
+                "assets_created": {
+                    "type": "integer"
+                },
+                "assets_deleted": {
+                    "type": "integer"
+                },
+                "assets_updated": {
+                    "type": "integer"
+                },
+                "documentation_added": {
+                    "type": "integer"
+                },
+                "duration_seconds": {
+                    "type": "integer"
+                },
+                "errors_count": {
+                    "type": "integer"
+                },
+                "lineage_created": {
+                    "type": "integer"
+                },
+                "lineage_updated": {
+                    "type": "integer"
+                },
+                "total_entities": {
+                    "type": "integer"
+                }
+            }
+        },
+        "runs.BatchAssetResult": {
+            "type": "object",
+            "properties": {
+                "asset": {},
+                "error": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "runs.BatchCreateRequest": {
+            "type": "object",
+            "required": [
+                "assets",
+                "pipeline_name",
+                "run_id",
+                "source_name"
+            ],
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/runs.CreateAssetRequest"
+                    }
+                },
+                "config": {
+                    "$ref": "#/definitions/plugin.RawPluginConfig"
+                },
+                "documentation": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.CreateDocRequest"
+                    }
+                },
+                "lineage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.CreateLineageRequest"
+                    }
+                },
+                "pipeline_name": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "source_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "runs.BatchCreateResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.BatchAssetResult"
+                    }
+                },
+                "documentation": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_runs.DocumentationResult"
+                    }
+                },
+                "lineage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_runs.LineageResult"
+                    }
+                },
+                "stale_entities_removed": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "runs.CompleteRunRequest": {
+            "type": "object",
+            "required": [
+                "run_id",
+                "status"
+            ],
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/plugin.RunStatus"
+                },
+                "summary": {
+                    "$ref": "#/definitions/plugin.RunSummary"
+                }
+            }
+        },
+        "runs.CreateAssetRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "external_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "runs.CreateDocRequest": {
+            "type": "object",
+            "properties": {
+                "asset_mrn": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "runs.CreateLineageRequest": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "runs.RunEntitiesResponse": {
+            "type": "object",
+            "properties": {
+                "entities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.RunEntity"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "runs.RunEntity": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "entity_mrn": {
+                    "type": "string"
+                },
+                "entity_name": {
+                    "type": "string"
+                },
+                "entity_type": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "runs.StartRunRequest": {
+            "type": "object",
+            "required": [
+                "pipeline_name",
+                "source_name"
+            ],
+            "properties": {
+                "config": {
+                    "$ref": "#/definitions/plugin.RawPluginConfig"
+                },
+                "pipeline_name": {
+                    "type": "string"
+                },
+                "source_name": {
+                    "type": "string"
+                }
+            }
+        },
         "time.Duration": {
             "type": "integer",
             "enum": [
@@ -3268,25 +3887,9 @@
                 1000000,
                 1000000000,
                 60000000000,
-                3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
                 3600000000000
             ],
             "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
                 "minDuration",
                 "maxDuration",
                 "Nanosecond",

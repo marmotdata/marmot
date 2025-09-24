@@ -28,7 +28,7 @@ type Config struct {
 	Host     string `json:"host" description:"MySQL server hostname or IP address"`
 	Port     int    `json:"port" description:"MySQL server port (default: 3306)"`
 	User     string `json:"user" description:"Username for authentication"`
-	Password string `json:"password" description:"Password for authentication"`
+	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
 	Database string `json:"database" description:"Database name to connect to"`
 	TLS      string `json:"tls" description:"TLS configuration (false, true, skip-verify, preferred)"`
 
@@ -57,57 +57,45 @@ type Source struct {
 	db     *sql.DB
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting MySQL config validation")
-
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
-		return fmt.Errorf("unmarshaling config: %w", err)
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
+
+	log.Debug().Interface("raw_config", rawConfig).Msg("Starting MySQL config validation")
 
 	if config.Host == "" {
-		return fmt.Errorf("host is required")
+		return nil, fmt.Errorf("host is required")
 	}
-
 	if config.Port == 0 {
 		config.Port = 3306
 	}
-
 	if config.User == "" {
-		return fmt.Errorf("user is required")
+		return nil, fmt.Errorf("user is required")
 	}
-
 	if config.Database == "" {
-		return fmt.Errorf("database is required")
+		return nil, fmt.Errorf("database is required")
 	}
-
 	if config.TLS == "" {
 		config.TLS = "false"
 	}
-
 	if !config.IncludeColumns {
 		config.IncludeColumns = true
 	}
-
 	if !config.IncludeRowCounts {
 		config.IncludeRowCounts = true
 	}
-
 	if !config.DiscoverForeignKeys {
 		config.DiscoverForeignKeys = true
 	}
-
 	s.config = config
-	return nil
+	return rawConfig, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
-
-	if err := s.Validate(pluginConfig); err != nil {
-		return nil, fmt.Errorf("validating config: %w", err)
-	}
 
 	if err := s.initConnection(ctx, s.config.Database); err != nil {
 		return nil, fmt.Errorf("initializing database connection: %w", err)

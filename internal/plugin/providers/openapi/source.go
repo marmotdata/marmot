@@ -30,13 +30,13 @@ type Source struct {
 // Config for OpenAPI plugin
 // +marmot:config
 type Config struct {
-	plugin.BaseConfig 	`json:",inline"`
-	SpecPath		string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications"`
+	plugin.BaseConfig `json:",inline"`
+	SpecPath          string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications"`
 }
 
 const (
-	typeEndpoint = "Endpoint"
-	typeService = "Service"
+	typeEndpoint    = "Endpoint"
+	typeService     = "Service"
 	openapiProvider = "OpenAPI"
 )
 
@@ -49,21 +49,21 @@ tags:
   - "specifications"
 `
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
-		return fmt.Errorf("parsing config: %w", err)
+		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 
 	if config.SpecPath == "" {
-		return fmt.Errorf("spec_path is required")
+		return nil, fmt.Errorf("spec_path is required")
 	}
 
 	if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
-		return fmt.Errorf("spec path does not exist: %s", config.SpecPath)
+		return nil, fmt.Errorf("spec path does not exist: %s", config.SpecPath)
 	}
 
-	return nil
+	return rawConfig, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
@@ -129,7 +129,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 
 	return &plugin.DiscoveryResult{
-		Assets: assets,
+		Assets:  assets,
 		Lineage: lineages,
 	}, nil
 }
@@ -156,21 +156,21 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 	for _, item := range spec.Model.Paths.PathItems.FromOldest() {
 		for _, op := range item.GetOperations().FromOldest() {
 			if op.Deprecated != nil && *op.Deprecated {
-				numDeprecatedEndpoints++ 
+				numDeprecatedEndpoints++
 			}
 		}
 		numEndpoints += item.GetOperations().Len()
 	}
 
 	serviceFields := OpenAPIFields{
-		Description: description,
+		Description:            description,
 		NumDeprecatedEndpoints: numDeprecatedEndpoints,
-		NumEndpoints: numEndpoints,
-		OpenAPIVersion: openapiVersion,
-		Servers: servers,
-		ServiceName: serviceName,
-		ServiceVersion: spec.Model.Info.Version,
-		TermsOfService: spec.Model.Info.TermsOfService,
+		NumEndpoints:           numEndpoints,
+		OpenAPIVersion:         openapiVersion,
+		Servers:                servers,
+		ServiceName:            serviceName,
+		ServiceVersion:         spec.Model.Info.Version,
+		TermsOfService:         spec.Model.Info.TermsOfService,
 	}
 	if spec.Model.Info.Contact != nil {
 		serviceFields.ContactEmail = spec.Model.Info.Contact.Email
@@ -197,24 +197,24 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		}
 		externalLinks = append(externalLinks, asset.ExternalLink{
 			Name: name,
-			URL: spec.Model.ExternalDocs.URL,
+			URL:  spec.Model.ExternalDocs.URL,
 		})
 	}
 
 	return asset.Asset{
-		Name: 		&serviceName,
-		MRN: 		&mrnValue,
-		Type:		typeService,
-		Providers: 	[]string{openapiProvider},
-		Description: 	&description,
-		Metadata: 	metadata,
-		Tags: 		processedTags,
-		Sources: 	[]asset.AssetSource{},
-		ExternalLinks: 	externalLinks,
+		Name:          &serviceName,
+		MRN:           &mrnValue,
+		Type:          typeService,
+		Providers:     []string{openapiProvider},
+		Description:   &description,
+		Metadata:      metadata,
+		Tags:          processedTags,
+		Sources:       []asset.AssetSource{},
+		ExternalLinks: externalLinks,
 	}
 }
 
-func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document], config *Config) []asset.Asset {
+func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document], config *Config) []asset.Asset {
 	assets := []asset.Asset{}
 	parentMrn := serviceMrnValue(spec)
 	serviceName := spec.Model.Info.Title
@@ -235,11 +235,11 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 
 			endpointField := EndpointField{
 				Description: op.Description,
-				HTTPMethod: strings.ToUpper(httpMethod),
+				HTTPMethod:  strings.ToUpper(httpMethod),
 				OperationID: op.OperationId,
-				Path: path,
+				Path:        path,
 				StatusCodes: statusCodes,
-				Summary: op.Summary,
+				Summary:     op.Summary,
 			}
 			if op.Deprecated != nil {
 				endpointField.Deprecated = *op.Deprecated
@@ -266,7 +266,7 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 				}
 				externalLinks = append(externalLinks, asset.ExternalLink{
 					Name: name,
-					URL: op.ExternalDocs.URL,
+					URL:  op.ExternalDocs.URL,
 				})
 			}
 
@@ -288,17 +288,17 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 			}
 
 			asset := asset.Asset{
-				Name: &pathWithMethod,
-				MRN: &mrnValue,
-				ParentMRN: &parentMrn,
-				Type: typeEndpoint,
-				Providers: []string{openapiProvider},
-				Description: &description,
-				Metadata: metadata,
-				Tags: processedTags,
-				Sources: []asset.AssetSource{},
+				Name:          &pathWithMethod,
+				MRN:           &mrnValue,
+				ParentMRN:     &parentMrn,
+				Type:          typeEndpoint,
+				Providers:     []string{openapiProvider},
+				Description:   &description,
+				Metadata:      metadata,
+				Tags:          processedTags,
+				Sources:       []asset.AssetSource{},
 				ExternalLinks: externalLinks,
-				Schema: schema,
+				Schema:        schema,
 			}
 			assets = append(assets, asset)
 		}
@@ -306,7 +306,6 @@ func (s *Source) createEndpointAssets(spec*libopenapi.DocumentModel[v3.Document]
 
 	return assets
 }
-
 
 func addUniqueAsset(assets *[]asset.Asset, newAsset asset.Asset, seen map[string]bool) {
 	if newAsset.MRN == nil {

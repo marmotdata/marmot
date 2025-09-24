@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
 	import { onMount } from 'svelte';
+	import IconifyIcon from '@iconify/svelte';
 	import * as d3 from 'd3';
 
 	export let assetId: string;
@@ -206,9 +207,21 @@
 		>
 			<p class="text-red-600 dark:text-red-400 text-sm">{error}</p>
 		</div>
-	{:else if histogramData.length === 0}
-		<div class="text-center py-8">
-			<p class="text-gray-500 dark:text-gray-400 text-sm">No run history data available</p>
+	{:else if histogramData.length === 0 || histogramData.every((d) => d.total === 0)}
+		<div
+			class="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6 text-center"
+		>
+			<div class="text-gray-600 dark:text-gray-400 mb-3">
+				<IconifyIcon icon="mdi:chart-bar" class="w-12 h-12 mx-auto" />
+			</div>
+			<h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">No Run History</h4>
+			<p class="text-sm text-gray-500 dark:text-gray-400">
+				No runs found in the last {period === '7d'
+					? '7 days'
+					: period === '30d'
+						? '30 days'
+						: '90 days'}
+			</p>
 		</div>
 	{:else}
 		<div class="mb-4">

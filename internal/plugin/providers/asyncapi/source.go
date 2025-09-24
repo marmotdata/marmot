@@ -50,22 +50,21 @@ type Source struct {
 	config *Config
 }
 
-// TODO: use YAML
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
-		return fmt.Errorf("parsing config: %w", err)
+		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 
 	if config.SpecPath == "" {
-		return fmt.Errorf("spec_path is required")
+		return nil, fmt.Errorf("spec_path is required")
 	}
 
 	if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
-		return fmt.Errorf("spec path does not exist: %s", config.SpecPath)
+		return nil, fmt.Errorf("spec path does not exist: %s", config.SpecPath)
 	}
 
-	return nil
+	return rawConfig, nil
 }
 
 func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {

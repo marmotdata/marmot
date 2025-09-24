@@ -42,7 +42,7 @@ type Config struct {
 type AuthConfig struct {
 	Type      string `json:"type" description:"Authentication type: none, sasl_plaintext, sasl_ssl, ssl"`
 	Username  string `json:"username,omitempty" description:"SASL username"`
-	Password  string `json:"password,omitempty" description:"SASL password"`
+	Password  string `json:"password,omitempty" description:"SASL password" sensitive:"true"`
 	Mechanism string `json:"mechanism,omitempty" description:"SASL mechanism: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512"`
 }
 
@@ -97,51 +97,46 @@ func (c *Config) ApplyDefaults() {
 	}
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
-		return fmt.Errorf("unmarshaling config: %w", err)
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
+
+	log.Debug().Interface("raw_config", rawConfig).Msg("Starting Kafka config validation")
 
 	config.ApplyDefaults()
 
 	if config.BootstrapServers == "" {
-		return fmt.Errorf("bootstrap_servers is required")
+		return nil, fmt.Errorf("bootstrap_servers is required")
 	}
 
 	if config.Authentication != nil {
-		sanitizedConfig := rawConfig.MaskSensitiveInfo(config.Authentication.Password)
-		log.Debug().Interface("raw_config", sanitizedConfig).Msg("Starting Kafka config validation")
-
 		authType := config.Authentication.Type
 		switch authType {
 		case "sasl_plaintext", "sasl_ssl", "ssl":
 			if authType == "sasl_plaintext" || authType == "sasl_ssl" {
 				if config.Authentication.Username == "" {
-					return fmt.Errorf("username is required for %s authentication", authType)
+					return nil, fmt.Errorf("username is required for %s authentication", authType)
 				}
 				if config.Authentication.Password == "" {
-					return fmt.Errorf("password is required for %s authentication", authType)
+					return nil, fmt.Errorf("password is required for %s authentication", authType)
 				}
 				if config.Authentication.Mechanism == "" {
-					return fmt.Errorf("mechanism is required for %s authentication", authType)
+					return nil, fmt.Errorf("mechanism is required for %s authentication", authType)
 				}
 			}
 		case "none", "":
 		default:
-			return fmt.Errorf("unsupported authentication type: %s. Valid types are: sasl_plaintext, sasl_ssl, ssl, none", authType)
+			return nil, fmt.Errorf("unsupported authentication type: %s. Valid types are: sasl_plaintext, sasl_ssl, ssl, none", authType)
 		}
 	}
 
 	s.config = config
-	return nil
+	return rawConfig, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	if err := s.Validate(pluginConfig); err != nil {
-		return nil, fmt.Errorf("validating config: %w", err)
-	}
-
 	if err := s.initClient(ctx); err != nil {
 		return nil, fmt.Errorf("initializing Kafka client: %w", err)
 	}

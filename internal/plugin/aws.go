@@ -16,7 +16,7 @@ import (
 type AWSCredentials struct {
 	Profile        string `json:"profile,omitempty" description:"AWS profile to use from shared credentials file"`
 	ID             string `json:"id,omitempty" description:"AWS access key ID"`
-	Secret         string `json:"secret,omitempty" description:"AWS secret access key"`
+	Secret         string `json:"secret,omitempty" description:"AWS secret access key" sensitive:"true"`
 	Token          string `json:"token,omitempty" description:"AWS session token"`
 	Role           string `json:"role,omitempty" description:"AWS IAM role ARN to assume"`
 	RoleExternalID string `json:"role_external_id,omitempty" description:"External ID for cross-account role assumption"`

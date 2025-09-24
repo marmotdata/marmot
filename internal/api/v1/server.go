@@ -14,15 +14,16 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
+	"github.com/marmotdata/marmot/internal/api/v1/runs"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
 	"github.com/marmotdata/marmot/internal/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
+	runService "github.com/marmotdata/marmot/internal/core/runs"
 	userService "github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/metrics"
-	"github.com/marmotdata/marmot/internal/sync"
 	"github.com/rs/zerolog/log"
 	httpSwagger "github.com/swaggo/http-swagger"
 )
@@ -51,12 +52,15 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	lineageRepo := lineageService.NewPostgresRepository(db)
 	assetDocsRepo := assetdocs.NewPostgresRepository(db)
 	authRepo := authService.NewPostgresRepository(db)
+	runRepo := runService.NewPostgresRepository(db)
 
 	assetSvc := asset.NewService(assetRepo)
 	userSvc := userService.NewService(userRepo)
 	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
 	authSvc := authService.NewService(authRepo, userSvc)
+	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc)
+
 	oauthManager := authService.NewOAuthManager()
 
 	if config.Auth.Providers != nil {
@@ -76,11 +80,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	}
 
 	server.handlers = []interface{ Routes() []common.Route }{
-		assets.NewHandler(assetSvc, assetDocsSvc, sync.NewAssetSyncer(), userSvc, authSvc, metricsService, config),
+		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, config),
 		users.NewHandler(userSvc, authSvc, config),
 		auth.NewHandler(authSvc, oauthManager, userSvc, config),
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
+		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 	}
 
 	return server

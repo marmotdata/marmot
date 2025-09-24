@@ -76,7 +76,6 @@ The following configuration options are available:
 | global_documentation | []string | false |  |
 | global_documentation_position | string | false |  |
 | include_tags | []string | false | List of AWS tags to include as metadata |
-| merge | MergeConfig | false |  |
 | metadata | MetadataConfig | false |  |
 | tags | TagsConfig | false |  |
 | tags_to_metadata | bool | false | Convert AWS tags to Marmot metadata |

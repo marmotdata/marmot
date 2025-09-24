@@ -191,7 +191,7 @@
 					</div>
 				{/if}
 
-				{#if !shouldHideRunHistory}
+				{#if !shouldHideRunHistory && asset.has_run_history}
 					<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
 						<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Run History</h3>
 						<RunHistory assetId={asset.id} minimal={true} {asset} />

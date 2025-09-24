@@ -3,6 +3,7 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
@@ -10,9 +11,9 @@ import (
 	"sigs.k8s.io/yaml"
 )
 
-// Config represents the top-level configuration
 type Config struct {
-	Runs []SourceRun `json:"runs"`
+	Name string      `json:"name" yaml:"name"`
+	Runs []SourceRun `json:"runs" yaml:"runs"`
 }
 
 // SourceRun maps source names to their raw configurations
@@ -23,13 +24,11 @@ type SourceRun map[string]RawPluginConfig
 // for each plugin's specific config.
 type RawPluginConfig map[string]interface{}
 
-// BaseConfig contains configuration fields common to all plugins
 type BaseConfig struct {
 	GlobalDocumentation         []string       `json:"global_documentation,omitempty"`
 	GlobalDocumentationPosition string         `json:"global_documentation_position,omitempty"`
 	Metadata                    MetadataConfig `json:"metadata,omitempty"`
 	Tags                        TagsConfig     `json:"tags,omitempty"`
-	Merge                       MergeConfig    `json:"merge,omitempty"`
 	ExternalLinks               []ExternalLink `json:"external_links,omitempty"`
 	AWSConfig                   *AWSConfig     `json:"aws,omitempty"`
 }
@@ -40,17 +39,8 @@ type PluginConfig struct {
 	Source     string `json:"source,omitempty"`
 }
 
-// MetadataConfig defines allowable metadata fields
 type MetadataConfig struct {
 	Allow []string `json:"allow,omitempty"`
-}
-
-// MergeConfig defines how different asset fields should be merged
-type MergeConfig struct {
-	Tags        string `json:"tags,omitempty"`
-	Metadata    string `json:"metadata,omitempty"`
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
 }
 
 // ExternalLink defines an external resource link
@@ -60,27 +50,6 @@ type ExternalLink struct {
 	URL  string `json:"url"`
 }
 
-// MetadataFilter defines metadata filtering rules
-type MetadataFilter struct {
-	Mode     string   `json:"mode"`
-	Props    []string `json:"props"`
-	Prefixes []string `json:"prefixes"`
-}
-
-// MetadataRules defines rules for metadata handling
-type MetadataRules struct {
-	Merge       MetadataFilter `json:"merge"`
-	Environment MetadataFilter `json:"environment"`
-}
-
-// MetadataMapping defines how metadata should be mapped during merge
-type MetadataMapping struct {
-	Source       string `json:"source"`
-	Target       string `json:"target"`
-	Type         string `json:"type"`
-	DefaultValue any    `json:"default,omitempty"`
-}
-
 // DiscoveryResult contains all discovered assets, lineage, and documentation
 type DiscoveryResult struct {
 	Assets        []asset.Asset             `json:"assets"`
@@ -88,9 +57,71 @@ type DiscoveryResult struct {
 	Documentation []assetdocs.Documentation `json:"documentation"`
 }
 
+// Run represents a single run
+type Run struct {
+	ID           string          `json:"id"`
+	PipelineName string          `json:"pipeline_name"`
+	SourceName   string          `json:"source_name"`
+	RunID        string          `json:"run_id"`
+	Status       RunStatus       `json:"status"`
+	StartedAt    time.Time       `json:"started_at"`
+	CompletedAt  *time.Time      `json:"completed_at,omitempty"`
+	ErrorMessage string          `json:"error_message,omitempty"`
+	Config       RawPluginConfig `json:"config,omitempty"`
+	Summary      *RunSummary     `json:"summary,omitempty"`
+	CreatedBy    string          `json:"created_by"`
+}
+
+type RunStatus string
+
+const (
+	StatusRunning   RunStatus = "running"
+	StatusCompleted RunStatus = "completed"
+	StatusFailed    RunStatus = "failed"
+	StatusCancelled RunStatus = "cancelled"
+)
+
+// RunSummary contains summary statistics for a run
+type RunSummary struct {
+	AssetsCreated      int `json:"assets_created"`
+	AssetsUpdated      int `json:"assets_updated"`
+	AssetsDeleted      int `json:"assets_deleted"`
+	LineageCreated     int `json:"lineage_created"`
+	LineageUpdated     int `json:"lineage_updated"`
+	DocumentationAdded int `json:"documentation_added"`
+	ErrorsCount        int `json:"errors_count"`
+	TotalEntities      int `json:"total_entities"`
+	DurationSeconds    int `json:"duration_seconds"`
+}
+
+// RunCheckpoint tracks what entities were processed in a run
+type RunCheckpoint struct {
+	ID           string    `json:"id"`
+	RunID        string    `json:"run_id"`
+	EntityType   string    `json:"entity_type"` // 'asset', 'lineage', 'documentation'
+	EntityMRN    string    `json:"entity_mrn"`
+	Operation    string    `json:"operation"`     // 'created', 'updated', 'deleted', 'skipped'
+	SourceFields []string  `json:"source_fields"` // Which fields this source contributed
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+// StatefulRunContext provides context for stateful operations
+type StatefulRunContext struct {
+	PipelineName       string
+	SourceName         string
+	LastRunCheckpoints map[string]*RunCheckpoint // entity_mrn -> checkpoint
+	CurrentRunID       string
+}
+
 type Source interface {
-	Validate(config RawPluginConfig) error
+	Validate(config RawPluginConfig) (RawPluginConfig, error)
 	Discover(ctx context.Context, config RawPluginConfig) (*DiscoveryResult, error)
+}
+
+// StatefulSource extends Source with stateful capabilities
+type StatefulSource interface {
+	Source
+	SupportsStatefulIngestion() bool
 }
 
 // UnmarshalPluginConfig unmarshals raw config into a specific plugin config type
@@ -107,3 +138,4 @@ func UnmarshalPluginConfig[T any](raw RawPluginConfig) (*T, error) {
 
 	return &config, nil
 }
+

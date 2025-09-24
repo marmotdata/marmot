@@ -29,7 +29,6 @@ The following configuration options are available:
 | external_links | []ExternalLink | false |  |
 | global_documentation | []string | false |  |
 | global_documentation_position | string | false |  |
-| merge | MergeConfig | false |  |
 | metadata | MetadataConfig | false |  |
 | resolve_external_docs | bool | false |  |
 | spec_path | string | false |  |

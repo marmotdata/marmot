@@ -45,12 +45,14 @@ marmot ingest [flags]
 | `--config`, `-c`  | Path to ingestion config file                      |
 | `--host`, `-H`    | Marmot API host (default: "http://localhost:8080") |
 | `--api-key`, `-k` | API key for authentication                         |
+| `--destroy`, `-d` | Delete all resources for this pipeline             |
 
 ## Configuration File
 
 The ingest command requires a YAML configuration file that defines the data sources to ingest. The configuration follows this structure:
 
 ```yaml
+name: my_pipeline_name
 runs:
   - source_type1:
       # source-specific configuration
@@ -59,6 +61,8 @@ runs:
 ```
 
 Where `source_type` is one of the supported data source types. You can find all [available source types and their available configuration by looking at the Plugins documentation.](/docs/plugins)
+
+** It's important to give your pipeline a unique name, this is used to track the state of the ingestion **
 
 ## Example: Ingesting Kafka Topics
 
@@ -86,7 +90,6 @@ This configuration:
 
 1. Connects to a Kafka broker at `kafka-broker:9092` with SASL PLAIN authentication
 2. Integrates with a Schema Registry at `http://schema-registry:8081`
-3. Tags all ingested assets with `kafka` and `messaging` tags
 
 To run the ingestion:
 

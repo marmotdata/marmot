@@ -30,7 +30,7 @@ type Config struct {
 	Host     string `json:"host" description:"PostgreSQL server hostname or IP address"`
 	Port     int    `json:"port" description:"PostgreSQL server port (default: 5432)"`
 	User     string `json:"user" description:"Username for authentication"`
-	Password string `json:"password" description:"Password for authentication"`
+	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
 	SSLMode  string `json:"ssl_mode" description:"SSL mode (disable, require, verify-ca, verify-full)"`
 
 	// Discovery configuration
@@ -63,16 +63,16 @@ type Source struct {
 	pool   *pgxpool.Pool
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting PostgreSQL config validation")
-
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
-		return fmt.Errorf("unmarshaling config: %w", err)
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
+	log.Debug().Interface("raw_config", rawConfig).Msg("Starting PostgreSQL config validation")
+
 	if config.Host == "" {
-		return fmt.Errorf("host is required")
+		return nil, fmt.Errorf("host is required")
 	}
 
 	if config.Port == 0 {
@@ -80,7 +80,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
 	}
 
 	if config.User == "" {
-		return fmt.Errorf("user is required")
+		return nil, fmt.Errorf("user is required")
 	}
 
 	if config.SSLMode == "" {
@@ -104,16 +104,12 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
 	}
 
 	s.config = config
-	return nil
+	return rawConfig, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
-
-	if err := s.Validate(pluginConfig); err != nil {
-		return nil, fmt.Errorf("validating config: %w", err)
-	}
 
 	if err := s.initConnection(ctx, "postgres"); err != nil {
 		return nil, fmt.Errorf("initializing database connection: %w", err)

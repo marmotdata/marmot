@@ -67,6 +67,7 @@
 			return false;
 		if (tab === 'documentation' && !asset?.documentation) return false;
 		if (tab === 'query' && (!asset?.query || !asset.query.trim())) return false;
+		if (tab === 'run-history' && !asset?.has_run_history) return false; // Add this line
 		return true;
 	});
 

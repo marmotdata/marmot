@@ -102,7 +102,6 @@ The following configuration options are available:
 | global_documentation_position | string | false |  |
 | include_partition_info | bool | false | Whether to include partition information in metadata |
 | include_topic_config | bool | false | Whether to include topic configuration in metadata |
-| merge | MergeConfig | false |  |
 | metadata | MetadataConfig | false |  |
 | schema_registry | SchemaRegistryConfig | false | Schema Registry configuration |
 | tags | TagsConfig | false |  |

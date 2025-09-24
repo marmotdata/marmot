@@ -27,7 +27,7 @@ type Config struct {
 	Host          string `json:"host" description:"MongoDB server hostname or IP address"`
 	Port          int    `json:"port" description:"MongoDB server port (default: 27017)"`
 	User          string `json:"user" description:"Username for authentication"`
-	Password      string `json:"password" description:"Password for authentication"`
+	Password      string `json:"password" description:"Password for authentication" sensitive:"true"`
 	AuthSource    string `json:"auth_source" description:"Authentication database name"`
 	TLS           bool   `json:"tls" description:"Enable TLS/SSL for connection"`
 	TLSInsecure   bool   `json:"tls_insecure" description:"Skip verification of server certificate"`
@@ -65,50 +65,41 @@ type Source struct {
 	sampleSize int32
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting MongoDB config validation")
-
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
-		return fmt.Errorf("unmarshaling config: %w", err)
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
+
+	log.Debug().Interface("raw_config", rawConfig).Msg("Starting MongoDB config validation")
 
 	if config.ConnectionURI == "" {
 		if config.Host == "" {
-			return fmt.Errorf("either host or connection_uri is required")
+			return nil, fmt.Errorf("either host or connection_uri is required")
 		}
-
 		if config.Port == 0 {
 			config.Port = 27017
 		}
 	}
-
 	if !config.IncludeDatabases {
 		config.IncludeDatabases = true
 	}
-
 	if !config.IncludeCollections {
 		config.IncludeCollections = true
 	}
-
 	if config.SampleSize == -1 {
 		s.sampleSize = 0
 	} else {
 		s.sampleSize = int32(config.SampleSize)
 	}
-
 	s.config = config
 	s.timeout = 2 * time.Minute
-	return nil
+	return rawConfig, nil
 }
 
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
-
-	if err := s.Validate(pluginConfig); err != nil {
-		return nil, fmt.Errorf("validating config: %w", err)
-	}
 
 	if err := s.connect(ctx); err != nil {
 		return nil, fmt.Errorf("connecting to MongoDB: %w", err)

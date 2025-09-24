@@ -38,7 +38,6 @@ The following configuration options are available:
 | host | string | false | MySQL server hostname or IP address |
 | include_columns | bool | false | Whether to include column information in table metadata |
 | include_row_counts | bool | false | Whether to include approximate row counts |
-| merge | MergeConfig | false |  |
 | metadata | MetadataConfig | false |  |
 | password | string | false | Password for authentication |
 | port | int | false | MySQL server port (default: 3306) |

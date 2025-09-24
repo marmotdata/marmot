@@ -11,6 +11,7 @@ type MetadataField struct {
 	Description string
 	Type        string
 	Required    bool
+	Sensitive   bool
 }
 
 // GetMetadataFields extracts metadata field definitions from struct tags
@@ -30,11 +31,14 @@ func GetMetadataFields(v interface{}) []MetadataField {
 			continue
 		}
 
+		_, sensitive := field.Tag.Lookup("sensitive")
+
 		fields = append(fields, MetadataField{
 			Path:        path,
 			Description: field.Tag.Get("description"),
 			Type:        field.Type.String(),
 			Required:    field.Tag.Get("required") == "true",
+			Sensitive:   sensitive,
 		})
 	}
 
@@ -66,12 +70,17 @@ func MapToMetadata(source interface{}) map[string]interface{} {
 			continue
 		}
 
-		if field.Type.Kind() == reflect.Struct {
+		_, sensitive := field.Tag.Lookup("sensitive")
+		if sensitive {
+			value = SensitiveMask
+		}
+
+		if field.Type.Kind() == reflect.Struct && !sensitive {
 			nestedMetadata := MapToMetadata(value)
 			for k, v := range nestedMetadata {
 				setNestedValue(metadata, metadataTag+"."+k, v)
 			}
-		} else if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct {
+		} else if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct && !sensitive {
 			sliceValue := v.Field(i)
 			for j := 0; j < sliceValue.Len(); j++ {
 				nestedMetadata := MapToMetadata(sliceValue.Index(j).Interface())
@@ -118,3 +127,4 @@ func setNestedValue(metadata map[string]interface{}, path string, value interfac
 
 	current[parts[len(parts)-1]] = value
 }
+

@@ -73,7 +73,7 @@
 			</span>
 		{:else if icon}
 			<span class="w-4 h-4 mr-1.5">
-				<Icon icon={`bi:${icon}`} />
+				<Icon icon={`${icon}`} />
 			</span>
 		{/if}
 		{#if text}

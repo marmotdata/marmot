@@ -28,7 +28,6 @@ The following configuration options are available:
 | external_links | []ExternalLink | false |  |
 | global_documentation | []string | false |  |
 | global_documentation_position | string | false |  |
-| merge | MergeConfig | false |  |
 | metadata | MetadataConfig | false |  |
 | spec_path | string | false | Path to the directory containing the OpenAPI specifications |
 | tags | TagsConfig | false |  |

@@ -26,6 +26,7 @@ export interface Asset {
   schema: Record<string, any>;
   parent_mrn?: string;
   last_sync_at?: string;
+  has_run_history: boolean;
   environments?: Record<string, Environment>;
   sources: AssetSource[];
 }

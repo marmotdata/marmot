@@ -8,9 +8,9 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/runs"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/metrics"
-	"github.com/marmotdata/marmot/internal/sync"
 )
 
 type Handler struct {
@@ -19,18 +19,26 @@ type Handler struct {
 	userService      user.Service
 	authService      auth.Service
 	metricsService   *metrics.Service
-	syncer           *sync.AssetSyncer
+	runService       runs.Service
 	config           *config.Config
 }
 
-func NewHandler(assetService asset.Service, assetDocsService assetdocs.Service, syncer *sync.AssetSyncer, userService user.Service, authService auth.Service, metricsService *metrics.Service, config *config.Config) *Handler {
+func NewHandler(
+	assetService asset.Service,
+	assetDocsService assetdocs.Service,
+	userService user.Service,
+	authService auth.Service,
+	metricsService *metrics.Service,
+	runService runs.Service,
+	config *config.Config,
+) *Handler {
 	return &Handler{
 		assetService:     assetService,
 		assetDocsService: assetDocsService,
 		userService:      userService,
 		authService:      authService,
 		metricsService:   metricsService,
-		syncer:           syncer,
+		runService:       runService,
 		config:           config,
 	}
 }
@@ -140,15 +148,6 @@ func (h *Handler) Routes() []common.Route {
 			Path:    "/api/v1/assets/documentation/",
 			Method:  http.MethodPost,
 			Handler: h.createAssetDocumentation,
-			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService, h.config),
-				common.RequirePermission(h.userService, "assets", "manage"),
-			},
-		},
-		{
-			Path:    "/api/v1/assets/batch",
-			Method:  http.MethodPost,
-			Handler: h.batchCreateAssets,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),

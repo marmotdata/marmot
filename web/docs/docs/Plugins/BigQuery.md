@@ -38,7 +38,6 @@ The following configuration options are available:
 | include_table_stats | bool | false | Whether to include table statistics (row count, size) |
 | include_views | bool | false | Whether to discover views |
 | max_concurrent_requests | int | false | Maximum number of concurrent API requests |
-| merge | MergeConfig | false |  |
 | metadata | MetadataConfig | false |  |
 | project_id | string | false | Google Cloud Project ID |
 | table_filter | plugin.Filter | false | Filter configuration for tables |

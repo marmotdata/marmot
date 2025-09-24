@@ -42,6 +42,7 @@ type Asset struct {
 	QueryLanguage *string                `json:"query_language,omitempty"`
 	IsStub        bool                   `json:"is_stub"`
 	ExternalLinks []ExternalLink         `json:"external_links,omitempty"`
+	HasRunHistory bool                   `json:"has_run_history"`
 	CreatedAt     time.Time              `json:"created_at,omitempty"`
 	UpdatedAt     time.Time              `json:"updated_at,omitempty"`
 	LastSyncAt    time.Time              `json:"last_sync_at,omitempty"`
@@ -169,6 +170,7 @@ type Service interface {
 	Summary(ctx context.Context) (*AssetSummary, error)
 	Update(ctx context.Context, id string, input UpdateInput) (*Asset, error)
 	Delete(ctx context.Context, id string) error
+	DeleteByMRN(ctx context.Context, mrn string) error
 	AddTag(ctx context.Context, id string, tag string) (*Asset, error)
 	RemoveTag(ctx context.Context, id string, tag string) (*Asset, error)
 	ListByPattern(ctx context.Context, pattern string, assetType string) ([]*Asset, error)
@@ -557,6 +559,25 @@ func (s *service) Delete(ctx context.Context, id string) error {
 	log.Info().
 		Str("asset_id", id).
 		Msg("Asset deleted")
+
+	if s.metrics != nil {
+		s.metrics.Count("asset.deleted", 1)
+	}
+
+	return nil
+}
+
+func (s *service) DeleteByMRN(ctx context.Context, mrn string) error {
+	if err := s.repo.DeleteByMRN(ctx, mrn); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return ErrAssetNotFound
+		}
+		return fmt.Errorf("failed to delete asset by MRN: %w", err)
+	}
+
+	log.Info().
+		Str("asset_mrn", mrn).
+		Msg("Asset deleted by MRN")
 
 	if s.metrics != nil {
 		s.metrics.Count("asset.deleted", 1)

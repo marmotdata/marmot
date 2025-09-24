@@ -39,7 +39,6 @@ The following configuration options are available:
 | include_columns | bool | false | Whether to include column information in table metadata |
 | include_databases | bool | false | Whether to discover databases |
 | include_row_counts | bool | false | Whether to include approximate row counts (requires analyze) |
-| merge | MergeConfig | false |  |
 | metadata | MetadataConfig | false |  |
 | password | string | false | Password for authentication |
 | port | int | false | PostgreSQL server port (default: 5432) |

@@ -43,7 +43,6 @@ The following configuration options are available:
 | include_databases | bool | false | Whether to discover databases |
 | include_indexes | bool | false | Whether to include index information |
 | include_views | bool | false | Whether to include views |
-| merge | MergeConfig | false |  |
 | metadata | MetadataConfig | false |  |
 | password | string | false | Password for authentication |
 | port | int | false | MongoDB server port (default: 27017) |

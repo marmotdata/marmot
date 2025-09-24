@@ -101,13 +101,19 @@
 					</div>
 					<div class="ml-4 flex items-center space-x-4 md:ml-6">
 						<Button
+							icon="material-symbols:inventory"
+							text="Runs"
+							variant="clear"
+							href="/runs"
+							class={'hover:bg-gray-100 dark:hover:bg-gray-700'}
+						/>
+						<Button
 							icon="material-symbols:area-chart-rounded"
 							text="Metrics"
 							variant="clear"
 							href="/metrics"
 							class={'hover:bg-gray-100 dark:hover:bg-gray-700'}
 						/>
-
 						<div class="relative">
 							<div>
 								<button
