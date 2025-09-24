@@ -25,7 +25,7 @@ jobs:
         id: chart_version
         run: |
           cd charts/marmot
-          echo "CHART_VERSION=$(grep -o 'version: [0-9.]*' Chart.yaml | awk '{print $2}')" >> $GITHUB_OUTPUT
+          echo "CHART_VERSION=$(grep -o 'version: [0-9.]*' Chart.yaml | awk '{print $2}')" >> "$GITHUB_OUTPUT"
 
       - name: Check if version changed
         id: version_check
