@@ -3459,6 +3459,12 @@ const docTemplate = `{
             "properties": {
                 "count": {
                     "type": "integer"
+                },
+                "percentage": {
+                    "type": "number"
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -3887,14 +3893,11 @@ const docTemplate = `{
                 1000000000,
                 60000000000,
                 3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
-                60000000000,
-                3600000000000
+                60000000000
             ],
             "x-enum-varnames": [
                 "minDuration",
@@ -3905,14 +3908,11 @@ const docTemplate = `{
                 "Second",
                 "Minute",
                 "Hour",
-                "minDuration",
-                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
-                "Minute",
-                "Hour"
+                "Minute"
             ]
         },
         "user.APIKey": {

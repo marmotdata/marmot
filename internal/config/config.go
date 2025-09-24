@@ -45,8 +45,13 @@ type Config struct {
 	} `mapstructure:"server"`
 
 	Metrics struct {
-		Enabled bool `mapstructure:"enabled"`
-		Port    int  `mapstructure:"port"`
+		Enabled             bool     `mapstructure:"enabled"`
+		Port                int      `mapstructure:"port"`
+		OwnerMetadataFields []string `mapstructure:"owner_metadata_fields"`
+		Schemas             struct {
+			ExcludedAssetTypes []string `mapstructure:"excluded_asset_types"`
+			ExcludedProviders  []string `mapstructure:"excluded_providers"`
+		} `mapstructure:"schemas"`
 	} `mapstructure:"metrics"`
 
 	Database struct {
@@ -153,6 +158,9 @@ func setDefaults(v *viper.Viper) {
 	// Metrics defaults
 	v.SetDefault("metrics.enabled", false)
 	v.SetDefault("metrics.port", 9090)
+	v.SetDefault("metrics.owner_metadata_fields", []string{"owner", "ownedBy", "owningTeam"})
+	v.SetDefault("metrics.schemas.excluded_asset_types", []string{"Service"})
+	v.SetDefault("metrics.schemas.excluded_providers", []string{})
 
 	// Database defaults
 	v.SetDefault("database.host", "localhost")

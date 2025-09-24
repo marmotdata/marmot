@@ -308,7 +308,9 @@ func (h *Handler) getAssetsByProvider(w http.ResponseWriter, r *http.Request) {
 }
 
 type AssetsWithSchemasResponse struct {
-	Count int64 `json:"count"`
+	Count      int64   `json:"count"`
+	Total      int64   `json:"total"`
+	Percentage float64 `json:"percentage"`
 }
 
 // @Summary Get assets with schemas count
@@ -318,14 +320,32 @@ type AssetsWithSchemasResponse struct {
 // @Success 200 {object} AssetsWithSchemasResponse
 // @Router /api/v1/metrics/assets/with-schemas [get]
 func (h *Handler) getAssetsWithSchemas(w http.ResponseWriter, r *http.Request) {
-	count, err := h.metricsService.GetAssetsWithSchemas(r.Context())
+	schemasCount, err := h.metricsService.GetAssetsWithSchemas(r.Context())
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get assets with schemas")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to retrieve assets with schemas")
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, AssetsWithSchemasResponse{Count: count})
+	totalCount, err := h.metricsService.GetTotalAssetsFiltered(r.Context(),
+		h.config.Metrics.Schemas.ExcludedAssetTypes,
+		h.config.Metrics.Schemas.ExcludedProviders)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to get total assets")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to retrieve total assets")
+		return
+	}
+
+	var percentage float64
+	if totalCount > 0 {
+		percentage = (float64(schemasCount) / float64(totalCount)) * 100
+	}
+
+	common.RespondJSON(w, http.StatusOK, AssetsWithSchemasResponse{
+		Count:      schemasCount,
+		Total:      totalCount,
+		Percentage: percentage,
+	})
 }
 
 type AssetsByOwnerResponse struct {
@@ -339,7 +359,7 @@ type AssetsByOwnerResponse struct {
 // @Success 200 {object} AssetsByOwnerResponse
 // @Router /api/v1/metrics/assets/by-owner [get]
 func (h *Handler) getAssetsByOwner(w http.ResponseWriter, r *http.Request) {
-	assets, err := h.metricsService.GetAssetsByOwner(r.Context())
+	assets, err := h.metricsService.GetAssetsByOwner(r.Context(), h.config.Metrics.OwnerMetadataFields)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get assets by owner")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to retrieve assets by owner")

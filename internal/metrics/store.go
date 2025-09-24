@@ -84,10 +84,11 @@ type Store interface {
 	GetTopAssets(ctx context.Context, timeRange TimeRange, limit int) ([]AssetCount, error)
 
 	GetTotalAssets(ctx context.Context) (int64, error)
+	GetTotalAssetsFiltered(ctx context.Context, excludedTypes []string, excludedProviders []string) (int64, error)
 	GetAssetsByType(ctx context.Context) (map[string]int64, error)
 	GetAssetsByProvider(ctx context.Context) (map[string]int64, error)
 	GetAssetsWithSchemas(ctx context.Context) (int64, error)
-	GetAssetsByOwner(ctx context.Context) (map[string]int64, error)
+	GetAssetsByOwner(ctx context.Context, ownerFields []string) (map[string]int64, error)
 	GetAssetBreakdown(ctx context.Context) ([]AssetBreakdown, error)
 
 	AggregateMetrics(ctx context.Context, timeRange TimeRange, bucketSize time.Duration) error
@@ -106,6 +107,34 @@ func NewPostgresStore(db *pgxpool.Pool) Store {
 
 func (s *PostgresStore) RecordMetric(ctx context.Context, metric Metric) error {
 	return s.RecordMetrics(ctx, []Metric{metric})
+}
+
+func (s *PostgresStore) GetAssetsWithSchemas(ctx context.Context) (int64, error) {
+	query := `SELECT COUNT(*) FROM assets WHERE schema != '{}' AND schema IS NOT NULL`
+	var count int64
+	err := s.db.QueryRow(ctx, query).Scan(&count)
+	return count, err
+}
+
+func (s *PostgresStore) GetTotalAssetsFiltered(ctx context.Context, excludedTypes []string, excludedProviders []string) (int64, error) {
+	query := `SELECT COUNT(*) FROM assets WHERE 1=1`
+	args := []interface{}{}
+	argNum := 1
+
+	if len(excludedTypes) > 0 {
+		query += fmt.Sprintf(" AND type != ALL($%d)", argNum)
+		args = append(args, excludedTypes)
+		argNum++
+	}
+
+	if len(excludedProviders) > 0 {
+		query += fmt.Sprintf(" AND NOT (providers && $%d)", argNum)
+		args = append(args, excludedProviders)
+	}
+
+	var count int64
+	err := s.db.QueryRow(ctx, query, args...).Scan(&count)
+	return count, err
 }
 
 func (s *PostgresStore) GetTotalAssets(ctx context.Context) (int64, error) {
@@ -164,21 +193,25 @@ func (s *PostgresStore) GetAssetsByProvider(ctx context.Context) (map[string]int
 	return result, nil
 }
 
-func (s *PostgresStore) GetAssetsWithSchemas(ctx context.Context) (int64, error) {
-	query := `SELECT COUNT(*) FROM assets WHERE schema != '{}'`
-	var count int64
-	err := s.db.QueryRow(ctx, query).Scan(&count)
-	return count, err
-}
+func (s *PostgresStore) GetAssetsByOwner(ctx context.Context, ownerFields []string) (map[string]int64, error) {
+	if len(ownerFields) == 0 {
+		return make(map[string]int64), nil
+	}
 
-func (s *PostgresStore) GetAssetsByOwner(ctx context.Context) (map[string]int64, error) {
-	query := `
+	coalesceFields := make([]string, len(ownerFields))
+	for i, field := range ownerFields {
+		coalesceFields[i] = fmt.Sprintf("metadata->>'%s'", field)
+	}
+
+	query := fmt.Sprintf(`
    	SELECT 
-   		COALESCE(metadata->>'owner', metadata->>'ownedBy', metadata->>'owningTeam') as owner,
+   		COALESCE(%s) as owner,
    		COUNT(*)
    	FROM assets
-   	WHERE COALESCE(metadata->>'owner', metadata->>'ownedBy', metadata->>'owningTeam') IS NOT NULL
-   	GROUP BY owner ORDER BY COUNT(*) DESC`
+   	WHERE COALESCE(%s) IS NOT NULL
+   	GROUP BY owner ORDER BY COUNT(*) DESC`,
+		strings.Join(coalesceFields, ", "),
+		strings.Join(coalesceFields, ", "))
 
 	result := make(map[string]int64)
 	rows, err := s.db.Query(ctx, query)
@@ -564,10 +597,10 @@ func (s *PostgresStore) GetTopQueries(ctx context.Context, timeRange TimeRange, 
 func (s *PostgresStore) GetTopAssets(ctx context.Context, timeRange TimeRange, limit int) ([]AssetCount, error) {
 	query := `
 		SELECT 
-			labels->>'asset_id' as asset_id,
-			labels->>'asset_type' as asset_type,
-			labels->>'asset_name' as asset_name,
-			labels->>'asset_provider' as asset_provider,
+			COALESCE(labels->>'asset_id', '') as asset_id,
+			COALESCE(labels->>'asset_type', '') as asset_type,
+			COALESCE(labels->>'asset_name', '') as asset_name,
+			COALESCE(labels->>'asset_provider', '') as asset_provider,
 			SUM(value)::bigint as count
 		FROM raw_metrics
 		WHERE metric_name = 'asset_views_total'

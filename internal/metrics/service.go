@@ -74,8 +74,16 @@ func (s *Service) GetAssetsWithSchemas(ctx context.Context) (int64, error) {
 	return count, err
 }
 
-func (s *Service) GetAssetsByOwner(ctx context.Context) (map[string]int64, error) {
-	assets, err := s.store.GetAssetsByOwner(ctx)
+func (s *Service) GetTotalAssetsFiltered(ctx context.Context, excludedTypes []string, excludedProviders []string) (int64, error) {
+	count, err := s.store.GetTotalAssetsFiltered(ctx, excludedTypes, excludedProviders)
+	if err == nil {
+		s.updateAssetMetrics(ctx)
+	}
+	return count, err
+}
+
+func (s *Service) GetAssetsByOwner(ctx context.Context, ownerFields []string) (map[string]int64, error) {
+	assets, err := s.store.GetAssetsByOwner(ctx, ownerFields)
 	if err == nil {
 		s.updateAssetMetrics(ctx)
 	}

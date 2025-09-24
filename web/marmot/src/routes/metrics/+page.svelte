@@ -19,6 +19,7 @@
 	interface AssetMetrics {
 		totalAssets: number;
 		assetsWithSchemas: number;
+		schemasPercentage: number;
 		assetsByType: Record<string, number>;
 		assetsByProvider: Record<string, number>;
 		assetsByOwner: Record<string, number>;
@@ -61,6 +62,7 @@
 		assetsByProvider: {},
 		assetsByOwner: {}
 	};
+
 	let metricsLoading = true;
 	let metricsError: string | null = null;
 
@@ -88,6 +90,7 @@
 			assetMetrics = {
 				totalAssets: total.count,
 				assetsWithSchemas: schemas.count,
+				schemasPercentage: schemas.percentage,
 				assetsByType: type.assets,
 				assetsByProvider: provider.assets,
 				assetsByOwner: owner.assets
@@ -231,9 +234,7 @@
 			icon="mdi:database-check"
 			loading={metricsLoading}
 			error={metricsError}
-			subtitle="{assetMetrics.totalAssets > 0
-				? Math.round((assetMetrics.assetsWithSchemas / assetMetrics.totalAssets) * 100)
-				: 0}% coverage"
+			subtitle="{Math.round(assetMetrics.schemasPercentage)}% coverage"
 		/>
 
 		<MetricCard
