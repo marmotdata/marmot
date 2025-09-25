@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import UserIcon from '~icons/heroicons/user-16-solid';
-	import Button from '../components/Button.svelte';
+	import Icon from '@iconify/svelte';
 
 	let showBanner: boolean | null = null;
 	let isDropdownOpen = false;
@@ -100,20 +100,31 @@
 						{/if}
 					</div>
 					<div class="ml-4 flex items-center space-x-4 md:ml-6">
-						<Button
-							icon="material-symbols:inventory"
-							text="Runs"
-							variant="clear"
+						<a
 							href="/runs"
-							class={'hover:bg-gray-100 dark:hover:bg-gray-700'}
-						/>
-						<Button
-							icon="material-symbols:area-chart-rounded"
-							text="Metrics"
-							variant="clear"
+							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
+								.url.pathname === '/runs'
+								? 'text-orange-600 dark:text-orange-400'
+								: 'text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400'}"
+						>
+							<span class="w-4 h-4 mr-1.5">
+								<Icon icon="material-symbols:inventory" />
+							</span>
+							<span>Runs</span>
+						</a>
+
+						<a
 							href="/metrics"
-							class={'hover:bg-gray-100 dark:hover:bg-gray-700'}
-						/>
+							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
+								.url.pathname === '/metrics'
+								? 'text-orange-600 dark:text-orange-400'
+								: 'text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400'}"
+						>
+							<span class="w-4 h-4 mr-1.5">
+								<Icon icon="material-symbols:area-chart-rounded" />
+							</span>
+							<span>Metrics</span>
+						</a>
 						<div class="relative">
 							<div>
 								<button

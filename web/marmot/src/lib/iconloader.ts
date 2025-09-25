@@ -34,6 +34,7 @@ import ModelingOutlineRounded from '~icons/material-symbols/modeling-outline-rou
 import ClinicalNotesOutlineRounded from '~icons/material-symbols/clinical-notes-outline-rounded';
 import TaskOutlineRounded from '~icons/material-symbols/task-outline-rounded';
 import Graph4 from '~icons/material-symbols/graph-4';
+import Endpoint from '~icons/material-symbols/api-rounded';
 import OpenLineage from '~icons/material-symbols/flowchart-outline-sharp';
 import FolderDataOutline from '~icons/material-symbols/folder-data-outline';
 
@@ -83,6 +84,7 @@ const iconMap: Record<
   project: { default: ClinicalNotesOutlineRounded, class: 'text-gray-900 dark:text-gray-100' },
   task: { default: TaskOutlineRounded, class: 'text-gray-900 dark:text-gray-100' },
   dag: { default: Graph4, class: 'text-gray-900 dark:text-gray-100' },
+  endpoint: { default: Endpoint, class: 'text-gray-900 dark:text-gray-100' },
   job: { default: FolderDataOutline, class: 'text-gray-900 dark:text-gray-100' }
 };
 

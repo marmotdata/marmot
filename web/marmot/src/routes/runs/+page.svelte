@@ -8,6 +8,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import IngestionRunCard from '../../components/IngestionRunCard.svelte';
 	import IngestionRunModal from '../../components/IngestionRunModal.svelte';
+	import GettingStarted from '../../components/GettingStarted.svelte';
 
 	interface IngestionRunSummary {
 		assets_created: number;
@@ -168,10 +169,6 @@
 		}
 	}
 
-	async function fetchPipelines() {
-		// Pipelines are now fetched with runs, no separate call needed
-	}
-
 	function goToPage(page: number) {
 		if (page >= 1 && page <= totalPages) {
 			currentPage = page;
@@ -226,7 +223,6 @@
 	}
 
 	onMount(() => {
-		fetchPipelines();
 		fetchRuns();
 	});
 </script>
@@ -269,82 +265,7 @@
 			</div>
 		</div>
 	{:else if showGettingStarted}
-		<div
-			class="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg p-8"
-		>
-			<div class="text-center">
-				<div
-					class="mx-auto w-16 h-16 bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center mb-6"
-				>
-					<IconifyIcon
-						icon="material-symbols:rocket-launch"
-						class="h-8 w-8 text-orange-600 dark:text-orange-400"
-					/>
-				</div>
-				<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-					Get Started with CLI Ingestion
-				</h3>
-				<p class="text-gray-600 dark:text-gray-400 mb-6 max-w-2xl mx-auto">
-					Start ingesting data from your sources using the Marmot CLI. Configure your data sources
-					and run ingestion jobs to populate your data catalog.
-				</p>
-
-				<div class="grid md:grid-cols-2 gap-6 max-w-4xl mx-auto mb-8">
-					<div
-						class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
-					>
-						<div class="flex items-center mb-4">
-							<div
-								class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-3"
-							>
-								<span class="text-blue-600 dark:text-blue-400 font-semibold text-sm">1</span>
-							</div>
-							<h4 class="font-semibold text-gray-900 dark:text-gray-100">Install CLI</h4>
-						</div>
-						<div class="bg-gray-900 dark:bg-gray-950 rounded-md p-3 mb-4">
-							<code class="text-green-400 text-sm">curl -sSL https://get.marmot.dev | sh</code>
-						</div>
-						<p class="text-sm text-gray-600 dark:text-gray-400">
-							Download and install the Marmot CLI tool to get started with data ingestion.
-						</p>
-					</div>
-
-					<div
-						class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
-					>
-						<div class="flex items-center mb-4">
-							<div
-								class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3"
-							>
-								<span class="text-green-600 dark:text-green-400 font-semibold text-sm">2</span>
-							</div>
-							<h4 class="font-semibold text-gray-900 dark:text-gray-100">Configure Sources</h4>
-						</div>
-						<div class="bg-gray-900 dark:bg-gray-950 rounded-md p-3 mb-4">
-							<code class="text-green-400 text-sm">marmot ingest --config pipeline.yaml</code>
-						</div>
-						<p class="text-sm text-gray-600 dark:text-gray-400">
-							Create configuration files for your data sources and run ingestion jobs.
-						</p>
-					</div>
-				</div>
-
-				<div class="flex flex-col sm:flex-row gap-4 justify-center">
-					<Button
-						variant="filled"
-						text="View Documentation"
-						icon="book"
-						click={() => window.open('https://docs.marmot.dev', '_blank')}
-					/>
-					<Button
-						variant="clear"
-						text="Example Configurations"
-						icon="code"
-						click={() => window.open('https://github.com/marmotdata/examples', '_blank')}
-					/>
-				</div>
-			</div>
-		</div>
+		<GettingStarted />
 	{:else}
 		<!-- Filters -->
 		<div

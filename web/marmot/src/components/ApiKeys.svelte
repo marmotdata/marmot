@@ -100,7 +100,7 @@
 			<Button
 				variant="filled"
 				text={creatingKey ? 'Cancel' : 'New Key'}
-				icon={creatingKey ? 'cross' : 'plus'}
+				icon={creatingKey ? 'material-symbols:close' : 'material-symbols:add-2'}
 				click={() => {
 					creatingKey = !creatingKey;
 					newlyCreatedKey = null;

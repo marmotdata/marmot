@@ -53,11 +53,18 @@
 
 			const rawData = await response.json();
 
+			// Handle null or undefined response
+			if (!rawData) {
+				items = [];
+				return;
+			}
+
 			// Transform data if transformer is provided, otherwise use raw data
 			if (transformData) {
 				items = transformData(rawData);
 			} else {
-				items = rawData;
+				// Ensure rawData is an array
+				items = Array.isArray(rawData) ? rawData : [];
 			}
 		} catch (err) {
 			console.error(`Error fetching data:`, err);
@@ -100,12 +107,14 @@
 				</div>
 			</div>
 		{:else if items.length === 0}
-			<div class="text-center py-5">
-				<IconifyIcon icon={emptyIcon} class="w-11 h-11 text-gray-400 mx-auto mb-2.5" />
-				<p class="text-gray-500 dark:text-gray-400 text-sm">{emptyMessage}</p>
-				<p class="text-gray-400 dark:text-gray-500 text-xs mt-0.5">
-					{emptyDescription}
-				</p>
+			<div class="flex items-center justify-center py-8">
+				<div class="text-center">
+					<IconifyIcon icon={emptyIcon} class="w-8 h-8 text-gray-400 mx-auto mb-2" />
+					<p class="text-gray-500 dark:text-gray-400 text-sm mb-1">{emptyMessage}</p>
+					<p class="text-gray-400 dark:text-gray-500 text-xs">
+						{emptyDescription}
+					</p>
+				</div>
 			</div>
 		{:else}
 			<div class="space-y-1">

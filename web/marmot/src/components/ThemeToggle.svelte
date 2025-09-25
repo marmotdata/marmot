@@ -63,7 +63,7 @@
 		class="rounded-r-none border-r-0"
 		click={handleThemeChange('light')}
 		disabled={loading}
-		icon="sun"
+		icon="material-symbols:sunny"
 		text="Light"
 	/>
 
@@ -72,7 +72,7 @@
 		class="rounded-none border-x"
 		click={handleThemeChange('dark')}
 		disabled={loading}
-		icon="moon"
+		icon="material-symbols:moon-stars"
 		text="Dark"
 	/>
 
@@ -81,7 +81,7 @@
 		class="rounded-l-none border-l-0"
 		click={handleThemeChange('auto')}
 		disabled={loading}
-		icon="display"
+		icon="material-symbols:wand-stars-rounded"
 		text="Auto"
 	/>
 </div>

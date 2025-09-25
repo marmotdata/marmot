@@ -118,8 +118,13 @@
 			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Asset Details</h2>
 			{#if !staticPlacement}
 				<div class="flex items-center space-x-4">
-					<Button icon="aspect-ratio" href={fullViewUrl} text="Full View" variant="filled" />
-					<Button click={onClose} icon="x-lg" variant="clear" />
+					<Button
+						icon="material-symbols:screenshot-monitor-outline"
+						href={fullViewUrl}
+						text="Full View"
+						variant="filled"
+					/>
+					<Button click={onClose} variant="clear" icon="material-symbols:close" />
 				</div>
 			{/if}
 		</div>
