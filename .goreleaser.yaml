@@ -87,13 +87,13 @@ docker_manifests:
     image_templates:
       - "ghcr.io/marmotdata/marmot:latest-amd64"
       - "ghcr.io/marmotdata/marmot:latest-arm64"
-    skip_push: "{{ .IsPrerelease }}"
+    skip_push: '{{ contains .Version "preview" }}'
 
   - name_template: "ghcr.io/marmotdata/marmot:{{ .Major }}.{{ .Minor }}"
     image_templates:
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-amd64"
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-arm64"
-    skip_push: "{{ .IsPrerelease }}"
+    skip_push: '{{ contains .Version "preview" }}'
 
 release:
   github:
