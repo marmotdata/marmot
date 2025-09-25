@@ -1,0 +1,35 @@
+version: 2
+
+sources:
+  - name: public
+    tables:
+      - name: raw_customers
+        columns:
+          - name: id
+            data_type: integer
+          - name: name
+            data_type: varchar
+          - name: email
+            data_type: varchar
+          - name: created_at
+            data_type: timestamp
+      - name: raw_orders
+        columns:
+          - name: id
+            data_type: integer
+          - name: customer_id
+            data_type: integer
+          - name: amount
+            data_type: decimal
+          - name: order_date
+            data_type: date
+          - name: status
+            data_type: varchar
+
+models:
+  - name: customers
+    description: "Clean customer data"
+  - name: orders
+    description: "Clean order data"
+  - name: customer_summary
+    description: "Customer analytics summary"

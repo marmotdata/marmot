@@ -1,0 +1,20 @@
+transport:
+  type: http
+  url: http://192.168.0.9:8080
+  endpoint: api/v1/lineage
+  timeout: 5000
+  verify: false
+  auth:
+    type: api_key
+    apiKey: SETKEY
+
+namespace: dbt_test_project
+job_namespace: dbt_test_project
+
+disabled_facets:
+  - spark_unknown
+  - spark_version
+
+custom_environment_variables:
+  - DBT_CLOUD_PROJECT_ID
+  - DBT_CLOUD_JOB_ID

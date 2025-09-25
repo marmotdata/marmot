@@ -1,0 +1,7 @@
+{
+  "eventType": "START",
+  "eventTime": "2025-08-12T20:26:43.161Z",
+  "run": {"runId": "test-run-123"},
+  "job": {"namespace": "test", "name": "test-job"},
+  "producer": "manual-test"
+}

@@ -1,0 +1,26 @@
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: dbt_test
+      POSTGRES_USER: dbt_user
+      POSTGRES_PASSWORD: dbt_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  dbt:
+    build: .
+    depends_on:
+      - postgres
+    volumes:
+      - ./dbt_project:/usr/app/dbt_project
+    environment:
+      DBT_PROFILES_DIR: /usr/app/dbt_project
+      OPENLINEAGE_URL: http://192.168.0.9:8080
+      OPENLINEAGE_NAMESPACE: dbt_test_project
+      OPENLINEAGE_TRANSPORT_AUTH_API_KEY: SETKEY
+      OPENLINEAGE_TRANSPORT_AUTH_TYPE: api_key
