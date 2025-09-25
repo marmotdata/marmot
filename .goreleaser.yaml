@@ -76,7 +76,7 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
     goos: linux
     goarch: arm64
-
+    
 docker_manifests:
   - name_template: "ghcr.io/marmotdata/marmot:{{ .Version }}"
     image_templates:
@@ -87,11 +87,13 @@ docker_manifests:
     image_templates:
       - "ghcr.io/marmotdata/marmot:latest-amd64"
       - "ghcr.io/marmotdata/marmot:latest-arm64"
+    skip_push: "{{ .IsPrerelease }}"
 
   - name_template: "ghcr.io/marmotdata/marmot:{{ .Major }}.{{ .Minor }}"
     image_templates:
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-amd64"
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-arm64"
+    skip_push: "{{ .IsPrerelease }}"
 
 release:
   github:
@@ -99,4 +101,22 @@ release:
     name: marmot
   prerelease: auto
   draft: false
-  name_template: "Marmot v{{.Version}}"
+  name_template: "v{{.Version}}"
+
+changelog:
+  use: github
+  sort: asc
+  abbrev: 0
+  groups:
+    - title: Features
+      regexp: "^.*feat[(\\w)]*:+.*$"
+      order: 0
+    - title: 'Bug fixes'
+      regexp: "^.*fix[(\\w)]*:+.*$"
+      order: 1
+    - title: Others
+      order: 999
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
