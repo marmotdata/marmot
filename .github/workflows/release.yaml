@@ -60,7 +60,13 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
+          
+      - name: Get previous full release
+        id: prev_release
+        run: |
+          PREV_TAG=$(git tag -l --sort=-version:refname | grep -v "preview" | head -1)
+          echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
+          
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
