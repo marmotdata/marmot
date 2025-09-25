@@ -10,9 +10,6 @@ const ajv = new Ajv({
 });
 addFormats(ajv);
 
-/**
- * Resolves a JSON Schema reference
- */
 export function resolveRef(ref: string, rootSchema: any): any {
   if (!ref?.startsWith('#/')) return null;
 
@@ -27,17 +24,11 @@ export function resolveRef(ref: string, rootSchema: any): any {
   return current;
 }
 
-/**
- * Extracts a schema name from a reference
- */
 export function getSchemaNameFromRef(ref: string): string {
   if (!ref) return 'unknown';
   return ref.split('/').pop() || 'unknown';
 }
 
-/**
- * Determines the field type from a schema
- */
 export function getFieldType(fieldSchema: any): string {
   if (!fieldSchema) return 'unknown';
 
@@ -80,13 +71,11 @@ export function getFieldType(fieldSchema: any): string {
   return fieldSchema.type || 'any';
 }
 
-/**
- * Processes pattern properties
- */
 export function processPatternProperties(
   patternProperties: any,
   rootSchema: any = {},
-  depth = 0
+  depth = 0,
+  parentPath = ''
 ): Field[] {
   const fields: Field[] = [];
 
@@ -95,8 +84,9 @@ export function processPatternProperties(
   }
 
   Object.entries(patternProperties).forEach(([pattern, schema]) => {
+    const fullPath = parentPath ? `${parentPath}.{pattern: ${pattern}}` : `{pattern: ${pattern}}`;
     fields.push({
-      name: `{pattern: ${pattern}}`,
+      name: fullPath,
       type: getFieldType(schema),
       description: schema.description || `Fields matching pattern: ${pattern}`,
       pattern: pattern,
@@ -112,7 +102,13 @@ export function processPatternProperties(
       default: schema.default
     });
 
-    const nestedFields = processSchemaRecursively(`{${pattern}}`, schema, rootSchema, depth);
+    const nestedFields = processSchemaRecursively(
+      `{${pattern}}`,
+      schema,
+      rootSchema,
+      depth,
+      parentPath
+    );
     if (nestedFields.length > 0) {
       fields.push(...nestedFields.slice(1));
     }
@@ -121,94 +117,155 @@ export function processPatternProperties(
   return fields;
 }
 
-/**
- * Processes a schema composition
- */
 export function processComposition(
   fieldName: string,
   fieldSchema: any,
   rootSchema: any = {},
-  depth = 0
+  depth = 0,
+  parentPath = ''
 ): Field[] {
   const fields: Field[] = [];
+  const fullPath = parentPath ? `${parentPath}.${fieldName}` : fieldName;
 
   if (fieldSchema.anyOf) {
     fields.push({
-      name: fieldName,
+      name: fullPath,
       type: 'anyOf',
       description: fieldSchema.description || 'One or more of the following schemas',
       required: false,
       indentLevel: depth
     });
 
-    fieldSchema.anyOf.forEach((schema: any) => {
-      fields.push(...processSchemaRecursively(fieldName, schema, rootSchema, depth + 1));
+    fieldSchema.anyOf.forEach((schema: any, index: number) => {
+      const optionName = schema.title || schema.description || `Option ${index + 1}`;
+
+      if (!schema.properties && !schema.type && fieldSchema.properties) {
+        const mergedSchema = {
+          type: 'object',
+          properties: fieldSchema.properties,
+          required: schema.required || []
+        };
+        fields.push(
+          ...processSchemaRecursively(optionName, mergedSchema, rootSchema, depth + 1, fullPath)
+        );
+      } else {
+        fields.push(
+          ...processSchemaRecursively(optionName, schema, rootSchema, depth + 1, fullPath)
+        );
+      }
     });
   }
 
   if (fieldSchema.oneOf) {
     fields.push({
-      name: fieldName,
+      name: fullPath,
       type: 'oneOf',
       description: fieldSchema.description || 'Exactly one of the following schemas',
       required: false,
       indentLevel: depth
     });
 
-    fieldSchema.oneOf.forEach((schema: any) => {
-      fields.push(...processSchemaRecursively(fieldName, schema, rootSchema, depth + 1));
+    fieldSchema.oneOf.forEach((schema: any, index: number) => {
+      const optionName = schema.title || schema.description || `Option ${index + 1}`;
+
+      if (!schema.properties && !schema.type && fieldSchema.properties) {
+        const mergedSchema = {
+          type: 'object',
+          properties: fieldSchema.properties,
+          required: schema.required || []
+        };
+        fields.push(
+          ...processSchemaRecursively(optionName, mergedSchema, rootSchema, depth + 1, fullPath)
+        );
+      } else {
+        fields.push(
+          ...processSchemaRecursively(optionName, schema, rootSchema, depth + 1, fullPath)
+        );
+      }
     });
   }
 
   if (fieldSchema.allOf) {
-    fields.push({
-      name: fieldName,
-      type: 'allOf',
-      description: fieldSchema.description || 'All of the following schemas',
-      required: false,
-      indentLevel: depth
-    });
+    const mergedSchema = { type: 'object', properties: {}, required: [] };
 
     fieldSchema.allOf.forEach((schema: any) => {
-      fields.push(...processSchemaRecursively(fieldName, schema, rootSchema, depth + 1));
+      if (schema.$ref) {
+        const resolved = resolveRef(schema.$ref, rootSchema);
+        if (resolved) schema = resolved;
+      }
+
+      if (schema.properties) {
+        Object.assign(mergedSchema.properties, schema.properties);
+      }
+      if (schema.required) {
+        mergedSchema.required.push(...schema.required);
+      }
     });
+
+    if (mergedSchema.properties && Object.keys(mergedSchema.properties).length > 0) {
+      Object.entries(mergedSchema.properties).forEach(([name, schema]) => {
+        const isRequired = mergedSchema.required.includes(name);
+        const nestedFields = processSchemaRecursively(name, schema, rootSchema, depth, fullPath);
+
+        if (nestedFields.length > 0) {
+          nestedFields[0].required = isRequired;
+        }
+
+        fields.push(...nestedFields);
+      });
+    } else {
+      fields.push({
+        name: fullPath,
+        type: 'allOf',
+        description: fieldSchema.description || 'All of the following schemas',
+        required: false,
+        indentLevel: depth
+      });
+    }
   }
 
   if (fieldSchema.not) {
     fields.push({
-      name: fieldName,
+      name: fullPath,
       type: 'not',
       description: fieldSchema.description || 'Must not match the following schema',
       required: false,
       indentLevel: depth
     });
 
-    fields.push(...processSchemaRecursively(fieldName, fieldSchema.not, rootSchema, depth + 1));
+    fields.push(
+      ...processSchemaRecursively(
+        `${fieldName} (not)`,
+        fieldSchema.not,
+        rootSchema,
+        depth + 1,
+        fullPath
+      )
+    );
   }
 
   return fields;
 }
 
-/**
- * Processes a schema and its children
- */
 export function processSchemaRecursively(
   fieldName: string,
   fieldSchema: any,
   rootSchema: any = {},
-  depth = 0
+  depth = 0,
+  parentPath = ''
 ): Field[] {
   if (!fieldSchema) return [];
 
   const fields: Field[] = [];
+  const fullPath = parentPath ? `${parentPath}.${fieldName}` : fieldName;
 
   if (fieldSchema.$ref) {
     const resolvedSchema = resolveRef(fieldSchema.$ref, rootSchema);
     if (resolvedSchema) {
-      return processSchemaRecursively(fieldName, resolvedSchema, rootSchema, depth);
+      return processSchemaRecursively(fieldName, resolvedSchema, rootSchema, depth, parentPath);
     } else {
       fields.push({
-        name: fieldName,
+        name: fullPath,
         type: `ref(${getSchemaNameFromRef(fieldSchema.$ref)})`,
         description: fieldSchema.description,
         required: false,
@@ -219,12 +276,12 @@ export function processSchemaRecursively(
   }
 
   if (fieldSchema.anyOf || fieldSchema.oneOf || fieldSchema.allOf || fieldSchema.not) {
-    return processComposition(fieldName, fieldSchema, rootSchema, depth);
+    return processComposition(fieldName, fieldSchema, rootSchema, depth, parentPath);
   }
 
   if (fieldSchema.const !== undefined) {
     fields.push({
-      name: fieldName,
+      name: fullPath,
       type: 'const',
       description: fieldSchema.description,
       format: fieldSchema.format,
@@ -237,7 +294,7 @@ export function processSchemaRecursively(
   }
 
   const field: Field = {
-    name: fieldName,
+    name: fullPath,
     type: getFieldType(fieldSchema),
     description: fieldSchema.description,
     format: fieldSchema.format,
@@ -260,7 +317,13 @@ export function processSchemaRecursively(
     if (fieldSchema.properties) {
       Object.entries(fieldSchema.properties).forEach(([name, schema]) => {
         const isRequired = (fieldSchema.required || []).includes(name);
-        const nestedFields = processSchemaRecursively(name, schema, rootSchema, depth + 1);
+        const nestedFields = processSchemaRecursively(
+          name,
+          schema,
+          rootSchema,
+          depth + 1,
+          fullPath
+        );
 
         if (nestedFields.length > 0) {
           nestedFields[0].required = isRequired;
@@ -272,7 +335,7 @@ export function processSchemaRecursively(
 
     if (fieldSchema.patternProperties) {
       fields.push(
-        ...processPatternProperties(fieldSchema.patternProperties, rootSchema, depth + 1)
+        ...processPatternProperties(fieldSchema.patternProperties, rootSchema, depth + 1, fullPath)
       );
     }
   }
@@ -281,7 +344,13 @@ export function processSchemaRecursively(
     if (fieldSchema.items.type === 'object' && fieldSchema.items.properties) {
       Object.entries(fieldSchema.items.properties).forEach(([name, schema]) => {
         const isRequired = (fieldSchema.items.required || []).includes(name);
-        const nestedFields = processSchemaRecursively(`${name}[]`, schema, rootSchema, depth + 1);
+        const nestedFields = processSchemaRecursively(
+          name,
+          schema,
+          rootSchema,
+          depth + 1,
+          `${fullPath}[]`
+        );
 
         if (nestedFields.length > 0) {
           nestedFields[0].required = isRequired;
@@ -294,7 +363,8 @@ export function processSchemaRecursively(
         `${fieldName}[]`,
         fieldSchema.items,
         rootSchema,
-        depth + 1
+        depth + 1,
+        parentPath
       );
       fields.push(...nestedFields);
     }
@@ -303,9 +373,6 @@ export function processSchemaRecursively(
   return fields;
 }
 
-/**
- * Processes a schema field and its children
- */
 export function processField(
   fieldName: string,
   fieldSchema: any,
@@ -337,9 +404,6 @@ export function processField(
   }
 }
 
-/**
- * Extract examples from schema (supports both 'example' and 'examples')
- */
 export function extractExamples(schema: any): any {
   if (schema.examples && Array.isArray(schema.examples)) {
     return schema.examples.length === 1 ? schema.examples[0] : schema.examples;
@@ -352,9 +416,6 @@ export function extractExamples(schema: any): any {
   return null;
 }
 
-/**
- * Processes a JSON schema using Ajv for validation and metadata
- */
 export function processJsonSchema(schemaSection: any): Field[] {
   if (!schemaSection) return [];
 
@@ -453,12 +514,17 @@ export function processJsonSchema(schemaSection: any): Field[] {
     let fields: Field[] = [];
 
     if (schema.anyOf || schema.oneOf || schema.allOf || schema.not) {
-      fields.push(...processComposition('root', schema, schema, 0));
-    } else if (schema.type === 'object' || (Array.isArray(schema.type) && schema.type.includes('object'))) {
+      fields.push(...processComposition('root', schema, schema, 0, ''));
+    }
+
+    if (
+      schema.type === 'object' ||
+      (Array.isArray(schema.type) && schema.type.includes('object'))
+    ) {
       if (schema.properties) {
         Object.entries(schema.properties).forEach(([fieldName, fieldSchema]) => {
           const isRequired = (schema.required || []).includes(fieldName);
-          const fieldResults = processSchemaRecursively(fieldName, fieldSchema, schema, 0);
+          const fieldResults = processSchemaRecursively(fieldName, fieldSchema, schema, 0, '');
 
           if (fieldResults.length > 0) {
             fieldResults[0].required = isRequired;
@@ -469,10 +535,12 @@ export function processJsonSchema(schemaSection: any): Field[] {
       }
 
       if (schema.patternProperties) {
-        fields.push(...processPatternProperties(schema.patternProperties, schema, 0));
+        fields.push(...processPatternProperties(schema.patternProperties, schema, 0, ''));
       }
-    } else {
-      fields.push(...processSchemaRecursively('root', schema, schema, 0));
+    }
+
+    if (fields.length === 0) {
+      fields.push(...processSchemaRecursively('root', schema, schema, 0, ''));
     }
 
     return fields;
@@ -487,10 +555,6 @@ export function processJsonSchema(schemaSection: any): Field[] {
   }
 }
 
-/**
- * Validate a JSON schema using Ajv
- * Returns array of validation errors
- */
 export function validateJsonSchema(schema: any): any[] {
   if (!schema) return [];
 
@@ -507,7 +571,6 @@ export function validateJsonSchema(schema: any): any[] {
     if (schemaObj && typeof schemaObj === 'object') {
       const schemaCopy = JSON.parse(JSON.stringify(schemaObj));
 
-      // Remove examples for validation
       if (schemaCopy.example) delete schemaCopy.example;
       if (schemaCopy.examples) delete schemaCopy.examples;
 
@@ -525,9 +588,6 @@ export function validateJsonSchema(schema: any): any[] {
   }
 }
 
-/**
- * Detects if an object is likely a JSON schema
- */
 export function isJsonSchema(schemaSection: any): boolean {
   if (!schemaSection) return false;
 
@@ -535,7 +595,6 @@ export function isJsonSchema(schemaSection: any): boolean {
     return true;
   }
 
-  // Check for common JSON Schema properties
   if (
     typeof schemaSection === 'object' &&
     schemaSection !== null &&
