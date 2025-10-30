@@ -728,6 +728,10 @@ definitions:
         type: string
       source_name:
         type: string
+      statistics:
+        items:
+          $ref: '#/definitions/runs.CreateStatRequest'
+        type: array
     required:
     - assets
     - pipeline_name
@@ -818,6 +822,19 @@ definitions:
       type:
         type: string
     type: object
+  runs.CreateStatRequest:
+    properties:
+      asset_mrn:
+        type: string
+      metric_name:
+        type: string
+      value:
+        type: number
+    required:
+    - asset_mrn
+    - metric_name
+    - value
+    type: object
   runs.RunEntitiesResponse:
     properties:
       entities:
@@ -872,11 +889,14 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
+    - 3600000000000
     type: integer
     x-enum-varnames:
     - minDuration
@@ -887,11 +907,14 @@ definitions:
     - Second
     - Minute
     - Hour
+    - minDuration
+    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
+    - Hour
   user.APIKey:
     properties:
       created_at:

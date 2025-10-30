@@ -10,6 +10,7 @@ type Recorder interface {
 	RecordAssetView(ctx context.Context, assetID, assetType, assetName, assetProvider string) error
 	RecordDBQuery(ctx context.Context, operation string, duration time.Duration, success bool)
 	WrapDBQuery(ctx context.Context, operation string, fn func() error) error
+	RecordCustomMetrics(ctx context.Context, metrics []Metric) error
 }
 
 type recorder struct {
@@ -40,3 +41,8 @@ func (r *recorder) WrapDBQuery(ctx context.Context, operation string, fn func() 
 	r.collector.RecordDBQuery(operation, duration, err == nil)
 	return err
 }
+
+func (r *recorder) RecordCustomMetrics(ctx context.Context, metrics []Metric) error {
+	return r.collector.store.RecordMetrics(ctx, metrics)
+}
+

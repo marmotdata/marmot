@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
@@ -88,6 +89,12 @@ type DocumentationInput struct {
 	Type     string `json:"type"`
 }
 
+type StatisticInput struct {
+	AssetMRN   string  `json:"asset_mrn"`
+	MetricName string  `json:"metric_name"`
+	Value      float64 `json:"value"`
+}
+
 type DestroyRunResponse struct {
 	AssetsDeleted        int      `json:"assets_deleted"`
 	LineageDeleted       int      `json:"lineage_deleted"`
@@ -99,7 +106,7 @@ type Service interface {
 	StartRun(ctx context.Context, pipelineName, sourceName, createdBy string, config plugin.RawPluginConfig) (*plugin.Run, error)
 	CompleteRun(ctx context.Context, runID string, status plugin.RunStatus, summary *plugin.RunSummary, errorMessage string) error
 	ProcessAssets(ctx context.Context, runID string, assets []CreateAssetInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
-	ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
+	ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, stats []StatisticInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
 	AddCheckpoint(ctx context.Context, runID, entityType, entityMRN, operation string, sourceFields []string) error
 	GetLastRunCheckpoints(ctx context.Context, pipelineName, sourceName string) (map[string]*plugin.RunCheckpoint, error)
 	GetStaleEntities(ctx context.Context, lastCheckpoints map[string]*plugin.RunCheckpoint, currentEntityMRNs []string) []string
@@ -112,18 +119,20 @@ type Service interface {
 }
 
 type service struct {
-	repo           Repository
-	assetService   asset.Service
-	lineageService lineage.Service
-	validator      *validator.Validate
+	repo            Repository
+	assetService    asset.Service
+	lineageService  lineage.Service
+	metricsRecorder metrics.Recorder
+	validator       *validator.Validate
 }
 
-func NewService(repo Repository, assetService asset.Service, lineageService lineage.Service) Service {
+func NewService(repo Repository, assetService asset.Service, lineageService lineage.Service, metricsRecorder metrics.Recorder) Service {
 	return &service{
-		repo:           repo,
-		assetService:   assetService,
-		lineageService: lineageService,
-		validator:      validator.New(),
+		repo:            repo,
+		assetService:    assetService,
+		lineageService:  lineageService,
+		metricsRecorder: metricsRecorder,
+		validator:       validator.New(),
 	}
 }
 
@@ -198,7 +207,7 @@ func (s *service) CompleteRun(ctx context.Context, runID string, status plugin.R
 	return nil
 }
 
-func (s *service) ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error) {
+func (s *service) ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, stats []StatisticInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error) {
 	run, err := s.repo.GetByRunID(ctx, runID)
 	if err != nil {
 		return nil, fmt.Errorf("getting run: %w", err)
@@ -394,7 +403,36 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		}
 	}
 
+	if len(stats) > 0 {
+		s.processStatistics(ctx, stats)
+	}
+
 	return response, nil
+}
+
+func (s *service) processStatistics(ctx context.Context, statistics []StatisticInput) {
+	if len(statistics) == 0 {
+		return
+	}
+
+	metricsToRecord := make([]metrics.Metric, 0, len(statistics))
+	now := time.Now()
+
+	for _, stat := range statistics {
+		metricsToRecord = append(metricsToRecord, metrics.Metric{
+			Name:  stat.MetricName,
+			Type:  metrics.Gauge,
+			Value: stat.Value,
+			Labels: map[string]string{
+				"asset_mrn": stat.AssetMRN,
+			},
+			Timestamp: now,
+		})
+	}
+
+	if err := s.metricsRecorder.RecordCustomMetrics(ctx, metricsToRecord); err != nil {
+		log.Warn().Err(err).Msg("Failed to record asset statistics")
+	}
 }
 
 func convertSchemaToStringMap(schema map[string]interface{}) map[string]string {
@@ -417,7 +455,7 @@ func convertToAssetExternalLinks(links []map[string]string) []asset.ExternalLink
 }
 
 func (s *service) ProcessAssets(ctx context.Context, runID string, assets []CreateAssetInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error) {
-	return s.ProcessEntities(ctx, runID, assets, nil, nil, pipelineName, sourceName)
+	return s.ProcessEntities(ctx, runID, assets, nil, nil, nil, pipelineName, sourceName)
 }
 
 func (s *service) AddCheckpoint(ctx context.Context, runID, entityType, entityMRN, operation string, sourceFields []string) error {
@@ -482,7 +520,10 @@ func (s *service) DestroyPipeline(ctx context.Context, pipelineName string) (*De
 	}
 
 	response := &DestroyRunResponse{
-		DeletedEntityMRNs: make([]string, 0, len(allCurrentEntities)),
+		AssetsDeleted:        0,
+		LineageDeleted:       0,
+		DocumentationDeleted: 0,
+		DeletedEntityMRNs:    make([]string, 0, len(allCurrentEntities)),
 	}
 
 	if len(allCurrentEntities) == 0 {
@@ -726,3 +767,4 @@ func (s *service) hashAsset(asset CreateAssetInput) string {
 	hash := sha256.Sum256(data)
 	return fmt.Sprintf("%x", hash)
 }
+

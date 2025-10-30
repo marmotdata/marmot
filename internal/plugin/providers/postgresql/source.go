@@ -36,7 +36,7 @@ type Config struct {
 	// Discovery configuration
 	IncludeDatabases     bool           `json:"include_databases" description:"Whether to discover databases" default:"true"`
 	IncludeColumns       bool           `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeRowCounts     bool           `json:"include_row_counts" description:"Whether to include approximate row counts (requires analyze)" default:"true"`
+	EnableMetrics        bool           `json:"enable_metrics" description:"Whether to include table metrics" default:"true"`
 	DiscoverForeignKeys  bool           `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
 	SchemaFilter         *plugin.Filter `json:"schema_filter,omitempty" description:"Filter configuration for schemas"`
 	TableFilter          *plugin.Filter `json:"table_filter,omitempty" description:"Filter configuration for tables"`
@@ -95,8 +95,8 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.IncludeColumns = true
 	}
 
-	if !config.IncludeRowCounts {
-		config.IncludeRowCounts = true
+	if !config.EnableMetrics {
+		config.EnableMetrics = true
 	}
 
 	if !config.DiscoverForeignKeys {
@@ -110,7 +110,6 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
-
 	if err := s.initConnection(ctx, "postgres"); err != nil {
 		return nil, fmt.Errorf("initializing database connection: %w", err)
 	}
@@ -118,42 +117,40 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
+	var statistics []plugin.Statistic
 
 	log.Debug().Msg("Starting database discovery")
+
 	databaseAssets, err := s.discoverDatabases(ctx)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to discover databases")
 		return &plugin.DiscoveryResult{
-			Assets:  assets,
-			Lineage: lineages,
+			Assets:     assets,
+			Lineage:    lineages,
+			Statistics: statistics,
 		}, fmt.Errorf("failed to discover databases: %w", err)
 	} else {
 		assets = append(assets, databaseAssets...)
 		log.Debug().Int("count", len(databaseAssets)).Msg("Discovered databases")
 	}
-
 	for _, dbAsset := range databaseAssets {
 		if dbAsset.Type != "Database" {
 			continue
 		}
-
 		dbName := *dbAsset.Name
 		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(dbName, *s.config.DatabaseFilter) {
 			log.Debug().Str("database", dbName).Msg("Skipping database due to filter")
 			continue
 		}
-
 		if dbName == "template0" || dbName == "template1" {
 			continue
 		}
-
 		dbCtx, dbCancel := context.WithTimeout(ctx, 2*time.Minute)
 		if err := s.initConnection(dbCtx, dbName); err != nil {
 			log.Warn().Err(err).Str("database", dbName).Msg("Failed to connect to database")
 			dbCancel()
 			continue
 		}
-
 		log.Debug().Str("database", dbName).Msg("Starting table and view discovery")
 		objectAssets, err := s.discoverTablesAndViews(dbCtx, dbName)
 		if err != nil {
@@ -161,6 +158,12 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		} else {
 			assets = append(assets, objectAssets...)
 			log.Debug().Int("count", len(objectAssets)).Msg("Discovered tables and views")
+
+			// Collect statistics if enabled
+			if s.config.EnableMetrics {
+				tableStats := s.collectTableStatistics(dbCtx, dbName, objectAssets)
+				statistics = append(statistics, tableStats...)
+			}
 
 			// Create lineage between database and its tables/views
 			for _, objAsset := range objectAssets {
@@ -171,7 +174,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 				})
 			}
 		}
-
 		if s.config.DiscoverForeignKeys {
 			log.Debug().Str("database", dbName).Msg("Starting foreign key discovery")
 			fkLineages, err := s.discoverForeignKeys(dbCtx, dbName)
@@ -182,14 +184,12 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 				log.Debug().Int("count", len(fkLineages)).Msg("Discovered foreign key relationships")
 			}
 		}
-
-		s.closeConnection()
 		dbCancel()
 	}
-
 	return &plugin.DiscoveryResult{
-		Assets:  assets,
-		Lineage: lineages,
+		Assets:     assets,
+		Lineage:    lineages,
+		Statistics: statistics,
 	}, nil
 }
 
@@ -454,7 +454,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 		metadata["created"] = currentTime
 		metadata["object_type"] = objectType
 
-		if estimatedRows.Valid && s.config.IncludeRowCounts {
+		if estimatedRows.Valid && s.config.EnableMetrics {
 			metadata["row_count"] = int64(estimatedRows.Float64)
 		}
 
@@ -742,4 +742,69 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 	}
 
 	return lineages, nil
+}
+
+func (s *Source) collectTableStatistics(ctx context.Context, dbName string, assets []asset.Asset) []plugin.Statistic {
+	var statistics []plugin.Statistic
+
+	query := `
+		SELECT 
+			n.nspname || '.' || c.relname as table_name,
+			c.reltuples::bigint as row_count,
+			(SELECT COUNT(*) FROM information_schema.columns 
+			 WHERE table_schema = n.nspname AND table_name = c.relname) as column_count,
+			pg_total_relation_size(c.oid) as total_size_bytes
+		FROM pg_catalog.pg_class c
+		JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
+		WHERE c.relkind = 'r'
+		  AND n.nspname NOT LIKE 'pg_%'
+		  AND n.nspname != 'information_schema'`
+
+	rows, err := s.pool.Query(ctx, query)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to collect table statistics")
+		return statistics
+	}
+	defer rows.Close()
+
+	assetMap := make(map[string]string)
+	for _, a := range assets {
+		if tableName, ok := a.Metadata["table_name"].(string); ok {
+			assetMap[tableName] = *a.MRN
+		}
+	}
+
+	for rows.Next() {
+		var tableName string
+		var rowCount, columnCount, sizeBytes int64
+
+		if err := rows.Scan(&tableName, &rowCount, &columnCount, &sizeBytes); err != nil {
+			continue
+		}
+
+		assetMRN, ok := assetMap[tableName]
+		if !ok {
+			continue
+		}
+
+		statistics = append(statistics,
+			plugin.Statistic{
+				AssetMRN:   assetMRN,
+				MetricName: "asset.row_count",
+				Value:      float64(rowCount),
+			},
+			plugin.Statistic{
+				AssetMRN:   assetMRN,
+				MetricName: "asset.column_count",
+				Value:      float64(columnCount),
+			},
+			plugin.Statistic{
+				AssetMRN:   assetMRN,
+				MetricName: "asset.size_bytes",
+				Value:      float64(sizeBytes),
+			},
+		)
+	}
+
+	return statistics
 }

@@ -59,7 +59,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
 	authSvc := authService.NewService(authRepo, userSvc)
-	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc)
+	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc, recorder)
 
 	oauthManager := authService.NewOAuthManager()
 

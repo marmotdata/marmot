@@ -55,6 +55,13 @@ type DiscoveryResult struct {
 	Assets        []asset.Asset             `json:"assets"`
 	Lineage       []lineage.LineageEdge     `json:"lineage"`
 	Documentation []assetdocs.Documentation `json:"documentation"`
+	Statistics    []Statistic               `json:"statistics"`
+}
+
+type Statistic struct {
+	AssetMRN   string  `json:"asset_mrn"`
+	MetricName string  `json:"metric_name"`
+	Value      float64 `json:"value"`
 }
 
 // Run represents a single run
@@ -124,6 +131,15 @@ type StatefulSource interface {
 	SupportsStatefulIngestion() bool
 }
 
+// GetConfigType attempts to extract the config type from a source by unmarshaling into an empty interface and using reflection
+func GetConfigType(raw RawPluginConfig, source Source) interface{} {
+	validated, err := source.Validate(raw)
+	if err == nil && validated != nil {
+		return validated
+	}
+	return raw
+}
+
 // UnmarshalPluginConfig unmarshals raw config into a specific plugin config type
 func UnmarshalPluginConfig[T any](raw RawPluginConfig) (*T, error) {
 	data, err := yaml.Marshal(raw)
@@ -138,4 +154,3 @@ func UnmarshalPluginConfig[T any](raw RawPluginConfig) (*T, error) {
 
 	return &config, nil
 }
-

@@ -84,13 +84,14 @@ type CompleteRunRequest struct {
 }
 
 type BatchCreateRequest struct {
-	Assets        []CreateAssetRequest   `json:"assets"`
-	Lineage       []CreateLineageRequest `json:"lineage"`
-	Documentation []CreateDocRequest     `json:"documentation"`
-	Config        plugin.RawPluginConfig `json:"config"`
-	PipelineName  string                 `json:"pipeline_name"`
-	SourceName    string                 `json:"source_name"`
-	RunID         string                 `json:"run_id"`
+	Assets        []CreateAssetRequest     `json:"assets"`
+	Lineage       []CreateLineageRequest   `json:"lineage"`
+	Documentation []CreateDocRequest       `json:"documentation"`
+	Statistics    []CreateStatisticRequest `json:"statistics"`
+	Config        plugin.RawPluginConfig   `json:"config"`
+	PipelineName  string                   `json:"pipeline_name"`
+	SourceName    string                   `json:"source_name"`
+	RunID         string                   `json:"run_id"`
 }
 
 type CreateAssetRequest struct {
@@ -115,6 +116,12 @@ type CreateDocRequest struct {
 	AssetMRN string `json:"asset_mrn"`
 	Content  string `json:"content"`
 	Type     string `json:"type"`
+}
+
+type CreateStatisticRequest struct {
+	AssetMRN   string  `json:"asset_mrn"`
+	MetricName string  `json:"metric_name"`
+	Value      float64 `json:"value"`
 }
 
 type BatchCreateResponse struct {
@@ -197,6 +204,25 @@ func newAPIClient(baseURL, apiKey string) *apiClient {
 		apiKey:  apiKey,
 		client:  &http.Client{Timeout: httpTimeout},
 	}
+}
+
+type sourceFactory struct {
+	source func() plugin.Source
+	config func() interface{}
+}
+
+// TODO: a better registry is needed at some point
+var sourceRegistry = map[string]sourceFactory{
+	"asyncapi":   {source: func() plugin.Source { return &asyncapi.Source{} }, config: func() interface{} { return &asyncapi.Config{} }},
+	"sns":        {source: func() plugin.Source { return &sns.Source{} }, config: func() interface{} { return &sns.Config{} }},
+	"sqs":        {source: func() plugin.Source { return &sqs.Source{} }, config: func() interface{} { return &sqs.Config{} }},
+	"kafka":      {source: func() plugin.Source { return &kafka.Source{} }, config: func() interface{} { return &kafka.Config{} }},
+	"postgresql": {source: func() plugin.Source { return &postgresql.Source{} }, config: func() interface{} { return &postgresql.Config{} }},
+	"mongodb":    {source: func() plugin.Source { return &mongodb.Source{} }, config: func() interface{} { return &mongodb.Config{} }},
+	"mysql":      {source: func() plugin.Source { return &mysql.Source{} }, config: func() interface{} { return &mysql.Config{} }},
+	"bigquery":   {source: func() plugin.Source { return &bigquery.Source{} }, config: func() interface{} { return &bigquery.Config{} }},
+	"s3":         {source: func() plugin.Source { return &s3.Source{} }, config: func() interface{} { return &s3.Config{} }},
+	"openapi":    {source: func() plugin.Source { return &openapi.Source{} }, config: func() interface{} { return &openapi.Config{} }},
 }
 
 func (c *apiClient) startRun(ctx context.Context, request StartRunRequest) (*plugin.Run, error) {
@@ -382,19 +408,22 @@ func runDestroy(ctx context.Context, config plugin.Config, client *apiClient) er
 
 func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, overallSummary *Summary, config plugin.Config) error {
 	for sourceName, rawConfig := range run {
-		src, ok := sourceRegistry[sourceName]
+		srcFactory, ok := sourceRegistry[sourceName]
 		if !ok {
 			return fmt.Errorf("unknown source: %s", sourceName)
 		}
 
+		source := srcFactory.source()
+
 		printSourceHeader(sourceName)
 
-		m := rawConfig.MaskSensitiveFields(src())
-		maskedConfig, err := src().Validate(m)
+		_, err := source.Validate(rawConfig)
 		if err != nil {
 			printError(fmt.Sprintf("Config validation failed: %v", err))
 			return err
 		}
+
+		maskedConfig := rawConfig.MaskSensitiveFields(srcFactory.config())
 
 		printStep("Starting run...")
 		startTime := time.Now()
@@ -414,7 +443,7 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 		printSuccess(fmt.Sprintf("Run started (ID: %s)", ingestionRun.RunID))
 
 		printStep("Discovering assets...")
-		result, err := src().Discover(ctx, rawConfig)
+		result, err := source.Discover(ctx, rawConfig)
 		discoveryTime := time.Since(startTime)
 
 		if err != nil {
@@ -765,18 +794,5 @@ func printDestroySummary(response *DestroyRunResponse, totalDeleted int, pipelin
 	} else {
 		fmt.Printf("\n%s⚠️  No resources were found to delete%s\n", colorYellow, colorReset)
 	}
-}
-
-var sourceRegistry = map[string]func() plugin.Source{
-	"asyncapi":   func() plugin.Source { return &asyncapi.Source{} },
-	"sns":        func() plugin.Source { return &sns.Source{} },
-	"sqs":        func() plugin.Source { return &sqs.Source{} },
-	"kafka":      func() plugin.Source { return &kafka.Source{} },
-	"postgresql": func() plugin.Source { return &postgresql.Source{} },
-	"mongodb":    func() plugin.Source { return &mongodb.Source{} },
-	"mysql":      func() plugin.Source { return &mysql.Source{} },
-	"bigquery":   func() plugin.Source { return &bigquery.Source{} },
-	"s3":         func() plugin.Source { return &s3.Source{} },
-	"openapi":    func() plugin.Source { return &openapi.Source{} },
 }
 

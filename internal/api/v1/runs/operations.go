@@ -31,6 +31,7 @@ type BatchCreateRequest struct {
 	Assets        []CreateAssetRequest   `json:"assets" validate:"required,min=1"`
 	Lineage       []CreateLineageRequest `json:"lineage"`
 	Documentation []CreateDocRequest     `json:"documentation"`
+	Statistics    []CreateStatRequest    `json:"statistics"`
 	Config        plugin.RawPluginConfig `json:"config"`
 	PipelineName  string                 `json:"pipeline_name" validate:"required"`
 	SourceName    string                 `json:"source_name" validate:"required"`
@@ -42,6 +43,12 @@ type DestroyRunResponse struct {
 	LineageDeleted       int      `json:"lineage_deleted"`
 	DocumentationDeleted int      `json:"documentation_deleted"`
 	DeletedEntityMRNs    []string `json:"deleted_entity_mrns"`
+}
+
+type CreateStatRequest struct {
+	AssetMRN   string  `json:"asset_mrn" validate:"required"`
+	MetricName string  `json:"metric_name" validate:"required"`
+	Value      float64 `json:"value" validate:"required"`
 }
 
 type CreateLineageRequest struct {
@@ -175,7 +182,6 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-
 	assets := make([]runs.CreateAssetInput, len(req.Assets))
 	for i, asset := range req.Assets {
 		assets[i] = runs.CreateAssetInput{
@@ -190,7 +196,6 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 			ExternalLinks: asset.ExternalLinks,
 		}
 	}
-
 	lineageRequests := make([]runs.LineageInput, len(req.Lineage))
 	for i, lineage := range req.Lineage {
 		lineageRequests[i] = runs.LineageInput{
@@ -199,7 +204,6 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 			Type:   lineage.Type,
 		}
 	}
-
 	docRequests := make([]runs.DocumentationInput, len(req.Documentation))
 	for i, doc := range req.Documentation {
 		docRequests[i] = runs.DocumentationInput{
@@ -208,13 +212,19 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 			Type:     doc.Type,
 		}
 	}
-
-	response, err := h.runService.ProcessEntities(r.Context(), req.RunID, assets, lineageRequests, docRequests, req.PipelineName, req.SourceName)
+	statsRequests := make([]runs.StatisticInput, len(req.Statistics))
+	for i, stat := range req.Statistics {
+		statsRequests[i] = runs.StatisticInput{
+			AssetMRN:   stat.AssetMRN,
+			MetricName: stat.MetricName,
+			Value:      stat.Value,
+		}
+	}
+	response, err := h.runService.ProcessEntities(r.Context(), req.RunID, assets, lineageRequests, docRequests, statsRequests, req.PipelineName, req.SourceName)
 	if err != nil {
 		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to process entities: %v", err))
 		return
 	}
-
 	common.RespondJSON(w, http.StatusOK, response)
 }
 
@@ -412,4 +422,3 @@ func (h *Handler) getRun(w http.ResponseWriter, r *http.Request) {
 
 	common.RespondJSON(w, http.StatusOK, run)
 }
-
