@@ -2,26 +2,21 @@ import React from "react";
 import FeaturedCard from "./FeaturedCard";
 import IconAPI from "~icons/material-symbols/api-rounded";
 import IconTerminal from "~icons/material-symbols/terminal";
-import IconsScroll from "../components/IconsScroll";
 
 export default function Integrations(): JSX.Element {
   return (
     <section className="py-20 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold text-gray-900 dark:text-white mb-6">
-            Flexible Integration Options
+          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Deploy your way
           </h2>
-          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-            Integrate with Marmot your way. The flexible API supports a diverse
-            set of data sources and infrastructure-as-code tools, letting you
-            deploy virtually any asset type imaginable.
+          <p className="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+            Use CLI, API, Terraform, or Pulumi to manage your data catalog as
+            code
           </p>
         </div>
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {/* Example using different styling options */}
-
-          {/* Option 1: Using individual colors for each card */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           <FeaturedCard
             icon={IconTerminal}
             title="CLI"
@@ -40,7 +35,6 @@ export default function Integrations(): JSX.Element {
             large={true}
           />
 
-          {/* Option 2: Using the same theme color for all cards */}
           <FeaturedCard
             icon="terraform"
             title="Terraform"
