@@ -13,13 +13,13 @@ export default function Hero(): JSX.Element {
         <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6 tracking-tight">
           Discover any data asset
           <br />
-          across your entire stack in{" "}
+          across your entire org in{" "}
           <span className="text-amber-600 dark:text-amber-500">seconds</span>
         </h1>
 
         <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-          "Open-source catalog for all your data assets. Search everything -
-          tables, topics, queues, buckets, and more."
+          Open-source catalog for all your data assets. Search everything -
+          tables, topics, queues, buckets, and more.
         </p>
 
         <div className="mt-8 flex justify-center gap-4">

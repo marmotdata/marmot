@@ -28,8 +28,8 @@ export default function Home(): JSX.Element {
 
   return (
     <Layout
-      title={`Discover any data asset across your entire stack in seconds`}
-      description="Discover any data asset across your entire stack in seconds"
+      title={`Discover any data asset across your entire org in seconds`}
+      description="Discover any data asset across your entire org in seconds"
     >
       <div className="bg-earthy-brown-50 min-h-screen">
         <Hero />
