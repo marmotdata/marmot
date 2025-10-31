@@ -9,7 +9,7 @@ export default function ValueProps(): JSX.Element {
       icon: "mdi:robot-outline",
     },
     {
-      title: "Built for developers",
+      title: "Integration made simple",
       description: "Simple API, CLI and Terraform support",
       icon: "mdi:code-braces",
     },
