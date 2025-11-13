@@ -80,6 +80,7 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
+				common.WithRateLimit(h.config, 100, 60), // 100 requests per 60 seconds
 			},
 		},
 		{
@@ -98,6 +99,7 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
+				common.WithRateLimit(h.config, 30, 60), // 30 requests per 60 seconds
 			},
 		},
 	}

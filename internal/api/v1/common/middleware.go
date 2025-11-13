@@ -99,7 +99,7 @@ func RequirePermission(userService user.Service, resourceType, action string) fu
 				return
 			}
 
-			// Special handling for anonymous users
+			// handle anonymous users
 			if user.Username == "anonymous" {
 				anonymousCtx, ok := GetAnonymousContext(r.Context())
 				if ok {
@@ -119,7 +119,6 @@ func RequirePermission(userService user.Service, resourceType, action string) fu
 				}
 			}
 
-			// Normal permission check
 			hasPermission, err := userService.HasPermission(r.Context(), user.ID, resourceType, action)
 			if err != nil {
 				RespondError(w, http.StatusInternalServerError, "Failed to check permissions")

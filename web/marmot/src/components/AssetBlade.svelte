@@ -14,6 +14,8 @@
 	export let lineage: LineageResponse | null = null;
 	export let onClose: () => void;
 	export let staticPlacement = false;
+	export let collapsed = false;
+	export let onToggleCollapse: (() => void) | undefined = undefined;
 	export let assetUrl: string | undefined = undefined;
 	let currentAssetId: string | null = null;
 	let mounted = false;
@@ -100,18 +102,45 @@
 	{#if !staticPlacement}
 		<div
 			role="button"
+			tabindex="0"
 			class="fixed inset-0 bg-black bg-opacity-30 z-40"
 			onclick={onClose}
+			onkeydown={(e) => e.key === 'Enter' && onClose()}
 			transition:fade={{ duration: 200 }}
 		></div>
 	{/if}
 
 	<div
 		class={staticPlacement
-			? 'h-full w-full bg-earthy-brown-50 dark:bg-gray-900 flex flex-col'
+			? 'h-full w-full bg-earthy-brown-50 dark:bg-gray-900 flex'
 			: 'fixed right-0 top-0 h-full w-full max-w-2xl bg-earthy-brown-50 dark:bg-gray-900 shadow-lg dark:shadow-2xl z-50 flex flex-col'}
 		transition:fly={{ x: staticPlacement ? 0 : 400, duration: staticPlacement ? 0 : 200 }}
 	>
+		{#if staticPlacement && onToggleCollapse}
+			<a
+				href="#"
+				onclick={(e) => {
+					e.preventDefault();
+					onToggleCollapse();
+				}}
+				class="flex-shrink-0 w-8 flex items-center justify-center transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
+				aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+			>
+				<svg
+					class="w-4 h-4 text-gray-600 dark:text-gray-400 transition-transform {collapsed
+						? 'rotate-180'
+						: ''}"
+					fill="none"
+					stroke="currentColor"
+					viewBox="0 0 24 24"
+				>
+					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+				</svg>
+			</a>
+		{/if}
+
+		{#if !collapsed}
+		<div class="flex-1 flex flex-col min-w-0">
 		<div
 			class="flex-none bg-earthy-brown-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center"
 		>
@@ -209,7 +238,7 @@
 
 						{#if loadingLineage}
 							<div class="flex items-center justify-center p-8">
-								<div class="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full" />
+								<div class="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full"></div>
 							</div>
 						{:else if lineageError}
 							<div class="p-4 text-red-600 dark:text-red-400">{lineageError}</div>
@@ -288,5 +317,7 @@
 				</div>
 			</div>
 		</div>
+		</div>
+		{/if}
 	</div>
 {/if}

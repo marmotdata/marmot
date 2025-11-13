@@ -39,6 +39,22 @@
 		}
 	}
 
+	$effect(() => {
+		if (nodes && nodes.length > 0) {
+			setTimeout(() => {
+				const currentNode = nodes.find((n) => n.data?.isCurrent === true);
+				if (currentNode) {
+					fitView({
+						nodes: [currentNode],
+						padding: 0.5,
+						duration: 800,
+						maxZoom: 1
+					});
+				}
+			}, 100);
+		}
+	});
+
 	let processedNodes = $derived(
 		nodes.map((node) => {
 			if (node.type === 'cycleReturn') {

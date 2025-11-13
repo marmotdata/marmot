@@ -17,6 +17,10 @@ type AnonymousAuthConfig struct {
 	Role    string `mapstructure:"role"`
 }
 
+type RateLimitConfig struct {
+	Enabled bool `mapstructure:"enabled"`
+}
+
 type OAuthProviderConfig struct {
 	Enabled      bool             `mapstructure:"enabled"`
 	Type         string           `mapstructure:"type"`
@@ -75,6 +79,8 @@ type Config struct {
 		Providers map[string]*OAuthProviderConfig `mapstructure:"providers"`
 		Anonymous AnonymousAuthConfig             `mapstructure:"anonymous"`
 	} `mapstructure:"auth"`
+
+	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
 }
 
 var (
@@ -138,6 +144,9 @@ func loadConfig(configPath string) error {
 
 	v.BindEnv("server.root_url")
 
+	// Rate limit env vars
+	v.BindEnv("rate_limit.enabled")
+
 	// Set defaults
 	setDefaults(v)
 
@@ -184,6 +193,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("auth.providers.okta.name", "Okta")
 	v.SetDefault("auth.providers.okta.allow_signup", true)
 	v.SetDefault("auth.providers.okta.scopes", []string{"openid", "profile", "email", "groups", "offline_access"})
+
+	// Rate limit defaults
+	v.SetDefault("rate_limit.enabled", false)
 }
 
 // BuildDSN builds a PostgreSQL connection string from config

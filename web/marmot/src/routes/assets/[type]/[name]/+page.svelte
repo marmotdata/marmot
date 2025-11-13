@@ -14,13 +14,14 @@
 	import QueryPreview from '$lib/../components/QueryPreview.svelte';
 	import RunHistory from '$lib/../components/RunHistory.svelte';
 
-	let asset: Asset | null = null;
-	let loading = true;
-	let error: string | null = null;
+	let asset: Asset | null = $state(null);
+	let loading = $state(true);
+	let error: string | null = $state(null);
+	let bladeCollapsed = $state(false);
 
-	$: activeTab = $page.url.searchParams.get('tab') || 'metadata';
-	$: assetType = $page.params.type;
-	$: assetName = $page.params.name;
+	let activeTab = $derived($page.url.searchParams.get('tab') || 'metadata');
+	let assetType = $derived($page.params.type);
+	let assetName = $derived($page.params.name);
 
 	async function fetchAsset() {
 		try {
@@ -51,31 +52,33 @@
 		goto('/assets');
 	}
 
-	$: visibleTabs = [
-		'metadata',
-		'query',
-		'environments',
-		'schema',
-		'documentation',
-		'run-history',
-		'lineage'
-	].filter((tab) => {
-		if (
-			tab === 'environments' &&
-			(!asset?.environments || Object.keys(asset.environments).length === 0)
-		)
-			return false;
-		if (tab === 'documentation' && !asset?.documentation) return false;
-		if (tab === 'query' && (!asset?.query || !asset.query.trim())) return false;
-		if (tab === 'run-history' && !asset?.has_run_history) return false; // Add this line
-		return true;
-	});
+	let visibleTabs = $derived(
+		[
+			'metadata',
+			'query',
+			'environments',
+			'schema',
+			'documentation',
+			'run-history',
+			'lineage'
+		].filter((tab) => {
+			if (
+				tab === 'environments' &&
+				(!asset?.environments || Object.keys(asset.environments).length === 0)
+			)
+				return false;
+			if (tab === 'documentation' && !asset?.documentation) return false;
+			if (tab === 'query' && (!asset?.query || !asset.query.trim())) return false;
+			if (tab === 'run-history' && !asset?.has_run_history) return false;
+			return true;
+		})
+	);
 
-	$: {
+	$effect(() => {
 		if (assetType && assetName) {
 			fetchAsset();
 		}
-	}
+	});
 </script>
 
 <div class="h-full flex">
@@ -220,8 +223,18 @@
 			</div>
 		</div>
 
-		<div class="w-[32rem] border-l border-gray-200 dark:border-gray-700 overflow-hidden">
-			<AssetBlade {asset} staticPlacement={true} onClose={() => {}} />
+		<div
+			class="border-l border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 {bladeCollapsed
+				? 'w-12'
+				: 'w-[32rem]'}"
+		>
+			<AssetBlade
+				{asset}
+				staticPlacement={true}
+				collapsed={bladeCollapsed}
+				onToggleCollapse={() => (bladeCollapsed = !bladeCollapsed)}
+				onClose={() => {}}
+			/>
 		</div>
 	{/if}
 </div>

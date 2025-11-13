@@ -90,6 +90,11 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 	queryValues := r.URL.Query()
 	searchQuery := queryValues.Get("q")
 
+	if len(searchQuery) > 256 {
+		common.RespondError(w, http.StatusBadRequest, "Search query must be 256 characters or less")
+		return
+	}
+
 	filter, err := parseFilter(r)
 	if err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid filter parameters")
@@ -119,7 +124,7 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if searchQuery != "" {
+	if searchQuery != "" && total > 0 {
 		recorder := h.metricsService.GetRecorder()
 		queryType := "full_text"
 		if len(filter.Types) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 {
