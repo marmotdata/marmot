@@ -1,6 +1,5 @@
 import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
+import { Icon } from "@iconify/react";
 
 export default function GetStarted(): JSX.Element {
   return (
@@ -24,7 +23,7 @@ export default function GetStarted(): JSX.Element {
                     className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm bg-white text-amber-600 hover:bg-gray-50 transition-colors duration-150"
                   >
                     Explore the docs
-                    <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
+                    <Icon icon="mdi:arrow-right" className="ml-2 text-xl" />
                   </a>
                 </div>
               </div>

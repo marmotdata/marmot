@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 
 interface Benefit {
@@ -14,13 +14,30 @@ interface Benefit {
 export default function BenefitsShowcase(): JSX.Element {
   const [activeBenefit, setActiveBenefit] = useState("search");
 
+  // Preload all images on mount
+  useEffect(() => {
+    const imagesToPreload = [
+      "/img/discovery.png",
+      "/img/discovery-dark.png",
+      "/img/lineage.png",
+      "/img/lineage-dark.png",
+      "/img/metrics.png",
+      "/img/metrics-dark.png",
+    ];
+
+    imagesToPreload.forEach((src) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
   const benefits: Benefit[] = [
     {
       id: "search",
       icon: "mdi:magnify",
       title: "Search everything",
       description:
-        "Power query language across all your data assets. Find exactly what you're looking for.",
+        "Find exactly what you're looking for with a powerful query language that works across all your data assets.",
       features: [
         "Full-text search across all metadata",
         "Powerful built-in query language",
@@ -34,7 +51,7 @@ export default function BenefitsShowcase(): JSX.Element {
       icon: "mdi:graph-outline",
       title: "Track lineage",
       description:
-        "See dependencies and impact before making changes. OpenLineage support built-in.",
+        "Understand dependencies and assess impact before making changes. Built-in support for OpenLineage.",
       features: [
         "Impact analysis for data changes",
         "Data flow visualization",
@@ -48,7 +65,7 @@ export default function BenefitsShowcase(): JSX.Element {
       icon: "mdi:chart-line",
       title: "Usage analytics",
       description:
-        "Understand your data landscape. See which tables are most used, monitor technology adoption and gain insights into data trends.",
+        "Get insights into your data landscape. Track which assets are most used and monitor technology adoption trends.",
       features: [
         "Asset trends and popularity",
         "Overview of your data landscape",
@@ -78,22 +95,22 @@ export default function BenefitsShowcase(): JSX.Element {
                     setActiveBenefit(benefit.id);
                   }}
                   className={`group block p-6 rounded-xl transition-all duration-200 ${isActive
-                    ? "bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 shadow-lg"
-                    : "bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-md"
+                      ? "bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 shadow-lg"
+                      : "bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-md"
                     }`}
                 >
                   <div
                     className={`inline-flex items-center justify-center w-12 h-12 mb-4 rounded-lg transition-all duration-200 ${isActive
-                      ? "bg-amber-600 text-white shadow-md"
-                      : "bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 group-hover:bg-amber-50 dark:group-hover:bg-amber-900/30"
+                        ? "bg-amber-600 text-white shadow-md"
+                        : "bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 group-hover:bg-amber-50 dark:group-hover:bg-amber-900/30"
                       }`}
                   >
                     <Icon icon={benefit.icon} className="text-2xl" />
                   </div>
                   <h3
                     className={`text-lg font-bold mb-2 transition-colors ${isActive
-                      ? "text-amber-900 dark:text-amber-100"
-                      : "text-gray-900 dark:text-white"
+                        ? "text-amber-900 dark:text-amber-100"
+                        : "text-gray-900 dark:text-white"
                       }`}
                   >
                     {benefit.title}

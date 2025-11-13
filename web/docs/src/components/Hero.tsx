@@ -23,12 +23,17 @@ export default function Hero(): JSX.Element {
         </p>
 
         <div className="mt-8 flex justify-center gap-4">
-          <a
-            href="/docs/introduction"
-            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700"
-          >
-            Get Started
-          </a>
+          <span className="sparkle-container">
+            <a
+              href="/docs/introduction"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700"
+            >
+              Get Started
+            </a>
+            <span className="sparkle sparkle-1"></span>
+            <span className="sparkle sparkle-2"></span>
+            <span className="sparkle sparkle-3"></span>
+          </span>
           <a
             href="https://github.com/marmotdata/marmot"
             className="inline-flex items-center px-6 py-3 border border-gray-300 dark:border-gray-600 text-base font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700"

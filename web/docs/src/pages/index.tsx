@@ -6,11 +6,6 @@ import DataSources from "../components/DataSources";
 import CTA from "../components/CTA";
 import Benefits from "../components/BenefitsShowcase";
 import Integrations from "../components/Integrations";
-import {
-  faSearch,
-  faProjectDiagram,
-  faChartLine,
-} from "@fortawesome/free-solid-svg-icons";
 
 export default function Home(): JSX.Element {
   useEffect(() => {

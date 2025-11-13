@@ -5,17 +5,17 @@ export default function ValueProps(): JSX.Element {
   const props = [
     {
       title: "Find data for your agents",
-      description: "Give AI agents instant context about your data sources",
+      description: "Give AI agents instant context about your data assets",
       icon: "mdi:robot-outline",
     },
     {
       title: "Integration made simple",
-      description: "Simple API, CLI and Terraform support",
+      description: "Flexible API, CLI and Terraform support",
       icon: "mdi:code-braces",
     },
     {
       title: "Deploy anywhere",
-      description: "Self-hosted on your infrastructure. Your data stays yours",
+      description: "Completely open source and self-hosted. Your data stays yours",
       icon: "mdi:cloud-lock-outline",
     },
   ];

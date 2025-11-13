@@ -91,6 +91,12 @@ const config: Config = {
         { to: "/docs/introduction", label: "Docs", position: "left" },
         { to: "/api", label: "API", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
+        {
+          href: "https://demo.marmotdata.io",
+          label: "✨ Live Demo",
+          position: "right",
+          className: "demo-button",
+        },
       ],
     },
     footer: {
