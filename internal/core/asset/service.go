@@ -26,27 +26,28 @@ type ExternalLink struct {
 }
 
 type Asset struct {
-	ID            string                 `json:"id,omitempty"`
-	ParentMRN     *string                `json:"parent_mrn,omitempty"`
-	Name          *string                `json:"name,omitempty"`
-	Description   *string                `json:"description,omitempty"`
-	Type          string                 `json:"type"`
-	Providers     []string               `json:"providers"`
-	MRN           *string                `json:"mrn,omitempty"`
-	Schema        map[string]string      `json:"schema,omitempty"`
-	Metadata      map[string]interface{} `json:"metadata,omitempty"`
-	Sources       []AssetSource          `json:"sources,omitempty"`
-	Tags          []string               `json:"tags,omitempty"`
-	Environments  map[string]Environment `json:"environments,omitempty"`
-	Query         *string                `json:"query,omitempty"`
-	QueryLanguage *string                `json:"query_language,omitempty"`
-	IsStub        bool                   `json:"is_stub"`
-	ExternalLinks []ExternalLink         `json:"external_links,omitempty"`
-	HasRunHistory bool                   `json:"has_run_history"`
-	CreatedAt     time.Time              `json:"created_at,omitempty"`
-	UpdatedAt     time.Time              `json:"updated_at,omitempty"`
-	LastSyncAt    time.Time              `json:"last_sync_at,omitempty"`
-	CreatedBy     string                 `json:"created_by,omitempty"`
+	ID              string                 `json:"id,omitempty"`
+	ParentMRN       *string                `json:"parent_mrn,omitempty"`
+	Name            *string                `json:"name,omitempty"`
+	Description     *string                `json:"description,omitempty"`
+	UserDescription *string                `json:"user_description,omitempty"`
+	Type            string                 `json:"type"`
+	Providers       []string               `json:"providers"`
+	MRN             *string                `json:"mrn,omitempty"`
+	Schema          map[string]string      `json:"schema,omitempty"`
+	Metadata        map[string]interface{} `json:"metadata,omitempty"`
+	Sources         []AssetSource          `json:"sources,omitempty"`
+	Tags            []string               `json:"tags,omitempty"`
+	Environments    map[string]Environment `json:"environments,omitempty"`
+	Query           *string                `json:"query,omitempty"`
+	QueryLanguage   *string                `json:"query_language,omitempty"`
+	IsStub          bool                   `json:"is_stub"`
+	ExternalLinks   []ExternalLink         `json:"external_links,omitempty"`
+	HasRunHistory   bool                   `json:"has_run_history"`
+	CreatedAt       time.Time              `json:"created_at,omitempty"`
+	UpdatedAt       time.Time              `json:"updated_at,omitempty"`
+	LastSyncAt      time.Time              `json:"last_sync_at,omitempty"`
+	CreatedBy       string                 `json:"created_by,omitempty"`
 }
 
 type Environment struct {
@@ -74,18 +75,19 @@ type CreateInput struct {
 }
 
 type UpdateInput struct {
-	Name          *string                `json:"name"`
-	Description   *string                `json:"description"`
-	Metadata      map[string]interface{} `json:"metadata"`
-	Type          string                 `json:"type"`
-	Providers     []string               `json:"providers"`
-	Schema        map[string]string      `json:"schema"`
-	Tags          []string               `json:"tags"`
-	Sources       []AssetSource          `json:"sources"`
-	Environments  map[string]Environment `json:"environments"`
-	ExternalLinks []ExternalLink         `json:"external_links"`
-	Query         string                 `json:"query"`
-	QueryLanguage string                 `json:"query_language"`
+	Name            *string                `json:"name"`
+	Description     *string                `json:"description"`      // Technical description
+	UserDescription *string                `json:"user_description"` // User notes
+	Metadata        map[string]interface{} `json:"metadata"`
+	Type            string                 `json:"type"`
+	Providers       []string               `json:"providers"`
+	Schema          map[string]string      `json:"schema"`
+	Tags            []string               `json:"tags"`
+	Sources         []AssetSource          `json:"sources"`
+	Environments    map[string]Environment `json:"environments"`
+	ExternalLinks   []ExternalLink         `json:"external_links"`
+	Query           string                 `json:"query"`
+	QueryLanguage   string                 `json:"query_language"`
 }
 
 type Filter struct {
@@ -154,6 +156,16 @@ type HistogramBucket struct {
 	Other    int    `json:"other"`
 }
 
+type AssetTerm struct {
+	TermID            string    `json:"term_id"`
+	TermName          string    `json:"term_name"`
+	Definition        string    `json:"definition"`
+	Source            string    `json:"source"` // "user" or "plugin:name"
+	CreatedAt         time.Time `json:"created_at"`
+	CreatedBy         *string   `json:"created_by,omitempty"`
+	CreatedByUsername *string   `json:"created_by_username,omitempty"`
+}
+
 var (
 	ErrInvalidInput  = errors.New("invalid input")
 	ErrAssetNotFound = errors.New("asset not found")
@@ -181,6 +193,11 @@ type Service interface {
 	GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error)
 	GetRunHistory(ctx context.Context, assetID string, limit, offset int) ([]*RunHistory, int, error)
 	GetRunHistoryHistogram(ctx context.Context, assetID string, days int) ([]HistogramBucket, error)
+
+	AddTerms(ctx context.Context, assetID string, termIDs []string, source string, createdBy string) error
+	RemoveTerm(ctx context.Context, assetID string, termID string) error
+	GetTerms(ctx context.Context, assetID string) ([]AssetTerm, error)
+	GetAssetsByTerm(ctx context.Context, termID string, limit, offset int) ([]*Asset, int, error)
 }
 
 type service struct {
@@ -456,6 +473,10 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		asset.Description = input.Description
 		updated = true
 	}
+	if input.UserDescription != nil {
+		asset.UserDescription = input.UserDescription
+		updated = true
+	}
 	if input.Metadata != nil {
 		asset.Metadata = input.Metadata
 		updated = true
@@ -660,4 +681,67 @@ func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*A
 	}
 
 	return asset, nil
+}
+
+func (s *service) AddTerms(ctx context.Context, assetID string, termIDs []string, source string, createdBy string) error {
+	_, err := s.repo.Get(ctx, assetID)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return ErrAssetNotFound
+		}
+		return fmt.Errorf("verifying asset exists: %w", err)
+	}
+
+	if err := s.repo.AddTerms(ctx, assetID, termIDs, source, createdBy); err != nil {
+		return fmt.Errorf("adding terms to asset: %w", err)
+	}
+
+	log.Debug().
+		Str("asset_id", assetID).
+		Int("term_count", len(termIDs)).
+		Msg("Terms added to asset")
+
+	if s.metrics != nil {
+		s.metrics.Count("asset.terms.added", int64(len(termIDs)))
+	}
+
+	return nil
+}
+
+func (s *service) RemoveTerm(ctx context.Context, assetID string, termID string) error {
+	if err := s.repo.RemoveTerm(ctx, assetID, termID); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return ErrAssetNotFound
+		}
+		return fmt.Errorf("removing term from asset: %w", err)
+	}
+
+	log.Debug().
+		Str("asset_id", assetID).
+		Str("term_id", termID).
+		Msg("Term removed from asset")
+
+	if s.metrics != nil {
+		s.metrics.Count("asset.terms.removed", 1)
+	}
+
+	return nil
+}
+
+func (s *service) GetTerms(ctx context.Context, assetID string) ([]AssetTerm, error) {
+	terms, err := s.repo.GetTerms(ctx, assetID)
+	if err != nil {
+		return nil, fmt.Errorf("getting asset terms: %w", err)
+	}
+
+	return terms, nil
+}
+
+func (s *service) GetAssetsByTerm(ctx context.Context, termID string, limit, offset int) ([]*Asset, int, error) {
+	assets, total, err := s.repo.GetAssetsByTerm(ctx, termID, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("getting assets by term: %w", err)
+	}
+
+	return assets, total, nil
 }

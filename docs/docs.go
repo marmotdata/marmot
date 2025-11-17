@@ -394,6 +394,56 @@ const docTemplate = `{
                 }
             }
         },
+        "/assets/by-glossary-term/{term_id}": {
+            "get": {
+                "description": "Retrieve all assets associated with a specific glossary term",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get assets by glossary term",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "term_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Maximum number of assets",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Pagination offset",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/assets/documentation": {
             "post": {
                 "description": "Create or update documentation for an asset",
@@ -1315,6 +1365,152 @@ const docTemplate = `{
                         "description": "OK",
                         "schema": {
                             "$ref": "#/definitions/asset.Asset"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/assets/{id}/terms": {
+            "get": {
+                "description": "Retrieve all glossary terms associated with an asset",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get asset's glossary terms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/asset.AssetTerm"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Associate one or more glossary terms with an asset",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Add glossary terms to asset",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Term IDs to add",
+                        "name": "terms",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/assets.AddTermsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/asset.AssetTerm"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a glossary term association from an asset",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Remove glossary term from asset",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Term ID to remove",
+                        "name": "term",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/assets.RemoveTermRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/asset.AssetTerm"
+                            }
                         }
                     },
                     "400": {
@@ -2587,6 +2783,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
+                    "description": "Technical description (from plugins)",
                     "type": "string"
                 },
                 "environments": {
@@ -2661,6 +2858,10 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
+                },
+                "user_description": {
+                    "description": "User-provided notes",
+                    "type": "string"
                 }
             }
         },
@@ -2679,6 +2880,33 @@ const docTemplate = `{
                 "properties": {
                     "type": "object",
                     "additionalProperties": true
+                }
+            }
+        },
+        "asset.AssetTerm": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "created_by_username": {
+                    "type": "string"
+                },
+                "definition": {
+                    "type": "string"
+                },
+                "source": {
+                    "description": "\"user\" or \"plugin:name\"",
+                    "type": "string"
+                },
+                "term_id": {
+                    "type": "string"
+                },
+                "term_name": {
+                    "type": "string"
                 }
             }
         },
@@ -2882,6 +3110,21 @@ const docTemplate = `{
                 }
             }
         },
+        "assets.AddTermsRequest": {
+            "type": "object",
+            "required": [
+                "term_ids"
+            ],
+            "properties": {
+                "term_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "assets.AssetSummaryResponse": {
             "type": "object",
             "properties": {
@@ -3037,6 +3280,17 @@ const docTemplate = `{
                 }
             }
         },
+        "assets.RemoveTermRequest": {
+            "type": "object",
+            "required": [
+                "term_id"
+            ],
+            "properties": {
+                "term_id": {
+                    "type": "string"
+                }
+            }
+        },
         "assets.RunHistoryResponse": {
             "type": "object",
             "properties": {
@@ -3141,6 +3395,9 @@ const docTemplate = `{
                     }
                 },
                 "type": {
+                    "type": "string"
+                },
+                "user_description": {
                     "type": "string"
                 }
             }
@@ -3918,11 +4175,14 @@ const docTemplate = `{
                 1000000000,
                 60000000000,
                 3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
-                60000000000
+                60000000000,
+                3600000000000
             ],
             "x-enum-varnames": [
                 "minDuration",
@@ -3933,11 +4193,14 @@ const docTemplate = `{
                 "Second",
                 "Minute",
                 "Hour",
+                "minDuration",
+                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
-                "Minute"
+                "Minute",
+                "Hour"
             ]
         },
         "user.APIKey": {

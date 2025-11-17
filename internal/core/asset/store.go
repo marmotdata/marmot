@@ -24,9 +24,9 @@ var (
 
 const (
 	baseSelectAsset = `
-   	SELECT 
+   	SELECT
    		id, name, mrn, type, providers, environments, external_links,
-   		description, metadata, schema, sources, tags,
+   		description, user_description, metadata, schema, sources, tags,
    		created_at, created_by, updated_at, last_sync_at,
    		query, query_language, is_stub,
    		EXISTS(SELECT 1 FROM run_history WHERE asset_id = assets.id) as has_run_history
@@ -42,7 +42,7 @@ type Repository interface {
 	Summary(ctx context.Context) (*AssetSummary, error)
 	Update(ctx context.Context, asset *Asset) error
 	Delete(ctx context.Context, id string) error
-	DeleteByMRN(ctx context.Context, mrn string) error // Add this line
+	DeleteByMRN(ctx context.Context, mrn string) error
 	ListByPattern(ctx context.Context, pattern string, assetType string) ([]*Asset, error)
 	GetByMRNs(ctx context.Context, mrns []string) ([]*Asset, error)
 	GetByTypeAndName(ctx context.Context, assetType, name string) (*Asset, error)
@@ -53,6 +53,11 @@ type Repository interface {
 	GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error)
 	GetRunHistory(ctx context.Context, assetID string, limit, offset int) ([]*RunHistory, int, error)
 	GetRunHistoryHistogram(ctx context.Context, assetID string, days int) ([]HistogramBucket, error)
+
+	AddTerms(ctx context.Context, assetID string, termIDs []string, source string, createdBy string) error
+	RemoveTerm(ctx context.Context, assetID string, termID string) error
+	GetTerms(ctx context.Context, assetID string) ([]AssetTerm, error)
+	GetAssetsByTerm(ctx context.Context, termID string, limit, offset int) ([]*Asset, int, error)
 }
 
 type ListResult struct {
@@ -125,15 +130,15 @@ func (r *PostgresRepository) Create(ctx context.Context, asset *Asset) error {
 
 	query := `
    	INSERT INTO assets (
-   		id, name, mrn, type, providers, environments, description,
+   		id, name, mrn, type, providers, environments, description, user_description,
    		metadata, schema, sources, tags, external_links,
    		created_by, created_at, updated_at, last_sync_at,
    		query, query_language, is_stub
-   	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`
+   	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`
 
 	_, err = r.db.Exec(ctx, query,
 		asset.ID, asset.Name, asset.MRN, asset.Type, asset.Providers,
-		environmentsJSON, asset.Description, metadataJSON, asset.Schema,
+		environmentsJSON, asset.Description, asset.UserDescription, metadataJSON, asset.Schema,
 		sourcesJSON, asset.Tags, externalLinksJSON,
 		asset.CreatedBy, asset.CreatedAt, asset.UpdatedAt, asset.LastSyncAt,
 		asset.Query, asset.QueryLanguage, asset.IsStub)
@@ -232,15 +237,15 @@ func (r *PostgresRepository) Update(ctx context.Context, asset *Asset) error {
 	}
 
 	query := `
-   	UPDATE assets 
-   	SET name = $1, description = $2, metadata = $3, schema = $4,
-   		tags = $5, updated_at = $6, sources = $7, environments = $8,
-   		external_links = $9, providers = $10, mrn = $11,
-   		type = $12, query = $13, query_language = $14, is_stub = $15
-   	WHERE id = $16`
+   	UPDATE assets
+   	SET name = $1, description = $2, user_description = $3, metadata = $4, schema = $5,
+   		tags = $6, updated_at = $7, sources = $8, environments = $9,
+   		external_links = $10, providers = $11, mrn = $12,
+   		type = $13, query = $14, query_language = $15, is_stub = $16
+   	WHERE id = $17`
 
 	commandTag, err := r.db.Exec(ctx, query,
-		asset.Name, asset.Description, metadataJSON, asset.Schema,
+		asset.Name, asset.Description, asset.UserDescription, metadataJSON, asset.Schema,
 		asset.Tags, asset.UpdatedAt, sourcesJSON, environmentsJSON,
 		externalLinksJSON, asset.Providers, asset.MRN,
 		asset.Type, asset.Query, asset.QueryLanguage, asset.IsStub, asset.ID)
@@ -334,7 +339,7 @@ func (r *PostgresRepository) scanAsset(ctx context.Context, row pgx.Row) (*Asset
 
 	err := row.Scan(
 		&asset.ID, &asset.Name, &asset.MRN, &asset.Type, &asset.Providers,
-		&environmentsJSON, &externalLinksJSON, &asset.Description,
+		&environmentsJSON, &externalLinksJSON, &asset.Description, &asset.UserDescription,
 		&metadataJSON, &schemaJSON, &sourcesJSON,
 		&asset.Tags, &asset.CreatedAt, &asset.CreatedBy, &asset.UpdatedAt,
 		&asset.LastSyncAt, &asset.Query, &asset.QueryLanguage, &asset.IsStub, &asset.HasRunHistory,
@@ -802,14 +807,14 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 	}
 
 	wrappedQuery += `
-      SELECT 
+      SELECT
           id, name, mrn, type, providers, environments, external_links,
-          description, metadata, schema, sources, tags,
+          description, user_description, metadata, schema, sources, tags,
           created_at, created_by, updated_at, last_sync_at,
           query, query_language, is_stub,
           EXISTS(SELECT 1 FROM run_history WHERE asset_id = search_results.id) as has_run_history
       FROM search_results
-      ORDER BY 
+      ORDER BY
           CASE WHEN name_similarity > 0.8 THEN name_similarity * 2
           ELSE search_rank END DESC
       LIMIT $%d OFFSET $%d
@@ -1112,4 +1117,146 @@ func (r *PostgresRepository) GetRunHistoryHistogram(ctx context.Context, assetID
 	}
 
 	return buckets, nil
+}
+
+// AddTerms associates glossary terms with an asset
+func (r *PostgresRepository) AddTerms(ctx context.Context, assetID string, termIDs []string, source string, createdBy string) error {
+	if len(termIDs) == 0 {
+		return nil
+	}
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	for _, termID := range termIDs {
+		query := `
+			INSERT INTO asset_terms (asset_id, glossary_term_id, source, created_by, created_at)
+			VALUES ($1, $2, $3, $4, NOW())
+			ON CONFLICT (asset_id, glossary_term_id) DO NOTHING`
+
+		_, err := tx.Exec(ctx, query, assetID, termID, source, createdBy)
+		if err != nil {
+			return fmt.Errorf("inserting asset term: %w", err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return fmt.Errorf("committing transaction: %w", err)
+	}
+
+	return nil
+}
+
+// RemoveTerm removes a glossary term association from an asset
+func (r *PostgresRepository) RemoveTerm(ctx context.Context, assetID string, termID string) error {
+	query := `DELETE FROM asset_terms WHERE asset_id = $1 AND glossary_term_id = $2`
+
+	result, err := r.db.Exec(ctx, query, assetID, termID)
+	if err != nil {
+		return fmt.Errorf("removing asset term: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+
+	return nil
+}
+
+// GetTerms retrieves all glossary terms associated with an asset
+func (r *PostgresRepository) GetTerms(ctx context.Context, assetID string) ([]AssetTerm, error) {
+	query := `
+		SELECT
+			gt.id, gt.name, gt.definition,
+			at.source, at.created_at, at.created_by, u.username
+		FROM asset_terms at
+		JOIN glossary_terms gt ON at.glossary_term_id = gt.id
+		LEFT JOIN users u ON at.created_by = u.id
+		WHERE at.asset_id = $1 AND gt.deleted_at IS NULL
+		ORDER BY gt.name ASC`
+
+	rows, err := r.db.Query(ctx, query, assetID)
+	if err != nil {
+		return nil, fmt.Errorf("querying asset terms: %w", err)
+	}
+	defer rows.Close()
+
+	var terms []AssetTerm
+	for rows.Next() {
+		var term AssetTerm
+		err := rows.Scan(
+			&term.TermID,
+			&term.TermName,
+			&term.Definition,
+			&term.Source,
+			&term.CreatedAt,
+			&term.CreatedBy,
+			&term.CreatedByUsername,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning asset term: %w", err)
+		}
+		terms = append(terms, term)
+	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("iterating asset terms: %w", rows.Err())
+	}
+
+	return terms, nil
+}
+
+// GetAssetsByTerm retrieves all assets associated with a glossary term
+func (r *PostgresRepository) GetAssetsByTerm(ctx context.Context, termID string, limit, offset int) ([]*Asset, int, error) {
+	if limit <= 0 {
+		limit = 20
+	}
+	if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	countQuery := `
+		SELECT COUNT(DISTINCT a.id)
+		FROM assets a
+		JOIN asset_terms at ON a.id = at.asset_id
+		WHERE at.glossary_term_id = $1`
+
+	var total int
+	err := r.db.QueryRow(ctx, countQuery, termID).Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("counting assets by term: %w", err)
+	}
+
+	query := baseSelectAsset + `
+		JOIN asset_terms at ON assets.id = at.asset_id
+		WHERE at.glossary_term_id = $1
+		ORDER BY assets.name ASC
+		LIMIT $2 OFFSET $3`
+
+	rows, err := r.db.Query(ctx, query, termID, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("querying assets by term: %w", err)
+	}
+	defer rows.Close()
+
+	var assets []*Asset
+	for rows.Next() {
+		asset, err := r.scanAsset(ctx, rows)
+		if err != nil {
+			return nil, 0, err
+		}
+		assets = append(assets, asset)
+	}
+
+	if rows.Err() != nil {
+		return nil, 0, fmt.Errorf("iterating assets: %w", rows.Err())
+	}
+
+	return assets, total, nil
 }

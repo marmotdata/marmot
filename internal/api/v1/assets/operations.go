@@ -27,16 +27,17 @@ type CreateRequest struct {
 }
 
 type UpdateRequest struct {
-	Name          *string                      `json:"name"`
-	Description   *string                      `json:"description"`
-	Metadata      map[string]interface{}       `json:"metadata"`
-	Type          string                       `json:"type"`
-	Providers     []string                     `json:"providers"`
-	Schema        map[string]string            `json:"schema"`
-	Tags          []string                     `json:"tags"`
-	Sources       []asset.AssetSource          `json:"sources"`
-	Environments  map[string]asset.Environment `json:"environments"`
-	ExternalLinks []asset.ExternalLink         `json:"external_links"`
+	Name            *string                      `json:"name"`
+	Description     *string                      `json:"description"`
+	UserDescription *string                      `json:"user_description"`
+	Metadata        map[string]interface{}       `json:"metadata"`
+	Type            string                       `json:"type"`
+	Providers       []string                     `json:"providers"`
+	Schema          map[string]string            `json:"schema"`
+	Tags            []string                     `json:"tags"`
+	Sources         []asset.AssetSource          `json:"sources"`
+	Environments    map[string]asset.Environment `json:"environments"`
+	ExternalLinks   []asset.ExternalLink         `json:"external_links"`
 }
 
 // @Summary Create a new asset
@@ -113,7 +114,7 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} common.ErrorResponse
 // @Router /assets/{id} [get]
 func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/api/v1/assets/")
+	id := r.PathValue("id")
 	if id == "" {
 		common.RespondError(w, http.StatusBadRequest, "Asset ID required")
 		return
@@ -152,7 +153,7 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} common.ErrorResponse
 // @Router /assets/{id} [put]
 func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/api/v1/assets/")
+	id := r.PathValue("id")
 	if id == "" {
 		common.RespondError(w, http.StatusBadRequest, "Asset ID required")
 		return
@@ -165,16 +166,17 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := asset.UpdateInput{
-		Name:          req.Name,
-		Description:   req.Description,
-		Type:          req.Type,
-		Providers:     req.Providers,
-		Metadata:      req.Metadata,
-		Schema:        req.Schema,
-		Tags:          req.Tags,
-		Sources:       req.Sources,
-		Environments:  req.Environments,
-		ExternalLinks: req.ExternalLinks,
+		Name:            req.Name,
+		Description:     req.Description,
+		UserDescription: req.UserDescription,
+		Type:            req.Type,
+		Providers:       req.Providers,
+		Metadata:        req.Metadata,
+		Schema:          req.Schema,
+		Tags:            req.Tags,
+		Sources:         req.Sources,
+		Environments:    req.Environments,
+		ExternalLinks:   req.ExternalLinks,
 	}
 
 	updated, err := h.assetService.Update(r.Context(), id, input)
@@ -206,7 +208,7 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} common.ErrorResponse
 // @Router /assets/{id} [delete]
 func (h *Handler) deleteAsset(w http.ResponseWriter, r *http.Request) {
-	id := strings.TrimPrefix(r.URL.Path, "/api/v1/assets/")
+	id := r.PathValue("id")
 	if id == "" {
 		common.RespondError(w, http.StatusBadRequest, "Asset ID required")
 		return

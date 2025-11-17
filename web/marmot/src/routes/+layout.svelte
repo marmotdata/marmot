@@ -114,6 +114,19 @@
 						</a>
 
 						<a
+							href="/glossary"
+							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
+								.url.pathname.startsWith('/glossary')
+								? 'text-orange-600 dark:text-orange-400'
+								: 'text-gray-600 dark:text-gray-300 hover:text-orange-600 dark:hover:text-orange-400'}"
+						>
+							<span class="w-4 h-4 mr-1.5">
+								<Icon icon="material-symbols:book" />
+							</span>
+							<span>Glossary</span>
+						</a>
+
+						<a
 							href="/metrics"
 							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
 								.url.pathname === '/metrics'

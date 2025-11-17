@@ -74,7 +74,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets",
+			Path:    "/api/v1/assets/{id}",
 			Method:  http.MethodPut,
 			Handler: h.updateAsset,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
@@ -83,7 +83,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets/",
+			Path:    "/api/v1/assets/{id}",
 			Method:  http.MethodDelete,
 			Handler: h.deleteAsset,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
@@ -232,6 +232,43 @@ func (h *Handler) Routes() []common.Route {
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
 				common.WithRateLimit(h.config, 30, 60), // 30 requests per 60 seconds
+			},
+		},
+		// Term associations
+		{
+			Path:    "/api/v1/assets/terms/",
+			Method:  http.MethodPost,
+			Handler: h.addTerms,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/terms/",
+			Method:  http.MethodDelete,
+			Handler: h.removeTerm,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/terms/",
+			Method:  http.MethodGet,
+			Handler: h.getAssetTerms,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/by-glossary-term/{term_id}",
+			Method:  http.MethodGet,
+			Handler: h.getAssetsByTerm,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
 	}

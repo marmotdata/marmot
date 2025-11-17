@@ -21,6 +21,7 @@
 		"@tailwindcss/typography": "^0.5.16",
 		"@types/d3": "^7.4.3",
 		"@types/eslint": "^9.6.1",
+		"@types/turndown": "^5.0.6",
 		"autoprefixer": "^10.4.21",
 		"eslint": "^9.28.0",
 		"eslint-config-prettier": "^10.1.5",
@@ -40,6 +41,12 @@
 	},
 	"dependencies": {
 		"@dagrejs/dagre": "^1.1.4",
+		"@tiptap/core": "^3.10.7",
+		"@tiptap/extension-link": "^3.10.7",
+		"@tiptap/extension-placeholder": "^3.10.7",
+		"@tiptap/extension-typography": "^3.10.7",
+		"@tiptap/pm": "^3.10.7",
+		"@tiptap/starter-kit": "^3.10.7",
 		"@types/svg-pan-zoom": "^3.4.0",
 		"@xyflow/svelte": "^1.0.2",
 		"ajv": "^8.17.1",
@@ -54,6 +61,8 @@
 		"prismjs": "^1.30.0",
 		"process": "^0.11.10",
 		"protobufjs": "^7.5.3",
-		"svg-pan-zoom": "^3.6.2"
+		"svelte-tiptap": "^3.0.1",
+		"svg-pan-zoom": "^3.6.2",
+		"turndown": "^7.2.2"
 	}
 }

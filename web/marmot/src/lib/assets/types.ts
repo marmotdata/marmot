@@ -17,7 +17,8 @@ export interface Asset {
   mrn: string;
   type: string;
   providers: string[];
-  description?: string;
+  description?: string; // Technical description (from plugins)
+  user_description?: string; // User-provided notes
   tags: string[];
   created_at: string;
   updated_at: string;
@@ -29,6 +30,26 @@ export interface Asset {
   has_run_history: boolean;
   environments?: Record<string, Environment>;
   sources: AssetSource[];
+}
+
+export interface GlossaryTerm {
+  id: string;
+  name: string;
+  definition: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string;
+  created_by_username?: string;
+}
+
+export interface AssetTerm {
+  term_id: string;
+  term_name: string;
+  definition: string;
+  source: string; // "user" or "plugin:name"
+  created_at: string;
+  created_by?: string;
+  created_by_username?: string;
 }
 
 export interface AssetsResponse {

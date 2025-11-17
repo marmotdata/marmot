@@ -53,6 +53,16 @@ function createAuthStore() {
       }
       return false;
     },
+    hasPermission: (resourceType: string, action: string): boolean => {
+      if (browser) {
+        const payload = auth.getPayload();
+        if (payload && payload.permissions) {
+          const permKey = `${resourceType}:${action}`;
+          return payload.permissions.includes(permKey);
+        }
+      }
+      return false;
+    },
     isAuthenticated: (): boolean => {
       if (browser) {
         return localStorage.getItem('jwt') !== null;
@@ -96,6 +106,7 @@ function createAuthStore() {
 
 interface JwtPayload {
   roles?: string[];
+  permissions?: string[];
   preferences?: {
     theme?: string;
   };

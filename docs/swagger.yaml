@@ -7,6 +7,7 @@ definitions:
       created_by:
         type: string
       description:
+        description: Technical description (from plugins)
         type: string
       environments:
         additionalProperties:
@@ -57,6 +58,9 @@ definitions:
         type: string
       updated_at:
         type: string
+      user_description:
+        description: User-provided notes
+        type: string
     type: object
   asset.AssetSource:
     properties:
@@ -69,6 +73,24 @@ definitions:
       properties:
         additionalProperties: true
         type: object
+    type: object
+  asset.AssetTerm:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      created_by_username:
+        type: string
+      definition:
+        type: string
+      source:
+        description: '"user" or "plugin:name"'
+        type: string
+      term_id:
+        type: string
+      term_name:
+        type: string
     type: object
   asset.AvailableFilters:
     properties:
@@ -201,6 +223,16 @@ definitions:
       updated_at:
         type: string
     type: object
+  assets.AddTermsRequest:
+    properties:
+      term_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - term_ids
+    type: object
   assets.AssetSummaryResponse:
     properties:
       services:
@@ -304,6 +336,13 @@ definitions:
       period:
         type: string
     type: object
+  assets.RemoveTermRequest:
+    properties:
+      term_id:
+        type: string
+    required:
+    - term_id
+    type: object
   assets.RunHistoryResponse:
     properties:
       limit:
@@ -373,6 +412,8 @@ definitions:
           type: string
         type: array
       type:
+        type: string
+      user_description:
         type: string
     type: object
   auth.AuthConfig:
@@ -889,11 +930,14 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
+    - 3600000000000
     type: integer
     x-enum-varnames:
     - minDuration
@@ -904,11 +948,14 @@ definitions:
     - Second
     - Minute
     - Hour
+    - minDuration
+    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
+    - Hour
   user.APIKey:
     properties:
       created_at:
@@ -1593,6 +1640,137 @@ paths:
           schema:
             $ref: '#/definitions/common.ErrorResponse'
       summary: Add tag to asset
+      tags:
+      - assets
+  /assets/{id}/terms:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a glossary term association from an asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Term ID to remove
+        in: body
+        name: term
+        required: true
+        schema:
+          $ref: '#/definitions/assets.RemoveTermRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/asset.AssetTerm'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Remove glossary term from asset
+      tags:
+      - assets
+    get:
+      description: Retrieve all glossary terms associated with an asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/asset.AssetTerm'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get asset's glossary terms
+      tags:
+      - assets
+    post:
+      consumes:
+      - application/json
+      description: Associate one or more glossary terms with an asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Term IDs to add
+        in: body
+        name: terms
+        required: true
+        schema:
+          $ref: '#/definitions/assets.AddTermsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/asset.AssetTerm'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Add glossary terms to asset
+      tags:
+      - assets
+  /assets/by-glossary-term/{term_id}:
+    get:
+      description: Retrieve all assets associated with a specific glossary term
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: term_id
+        required: true
+        type: string
+      - default: 20
+        description: Maximum number of assets
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Pagination offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get assets by glossary term
       tags:
       - assets
   /assets/documentation:

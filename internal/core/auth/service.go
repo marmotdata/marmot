@@ -16,6 +16,7 @@ const JWTSigningKeyID = "jwt_signing_key"
 
 type Claims struct {
 	Roles       []string               `json:"roles"`
+	Permissions []string               `json:"permissions"`
 	Preferences map[string]interface{} `json:"preferences,omitempty"`
 	jwt.RegisteredClaims
 }
@@ -70,12 +71,25 @@ func (s *service) GenerateToken(ctx context.Context, user *user.User, preference
 	}
 
 	roleNames := make([]string, len(user.Roles))
+	permissionSet := make(map[string]bool)
+
 	for i, role := range user.Roles {
 		roleNames[i] = role.Name
+
+		for _, perm := range role.Permissions {
+			permKey := perm.ResourceType + ":" + perm.Action
+			permissionSet[permKey] = true
+		}
+	}
+
+	permissions := make([]string, 0, len(permissionSet))
+	for perm := range permissionSet {
+		permissions = append(permissions, perm)
 	}
 
 	claims := &Claims{
-		Roles: roleNames,
+		Roles:       roleNames,
+		Permissions: permissions,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   user.ID,
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),

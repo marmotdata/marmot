@@ -234,7 +234,6 @@ func (r *PostgresRepository) ListUsers(ctx context.Context, filter Filter) ([]*U
 		argNum++
 	}
 
-	// Count total matching users
 	countQuery := fmt.Sprintf(`
 		SELECT COUNT(DISTINCT u.id)
 		FROM users u
@@ -246,7 +245,6 @@ func (r *PostgresRepository) ListUsers(ctx context.Context, filter Filter) ([]*U
 		return nil, 0, fmt.Errorf("counting users: %w", err)
 	}
 
-	// Query users with pagination
 	query := fmt.Sprintf(`
 		WITH user_roles AS (
 			SELECT ur.user_id,
@@ -267,7 +265,6 @@ func (r *PostgresRepository) ListUsers(ctx context.Context, filter Filter) ([]*U
 		ORDER BY u.created_at DESC
 		LIMIT $%d OFFSET $%d`, strings.Join(conditions, " AND "), argNum, argNum+1)
 
-	// Append pagination parameters
 	args = append(args, filter.Limit, filter.Offset)
 
 	rows, err := r.db.Query(ctx, query, args...)
@@ -295,7 +292,6 @@ func (r *PostgresRepository) UpdateUser(ctx context.Context, id string, updates 
 	}
 	defer tx.Rollback(ctx)
 
-	// Check column names against actual table columns
 	for field := range updates {
 		var exists bool
 		err := tx.QueryRow(ctx,
@@ -309,7 +305,6 @@ func (r *PostgresRepository) UpdateUser(ctx context.Context, id string, updates 
 		}
 	}
 
-	// Now build the query with verified column names
 	setStatements := make([]string, 0, len(updates))
 	args := make([]interface{}, 0, len(updates)+1)
 	argNum := 1
@@ -320,7 +315,6 @@ func (r *PostgresRepository) UpdateUser(ctx context.Context, id string, updates 
 		argNum++
 	}
 
-	// Add updated_at
 	if _, ok := updates["updated_at"]; !ok {
 		setStatements = append(setStatements, "updated_at = NOW()")
 	}
@@ -364,29 +358,24 @@ func (r *PostgresRepository) UpdatePreferences(ctx context.Context, userID strin
 		return fmt.Errorf("getting current preferences: %w", err)
 	}
 
-	// Unmarshal current preferences
 	var currentPrefs map[string]interface{}
 	if err := json.Unmarshal(currentPrefsJSON, &currentPrefs); err != nil {
 		return fmt.Errorf("unmarshaling current preferences: %w", err)
 	}
 
-	// If currentPrefs is nil, initialize it
 	if currentPrefs == nil {
 		currentPrefs = make(map[string]interface{})
 	}
 
-	// Update the preferences map with new values
 	for k, v := range preferences {
 		currentPrefs[k] = v
 	}
 
-	// Marshal the updated preferences to JSON
 	prefsJSON, err := json.Marshal(currentPrefs)
 	if err != nil {
 		return fmt.Errorf("marshaling preferences: %w", err)
 	}
 
-	// Update the entire preferences column
 	commandTag, err := r.db.Exec(ctx,
 		"UPDATE users SET preferences = $1::jsonb, updated_at = NOW() WHERE id = $2",
 		prefsJSON, userID,
@@ -481,15 +470,30 @@ func (r *PostgresRepository) ValidatePassword(ctx context.Context, userID string
 
 func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username string) (*User, error) {
 	query := `
-		WITH user_roles AS (
+		WITH role_perms AS (
+			SELECT rp.role_id,
+				   json_agg(json_build_object(
+					   'id', p.id,
+					   'name', p.name,
+					   'description', p.description,
+					   'resource_type', p.resource_type,
+					   'action', p.action
+				   )) as permissions
+			FROM role_permissions rp
+			JOIN permissions p ON p.id = rp.permission_id
+			GROUP BY rp.role_id
+		),
+		user_roles AS (
 			SELECT ur.user_id,
 				   json_agg(json_build_object(
 					   'id', r.id,
 					   'name', r.name,
-					   'description', r.description
+					   'description', r.description,
+					   'permissions', COALESCE(rp.permissions, '[]'::json)
 				   )) as roles
 			FROM user_roles ur
 			JOIN roles r ON r.id = ur.role_id
+			LEFT JOIN role_perms rp ON rp.role_id = r.id
 			GROUP BY ur.user_id
 		)
 		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
@@ -503,18 +507,33 @@ func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username str
 
 func (r *PostgresRepository) GetUserByProviderID(ctx context.Context, provider string, providerUserID string) (*User, error) {
 	query := `
-		WITH user_roles AS (
+		WITH role_perms AS (
+			SELECT rp.role_id,
+				   json_agg(json_build_object(
+					   'id', p.id,
+					   'name', p.name,
+					   'description', p.description,
+					   'resource_type', p.resource_type,
+					   'action', p.action
+				   )) as permissions
+			FROM role_permissions rp
+			JOIN permissions p ON p.id = rp.permission_id
+			GROUP BY rp.role_id
+		),
+		user_roles AS (
 			SELECT ur.user_id,
 				   json_agg(json_build_object(
 					   'id', r.id,
 					   'name', r.name,
-					   'description', r.description
+					   'description', r.description,
+					   'permissions', COALESCE(rp.permissions, '[]'::json)
 				   )) as roles
 			FROM user_roles ur
 			JOIN roles r ON r.id = ur.role_id
+			LEFT JOIN role_perms rp ON rp.role_id = r.id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.must_change_password, .preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		JOIN user_identities ui ON ui.user_id = u.id
@@ -595,10 +614,8 @@ func (r *PostgresRepository) GetUserIdentities(ctx context.Context, userID strin
 			return nil, fmt.Errorf("scanning user identity: %w", err)
 		}
 
-		// Initialize the provider data map
 		identity.ProviderData = make(map[string]interface{})
 
-		// Only try to unmarshal if we have provider data
 		if len(providerDataJSON) > 0 {
 			if err := json.Unmarshal(providerDataJSON, &identity.ProviderData); err != nil {
 				return nil, fmt.Errorf("parsing provider data: %w", err)

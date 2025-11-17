@@ -9,6 +9,8 @@
 	import LineageViewNode from './LineageViewNode.svelte';
 	import Icon from './Icon.svelte';
 	import RunHistory from './RunHistory.svelte';
+	import AssetTagsGlossary from './AssetTagsGlossary.svelte';
+	import AssetDescriptions from './AssetDescriptions.svelte';
 
 	export let asset: Asset | null = null;
 	export let lineage: LineageResponse | null = null;
@@ -158,103 +160,90 @@
 			{/if}
 		</div>
 
-		<div class="flex-1 overflow-y-auto min-h-0 pb-16">
-			<div class="px-6 py-4 space-y-6">
+		<div class="flex-1 overflow-y-auto min-h-0">
+			<div class="divide-y divide-gray-200 dark:divide-gray-700">
+				<!-- Asset Header -->
 				{#if staticPlacement}
-					<div
-						class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
-					>
-						<div class="flex items-center space-x-4">
-							<div class="flex-shrink-0">
-								<Icon name={currentIconName} iconSize="lg" />
+					<div class="p-4">
+						<div class="flex items-start space-x-3">
+							<div class="flex-shrink-0 mt-0.5">
+								<Icon name={currentIconName} iconSize="md" />
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
+								<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
 									{asset.name || ''}
 								</h3>
-								<p class="text-sm text-gray-500 dark:text-gray-400 truncate">{asset.mrn || ''}</p>
-								{#if asset.tags?.length > 0}
-									<div class="mt-2 flex flex-wrap gap-2">
-										{#each asset.tags as tag}
-											<span
-												class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-											>
-												{tag}
-											</span>
-										{/each}
-									</div>
-								{/if}
+								<p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+									{asset.mrn || ''}
+								</p>
 							</div>
 						</div>
 					</div>
 				{:else}
-					<a href={`${fullViewUrl}`} class="block">
-						<div
-							class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4 hover:border-orange-400 transition-colors"
-						>
-							<div class="flex items-center space-x-4">
-								<div class="flex-shrink-0">
-									<Icon name={currentIconName} iconSize="lg" />
-								</div>
-								<div class="flex-1 min-w-0">
-									<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">
-										{asset.name || ''}
-									</h3>
-									<p class="text-sm text-gray-500 dark:text-gray-400 truncate">{asset.mrn || ''}</p>
-									{#if asset.tags?.length > 0}
-										<div class="mt-2 flex flex-wrap gap-2">
-											{#each asset.tags as tag}
-												<span
-													class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-												>
-													{tag}
-												</span>
-											{/each}
-										</div>
-									{/if}
-								</div>
+					<a href={`${fullViewUrl}`} class="block p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+						<div class="flex items-start space-x-3">
+							<div class="flex-shrink-0 mt-0.5">
+								<Icon name={currentIconName} iconSize="md" />
+							</div>
+							<div class="flex-1 min-w-0">
+								<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
+									{asset.name || ''}
+								</h3>
+								<p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+									{asset.mrn || ''}
+								</p>
 							</div>
 						</div>
 					</a>
 				{/if}
 
-				{#if asset.description}
-					<div class="bg-earthy-brown-50 dark:bg-gray-900 p-4">
-						<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Description</h4>
-						<p class="text-gray-600 dark:text-gray-300">{asset.description}</p>
-					</div>
-				{/if}
+				<!-- Descriptions -->
+				<div class="p-5">
+					<AssetDescriptions {asset} editable={staticPlacement} />
+				</div>
 
+				<!-- Tags and Glossary Terms -->
+				<div class="p-5">
+					<AssetTagsGlossary {asset} editable={staticPlacement} />
+				</div>
+
+				<!-- Run History -->
 				{#if !shouldHideRunHistory && asset.has_run_history}
-					<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-						<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Run History</h3>
+					<div class="p-5">
+						<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+							Run History
+						</h3>
 						<RunHistory assetId={asset.id} minimal={true} {asset} />
 					</div>
 				{/if}
 
+				<!-- Data Lineage -->
 				{#if hasNonCurrentNodes}
-					<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-						<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">Data Lineage</h3>
+					<div class="p-5">
+						<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+							Data Lineage
+						</h3>
 
 						{#if loadingLineage}
-							<div class="flex items-center justify-center p-8">
-								<div class="animate-spin h-8 w-8 border-b-2 border-orange-600 rounded-full"></div>
+							<div class="flex items-center justify-center py-8">
+								<div class="animate-spin h-6 w-6 border-b-2 border-orange-600 rounded-full"></div>
 							</div>
 						{:else if lineageError}
-							<div class="p-4 text-red-600 dark:text-red-400">{lineageError}</div>
+							<div class="text-sm text-red-600 dark:text-red-400">{lineageError}</div>
 						{:else if lineage}
 							{#if lineage.nodes.filter((n) => n.depth < 0).length > 0}
-								<div class="mt-6">
-									<h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-										Upstream Assets
+								<div class="mb-4">
+									<h4 class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+										Upstream
 									</h4>
-									<div class="space-y-3">
+									<div class="space-y-2">
 										{#each filteredLineage.nodes.filter((n) => n.depth < 0) as node}
 											<LineageViewNode
 												{node}
 												expanded={expandedAssets.has(node.id)}
 												onClick={() => toggleAssetExpansion(node.id)}
-												maxMetadataDepth={1}
+												maxMetadataDepth={0}
+												compact={true}
 											/>
 										{/each}
 									</div>
@@ -262,17 +251,18 @@
 							{/if}
 
 							{#if lineage.nodes.filter((n) => n.depth > 0).length > 0}
-								<div class="mt-6">
-									<h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-										Downstream Assets
+								<div>
+									<h4 class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+										Downstream
 									</h4>
-									<div class="space-y-3">
+									<div class="space-y-2">
 										{#each filteredLineage.nodes.filter((n) => n.depth > 0) as node}
 											<LineageViewNode
 												{node}
 												expanded={expandedAssets.has(node.id)}
 												onClick={() => toggleAssetExpansion(node.id)}
-												maxMetadataDepth={1}
+												maxMetadataDepth={0}
+												compact={true}
 											/>
 										{/each}
 									</div>
@@ -282,33 +272,34 @@
 					</div>
 				{/if}
 
-				<div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-					<h4 class="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">
-						Additional Details
+				<!-- Additional Details -->
+				<div class="p-4">
+					<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+						Details
 					</h4>
-					<dl class="grid grid-cols-2 gap-4">
+					<dl class="space-y-2">
 						<div>
-							<dt class="text-sm text-gray-500 dark:text-gray-400">Created By</dt>
-							<dd class="text-sm font-medium text-gray-900 dark:text-gray-100">
-								{asset.created_by || ''}
+							<dt class="text-xs text-gray-500 dark:text-gray-400">Created By</dt>
+							<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
+								{asset.created_by || 'Unknown'}
 							</dd>
 						</div>
 						<div>
-							<dt class="text-sm text-gray-500 dark:text-gray-400">Created At</dt>
-							<dd class="text-sm font-medium text-gray-900 dark:text-gray-100">
-								{asset.created_at ? formatDate(asset.created_at) : ''}
+							<dt class="text-xs text-gray-500 dark:text-gray-400">Created At</dt>
+							<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
+								{asset.created_at ? formatDate(asset.created_at) : 'Unknown'}
 							</dd>
 						</div>
 						<div>
-							<dt class="text-sm text-gray-500 dark:text-gray-400">Last Updated</dt>
-							<dd class="text-sm font-medium text-gray-900 dark:text-gray-100">
-								{asset.updated_at ? formatDate(asset.updated_at) : ''}
+							<dt class="text-xs text-gray-500 dark:text-gray-400">Last Updated</dt>
+							<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
+								{asset.updated_at ? formatDate(asset.updated_at) : 'Unknown'}
 							</dd>
 						</div>
 						{#if asset.parent_mrn}
-							<div class="col-span-2">
-								<dt class="text-sm text-gray-500 dark:text-gray-400">Parent Asset</dt>
-								<dd class="text-sm font-medium text-gray-900 dark:text-gray-100">
+							<div>
+								<dt class="text-xs text-gray-500 dark:text-gray-400">Parent Asset</dt>
+								<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5 font-mono text-xs break-all">
 									{asset.parent_mrn}
 								</dd>
 							</div>
