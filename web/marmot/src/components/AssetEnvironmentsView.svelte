@@ -52,7 +52,7 @@
 			return value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
 		}
 		if (typeof value === 'number') return 'bg-blue-100 text-blue-800';
-		if (Array.isArray(value)) return 'bg-amber-100 text-amber-800';
+		if (Array.isArray(value)) return 'bg-earthy-terracotta-100 text-earthy-terracotta-700';
 		return 'bg-gray-100 text-gray-800 dark:text-gray-200';
 	}
 
@@ -135,7 +135,7 @@
 										</span>
 									{:else if Array.isArray(metaValue)}
 										<span
-											class="px-2 py-1 text-sm rounded-full bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-100"
+											class="px-2 py-1 text-sm rounded-full bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
 										>
 											{formatValue(metaValue)}
 										</span>

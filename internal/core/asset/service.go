@@ -474,7 +474,11 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		updated = true
 	}
 	if input.UserDescription != nil {
-		asset.UserDescription = input.UserDescription
+		if *input.UserDescription == "" {
+			asset.UserDescription = nil
+		} else {
+			asset.UserDescription = input.UserDescription
+		}
 		updated = true
 	}
 	if input.Metadata != nil {

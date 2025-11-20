@@ -72,11 +72,11 @@
 					type="text"
 					placeholder="Search users..."
 					bind:value={userQuery}
-					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-transparent"
+					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-transparent"
 				/>
 			</div>
 			<button
-				class="ml-4 px-4 py-2 bg-amber-700 dark:bg-amber-600 text-white rounded-md hover:bg-amber-800 dark:hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-amber-400"
+				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 				on:click={() => (creatingUser = !creatingUser)}
 			>
 				{creatingUser ? 'Cancel' : 'Add User'}
@@ -89,7 +89,7 @@
 
 		{#if loading && !users.length}
 			<div class="flex justify-center p-8">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600" />
+				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700" />
 			</div>
 		{:else if error}
 			<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">

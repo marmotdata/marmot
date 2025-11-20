@@ -95,21 +95,21 @@ export default function BenefitsShowcase(): JSX.Element {
                     setActiveBenefit(benefit.id);
                   }}
                   className={`group block p-6 rounded-xl transition-all duration-200 ${isActive
-                      ? "bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-900/20 dark:to-orange-900/20 shadow-lg"
+                      ? "bg-gradient-to-br from-earthy-terracotta-50 to-earthy-terracotta-100 dark:from-earthy-terracotta-900/20 dark:to-earthy-terracotta-900/20 shadow-lg"
                       : "bg-gray-50 dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 hover:shadow-md"
                     }`}
                 >
                   <div
                     className={`inline-flex items-center justify-center w-12 h-12 mb-4 rounded-lg transition-all duration-200 ${isActive
-                        ? "bg-amber-600 text-white shadow-md"
-                        : "bg-white dark:bg-gray-800 text-amber-600 dark:text-amber-400 group-hover:bg-amber-50 dark:group-hover:bg-amber-900/30"
+                        ? "bg-earthy-terracotta-700 text-white shadow-md"
+                        : "bg-white dark:bg-gray-800 text-earthy-terracotta-700 dark:text-earthy-terracotta-500 group-hover:bg-earthy-terracotta-50 dark:group-hover:bg-earthy-terracotta-900/30"
                       }`}
                   >
                     <Icon icon={benefit.icon} className="text-2xl" />
                   </div>
                   <h3
                     className={`text-lg font-bold mb-2 transition-colors ${isActive
-                        ? "text-amber-900 dark:text-amber-100"
+                        ? "text-earthy-terracotta-900 dark:text-earthy-terracotta-100"
                         : "text-gray-900 dark:text-white"
                       }`}
                   >

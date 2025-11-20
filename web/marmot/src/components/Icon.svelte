@@ -31,8 +31,9 @@
 			}
 		} catch (error) {
 			console.error(`Failed to load icon: ${name}`, error);
-			iconResult = '/images/marmot.svg';
-			isComponent = false;
+			// Fallback to a generic icon from material-symbols
+			iconResult = await IconLoader.getInstance().loadIcon('material-symbols:help-outline', isDark);
+			isComponent = typeof iconResult !== 'string' && 'component' in iconResult;
 		}
 	}
 

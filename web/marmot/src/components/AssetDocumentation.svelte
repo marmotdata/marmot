@@ -96,7 +96,7 @@
 		@apply list-decimal pl-5 mb-4 text-gray-900 dark:text-gray-100;
 	}
 	:global(.markdown-content a) {
-		@apply text-orange-600 hover:text-orange-700 dark:text-orange-400 dark:hover:text-orange-300 underline;
+		@apply text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 underline;
 	}
 	:global(.markdown-content code) {
 		@apply bg-gray-100 dark:bg-gray-800 rounded px-1 py-0.5 font-mono text-sm text-gray-900 dark:text-gray-100;

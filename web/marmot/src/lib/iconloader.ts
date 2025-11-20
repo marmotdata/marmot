@@ -40,6 +40,68 @@ import FolderDataOutline from '~icons/material-symbols/folder-data-outline';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
 
+// Provider icons with display names
+export const providerIconMap: Record<
+  string,
+  {
+    default: ComponentType<SvelteComponent>;
+    dark?: ComponentType<SvelteComponent>;
+    class?: string;
+    displayName: string;
+  }
+> = {
+  asyncapi: { default: AsyncApiIcon, displayName: 'AsyncAPI' },
+  openapi: { default: OpenApiIcon, displayName: 'OpenAPI' },
+  dbt: { default: DbtIcon, displayName: 'dbt' },
+  airflow: { default: AirflowIcon, displayName: 'Airflow' },
+  redis: { default: RedisIcon, displayName: 'Redis' },
+  postgresql: { default: PostgresqlIcon, displayName: 'PostgreSQL' },
+  dynamodb: { default: DynamoDBIcon, displayName: 'DynamoDB' },
+  kinesis: { default: KinesisIcon, displayName: 'Kinesis' },
+  sns: { default: SnsIcon, displayName: 'SNS' },
+  sqs: { default: SqsIcon, displayName: 'SQS' },
+  elasticsearch: { default: ElasticsearchIcon, displayName: 'Elasticsearch' },
+  mysql: { default: MySqlIcon, displayName: 'MySQL' },
+  mongodb: { default: MongoDBIcon, displayName: 'MongoDB' },
+  s3: { default: S3Icon, displayName: 'S3' },
+  spark: { default: SparkIcon, displayName: 'Spark' },
+  snowflake: { default: SnowflakeIcon, displayName: 'Snowflake' },
+  kubernetes: { default: KubernetesIcon, displayName: 'Kubernetes' },
+  bigquery: { default: BigQueryIcon, displayName: 'BigQuery' },
+  amqp: { default: AMQPIcon, displayName: 'AMQP' },
+  rabbitmq: { default: AMQPIcon, displayName: 'RabbitMQ' },
+  openlineage: { default: OpenLineage, class: 'text-gray-900 dark:text-gray-100', displayName: 'OpenLineage' }
+};
+
+// Type icons with display names
+export const typeIconMap: Record<
+  string,
+  {
+    default: ComponentType<SvelteComponent>;
+    dark?: ComponentType<SvelteComponent>;
+    class?: string;
+    displayName: string;
+  }
+> = {
+  queue: { default: QueueListIcon, class: 'text-gray-900 dark:text-gray-100', displayName: 'Queue' },
+  topic: { default: ChatBubbleIcon, class: 'text-gray-900 dark:text-gray-100', displayName: 'Topic' },
+  service: { default: CodeBracketIcon, class: 'text-gray-900 dark:text-gray-100', displayName: 'Service' },
+  database: { default: DatabaseOutlineIcon, class: 'text-gray-900 dark:text-gray-100', displayName: 'Database' },
+  table: { default: TableOutlineIcon, class: 'text-gray-900 dark:text-gray-100', displayName: 'Table' },
+  bucket: { default: HomeStorageOutlineIcon, class: 'text-gray-900 dark:text-gray-100', displayName: 'Bucket' },
+  view: { default: ViewOutlineIcon, class: 'text-gray-900 dark:text-gray-100', displayName: 'View' },
+  exchange: { default: PartnerExchangeOutlineRounded, class: 'text-gray-900 dark:text-gray-100', displayName: 'Exchange' },
+  dataset: { default: DatasetOutlineRounded, class: 'text-gray-900 dark:text-gray-100', displayName: 'Dataset' },
+  collection: { default: BackupTableRounded, class: 'text-gray-900 dark:text-gray-100', displayName: 'Collection' },
+  model: { default: ModelingOutlineRounded, class: 'text-gray-900 dark:text-gray-100', displayName: 'Model' },
+  project: { default: ClinicalNotesOutlineRounded, class: 'text-gray-900 dark:text-gray-100', displayName: 'Project' },
+  task: { default: TaskOutlineRounded, class: 'text-gray-900 dark:text-gray-100', displayName: 'Task' },
+  dag: { default: Graph4, class: 'text-gray-900 dark:text-gray-100', displayName: 'DAG' },
+  endpoint: { default: Endpoint, class: 'text-gray-900 dark:text-gray-100', displayName: 'Endpoint' },
+  job: { default: FolderDataOutline, class: 'text-gray-900 dark:text-gray-100', displayName: 'Job' }
+};
+
+// Combined map for backward compatibility
 const iconMap: Record<
   string,
   {
@@ -48,44 +110,8 @@ const iconMap: Record<
     class?: string;
   }
 > = {
-  asyncapi: { default: AsyncApiIcon },
-  openapi: { default: OpenApiIcon },
-  dbt: { default: DbtIcon },
-  airflow: { default: AirflowIcon },
-  redis: { default: RedisIcon },
-  postgresql: { default: PostgresqlIcon },
-  dynamodb: { default: DynamoDBIcon },
-  kinesis: { default: KinesisIcon },
-  sns: { default: SnsIcon },
-  sqs: { default: SqsIcon },
-  elasticsearch: { default: ElasticsearchIcon },
-  mysql: { default: MySqlIcon },
-  mongodb: { default: MongoDBIcon },
-  s3: { default: S3Icon },
-  spark: { default: SparkIcon },
-  snowflake: { default: SnowflakeIcon },
-  kubernetes: { default: KubernetesIcon },
-  bigquery: { default: BigQueryIcon },
-  amqp: { default: AMQPIcon },
-  rabbitmq: { default: AMQPIcon },
-  openlineage: { default: OpenLineage, class: 'text-gray-900 dark:text-gray-100' },
-
-  queue: { default: QueueListIcon, class: 'text-gray-900 dark:text-gray-100' },
-  topic: { default: ChatBubbleIcon, class: 'text-gray-900 dark:text-gray-100' },
-  service: { default: CodeBracketIcon, class: 'text-gray-900 dark:text-gray-100' },
-  database: { default: DatabaseOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
-  table: { default: TableOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
-  bucket: { default: HomeStorageOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
-  view: { default: ViewOutlineIcon, class: 'text-gray-900 dark:text-gray-100' },
-  exchange: { default: PartnerExchangeOutlineRounded, class: 'text-gray-900 dark:text-gray-100' },
-  dataset: { default: DatasetOutlineRounded, class: 'text-gray-900 dark:text-gray-100' },
-  collection: { default: BackupTableRounded, class: 'text-gray-900 dark:text-gray-100' },
-  model: { default: ModelingOutlineRounded, class: 'text-gray-900 dark:text-gray-100' },
-  project: { default: ClinicalNotesOutlineRounded, class: 'text-gray-900 dark:text-gray-100' },
-  task: { default: TaskOutlineRounded, class: 'text-gray-900 dark:text-gray-100' },
-  dag: { default: Graph4, class: 'text-gray-900 dark:text-gray-100' },
-  endpoint: { default: Endpoint, class: 'text-gray-900 dark:text-gray-100' },
-  job: { default: FolderDataOutline, class: 'text-gray-900 dark:text-gray-100' }
+  ...providerIconMap,
+  ...typeIconMap
 };
 
 export class IconLoader {

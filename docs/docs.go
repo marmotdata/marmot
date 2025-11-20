@@ -2178,6 +2178,26 @@ const docTemplate = `{
                 }
             }
         },
+        "/ui/config": {
+            "get": {
+                "description": "Get UI configuration including banner settings",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "ui"
+                ],
+                "summary": "Get UI configuration",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ui.UIConfigResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/users": {
             "get": {
                 "description": "Get a list of users with optional filtering",
@@ -2783,7 +2803,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "description": {
-                    "description": "Technical description (from plugins)",
                     "type": "string"
                 },
                 "environments": {
@@ -2860,7 +2879,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_description": {
-                    "description": "User-provided notes",
                     "type": "string"
                 }
             }
@@ -4175,14 +4193,11 @@ const docTemplate = `{
                 1000000000,
                 60000000000,
                 3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
-                60000000000,
-                3600000000000
+                60000000000
             ],
             "x-enum-varnames": [
                 "minDuration",
@@ -4193,15 +4208,40 @@ const docTemplate = `{
                 "Second",
                 "Minute",
                 "Hour",
-                "minDuration",
-                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
-                "Minute",
-                "Hour"
+                "Minute"
             ]
+        },
+        "ui.BannerResponse": {
+            "type": "object",
+            "properties": {
+                "dismissible": {
+                    "type": "boolean"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "variant": {
+                    "type": "string"
+                }
+            }
+        },
+        "ui.UIConfigResponse": {
+            "type": "object",
+            "properties": {
+                "banner": {
+                    "$ref": "#/definitions/ui.BannerResponse"
+                }
+            }
         },
         "user.APIKey": {
             "type": "object",

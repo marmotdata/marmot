@@ -9,8 +9,12 @@
 	import LineageViewNode from './LineageViewNode.svelte';
 	import Icon from './Icon.svelte';
 	import RunHistory from './RunHistory.svelte';
-	import AssetTagsGlossary from './AssetTagsGlossary.svelte';
+	import AssetTags from './AssetTags.svelte';
+	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import AssetDescriptions from './AssetDescriptions.svelte';
+	import IconifyIcon from '@iconify/svelte';
+	import { auth } from '$lib/stores/auth';
+	import { goto } from '$app/navigation';
 
 	export let asset: Asset | null = null;
 	export let lineage: LineageResponse | null = null;
@@ -21,6 +25,11 @@
 	export let assetUrl: string | undefined = undefined;
 	let currentAssetId: string | null = null;
 	let mounted = false;
+	let showDeleteModal = false;
+	let isDeleting = false;
+	let deleteError = '';
+
+	$: canManageAssets = auth.hasPermission('assets', 'manage');
 
 	$: isRunHistoryTab = $page.url.searchParams.get('tab') === 'run-history';
 	$: shouldHideRunHistory = staticPlacement && isRunHistoryTab;
@@ -86,6 +95,8 @@
 	$: hasNonCurrentNodes =
 		filteredLineage?.nodes && filteredLineage.nodes.filter((n) => n.depth !== 0).length > 0;
 
+	$: hasDescriptionsOrTerms = asset?.description || asset?.user_description || staticPlacement;
+
 	onMount(() => {
 		mounted = true;
 		if (asset?.id) {
@@ -98,6 +109,39 @@
 			fetchLineage();
 		}
 	});
+
+	async function handleDelete() {
+		if (!asset?.id) return;
+
+		isDeleting = true;
+		deleteError = '';
+
+		try {
+			const response = await fetchApi(`/assets/${asset.id}`, {
+				method: 'DELETE'
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to delete asset');
+			}
+
+			showDeleteModal = false;
+
+			// Close the blade and redirect to assets list
+			if (staticPlacement) {
+				goto('/assets');
+			} else {
+				onClose();
+				// Trigger a page refresh to update the asset list
+				window.location.reload();
+			}
+		} catch (err) {
+			deleteError = err instanceof Error ? err.message : 'Failed to delete asset';
+		} finally {
+			isDeleting = false;
+		}
+	}
 </script>
 
 {#if isVisible && asset}
@@ -160,56 +204,58 @@
 			{/if}
 		</div>
 
-		<div class="flex-1 overflow-y-auto min-h-0">
-			<div class="divide-y divide-gray-200 dark:divide-gray-700">
+		<div class="flex-1 overflow-y-auto min-h-0 {staticPlacement ? 'pr-6 py-6' : 'p-6'}">
+			<div class="space-y-4">
 				<!-- Asset Header -->
 				{#if staticPlacement}
-					<div class="p-4">
-						<div class="flex items-start space-x-3">
-							<div class="flex-shrink-0 mt-0.5">
+					<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+						<div class="flex items-start gap-3 mb-3">
+							<div class="flex-shrink-0">
 								<Icon name={currentIconName} iconSize="md" />
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
+								<h3 class="font-semibold text-base text-gray-900 dark:text-gray-100 truncate">
 									{asset.name || ''}
 								</h3>
-								<p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+								<p class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5">
 									{asset.mrn || ''}
 								</p>
 							</div>
 						</div>
+						<AssetTags {asset} editable={staticPlacement} />
 					</div>
 				{:else}
-					<a href={`${fullViewUrl}`} class="block p-4 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
-						<div class="flex items-start space-x-3">
-							<div class="flex-shrink-0 mt-0.5">
+					<a href={`${fullViewUrl}`} class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all">
+						<div class="flex items-start gap-3 mb-3">
+							<div class="flex-shrink-0">
 								<Icon name={currentIconName} iconSize="md" />
 							</div>
 							<div class="flex-1 min-w-0">
-								<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
+								<h3 class="font-semibold text-base text-gray-900 dark:text-gray-100 truncate">
 									{asset.name || ''}
 								</h3>
-								<p class="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
+								<p class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5">
 									{asset.mrn || ''}
 								</p>
 							</div>
 						</div>
+						<AssetTags {asset} editable={false} />
 					</a>
 				{/if}
 
-				<!-- Descriptions -->
-				<div class="p-5">
-					<AssetDescriptions {asset} editable={staticPlacement} />
-				</div>
-
-				<!-- Tags and Glossary Terms -->
-				<div class="p-5">
-					<AssetTagsGlossary {asset} editable={staticPlacement} />
-				</div>
+				<!-- Descriptions and Glossary Terms -->
+				{#if hasDescriptionsOrTerms}
+					<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+						<div class="space-y-5">
+							<AssetDescriptions {asset} editable={staticPlacement} />
+							<AssetGlossaryTerms {asset} editable={staticPlacement} />
+						</div>
+					</div>
+				{/if}
 
 				<!-- Run History -->
 				{#if !shouldHideRunHistory && asset.has_run_history}
-					<div class="p-5">
+					<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
 						<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
 							Run History
 						</h3>
@@ -219,21 +265,21 @@
 
 				<!-- Data Lineage -->
 				{#if hasNonCurrentNodes}
-					<div class="p-5">
+					<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
 						<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
 							Data Lineage
 						</h3>
 
 						{#if loadingLineage}
 							<div class="flex items-center justify-center py-8">
-								<div class="animate-spin h-6 w-6 border-b-2 border-orange-600 rounded-full"></div>
+								<div class="animate-spin h-6 w-6 border-b-2 border-earthy-terracotta-700 rounded-full"></div>
 							</div>
 						{:else if lineageError}
 							<div class="text-sm text-red-600 dark:text-red-400">{lineageError}</div>
 						{:else if lineage}
 							{#if lineage.nodes.filter((n) => n.depth < 0).length > 0}
 								<div class="mb-4">
-									<h4 class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+									<h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">
 										Upstream
 									</h4>
 									<div class="space-y-2">
@@ -252,7 +298,7 @@
 
 							{#if lineage.nodes.filter((n) => n.depth > 0).length > 0}
 								<div>
-									<h4 class="text-sm font-medium text-gray-600 dark:text-gray-400 uppercase tracking-wide mb-2">
+									<h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">
 										Downstream
 									</h4>
 									<div class="space-y-2">
@@ -273,11 +319,11 @@
 				{/if}
 
 				<!-- Additional Details -->
-				<div class="p-4">
-					<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
+				<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
+					<h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
 						Details
 					</h4>
-					<dl class="space-y-2">
+					<dl class="space-y-3">
 						<div>
 							<dt class="text-xs text-gray-500 dark:text-gray-400">Created By</dt>
 							<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
@@ -308,7 +354,80 @@
 				</div>
 			</div>
 		</div>
+
+		<!-- Delete Button Footer -->
+		{#if canManageAssets}
+			<div class="flex-none border-t border-gray-200 dark:border-gray-700 bg-earthy-brown-50 dark:bg-gray-900 px-6 py-4 flex justify-end">
+				<button
+					onclick={() => (showDeleteModal = true)}
+					class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+				>
+					<IconifyIcon icon="material-symbols:delete-outline-rounded" class="w-4 h-4" />
+					Delete Asset
+				</button>
+			</div>
+		{/if}
 		</div>
 		{/if}
+	</div>
+{/if}
+
+<!-- Delete Confirmation Modal -->
+{#if showDeleteModal && asset}
+	<div
+		class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center px-4"
+		onclick={() => !isDeleting && (showDeleteModal = false)}
+		role="button"
+		tabindex="-1"
+	>
+		<div
+			class="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-md w-full border border-gray-200 dark:border-gray-700"
+			onclick={(e) => e.stopPropagation()}
+			role="dialog"
+			tabindex="-1"
+		>
+			<div class="p-6">
+				<div class="flex items-start gap-4">
+					<div class="flex-shrink-0">
+						<IconifyIcon icon="material-symbols:warning-rounded" class="w-12 h-12 text-red-600 dark:text-red-400" />
+					</div>
+					<div class="flex-1">
+						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+							Delete Asset
+						</h3>
+						<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+							Are you sure you want to delete <span class="font-semibold text-gray-900 dark:text-gray-100">"{asset.name}"</span>? This action cannot be undone.
+						</p>
+						{#if deleteError}
+							<div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+								<p class="text-sm text-red-800 dark:text-red-200">{deleteError}</p>
+							</div>
+						{/if}
+						<div class="flex gap-3 justify-end">
+							<button
+								onclick={() => (showDeleteModal = false)}
+								disabled={isDeleting}
+								class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+							>
+								Cancel
+							</button>
+							<button
+								onclick={handleDelete}
+								disabled={isDeleting}
+								class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+							>
+								{#if isDeleting}
+									<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+									Deleting...
+								{:else}
+									<IconifyIcon icon="material-symbols:delete-outline" class="w-5 h-5" />
+									Delete Asset
+								{/if}
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 {/if}

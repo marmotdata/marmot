@@ -88,7 +88,7 @@
 				<div class="flex flex-wrap gap-2">
 					{#each user.roles as role}
 						<span
-							class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-100"
+							class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
 						>
 							{role.name}
 						</span>

@@ -11,10 +11,13 @@
 			service: string;
 			isCurrent: boolean;
 			id: string;
+			mrn: string;
 			hasUpstream: boolean;
 			hasDownstream: boolean;
 			isStub?: boolean;
 			nodeClickHandler: (id: string) => void;
+			onAddUpstream?: (nodeMrn: string, event: MouseEvent) => void;
+			onAddDownstream?: (nodeMrn: string, event: MouseEvent) => void;
 		};
 	}>();
 
@@ -23,7 +26,28 @@
 			data.nodeClickHandler(data.id);
 		}
 	}
+
+	function handleAddUpstream(e: MouseEvent) {
+		e.stopPropagation();
+		data.onAddUpstream?.(data.mrn, e);
+	}
+
+	function handleAddDownstream(e: MouseEvent) {
+		e.stopPropagation();
+		data.onAddDownstream?.(data.mrn, e);
+	}
 </script>
+
+<!-- Add Upstream Button -->
+{#if data.onAddUpstream && !data.isStub}
+	<button
+		class="add-lineage-btn add-upstream"
+		onclick={handleAddUpstream}
+		title="Add upstream dependency"
+	>
+		<IconifyIcon icon="material-symbols:add-rounded" class="w-4 h-4" />
+	</button>
+{/if}
 
 {#if data.hasUpstream}
 	<Handle type="target" position={Position.Left} style="background: #696969;" />
@@ -31,7 +55,7 @@
 
 <div
 	class="node {data.isCurrent ? 'current' : ''} {data.isStub ? 'stub' : ''}"
-	on:click={handleClick}
+	onclick={handleClick}
 	title={data.isStub ? 'Stub asset created by OpenLineage' : ''}
 >
 	{#if data.isStub}
@@ -65,6 +89,17 @@
 
 {#if data.hasDownstream}
 	<Handle type="source" position={Position.Right} style="background: #696969;" />
+{/if}
+
+<!-- Add Downstream Button -->
+{#if data.onAddDownstream && !data.isStub}
+	<button
+		class="add-lineage-btn add-downstream"
+		onclick={handleAddDownstream}
+		title="Add downstream dependency"
+	>
+		<IconifyIcon icon="material-symbols:add-rounded" class="w-4 h-4" />
+	</button>
 {/if}
 
 <style>
@@ -143,5 +178,47 @@
 
 	:global(.dark .svelte-flow__handle) {
 		border-color: #2e2e2e;
+	}
+
+	.add-lineage-btn {
+		position: absolute;
+		top: 50%;
+		transform: translateY(-50%);
+		width: 24px;
+		height: 24px;
+		border-radius: 50%;
+		background: #e55633;
+		border: 2px solid #fefdf8;
+		color: white;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		transition: all 150ms;
+		z-index: 20;
+		opacity: 0;
+	}
+
+	:global(.dark) .add-lineage-btn {
+		border-color: #2e2e2e;
+		background: #e55633;
+	}
+
+	.node:hover .add-lineage-btn,
+	:global(.svelte-flow__node:hover) .add-lineage-btn {
+		opacity: 1;
+	}
+
+	.add-lineage-btn:hover {
+		background: #d25a30;
+		transform: translateY(-50%) scale(1.1);
+	}
+
+	.add-upstream {
+		left: -12px;
+	}
+
+	.add-downstream {
+		right: -12px;
 	}
 </style>

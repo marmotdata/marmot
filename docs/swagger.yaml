@@ -7,7 +7,6 @@ definitions:
       created_by:
         type: string
       description:
-        description: Technical description (from plugins)
         type: string
       environments:
         additionalProperties:
@@ -59,7 +58,6 @@ definitions:
       updated_at:
         type: string
       user_description:
-        description: User-provided notes
         type: string
     type: object
   asset.AssetSource:
@@ -930,14 +928,11 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
-    - 3600000000000
     type: integer
     x-enum-varnames:
     - minDuration
@@ -948,14 +943,29 @@ definitions:
     - Second
     - Minute
     - Hour
-    - minDuration
-    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
-    - Hour
+  ui.BannerResponse:
+    properties:
+      dismissible:
+        type: boolean
+      enabled:
+        type: boolean
+      id:
+        type: string
+      message:
+        type: string
+      variant:
+        type: string
+    type: object
+  ui.UIConfigResponse:
+    properties:
+      banner:
+        $ref: '#/definitions/ui.BannerResponse'
+    type: object
   user.APIKey:
     properties:
       created_at:
@@ -2585,6 +2595,19 @@ paths:
       summary: Start run
       tags:
       - runs
+  /ui/config:
+    get:
+      description: Get UI configuration including banner settings
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ui.UIConfigResponse'
+      summary: Get UI configuration
+      tags:
+      - ui
   /users:
     get:
       consumes:

@@ -9,6 +9,7 @@
 	import MarkdownRenderer from '../../components/MarkdownRenderer.svelte';
 	import RichTextEditor from '../../components/RichTextEditor.svelte';
 	import UserPicker from '../../components/UserPicker.svelte';
+	import Button from '../../components/Button.svelte';
 	import Icon from '@iconify/svelte';
 	import { auth } from '$lib/stores/auth';
 
@@ -53,6 +54,9 @@
 				// Try to load the term directly if not in the list
 				loadTermById(termId);
 			}
+		} else if (!termId && !selectedTerm && $terms.length > 0) {
+			// Auto-select first term if no term is selected and no term in URL
+			selectTerm($terms[0]);
 		}
 	}
 
@@ -283,35 +287,40 @@
 		<div class="flex gap-8">
 			<!-- Left Sidebar -->
 			<div class="w-80 flex-shrink-0 flex flex-col gap-4">
-		<div class="flex items-center justify-between">
-			<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Glossary</h1>
-			{#if canManageGlossary}
-				<button
-					on:click={handleNewTerm}
-					class="inline-flex items-center justify-center w-9 h-9 rounded-lg text-white bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 transition-colors"
-					title="Create new term"
-				>
-					<Icon icon="material-symbols:add" class="h-5 w-5" />
-				</button>
-			{/if}
+		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+			<div class="flex items-center justify-between mb-4">
+				<h1 class="text-xl font-bold text-gray-900 dark:text-gray-100">Glossary</h1>
+				{#if canManageGlossary}
+					<Button
+						click={handleNewTerm}
+						icon="material-symbols:add"
+						variant="filled"
+						class="!p-2"
+					/>
+				{/if}
+			</div>
+
+			<QueryInput
+				value={searchQuery}
+				onQueryChange={handleSearch}
+				onSubmit={handleSearchSubmit}
+				placeholder="Search terms..."
+			/>
+
+			<div class="text-xs text-gray-500 dark:text-gray-400 mt-3">
+				{$totalTerms} {$totalTerms === 1 ? 'term' : 'terms'}
+			</div>
 		</div>
 
-		<QueryInput
-			value={searchQuery}
-			onQueryChange={handleSearch}
-			onSubmit={handleSearchSubmit}
-			placeholder="Search terms..."
-		/>
-
-		<div class="space-y-2">
+		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden flex-1 min-h-0">
 			{#if $isLoading}
 				<div class="flex justify-center items-center h-32">
 					<div
-						class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600 dark:border-orange-400"
+						class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700 dark:border-earthy-terracotta-500"
 					></div>
 				</div>
 			{:else if $error}
-				<div class="rounded-lg bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-800 dark:text-red-200">
+				<div class="m-4 rounded-lg bg-red-50 dark:bg-red-900/20 p-3 text-sm text-red-800 dark:text-red-200">
 					{$error}
 				</div>
 			{:else if $terms.length === 0}
@@ -322,27 +331,25 @@
 					</p>
 				</div>
 			{:else}
-				{#each $terms as term}
-					<button
-						on:click={() => selectTerm(term)}
-						class="w-full px-4 py-3 text-left rounded-lg transition-all {selectedTerm?.id ===
-						term.id
-							? 'bg-orange-500/10 dark:bg-orange-500/20 ring-2 ring-orange-500/50 dark:ring-orange-400/50'
-							: 'hover:bg-gray-100 dark:hover:bg-gray-800'}"
-					>
-						<div class="font-medium text-gray-900 dark:text-gray-100 text-sm">
-							{term.name}
-						</div>
-						<div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
-							{term.definition}
-						</div>
-					</button>
-				{/each}
+				<div class="overflow-y-auto max-h-full">
+					{#each $terms as term}
+						<button
+							on:click={() => selectTerm(term)}
+							class="w-full px-4 py-3 text-left transition-all border-l-4 {selectedTerm?.id ===
+							term.id
+								? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 border-earthy-terracotta-700 dark:border-earthy-terracotta-500'
+								: 'hover:bg-gray-50 dark:hover:bg-gray-700/50 border-transparent'}"
+						>
+							<div class="font-medium text-gray-900 dark:text-gray-100 text-sm">
+								{term.name}
+							</div>
+							<div class="mt-0.5 text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+								{term.definition}
+							</div>
+						</button>
+					{/each}
+				</div>
 			{/if}
-		</div>
-
-		<div class="text-xs text-gray-500 dark:text-gray-400 px-2">
-			{$totalTerms} {$totalTerms === 1 ? 'term' : 'terms'}
 		</div>
 	</div>
 
@@ -350,59 +357,48 @@
 	<div class="flex-1">
 		{#if selectedTerm}
 			<div>
-				<div class="bg-white/40 dark:bg-gray-800/40 backdrop-blur-sm rounded-xl border border-gray-200/50 dark:border-gray-700/50">
-					<div class="px-6 py-5 border-b border-gray-200/50 dark:border-gray-700/50">
+				<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+					<!-- Header Section -->
+					<div class="relative px-6 py-5 border-b border-gray-200 dark:border-gray-700">
+						<!-- Term Name -->
 						{#if isEditing && editedTerm}
 							<input
 								type="text"
 								bind:value={editedTerm.name}
-								class="w-full text-2xl font-bold border-b border-gray-300 dark:border-gray-600 bg-transparent focus:outline-none focus:border-gray-400 text-gray-900 dark:text-gray-100 pb-1"
+								class="w-full text-2xl font-bold bg-transparent border-b-2 border-earthy-terracotta-300 dark:border-earthy-terracotta-700 focus:outline-none focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 text-gray-900 dark:text-gray-100 pb-2 mb-3"
 								placeholder="Term name"
 							/>
 						{:else}
-							<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+							<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-3">
 								{selectedTerm.name}
 							</h2>
 						{/if}
+
+						<!-- Definition -->
+						{#if isEditing && editedTerm}
+							<textarea
+								bind:value={editedTerm.definition}
+								rows="2"
+								class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent dark:bg-gray-700 dark:text-gray-100 resize-none"
+								placeholder="Clear, concise definition..."
+							></textarea>
+						{:else}
+							<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+								{selectedTerm.definition}
+							</p>
+						{/if}
 					</div>
 
-					<div class="p-6 space-y-6">
+					<!-- Body Section -->
+					<div class="p-6 space-y-5">
+						<!-- Owners Section -->
 						<div>
-							<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-								Definition
-							</h3>
-							{#if isEditing && editedTerm}
-								<textarea
-									bind:value={editedTerm.definition}
-									rows="3"
-									class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-1 focus:ring-gray-400 dark:bg-gray-700 dark:text-gray-100"
-									placeholder="Clear, concise definition..."
-								></textarea>
-							{:else}
-								<p class="text-gray-700 dark:text-gray-300">{selectedTerm.definition}</p>
-							{/if}
-						</div>
-
-						<div>
-							<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-								Description
-							</h3>
-							{#if isEditing && editedTerm}
-								<RichTextEditor
-									bind:value={editedTerm.description}
-									placeholder="Add a detailed description..."
-								/>
-							{:else if selectedTerm.description}
-								<MarkdownRenderer content={selectedTerm.description} />
-							{:else}
-								<p class="text-sm text-gray-400 dark:text-gray-500 italic">No description provided</p>
-							{/if}
-						</div>
-
-						<div>
-							<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-								Owners
-							</h3>
+							<div class="flex items-center gap-2 mb-2">
+								<Icon icon="material-symbols:person-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+								<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+									Owners
+								</h3>
+							</div>
 							{#if isEditing && editedTerm}
 								<UserPicker
 									selectedUserIds={editedTerm.owners.map(o => o.id)}
@@ -420,57 +416,94 @@
 								/>
 							{/if}
 						</div>
+						<!-- Description (Markdown Body) -->
+						{#if selectedTerm.description || (isEditing && editedTerm)}
+							<div>
+								<div class="flex items-center gap-2 mb-2">
+									<Icon icon="material-symbols:description-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+									<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+										Description
+									</h3>
+								</div>
+								{#if isEditing && editedTerm}
+									<RichTextEditor
+										bind:value={editedTerm.description}
+										placeholder="Add a detailed description with examples, context, or usage notes..."
+									/>
+								{:else if selectedTerm.description}
+									<div class="prose prose-sm dark:prose-invert max-w-none">
+										<MarkdownRenderer content={selectedTerm.description} />
+									</div>
+								{:else}
+									<p class="text-sm text-gray-400 dark:text-gray-500 italic">No description provided</p>
+								{/if}
+							</div>
+						{/if}
 
-						<div class="pt-4 border-t border-gray-200/50 dark:border-gray-700/50">
-							<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-3">
-								Metadata
-							</h3>
-							<dl class="grid grid-cols-2 gap-4 text-sm">
+						<!-- Metadata -->
+						<div>
+							<div class="flex items-center gap-2 mb-2">
+								<Icon icon="material-symbols:info-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+								<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+									Details
+								</h3>
+							</div>
+							<dl class="grid grid-cols-2 gap-4">
 								<div>
-									<dt class="text-gray-500 dark:text-gray-400">Created</dt>
-									<dd class="text-gray-900 dark:text-gray-100 mt-0.5">
-										{new Date(selectedTerm.created_at).toLocaleDateString()}
+									<dt class="text-xs text-gray-500 dark:text-gray-400">Created</dt>
+									<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
+										{new Date(selectedTerm.created_at).toLocaleDateString('en-US', {
+											year: 'numeric',
+											month: 'short',
+											day: 'numeric'
+										})}
 									</dd>
 								</div>
 								<div>
-									<dt class="text-gray-500 dark:text-gray-400">Last Updated</dt>
-									<dd class="text-gray-900 dark:text-gray-100 mt-0.5">
-										{new Date(selectedTerm.updated_at).toLocaleDateString()}
+									<dt class="text-xs text-gray-500 dark:text-gray-400">Last Updated</dt>
+									<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
+										{new Date(selectedTerm.updated_at).toLocaleDateString('en-US', {
+											year: 'numeric',
+											month: 'short',
+											day: 'numeric'
+										})}
 									</dd>
 								</div>
 							</dl>
 						</div>
 
+						<!-- Actions -->
 						{#if canManageGlossary}
-							<div class="pt-6 border-t border-gray-200/50 dark:border-gray-700/50 flex items-center justify-between">
+							<div class="pt-5 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
 								{#if isEditing}
-									<div class="flex gap-3">
-										<button
-											on:click={saveEdit}
-											class="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 rounded-md transition-colors"
-										>
-											Save Changes
-										</button>
-										<button
-											on:click={cancelEdit}
-											class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-										>
-											Cancel
-										</button>
+									<div class="flex gap-2">
+										<Button
+											click={saveEdit}
+											icon="material-symbols:check"
+											text="Save Changes"
+											variant="filled"
+										/>
+										<Button
+											click={cancelEdit}
+											text="Cancel"
+											variant="clear"
+										/>
 									</div>
 								{:else}
 									<button
 										on:click={startEdit}
-										class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+										class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 									>
+										<Icon icon="material-symbols:edit-outline" class="w-4 h-4" />
 										Edit
 									</button>
 								{/if}
 
 								<button
 									on:click={() => (showDeleteConfirm = true)}
-									class="px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors"
+									class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-white hover:bg-red-600 dark:hover:bg-red-500 border border-red-300 dark:border-red-600 hover:border-transparent rounded-lg transition-colors"
 								>
+									<Icon icon="material-symbols:delete-outline" class="w-4 h-4" />
 									Delete
 								</button>
 							</div>
@@ -480,10 +513,8 @@
 			</div>
 		{:else}
 			<div class="flex items-center justify-center h-full">
-				<div class="text-center max-w-md">
-					<div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-gray-100/50 dark:bg-gray-800/50 mb-4">
-						<Icon icon="material-symbols:book-outline" class="h-8 w-8 text-gray-400 dark:text-gray-500" />
-					</div>
+				<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center max-w-md">
+					<Icon icon="material-symbols:book-outline" class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
 					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Term Selected</h3>
 					<p class="text-sm text-gray-500 dark:text-gray-400">
 						Select a term from the list to view its details
@@ -540,7 +571,7 @@
 							bind:value={newTermName}
 							disabled={isCreating}
 							placeholder="e.g., Customer Lifetime Value"
-							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50"
+							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50"
 							required
 						/>
 					</div>
@@ -558,7 +589,7 @@
 							disabled={isCreating}
 							placeholder="Clear, concise definition of the business term..."
 							rows="3"
-							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-orange-500 focus:border-orange-500 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50"
+							class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50"
 							required
 						></textarea>
 					</div>
@@ -594,26 +625,20 @@
 					</div>
 
 					<div class="flex justify-end gap-3 pt-4">
-						<button
+						<Button
 							type="button"
-							on:click={() => (showCreateModal = false)}
+							click={() => (showCreateModal = false)}
 							disabled={isCreating}
-							class="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-md text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-						>
-							Cancel
-						</button>
-						<button
+							text="Cancel"
+							variant="clear"
+						/>
+						<Button
 							type="submit"
 							disabled={isCreating}
-							class="inline-flex items-center px-4 py-2 rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 dark:bg-orange-500 dark:hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed"
-						>
-							{#if isCreating}
-								<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-								Creating...
-							{:else}
-								Create Term
-							{/if}
-						</button>
+							loading={isCreating}
+							text={isCreating ? 'Creating...' : 'Create Term'}
+							variant="filled"
+						/>
 					</div>
 				</form>
 			</div>

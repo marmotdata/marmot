@@ -30,7 +30,7 @@
 				</p>
 			</div>
 			<svg
-				class="w-3.5 h-3.5 text-gray-400 group-hover:text-orange-600 flex-shrink-0"
+				class="w-3.5 h-3.5 text-gray-400 group-hover:text-earthy-terracotta-700 flex-shrink-0"
 				fill="none"
 				stroke="currentColor"
 				viewBox="0 0 24 24"
@@ -49,7 +49,7 @@
 	<div
 		class="bg-earthy-brown-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
 	>
-		<div class="flex p-4 cursor-pointer hover:bg-orange-50 dark:hover:bg-gray-700" on:click={onClick}>
+		<div class="flex p-4 cursor-pointer hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700" on:click={onClick}>
 			<div class="flex items-start space-x-3 flex-1 min-w-0">
 				<Icon
 					name={node.asset.providers?.length === 1 ? node.asset.providers[0] : node.type}
@@ -68,7 +68,7 @@
 			<div class="flex items-center gap-2 flex-shrink-0 ml-4">
 				<a
 					href={`/assets/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
-					class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-orange-600 whitespace-nowrap"
+					class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-earthy-terracotta-700 whitespace-nowrap"
 					on:click|stopPropagation
 				>
 					<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

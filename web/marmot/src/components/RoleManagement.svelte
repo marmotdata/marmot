@@ -49,7 +49,7 @@
 		<div class="flex justify-between items-center mb-6">
 			<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200">Roles & Permissions</h3>
 			<button
-				class="ml-4 px-4 py-2 bg-amber-700 dark:bg-amber-600 text-white rounded-md hover:bg-amber-800 dark:hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-amber-400"
+				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 				on:click={() => (creatingRole = !creatingRole)}
 			>
 				{creatingRole ? 'Cancel' : 'Add Role'}
@@ -65,19 +65,19 @@
 						<input
 							type="text"
 							bind:value={newRole.name}
-							class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
+							class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
 						/>
 					</div>
 					<div>
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300">Description</label>
 						<textarea
 							bind:value={newRole.description}
-							class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
+							class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
 						/>
 					</div>
 					<div class="flex justify-end">
 						<button
-							class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 dark:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-amber-400"
+							class="px-4 py-2 bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 							on:click={createRole}
 							disabled={loading}
 						>
@@ -90,7 +90,7 @@
 
 		{#if loading && !roles.length}
 			<div class="flex justify-center p-8">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
 			</div>
 		{:else if error}
 			<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
@@ -131,25 +131,25 @@
 													<input
 														type="text"
 														bind:value={role.name}
-														class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
+														class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
 													/>
 												</div>
 												<div>
 													<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300">Description</label>
 													<textarea
 														bind:value={role.description}
-														class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
+														class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
 													/>
 												</div>
 												<div class="flex justify-end space-x-3">
 													<button
-														class="px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:bg-gray-900 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:focus:ring-orange-400"
+														class="px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 dark:border-gray-600 text-gray-700 dark:text-gray-300 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:bg-gray-900 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 														on:click={() => (editingRoleId = null)}
 													>
 														Cancel
 													</button>
 													<button
-														class="px-4 py-2 bg-amber-600 text-white rounded-md hover:bg-amber-700 dark:bg-amber-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 dark:focus:ring-amber-400"
+														class="px-4 py-2 bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 														on:click={() => updateRole(role)}
 													>
 														Save Changes
@@ -168,7 +168,7 @@
 									>
 									<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
 										<button
-											class="text-amber-600 hover:text-amber-900 mr-3"
+											class="text-earthy-terracotta-700 hover:text-earthy-terracotta-700 mr-3"
 											on:click={() => (editingRoleId = role.id)}
 										>
 											Edit

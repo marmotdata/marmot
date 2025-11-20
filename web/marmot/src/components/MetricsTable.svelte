@@ -84,7 +84,7 @@
 <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
 	<div class="px-6 py-3 border-b border-gray-200 dark:border-gray-700">
 		<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-			<IconifyIcon {icon} class="w-5 h-5 text-orange-600 dark:text-orange-400" />
+			<IconifyIcon {icon} class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-700" />
 			{title}
 		</h2>
 		<p class="text-sm text-gray-600 dark:text-gray-400 mt-0.5">
@@ -95,7 +95,7 @@
 	<div class="p-2.5">
 		{#if loading}
 			<div class="flex items-center justify-center h-30">
-				<div class="animate-spin rounded-full h-7 w-7 border-b-2 border-orange-600"></div>
+				<div class="animate-spin rounded-full h-7 w-7 border-b-2 border-earthy-terracotta-700"></div>
 			</div>
 		{:else if error}
 			<div
@@ -145,7 +145,7 @@
 							}}
 						>
 							<div
-								class="flex items-center justify-center w-5 h-5 bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 rounded-full text-xs font-medium flex-shrink-0"
+								class="flex items-center justify-center w-5 h-5 bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 rounded-full text-xs font-medium flex-shrink-0"
 							>
 								{index + 1}
 							</div>

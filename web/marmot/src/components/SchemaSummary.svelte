@@ -139,7 +139,7 @@
 			error: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-100',
 			object: 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-100',
 			array: 'bg-teal-100 dark:bg-teal-900/20 text-teal-800 dark:text-teal-100',
-			string: 'bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-100',
+			string: 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100',
 			number: 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-100',
 			integer: 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-100',
 			boolean: 'bg-pink-100 dark:bg-pink-900/20 text-pink-800 dark:text-pink-100'
@@ -147,7 +147,7 @@
 
 		return (
 			typeMap[fieldType] ||
-			'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-100'
+			'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100'
 		);
 	}
 
@@ -197,7 +197,7 @@
 					<button
 						class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab ===
 						section.name
-							? 'bg-orange-100 dark:bg-orange-900/20 text-orange-800 dark:text-orange-100 border-orange-200 dark:border-orange-800'
+							? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800'
 							: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}"
 						onclick={() => setActiveTab(section.name)}
 					>
@@ -210,7 +210,7 @@
 		<div class="flex gap-3">
 			{#if schemaSections.length > 0}
 				<button
-					class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-orange-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-colors"
+					class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 transition-colors"
 					onclick={() => (showRawSchema = !showRawSchema)}
 				>
 					{showRawSchema ? 'Show Formatted' : 'Show Raw'}
@@ -395,7 +395,7 @@
 														{/if}
 														{#if field.minLength !== undefined || field.maxLength !== undefined}
 															<span
-																class="inline-flex items-center px-2 py-1 rounded bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-300"
+																class="inline-flex items-center px-2 py-1 rounded bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
 															>
 																{field.minLength !== undefined ? `minLen: ${field.minLength}` : ''}
 																{field.minLength !== undefined && field.maxLength !== undefined

@@ -5,10 +5,12 @@
 		type Node,
 		type Edge,
 		type NodeTypes,
+		type EdgeTypes,
 		useSvelteFlow
 	} from '@xyflow/svelte';
 	import CustomNode from './CustomNode.svelte';
 	import CycleReturnNode from './CycleReturnNode.svelte';
+	import CustomEdge from './CustomEdge.svelte';
 
 	let {
 		nodes,
@@ -25,6 +27,10 @@
 	const nodeTypes: NodeTypes = {
 		custom: CustomNode,
 		cycleReturn: CycleReturnNode
+	};
+
+	const edgeTypes: EdgeTypes = {
+		custom: CustomEdge
 	};
 
 	function handleReturnNodeClick(targetId: string) {
@@ -75,6 +81,7 @@
 	nodes={processedNodes}
 	{edges}
 	{nodeTypes}
+	{edgeTypes}
 	onnodeclick={(event) => {
 		if (event.node.type === 'custom') {
 			handleNodeClick(event.node.id);
@@ -85,7 +92,7 @@
 	maxZoom={1}
 	initialZoom={0.7}
 	defaultEdgeOptions={{
-		type: 'bezier',
+		type: 'custom',
 		animated: true,
 		style: 'stroke-width: 2; stroke: #d1d5db;'
 	}}

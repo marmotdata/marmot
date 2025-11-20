@@ -32,6 +32,24 @@ const config: Config = {
     defaultLocale: "en",
     locales: ["en"],
   },
+  headTags: [
+    {
+      tagName: "meta",
+      attributes: {
+        name: "theme-color",
+        content: "#fefcfb",
+        media: "(prefers-color-scheme: light)",
+      },
+    },
+    {
+      tagName: "meta",
+      attributes: {
+        name: "theme-color",
+        content: "#1a1a1a",
+        media: "(prefers-color-scheme: dark)",
+      },
+    },
+  ],
   plugins: [tailwindPlugin, unpluginIconsPlugin],
   presets: [
     [
@@ -67,7 +85,7 @@ const config: Config = {
         // Theme Options for modifying how redoc renders them
         theme: {
           // Change with your site colors
-          primaryColor: "#d97706",
+          primaryColor: "#d25a30",
         },
       },
     ] satisfies Redocusaurus.PresetEntry,

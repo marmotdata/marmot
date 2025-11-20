@@ -38,7 +38,7 @@ export default function DataSources(): JSX.Element {
             <a
               key={source.name}
               href={source.href}
-              className="group p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-amber-400 dark:hover:border-amber-500 hover:shadow-lg transition-all text-center"
+              className="group p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-500 dark:hover:border-earthy-terracotta-600 hover:shadow-lg transition-all text-center"
             >
               <div className="flex justify-center mb-3 transform group-hover:scale-110 transition-transform">
                 <Icon
@@ -56,7 +56,7 @@ export default function DataSources(): JSX.Element {
         <div className="text-center mt-8">
           <a
             href="/docs/Plugins/"
-            className="text-amber-600 dark:text-amber-400 hover:text-amber-700 dark:hover:text-amber-300 font-medium"
+            className="text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
           >
             and more →
           </a>

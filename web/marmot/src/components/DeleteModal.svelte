@@ -67,7 +67,7 @@
 									type="text"
 									id="confirm-text"
 									bind:value={inputText}
-									class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 sm:text-sm"
+									class="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 border border-gray-300 dark:border-gray-600 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm"
 									on:keydown={handleKeydown}
 								/>
 							</div>
@@ -85,7 +85,7 @@
 					</button>
 					<button
 						type="button"
-						class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:bg-gray-900 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 dark:focus:ring-orange-400 sm:mt-0 sm:w-auto sm:text-sm"
+						class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 dark:border-gray-600 dark:border-gray-600 shadow-sm px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 text-base font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 dark:bg-gray-800 dark:bg-gray-900 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 sm:mt-0 sm:w-auto sm:text-sm"
 						on:click={onCancel}
 					>
 						Cancel

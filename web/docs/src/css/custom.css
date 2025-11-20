@@ -21,13 +21,13 @@
 }
 
 :root {
-  --ifm-breadcrumb-color-active: rgb(217 119 6 / var(--tw-bg-opacity, 1));
-  --ifm-color-primary: rgb(217 119 6 / var(--tw-bg-opacity, 1)) !important;
-  --ifm-footer-background-color: #f0ece8;
-  --ifm-navbar-background-color: #fefdf8;
-  --ifm-background-color: #fefdf8;
+  --ifm-breadcrumb-color-active: #d25a30;
+  --ifm-color-primary: #d25a30 !important;
+  --ifm-footer-background-color: #f9f7f5;
+  --ifm-navbar-background-color: #fefcfb;
+  --ifm-background-color: #fefcfb;
   --ifm-navbar-shadow: none;
-  --ifm-link-color: rgb(217 119 6 / var(--tw-bg-opacity, 1));
+  --ifm-link-color: #d25a30;
 }
 
 /* Animation keyframes for seamless infinite scrolling */
@@ -61,8 +61,8 @@ html[data-theme="dark"] {
   --ifm-footer-background-color: #2e2e2e;
   --ifm-navbar-background-color: #1a1a1a;
   --ifm-background-color: #1a1a1a;
-  --ifm-link-color: #ffe082;
-  --ifm-color-primary: #ffe082;
+  --ifm-link-color: #f7885e;
+  --ifm-color-primary: #f7885e;
 
   .menu-content {
     background-color: #1a1a1a !important;
@@ -77,11 +77,11 @@ html[data-theme="dark"] {
 }
 
 .menu-content {
-  background-color: #fefdf8 !important;
+  background-color: #fefcfb !important;
   .scrollbar-container {
     ul {
       li label {
-        background-color: #fefdf8 !important;
+        background-color: #fefcfb !important;
       }
     }
   }
@@ -249,10 +249,10 @@ html[data-theme="dark"] {
   color: #c2810f;
 }
 
-.bg-earthy-brown-50 {
+.bg-earthy-yellow-50 {
   background-color: #fefdf8;
 }
-.bg-earthy-brown-500 {
+.bg-earthy-yellow-100 {
   background-color: #fdf8f2;
 }
 .bg-earthy-yellow-200 {
@@ -264,7 +264,7 @@ html[data-theme="dark"] {
 .bg-earthy-yellow-400 {
   background-color: #ecd292;
 }
-.bg-earthy-brown-500 {
+.bg-earthy-yellow-500 {
   background-color: #e7c776;
 }
 .bg-earthy-yellow-600 {
@@ -278,6 +278,69 @@ html[data-theme="dark"] {
 }
 .bg-earthy-yellow-900 {
   background-color: #c2810f;
+}
+
+/* Earthy Terracotta - 70's Revival */
+.text-earthy-terracotta-50 {
+  color: #fef6f3;
+}
+.text-earthy-terracotta-100 {
+  color: #feeae0;
+}
+.text-earthy-terracotta-200 {
+  color: #fcd4c1;
+}
+.text-earthy-terracotta-300 {
+  color: #fbb89d;
+}
+.text-earthy-terracotta-400 {
+  color: #f99d7a;
+}
+.text-earthy-terracotta-500 {
+  color: #f7885e;
+}
+.text-earthy-terracotta-600 {
+  color: #e86f42;
+}
+.text-earthy-terracotta-700 {
+  color: #d25a30;
+}
+.text-earthy-terracotta-800 {
+  color: #b34822;
+}
+.text-earthy-terracotta-900 {
+  color: #8d3718;
+}
+
+.bg-earthy-terracotta-50 {
+  background-color: #fef6f3;
+}
+.bg-earthy-terracotta-100 {
+  background-color: #feeae0;
+}
+.bg-earthy-terracotta-200 {
+  background-color: #fcd4c1;
+}
+.bg-earthy-terracotta-300 {
+  background-color: #fbb89d;
+}
+.bg-earthy-terracotta-400 {
+  background-color: #f99d7a;
+}
+.bg-earthy-terracotta-500 {
+  background-color: #f7885e;
+}
+.bg-earthy-terracotta-600 {
+  background-color: #e86f42;
+}
+.bg-earthy-terracotta-700 {
+  background-color: #d25a30;
+}
+.bg-earthy-terracotta-800 {
+  background-color: #b34822;
+}
+.bg-earthy-terracotta-900 {
+  background-color: #8d3718;
 }
 
 /* Earthy Blues */
@@ -345,36 +408,36 @@ html[data-theme="dark"] {
 
 /* You can override the default Infima variables here. */
 :root {
-  --ifm-color-primary: #2e8555;
-  --ifm-color-primary-dark: #29784c;
-  --ifm-color-primary-darker: #277148;
-  --ifm-color-primary-darkest: #205d3b;
-  --ifm-color-primary-light: #33925d;
-  --ifm-color-primary-lighter: #359962;
-  --ifm-color-primary-lightest: #3cad6e;
+  --ifm-color-primary: #d25a30;
+  --ifm-color-primary-dark: #b34822;
+  --ifm-color-primary-darker: #a6431f;
+  --ifm-color-primary-darkest: #8d3718;
+  --ifm-color-primary-light: #e86f42;
+  --ifm-color-primary-lighter: #ed7e52;
+  --ifm-color-primary-lightest: #f7885e;
   --ifm-code-font-size: 95%;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
 }
 
 /* For readability concerns, you should choose a lighter palette in dark mode. */
 [data-theme="dark"] {
-  --ifm-color-primary: #25c2a0;
-  --ifm-color-primary-dark: #21af90;
-  --ifm-color-primary-darker: #1fa588;
-  --ifm-color-primary-darkest: #1a8870;
-  --ifm-color-primary-light: #29d5b0;
-  --ifm-color-primary-lighter: #32d8b4;
-  --ifm-color-primary-lightest: #4fddbf;
+  --ifm-color-primary: #f7885e;
+  --ifm-color-primary-dark: #f5793f;
+  --ifm-color-primary-darker: #f46f30;
+  --ifm-color-primary-darkest: #e86f42;
+  --ifm-color-primary-light: #f99d7a;
+  --ifm-color-primary-lighter: #faa789;
+  --ifm-color-primary-lightest: #fbb89d;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
 
 /* Demo Button Styles */
 @keyframes pulse-glow {
   0%, 100% {
-    box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7);
+    box-shadow: 0 0 0 0 rgba(210, 90, 48, 0.7);
   }
   50% {
-    box-shadow: 0 0 0 8px rgba(217, 119, 6, 0);
+    box-shadow: 0 0 0 8px rgba(210, 90, 48, 0);
   }
 }
 
@@ -388,7 +451,7 @@ html[data-theme="dark"] {
 }
 
 .demo-button {
-  background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%) !important;
+  background: linear-gradient(135deg, #d25a30 0%, #e86f42 100%) !important;
   color: white !important;
   padding: 0.5rem 1.25rem !important;
   border-radius: 9999px !important;
@@ -400,18 +463,18 @@ html[data-theme="dark"] {
 }
 
 .demo-button:hover {
-  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+  background: linear-gradient(135deg, #e86f42 0%, #f7885e 100%) !important;
   transform: translateY(-2px) !important;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
   animation: bounce-subtle 0.6s ease-in-out infinite;
 }
 
 html[data-theme="dark"] .demo-button {
-  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%) !important;
+  background: linear-gradient(135deg, #e86f42 0%, #f7885e 100%) !important;
 }
 
 html[data-theme="dark"] .demo-button:hover {
-  background: linear-gradient(135deg, #fbbf24 0%, #fcd34d 100%) !important;
+  background: linear-gradient(135deg, #f7885e 0%, #f99d7a 100%) !important;
 }
 
 /* Keep demo button visible on mobile */

@@ -16,6 +16,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
+	"github.com/marmotdata/marmot/internal/api/v1/ui"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
 	"github.com/marmotdata/marmot/internal/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
@@ -91,6 +92,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
+		ui.NewHandler(config),
 	}
 
 	return server

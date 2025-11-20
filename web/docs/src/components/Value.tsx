@@ -29,7 +29,7 @@ export default function ValueProps(): JSX.Element {
               <div className="flex justify-center mb-4">
                 <Icon
                   icon={prop.icon}
-                  className="w-10 h-10 text-amber-600 dark:text-amber-400"
+                  className="w-10 h-10 text-earthy-terracotta-700 dark:text-earthy-terracotta-500"
                 />
               </div>
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">

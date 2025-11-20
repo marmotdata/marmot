@@ -133,7 +133,7 @@
 							id="key-name"
 							bind:value={newKeyName}
 							on:keydown={handleKeydown}
-							class="block w-full px-4 py-3 bg-white dark:bg-gray-800 rounded-md shadow-sm focus:ring-2 focus:ring-orange-500 dark:focus:ring-orange-400 focus:border-orange-500 dark:focus:border-orange-400 sm:text-sm border-gray-300 dark:border-gray-600"
+							class="block w-full px-4 py-3 bg-white dark:bg-gray-800 rounded-md shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm border-gray-300 dark:border-gray-600"
 							placeholder="Enter a descriptive name for your key"
 						/>
 					</div>

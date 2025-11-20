@@ -202,7 +202,7 @@
 							<button
 								class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between {selectedTimeRange.value ===
 								timeRange.value
-									? 'bg-orange-50 dark:bg-orange-900/20 text-orange-600 dark:text-orange-400'
+									? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 									: 'text-gray-700 dark:text-gray-300'}"
 								on:click={() => handleTimeRangeChange(timeRange)}
 							>

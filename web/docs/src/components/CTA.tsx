@@ -17,7 +17,7 @@ export default function CTA(): JSX.Element {
               href="https://demo.marmotdata.io"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold rounded-lg text-white bg-amber-600 hover:bg-amber-700 shadow-lg hover:shadow-xl transition-all"
+              className="inline-flex items-center justify-center px-8 py-3 text-base font-semibold rounded-lg text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-lg hover:shadow-xl transition-all"
             >
               <svg
                 className="w-5 h-5 mr-2"

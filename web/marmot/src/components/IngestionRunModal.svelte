@@ -206,7 +206,7 @@
 				<div class="flex items-center space-x-3">
 					<IconifyIcon
 						icon="material-symbols:sync"
-						class="h-6 w-6 text-orange-600 dark:text-orange-400"
+						class="h-6 w-6 text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
 					/>
 					<div>
 						<div class="flex items-center space-x-2">
@@ -315,7 +315,7 @@
 										</div>
 										<div class="flex justify-between items-center">
 											<span class="text-sm text-gray-600 dark:text-gray-400">Deleted</span>
-											<span class="text-lg font-semibold text-orange-600 dark:text-orange-400"
+											<span class="text-lg font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
 												>{run.summary.assets_deleted}</span
 											>
 										</div>
@@ -343,7 +343,7 @@
 								<Button
 									variant="clear"
 									text={showRawConfig ? 'Hide Raw' : 'Show Raw'}
-									icon="code"
+									icon={showRawConfig ? 'material-symbols:visibility-off' : 'material-symbols:code'}
 									click={() => (showRawConfig = !showRawConfig)}
 								/>
 							</div>
@@ -358,7 +358,7 @@
 											2
 										)}</pre>
 								{:else}
-									<MetadataView metadata={run.config} maxDepth={3} />
+									<MetadataView metadata={run.config} readOnly={true} maxDepth={3} />
 								{/if}
 							</div>
 						</div>
@@ -392,7 +392,7 @@
 
 						{#if entitiesLoading}
 							<div class="flex items-center justify-center py-8">
-								<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+								<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"></div>
 							</div>
 						{:else if entitiesError}
 							<div

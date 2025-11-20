@@ -5,6 +5,7 @@
 	import OAuthButtons from '../../components/OAuthButtons.svelte';
 	import { onMount } from 'svelte';
 	import { auth } from '$lib/stores/auth';
+	import Icon from '@iconify/svelte';
 
 	let username = $state('');
 	let password = $state('');
@@ -144,7 +145,9 @@
 <div class="min-h-screen flex items-center justify-center bg-earthy-brown-50 dark:bg-gray-900">
 	<div class="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
 		<div>
-			<img src="/images/marmot.svg" alt="Logo" class="mx-auto h-24 w-auto" />
+			<div class="flex justify-center">
+				<img src="/images/marmot.svg" alt="Marmot" class="h-24 w-24" />
+			</div>
 			<h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
 				{showPasswordChangeForm ? 'Change Password' : 'Sign in to Marmot'}
 			</h2>

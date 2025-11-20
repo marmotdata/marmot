@@ -10,15 +10,29 @@
 	import FlowContent from './FlowContent.svelte';
 	import Button from './Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import AddLineageModal from './AddLineageModal.svelte';
+	import { auth } from '$lib/stores/auth';
 
 	let { currentAsset }: { currentAsset: Asset } = $props();
+	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 	let selectedAsset: Asset | null = $state(null);
-	let loading = true;
-	let error: string | null = null;
+	let loading = $state(true);
+	let error = $state<string | null>(null);
 	let mounted = false;
 	let lineageData: LineageResponse | null = $state(null);
 	let depth = $state(10);
 	let initialLoad = true;
+
+	// Add lineage modal state
+	let showAddLineageModal = $state(false);
+	let clickedNodeMrn = $state('');
+	let addLineageDirection = $state<'upstream' | 'downstream'>('upstream');
+	let addLineagePosition = $state({ x: 0, y: 0 });
+
+	// Delete lineage state
+	let selectedEdgeId = $state<string | null>(null);
+	let deletePosition = $state({ x: 0, y: 0 });
+	let showDeleteButton = $state(false);
 
 	let nodes = $state.raw<Node[]>([]);
 	let edges = $state.raw<Edge[]>([]);
@@ -156,6 +170,7 @@
 						type: 'custom',
 						data: {
 							id: currentAsset.id,
+							mrn: currentAsset.mrn || currentAsset.id,
 							name: currentAsset.name || '',
 							type: currentAsset.type,
 							iconType: currentAsset.providers?.[0] || currentAsset.type,
@@ -164,7 +179,11 @@
 							depth: 0,
 							hasUpstream: false,
 							hasDownstream: false,
-							nodeClickHandler: handleNodeClick
+							nodeClickHandler: handleNodeClick,
+							...(canManageAssets && {
+								onAddUpstream: handleAddUpstream,
+								onAddDownstream: handleAddDownstream
+							})
 						},
 						position: { x: 0, y: 0 }
 					}
@@ -209,9 +228,13 @@
 					id: `${edge.source}-${edge.target}`,
 					source: edge.source,
 					target: edge.target,
-					type: 'bezier',
+					type: 'custom',
 					animated: true,
-					style: edge.job_mrn ? 'stroke: #22c55e; stroke-width: 2px;' : 'stroke: #94a3b8;'
+					style: edge.job_mrn ? 'stroke: #22c55e; stroke-width: 2px;' : 'stroke: #94a3b8;',
+					data: {
+						edgeId: edge.id,
+						...(canManageAssets && { onDelete: handleEdgeDelete })
+					}
 				});
 			}
 		});
@@ -237,6 +260,7 @@
 				type: 'custom',
 				data: {
 					id: node.asset.id,
+					mrn: node.id,
 					name: node.asset.name || '',
 					type: node.asset.type,
 					iconType: getNodeIconType(node),
@@ -246,7 +270,11 @@
 					hasUpstream: nodeConnections.hasUpstream,
 					hasDownstream: nodeConnections.hasDownstream,
 					isStub: node.asset.is_stub,
-					nodeClickHandler: handleNodeClick
+					nodeClickHandler: handleNodeClick,
+					...(canManageAssets && {
+						onAddUpstream: handleAddUpstream,
+						onAddDownstream: handleAddDownstream
+					})
 				},
 				position: { x: 0, y: 0 }
 			};
@@ -286,6 +314,115 @@
 		mounted = true;
 	});
 
+	function handleAddUpstream(nodeMrn: string, event: MouseEvent) {
+		// Clicking left button: adding an upstream dependency
+		// The searched asset will be the SOURCE, clicked node is TARGET
+		addLineageDirection = 'upstream';
+		clickedNodeMrn = nodeMrn;
+
+		// Position the search box near the button that was clicked
+		const target = event.currentTarget as HTMLElement;
+		const rect = target.getBoundingClientRect();
+		addLineagePosition = {
+			x: rect.left - 400, // Position to the left of the button
+			y: rect.top + rect.height / 2 - 50
+		};
+
+		showAddLineageModal = true;
+	}
+
+	function handleAddDownstream(nodeMrn: string, event: MouseEvent) {
+		// Clicking right button: adding a downstream dependency
+		// The clicked node will be the SOURCE, searched asset is TARGET
+		addLineageDirection = 'downstream';
+		clickedNodeMrn = nodeMrn;
+
+		// Position the search box near the button that was clicked
+		const target = event.currentTarget as HTMLElement;
+		const rect = target.getBoundingClientRect();
+		addLineagePosition = {
+			x: rect.right + 10, // Position to the right of the button
+			y: rect.top + rect.height / 2 - 50
+		};
+
+		showAddLineageModal = true;
+	}
+
+	async function handleAddLineage(selectedAssetMrn: string) {
+		try {
+			let source: string;
+			let target: string;
+
+			if (addLineageDirection === 'upstream') {
+				// Left button: searched asset flows INTO clicked node
+				// SOURCE = searched asset, TARGET = clicked node
+				source = selectedAssetMrn;
+				target = clickedNodeMrn;
+			} else {
+				// Right button: clicked node flows INTO searched asset
+				// SOURCE = clicked node, TARGET = searched asset
+				source = clickedNodeMrn;
+				target = selectedAssetMrn;
+			}
+
+			const response = await fetchApi('/lineage/direct', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ source, target })
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to create lineage');
+			}
+
+			// Refresh the lineage graph
+			await fetchLineage();
+		} catch (err) {
+			console.error('Error creating lineage:', err);
+			throw err;
+		}
+	}
+
+	async function handleEdgeDelete(edgeId: string, position: { x: number; y: number }) {
+		selectedEdgeId = edgeId;
+
+		// Position delete confirmation near the bin icon
+		deletePosition = {
+			x: position.x - 100, // Center the dialog (width ~200px)
+			y: position.y + 10   // Slightly below the bin icon
+		};
+
+		showDeleteButton = true;
+	}
+
+	async function handleDeleteLineage() {
+		if (!selectedEdgeId) return;
+
+		try {
+			const response = await fetchApi(`/lineage/direct/${selectedEdgeId}`, {
+				method: 'DELETE'
+			});
+
+			if (!response.ok) {
+				throw new Error('Failed to delete lineage');
+			}
+
+			showDeleteButton = false;
+			selectedEdgeId = null;
+
+			// Refresh the lineage graph
+			await fetchLineage();
+		} catch (err) {
+			console.error('Error deleting lineage:', err);
+		}
+	}
+
+	function handleCancelDelete() {
+		showDeleteButton = false;
+		selectedEdgeId = null;
+	}
+
 	$effect(() => {
 		if (mounted && $page.url.searchParams.get('tab') === 'lineage') {
 			fetchLineage();
@@ -299,24 +436,24 @@
 			<span class="text-xs text-gray-600 dark:text-gray-400 px-1 select-none">Depth</span>
 			<div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
 				<div class="flex flex-col items-center p-1">
-					<Button
-						variant="clear"
-						text="+"
-						class="!p-1"
-						click={() => {
+					<button
+						onclick={() => {
 							depth = depth + 1;
 						}}
-					/>
+						class="p-1 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+					>
+						+
+					</button>
 					<div class="py-1 text-sm text-gray-600 dark:text-gray-300 select-none">{depth}</div>
-					<Button
-						variant="clear"
-						text="-"
-						class="!p-1"
-						disabled={depth <= 1}
-						click={() => {
+					<button
+						onclick={() => {
 							depth = depth - 1;
 						}}
-					/>
+						disabled={depth <= 1}
+						class="p-1 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+					>
+						-
+					</button>
 				</div>
 			</div>
 		</div>
@@ -327,22 +464,22 @@
 			<div class="flex items-center gap-2">
 				<IconifyIcon
 					icon="bi:ticket-perforated-fill"
-					class="w-3 h-3 text-orange-600 dark:text-orange-400 rotate-12"
+					class="w-3 h-3 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 rotate-12"
 				/>
 				<span class="text-gray-600 dark:text-gray-300">Stub Asset</span>
 			</div>
 			<div class="flex items-center gap-1">
-				<div class="w-4 h-0.5 bg-amber-500"></div>
+				<div class="w-4 h-0.5 bg-earthy-terracotta-600"></div>
 				<span>Returns to</span>
 			</div>
 		</div>
 
 		<div
-			class="h-full bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 relative"
+			class="h-full bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-earthy-terracotta-100 dark:border-gray-700 relative"
 		>
 			{#if loading && (!nodes || nodes.length === 0)}
 				<div class="absolute inset-0 flex items-center justify-center bg-inherit z-10">
-					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600" />
+					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
 				</div>
 			{/if}
 
@@ -385,9 +522,61 @@
 	</div>
 {/if}
 
+<AddLineageModal
+	bind:show={showAddLineageModal}
+	sourceMrn={clickedNodeMrn}
+	targetMrn=""
+	direction={addLineageDirection}
+	position={addLineagePosition}
+	onAdd={handleAddLineage}
+/>
+
+<!-- Delete Lineage Button -->
+{#if showDeleteButton}
+	<div
+		class="fixed inset-0 z-[100]"
+		onclick={handleCancelDelete}
+		onkeydown={(e) => e.key === 'Escape' && handleCancelDelete()}
+		role="button"
+		tabindex="-1"
+	></div>
+
+	<div
+		class="absolute z-[101] bg-white dark:bg-gray-800 rounded-lg shadow-2xl border border-gray-200 dark:border-gray-700 p-4"
+		style="left: {deletePosition.x}px; top: {deletePosition.y}px;"
+		onclick={(e) => e.stopPropagation()}
+		onkeydown={(e) => e.stopPropagation()}
+		role="dialog"
+		tabindex="-1"
+	>
+		<div class="flex items-center gap-3">
+			<IconifyIcon icon="material-symbols:warning-rounded" class="w-6 h-6 text-red-600 dark:text-red-400" />
+			<div>
+				<p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
+					Delete this lineage connection?
+				</p>
+				<div class="flex gap-2">
+					<button
+						onclick={handleCancelDelete}
+						class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+					>
+						Cancel
+					</button>
+					<button
+						onclick={handleDeleteLineage}
+						class="px-3 py-1.5 text-sm text-white bg-red-600 hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600 rounded-lg transition-colors"
+					>
+						Delete
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+{/if}
+
 <style>
 	:global(.svelte-flow) {
-		background-color: #fefdf8 !important;
+		background-color: #fefcfb !important;
 	}
 	:global(.dark .svelte-flow) {
 		background-color: #1a1a1a !important;

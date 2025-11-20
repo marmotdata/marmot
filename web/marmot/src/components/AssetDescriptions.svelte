@@ -17,8 +17,10 @@
 		}
 	});
 
-	async function saveUserDescription() {
+	async function saveUserDescription(valueToSave?: string) {
 		if (!asset?.id) return;
+
+		const finalValue = valueToSave !== undefined ? valueToSave : userDescription;
 
 		savingUserDesc = true;
 		try {
@@ -26,12 +28,18 @@
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
-					user_description: userDescription.trim() || null
+					user_description: finalValue.trim()
 				})
 			});
 
 			if (response.ok) {
-				asset.user_description = userDescription.trim() || undefined;
+				const trimmedValue = finalValue.trim();
+				if (trimmedValue) {
+					asset.user_description = trimmedValue;
+				} else {
+					delete asset.user_description;
+				}
+				userDescription = trimmedValue;
 				isEditingUserDesc = false;
 			} else {
 				console.error('Failed to save user description');
@@ -106,7 +114,7 @@
 				{#if canManageAssets && !isEditingUserDesc}
 					<button
 						onclick={() => (isEditingUserDesc = true)}
-						class="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 font-medium"
+						class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 font-medium"
 					>
 						{asset.user_description ? 'Edit' : '+ Add'}
 					</button>
@@ -119,26 +127,39 @@
 						bind:value={userDescription}
 						placeholder="Add your notes..."
 						rows="4"
-						class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-y"
+						class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent resize-y"
 					></textarea>
-					<div class="flex justify-end gap-2">
-						<button
-							onclick={cancelEdit}
-							disabled={savingUserDesc}
-							class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded disabled:opacity-50"
-						>
-							Cancel
-						</button>
-						<button
-							onclick={saveUserDescription}
-							disabled={savingUserDesc}
-							class="px-3 py-1.5 text-sm bg-orange-600 text-white rounded hover:bg-orange-700 disabled:opacity-50 flex items-center gap-1.5"
-						>
-							{#if savingUserDesc}
-								<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+					<div class="flex justify-between gap-2">
+						<div>
+							{#if asset.user_description}
+								<button
+									onclick={() => saveUserDescription('')}
+									disabled={savingUserDesc}
+									class="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
+								>
+									Delete
+								</button>
 							{/if}
-							Save
-						</button>
+						</div>
+						<div class="flex gap-2">
+							<button
+								onclick={cancelEdit}
+								disabled={savingUserDesc}
+								class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded disabled:opacity-50"
+							>
+								Cancel
+							</button>
+							<button
+								onclick={() => saveUserDescription()}
+								disabled={savingUserDesc}
+								class="px-3 py-1.5 text-sm bg-earthy-terracotta-700 text-white rounded hover:bg-earthy-terracotta-800 disabled:opacity-50 flex items-center gap-1.5"
+							>
+								{#if savingUserDesc}
+									<div class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+								{/if}
+								Save
+							</button>
+						</div>
 					</div>
 				</div>
 			{:else if asset.user_description}

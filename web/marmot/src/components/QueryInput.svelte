@@ -21,8 +21,11 @@
 	export let onQueryChange: (query: string) => void = () => {};
 	export let onSubmit: () => void = () => {};
 	export let showDropdown = false;
+	export let autofocus = false;
+	export let plain = false;
 
 	let input: HTMLTextAreaElement;
+	let overlayDiv: HTMLDivElement;
 	let debounceTimer: NodeJS.Timeout;
 	let dropdownContainer: HTMLDivElement;
 	let suggestions: { type: string; value: string; display: string; count?: number }[] = [];
@@ -34,7 +37,7 @@
 		field: 'text-blue-500',
 		value: 'text-green-600',
 		operator: 'text-purple-500',
-		boolean: 'text-orange-500'
+		boolean: 'text-earthy-terracotta-700'
 	};
 
 	let clickOutsideHandler: (event: MouseEvent) => void;
@@ -417,9 +420,19 @@
 		input.style.height = `${input.scrollHeight}px`;
 	}
 
+	function syncScroll() {
+		if (overlayDiv && input) {
+			overlayDiv.scrollTop = input.scrollTop;
+			overlayDiv.scrollLeft = input.scrollLeft;
+		}
+	}
+
 	function handleInput() {
 		adjustTextareaHeight();
-		updateSuggestions();
+
+		if (!plain) {
+			updateSuggestions();
+		}
 
 		if (!isIncompleteMetadataQuery(value)) {
 			onQueryChange(value);
@@ -450,17 +463,25 @@
 
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter') {
-			event.preventDefault();
-
+			// If we have our own dropdown showing, handle it here
 			if (showDropdown && selectedIndex >= 0 && suggestions[selectedIndex]) {
+				event.preventDefault();
 				applySuggestion(suggestions[selectedIndex]);
 				return;
 			}
 
-			if (value.trim()) {
-				onSubmit();
-				showDropdown = false;
+			// If we have a dropdown (even with no selection), handle Enter
+			if (showDropdown) {
+				event.preventDefault();
+				if (value.trim()) {
+					onSubmit();
+					showDropdown = false;
+				}
+				return;
 			}
+
+			// No dropdown - don't preventDefault, let it bubble to Search.svelte
+			// Search.svelte will handle it if there are asset suggestions selected
 			return;
 		}
 
@@ -569,6 +590,19 @@
 	onMount(() => {
 		fetchMetadataFields();
 
+		// Adjust initial height if there's content
+		if (input && value) {
+			setTimeout(() => {
+				adjustTextareaHeight();
+			}, 0);
+		}
+
+		if (autofocus && input) {
+			setTimeout(() => {
+				input.focus();
+			}, 100);
+		}
+
 		clickOutsideHandler = (event: MouseEvent) => {
 			if (
 				dropdownContainer &&
@@ -590,15 +624,7 @@
 </script>
 
 <div class="relative w-full">
-	<div class="relative">
-		<div
-			class="absolute inset-0 pointer-events-none px-3 py-2 font-mono break-words whitespace-pre-wrap"
-			aria-hidden="true"
-		>
-			{#each getHighlightedText(value) as part}
-				<span class={part.class}>{part.text}</span>
-			{/each}
-		</div>
+	{#if plain}
 		<textarea
 			bind:this={input}
 			bind:value
@@ -606,11 +632,35 @@
 			on:keydown={handleKeydown}
 			{placeholder}
 			rows="1"
-			class="w-full px-3 py-2 bg-transparent border border-gray-200 dark:border-gray-700 dark:border-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-transparent caret-gray-900 break-words whitespace-pre-wrap resize-none overflow-hidden"
+			class="plain-input"
 			autocomplete="off"
 			spellcheck="false"
 		/>
-	</div>
+	{:else}
+		<div class="relative">
+			<div
+				bind:this={overlayDiv}
+				class="syntax-highlight-overlay"
+				aria-hidden="true"
+			>
+				{#each getHighlightedText(value) as part}
+					<span class={part.class}>{part.text}</span>
+				{/each}
+			</div>
+			<textarea
+				bind:this={input}
+				bind:value
+				on:input={handleInput}
+				on:keydown={handleKeydown}
+				on:scroll={syncScroll}
+				{placeholder}
+				rows="1"
+				class="fancy-input"
+				autocomplete="off"
+				spellcheck="false"
+			/>
+		</div>
+	{/if}
 
 	{#if showDropdown && suggestions.length > 0}
 		<div
@@ -643,3 +693,78 @@
 		</div>
 	{/if}
 </div>
+
+<style>
+	.plain-input {
+		width: 100%;
+		padding: 0;
+		border: none;
+		background: transparent;
+		color: #4b5563;
+		caret-color: #4b5563;
+		font-size: 0.875rem;
+		line-height: 1.25rem;
+		font-family: ui-monospace, monospace;
+		word-wrap: break-word;
+		white-space: pre-wrap;
+		resize: none;
+		overflow: hidden;
+		outline: none;
+	}
+
+	:global(.dark) .plain-input {
+		color: #9ca3af;
+		caret-color: #9ca3af;
+	}
+
+	.syntax-highlight-overlay {
+		position: absolute;
+		top: 0;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		padding: 0.5rem 0.75rem;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+		font-size: 0.875rem;
+		line-height: 1.5;
+		word-wrap: break-word;
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+		overflow-y: auto;
+		max-height: 300px;
+		pointer-events: none;
+	}
+
+	.fancy-input {
+		width: 100%;
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.375rem;
+		background: transparent;
+		color: transparent;
+		caret-color: #111827;
+		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+		font-size: 0.875rem;
+		line-height: 1.5;
+		word-wrap: break-word;
+		white-space: pre-wrap;
+		overflow-wrap: break-word;
+		resize: none;
+		overflow-y: auto;
+		max-height: 300px;
+	}
+
+	:global(.dark) .fancy-input {
+		border-color: #374151;
+	}
+
+	:global(.dark) .fancy-input {
+		caret-color: #f9fafb;
+	}
+
+	.fancy-input:focus {
+		outline: 2px solid #3b82f6;
+		outline-offset: 2px;
+		border-color: transparent;
+	}
+</style>

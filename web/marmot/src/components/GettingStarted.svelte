@@ -30,7 +30,7 @@
 </script>
 
 <div
-	class="bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-900/20 dark:to-amber-900/20 border border-orange-200 dark:border-orange-800/50 rounded-lg {condensed
+	class="bg-gradient-to-br from-earthy-terracotta-50 to-earthy-yellow-50 dark:from-earthy-terracotta-900/20 dark:to-earthy-yellow-900/20 border border-earthy-terracotta-200 dark:border-earthy-terracotta-800/50 rounded-lg {condensed
 		? 'p-6'
 		: 'p-8'}"
 >
@@ -38,11 +38,11 @@
 		<div
 			class="mx-auto {condensed
 				? 'w-12 h-12 mb-4'
-				: 'w-16 h-16 mb-6'} bg-orange-100 dark:bg-orange-900/30 rounded-full flex items-center justify-center"
+				: 'w-16 h-16 mb-6'} bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 rounded-full flex items-center justify-center"
 		>
 			<IconifyIcon
 				icon="material-symbols:rocket-launch"
-				class="{condensed ? 'h-6 w-6' : 'h-8 w-8'} text-orange-600 dark:text-orange-400"
+				class="{condensed ? 'h-6 w-6' : 'h-8 w-8'} text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
 			/>
 		</div>
 

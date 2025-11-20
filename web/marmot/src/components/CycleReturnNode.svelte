@@ -22,7 +22,7 @@
 
 <div class="cycle-return-node" onclick={handleClick}>
 	<div
-		class="text-xs text-gray-500 dark:text-gray-400 font-bold text-center pb-2 border-b border-amber-300 dark:border-amber-600 flex items-center justify-center gap-1"
+		class="text-xs text-gray-500 dark:text-gray-400 font-bold text-center pb-2 border-b border-earthy-terracotta-300 dark:border-earthy-terracotta-700 flex items-center justify-center gap-1"
 	>
 		<div class="flex items-center justify-center">
 			<div class="text-gray-500 dark:text-gray-400" style="filter: grayscale(1) opacity(0.6);">
@@ -32,7 +32,7 @@
 		<span class="uppercase">{data.targetType}</span>
 	</div>
 	<div class="flex items-center justify-center mt-2 mb-1">
-		<div class="text-amber-600 dark:text-amber-400 text-lg">↻</div>
+		<div class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700 text-lg">↻</div>
 	</div>
 	<div class="text-xs text-gray-600 dark:text-gray-400 text-center leading-tight">
 		Returns to<br />

@@ -84,7 +84,7 @@
 <div class="h-full flex">
 	{#if loading}
 		<div class="flex items-center justify-center w-full">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
 		</div>
 	{:else if error}
 		<div class="flex items-center justify-center w-full">
@@ -145,7 +145,7 @@
 						{#each visibleTabs as tab}
 							<button
 								class="py-3 px-2 border-b-2 font-medium text-sm {activeTab === tab
-									? 'border-orange-600 text-orange-600'
+									? 'border-earthy-terracotta-700 text-earthy-terracotta-700'
 									: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
 								aria-selected={activeTab === tab}
 								on:click={() => setActiveTab(tab)}
@@ -166,13 +166,7 @@
 							</div>
 						{:else if activeTab === 'metadata'}
 							<div class="mt-6">
-								{#if Object.keys(asset.metadata || {}).length > 0}
-									<MetadataView metadata={asset.metadata} />
-								{:else}
-									<div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-										<p class="text-gray-500 dark:text-gray-400 italic">No metadata available</p>
-									</div>
-								{/if}
+								<MetadataView {asset} />
 								<h3 class="pt-4 text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
 									Asset Sources
 								</h3>
@@ -226,7 +220,7 @@
 		<div
 			class="border-l border-gray-200 dark:border-gray-700 overflow-hidden transition-all duration-300 {bladeCollapsed
 				? 'w-12'
-				: 'w-[32rem]'}"
+				: 'w-[36rem]'}"
 		>
 			<AssetBlade
 				{asset}

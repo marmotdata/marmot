@@ -27,7 +27,7 @@
 	class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 h-full"
 >
 	<div class="flex items-center gap-2 mb-4">
-		<IconifyIcon {icon} class="w-5 h-5 text-orange-600 dark:text-orange-400" />
+		<IconifyIcon {icon} class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-700" />
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
 		{#if data.length > limit}
 			<span class="text-xs text-gray-500 dark:text-gray-400">Top {limit}</span>
@@ -36,7 +36,7 @@
 
 	{#if loading}
 		<div class="flex items-center justify-center h-32">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
 		</div>
 	{:else if error}
 		<div class="flex items-center justify-center h-32">

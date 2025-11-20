@@ -22,8 +22,8 @@
 				<button
 					class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {activeTab ===
 					tab.id
-						? 'bg-orange-100 dark:bg-orange-900/20 text-orange-900 dark:text-orange-100'
-						: 'text-gray-600 dark:text-gray-400 hover:bg-orange-50 dark:hover:bg-orange-900/10 hover:text-orange-900 dark:hover:text-orange-100'}"
+						? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100'
+						: 'text-gray-600 dark:text-gray-400 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/10 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-100'}"
 					on:click={() => handleTabChange(tab.id)}
 				>
 					{tab.label}

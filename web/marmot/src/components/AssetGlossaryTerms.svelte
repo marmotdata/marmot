@@ -7,20 +7,15 @@
 
 	let canManageAssets = $derived(editable && auth.hasPermission('assets', 'manage'));
 
-	let tags: string[] = $state(asset?.tags || []);
 	let terms: AssetTerm[] = $state([]);
-	let newTag = $state('');
-	let showTagInput = $state(false);
 	let showTermPicker = $state(false);
 	let availableTerms: GlossaryTerm[] = $state([]);
 	let termSearchQuery = $state('');
 	let loadingTerms = $state(false);
-	let savingTag = $state(false);
 	let savingTerm = $state(false);
 
 	$effect(() => {
 		if (asset?.id) {
-			tags = asset.tags || [];
 			fetchAssetTerms();
 		}
 	});
@@ -54,62 +49,6 @@
 			console.error('Failed to fetch glossary terms:', error);
 		} finally {
 			loadingTerms = false;
-		}
-	}
-
-	async function addTag() {
-		if (!newTag.trim() || !asset?.id) return;
-
-		savingTag = true;
-		try {
-			// Update local state immediately
-			const updatedTags = [...tags, newTag.trim()];
-
-			const response = await fetchApi(`/assets/${asset.id}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					tags: updatedTags
-				})
-			});
-
-			if (response.ok) {
-				tags = updatedTags;
-				asset.tags = updatedTags;
-				newTag = '';
-				showTagInput = false;
-			} else {
-				console.error('Failed to add tag');
-			}
-		} catch (error) {
-			console.error('Error adding tag:', error);
-		} finally {
-			savingTag = false;
-		}
-	}
-
-	async function removeTag(tag: string) {
-		if (!asset?.id) return;
-
-		try {
-			const updatedTags = tags.filter((t) => t !== tag);
-
-			const response = await fetchApi(`/assets/${asset.id}`, {
-				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					tags: updatedTags
-				})
-			});
-
-			if (response.ok) {
-				tags = updatedTags;
-				asset.tags = updatedTags;
-			} else {
-				console.error('Failed to remove tag');
-			}
-		} catch (error) {
-			console.error('Error removing tag:', error);
 		}
 	}
 
@@ -171,98 +110,21 @@
 	}
 </script>
 
-<div class="space-y-5">
-	<!-- Tags Section -->
-	{#if tags.length > 0 || canManageAssets}
-		<div>
-			<div class="flex items-center justify-between mb-2">
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Tags</h3>
-				{#if canManageAssets && !showTagInput}
-					<button
-						onclick={() => (showTagInput = true)}
-						class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 font-medium"
-					>
-						+ Add
-					</button>
-				{/if}
-			</div>
-
-			{#if tags.length > 0 || showTagInput}
-			<div class="flex flex-wrap gap-2">
-				{#each tags as tag}
-					<span
-						class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-sm font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
-					>
-						{tag}
-						{#if canManageAssets}
-							<button
-								onclick={() => removeTag(tag)}
-								class="hover:text-red-600 dark:hover:text-red-400"
-								aria-label="Remove tag"
-							>
-								<svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-									<path
-										fill-rule="evenodd"
-										d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-										clip-rule="evenodd"
-									/>
-								</svg>
-							</button>
-						{/if}
-					</span>
-				{/each}
-
-				{#if showTagInput}
-					<div class="inline-flex items-center gap-2">
-						<input
-							type="text"
-							bind:value={newTag}
-							onkeydown={(e) => e.key === 'Enter' && addTag()}
-							placeholder="tag name"
-							class="px-2.5 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-transparent w-28"
-							autofocus
-						/>
-						<button
-							onclick={addTag}
-							disabled={savingTag || !newTag.trim()}
-							class="text-sm text-green-600 dark:text-green-400 hover:text-green-700 dark:hover:text-green-300 disabled:opacity-50"
-						>
-							Add
-						</button>
-						<button
-							onclick={() => {
-								showTagInput = false;
-								newTag = '';
-							}}
-							class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
-						>
-							✕
-						</button>
-					</div>
-				{/if}
-			</div>
-		{:else}
-			<p class="text-sm text-gray-500 dark:text-gray-400 italic">No tags yet</p>
-		{/if}
+{#if terms.length > 0 || canManageAssets}
+	<div>
+		<div class="flex items-center justify-between mb-2">
+			<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Glossary Terms</h3>
+			{#if canManageAssets && !showTermPicker}
+				<button
+					onclick={() => (showTermPicker = true)}
+					class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 font-medium"
+				>
+					+ Add
+				</button>
+			{/if}
 		</div>
-	{/if}
 
-	<!-- Glossary Terms Section -->
-	{#if terms.length > 0 || canManageAssets}
-		<div>
-			<div class="flex items-center justify-between mb-2">
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">Glossary Terms</h3>
-				{#if canManageAssets && !showTermPicker}
-					<button
-						onclick={() => (showTermPicker = true)}
-						class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 font-medium"
-					>
-						+ Add
-					</button>
-				{/if}
-			</div>
-
-			{#if terms.length > 0 || showTermPicker}
+		{#if terms.length > 0 || showTermPicker}
 			<div class="space-y-2.5">
 				{#each terms as term}
 					<div class="rounded border border-gray-200 dark:border-gray-700">
@@ -309,7 +171,9 @@
 										{/if}
 									</div>
 								</div>
-								<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">{term.definition}</p>
+								<p class="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+									{term.definition}
+								</p>
 							</div>
 							<div class="flex items-center gap-1.5 flex-shrink-0">
 								<svg
@@ -350,7 +214,9 @@
 				{/each}
 
 				{#if showTermPicker}
-					<div class="p-3 rounded bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600">
+					<div
+						class="p-3 rounded bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600"
+					>
 						<input
 							type="text"
 							bind:value={termSearchQuery}
@@ -362,9 +228,7 @@
 
 						{#if loadingTerms}
 							<div class="flex items-center justify-center py-4">
-								<div
-									class="animate-spin rounded-full h-4 w-4 border-b-2 border-earthy-terracotta-700"
-								></div>
+								<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-earthy-terracotta-700"></div>
 							</div>
 						{:else if availableTerms.length > 0}
 							<div class="space-y-1.5 max-h-48 overflow-y-auto">
@@ -408,9 +272,8 @@
 					</div>
 				{/if}
 			</div>
-			{:else}
-				<p class="text-sm text-gray-500 dark:text-gray-400 italic">No glossary terms yet</p>
-			{/if}
-		</div>
-	{/if}
-</div>
+		{:else}
+			<p class="text-sm text-gray-500 dark:text-gray-400 italic">No glossary terms yet</p>
+		{/if}
+	</div>
+{/if}

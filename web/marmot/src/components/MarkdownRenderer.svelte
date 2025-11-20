@@ -79,6 +79,6 @@
 		min-width: 100%;
 	}
 	:global(.prose a) {
-		@apply text-orange-600 dark:text-orange-400 no-underline hover:underline;
+		@apply text-earthy-terracotta-700 dark:text-earthy-terracotta-700 no-underline hover:underline;
 	}
 </style>

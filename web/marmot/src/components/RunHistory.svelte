@@ -141,7 +141,7 @@
 			<div
 				class="animate-spin rounded-full {minimal
 					? 'h-6 w-6'
-					: 'h-8 w-8'} border-b-2 border-orange-600"
+					: 'h-8 w-8'} border-b-2 border-earthy-terracotta-700"
 			></div>
 		</div>
 	{:else if error}
@@ -184,7 +184,7 @@
 						href="/assets/{asset?.type?.toLowerCase()}/{encodeURIComponent(
 							asset?.name || ''
 						)}?tab=run-history"
-						class="text-sm text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300"
+						class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400"
 					>
 						View all runs →
 					</a>

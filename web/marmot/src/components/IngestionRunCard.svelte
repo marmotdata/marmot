@@ -112,7 +112,7 @@
 						: 'material-symbols:sync'}
 					class="h-6 w-6 {run.source_name === 'destroy'
 						? 'text-red-600 dark:text-red-400'
-						: 'text-orange-600 dark:text-orange-400'}"
+						: 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'}"
 				/>
 			</div>
 			<div class="min-w-0 flex-1">
@@ -212,7 +212,7 @@
 					<div class="text-xs text-gray-500 dark:text-gray-400">Updated</div>
 				</div>
 				<div class="text-center">
-					<div class="text-lg font-semibold text-orange-600 dark:text-orange-400">
+					<div class="text-lg font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-700">
 						{run.summary.assets_deleted}
 					</div>
 					<div class="text-xs text-gray-500 dark:text-gray-400">Deleted</div>

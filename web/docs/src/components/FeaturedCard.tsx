@@ -20,7 +20,7 @@ export default function FeaturedCard({
   href,
   color = "bg-white dark:bg-gray-800",
   useThemeColor = false,
-  themeColor = "bg-amber-50 dark:bg-amber-900/20",
+  themeColor = "bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20",
   large = false,
   className = "",
 }: FeaturedCardProps): JSX.Element {
@@ -61,7 +61,7 @@ export default function FeaturedCard({
     border border-gray-200 dark:border-gray-700
     shadow-sm 
     hover:shadow-md 
-    hover:border-amber-500 dark:hover:border-amber-400
+    hover:border-earthy-terracotta-600 dark:hover:border-earthy-terracotta-500
     transition-all 
     duration-200 
     hover:translate-y-[-2px]

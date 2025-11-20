@@ -250,7 +250,7 @@
 
 	{#if loading}
 		<div class="flex items-center justify-center py-12">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
 		</div>
 	{:else if error}
 		<div
@@ -275,7 +275,7 @@
 				<!-- Pipeline Filter -->
 				<div class="relative">
 					<button
-						class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
+						class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700"
 						onclick={() => (showPipelineDropdown = !showPipelineDropdown)}
 					>
 						<span class="flex items-center">
@@ -310,7 +310,7 @@
 										<input
 											type="checkbox"
 											checked={selectedPipelines.includes(pipeline)}
-											class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+											class="h-4 w-4 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
 											readonly
 										/>
 										<span class="ml-3 text-gray-900 dark:text-gray-100">{pipeline}</span>
@@ -324,7 +324,7 @@
 				<!-- Status Filter -->
 				<div class="relative">
 					<button
-						class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-orange-500 focus:border-orange-500"
+						class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700"
 						onclick={() => (showStatusDropdown = !showStatusDropdown)}
 					>
 						<span class="flex items-center">
@@ -351,7 +351,7 @@
 										<input
 											type="checkbox"
 											checked={selectedStatuses.includes(status)}
-											class="h-4 w-4 text-orange-600 focus:ring-orange-500 border-gray-300 rounded"
+											class="h-4 w-4 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
 											readonly
 										/>
 										<span class="ml-3 text-gray-900 dark:text-gray-100 capitalize">{status}</span>
@@ -417,7 +417,7 @@
 						variant="clear"
 						click={() => goToPage(currentPage - 1)}
 						disabled={currentPage === 1}
-						icon="chevron-left"
+						icon="material-symbols:chevron-left"
 						text="Previous"
 					/>
 					<Button
@@ -425,7 +425,7 @@
 						click={() => goToPage(currentPage + 1)}
 						disabled={currentPage === totalPages}
 						text="Next"
-						icon="chevron-right"
+						icon="material-symbols:chevron-right"
 					/>
 				</div>
 			</div>
@@ -506,7 +506,7 @@
 							variant="clear"
 							click={() => goToPage(currentPage - 1)}
 							disabled={currentPage === 1}
-							icon="chevron-left"
+							icon="material-symbols:chevron-left"
 							text="Previous"
 						/>
 						<Button
@@ -514,7 +514,7 @@
 							click={() => goToPage(currentPage + 1)}
 							disabled={currentPage === totalPages}
 							text="Next"
-							icon="chevron-right"
+							icon="material-symbols:chevron-right"
 						/>
 					</div>
 				</div>

@@ -42,7 +42,7 @@
 				Link.configure({
 					openOnClick: false,
 					HTMLAttributes: {
-						class: 'text-orange-600 dark:text-orange-400 underline'
+						class: 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700 underline'
 					}
 				}),
 				Typography
@@ -142,7 +142,7 @@
 			on:click={toggleBold}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('bold')
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
 			title="Bold (Ctrl+B)"
 		>
@@ -154,7 +154,7 @@
 			on:click={toggleItalic}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('italic')
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
 			title="Italic (Ctrl+I)"
 		>
@@ -166,7 +166,7 @@
 			on:click={toggleCode}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('code')
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
 			title="Inline Code"
 		>
@@ -180,7 +180,7 @@
 			on:click={() => toggleHeading(1)}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('heading', { level: 1 })
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
 			title="Heading 1"
 		>
@@ -192,7 +192,7 @@
 			on:click={() => toggleHeading(2)}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('heading', { level: 2 })
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
 			title="Heading 2"
 		>
@@ -204,7 +204,7 @@
 			on:click={() => toggleHeading(3)}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('heading', { level: 3 })
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
 			title="Heading 3"
 		>
@@ -218,7 +218,7 @@
 			on:click={toggleBulletList}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('bulletList')
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
 			title="Bullet List"
 		>
@@ -230,7 +230,7 @@
 			on:click={toggleOrderedList}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('orderedList')
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
 			title="Numbered List"
 		>
@@ -244,7 +244,7 @@
 			on:click={toggleBlockquote}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('blockquote')
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
 			title="Quote"
 		>
@@ -256,7 +256,7 @@
 			on:click={toggleCodeBlock}
 			disabled={disabled}
 			class="p-1.5 rounded {isActive('codeBlock')
-				? 'bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400'
+				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
 			title="Code Block"
 		>
@@ -270,7 +270,7 @@
 				type="button"
 				on:click={unsetLink}
 				disabled={disabled}
-				class="p-1.5 rounded bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-400 disabled:opacity-50 disabled:cursor-not-allowed"
+				class="p-1.5 rounded bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed"
 				title="Remove Link"
 			>
 				<Icon icon="material-symbols:link-off" class="h-4 w-4" />

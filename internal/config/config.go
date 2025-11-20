@@ -81,6 +81,18 @@ type Config struct {
 	} `mapstructure:"auth"`
 
 	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
+
+	UI struct {
+		Banner BannerConfig `mapstructure:"banner"`
+	} `mapstructure:"ui"`
+}
+
+type BannerConfig struct {
+	Enabled     bool   `mapstructure:"enabled"`
+	Dismissible bool   `mapstructure:"dismissible"`
+	Variant     string `mapstructure:"variant"`
+	Message     string `mapstructure:"message"`
+	ID          string `mapstructure:"id"`
 }
 
 var (
@@ -147,6 +159,13 @@ func loadConfig(configPath string) error {
 	// Rate limit env vars
 	v.BindEnv("rate_limit.enabled")
 
+	// UI banner env vars
+	v.BindEnv("ui.banner.enabled")
+	v.BindEnv("ui.banner.dismissible")
+	v.BindEnv("ui.banner.variant")
+	v.BindEnv("ui.banner.message")
+	v.BindEnv("ui.banner.id")
+
 	// Set defaults
 	setDefaults(v)
 
@@ -196,6 +215,13 @@ func setDefaults(v *viper.Viper) {
 
 	// Rate limit defaults
 	v.SetDefault("rate_limit.enabled", false)
+
+	// UI defaults
+	v.SetDefault("ui.banner.enabled", false)
+	v.SetDefault("ui.banner.dismissible", true)
+	v.SetDefault("ui.banner.variant", "info")
+	v.SetDefault("ui.banner.message", "")
+	v.SetDefault("ui.banner.id", "banner-1")
 }
 
 // BuildDSN builds a PostgreSQL connection string from config
@@ -239,6 +265,16 @@ func validate(cfg *Config) error {
 	}
 	if !validFormats[strings.ToLower(cfg.Logging.Format)] {
 		return fmt.Errorf("invalid logging format: %s", cfg.Logging.Format)
+	}
+
+	validVariants := map[string]bool{
+		"info":    true,
+		"warning": true,
+		"error":   true,
+		"success": true,
+	}
+	if cfg.UI.Banner.Enabled && !validVariants[strings.ToLower(cfg.UI.Banner.Variant)] {
+		return fmt.Errorf("invalid banner variant: %s", cfg.UI.Banner.Variant)
 	}
 
 	return nil

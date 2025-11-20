@@ -173,7 +173,7 @@
 			<button
 				onclick={() => (period = '7d')}
 				class="px-2 py-1 text-xs rounded {period === '7d'
-					? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+					? 'bg-earthy-terracotta-100 text-earthy-terracotta-700 dark:bg-earthy-terracotta-900/30 dark:text-earthy-terracotta-400'
 					: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}"
 			>
 				7d
@@ -181,7 +181,7 @@
 			<button
 				onclick={() => (period = '30d')}
 				class="px-2 py-1 text-xs rounded {period === '30d'
-					? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+					? 'bg-earthy-terracotta-100 text-earthy-terracotta-700 dark:bg-earthy-terracotta-900/30 dark:text-earthy-terracotta-400'
 					: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}"
 			>
 				30d
@@ -189,7 +189,7 @@
 			<button
 				onclick={() => (period = '90d')}
 				class="px-2 py-1 text-xs rounded {period === '90d'
-					? 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-300'
+					? 'bg-earthy-terracotta-100 text-earthy-terracotta-700 dark:bg-earthy-terracotta-900/30 dark:text-earthy-terracotta-400'
 					: 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}"
 			>
 				90d
@@ -199,7 +199,7 @@
 
 	{#if loading}
 		<div class="flex items-center justify-center h-24">
-			<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-600"></div>
+			<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"></div>
 		</div>
 	{:else if error}
 		<div

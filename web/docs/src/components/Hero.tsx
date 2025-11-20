@@ -14,7 +14,7 @@ export default function Hero(): JSX.Element {
           Discover any data asset
           <br />
           across your entire org in{" "}
-          <span className="text-amber-600 dark:text-amber-500">seconds</span>
+          <span className="text-earthy-terracotta-700 dark:text-earthy-terracotta-600">seconds</span>
         </h1>
 
         <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
@@ -26,7 +26,7 @@ export default function Hero(): JSX.Element {
           <span className="sparkle-container">
             <a
               href="/docs/introduction"
-              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-amber-600 hover:bg-amber-700"
+              className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800"
             >
               Get Started
             </a>

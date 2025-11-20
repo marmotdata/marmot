@@ -80,7 +80,7 @@
 							<div class="flex flex-wrap gap-1">
 								{#each user.roles as role}
 									<span
-										class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-100"
+										class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
 										>{role.name}</span
 									>
 								{/each}
@@ -97,7 +97,7 @@
 							{#if currentUserId !== user.id}
 								<button
 									type="button"
-									class="text-amber-600 hover:text-amber-900 mr-3"
+									class="text-earthy-terracotta-700 hover:text-earthy-terracotta-700 mr-3"
 									on:click={() => onEdit(user.id)}
 								>
 									Edit
