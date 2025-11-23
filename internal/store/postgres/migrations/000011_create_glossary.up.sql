@@ -22,14 +22,19 @@ CREATE INDEX IF NOT EXISTS idx_glossary_terms_metadata ON glossary_terms USING g
 CREATE INDEX IF NOT EXISTS idx_glossary_terms_updated_at ON glossary_terms (updated_at);
 
 CREATE TABLE IF NOT EXISTS glossary_term_owners (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     glossary_term_id UUID NOT NULL REFERENCES glossary_terms(id) ON DELETE CASCADE,
-    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+    team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (glossary_term_id, user_id)
+    CHECK ((user_id IS NOT NULL AND team_id IS NULL) OR (user_id IS NULL AND team_id IS NOT NULL)),
+    UNIQUE (glossary_term_id, user_id),
+    UNIQUE (glossary_term_id, team_id)
 );
 
 CREATE INDEX IF NOT EXISTS idx_glossary_term_owners_term ON glossary_term_owners(glossary_term_id);
 CREATE INDEX IF NOT EXISTS idx_glossary_term_owners_user ON glossary_term_owners(user_id);
+CREATE INDEX IF NOT EXISTS idx_glossary_term_owners_team ON glossary_term_owners(team_id);
 
 INSERT INTO permissions (name, description, resource_type, action) VALUES
 ('view_glossary', 'View glossary terms', 'glossary', 'view'),

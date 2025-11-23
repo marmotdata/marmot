@@ -1,7 +1,9 @@
 export interface Owner {
   id: string;
-  username: string;
+  username?: string;
   name: string;
+  type: 'user' | 'team';
+  email?: string;
 }
 
 export interface GlossaryTerm {
@@ -17,12 +19,17 @@ export interface GlossaryTerm {
   deleted_at?: string;
 }
 
+export interface OwnerInput {
+  id: string;
+  type: 'user' | 'team';
+}
+
 export interface CreateTermInput {
   name: string;
   definition: string;
   description?: string;
   parent_term_id?: string;
-  owner_ids?: string[];
+  owners?: OwnerInput[];
   metadata?: Record<string, any>;
 }
 
@@ -31,7 +38,7 @@ export interface UpdateTermInput {
   definition?: string;
   description?: string;
   parent_term_id?: string;
-  owner_ids?: string[];
+  owners?: OwnerInput[];
   metadata?: Record<string, any>;
 }
 

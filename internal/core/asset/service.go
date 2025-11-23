@@ -101,6 +101,8 @@ type Filter struct {
 	Offset       int        `json:"offset,omitempty"`
 	Environment  *string    `json:"environment,omitempty"`
 	IncludeStubs bool       `json:"include_stubs,omitempty"`
+	OwnerType    *string    `json:"owner_type,omitempty"`
+	OwnerID      *string    `json:"owner_id,omitempty"`
 }
 
 type SearchFilter struct {
@@ -111,6 +113,8 @@ type SearchFilter struct {
 	Limit        int      `json:"limit" validate:"omitempty,gte=0"`
 	Offset       int      `json:"offset" validate:"omitempty,gte=0"`
 	IncludeStubs bool     `json:"include_stubs,omitempty"`
+	OwnerType    *string  `json:"owner_type,omitempty"`
+	OwnerID      *string  `json:"owner_id,omitempty"`
 }
 
 type MetadataContext struct {
@@ -179,6 +183,7 @@ type Service interface {
 	List(ctx context.Context, offset, limit int) (*ListResult, error)
 	ListWithStubs(ctx context.Context, offset, limit int, includeStubs bool) (*ListResult, error)
 	Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error)
+	GetMyAssets(ctx context.Context, userID string, teamIDs []string, limit, offset int) ([]*Asset, int, error)
 	Summary(ctx context.Context) (*AssetSummary, error)
 	Update(ctx context.Context, id string, input UpdateInput) (*Asset, error)
 	Delete(ctx context.Context, id string) error
@@ -745,6 +750,24 @@ func (s *service) GetAssetsByTerm(ctx context.Context, termID string, limit, off
 	assets, total, err := s.repo.GetAssetsByTerm(ctx, termID, limit, offset)
 	if err != nil {
 		return nil, 0, fmt.Errorf("getting assets by term: %w", err)
+	}
+
+	return assets, total, nil
+}
+
+func (s *service) GetMyAssets(ctx context.Context, userID string, teamIDs []string, limit, offset int) ([]*Asset, int, error) {
+	if limit <= 0 {
+		limit = 20
+	} else if limit > 100 {
+		limit = 100
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	assets, total, err := s.repo.GetMyAssets(ctx, userID, teamIDs, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("getting user assets: %w", err)
 	}
 
 	return assets, total, nil

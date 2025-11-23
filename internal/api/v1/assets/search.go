@@ -108,6 +108,8 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 		Tags:      filter.Tags,
 		Limit:     filter.Limit,
 		Offset:    filter.Offset,
+		OwnerType: filter.OwnerType,
+		OwnerID:   filter.OwnerID,
 	}
 
 	calculateCounts := queryValues.Get("calculateCounts") == "true"
@@ -209,6 +211,14 @@ func parseFilter(r *http.Request) (asset.Filter, error) {
 		updatedAfter = &parsedTime
 	}
 
+	var ownerType, ownerID *string
+	if ownerTypeStr := query.Get("owner_type"); ownerTypeStr != "" {
+		ownerType = &ownerTypeStr
+	}
+	if ownerIDStr := query.Get("owner_id"); ownerIDStr != "" {
+		ownerID = &ownerIDStr
+	}
+
 	return asset.Filter{
 		Limit:        limit,
 		Offset:       offset,
@@ -216,6 +226,8 @@ func parseFilter(r *http.Request) (asset.Filter, error) {
 		Providers:    providers,
 		Tags:         tags,
 		UpdatedAfter: updatedAfter,
+		OwnerType:    ownerType,
+		OwnerID:      ownerID,
 	}, nil
 }
 
@@ -236,7 +248,6 @@ func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Split the remaining path to get name
 	parts := strings.SplitN(assetType, "/", 2)
 	if len(parts) != 2 {
 		common.RespondError(w, http.StatusBadRequest, "Asset name is required")

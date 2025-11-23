@@ -928,11 +928,6 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
     type: integer
     x-enum-varnames:
     - minDuration
@@ -943,11 +938,6 @@ definitions:
     - Second
     - Minute
     - Hour
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
   ui.BannerResponse:
     properties:
       dismissible:
@@ -1963,6 +1953,38 @@ paths:
           schema:
             $ref: '#/definitions/common.ErrorResponse'
       summary: Match asset pattern
+      tags:
+      - assets
+  /assets/my-assets:
+    get:
+      description: Get assets owned by the current user or their teams
+      parameters:
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assets.SearchResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get user's assets
       tags:
       - assets
   /assets/qualified-name/{qualifiedName}:

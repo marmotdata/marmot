@@ -10,9 +10,10 @@ import (
 )
 
 type Owner struct {
-	ID       string `json:"id"`
-	Username string `json:"username"`
-	Name     string `json:"name"`
+	ID       string  `json:"id"`
+	Username *string `json:"username,omitempty"` // Only for user owners
+	Name     string  `json:"name"`
+	Type     string  `json:"type"` // "user" or "team"
 }
 
 type GlossaryTerm struct {
@@ -28,12 +29,17 @@ type GlossaryTerm struct {
 	DeletedAt    *time.Time             `json:"deleted_at,omitempty"`
 }
 
+type OwnerInput struct {
+	ID   string `json:"id" validate:"required"`
+	Type string `json:"type" validate:"required,oneof=user team"`
+}
+
 type CreateTermInput struct {
 	Name         string                 `json:"name" validate:"required,min=1,max=255"`
 	Definition   string                 `json:"definition" validate:"required,min=1"`
 	Description  *string                `json:"description,omitempty"`
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
-	OwnerIDs     []string               `json:"owner_ids" validate:"required,min=1,dive,required"`
+	Owners       []OwnerInput           `json:"owners" validate:"required,min=1,dive"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -42,7 +48,7 @@ type UpdateTermInput struct {
 	Definition   *string                `json:"definition,omitempty" validate:"omitempty,min=1"`
 	Description  *string                `json:"description,omitempty"`
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
-	OwnerIDs     []string               `json:"owner_ids,omitempty" validate:"omitempty,min=1,dive,required"`
+	Owners       []OwnerInput           `json:"owners,omitempty" validate:"omitempty,min=1,dive"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -137,7 +143,7 @@ func (s *service) Create(ctx context.Context, input CreateTermInput) (*GlossaryT
 		UpdatedAt:    time.Now().UTC(),
 	}
 
-	if err := s.repo.Create(ctx, term, input.OwnerIDs); err != nil {
+	if err := s.repo.Create(ctx, term, input.Owners); err != nil {
 		return nil, err
 	}
 
@@ -209,7 +215,7 @@ func (s *service) Update(ctx context.Context, id string, input UpdateTermInput) 
 
 	existing.UpdatedAt = time.Now().UTC()
 
-	if err := s.repo.Update(ctx, existing, input.OwnerIDs); err != nil {
+	if err := s.repo.Update(ctx, existing, input.Owners); err != nil {
 		return nil, err
 	}
 

@@ -8,6 +8,7 @@ import (
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 	"golang.org/x/oauth2"
@@ -21,6 +22,7 @@ type OktaProvider struct {
 	config       *config.Config
 	userService  user.Service
 	authService  Service
+	teamService  *team.Service
 	verifier     *oidc.IDTokenVerifier
 	userInfoURL  string
 	oauthConfig  *oauth2.Config
@@ -28,7 +30,7 @@ type OktaProvider struct {
 }
 
 // NewOktaProvider creates a new OktaProvider.
-func NewOktaProvider(cfg *config.Config, userService user.Service, authService Service) *OktaProvider {
+func NewOktaProvider(cfg *config.Config, userService user.Service, authService Service, teamService *team.Service) *OktaProvider {
 	providerCfg, ok := cfg.Auth.Providers["okta"]
 	if !ok || providerCfg == nil {
 		log.Fatal().Msg("okta provider config not found")
@@ -42,6 +44,7 @@ func NewOktaProvider(cfg *config.Config, userService user.Service, authService S
 		config:       cfg,
 		userService:  userService,
 		authService:  authService,
+		teamService:  teamService,
 	}
 
 	p.oauthConfig = &oauth2.Config{
@@ -96,7 +99,6 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 	}
 	log.Debug().Str("email", email).Msg("got user email from Okta")
 
-	// Try to find existing user by email
 	log.Debug().Str("email", email).Msg("looking up existing user by email")
 	usr, err := p.userService.GetUserByUsername(ctx, email)
 	if err != nil && err != user.ErrUserNotFound {
@@ -104,10 +106,9 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 	}
 
 	if err == user.ErrUserNotFound {
-		// Get user details from Okta
 		name, ok := userInfo["name"].(string)
 		if !ok || name == "" {
-			name = email // Fallback to email if name not provided
+			name = email
 			log.Debug().Str("email", email).Msg("name not provided, using email as name")
 		} else {
 			log.Debug().Str("name", name).Str("email", email).Msg("got user name from Okta")
@@ -118,7 +119,6 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 			return nil, fmt.Errorf("provider user ID not provided by Okta")
 		}
 
-		// Create new user
 		log.Debug().Str("name", name).Str("email", email).Msg("creating new user")
 		newUser := user.CreateUserInput{
 			Username:          email,
@@ -136,6 +136,19 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 		log.Debug().Str("user_id", usr.ID).Str("name", name).Str("email", email).Msg("created new user")
 	} else {
 		log.Debug().Str("user_id", usr.ID).Str("email", email).Msg("found existing user")
+	}
+
+	if p.teamService != nil {
+		providerCfg, ok := p.config.Auth.Providers["okta"]
+		if ok && providerCfg.TeamSync.Enabled {
+			groups := p.extractGroups(userInfo, providerCfg.TeamSync.GroupClaim)
+			if len(groups) > 0 {
+				log.Debug().Strs("groups", groups).Str("user_id", usr.ID).Msg("syncing team memberships from SSO")
+				if err := p.teamService.SyncUserTeamsFromSSO(ctx, usr.ID, "okta", groups); err != nil {
+					log.Error().Err(err).Str("user_id", usr.ID).Msg("failed to sync teams from SSO")
+				}
+			}
+		}
 	}
 
 	return usr, nil
@@ -198,4 +211,28 @@ func (p *OktaProvider) Name() string {
 // Type returns the type of the provider.
 func (p *OktaProvider) Type() string {
 	return "okta"
+}
+
+func (p *OktaProvider) extractGroups(userInfo map[string]interface{}, groupClaim string) []string {
+	groups := []string{}
+
+	groupsRaw, ok := userInfo[groupClaim]
+	if !ok {
+		return groups
+	}
+
+	switch v := groupsRaw.(type) {
+	case []interface{}:
+		for _, g := range v {
+			if groupStr, ok := g.(string); ok {
+				groups = append(groups, groupStr)
+			}
+		}
+	case []string:
+		groups = v
+	case string:
+		groups = []string{v}
+	}
+
+	return groups
 }

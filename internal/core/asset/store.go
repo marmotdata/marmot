@@ -39,6 +39,7 @@ type Repository interface {
 	GetByMRN(ctx context.Context, qualifiedName string) (*Asset, error)
 	List(ctx context.Context, offset, limit int, includeStubs bool) (*ListResult, error)
 	Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error)
+	GetMyAssets(ctx context.Context, userID string, teamIDs []string, limit, offset int) ([]*Asset, int, error)
 	Summary(ctx context.Context) (*AssetSummary, error)
 	Update(ctx context.Context, asset *Asset) error
 	Delete(ctx context.Context, id string) error
@@ -798,6 +799,25 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 		params = append(params, filter.Tags)
 	}
 
+	if filter.OwnerType != nil && filter.OwnerID != nil {
+		// join with asset_owners table and filter by owner
+		ownerCondition := ""
+		if *filter.OwnerType == "user" {
+			ownerCondition = fmt.Sprintf(" AND id IN (SELECT asset_id FROM asset_owners WHERE user_id = $%d)", len(params)+1)
+		} else if *filter.OwnerType == "team" {
+			ownerCondition = fmt.Sprintf(" AND id IN (SELECT asset_id FROM asset_owners WHERE team_id = $%d)", len(params)+1)
+		}
+
+		if ownerCondition != "" {
+			if strings.Contains(query, "WHERE") {
+				query += ownerCondition
+			} else {
+				query += " WHERE" + strings.TrimPrefix(ownerCondition, " AND")
+			}
+			params = append(params, *filter.OwnerID)
+		}
+	}
+
 	wrappedQuery := fmt.Sprintf("WITH search_results AS (%s)", query)
 
 	var total int
@@ -870,6 +890,15 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 		if len(filter.Tags) > 0 {
 			countQuery += fmt.Sprintf(" AND tags @> $%d", len(countParams)+1)
 			countParams = append(countParams, filter.Tags)
+		}
+
+		if filter.OwnerType != nil && filter.OwnerID != nil {
+			if *filter.OwnerType == "user" {
+				countQuery += fmt.Sprintf(" AND id IN (SELECT asset_id FROM asset_owners WHERE user_id = $%d)", len(countParams)+1)
+			} else if *filter.OwnerType == "team" {
+				countQuery += fmt.Sprintf(" AND id IN (SELECT asset_id FROM asset_owners WHERE team_id = $%d)", len(countParams)+1)
+			}
+			countParams = append(countParams, *filter.OwnerID)
 		}
 
 		countQuery += `
@@ -1258,5 +1287,66 @@ func (r *PostgresRepository) GetAssetsByTerm(ctx context.Context, termID string,
 		return nil, 0, fmt.Errorf("iterating assets: %w", rows.Err())
 	}
 
+	return assets, total, nil
+}
+
+// GetMyAssets retrieves assets owned by a user or their teams with a single optimized query
+func (r *PostgresRepository) GetMyAssets(ctx context.Context, userID string, teamIDs []string, limit, offset int) ([]*Asset, int, error) {
+	start := time.Now()
+
+	// Build the query to find all assets where the user or any of their teams is an owner
+	countQuery := `
+		SELECT COUNT(DISTINCT a.id)
+		FROM assets a
+		JOIN asset_owners ao ON a.id = ao.asset_id
+		WHERE (ao.user_id = $1 OR ao.team_id = ANY($2))
+		AND a.is_stub = FALSE`
+
+	var total int
+	err := r.db.QueryRow(ctx, countQuery, userID, teamIDs).Scan(&total)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "get_my_assets_count", time.Since(start), false)
+		return nil, 0, fmt.Errorf("counting user assets: %w", err)
+	}
+	r.recorder.RecordDBQuery(ctx, "get_my_assets_count", time.Since(start), true)
+
+	query := `
+		SELECT DISTINCT
+			a.id, a.name, a.mrn, a.type, a.providers, a.environments, a.external_links,
+			a.description, a.user_description, a.metadata, a.schema, a.sources, a.tags,
+			a.created_at, a.created_by, a.updated_at, a.last_sync_at,
+			a.query, a.query_language, a.is_stub,
+			EXISTS(SELECT 1 FROM run_history WHERE asset_id = a.id) as has_run_history
+		FROM assets a
+		JOIN asset_owners ao ON a.id = ao.asset_id
+		WHERE (ao.user_id = $1 OR ao.team_id = ANY($2))
+		AND a.is_stub = FALSE
+		ORDER BY a.updated_at DESC, a.name ASC
+		LIMIT $3 OFFSET $4`
+
+	queryStart := time.Now()
+	rows, err := r.db.Query(ctx, query, userID, teamIDs, limit, offset)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "get_my_assets", time.Since(queryStart), false)
+		return nil, 0, fmt.Errorf("querying user assets: %w", err)
+	}
+	defer rows.Close()
+
+	var assets []*Asset
+	for rows.Next() {
+		asset, err := r.scanAsset(ctx, rows)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "get_my_assets", time.Since(queryStart), false)
+			return nil, 0, err
+		}
+		assets = append(assets, asset)
+	}
+
+	if rows.Err() != nil {
+		r.recorder.RecordDBQuery(ctx, "get_my_assets", time.Since(queryStart), false)
+		return nil, 0, fmt.Errorf("iterating user assets: %w", rows.Err())
+	}
+
+	r.recorder.RecordDBQuery(ctx, "get_my_assets", time.Since(queryStart), true)
 	return assets, total, nil
 }

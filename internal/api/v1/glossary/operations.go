@@ -13,12 +13,17 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+type OwnerRequest struct {
+	ID   string `json:"id" validate:"required"`
+	Type string `json:"type" validate:"required,oneof=user team"`
+}
+
 type CreateTermRequest struct {
 	Name         string                 `json:"name" validate:"required"`
 	Definition   string                 `json:"definition" validate:"required"`
 	Description  *string                `json:"description,omitempty"`
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
-	OwnerIDs     []string               `json:"owner_ids" validate:"required,min=1"`
+	Owners       []OwnerRequest         `json:"owners" validate:"required,min=1"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -27,7 +32,7 @@ type UpdateTermRequest struct {
 	Definition   *string                `json:"definition,omitempty"`
 	Description  *string                `json:"description,omitempty"`
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
-	OwnerIDs     []string               `json:"owner_ids,omitempty"`
+	Owners       []OwnerRequest         `json:"owners,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 
@@ -44,9 +49,16 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ownerIDs := req.OwnerIDs
-	if len(ownerIDs) == 0 {
-		ownerIDs = []string{usr.ID}
+	owners := make([]glossary.OwnerInput, len(req.Owners))
+	for i, owner := range req.Owners {
+		owners[i] = glossary.OwnerInput{
+			ID:   owner.ID,
+			Type: owner.Type,
+		}
+	}
+
+	if len(owners) == 0 {
+		owners = []glossary.OwnerInput{{ID: usr.ID, Type: "user"}}
 	}
 
 	input := glossary.CreateTermInput{
@@ -54,7 +66,7 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 		Definition:   req.Definition,
 		Description:  req.Description,
 		ParentTermID: req.ParentTermID,
-		OwnerIDs:     ownerIDs,
+		Owners:       owners,
 		Metadata:     req.Metadata,
 	}
 
@@ -112,12 +124,23 @@ func (h *Handler) updateTerm(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var owners []glossary.OwnerInput
+	if req.Owners != nil {
+		owners = make([]glossary.OwnerInput, len(req.Owners))
+		for i, owner := range req.Owners {
+			owners[i] = glossary.OwnerInput{
+				ID:   owner.ID,
+				Type: owner.Type,
+			}
+		}
+	}
+
 	input := glossary.UpdateTermInput{
 		Name:         req.Name,
 		Definition:   req.Definition,
 		Description:  req.Description,
 		ParentTermID: req.ParentTermID,
-		OwnerIDs:     req.OwnerIDs,
+		Owners:       owners,
 		Metadata:     req.Metadata,
 	}
 

@@ -5,6 +5,8 @@
 	import Icon from '@iconify/svelte';
 	import { auth } from '$lib/stores/auth';
 	import GettingStarted from '../components/GettingStarted.svelte';
+	import AssetBlade from '../components/AssetBlade.svelte';
+	import IconComponent from '../components/Icon.svelte';
 
 	interface QuickStat {
 		label: string;
@@ -25,8 +27,10 @@
 		id: string;
 		name: string;
 		type: string;
-		provider: string;
+		provider?: string;
+		providers?: string[];
 		updated_at?: string;
+		mrn?: string;
 	}
 
 	interface PopularAsset {
@@ -57,9 +61,11 @@
 	});
 	let recentAssets = $state<RecentAsset[]>([]);
 	let popularAssets = $state<PopularAsset[]>([]);
+	let userAssets = $state<RecentAsset[]>([]);
 	let isLoading = $state(true);
 	let hasLoadedOnce = $state(false);
 	let userProfile = $state<UserProfile | null>(null);
+	let selectedAsset = $state<any>(null);
 
 	let totalAssets = $derived(
 		Object.values(summary.types).reduce((sum, type: any) => sum + (type.count || 0), 0)
@@ -162,15 +168,26 @@
 		return str.charAt(0).toUpperCase() + str.slice(1);
 	}
 
+	function getIconType(asset: RecentAsset): string {
+		if (asset.providers && Array.isArray(asset.providers) && asset.providers.length === 1) {
+			return asset.providers[0];
+		}
+		if (asset.provider) {
+			return asset.provider;
+		}
+		return asset.type;
+	}
+
 	let displayName = $derived(
 		capitalizeFirstLetter(userProfile?.display_name || userProfile?.username || ($auth?.username) || 'there')
 	);
 
 	async function fetchData() {
 		try {
-			const [summaryRes, recentRes] = await Promise.all([
+			const [summaryRes, recentRes, userAssetsRes] = await Promise.all([
 				fetchApi('/assets/summary'),
-				fetchApi('/assets?limit=6&sort_by=updated_at&sort_order=desc')
+				fetchApi('/assets/list?limit=6&sort_by=updated_at&sort_order=desc'),
+				fetchApi('/assets/my-assets?limit=6')
 			]);
 
 			if (summaryRes.ok) {
@@ -179,6 +196,10 @@
 			if (recentRes.ok) {
 				const recentData = await recentRes.json();
 				recentAssets = recentData.assets || [];
+			}
+			if (userAssetsRes.ok) {
+				const userData = await userAssetsRes.json();
+				userAssets = userData.assets || [];
 			}
 
 			// Fetch popular assets from metrics
@@ -211,6 +232,10 @@
 			isLoading = false;
 			hasLoadedOnce = true;
 		}
+	}
+
+	function handleAssetClick(asset: RecentAsset | PopularAsset) {
+		selectedAsset = asset;
 	}
 
 	function navigateToAsset(asset: RecentAsset | PopularAsset) {
@@ -269,16 +294,8 @@
 	onMount(fetchData);
 </script>
 
-{#if showGettingStarted}
-	<div class="container max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
-		<GettingStarted
-			condensed={false}
-			title="Welcome to Marmot"
-			description="Start building your data catalog by connecting to your data sources and discovering assets."
-		/>
-	</div>
-{:else}
-	<div class="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+<div class="container max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+	{#if !showGettingStarted}
 		<!-- Greeting -->
 		<div class="mb-8">
 			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
@@ -386,7 +403,7 @@
 						</div>
 					</div>
 				{:else}
-					<!-- Recent Assets fallback -->
+					<!-- User Assets fallback -->
 					<div>
 						<div class="flex items-center justify-between mb-4">
 							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
@@ -400,20 +417,16 @@
 							</a>
 						</div>
 						<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-							{#if recentAssets.length > 0}
+							{#if userAssets.length > 0}
 								<div class="divide-y divide-gray-200 dark:divide-gray-700">
-									{#each recentAssets as asset}
-										<button
-											onclick={() => navigateToAsset(asset)}
-											class="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
+									{#each userAssets as asset}
+										<a
+											href="/assets/{asset.type}/{encodeURIComponent(asset.name)}"
+											onclick={(e) => { e.preventDefault(); handleAssetClick(asset); }}
+											class="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
 										>
-											<div
-												class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0"
-											>
-												<Icon
-													icon={`simple-icons:${getProviderIcon(asset.provider)}`}
-													class="w-6 h-6 text-gray-600 dark:text-gray-400"
-												/>
+											<div class="flex-shrink-0">
+												<IconComponent name={getIconType(asset)} showLabel={false} size="sm" />
 											</div>
 											<div class="flex-1 min-w-0 text-left">
 												<h3
@@ -421,9 +434,12 @@
 												>
 													{asset.name}
 												</h3>
-												<p class="text-xs text-gray-600 dark:text-gray-400 capitalize">{asset.type}</p>
+												<p class="text-xs text-gray-600 dark:text-gray-400 truncate font-mono">{asset.mrn}</p>
 											</div>
-										</button>
+											<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+												{asset.type}
+											</span>
+										</a>
 									{/each}
 								</div>
 							{:else}
@@ -553,6 +569,83 @@
 					</div>
 				</div>
 			{/if}
+		{:else}
+			<!-- Getting Started - shown in two column layout -->
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+				<div class="lg:col-span-2">
+					<GettingStarted
+						condensed={false}
+						title="Welcome to Marmot"
+						description="Start building your data catalog by connecting to your data sources and discovering assets."
+					/>
+				</div>
+			</div>
 		{/if}
-	</div>
+	{:else}
+		<!-- Greeting -->
+		<div class="mb-8">
+			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+				Hi {displayName} 👋
+			</h1>
+			<p class="text-gray-600 dark:text-gray-400 mt-2">Here's what's in your data catalog</p>
+		</div>
+
+		<!-- Quick Stats -->
+		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+			{#each quickStats as stat}
+				<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+					<div class="flex items-center justify-between mb-2">
+						<Icon
+							icon={stat.icon}
+							class="w-8 h-8 text-gray-400 dark:text-gray-500"
+						/>
+					</div>
+					<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>
+					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
+				</div>
+			{/each}
+		</div>
+
+		<!-- Quick Actions -->
+		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+			{#each quickActions as action}
+				{@const colors = getColorClasses(action.color)}
+				<a
+					href={action.href}
+					target={action.href.startsWith('http') ? '_blank' : undefined}
+					rel={action.href.startsWith('http') ? 'noopener noreferrer' : undefined}
+					class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:border-earthy-terracotta-500 dark:hover:border-earthy-terracotta-600 hover:shadow-lg transition-all"
+				>
+					<div class="flex items-start gap-4">
+						<div class="flex-shrink-0 w-10 h-10 {colors.bg} rounded-lg flex items-center justify-center">
+							<Icon icon={action.icon} class="w-6 h-6 {colors.text}" />
+						</div>
+						<div class="flex-1 min-w-0">
+							<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors">
+								{action.title}
+							</h3>
+							<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+								{action.description}
+							</p>
+						</div>
+					</div>
+				</a>
+			{/each}
+		</div>
+
+		<!-- Getting Started - shown in two column layout -->
+		<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+			<div class="lg:col-span-2">
+				<GettingStarted
+					condensed={false}
+					title="Welcome to Marmot"
+					description="Start building your data catalog by connecting to your data sources and discovering assets."
+				/>
+			</div>
+		</div>
+	{/if}
+</div>
+
+{#if selectedAsset}
+	<AssetBlade asset={selectedAsset} onClose={() => (selectedAsset = null)} />
 {/if}

@@ -32,11 +32,17 @@ type OAuthProviderConfig struct {
 	Scopes       []string         `mapstructure:"scopes"`
 	AllowSignup  bool             `mapstructure:"allow_signup"`
 	GroupMapping []GroupMapConfig `mapstructure:"group_mapping"`
+	TeamSync     TeamSyncConfig   `mapstructure:"team_sync"`
 }
 
 type GroupMapConfig struct {
 	GroupName string   `mapstructure:"group_name"`
 	Roles     []string `mapstructure:"roles"`
+}
+
+type TeamSyncConfig struct {
+	Enabled    bool   `mapstructure:"enabled"`
+	GroupClaim string `mapstructure:"group_claim"`
 }
 
 // Config holds all configuration for the application
@@ -150,6 +156,8 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.providers.okta.type")
 	v.BindEnv("auth.providers.okta.name")
 	v.BindEnv("auth.providers.okta.allow_signup")
+	v.BindEnv("auth.providers.okta.team_sync.enabled")
+	v.BindEnv("auth.providers.okta.team_sync.group_claim")
 
 	v.BindEnv("auth.anonymous.enabled")
 	v.BindEnv("auth.anonymous.role")
@@ -212,6 +220,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("auth.providers.okta.name", "Okta")
 	v.SetDefault("auth.providers.okta.allow_signup", true)
 	v.SetDefault("auth.providers.okta.scopes", []string{"openid", "profile", "email", "groups", "offline_access"})
+	v.SetDefault("auth.providers.okta.team_sync.enabled", false)
+	v.SetDefault("auth.providers.okta.team_sync.group_claim", "groups")
 
 	// Rate limit defaults
 	v.SetDefault("rate_limit.enabled", false)

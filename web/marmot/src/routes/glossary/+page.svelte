@@ -4,11 +4,11 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { fetchApi } from '$lib/api';
-	import type { GlossaryTerm, TermsListResponse } from '$lib/glossary/types';
+	import type { GlossaryTerm, TermsListResponse, Owner } from '$lib/glossary/types';
 	import QueryInput from '../../components/QueryInput.svelte';
 	import MarkdownRenderer from '../../components/MarkdownRenderer.svelte';
 	import RichTextEditor from '../../components/RichTextEditor.svelte';
-	import UserPicker from '../../components/UserPicker.svelte';
+	import OwnerSelector from '../../components/OwnerSelector.svelte';
 	import Button from '../../components/Button.svelte';
 	import Icon from '@iconify/svelte';
 	import { auth } from '$lib/stores/auth';
@@ -28,7 +28,7 @@
 	let newTermName = '';
 	let newTermDefinition = '';
 	let newTermDescription = '';
-	let newTermOwnerIds: string[] = [];
+	let newTermOwners: Owner[] = [];
 	let isCreating = false;
 	let createError = '';
 
@@ -145,7 +145,7 @@
 		newTermName = '';
 		newTermDefinition = '';
 		newTermDescription = '';
-		newTermOwnerIds = [];
+		newTermOwners = [];
 		createError = '';
 		showCreateModal = true;
 	}
@@ -160,13 +160,17 @@
 		createError = '';
 
 		try {
+			const owners = newTermOwners.length > 0
+				? newTermOwners.map(o => ({ id: o.id, type: o.type }))
+				: undefined;
+
 			const response = await fetchApi('/glossary/', {
 				method: 'POST',
 				body: JSON.stringify({
 					name: newTermName,
 					definition: newTermDefinition,
 					description: newTermDescription || undefined,
-					owner_ids: newTermOwnerIds.length > 0 ? newTermOwnerIds : undefined
+					owners
 				})
 			});
 
@@ -211,14 +215,14 @@
 				updateData.description = editedTerm.description || null;
 			}
 
-			const currentOwnerIds = selectedTerm.owners.map((o) => o.id);
-			const newOwnerIds = editedTerm.owners.map((o) => o.id);
+			const currentOwners = selectedTerm.owners.map((o) => ({ id: o.id, type: o.type }));
+			const newOwners = editedTerm.owners.map((o) => ({ id: o.id, type: o.type }));
 			const ownersChanged =
-				newOwnerIds.length !== currentOwnerIds.length ||
-				!newOwnerIds.every((id) => currentOwnerIds.includes(id));
+				newOwners.length !== currentOwners.length ||
+				!newOwners.every((no) => currentOwners.some((co) => co.id === no.id && co.type === no.type));
 
-			if (ownersChanged && newOwnerIds.length > 0) {
-				updateData.owner_ids = newOwnerIds;
+			if (ownersChanged) {
+				updateData.owners = newOwners;
 			}
 
 			if (Object.keys(updateData).length === 0) {
@@ -400,17 +404,17 @@
 								</h3>
 							</div>
 							{#if isEditing && editedTerm}
-								<UserPicker
-									selectedUserIds={editedTerm.owners.map(o => o.id)}
-									onChange={(ids, users) => {
+								<OwnerSelector
+									bind:selectedOwners={editedTerm.owners}
+									onChange={(owners) => {
 										if (editedTerm) {
-											editedTerm.owners = users;
+											editedTerm.owners = owners;
 										}
 									}}
 								/>
 							{:else}
-								<UserPicker
-									selectedUserIds={selectedTerm.owners.map(o => o.id)}
+								<OwnerSelector
+									selectedOwners={selectedTerm.owners}
 									onChange={() => {}}
 									disabled={true}
 								/>
@@ -612,10 +616,10 @@
 						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 							Owners (Optional)
 						</label>
-						<UserPicker
-							bind:selectedUserIds={newTermOwnerIds}
-							onChange={(ids, users) => {
-								newTermOwnerIds = ids;
+						<OwnerSelector
+							bind:selectedOwners={newTermOwners}
+							onChange={(owners) => {
+								newTermOwners = owners;
 							}}
 							placeholder="Search and select owners..."
 						/>

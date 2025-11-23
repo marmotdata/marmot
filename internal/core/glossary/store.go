@@ -19,9 +19,9 @@ var (
 )
 
 type Repository interface {
-	Create(ctx context.Context, term *GlossaryTerm, ownerIDs []string) error
+	Create(ctx context.Context, term *GlossaryTerm, owners []OwnerInput) error
 	Get(ctx context.Context, id string) (*GlossaryTerm, error)
-	Update(ctx context.Context, term *GlossaryTerm, ownerIDs []string) error
+	Update(ctx context.Context, term *GlossaryTerm, owners []OwnerInput) error
 	List(ctx context.Context, offset, limit int) (*ListResult, error)
 	Search(ctx context.Context, filter SearchFilter) (*ListResult, error)
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
@@ -41,11 +41,16 @@ func NewPostgresRepository(db *pgxpool.Pool, recorder metrics.Recorder) *Postgre
 
 func (r *PostgresRepository) loadOwners(ctx context.Context, termID string) ([]Owner, error) {
 	query := `
-		SELECT u.id, u.username, u.name
+		SELECT
+			COALESCE(u.id::text, t.id::text) as id,
+			u.username,
+			COALESCE(u.name, t.name) as name,
+			CASE WHEN u.id IS NOT NULL THEN 'user' ELSE 'team' END as type
 		FROM glossary_term_owners gto
-		JOIN users u ON gto.user_id = u.id
+		LEFT JOIN users u ON gto.user_id = u.id
+		LEFT JOIN teams t ON gto.team_id = t.id
 		WHERE gto.glossary_term_id = $1
-		ORDER BY u.username`
+		ORDER BY type, COALESCE(u.username, t.name)`
 
 	rows, err := r.db.Query(ctx, query, termID)
 	if err != nil {
@@ -53,10 +58,10 @@ func (r *PostgresRepository) loadOwners(ctx context.Context, termID string) ([]O
 	}
 	defer rows.Close()
 
-	var owners []Owner
+	owners := []Owner{}
 	for rows.Next() {
 		var owner Owner
-		if err := rows.Scan(&owner.ID, &owner.Username, &owner.Name); err != nil {
+		if err := rows.Scan(&owner.ID, &owner.Username, &owner.Name, &owner.Type); err != nil {
 			return nil, fmt.Errorf("scanning owner: %w", err)
 		}
 		owners = append(owners, owner)
@@ -69,16 +74,21 @@ func (r *PostgresRepository) loadOwners(ctx context.Context, termID string) ([]O
 	return owners, nil
 }
 
-func (r *PostgresRepository) setOwners(ctx context.Context, tx pgx.Tx, termID string, ownerIDs []string) error {
+func (r *PostgresRepository) setOwners(ctx context.Context, tx pgx.Tx, termID string, owners []OwnerInput) error {
 	_, err := tx.Exec(ctx, "DELETE FROM glossary_term_owners WHERE glossary_term_id = $1", termID)
 	if err != nil {
 		return fmt.Errorf("deleting existing owners: %w", err)
 	}
 
-	for _, ownerID := range ownerIDs {
-		_, err := tx.Exec(ctx,
-			"INSERT INTO glossary_term_owners (glossary_term_id, user_id) VALUES ($1, $2)",
-			termID, ownerID)
+	for _, owner := range owners {
+		var query string
+		if owner.Type == "user" {
+			query = "INSERT INTO glossary_term_owners (glossary_term_id, user_id) VALUES ($1, $2)"
+		} else {
+			query = "INSERT INTO glossary_term_owners (glossary_term_id, team_id) VALUES ($1, $2)"
+		}
+
+		_, err := tx.Exec(ctx, query, termID, owner.ID)
 		if err != nil {
 			return fmt.Errorf("inserting owner: %w", err)
 		}
@@ -87,7 +97,7 @@ func (r *PostgresRepository) setOwners(ctx context.Context, tx pgx.Tx, termID st
 	return nil
 }
 
-func (r *PostgresRepository) Create(ctx context.Context, term *GlossaryTerm, ownerIDs []string) error {
+func (r *PostgresRepository) Create(ctx context.Context, term *GlossaryTerm, owners []OwnerInput) error {
 	start := time.Now()
 
 	metadataJSON, err := json.Marshal(term.Metadata)
@@ -125,7 +135,7 @@ func (r *PostgresRepository) Create(ctx context.Context, term *GlossaryTerm, own
 		return fmt.Errorf("creating glossary term: %w", err)
 	}
 
-	if err := r.setOwners(ctx, tx, term.ID, ownerIDs); err != nil {
+	if err := r.setOwners(ctx, tx, term.ID, owners); err != nil {
 		r.recorder.RecordDBQuery(ctx, "glossary_create", time.Since(start), false)
 		return fmt.Errorf("setting owners: %w", err)
 	}
@@ -184,7 +194,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 	return &term, nil
 }
 
-func (r *PostgresRepository) Update(ctx context.Context, term *GlossaryTerm, ownerIDs []string) error {
+func (r *PostgresRepository) Update(ctx context.Context, term *GlossaryTerm, owners []OwnerInput) error {
 	start := time.Now()
 
 	metadataJSON, err := json.Marshal(term.Metadata)
@@ -223,8 +233,8 @@ func (r *PostgresRepository) Update(ctx context.Context, term *GlossaryTerm, own
 		return ErrNotFound
 	}
 
-	if ownerIDs != nil {
-		if err := r.setOwners(ctx, tx, term.ID, ownerIDs); err != nil {
+	if owners != nil {
+		if err := r.setOwners(ctx, tx, term.ID, owners); err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_update", duration, false)
 			return fmt.Errorf("setting owners: %w", err)
 		}

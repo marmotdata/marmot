@@ -12,9 +12,18 @@
 	import AssetTags from './AssetTags.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import AssetDescriptions from './AssetDescriptions.svelte';
+	import OwnerSelector from './OwnerSelector.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import { auth } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
+
+	interface Owner {
+		id: string;
+		name: string;
+		type: 'user' | 'team';
+		username?: string;
+		email?: string;
+	}
 
 	export let asset: Asset | null = null;
 	export let lineage: LineageResponse | null = null;
@@ -38,6 +47,10 @@
 		currentAssetId = asset?.id || null;
 		lineage = null;
 		expandedAssets = new Set<string>();
+		owners = [];
+		if (asset?.id) {
+			fetchOwners();
+		}
 	}
 
 	$: currentIconName = asset
@@ -53,6 +66,8 @@
 	let loadingLineage = false;
 	let lineageError: string | null = null;
 	let expandedAssets = new Set<string>();
+	let owners: Owner[] = [];
+	let loadingOwners = false;
 
 	function formatDate(dateString: string): string {
 		return new Date(dateString).toLocaleString();
@@ -85,6 +100,63 @@
 			loadingLineage = false;
 		}
 	}
+
+	async function fetchOwners() {
+		if (!asset?.id) return;
+
+		loadingOwners = true;
+		try {
+			const response = await fetchApi(`/assets/owners/?asset_id=${asset.id}`);
+			if (!response.ok) throw new Error('Failed to fetch owners');
+			const data = await response.json();
+			owners = data.owners || [];
+		} catch (error) {
+			console.error('Failed to fetch owners:', error);
+			owners = [];
+		} finally {
+			loadingOwners = false;
+		}
+	}
+
+	async function handleOwnersChange(newOwners: Owner[]) {
+		if (!asset?.id || !canManageAssets) return;
+
+		const currentOwnerKeys = new Set(owners.map(o => `${o.type}-${o.id}`));
+		const newOwnerKeys = new Set(newOwners.map(o => `${o.type}-${o.id}`));
+
+		// Find added and removed owners
+		const added = newOwners.filter(o => !currentOwnerKeys.has(`${o.type}-${o.id}`));
+		const removed = owners.filter(o => !newOwnerKeys.has(`${o.type}-${o.id}`));
+
+		try {
+			// Add new owners
+			for (const owner of added) {
+				const response = await fetchApi(`/assets/owners/?asset_id=${asset.id}`, {
+					method: 'POST',
+					body: JSON.stringify({
+						owner_type: owner.type,
+						owner_id: owner.id
+					})
+				});
+				if (!response.ok) throw new Error('Failed to add owner');
+			}
+
+			// Remove old owners
+			for (const owner of removed) {
+				const response = await fetchApi(
+					`/assets/owners/?asset_id=${asset.id}&owner_type=${owner.type}&owner_id=${owner.id}`,
+					{ method: 'DELETE' }
+				);
+				if (!response.ok) throw new Error('Failed to remove owner');
+			}
+
+			owners = newOwners;
+		} catch (error) {
+			console.error('Failed to update owners:', error);
+			// Revert to previous state on error
+			await fetchOwners();
+		}
+	}
 	$: filteredLineage = lineage
 		? {
 				...lineage,
@@ -101,11 +173,12 @@
 		mounted = true;
 		if (asset?.id) {
 			fetchLineage();
+			fetchOwners();
 		}
 	});
 
 	afterUpdate(() => {
-		if (mounted && asset?.id && !lineage) {
+		if (mounted && asset?.id && !lineage && !loadingLineage) {
 			fetchLineage();
 		}
 	});
@@ -199,7 +272,13 @@
 						text="Full View"
 						variant="filled"
 					/>
-					<Button click={onClose} variant="clear" icon="material-symbols:close" />
+					<a
+						href="#"
+						onclick={(e) => { e.preventDefault(); onClose(); }}
+						class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+					>
+						<IconifyIcon icon="material-symbols:close" class="w-5 h-5" />
+					</a>
 				</div>
 			{/if}
 		</div>
@@ -222,7 +301,36 @@
 								</p>
 							</div>
 						</div>
-						<AssetTags {asset} editable={staticPlacement} />
+						<div class="space-y-4">
+							<div>
+								<div class="flex items-center gap-2 mb-2">
+									<IconifyIcon icon="material-symbols:label-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+									<h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+										Tags
+									</h4>
+								</div>
+								<AssetTags {asset} editable={staticPlacement} />
+							</div>
+							<div>
+								<div class="flex items-center gap-2 mb-2">
+									<IconifyIcon icon="material-symbols:person-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+									<h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+										Owners
+									</h4>
+								</div>
+								{#if loadingOwners}
+									<div class="flex items-center justify-center py-4">
+										<div class="animate-spin h-5 w-5 border-b-2 border-earthy-terracotta-700 rounded-full"></div>
+									</div>
+								{:else}
+									<OwnerSelector
+										selectedOwners={owners}
+										onChange={handleOwnersChange}
+										disabled={!canManageAssets}
+									/>
+								{/if}
+							</div>
+						</div>
 					</div>
 				{:else}
 					<a href={`${fullViewUrl}`} class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all">
@@ -239,7 +347,36 @@
 								</p>
 							</div>
 						</div>
-						<AssetTags {asset} editable={false} />
+						<div class="space-y-4">
+							<div>
+								<div class="flex items-center gap-2 mb-2">
+									<IconifyIcon icon="material-symbols:label-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+									<h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+										Tags
+									</h4>
+								</div>
+								<AssetTags {asset} editable={false} />
+							</div>
+							<div>
+								<div class="flex items-center gap-2 mb-2">
+									<IconifyIcon icon="material-symbols:person-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+									<h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+										Owners
+									</h4>
+								</div>
+								{#if loadingOwners}
+									<div class="flex items-center justify-center py-4">
+										<div class="animate-spin h-5 w-5 border-b-2 border-earthy-terracotta-700 rounded-full"></div>
+									</div>
+								{:else}
+									<OwnerSelector
+										selectedOwners={owners}
+										onChange={() => {}}
+										disabled={true}
+									/>
+								{/if}
+							</div>
+						</div>
 					</a>
 				{/if}
 

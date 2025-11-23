@@ -9,6 +9,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/runs"
+	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/metrics"
 )
@@ -20,6 +21,7 @@ type Handler struct {
 	authService      auth.Service
 	metricsService   *metrics.Service
 	runService       runs.Service
+	teamService      *team.Service
 	config           *config.Config
 }
 
@@ -30,6 +32,7 @@ func NewHandler(
 	authService auth.Service,
 	metricsService *metrics.Service,
 	runService runs.Service,
+	teamService *team.Service,
 	config *config.Config,
 ) *Handler {
 	return &Handler{
@@ -39,6 +42,7 @@ func NewHandler(
 		authService:      authService,
 		metricsService:   metricsService,
 		runService:       runService,
+		teamService:      teamService,
 		config:           config,
 	}
 }
@@ -95,6 +99,16 @@ func (h *Handler) Routes() []common.Route {
 			Path:    "/api/v1/assets/search",
 			Method:  http.MethodGet,
 			Handler: h.searchAssets,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+				common.WithRateLimit(h.config, 50, 60), // 50 requests per 60 seconds
+			},
+		},
+		{
+			Path:    "/api/v1/assets/my-assets",
+			Method:  http.MethodGet,
+			Handler: h.getMyAssets,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
@@ -269,6 +283,33 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/owners/",
+			Method:  http.MethodGet,
+			Handler: h.listAssetOwners,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/owners/",
+			Method:  http.MethodPost,
+			Handler: h.addAssetOwner,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/owners/",
+			Method:  http.MethodDelete,
+			Handler: h.removeAssetOwner,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
+	"github.com/marmotdata/marmot/internal/api/v1/teams"
 	"github.com/marmotdata/marmot/internal/api/v1/ui"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
 	"github.com/marmotdata/marmot/internal/config"
@@ -25,6 +26,7 @@ import (
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
+	teamService "github.com/marmotdata/marmot/internal/core/team"
 	userService "github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/rs/zerolog/log"
@@ -65,13 +67,15 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	authSvc := authService.NewService(authRepo, userSvc)
 	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc, recorder)
 	glossarySvc := glossaryService.NewService(glossaryRepo)
+	teamRepo := teamService.NewPostgresRepository(db)
+	teamSvc := teamService.NewService(teamRepo)
 
 	oauthManager := authService.NewOAuthManager()
 
 	if config.Auth.Providers != nil {
 		if oktaConfig, exists := config.Auth.Providers["okta"]; exists && oktaConfig != nil && oktaConfig.Enabled {
 			if oktaConfig.ClientID != "" && oktaConfig.ClientSecret != "" && oktaConfig.URL != "" {
-				oktaProvider := authService.NewOktaProvider(config, userSvc, authSvc)
+				oktaProvider := authService.NewOktaProvider(config, userSvc, authSvc, teamSvc)
 				oauthManager.RegisterProvider(oktaProvider)
 			} else {
 				log.Warn().Msg("Incomplete Okta configuration found - provider will not be initialized")
@@ -85,13 +89,14 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	}
 
 	server.handlers = []interface{ Routes() []common.Route }{
-		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, config),
+		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, teamSvc, config),
 		users.NewHandler(userSvc, authSvc, config),
 		auth.NewHandler(authSvc, oauthManager, userSvc, config),
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
+		teams.NewHandler(teamSvc, userSvc, authSvc, config),
 		ui.NewHandler(config),
 	}
 

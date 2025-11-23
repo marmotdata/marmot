@@ -1,13 +1,15 @@
 <script lang="ts">
 	import Sidebar from '../../components/Sidebar.svelte';
 	import UserManagement from '../../components/UserManagement.svelte';
+	import TeamManagement from '../../components/TeamManagement.svelte';
 	// import RoleManagement from '../../components/RoleManagement.svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 
 	const tabs = [
-		{ id: 'users', label: 'User Management' }
+		{ id: 'users', label: 'User Management' },
+		{ id: 'teams', label: 'Team Management' }
 		// { id: 'roles', label: 'Roles & Permissions' }
 	];
 
@@ -30,6 +32,10 @@
 			{#if activeTab === 'users'}
 				<div class="animate-slide-down">
 					<UserManagement />
+				</div>
+			{:else if activeTab === 'teams'}
+				<div class="animate-slide-down">
+					<TeamManagement />
 				</div>
 				<!-- {:else if activeTab === 'roles'} -->
 				<!-- 	<div class="animate-slide-down"> -->
