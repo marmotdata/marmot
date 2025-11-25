@@ -15,7 +15,7 @@
 	import { auth } from '$lib/stores/auth';
 
 	interface SearchResult {
-		type: 'asset' | 'glossary' | 'team' | 'user';
+		type: 'asset' | 'glossary' | 'team';
 		id: string;
 		name: string;
 		description?: string;
@@ -306,8 +306,7 @@
 		const iconMap: Record<string, string> = {
 			asset: 'mdi:database',
 			glossary: 'mdi:book-open-variant',
-			team: 'mdi:account-group',
-			user: 'mdi:account'
+			team: 'mdi:account-group'
 		};
 		return iconMap[type] || 'mdi:file-document';
 	}
@@ -316,8 +315,7 @@
 		const colorMap: Record<string, string> = {
 			asset: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
 			glossary: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-			user: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
 		};
 		return colorMap[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
 	}
@@ -325,9 +323,6 @@
 	function getResultSubtitle(result: SearchResult): string {
 		if (result.type === 'asset' && result.metadata?.type) {
 			return result.metadata.type;
-		}
-		if (result.type === 'user' && result.metadata?.username) {
-			return `@${result.metadata.username}`;
 		}
 		if (result.description) {
 			return result.description;
@@ -402,7 +397,7 @@
 						>
 							Kind
 						</h3>
-						{#each ['asset', 'glossary', 'team', 'user'] as kind}
+						{#each ['asset', 'glossary', 'team'] as kind}
 							<label class="flex items-center justify-between mb-2">
 								<div class="flex items-center">
 									<input

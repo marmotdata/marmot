@@ -106,8 +106,8 @@
 	.node {
 		padding: 1rem;
 		border-radius: 0.5rem;
-		border: 1px solid #dfdfdf;
-		background: #fefdf8;
+		border: 1px solid #e5e7eb;
+		background: #ffffff;
 		cursor: pointer;
 		min-width: 150px;
 		transition: all 150ms;
@@ -116,17 +116,17 @@
 	}
 
 	:global(.dark) .node {
-		background: #2e2e2e;
-		border-color: #4d4d4d;
+		background: #1f2937;
+		border-color: #374151;
 	}
 
 	.node:not(.current):not(.stub):hover {
 		border-color: #fb923c;
-		background: #fff7ed;
+		background: #f9fafb;
 	}
 
 	:global(.dark) .node:not(.current):not(.stub):hover {
-		background: #4d4d4d;
+		background: #374151;
 	}
 
 	.node.current {
@@ -135,18 +135,18 @@
 	}
 
 	:global(.dark) .node.current {
-		background: #4d4d4d;
+		background: #374151;
 	}
 
 	.node.stub {
 		cursor: default;
-		background: #f5f4ef;
-		border-color: #c9c9c9;
+		background: #f9fafb;
+		border-color: #d1d5db;
 	}
 
 	:global(.dark) .node.stub {
-		background: #252525;
-		border-color: #3d3d3d;
+		background: #111827;
+		border-color: #374151;
 	}
 
 	.name {
@@ -173,11 +173,11 @@
 		width: 8px;
 		height: 8px;
 		border-radius: 50%;
-		border: 2px solid #fefdf8;
+		border: 2px solid #ffffff;
 	}
 
 	:global(.dark .svelte-flow__handle) {
-		border-color: #2e2e2e;
+		border-color: #1f2937;
 	}
 
 	.add-lineage-btn {
@@ -200,7 +200,7 @@
 	}
 
 	:global(.dark) .add-lineage-btn {
-		border-color: #2e2e2e;
+		border-color: #1f2937;
 		background: #e55633;
 	}
 

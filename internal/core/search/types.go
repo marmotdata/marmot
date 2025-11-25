@@ -9,7 +9,6 @@ const (
 	ResultTypeAsset    ResultType = "asset"
 	ResultTypeGlossary ResultType = "glossary"
 	ResultTypeTeam     ResultType = "team"
-	ResultTypeUser     ResultType = "user"
 )
 
 // Result represents a unified search result

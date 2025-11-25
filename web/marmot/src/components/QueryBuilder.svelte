@@ -73,7 +73,7 @@
 		{
 			value: 'kind',
 			label: '@kind',
-			description: 'Resource kind (asset, glossary, team, user)',
+			description: 'Resource kind (asset, glossary, team)',
 			category: 'Simple Field'
 		},
 		{ value: 'type', label: '@type', description: 'Asset type', category: 'Simple Field' },

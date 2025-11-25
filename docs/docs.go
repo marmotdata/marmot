@@ -4356,14 +4356,12 @@ const docTemplate = `{
             "enum": [
                 "asset",
                 "glossary",
-                "team",
-                "user"
+                "team"
             ],
             "x-enum-varnames": [
                 "ResultTypeAsset",
                 "ResultTypeGlossary",
-                "ResultTypeTeam",
-                "ResultTypeUser"
+                "ResultTypeTeam"
             ]
         },
         "time.Duration": {
@@ -4376,7 +4374,12 @@ const docTemplate = `{
                 1000000,
                 1000000000,
                 60000000000,
-                3600000000000
+                3600000000000,
+                1,
+                1000,
+                1000000,
+                1000000000,
+                60000000000
             ],
             "x-enum-varnames": [
                 "minDuration",
@@ -4386,7 +4389,12 @@ const docTemplate = `{
                 "Millisecond",
                 "Second",
                 "Minute",
-                "Hour"
+                "Hour",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
+                "Minute"
             ]
         },
         "ui.BannerResponse": {

@@ -90,15 +90,6 @@ func (s *Service) CreateTeam(ctx context.Context, name, description, createdBy s
 		return nil, err
 	}
 
-	if err := s.repo.AddMember(ctx, &TeamMember{
-		TeamID: team.ID,
-		UserID: createdBy,
-		Role:   RoleOwner,
-		Source: SourceManual,
-	}); err != nil {
-		return nil, fmt.Errorf("failed to add creator as owner: %w", err)
-	}
-
 	return team, nil
 }
 

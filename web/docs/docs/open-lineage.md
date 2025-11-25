@@ -34,7 +34,7 @@ Marmot maps OpenLineage events to specific asset types:
 
 ### Stub Assets
 
-Assets discovered for the first time via OpenLineage are marked as "stub assets" until enhanced by other integrations. This allows lineage tracking even for undocumented datasets without poluting the catalog with potential bad data.
+Assets discovered for the first time via OpenLineage are marked as "stub assets" until enhanced by other integrations. This allows lineage tracking even for undocumented datasets without polluting the catalog with potential bad data.
 
 ### Run History
 
@@ -47,9 +47,7 @@ All OpenLineage events are stored as run history, providing:
 
 ## Authentication
 
-By default, the OpenLineage endpoint requires authentication via API key. However, you can disable authentication for this endpoint if needed.
-
-The OpenLineage endpoint requires authentication via API key.
+By default, the OpenLineage endpoint requires authentication via an API key. However, you can disable authentication for this endpoint if needed.
 
 ### Generate API Key
 

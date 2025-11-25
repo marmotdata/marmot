@@ -85,8 +85,8 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 	// Get total count and facets
 	countQuery, countParams := r.buildCountQuery(filter)
 
-	var total, assetCount, glossaryCount, teamCount, userCount int
-	err = r.db.QueryRow(ctx, countQuery, countParams...).Scan(&total, &assetCount, &glossaryCount, &teamCount, &userCount)
+	var total, assetCount, glossaryCount, teamCount int
+	err = r.db.QueryRow(ctx, countQuery, countParams...).Scan(&total, &assetCount, &glossaryCount, &teamCount)
 	if err != nil {
 		r.recorder.RecordDBQuery(ctx, "unified_search_count", time.Since(start), false)
 		return nil, 0, nil, fmt.Errorf("counting search results: %w", err)
@@ -96,7 +96,6 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 		ResultTypeAsset:    assetCount,
 		ResultTypeGlossary: glossaryCount,
 		ResultTypeTeam:     teamCount,
-		ResultTypeUser:     userCount,
 	}
 
 	r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), true)
@@ -121,7 +120,6 @@ func (r *PostgresRepository) buildUnifiedSearchQuery(filter Filter) (string, []i
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
-	includeUsers := searchTypeIncluded(filter.Types, ResultTypeUser)
 
 	var unions []string
 	var params []interface{}
@@ -336,31 +334,6 @@ func (r *PostgresRepository) buildUnifiedSearchQuery(filter Filter) (string, []i
 		`, rankExpr, whereClause))
 	}
 
-	if includeUsers {
-		var rankExpr, whereClause string
-		if filter.Query != "" {
-			rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-			whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND active = TRUE"
-		} else {
-			rankExpr = "0"
-			whereClause = "WHERE active = TRUE"
-		}
-
-		unions = append(unions, fmt.Sprintf(`
-			SELECT
-				'user' as type,
-				id::text,
-				name,
-				username as description,
-				jsonb_build_object('username', username, 'active', active) as metadata,
-				'/users/' || id as url,
-				%s as rank,
-				updated_at
-			FROM users
-			%s
-		`, rankExpr, whereClause))
-	}
-
 	if len(unions) == 0 {
 		// No types selected, return empty query
 		return "SELECT NULL as type, NULL as id, NULL as name, NULL as description, NULL as metadata, NULL as url, 0 as rank, NULL as updated_at WHERE FALSE", []interface{}{}
@@ -390,7 +363,6 @@ func (r *PostgresRepository) buildCountQuery(filter Filter) (string, []interface
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
-	includeUsers := searchTypeIncluded(filter.Types, ResultTypeUser)
 
 	var unions []string
 	var params []interface{}
@@ -461,23 +433,9 @@ func (r *PostgresRepository) buildCountQuery(filter Filter) (string, []interface
 		}
 	}
 
-	if includeUsers {
-		if filter.Query != "" {
-			unions = append(unions, `
-				SELECT 'user' as type FROM users
-				WHERE search_text @@ websearch_to_tsquery('english', $1) AND active = TRUE
-			`)
-		} else {
-			unions = append(unions, `
-				SELECT 'user' as type FROM users
-				WHERE active = TRUE
-			`)
-		}
-	}
-
 	if len(unions) == 0 {
 		// No types selected
-		return "SELECT 0 as total, 0 as asset_count, 0 as glossary_count, 0 as team_count, 0 as user_count", []interface{}{}
+		return "SELECT 0 as total, 0 as asset_count, 0 as glossary_count, 0 as team_count", []interface{}{}
 	}
 
 	query := fmt.Sprintf(`
@@ -485,8 +443,7 @@ func (r *PostgresRepository) buildCountQuery(filter Filter) (string, []interface
 			COUNT(*) as total,
 			COALESCE(SUM(CASE WHEN type = 'asset' THEN 1 ELSE 0 END), 0) as asset_count,
 			COALESCE(SUM(CASE WHEN type = 'glossary' THEN 1 ELSE 0 END), 0) as glossary_count,
-			COALESCE(SUM(CASE WHEN type = 'team' THEN 1 ELSE 0 END), 0) as team_count,
-			COALESCE(SUM(CASE WHEN type = 'user' THEN 1 ELSE 0 END), 0) as user_count
+			COALESCE(SUM(CASE WHEN type = 'team' THEN 1 ELSE 0 END), 0) as team_count
 		FROM (
 			%s
 		) counts

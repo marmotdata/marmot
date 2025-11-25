@@ -47,7 +47,7 @@
 {:else}
 	<!-- Full Mode -->
 	<div
-		class="bg-earthy-brown-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700"
+		class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
 	>
 		<div class="flex p-4 cursor-pointer hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700" on:click={onClick}>
 			<div class="flex items-start space-x-3 flex-1 min-w-0">

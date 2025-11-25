@@ -164,10 +164,12 @@
 						{:else if activeTab === 'metadata'}
 							<div class="mt-6">
 								<MetadataView {asset} />
-								<h3 class="pt-4 text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-									Asset Sources
-								</h3>
-								<AssetSources sources={asset.sources || []} />
+								{#if asset.sources && asset.sources.length > 0}
+									<h3 class="pt-4 text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+										Asset Sources
+									</h3>
+									<AssetSources sources={asset.sources} />
+								{/if}
 							</div>
 						{:else if activeTab === 'environments'}
 							<div class="mt-6">

@@ -9,7 +9,7 @@
 	export let onNavigate: (() => void) | undefined = undefined;
 
 	interface SearchResult {
-		type: 'asset' | 'glossary' | 'team' | 'user';
+		type: 'asset' | 'glossary' | 'team';
 		id: string;
 		name: string;
 		description?: string;
@@ -124,8 +124,7 @@
 		const iconMap: Record<string, string> = {
 			asset: 'mdi:database',
 			glossary: 'mdi:book-open-variant',
-			team: 'mdi:account-group',
-			user: 'mdi:account'
+			team: 'mdi:account-group'
 		};
 		return iconMap[type] || 'mdi:file-document';
 	}
@@ -134,8 +133,7 @@
 		const colorMap: Record<string, string> = {
 			asset: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
 			glossary: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-			user: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
 		};
 		return colorMap[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
 	}
@@ -143,9 +141,6 @@
 	function getResultSubtitle(result: SearchResult): string {
 		if (result.type === 'asset' && result.metadata?.type) {
 			return result.metadata.type;
-		}
-		if (result.type === 'user' && result.metadata?.username) {
-			return `@${result.metadata.username}`;
 		}
 		if (result.description) {
 			return result.description;
@@ -165,7 +160,7 @@
 			on:keydown={handleKeydown}
 			on:focus={() => searchQuery && (showResults = true)}
 			type="text"
-			placeholder="Search assets, glossary, teams, users..."
+			placeholder="Search assets, glossary, teams..."
 			autofocus={autofocus}
 			class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-base"
 		/>

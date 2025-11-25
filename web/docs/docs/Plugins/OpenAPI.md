@@ -46,9 +46,9 @@ The following metadata fields are available:
 | description | string | A verbose explanation of the operation behaviour. |
 | external_docs | string | Link to the external documentation |
 | http_method | string | HTTP method |
-| license_identifier | string | SPDX license experession for the API |
-| license_name | string | Name of the license |
-| license_url | string | URL of the license |
+| license_identifier | string | SPDX licence expression for the API |
+| license_name | string | Name of the licence |
+| license_url | string | URL of the licence |
 | num_deprecated_endpoints | int | Number of deprecated endpoints in the OpenAPI specification |
 | num_endpoints | int | Number of endpoints in the OpenAPI specification |
 | openapi_version | string | Version of the OpenAPI spec |

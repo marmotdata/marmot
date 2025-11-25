@@ -354,7 +354,7 @@
 
 								<!-- Actions -->
 								<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-									{#if member.source === 'sso'}
+									{#if member.source === 'sso' && currentUserId !== member.user_id}
 										<button
 											onclick={() => convertToManual(member.user_id)}
 											class="text-xs text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
@@ -363,12 +363,12 @@
 											Make Permanent
 										</button>
 									{/if}
-									{#if (member.source === 'manual' || !team.created_via_sso) && currentUserId !== member.user_id}
+									{#if member.source === 'manual' || !team.created_via_sso}
 										<button
 											onclick={() => removeMemberDirect(member.user_id, member.source)}
 											disabled={removingMemberId === member.user_id}
 											class="p-1.5 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 transition-colors"
-											title="Remove member"
+											title={currentUserId === member.user_id ? "Leave team" : "Remove member"}
 										>
 											<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
 										</button>

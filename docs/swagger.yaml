@@ -960,13 +960,11 @@ definitions:
     - asset
     - glossary
     - team
-    - user
     type: string
     x-enum-varnames:
     - ResultTypeAsset
     - ResultTypeGlossary
     - ResultTypeTeam
-    - ResultTypeUser
   time.Duration:
     enum:
     - -9223372036854775808
@@ -977,6 +975,11 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
     type: integer
     x-enum-varnames:
     - minDuration
@@ -987,6 +990,11 @@ definitions:
     - Second
     - Minute
     - Hour
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
   ui.BannerResponse:
     properties:
       dismissible:
