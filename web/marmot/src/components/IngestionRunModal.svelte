@@ -160,7 +160,7 @@
 		const type = pathParts[0];
 		const name = pathParts.slice(2).join('/');
 
-		return `/assets/${encodeURIComponent(type)}/${encodeURIComponent(entity.entity_name)}`;
+		return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(entity.entity_name)}`;
 	}
 
 	function shouldShowAssetLink(entity: RunEntity): boolean {

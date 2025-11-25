@@ -5,11 +5,11 @@
 	import { goto } from '$app/navigation';
 	import { fetchApi } from '$lib/api';
 	import type { GlossaryTerm, TermsListResponse, Owner } from '$lib/glossary/types';
-	import QueryInput from '../../components/QueryInput.svelte';
-	import MarkdownRenderer from '../../components/MarkdownRenderer.svelte';
-	import RichTextEditor from '../../components/RichTextEditor.svelte';
-	import OwnerSelector from '../../components/OwnerSelector.svelte';
-	import Button from '../../components/Button.svelte';
+	import QueryInput from '../../../components/QueryInput.svelte';
+	import MarkdownRenderer from '../../../components/MarkdownRenderer.svelte';
+	import RichTextEditor from '../../../components/RichTextEditor.svelte';
+	import OwnerSelector from '../../../components/OwnerSelector.svelte';
+	import Button from '../../../components/Button.svelte';
 	import Icon from '@iconify/svelte';
 	import { auth } from '$lib/stores/auth';
 
@@ -43,8 +43,8 @@
 			searchQuery = query;
 		}
 
-		// Handle term selection from URL
-		const termId = $page.url.searchParams.get('term');
+		// Handle term selection from URL path
+		const termId = $page.params.id;
 		if (termId && (!selectedTerm || selectedTerm.id !== termId)) {
 			// Find the term in the loaded terms
 			const term = $terms.find(t => t.id === termId);
@@ -123,10 +123,10 @@
 		isEditing = false;
 		editedTerm = null;
 
-		// Update URL with selected term
-		const url = new URL(window.location.href);
-		url.searchParams.set('term', term.id);
-		goto(url.toString(), { replaceState: true, noScroll: true, keepFocus: true });
+		// Update URL with selected term using path parameter
+		const searchParams = $page.url.searchParams.toString();
+		const url = searchParams ? `/glossary/${term.id}?${searchParams}` : `/glossary/${term.id}`;
+		goto(url, { replaceState: true, noScroll: true, keepFocus: true });
 	}
 
 	async function loadTermById(termId: string) {

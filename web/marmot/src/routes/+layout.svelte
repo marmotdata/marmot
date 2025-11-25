@@ -9,7 +9,7 @@
 	import Icon from '@iconify/svelte';
 	import Banner from '$lib/components/Banner.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import Search from '../components/Search.svelte';
+	import GlobalSearch from '../components/GlobalSearch.svelte';
 
 	interface BannerConfig {
 		enabled: boolean;
@@ -25,7 +25,7 @@
 	let checkingAnonymousMode = true;
 	let manualNavigation = false;
 	let showSearchModal = false;
-	let searchInput: Search;
+	let searchInput: GlobalSearch;
 
 	const appName = 'Marmot';
 	const isMac = browser && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -90,12 +90,9 @@
 
 			showSearchModal = !showSearchModal;
 
-			if (showSearchModal) {
+			if (showSearchModal && searchInput) {
 				setTimeout(() => {
-					const textarea = document.querySelector('.search-modal-input textarea') as HTMLTextAreaElement;
-					if (textarea) {
-						textarea.focus();
-					}
+					searchInput.focus();
 				}, 100);
 			}
 		}
@@ -226,7 +223,7 @@
 										<span class={part.class}>{part.text}</span>
 									{/each}
 								{:else}
-									<span class="text-gray-600 dark:text-gray-400">Search assets...</span>
+									<span class="text-gray-600 dark:text-gray-400">Search everything...</span>
 								{/if}
 							</span>
 							<kbd class="px-2 py-0.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded flex-shrink-0">
@@ -248,16 +245,16 @@
 						</button>
 
 						<a
-							href="/assets"
+							href="/discover"
 							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
-								.url.pathname.startsWith('/assets')
+								.url.pathname.startsWith('/discover')
 								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
 						>
 							<span class="w-4 h-4 mr-1.5">
 								<Icon icon="material-symbols:database" />
 							</span>
-							<span>Assets</span>
+							<span>Discover</span>
 						</a>
 
 						<a
@@ -386,17 +383,8 @@
 			role="dialog"
 			tabindex="-1"
 		>
-			<div class="p-4 search-modal-input">
-				<Search bind:this={searchInput} autofocus={true} initialQuery={currentSearchQuery} onNavigate={() => (showSearchModal = false)} />
-			</div>
-			<div class="px-4 py-3 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
-				<p class="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-2">
-					<Icon icon="material-symbols:keyboard" class="w-3.5 h-3.5" />
-					<kbd class="px-1.5 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">{isMac ? '⌘' : 'Ctrl'}K</kbd>
-					to open,
-					<kbd class="px-1.5 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">ESC</kbd>
-					to close
-				</p>
+			<div class="p-6 search-modal-input">
+				<GlobalSearch bind:this={searchInput} autofocus={true} initialQuery={currentSearchQuery} onNavigate={() => (showSearchModal = false)} />
 			</div>
 		</div>
 	</div>

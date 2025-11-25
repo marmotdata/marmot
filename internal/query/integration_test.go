@@ -94,37 +94,37 @@ func TestQueryParsing(t *testing.T) {
 		{
 			name:           "Simple wildcard in metadata",
 			searchQuery:    `@metadata.name: "order*"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' LIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "order%"},
 		},
 		{
 			name:           "Multiple wildcards in metadata",
 			searchQuery:    `@metadata.name: "ord*_serv*"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' LIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "ord%_serv%"},
 		},
 		{
 			name:           "Wildcard with free text",
 			searchQuery:    `critical @metadata.name: "ord*" service`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' LIKE $2 AND (search_text @@ websearch_to_tsquery('english', $3) OR similarity(name, $3) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2 AND (search_text @@ websearch_to_tsquery('english', $3) OR similarity(name, $3) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "ord%", "service"},
 		},
 		{
 			name:           "Multiple_wildcards_with_boolean_operators",
 			searchQuery:    `@metadata.name: "ord*" AND @metadata.environment: "*prod*" OR @metadata.team: "dev*"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'name' LIKE $2 AND metadata->>'environment' LIKE $3) OR metadata->>'team' LIKE $4) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'name' ILIKE $2 AND metadata->>'environment' ILIKE $3) OR metadata->>'team' ILIKE $4) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "ord%", "%prod%", "dev%"},
 		},
 		{
 			name:           "Complex query with wildcards and free text",
 			searchQuery:    `critical @metadata.name: "ord*_service" AND @metadata.team: "dev*" production`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' LIKE $2 AND metadata->>'team' LIKE $3 AND (search_text @@ websearch_to_tsquery('english', $4) OR similarity(name, $4) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2 AND metadata->>'team' ILIKE $3 AND (search_text @@ websearch_to_tsquery('english', $4) OR similarity(name, $4) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "ord%_service", "dev%", "production"},
 		},
 		{
 			name:           "NOT_operator_with_wildcards_and_free_text",
 			searchQuery:    `production NOT @metadata.environment: "*test*" @metadata.name: "api*"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'name' LIKE $2) OR NOT (metadata->>'environment' LIKE $3) AND (search_text @@ websearch_to_tsquery('english', $4) OR similarity(name, $4) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'name' ILIKE $2) OR NOT (metadata->>'environment' ILIKE $3) AND (search_text @@ websearch_to_tsquery('english', $4) OR similarity(name, $4) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "api%", "%test%", "production"},
 		},
 	}

@@ -11,7 +11,6 @@
 	import Lineage from '$lib/../components/Lineage.svelte';
 	import SchemaSummary from '$lib/../components/SchemaSummary.svelte';
 	import AssetEnvironmentsView from '$lib/../components/AssetEnvironmentsView.svelte';
-	import QueryPreview from '$lib/../components/QueryPreview.svelte';
 	import RunHistory from '$lib/../components/RunHistory.svelte';
 
 	let asset: Asset | null = $state(null);
@@ -49,13 +48,12 @@
 	}
 
 	function handleBack() {
-		goto('/assets');
+		window.history.back();
 	}
 
 	let visibleTabs = $derived(
 		[
 			'metadata',
-			'query',
 			'environments',
 			'schema',
 			'documentation',
@@ -68,7 +66,6 @@
 			)
 				return false;
 			if (tab === 'documentation' && !asset?.documentation) return false;
-			if (tab === 'query' && (!asset?.query || !asset.query.trim())) return false;
 			if (tab === 'run-history' && !asset?.has_run_history) return false;
 			return true;
 		})
@@ -99,7 +96,7 @@
 			<div class="flex-none p-8">
 				<div class="mb-6">
 					<button
-						on:click={handleBack}
+						onclick={handleBack}
 						class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
 					>
 						<svg class="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -110,7 +107,7 @@
 								d="M10 19l-7-7m0 0l7-7m-7 7h18"
 							/>
 						</svg>
-						Back to Assets
+						Back
 					</button>
 				</div>
 
@@ -148,7 +145,7 @@
 									? 'border-earthy-terracotta-700 text-earthy-terracotta-700'
 									: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
 								aria-selected={activeTab === tab}
-								on:click={() => setActiveTab(tab)}
+								onclick={() => setActiveTab(tab)}
 							>
 								{tab === 'run-history' ? 'Run History' : tab.charAt(0).toUpperCase() + tab.slice(1)}
 							</button>
@@ -171,13 +168,6 @@
 									Asset Sources
 								</h3>
 								<AssetSources sources={asset.sources || []} />
-							</div>
-						{:else if activeTab === 'query'}
-							<div class="mt-6">
-								<QueryPreview
-									query={asset.query || ''}
-									queryLanguage={asset.query_language || 'sql'}
-								/>
 							</div>
 						{:else if activeTab === 'environments'}
 							<div class="mt-6">

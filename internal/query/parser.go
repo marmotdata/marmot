@@ -120,7 +120,14 @@ func (p *Parser) Parse(queryStr string) (*Query, error) {
 	for i < len(tokens) {
 		token := tokens[i]
 
-		if strings.HasPrefix(token, "@metadata.") {
+		// Check if token is a structured query field (@metadata, @kind, @type, @provider, @name)
+		isStructuredField := strings.HasPrefix(token, "@metadata.") ||
+			strings.HasPrefix(token, "@kind") ||
+			strings.HasPrefix(token, "@type") ||
+			strings.HasPrefix(token, "@provider") ||
+			strings.HasPrefix(token, "@name")
+
+		if isStructuredField {
 			if len(freeTextTokens) > 0 {
 				query.FreeText = strings.Join(freeTextTokens, " ")
 				freeTextTokens = []string{}
@@ -179,10 +186,32 @@ func (p *Parser) parseFilter(tokens []string) (Filter, int, error) {
 		return Filter{}, 0, fmt.Errorf("incomplete filter expression")
 	}
 
-	// Split the nested field path
-	fieldPath := strings.Split(strings.TrimPrefix(tokens[0], "@metadata."), ".")
-	if len(fieldPath) > 5 { // Optional depth limit
-		return Filter{}, 0, fmt.Errorf("metadata nesting depth exceeds limit of 5")
+	// Determine field type and extract field path
+	var fieldType FieldType
+	var fieldPath []string
+
+	token := tokens[0]
+	switch {
+	case strings.HasPrefix(token, "@metadata."):
+		fieldType = FieldMetadata
+		fieldPath = strings.Split(strings.TrimPrefix(token, "@metadata."), ".")
+		if len(fieldPath) > 5 { // Optional depth limit
+			return Filter{}, 0, fmt.Errorf("metadata nesting depth exceeds limit of 5")
+		}
+	case strings.HasPrefix(token, "@kind"):
+		fieldType = FieldKind
+		fieldPath = []string{"kind"}
+	case strings.HasPrefix(token, "@type"):
+		fieldType = FieldAssetType
+		fieldPath = []string{"type"}
+	case strings.HasPrefix(token, "@provider"):
+		fieldType = FieldProvider
+		fieldPath = []string{"provider"}
+	case strings.HasPrefix(token, "@name"):
+		fieldType = FieldName
+		fieldPath = []string{"name"}
+	default:
+		return Filter{}, 0, fmt.Errorf("unsupported field prefix: %s", token)
 	}
 
 	// Validate each field name
@@ -236,8 +265,9 @@ func (p *Parser) parseFilter(tokens []string) (Filter, int, error) {
 		toVal, _ := strconv.ParseFloat(to, 64)
 
 		return Filter{
-			Field:    fieldPath,
-			Operator: operator,
+			Field:     fieldPath,
+			FieldType: fieldType,
+			Operator:  operator,
 			Range: &RangeValue{
 				From:      fromVal,
 				To:        toVal,
@@ -295,8 +325,9 @@ func (p *Parser) parseFilter(tokens []string) (Filter, int, error) {
 	}
 
 	return Filter{
-		Field:    fieldPath,
-		Operator: operator,
-		Value:    value,
+		Field:     fieldPath,
+		FieldType: fieldType,
+		Operator:  operator,
+		Value:     value,
 	}, consumed, nil
 }

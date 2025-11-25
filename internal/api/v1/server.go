@@ -16,6 +16,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
+	searchAPI "github.com/marmotdata/marmot/internal/api/v1/search"
 	"github.com/marmotdata/marmot/internal/api/v1/teams"
 	"github.com/marmotdata/marmot/internal/api/v1/ui"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
@@ -26,6 +27,7 @@ import (
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
+	searchService "github.com/marmotdata/marmot/internal/core/search"
 	teamService "github.com/marmotdata/marmot/internal/core/team"
 	userService "github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/metrics"
@@ -59,6 +61,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	authRepo := authService.NewPostgresRepository(db)
 	runRepo := runService.NewPostgresRepository(db)
 	glossaryRepo := glossaryService.NewPostgresRepository(db, recorder)
+	searchRepo := searchService.NewPostgresRepository(db, recorder)
 
 	assetSvc := asset.NewService(assetRepo)
 	userSvc := userService.NewService(userRepo)
@@ -69,6 +72,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	glossarySvc := glossaryService.NewService(glossaryRepo)
 	teamRepo := teamService.NewPostgresRepository(db)
 	teamSvc := teamService.NewService(teamRepo)
+	searchSvc := searchService.NewService(searchRepo)
 
 	oauthManager := authService.NewOAuthManager()
 
@@ -97,6 +101,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
+		searchAPI.NewHandler(searchSvc, userSvc, authSvc, config),
 		ui.NewHandler(config),
 	}
 

@@ -37,9 +37,10 @@ func TestBuildSQL(t *testing.T) {
 				Bool: &BooleanQuery{
 					Must: []Filter{
 						{
-							Field:    []string{"field1"},
-							Operator: OpEquals,
-							Value:    "value1",
+							Field:     []string{"field1"},
+							FieldType: FieldMetadata,
+							Operator:  OpEquals,
+							Value:     "value1",
 						},
 					},
 				},
@@ -63,9 +64,10 @@ func TestBuildSQL(t *testing.T) {
 				Bool: &BooleanQuery{
 					Must: []Filter{
 						{
-							Field:    []string{"field1"},
-							Operator: OpEquals,
-							Value:    "value1",
+							Field:     []string{"field1"},
+							FieldType: FieldMetadata,
+							Operator:  OpEquals,
+							Value:     "value1",
 						},
 					},
 				},
@@ -102,23 +104,26 @@ func TestBuildConditions(t *testing.T) {
 			bq: &BooleanQuery{
 				Must: []Filter{
 					{
-						Field:    []string{"field1"},
-						Operator: OpEquals,
-						Value:    "value1",
+						Field:     []string{"field1"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value1",
 					},
 				},
 				Should: []Filter{
 					{
-						Field:    []string{"field2"},
-						Operator: OpEquals,
-						Value:    "value2",
+						Field:     []string{"field2"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value2",
 					},
 				},
 				MustNot: []Filter{
 					{
-						Field:    []string{"field3"},
-						Operator: OpEquals,
-						Value:    "value3",
+						Field:     []string{"field3"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value3",
 					},
 				},
 			},
@@ -152,14 +157,16 @@ func TestBuildBooleanConditions(t *testing.T) {
 			bq: &BooleanQuery{
 				Must: []Filter{
 					{
-						Field:    []string{"field1"},
-						Operator: OpEquals,
-						Value:    "value1",
+						Field:     []string{"field1"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value1",
 					},
 					{
-						Field:    []string{"field2"},
-						Operator: OpEquals,
-						Value:    "value2",
+						Field:     []string{"field2"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value2",
 					},
 				},
 			},
@@ -172,14 +179,16 @@ func TestBuildBooleanConditions(t *testing.T) {
 			bq: &BooleanQuery{
 				Should: []Filter{
 					{
-						Field:    []string{"field1"},
-						Operator: OpEquals,
-						Value:    "value1",
+						Field:     []string{"field1"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value1",
 					},
 					{
-						Field:    []string{"field2"},
-						Operator: OpEquals,
-						Value:    "value2",
+						Field:     []string{"field2"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value2",
 					},
 				},
 			},
@@ -192,14 +201,16 @@ func TestBuildBooleanConditions(t *testing.T) {
 			bq: &BooleanQuery{
 				MustNot: []Filter{
 					{
-						Field:    []string{"field1"},
-						Operator: OpEquals,
-						Value:    "value1",
+						Field:     []string{"field1"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value1",
 					},
 					{
-						Field:    []string{"field2"},
-						Operator: OpEquals,
-						Value:    "value2",
+						Field:     []string{"field2"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value2",
 					},
 				},
 			},
@@ -212,14 +223,16 @@ func TestBuildBooleanConditions(t *testing.T) {
 			bq: &BooleanQuery{
 				Must: []Filter{
 					{
-						Field:    []string{"nested"},
-						Operator: OpEquals,
+						Field:     []string{"nested"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
 						Value: &BooleanQuery{
 							Must: []Filter{
 								{
-									Field:    []string{"field1"},
-									Operator: OpEquals,
-									Value:    "value1",
+									Field:     []string{"field1"},
+									FieldType: FieldMetadata,
+									Operator:  OpEquals,
+									Value:     "value1",
 								},
 							},
 						},
@@ -235,23 +248,26 @@ func TestBuildBooleanConditions(t *testing.T) {
 			bq: &BooleanQuery{
 				Must: []Filter{
 					{
-						Field:    []string{"field1"},
-						Operator: OpEquals,
-						Value:    "value1",
+						Field:     []string{"field1"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value1",
 					},
 				},
 				Should: []Filter{
 					{
-						Field:    []string{"field2"},
-						Operator: OpEquals,
-						Value:    "value2",
+						Field:     []string{"field2"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value2",
 					},
 				},
 				MustNot: []Filter{
 					{
-						Field:    []string{"field3"},
-						Operator: OpEquals,
-						Value:    "value3",
+						Field:     []string{"field3"},
+						FieldType: FieldMetadata,
+						Operator:  OpEquals,
+						Value:     "value3",
 					},
 				},
 			},
@@ -286,9 +302,10 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "Equals",
 			filter: Filter{
-				Field:    []string{"field1"},
-				Operator: OpEquals,
-				Value:    "value1",
+				Field:     []string{"field1"},
+				FieldType: FieldMetadata,
+				Operator:  OpEquals,
+				Value:     "value1",
 			},
 			expectedCond:     "metadata->>'field1' = $1",
 			expectedParams:   []interface{}{"value1"},
@@ -298,9 +315,10 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "NotEquals",
 			filter: Filter{
-				Field:    []string{"field1"},
-				Operator: OpNotEquals,
-				Value:    "value1",
+				Field:     []string{"field1"},
+				FieldType: FieldMetadata,
+				Operator:  OpNotEquals,
+				Value:     "value1",
 			},
 			expectedCond:     "metadata->>'field1' != $1",
 			expectedParams:   []interface{}{"value1"},
@@ -310,9 +328,10 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "Contains",
 			filter: Filter{
-				Field:    []string{"field1"},
-				Operator: OpContains,
-				Value:    "value1",
+				Field:     []string{"field1"},
+				FieldType: FieldMetadata,
+				Operator:  OpContains,
+				Value:     "value1",
 			},
 			expectedCond:     "metadata->>'field1' ILIKE $1",
 			expectedParams:   []interface{}{"%value1%"},
@@ -322,9 +341,10 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "Greater",
 			filter: Filter{
-				Field:    []string{"field1"},
-				Operator: OpGreater,
-				Value:    10,
+				Field:     []string{"field1"},
+				FieldType: FieldMetadata,
+				Operator:  OpGreater,
+				Value:     10,
 			},
 			expectedCond:     "(metadata->>'field1')::numeric > $1",
 			expectedParams:   []interface{}{"10"},
@@ -334,9 +354,10 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "Less",
 			filter: Filter{
-				Field:    []string{"field1"},
-				Operator: OpLess,
-				Value:    10,
+				Field:     []string{"field1"},
+				FieldType: FieldMetadata,
+				Operator:  OpLess,
+				Value:     10,
 			},
 			expectedCond:     "(metadata->>'field1')::numeric < $1",
 			expectedParams:   []interface{}{"10"},
@@ -346,9 +367,10 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "GreaterEqual",
 			filter: Filter{
-				Field:    []string{"field1"},
-				Operator: OpGreaterEqual,
-				Value:    10,
+				Field:     []string{"field1"},
+				FieldType: FieldMetadata,
+				Operator:  OpGreaterEqual,
+				Value:     10,
 			},
 			expectedCond:     "(metadata->>'field1')::numeric >= $1",
 			expectedParams:   []interface{}{"10"},
@@ -358,9 +380,10 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "LessEqual",
 			filter: Filter{
-				Field:    []string{"field1"},
-				Operator: OpLessEqual,
-				Value:    10,
+				Field:     []string{"field1"},
+				FieldType: FieldMetadata,
+				Operator:  OpLessEqual,
+				Value:     10,
 			},
 			expectedCond:     "(metadata->>'field1')::numeric <= $1",
 			expectedParams:   []interface{}{"10"},
@@ -370,11 +393,12 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "Wildcard",
 			filter: Filter{
-				Field:    []string{"field1"},
-				Operator: OpWildcard,
-				Value:    "val*ue*",
+				Field:     []string{"field1"},
+				FieldType: FieldMetadata,
+				Operator:  OpWildcard,
+				Value:     "val*ue*",
 			},
-			expectedCond:     "metadata->>'field1' LIKE $1",
+			expectedCond:     "metadata->>'field1' ILIKE $1",
 			expectedParams:   []interface{}{"val%ue%"},
 			expectedStartIdx: 1,
 			expectedErr:      nil,
@@ -382,9 +406,10 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "Unsupported Operator",
 			filter: Filter{
-				Field:    []string{"field1"},
-				Operator: "invalid",
-				Value:    "value1",
+				Field:     []string{"field1"},
+				FieldType: FieldMetadata,
+				Operator:  "invalid",
+				Value:     "value1",
 			},
 			expectedCond:     "",
 			expectedParams:   nil,
@@ -394,9 +419,10 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "Nested Field",
 			filter: Filter{
-				Field:    []string{"parent", "child", "field1"},
-				Operator: OpEquals,
-				Value:    "value1",
+				Field:     []string{"parent", "child", "field1"},
+				FieldType: FieldMetadata,
+				Operator:  OpEquals,
+				Value:     "value1",
 			},
 			expectedCond:     "metadata->'parent'->'child'->>'field1' = $1",
 			expectedParams:   []interface{}{"value1"},
@@ -418,20 +444,208 @@ func TestBuildFilterCondition(t *testing.T) {
 		{
 			name: "Nested Boolean",
 			filter: Filter{
-				Field:    []string{"nested"},
-				Operator: OpEquals,
+				Field:     []string{"nested"},
+				FieldType: FieldMetadata,
+				Operator:  OpEquals,
 				Value: &BooleanQuery{
 					Must: []Filter{
 						{
-							Field:    []string{"field1"},
-							Operator: OpEquals,
-							Value:    "value1",
+							Field:     []string{"field1"},
+							FieldType: FieldMetadata,
+							Operator:  OpEquals,
+							Value:     "value1",
 						},
 					},
 				},
 			},
 			expectedCond:     "(metadata->>'field1' = $1)",
 			expectedParams:   []interface{}{"value1"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		// New tests for @type field
+		{
+			name: "Type Equals",
+			filter: Filter{
+				Field:     []string{"type"},
+				FieldType: FieldAssetType,
+				Operator:  OpEquals,
+				Value:     "dataset",
+			},
+			expectedCond:     "type ILIKE $1",
+			expectedParams:   []interface{}{"dataset"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		{
+			name: "Type Contains",
+			filter: Filter{
+				Field:     []string{"type"},
+				FieldType: FieldAssetType,
+				Operator:  OpContains,
+				Value:     "data",
+			},
+			expectedCond:     "type ILIKE $1",
+			expectedParams:   []interface{}{"%data%"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		{
+			name: "Type NotEquals",
+			filter: Filter{
+				Field:     []string{"type"},
+				FieldType: FieldAssetType,
+				Operator:  OpNotEquals,
+				Value:     "table",
+			},
+			expectedCond:     "type NOT ILIKE $1",
+			expectedParams:   []interface{}{"table"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		// New tests for @kind field
+		{
+			name: "Kind Equals",
+			filter: Filter{
+				Field:     []string{"kind"},
+				FieldType: FieldKind,
+				Operator:  OpEquals,
+				Value:     "asset",
+			},
+			expectedCond:     "'asset' ILIKE $1",
+			expectedParams:   []interface{}{"asset"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		{
+			name: "Kind Contains",
+			filter: Filter{
+				Field:     []string{"kind"},
+				FieldType: FieldKind,
+				Operator:  OpContains,
+				Value:     "gloss",
+			},
+			expectedCond:     "'asset' ILIKE $1",
+			expectedParams:   []interface{}{"%gloss%"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		// New tests for @provider field (array)
+		{
+			name: "Provider Equals",
+			filter: Filter{
+				Field:     []string{"provider"},
+				FieldType: FieldProvider,
+				Operator:  OpEquals,
+				Value:     "snowflake",
+			},
+			expectedCond:     "EXISTS (SELECT 1 FROM unnest(providers) AS elem WHERE elem ILIKE $1)",
+			expectedParams:   []interface{}{"snowflake"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		{
+			name: "Provider Contains",
+			filter: Filter{
+				Field:     []string{"provider"},
+				FieldType: FieldProvider,
+				Operator:  OpContains,
+				Value:     "snow",
+			},
+			expectedCond:     "EXISTS (SELECT 1 FROM unnest(providers) AS elem WHERE elem ILIKE $1)",
+			expectedParams:   []interface{}{"%snow%"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		{
+			name: "Provider NotEquals",
+			filter: Filter{
+				Field:     []string{"provider"},
+				FieldType: FieldProvider,
+				Operator:  OpNotEquals,
+				Value:     "bigquery",
+			},
+			expectedCond:     "NOT EXISTS (SELECT 1 FROM unnest(providers) AS elem WHERE elem ILIKE $1)",
+			expectedParams:   []interface{}{"bigquery"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		{
+			name: "Provider Wildcard Error",
+			filter: Filter{
+				Field:     []string{"provider"},
+				FieldType: FieldProvider,
+				Operator:  OpWildcard,
+				Value:     "snow*",
+			},
+			expectedCond:     "",
+			expectedParams:   nil,
+			expectedStartIdx: 1,
+			expectedErr:      fmt.Errorf("wildcard operator not supported for provider fields"),
+		},
+		{
+			name: "Provider Numeric Comparison Error",
+			filter: Filter{
+				Field:     []string{"provider"},
+				FieldType: FieldProvider,
+				Operator:  OpGreater,
+				Value:     10,
+			},
+			expectedCond:     "",
+			expectedParams:   nil,
+			expectedStartIdx: 1,
+			expectedErr:      fmt.Errorf("comparison operators not supported for provider fields"),
+		},
+		// New tests for @name field
+		{
+			name: "Name Equals",
+			filter: Filter{
+				Field:     []string{"name"},
+				FieldType: FieldName,
+				Operator:  OpEquals,
+				Value:     "myasset",
+			},
+			expectedCond:     "name ILIKE $1",
+			expectedParams:   []interface{}{"myasset"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		{
+			name: "Name Contains",
+			filter: Filter{
+				Field:     []string{"name"},
+				FieldType: FieldName,
+				Operator:  OpContains,
+				Value:     "asset",
+			},
+			expectedCond:     "name ILIKE $1",
+			expectedParams:   []interface{}{"%asset%"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		{
+			name: "Name NotEquals",
+			filter: Filter{
+				Field:     []string{"name"},
+				FieldType: FieldName,
+				Operator:  OpNotEquals,
+				Value:     "otherasset",
+			},
+			expectedCond:     "name NOT ILIKE $1",
+			expectedParams:   []interface{}{"otherasset"},
+			expectedStartIdx: 1,
+			expectedErr:      nil,
+		},
+		{
+			name: "Name Wildcard",
+			filter: Filter{
+				Field:     []string{"name"},
+				FieldType: FieldName,
+				Operator:  OpWildcard,
+				Value:     "my*asset",
+			},
+			expectedCond:     "name ILIKE $1",
+			expectedParams:   []interface{}{"my%asset"},
 			expectedStartIdx: 1,
 			expectedErr:      nil,
 		},

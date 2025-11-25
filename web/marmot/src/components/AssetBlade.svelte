@@ -61,7 +61,7 @@
 
 	$: isVisible = asset != null;
 	$: fullViewUrl =
-		assetUrl || `/assets/${asset?.type.toLowerCase()}/${encodeURIComponent(asset?.name)}`;
+		assetUrl || `/discover/${asset?.type.toLowerCase()}/${encodeURIComponent(asset?.name)}`;
 
 	let loadingLineage = false;
 	let lineageError: string | null = null;
@@ -203,7 +203,7 @@
 
 			// Close the blade and redirect to assets list
 			if (staticPlacement) {
-				goto('/assets');
+				goto('/discover');
 			} else {
 				onClose();
 				// Trigger a page refresh to update the asset list

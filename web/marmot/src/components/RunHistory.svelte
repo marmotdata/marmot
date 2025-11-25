@@ -181,7 +181,7 @@
 				<div class="flex justify-between items-center mb-3">
 					<h4 class="text-base font-medium text-gray-900 dark:text-gray-100">Recent Runs</h4>
 					<a
-						href="/assets/{asset?.type?.toLowerCase()}/{encodeURIComponent(
+						href="/discover/{asset?.type?.toLowerCase()}/{encodeURIComponent(
 							asset?.name || ''
 						)}?tab=run-history"
 						class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400"

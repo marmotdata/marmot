@@ -76,19 +76,19 @@
 			label: 'Total Assets',
 			value: totalAssets,
 			icon: 'material-symbols:database',
-			href: '/assets'
+			href: '/discover'
 		},
 		{
 			label: 'Asset Types',
 			value: Object.keys(summary.types).length,
 			icon: 'material-symbols:category',
-			href: '/assets'
+			href: '/discover'
 		},
 		{
 			label: 'Data Sources',
 			value: Object.keys(summary.providers).length,
 			icon: 'material-symbols:cloud',
-			href: '/assets'
+			href: '/discover'
 		}
 	]);
 
@@ -97,7 +97,7 @@
 			title: 'Explore Assets',
 			description: 'Browse and discover your data assets',
 			icon: 'material-symbols:database',
-			href: '/assets',
+			href: '/discover',
 			color: 'terracotta'
 		},
 		{
@@ -241,19 +241,19 @@
 	function navigateToAsset(asset: RecentAsset | PopularAsset) {
 		const type = 'asset_type' in asset ? asset.asset_type : asset.type;
 		const name = 'asset_name' in asset ? asset.asset_name : asset.name;
-		goto(`/assets/${encodeURIComponent(type)}/${encodeURIComponent(name)}`);
+		goto(`/discover/${encodeURIComponent(type)}/${encodeURIComponent(name)}`);
 	}
 
 	function navigateToType(type: string) {
-		goto(`/assets?types=${encodeURIComponent(type)}`);
+		goto(`/discover?types=${encodeURIComponent(type)}`);
 	}
 
 	function navigateToProvider(provider: string) {
-		goto(`/assets?providers=${encodeURIComponent(provider)}`);
+		goto(`/discover?providers=${encodeURIComponent(provider)}`);
 	}
 
 	function navigateToTag(tag: string) {
-		goto(`/assets?tags=${encodeURIComponent(tag)}`);
+		goto(`/discover?tags=${encodeURIComponent(tag)}`);
 	}
 
 	function getColorClasses(color: string) {
@@ -410,7 +410,7 @@
 								Your Assets
 							</h2>
 							<a
-								href="/assets"
+								href="/discover"
 								class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
 							>
 								View all →
@@ -421,7 +421,7 @@
 								<div class="divide-y divide-gray-200 dark:divide-gray-700">
 									{#each userAssets as asset}
 										<a
-											href="/assets/{asset.type}/{encodeURIComponent(asset.name)}"
+											href="/discover/{asset.type}/{encodeURIComponent(asset.name)}"
 											onclick={(e) => { e.preventDefault(); handleAssetClick(asset); }}
 											class="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
 										>

@@ -29,7 +29,7 @@
 		{:else}
 			{#each Object.entries(items) as [key, value]}
 				<a
-					href="/assets?{filterType}={key}"
+					href="/discover?{filterType}={key}"
 					class="w-full bg-earthy-brown-50 dark:bg-gray-900 shadow-md dark:shadow-gray-700 rounded-lg p-4 flex flex-col items-center cursor-pointer transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 				>
 					<Icon name={key} iconSize="lg" />

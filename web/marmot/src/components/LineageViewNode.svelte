@@ -16,7 +16,7 @@
 		class="rounded border border-gray-200 dark:border-gray-700"
 	>
 		<a
-			href={`/assets/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
+			href={`/discover/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
 			class="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
 		>
 			<Icon
@@ -67,7 +67,7 @@
 			</div>
 			<div class="flex items-center gap-2 flex-shrink-0 ml-4">
 				<a
-					href={`/assets/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
+					href={`/discover/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
 					class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-earthy-terracotta-700 whitespace-nowrap"
 					on:click|stopPropagation
 				>
@@ -115,7 +115,7 @@
 								metadata={node.asset.metadata}
 								maxDepth={0}
 								maxCharLength={50}
-								showDetailsLink={`/assets/${node.asset.id}`}
+								showDetailsLink={`/discover/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
 							/>
 						</div>
 					</div>

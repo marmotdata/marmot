@@ -126,7 +126,7 @@
 
 	function handleAssetClick(item: any) {
 		if (item.asset_type && item.asset_name) {
-			goto(`/assets/${encodeURIComponent(item.asset_type)}/${encodeURIComponent(item.asset_name)}`);
+			goto(`/discover/${encodeURIComponent(item.asset_type)}/${encodeURIComponent(item.asset_name)}`);
 		}
 	}
 

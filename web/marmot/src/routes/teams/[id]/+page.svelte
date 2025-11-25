@@ -210,13 +210,13 @@
 <div class="container max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 	<!-- Back Button -->
 	<div class="mb-6">
-		<a
-			href="/admin?tab=teams"
+		<button
+			onclick={() => window.history.back()}
 			class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-500"
 		>
 			<ArrowLeft class="h-4 w-4 mr-1" />
-			Back to Teams
-		</a>
+			Back
+		</button>
 	</div>
 
 	{#if loading}
@@ -431,7 +431,7 @@
 					<div class="space-y-1">
 						{#each assets as asset}
 							<a
-								href="/assets/{asset.type}/{encodeURIComponent(asset.name)}"
+								href="/discover/{asset.type}/{encodeURIComponent(asset.name)}"
 								onclick={(e) => handleAssetClick(e, asset)}
 								class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
 							>

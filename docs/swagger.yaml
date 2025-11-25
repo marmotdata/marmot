@@ -918,6 +918,55 @@ definitions:
     - pipeline_name
     - source_name
     type: object
+  search.Response:
+    properties:
+      facets:
+        additionalProperties:
+          type: integer
+        type: object
+      limit:
+        type: integer
+      offset:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/search.Result'
+        type: array
+      total:
+        type: integer
+    type: object
+  search.Result:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      rank:
+        type: number
+      type:
+        $ref: '#/definitions/search.ResultType'
+      updated_at:
+        type: string
+      url:
+        type: string
+    type: object
+  search.ResultType:
+    enum:
+    - asset
+    - glossary
+    - team
+    - user
+    type: string
+    x-enum-varnames:
+    - ResultTypeAsset
+    - ResultTypeGlossary
+    - ResultTypeTeam
+    - ResultTypeUser
   time.Duration:
     enum:
     - -9223372036854775808
@@ -928,8 +977,40 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
+    - -9223372036854775808
+    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
+    - 60000000000
+    - 3600000000000
     type: integer
     x-enum-varnames:
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
+    - minDuration
+    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
+    - Minute
+    - Hour
     - minDuration
     - maxDuration
     - Nanosecond
@@ -2617,6 +2698,50 @@ paths:
       summary: Start run
       tags:
       - runs
+  /search:
+    get:
+      description: Search across assets, glossary terms, teams, and users
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - collectionFormat: csv
+        description: Filter by result types (asset, glossary, team, user)
+        in: query
+        items:
+          type: string
+        name: types
+        type: array
+      - default: 20
+        description: Limit
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/search.Response'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Unified search
+      tags:
+      - search
   /ui/config:
     get:
       description: Get UI configuration including banner settings

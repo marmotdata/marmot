@@ -98,7 +98,7 @@
 
 	function getHighlightedText(text: string): { text: string; class: string }[] {
 		const regex =
-			/@metadata\.[a-zA-Z0-9_.]+|"[^"]*"|'[^']*'|[:=<>!]+|\b(AND|OR|NOT|contains|range)\b/g;
+			/@(?:metadata\.[a-zA-Z0-9_.]+|kind|type|provider|name)|"[^"]*"|'[^']*'|[:=<>!]+|\b(AND|OR|NOT|contains|range)\b/g;
 		const parts: { text: string; class: string }[] = [];
 		let lastIndex = 0;
 		let match;
@@ -114,7 +114,7 @@
 			const matchText = match[0];
 			let colorClass = 'text-gray-900 dark:text-gray-100';
 
-			if (matchText.startsWith('@metadata.')) {
+			if (matchText.startsWith('@')) {
 				colorClass = tokenColors.field;
 			} else if (matchText.match(/^["'][^"']*["']$/)) {
 				colorClass = tokenColors.value;
@@ -142,46 +142,93 @@
 		return parts;
 	}
 
-	function getMetadataFieldAtPosition(
+	function getFieldAtPosition(
 		value: string,
 		position: number
 	): {
 		field: string | null;
+		fieldType: 'simple' | 'metadata' | null;
 		startPosition: number;
 		hasOperator: boolean;
 		valuePrefix?: string;
 		needsOperator?: boolean;
+		showFieldSuggestions?: boolean;
 	} {
-		const metadataMatches = Array.from(value.matchAll(/@metadata\./g));
-		let relevantMetadataMatch = null;
-		for (const match of metadataMatches) {
-			if (
-				match.index !== undefined &&
-				position >= match.index &&
-				position <= match.index + '@metadata.'.length
-			) {
-				relevantMetadataMatch = match;
-				break;
+		// Check if we're at the beginning of an @ field
+		const atMatches = Array.from(value.matchAll(/@/g));
+		for (const match of atMatches) {
+			if (match.index !== undefined && position === match.index + 1) {
+				return {
+					field: '',
+					fieldType: null,
+					startPosition: match.index,
+					hasOperator: false,
+					showFieldSuggestions: true
+				};
 			}
 		}
 
-		if (relevantMetadataMatch) {
+		// Check for simple fields (@kind, @type, @provider, @name)
+		const simpleFieldMatches = Array.from(value.matchAll(/@(kind|type|provider|name)\b/g));
+		let currentSimpleMatch = null;
+		for (const match of simpleFieldMatches) {
+			if (match.index !== undefined && match.index < position) {
+				const fieldEnd = match.index + match[0].length;
+				const afterField = value.substring(fieldEnd);
+				// Only consider this match if cursor is within reasonable range
+				if (position <= fieldEnd + 50) {
+					currentSimpleMatch = match;
+				}
+			}
+		}
+
+		if (currentSimpleMatch && currentSimpleMatch.index !== undefined) {
+			const fieldStart = currentSimpleMatch.index;
+			const fieldName = currentSimpleMatch[1]; // kind, type, provider, or name
+			const fieldEnd = fieldStart + currentSimpleMatch[0].length;
+			const afterField = value.substring(fieldEnd);
+			const hasOperator = /^\s*[:<>=]+\s*/.test(afterField);
+			const needsOperator = !hasOperator && /^\s+/.test(afterField);
+
+			if (hasOperator) {
+				const operatorMatch = afterField.match(/^\s*[:<>=]+\s*/);
+				if (operatorMatch) {
+					const valueStart = fieldEnd + operatorMatch[0].length;
+					if (position >= valueStart) {
+						const valueText = value.substring(valueStart, position);
+						return {
+							field: fieldName,
+							fieldType: 'simple',
+							startPosition: valueStart,
+							hasOperator: true,
+							valuePrefix: valueText.trim()
+						};
+					}
+				}
+			}
+
 			return {
-				field: '',
-				startPosition: relevantMetadataMatch.index,
-				hasOperator: false
+				field: fieldName,
+				fieldType: 'simple',
+				startPosition: fieldEnd,
+				hasOperator,
+				needsOperator
 			};
 		}
 
+		// Check for @metadata fields
+		const metadataMatches = Array.from(value.matchAll(/@metadata\./g));
+
+		// Find the most recent @metadata. before or at the cursor
 		let currentMatch = null;
 		for (const match of metadataMatches) {
-			if (match.index !== undefined && match.index < position) {
+			if (match.index !== undefined && match.index <= position) {
 				currentMatch = match;
 			}
 		}
 
 		if (!currentMatch || currentMatch.index === undefined) {
-			return { field: null, startPosition: 0, hasOperator: false };
+			return { field: null, fieldType: null, startPosition: 0, hasOperator: false };
 		}
 
 		const metadataStart = currentMatch.index;
@@ -189,7 +236,7 @@
 
 		const fieldMatch = afterMetadata.match(/^@metadata\.([a-zA-Z0-9_.]*)/);
 		if (!fieldMatch) {
-			return { field: null, startPosition: 0, hasOperator: false };
+			return { field: null, fieldType: null, startPosition: 0, hasOperator: false };
 		}
 
 		const field = fieldMatch[1];
@@ -205,6 +252,7 @@
 				const valueText = value.substring(valueStart, position);
 				return {
 					field,
+					fieldType: 'metadata',
 					startPosition: valueStart,
 					hasOperator: true,
 					valuePrefix: valueText.trim()
@@ -214,6 +262,7 @@
 
 		return {
 			field,
+			fieldType: 'metadata',
 			startPosition: metadataStart + fieldEnd.length,
 			hasOperator,
 			needsOperator
@@ -221,15 +270,41 @@
 	}
 
 	async function fetchMetadataFields(): Promise<MetadataFieldSuggestion[]> {
-		if (metadataFieldsCache) {
+		// Only use cache if it has data
+		if (metadataFieldsCache && metadataFieldsCache.length > 0) {
+			console.log('Using cached metadata fields:', metadataFieldsCache.length);
 			return metadataFieldsCache;
 		}
 
+		console.log('Fetching metadata fields from API...');
 		try {
 			const response = await fetchApi('/assets/suggestions/metadata/fields');
-			const data: MetadataFieldSuggestion[] = await response.json();
-			metadataFieldsCache = data;
-			return data;
+			console.log('API response status:', response.status, response.statusText);
+			console.log('API response headers:', response.headers);
+
+			if (!response.ok) {
+				const errorText = await response.text();
+				console.error('Failed to fetch metadata fields:', response.statusText, errorText);
+				return [];
+			}
+
+			const responseText = await response.text();
+			console.log('Raw API response:', responseText);
+
+			let data: MetadataFieldSuggestion[] = [];
+			try {
+				data = responseText ? JSON.parse(responseText) : [];
+			} catch (parseError) {
+				console.error('Failed to parse JSON:', parseError);
+				return [];
+			}
+
+			console.log('Parsed API data:', data);
+			console.log('Data type:', typeof data, 'Is array:', Array.isArray(data));
+
+			metadataFieldsCache = data || [];
+			console.log('Cached metadata fields:', metadataFieldsCache.length);
+			return metadataFieldsCache;
 		} catch (error) {
 			console.error('Error fetching metadata fields:', error);
 			return [];
@@ -248,8 +323,12 @@
 				limit: '10'
 			});
 			const response = await fetchApi(`/assets/suggestions/metadata/values?${params}`);
+			if (!response.ok) {
+				console.error('Failed to fetch metadata values:', response.statusText);
+				return [];
+			}
 			const data: MetadataValueSuggestion[] = await response.json();
-			return data;
+			return Array.isArray(data) ? data : [];
 		} catch (error) {
 			console.error('Error fetching metadata values:', error);
 			return [];
@@ -262,9 +341,30 @@
 		if (!input) return;
 
 		const cursorPos = input.selectionStart || 0;
-		const fieldInfo = getMetadataFieldAtPosition(value, cursorPos);
+		const fieldInfo = getFieldAtPosition(value, cursorPos);
+		console.log('updateSuggestions - fieldInfo:', {
+			fieldType: fieldInfo.fieldType,
+			field: fieldInfo.field,
+			hasOperator: fieldInfo.hasOperator,
+			value: value.substring(0, cursorPos)
+		});
 
-		if (fieldInfo.field === null && !value.substring(0, cursorPos).includes('@metadata.')) {
+		// Show field suggestions when user types @
+		if (fieldInfo.showFieldSuggestions) {
+			suggestionStartPos = fieldInfo.startPosition;
+			selectedIndex = -1;
+			suggestions = [
+				{ type: 'field', value: 'kind', display: '@kind' },
+				{ type: 'field', value: 'type', display: '@type' },
+				{ type: 'field', value: 'provider', display: '@provider' },
+				{ type: 'field', value: 'name', display: '@name' },
+				{ type: 'field', value: 'metadata', display: '@metadata.' }
+			];
+			showDropdown = true;
+			return;
+		}
+
+		if (fieldInfo.field === null && fieldInfo.fieldType === null) {
 			showDropdown = false;
 			return;
 		}
@@ -279,104 +379,55 @@
 			return;
 		}
 
-		if (!fieldInfo.hasOperator) {
+		if (!fieldInfo.hasOperator && fieldInfo.fieldType === 'metadata') {
 			const fields = await fetchMetadataFields();
-			let searchPath = fieldInfo.field ? fieldInfo.field.toLowerCase() : '';
-			const parts = searchPath.split('.');
+			console.log('Fetched metadata fields:', fields ? fields.length : 'null');
 
-			if (parts.length === 1 && parts[0] === '') {
-				suggestions = fields
-					.filter((f) => f.path_parts.length > 0)
-					.map((f) => ({
-						type: f.types[0],
-						value: f.path_parts[0],
-						display: f.path_parts[0],
-						count: f.count
-					}))
-					.filter(
-						(suggestion, index, self) =>
-							index === self.findIndex((s) => s.display === suggestion.display)
-					)
-					.sort((a, b) => (b.count || 0) - (a.count || 0));
-			} else {
-				const searchPathClean = searchPath.endsWith('.') ? searchPath.slice(0, -1) : searchPath;
-				const searchParts = searchPathClean.split('.');
-
-				if (searchParts.length === 1) {
-					const currentTerm = searchParts[0];
-					suggestions = fields
-						.filter((f) => f.path_parts.length > 0)
-						.map((f) => ({
-							type: f.types[0],
-							value: f.path_parts[0],
-							display: f.path_parts[0],
-							count: f.count
-						}))
-						.filter(
-							(suggestion, index, self) =>
-								index === self.findIndex((s) => s.display === suggestion.display)
-						)
-						.filter((suggestion) => suggestion.display.toLowerCase().startsWith(currentTerm))
-						.sort((a, b) => (b.count || 0) - (a.count || 0));
-				} else {
-					const filteredFields = fields.filter((f) => {
-						const fieldId = f.field.toLowerCase();
-						return fieldId.startsWith(searchPathClean + '.') && fieldId !== searchPathClean;
-					});
-
-					if (filteredFields.length === 0 && searchPath.endsWith('.')) {
-						const parentField = fields.find((f) => f.field.toLowerCase() === searchPathClean);
-						if (!parentField || parentField.type !== 'object') {
-							suggestions = operators;
-						}
-					} else {
-						suggestions = filteredFields
-							.map((f) => {
-								const remainingPath = f.field.substring(searchPathClean.length + 1);
-								const nextPart = remainingPath.split('.')[0];
-								const isObject =
-									f.types[0] === 'object' ||
-									fields.some((field) =>
-										field.field.toLowerCase().startsWith(f.field.toLowerCase() + '.')
-									);
-								return {
-									type: isObject ? 'object' : 'value',
-									value: searchPathClean + '.' + nextPart,
-									display: nextPart,
-									count: f.count
-								};
-							})
-							.filter((s) => s.display)
-							.filter(
-								(suggestion, index, self) =>
-									index === self.findIndex((s) => s.display === suggestion.display)
-							)
-							.sort((a, b) => (b.count || 0) - (a.count || 0));
-
-						if (!searchPath.endsWith('.') && parts.length > 0) {
-							const lastPart = parts[parts.length - 1];
-							if (lastPart && lastPart.length > 0) {
-								const filterTerm = lastPart.toLowerCase();
-								suggestions = suggestions.filter((suggestion) =>
-									suggestion.display.toLowerCase().startsWith(filterTerm)
-								);
-							}
-						}
-					}
-				}
-			}
-
-			if (searchPath.endsWith('.')) {
-				showDropdown = suggestions.length > 0;
+			// Check if fields is null or empty
+			if (!fields || fields.length === 0) {
+				console.log('No metadata fields available');
+				showDropdown = false;
 				return;
 			}
+
+			let searchPath = fieldInfo.field ? fieldInfo.field.toLowerCase() : '';
+			console.log('Search path for metadata:', searchPath);
+
+			// Simple approach: show all fields that match the search prefix
+			if (searchPath === '') {
+				// Show all top-level fields
+				suggestions = fields
+					.map((f) => ({
+						type: f.type,
+						value: f.field,
+						display: f.field,
+						count: f.count
+					}))
+					.sort((a, b) => (b.count || 0) - (a.count || 0))
+					.slice(0, 20); // Limit to 20 suggestions
+			} else {
+				// Filter fields that start with the search path
+				suggestions = fields
+					.filter((f) => f.field.toLowerCase().startsWith(searchPath))
+					.map((f) => ({
+						type: f.type,
+						value: f.field,
+						display: f.field,
+						count: f.count
+					}))
+					.sort((a, b) => (b.count || 0) - (a.count || 0))
+					.slice(0, 20); // Limit to 20 suggestions
+			}
+			console.log('Built metadata suggestions:', suggestions.length);
 		} else if (fieldInfo.hasOperator) {
 			const prefix = fieldInfo.valuePrefix || '';
 			const fieldKey = fieldInfo.field!;
 
+			// For simple fields, fetch metadata values using the field name
+			// (backend should recognize kind, type, provider as special fields)
 			if (lastFetchedValues[fieldKey]) {
 				suggestions = lastFetchedValues[fieldKey]
-					.filter((v) => v.value !== null)
+					.filter((v) => v && v.value !== null && v.value !== undefined)
 					.map((v) => ({
 						type: 'value',
 						value: v.value,
@@ -392,10 +443,10 @@
 			}
 
 			const values = await debouncedFetchMetadataValues(fieldInfo.field!, prefix);
-			if (values) {
+			if (values && Array.isArray(values) && values.length > 0) {
 				lastFetchedValues[fieldKey] = values;
 				suggestions = values
-					.filter((v) => v.value !== null)
+					.filter((v) => v && v.value !== null && v.value !== undefined)
 					.map((v) => ({
 						type: 'value',
 						value: v.value,
@@ -412,6 +463,7 @@
 		}
 
 		showDropdown = suggestions.length > 0;
+		console.log('updateSuggestions - showDropdown:', showDropdown, 'suggestions:', suggestions.length);
 	}
 
 	function adjustTextareaHeight() {
@@ -527,7 +579,24 @@
 		if (!input) return;
 
 		const cursorPos = input.selectionStart || 0;
-		const fieldInfo = getMetadataFieldAtPosition(value, cursorPos);
+		const fieldInfo = getFieldAtPosition(value, cursorPos);
+
+		// Handle field suggestions (when user types @)
+		if (suggestion.type === 'field') {
+			const beforeAt = value.substring(0, fieldInfo.startPosition);
+			const afterCursor = value.substring(cursorPos);
+			const fieldText = suggestion.value === 'metadata' ? '@metadata.' : `@${suggestion.value}`;
+			value = beforeAt + fieldText + afterCursor;
+			const newCursorPos = beforeAt.length + fieldText.length;
+			requestAnimationFrame(() => {
+				if (input) {
+					input.setSelectionRange(newCursorPos, newCursorPos);
+					input.focus();
+				}
+			});
+			showDropdown = false;
+			return;
+		}
 
 		if (suggestion.type === 'operator') {
 			const beforeCursor = value.substring(0, fieldInfo.startPosition);
@@ -540,14 +609,14 @@
 					input.focus();
 				}
 			});
+			showDropdown = false;
 			return;
 		}
 
-		if (!fieldInfo.hasOperator) {
+		if (!fieldInfo.hasOperator && fieldInfo.fieldType === 'metadata') {
 			const metadataPrefix = '@metadata.';
 			const lastMetadataIndex = value.lastIndexOf(metadataPrefix);
 			const beforeMetadata = value.substring(0, lastMetadataIndex);
-			const afterMetadata = value.substring(lastMetadataIndex + metadataPrefix.length);
 
 			value =
 				beforeMetadata +

@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/query"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -447,7 +448,7 @@ func (r *PostgresRepository) scanMultipleAssets(ctx context.Context, query strin
 func (r *PostgresRepository) GetMetadataFields(ctx context.Context) ([]MetadataFieldSuggestion, error) {
 	query := `
    	WITH RECURSIVE all_metadata_keys AS (
-   		SELECT 
+   		SELECT
    			key as path,
    			key as field,
    			value,
@@ -457,11 +458,14 @@ func (r *PostgresRepository) GetMetadataFields(ctx context.Context) ([]MetadataF
    			ARRAY[jsonb_typeof(value)] as types
    		FROM assets,
    			jsonb_each(metadata)
-   		WHERE metadata != '{}'::jsonb AND is_stub = FALSE
-   		
+   		WHERE metadata IS NOT NULL
+   			AND metadata != '{}'::jsonb
+   			AND jsonb_typeof(metadata) = 'object'
+   			AND is_stub = FALSE
+
    		UNION ALL
-   		
-   		SELECT 
+
+   		SELECT
    			mk.path || '.' || e.key,
    			e.key,
    			e.value,
@@ -521,87 +525,241 @@ func (r *PostgresRepository) GetMetadataFieldsWithContext(ctx context.Context, q
 func (r *PostgresRepository) scanMetadataFields(ctx context.Context, query string, args ...interface{}) ([]MetadataFieldSuggestion, error) {
 	rows, err := r.db.Query(ctx, query, args...)
 	if err != nil {
+		log.Error().Err(err).Msg("Error executing metadata fields query")
 		return nil, fmt.Errorf("querying metadata fields: %w", err)
 	}
 	defer rows.Close()
 
-	var suggestions []MetadataFieldSuggestion
+	suggestions := make([]MetadataFieldSuggestion, 0)
+	rowCount := 0
 	for rows.Next() {
+		rowCount++
 		var s MetadataFieldSuggestion
 		if err := rows.Scan(&s.Field, &s.Type, &s.Count, &s.Example, &s.PathParts, &s.Types); err != nil {
+			log.Error().Err(err).Int("row", rowCount).Msg("Error scanning metadata field row")
 			return nil, fmt.Errorf("scanning metadata field: %w", err)
 		}
+		log.Debug().Str("field", s.Field).Str("type", s.Type).Int("count", s.Count).Msg("Scanned metadata field")
 		suggestions = append(suggestions, s)
 	}
 
+	if err := rows.Err(); err != nil {
+		log.Error().Err(err).Msg("Error iterating metadata fields rows")
+		return nil, fmt.Errorf("iterating rows: %w", err)
+	}
+
+	log.Info().Int("total", len(suggestions)).Int("rows_scanned", rowCount).Msg("Metadata fields query completed")
 	return suggestions, nil
 }
 
 func (r *PostgresRepository) GetMetadataValues(ctx context.Context, field string, prefix string, limit int) ([]MetadataValueSuggestion, error) {
-	pathArray := strings.Split(field, ".")
-	query := `
-   	WITH RECURSIVE MetadataValues AS (
-   		SELECT
-   			a.id,
-   			jsonb_extract_path(a.metadata, VARIADIC $1::text[]) as value,
-   			1 as level
-   		FROM assets a
-   		WHERE jsonb_typeof(jsonb_extract_path(a.metadata, VARIADIC $1::text[])) != 'null' AND is_stub = FALSE
-   	)
-   	SELECT
-   		value::text,
-   		COUNT(DISTINCT id)
-   	FROM MetadataValues
-   	WHERE (
-   		$2 = '' OR
-   		CASE
-   			WHEN jsonb_typeof(value) = 'string' THEN value::text ILIKE $2 || '%'
-   			WHEN jsonb_typeof(value) IN ('number', 'boolean') THEN value::text ILIKE $2 || '%'
-   			ELSE FALSE
-   		END
-   	)
-   	AND jsonb_typeof(value) != 'null'
-   	GROUP BY value
-   	ORDER BY COUNT(DISTINCT id) DESC, value ASC
-   	LIMIT $3`
+	// Handle special fields: kind, type, provider
+	switch field {
+	case "kind":
+		// Kind represents result types: asset, glossary, team, user
+		// Return hardcoded values filtered by prefix
+		kinds := []string{"asset", "glossary", "team", "user"}
+		var suggestions []MetadataValueSuggestion
+		for _, kind := range kinds {
+			if prefix == "" || strings.Contains(strings.ToLower(kind), strings.ToLower(prefix)) {
+				suggestions = append(suggestions, MetadataValueSuggestion{
+					Value: kind,
+					Count: 1, // Count would need to query across multiple tables
+				})
+			}
+		}
+		return suggestions, nil
 
-	return r.scanMetadataValues(ctx, query, pathArray, prefix, limit)
+	case "type":
+		// Type queries the asset type column
+		query := `
+			SELECT
+				type as value,
+				COUNT(DISTINCT id) as count
+			FROM assets
+			WHERE is_stub = FALSE
+			AND ($1 = '' OR type ILIKE '%' || $1 || '%')
+			GROUP BY type
+			ORDER BY count DESC, value ASC
+			LIMIT $2`
+		return r.scanMetadataValues(ctx, query, prefix, limit)
+
+	case "provider":
+		// Provider queries the providers array
+		query := `
+			SELECT
+				unnest(providers) as value,
+				COUNT(DISTINCT id) as count
+			FROM assets
+			WHERE is_stub = FALSE
+			AND ($1 = '' OR EXISTS (
+				SELECT 1 FROM unnest(providers) AS p WHERE p ILIKE '%' || $1 || '%'
+			))
+			GROUP BY value
+			ORDER BY count DESC, value ASC
+			LIMIT $2`
+		return r.scanMetadataValues(ctx, query, prefix, limit)
+
+	case "name":
+		// Name queries the name column
+		query := `
+			SELECT
+				name as value,
+				COUNT(DISTINCT id) as count
+			FROM assets
+			WHERE is_stub = FALSE
+			AND ($1 = '' OR name ILIKE '%' || $1 || '%')
+			GROUP BY name
+			ORDER BY count DESC, value ASC
+			LIMIT $2`
+		return r.scanMetadataValues(ctx, query, prefix, limit)
+
+	default:
+		// Regular metadata field query
+		pathArray := strings.Split(field, ".")
+		query := `
+			WITH RECURSIVE MetadataValues AS (
+				SELECT
+					a.id,
+					jsonb_extract_path(a.metadata, VARIADIC $1::text[]) as value,
+					1 as level
+				FROM assets a
+				WHERE jsonb_typeof(jsonb_extract_path(a.metadata, VARIADIC $1::text[])) != 'null' AND is_stub = FALSE
+			)
+			SELECT
+				value::text,
+				COUNT(DISTINCT id)
+			FROM MetadataValues
+			WHERE (
+				$2 = '' OR
+				CASE
+					WHEN jsonb_typeof(value) = 'string' THEN value::text ILIKE $2 || '%'
+					WHEN jsonb_typeof(value) IN ('number', 'boolean') THEN value::text ILIKE $2 || '%'
+					ELSE FALSE
+				END
+			)
+			AND jsonb_typeof(value) != 'null'
+			GROUP BY value
+			ORDER BY COUNT(DISTINCT id) DESC, value ASC
+			LIMIT $3`
+
+		return r.scanMetadataValues(ctx, query, pathArray, prefix, limit)
+	}
 }
 
 func (r *PostgresRepository) GetMetadataValuesWithContext(ctx context.Context, field string, prefix string, limit int, queryContext *MetadataContext) ([]MetadataValueSuggestion, error) {
-	query := `
-   	WITH matching_assets AS (
-   		SELECT id FROM assets
-   		WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE
-   	),
-   	MetadataValues AS (
-   		SELECT
-   			a.id,
-   			je.key,
-   			je.value
-   		FROM assets a
-   		JOIN matching_assets ma ON a.id = ma.id
-   		CROSS JOIN LATERAL jsonb_each(a.metadata) AS je
-   		WHERE a.metadata IS NOT NULL
-   	)
-   	SELECT
-   		value::text,
-   		COUNT(DISTINCT id)
-   	FROM MetadataValues
-   	WHERE key = $2
-   	AND (
-   		$3 = '' OR
-   		CASE
-   			WHEN jsonb_typeof(value) = 'string' THEN value::text ILIKE $3 || '%'
-   			WHEN jsonb_typeof(value) IN ('number', 'boolean') THEN value::text ILIKE $3 || '%'
-   			ELSE FALSE
-   		END
-   	)
-   	GROUP BY value
-   	ORDER BY COUNT(DISTINCT id) DESC, value ASC
-   	LIMIT $4`
+	// Handle special fields: kind, type, provider
+	switch field {
+	case "kind":
+		// Kind represents result types: asset, glossary, team, user
+		// Return hardcoded values filtered by prefix (context doesn't affect these)
+		kinds := []string{"asset", "glossary", "team", "user"}
+		var suggestions []MetadataValueSuggestion
+		for _, kind := range kinds {
+			if prefix == "" || strings.Contains(strings.ToLower(kind), strings.ToLower(prefix)) {
+				suggestions = append(suggestions, MetadataValueSuggestion{
+					Value: kind,
+					Count: 1, // Count would need to query across multiple tables
+				})
+			}
+		}
+		return suggestions, nil
 
-	return r.scanMetadataValues(ctx, query, queryContext.Query, field, prefix, limit)
+	case "type":
+		// Type queries the asset type column with context
+		query := `
+			WITH matching_assets AS (
+				SELECT id FROM assets
+				WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE
+			)
+			SELECT
+				a.type as value,
+				COUNT(DISTINCT a.id) as count
+			FROM assets a
+			JOIN matching_assets ma ON a.id = ma.id
+			WHERE is_stub = FALSE
+			AND ($2 = '' OR a.type ILIKE '%' || $2 || '%')
+			GROUP BY a.type
+			ORDER BY count DESC, value ASC
+			LIMIT $3`
+		return r.scanMetadataValues(ctx, query, queryContext.Query, prefix, limit)
+
+	case "provider":
+		// Provider queries the providers array
+		query := `
+			WITH matching_assets AS (
+				SELECT id FROM assets
+				WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE
+			)
+			SELECT
+				unnest(a.providers) as value,
+				COUNT(DISTINCT a.id) as count
+			FROM assets a
+			JOIN matching_assets ma ON a.id = ma.id
+			WHERE is_stub = FALSE
+			AND ($2 = '' OR EXISTS (
+				SELECT 1 FROM unnest(a.providers) AS p WHERE p ILIKE '%' || $2 || '%'
+			))
+			GROUP BY value
+			ORDER BY count DESC, value ASC
+			LIMIT $3`
+		return r.scanMetadataValues(ctx, query, queryContext.Query, prefix, limit)
+
+	case "name":
+		// Name queries the name column with context
+		query := `
+			WITH matching_assets AS (
+				SELECT id FROM assets
+				WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE
+			)
+			SELECT
+				a.name as value,
+				COUNT(DISTINCT a.id) as count
+			FROM assets a
+			JOIN matching_assets ma ON a.id = ma.id
+			WHERE is_stub = FALSE
+			AND ($2 = '' OR a.name ILIKE '%' || $2 || '%')
+			GROUP BY a.name
+			ORDER BY count DESC, value ASC
+			LIMIT $3`
+		return r.scanMetadataValues(ctx, query, queryContext.Query, prefix, limit)
+
+	default:
+		// Regular metadata field query
+		query := `
+			WITH matching_assets AS (
+				SELECT id FROM assets
+				WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE
+			),
+			MetadataValues AS (
+				SELECT
+					a.id,
+					je.key,
+					je.value
+				FROM assets a
+				JOIN matching_assets ma ON a.id = ma.id
+				CROSS JOIN LATERAL jsonb_each(a.metadata) AS je
+				WHERE a.metadata IS NOT NULL
+			)
+			SELECT
+				value::text,
+				COUNT(DISTINCT id)
+			FROM MetadataValues
+			WHERE key = $2
+			AND (
+				$3 = '' OR
+				CASE
+					WHEN jsonb_typeof(value) = 'string' THEN value::text ILIKE $3 || '%'
+					WHEN jsonb_typeof(value) IN ('number', 'boolean') THEN value::text ILIKE $3 || '%'
+					ELSE FALSE
+				END
+			)
+			GROUP BY value
+			ORDER BY COUNT(DISTINCT id) DESC, value ASC
+			LIMIT $4`
+
+		return r.scanMetadataValues(ctx, query, queryContext.Query, field, prefix, limit)
+	}
 }
 
 func (r *PostgresRepository) scanMetadataValues(ctx context.Context, query string, args ...interface{}) ([]MetadataValueSuggestion, error) {
@@ -611,7 +769,7 @@ func (r *PostgresRepository) scanMetadataValues(ctx context.Context, query strin
 	}
 	defer rows.Close()
 
-	var suggestions []MetadataValueSuggestion
+	suggestions := make([]MetadataValueSuggestion, 0)
 	for rows.Next() {
 		var s MetadataValueSuggestion
 		if err := rows.Scan(&s.Value, &s.Count); err != nil {
