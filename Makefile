@@ -13,7 +13,7 @@ build:
 	go build -o bin/$(BINARY_NAME) cmd/main.go
 
 dev: swagger build
-	./bin/$(BINARY_NAME) run
+	MARMOT_LOGGING_LEVEL=debug ./bin/$(BINARY_NAME) run
 
 frontend-build:
 	cd web/marmot && pnpm install && pnpm build

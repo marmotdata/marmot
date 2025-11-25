@@ -47,6 +47,8 @@ All OpenLineage events are stored as run history, providing:
 
 ## Authentication
 
+By default, the OpenLineage endpoint requires authentication via API key. However, you can disable authentication for this endpoint if needed.
+
 The OpenLineage endpoint requires authentication via API key.
 
 ### Generate API Key
@@ -62,6 +64,28 @@ The OpenLineage endpoint requires authentication via API key.
 POST /api/v1/lineage
 Authorization: X-API-Key <your-api-key>
 ```
+
+## Disable Authentication
+
+To disable authentication for the OpenLineage endpoint, set the following configuration:
+
+**Config file**
+
+```yaml
+auth:
+  openlineage:
+    enabled: false
+```
+
+**Environment variable:**
+
+```bash
+export MARMOT_AUTH_OPENLINEAGE_ENABLED=false
+```
+
+:::warning
+Disabling authentication allows anyone to send lineage events to your Marmot instance. Only use this in trusted environments.
+:::
 
 ## Configuration Examples
 

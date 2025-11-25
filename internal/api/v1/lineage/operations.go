@@ -205,7 +205,7 @@ func (h *Handler) ingestOpenLineageEvent(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	log.Info().Str("body", string(bodyBytes)).Msg("Received OpenLineage event")
+	log.Debug().Str("body", string(bodyBytes)).Msg("Received OpenLineage event")
 
 	var event lineage.RunEvent
 	if err := json.Unmarshal(bodyBytes, &event); err != nil {
@@ -214,22 +214,17 @@ func (h *Handler) ingestOpenLineageEvent(w http.ResponseWriter, r *http.Request)
 		return
 	}
 
-	user, ok := common.GetAuthenticatedUser(r.Context())
-	if !ok {
-		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
-		return
-	}
+	log.Info().
+		Str("event_type", event.EventType).
+		Str("run_id", event.Run.RunID).
+		Str("job_namespace", event.Job.Namespace).
+		Str("job_name", event.Job.Name).
+		Int("inputs_count", len(event.Inputs)).
+		Int("outputs_count", len(event.Outputs)).
+		Str("producer", event.Producer).
+		Msg("Processing OpenLineage event")
 
-	// log.Info().
-	// 	Str("event_type", event.EventType).
-	// 	Str("run_id", event.Run.RunID).
-	// 	Str("job_namespace", event.Job.Namespace).
-	// 	Str("job_name", event.Job.Name).
-	// 	Int("inputs_count", len(event.Inputs)).
-	// 	Int("outputs_count", len(event.Outputs)).
-	// 	Str("producer", event.Producer).
-
-	if err := h.lineageService.ProcessOpenLineageEvent(r.Context(), &event, user.Name); err != nil {
+	if err := h.lineageService.ProcessOpenLineageEvent(r.Context(), &event, "openlineage"); err != nil {
 		log.Error().Err(err).
 			Str("event_type", event.EventType).
 			Str("run_id", event.Run.RunID).

@@ -17,6 +17,10 @@ type AnonymousAuthConfig struct {
 	Role    string `mapstructure:"role"`
 }
 
+type OpenLineageAuthConfig struct {
+	Enabled bool `mapstructure:"enabled"`
+}
+
 type RateLimitConfig struct {
 	Enabled bool `mapstructure:"enabled"`
 }
@@ -82,8 +86,9 @@ type Config struct {
 	} `mapstructure:"logging"`
 
 	Auth struct {
-		Providers map[string]*OAuthProviderConfig `mapstructure:"providers"`
-		Anonymous AnonymousAuthConfig             `mapstructure:"anonymous"`
+		Providers   map[string]*OAuthProviderConfig `mapstructure:"providers"`
+		Anonymous   AnonymousAuthConfig             `mapstructure:"anonymous"`
+		OpenLineage OpenLineageAuthConfig           `mapstructure:"openlineage"`
 	} `mapstructure:"auth"`
 
 	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
@@ -161,6 +166,7 @@ func loadConfig(configPath string) error {
 
 	v.BindEnv("auth.anonymous.enabled")
 	v.BindEnv("auth.anonymous.role")
+	v.BindEnv("auth.openlineage.enabled")
 
 	v.BindEnv("server.root_url")
 
@@ -210,6 +216,7 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("database.conn_lifetime", 5) // minutes
 
 	v.SetDefault("auth.anonymous.role", "user")
+	v.SetDefault("auth.openlineage.enabled", true)
 
 	// Logging defaults
 	v.SetDefault("logging.level", "info")

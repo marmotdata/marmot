@@ -27,6 +27,19 @@ func NewHandler(lineageService lineage.Service, userService user.Service, authSe
 }
 
 func (h *Handler) Routes() []common.Route {
+	// Build OpenLineage middleware conditionally based on config
+	var openLineageMiddleware []func(http.HandlerFunc) http.HandlerFunc
+	if h.config.Auth.OpenLineage.Enabled {
+		// Auth enabled (default): require auth and manage permission
+		openLineageMiddleware = []func(http.HandlerFunc) http.HandlerFunc{
+			common.WithAuth(h.userService, h.authService, h.config),
+			common.RequirePermission(h.userService, "assets", "manage"),
+		}
+	} else {
+		// Auth disabled: no auth required for OpenLineage endpoint
+		openLineageMiddleware = []func(http.HandlerFunc) http.HandlerFunc{}
+	}
+
 	return []common.Route{
 		{
 			Path:    "/api/v1/lineage/assets/{id}",
@@ -75,15 +88,12 @@ func (h *Handler) Routes() []common.Route {
 				common.RequirePermission(h.userService, "assets", "manage"),
 			},
 		},
-		// OpenLineage endpoint
+		// OpenLineage endpoint - auth configurable via auth.openlineage.enabled
 		{
-			Path:    "/api/v1/lineage",
-			Method:  http.MethodPost,
-			Handler: h.ingestOpenLineageEvent,
-			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService, h.config),
-				common.RequirePermission(h.userService, "assets", "manage"),
-			},
+			Path:       "/api/v1/lineage",
+			Method:     http.MethodPost,
+			Handler:    h.ingestOpenLineageEvent,
+			Middleware: openLineageMiddleware,
 		},
 	}
 }

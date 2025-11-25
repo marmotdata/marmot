@@ -46,10 +46,11 @@ auth:
 | `database.connLifetime`  | Connection lifetime (minutes)          | `30`        | `MARMOT_DATABASE_CONN_LIFETIME` |
 | `server.host`            | Server host                            | `0.0.0.0`   | `MARMOT_SERVER_HOST`            |
 | `server.port`            | Server port                            | `8080`      | `MARMOT_SERVER_PORT`            |
-| `logging.level`          | Log level (debug, info, warn, error)   | `info`      | `MARMOT_LOGGING_LEVEL`          |
-| `logging.format`         | Log format (json, console)             | `json`      | `MARMOT_LOGGING_FORMAT`         |
-| `auth.anonymous.enabled` | Enable anonymous authentication        | `false`     | `MARMOT_AUTH_ANONYMOUS_ENABLED` |
-| `auth.anonymous.role`    | Role to be assigned to anonymous users | `user`      | `MARMOT_AUTH_ANONYMOUS_ROLE`    |
+| `logging.level`              | Log level (debug, info, warn, error)   | `info`      | `MARMOT_LOGGING_LEVEL`              |
+| `logging.format`             | Log format (json, console)             | `json`      | `MARMOT_LOGGING_FORMAT`             |
+| `auth.anonymous.enabled`     | Enable anonymous authentication        | `false`     | `MARMOT_AUTH_ANONYMOUS_ENABLED`     |
+| `auth.anonymous.role`        | Role to be assigned to anonymous users | `user`      | `MARMOT_AUTH_ANONYMOUS_ROLE`        |
+| `auth.openlineage.enabled`   | Enable auth for OpenLineage endpoint   | `true`      | `MARMOT_AUTH_OPENLINEAGE_ENABLED`   |
 
 ## Configuration Loading
 

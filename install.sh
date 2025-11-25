@@ -30,7 +30,7 @@ fi
 
 if [ -z "$VERSION" ]; then
     echo "Could not determine the latest version. Defaulting to 0.1.0"
-    VERSION="0.1.0"
+    VERSION="0.4.0"
 fi
 
 echo "Installing Marmot version ${VERSION}..."
