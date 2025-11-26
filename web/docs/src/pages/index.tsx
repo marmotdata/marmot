@@ -28,8 +28,8 @@ export default function Home(): JSX.Element {
     >
       <div className="bg-earthy-brown-50 min-h-screen">
         <Hero />
-        <Value />
         <Benefits />
+        {/* <Value /> */}
         <Integrations />
         <DataSources />
         <CTA />
