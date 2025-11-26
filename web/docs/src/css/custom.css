@@ -460,6 +460,7 @@ html[data-theme="dark"] {
   animation: pulse-glow 2s infinite;
   border: none !important;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  margin-right: 0 !important;
 }
 
 .demo-button:hover {
@@ -623,4 +624,24 @@ html[data-theme="dark"] .kafka-icon {
   color: #fcd34d;
   animation: sparkle 2s ease-in-out infinite;
   animation-delay: 1.2s;
+}
+
+/* Hide navbar color mode toggle */
+.navbar__items button[class*="colorModeToggle"],
+.navbar__items button[class*="toggle"],
+.navbar__items > button[title*="mode"],
+.navbar__items > button[aria-label*="mode"],
+div[class*="colorModeToggle"],
+div[class*="toggle_"] {
+  display: none !important;
+}
+
+/* Remove padding/margin from navbar items right */
+.navbar__items--right {
+  gap: 0 !important;
+}
+
+.navbar__items--right > *:last-child {
+  margin-right: 0 !important;
+  padding-right: 0 !important;
 }

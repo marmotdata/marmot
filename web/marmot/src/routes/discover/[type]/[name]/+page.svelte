@@ -10,6 +10,7 @@
 	import MetadataView from '$lib/../components/MetadataView.svelte';
 	import Lineage from '$lib/../components/Lineage.svelte';
 	import SchemaSummary from '$lib/../components/SchemaSummary.svelte';
+	import SchemaEditor from '$lib/../components/SchemaEditor.svelte';
 	import AssetEnvironmentsView from '$lib/../components/AssetEnvironmentsView.svelte';
 	import RunHistory from '$lib/../components/RunHistory.svelte';
 
@@ -183,7 +184,7 @@
 							</div>
 						{:else if activeTab === 'schema'}
 							<div class="mt-6">
-								<SchemaSummary schema={asset.schema} />
+								<SchemaEditor asset={asset} />
 							</div>
 						{:else if activeTab === 'documentation'}
 							<div class="mt-6">

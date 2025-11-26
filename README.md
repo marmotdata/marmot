@@ -8,6 +8,7 @@
 _Open-source catalog for all your data assets. Search everything - tables, topics, queues, buckets, and more._
 
 [Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Quickstart](https://marmotdata.io/docs/quick-start)
+
 </div>
 
 ## What is Marmot?
@@ -32,9 +33,9 @@ Find any data asset across your entire organisation in seconds. Combine full-tex
 
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/search-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./docs/images/search-light.png">
-    <img alt="Marmot search interface showing filters and search results" src="./docs/images/search-light.png" style="max-height: 400px; width: auto;">
+    <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/search-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./web/docs/static/img/search-light.png">
+    <img alt="Marmot search interface showing filters and search results" src="./web/docs/static/img/search-light.png" style="max-height: 400px; width: auto;">
   </picture>
 </div>
 
@@ -46,9 +47,9 @@ Trace data flows from source to destination with interactive dependency graphs. 
 
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/lineage-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./docs/images/lineage-light.png">
-    <img alt="Interactive lineage graph showing data flow and dependencies" src="./docs/images/lineage-light.png" style="max-height: 400px; width: auto;">
+    <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/lineage-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./web/docs/static/img/lineage-light.png">
+    <img alt="Interactive lineage graph showing data flow and dependencies" src="./web/docs/static/img/lineage-light.png" style="max-height: 400px; width: auto;">
   </picture>
 </div>
 
@@ -60,9 +61,9 @@ Store rich metadata for any asset type. From tables and topics to APIs and dashb
 
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/home-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./docs/images/home-light.png">
-    <img alt="Asset detail page showing rich metadata and documentation" src="./docs/images/home-light.png" style="max-height: 400px; width: auto;">
+    <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/home-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./web/docs/static/img/home-light.png">
+    <img alt="Asset detail page showing rich metadata and documentation" src="./web/docs/static/img/home-light.png" style="max-height: 400px; width: auto;">
   </picture>
 </div>
 
@@ -74,24 +75,11 @@ Assign ownership, document business context, and create glossaries. Keep your en
 
 <div align="center">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/team-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./docs/images/team-light.png">
-    <img alt="Team management interface showing ownership and collaboration features" src="./docs/images/team-light.png" style="max-height: 400px; width: auto;">
+    <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/team-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./web/docs/static/img/team-light.png">
+    <img alt="Team management interface showing ownership and collaboration features" src="./web/docs/static/img/team-light.png" style="max-height: 400px; width: auto;">
   </picture>
 </div>
-
----
-
-### Extensible Integration Ecosystem
-
-**Populate Your Catalog with:**
-
-- **CLI Plugins**: Kafka, PostgreSQL, AsyncAPI, SQS, SNS, and growing
-- **Infrastructure as Code**: Terraform and Pulumi providers
-- **REST API**: Build custom integrations for any data source
-- **OpenLineage**: Automatic lineage from compatible tools
-
----
 
 ## Quick Start
 

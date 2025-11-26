@@ -32,8 +32,11 @@
 			processedSchemas = processed;
 			validationErrors = errors;
 
-			if (sections.length > 0 && !activeTab) {
+			// Always set activeTab to first section when schema changes
+			if (sections.length > 0) {
 				activeTab = sections[0].name;
+			} else {
+				activeTab = '';
 			}
 		} else {
 			schemaSections = [];
@@ -190,34 +193,21 @@
 </script>
 
 <div class="space-y-6 overflow-x-auto">
-	<div class="flex flex-col sm:flex-row justify-between gap-4">
+	{#if showSchemaTabs}
 		<div class="flex flex-wrap gap-2">
-			{#if showSchemaTabs}
-				{#each schemaSections as section}
-					<button
-						class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab ===
-						section.name
-							? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800'
-							: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}"
-						onclick={() => setActiveTab(section.name)}
-					>
-						{section.name.charAt(0).toUpperCase() + section.name.slice(1)} Schema
-					</button>
-				{/each}
-			{/if}
-		</div>
-
-		<div class="flex gap-3">
-			{#if schemaSections.length > 0}
+			{#each schemaSections as section}
 				<button
-					class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 transition-colors"
-					onclick={() => (showRawSchema = !showRawSchema)}
+					class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab ===
+					section.name
+						? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800'
+						: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}"
+					onclick={() => setActiveTab(section.name)}
 				>
-					{showRawSchema ? 'Show Formatted' : 'Show Raw'}
+					{section.name.charAt(0).toUpperCase() + section.name.slice(1)} Schema
 				</button>
-			{/if}
+			{/each}
 		</div>
-	</div>
+	{/if}
 
 	{#if schemaSections.length > 0}
 		{#if hasValidationErrors}
@@ -258,21 +248,8 @@
 			</div>
 		{/if}
 
-		{#key activeTab + '-' + showRawSchema}
-			{#if showRawSchema && activeSchema}
-				{#if typeof activeSchema === 'string'}
-					{#if activeSchema.includes('syntax = "proto') || activeSchema.includes('message ') || activeSchema.includes('type: record')}
-						<CodeBlock code={activeSchema} />
-					{:else}
-						<CodeBlock code={prettyPrintSchema(activeSchema)} />
-					{/if}
-				{:else}
-					<CodeBlock code={JSON.stringify(activeSchema, null, 2)} />
-				{/if}
-			{:else if visibleFields.length > 0}
-				<div
-					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
-				>
+		{#if visibleFields.length > 0}
+			<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
 					<div class="divide-y divide-gray-100 dark:divide-gray-700">
 						{#each visibleFields as field}
 							{@const fieldPath = field.name}
@@ -308,8 +285,8 @@
 
 									<!-- Content area -->
 									<div
-										class="flex items-start gap-3 px-6 py-4 w-full"
-										style="margin-left: {indentLevel * 32}px"
+										class="flex items-start gap-3 px-4 py-3 w-full"
+										style="margin-left: {indentLevel * 24}px"
 									>
 										<!-- Expansion toggle -->
 										<div class="flex-shrink-0 w-6 flex items-center justify-center">
@@ -336,9 +313,9 @@
 
 										<!-- Field content -->
 										<div class="min-w-0 flex-1">
-											<div class="flex items-start justify-between gap-4">
+											<div class="flex items-start justify-between gap-3">
 												<div class="min-w-0 flex-1">
-													<div class="flex items-center gap-3 mb-2">
+													<div class="flex items-center gap-2 mb-2">
 														<h4
 															class="text-sm font-semibold text-gray-900 dark:text-gray-100 font-mono"
 														>
@@ -361,7 +338,7 @@
 													</div>
 
 													{#if field.description}
-														<p class="text-sm text-gray-600 dark:text-gray-400 mb-3">
+														<p class="text-sm text-gray-600 dark:text-gray-400 mb-2">
 															{field.description}
 														</p>
 													{/if}
@@ -457,30 +434,29 @@
 							</div>
 						{/each}
 					</div>
-				</div>
+			</div>
 
-				{#if activeExample && typeof activeExample === 'object' && Object.keys(activeExample).length > 0}
-					<div class="space-y-4">
-						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-							{schemaExamples.length > 1 ? 'Examples' : 'Example'}
-						</h3>
-						<CodeBlock code={JSON.stringify(activeExample, null, 2)} />
-					</div>
-				{/if}
-
-				{#if schemaExamples.length > 1}
-					{#each schemaExamples.slice(1) as example, i}
-						<div class="mt-4">
-							<CodeBlock code={JSON.stringify(example, null, 2)} />
-						</div>
-					{/each}
-				{/if}
-			{:else}
-				<div class="text-center py-12 text-gray-500 dark:text-gray-400">
-					<p>No fields available for {activeTab} schema</p>
+			{#if activeExample && typeof activeExample === 'object' && Object.keys(activeExample).length > 0}
+				<div class="space-y-4">
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+						{schemaExamples.length > 1 ? 'Examples' : 'Example'}
+					</h3>
+					<CodeBlock code={JSON.stringify(activeExample, null, 2)} />
 				</div>
 			{/if}
-		{/key}
+
+			{#if schemaExamples.length > 1}
+				{#each schemaExamples.slice(1) as example, i}
+					<div class="mt-4">
+						<CodeBlock code={JSON.stringify(example, null, 2)} />
+					</div>
+				{/each}
+			{/if}
+		{:else}
+			<div class="text-center py-12 text-gray-500 dark:text-gray-400">
+				<p>No fields available for {activeTab} schema</p>
+			</div>
+		{/if}
 	{:else}
 		<div class="text-center py-12 text-gray-500 dark:text-gray-400">
 			<p>No schema available</p>
