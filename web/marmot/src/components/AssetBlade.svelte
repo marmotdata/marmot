@@ -259,7 +259,7 @@
 		{/if}
 
 		{#if !collapsed}
-		<div class="flex-1 flex flex-col min-w-0">
+		<div class="flex-1 flex flex-col min-w-0 min-h-0">
 		<div
 			class="flex-none bg-earthy-brown-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center"
 		>

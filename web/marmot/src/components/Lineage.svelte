@@ -75,9 +75,6 @@
 
 				selectedAsset = await assetResponse.json();
 				lineageData = await lineageResponse.json();
-
-				console.log('Selected asset set:', selectedAsset);
-				console.log('Lineage data set:', lineageData);
 			} catch (error) {
 				console.error('Error fetching asset/lineage:', error);
 			}

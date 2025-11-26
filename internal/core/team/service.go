@@ -4,7 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
+	"strings"
 	"time"
+
+	"github.com/marmotdata/marmot/internal/config"
 )
 
 type Team struct {
@@ -196,7 +200,57 @@ func (s *Service) ListSSOMappings(ctx context.Context, provider string) ([]*SSOT
 	return s.repo.ListSSOMappings(ctx, provider)
 }
 
-func (s *Service) SyncUserTeamsFromSSO(ctx context.Context, userID, provider string, ssoGroups []string) error {
+// matchesGroupFilter checks if a group name matches the configured filter
+func matchesGroupFilter(groupName string, filter config.TeamGroupFilter) bool {
+	switch filter.Mode {
+	case "none", "":
+		return true
+	case "prefix":
+		return strings.HasPrefix(groupName, filter.Pattern)
+	case "regex":
+		if filter.Pattern == "" {
+			return true
+		}
+		matched, err := regexp.MatchString(filter.Pattern, groupName)
+		if err != nil {
+			return false
+		}
+		return matched
+	case "allowlist":
+		if filter.Pattern == "" {
+			return true
+		}
+		allowedGroups := strings.Split(filter.Pattern, ",")
+		for _, allowed := range allowedGroups {
+			if strings.TrimSpace(allowed) == groupName {
+				return true
+			}
+		}
+		return false
+	case "denylist":
+		if filter.Pattern == "" {
+			return true
+		}
+		deniedGroups := strings.Split(filter.Pattern, ",")
+		for _, denied := range deniedGroups {
+			if strings.TrimSpace(denied) == groupName {
+				return false
+			}
+		}
+		return true
+	default:
+		return false
+	}
+}
+
+func getTeamNameForGroup(groupName string, stripPrefix string) string {
+	if stripPrefix != "" && strings.HasPrefix(groupName, stripPrefix) {
+		return strings.TrimPrefix(groupName, stripPrefix)
+	}
+	return groupName
+}
+
+func (s *Service) SyncUserTeamsFromSSO(ctx context.Context, userID, provider string, ssoGroups []string, syncConfig config.TeamSyncConfig) error {
 	if len(ssoGroups) == 0 {
 		return nil
 	}
@@ -204,6 +258,49 @@ func (s *Service) SyncUserTeamsFromSSO(ctx context.Context, userID, provider str
 	mappings, err := s.repo.GetMappingsForGroups(ctx, provider, ssoGroups)
 	if err != nil {
 		return fmt.Errorf("failed to get mappings: %w", err)
+	}
+
+	mappedGroups := make(map[string]*SSOTeamMapping)
+	for _, mapping := range mappings {
+		mappedGroups[mapping.SSOGroupName] = mapping
+	}
+
+	if syncConfig.Enabled {
+		for _, groupName := range ssoGroups {
+			if _, exists := mappedGroups[groupName]; exists {
+				continue
+			}
+
+			if !matchesGroupFilter(groupName, syncConfig.Group.Filter) {
+				continue
+			}
+
+			teamName := getTeamNameForGroup(groupName, syncConfig.StripPrefix)
+
+			existingTeam, err := s.repo.GetTeamByName(ctx, teamName)
+			if err != nil && !errors.Is(err, ErrTeamNotFound) {
+				return fmt.Errorf("failed to check for existing team: %w", err)
+			}
+
+			var teamID string
+			if existingTeam != nil {
+				teamID = existingTeam.ID
+			} else {
+				team, err := s.CreateTeamViaSSO(ctx, provider, teamName)
+				if err != nil {
+					return fmt.Errorf("failed to create team via SSO: %w", err)
+				}
+				teamID = team.ID
+			}
+
+			mapping, err := s.CreateSSOMapping(ctx, provider, groupName, teamID, RoleMember)
+			if err != nil {
+				return fmt.Errorf("failed to create SSO mapping: %w", err)
+			}
+
+			mappings = append(mappings, mapping)
+			mappedGroups[groupName] = mapping
+		}
 	}
 
 	userTeams, err := s.repo.ListUserTeams(ctx, userID)

@@ -178,7 +178,7 @@ func (r *PostgresRepository) buildUnifiedSearchQuery(filter Filter) (string, []i
 						'query_language', query_language,
 						'is_stub', is_stub
 					) as metadata,
-					'/assets/' || id as url,
+					'/discover/' || type || '/' || name as url,
 					ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as rank,
 					updated_at
 				FROM assets`
@@ -253,7 +253,7 @@ func (r *PostgresRepository) buildUnifiedSearchQuery(filter Filter) (string, []i
 						'query_language', query_language,
 						'is_stub', is_stub
 					) as metadata,
-					'/assets/' || id as url,
+					'/discover/' || type || '/' || name as url,
 					%s as rank,
 					updated_at
 				FROM assets

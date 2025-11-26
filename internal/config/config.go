@@ -45,8 +45,19 @@ type GroupMapConfig struct {
 }
 
 type TeamSyncConfig struct {
-	Enabled    bool   `mapstructure:"enabled"`
-	GroupClaim string `mapstructure:"group_claim"`
+	Enabled     bool            `mapstructure:"enabled"`
+	StripPrefix string          `mapstructure:"strip_prefix"`
+	Group       TeamGroupConfig `mapstructure:"group"`
+}
+
+type TeamGroupConfig struct {
+	Claim  string          `mapstructure:"claim"`
+	Filter TeamGroupFilter `mapstructure:"filter"`
+}
+
+type TeamGroupFilter struct {
+	Mode    string `mapstructure:"mode"`
+	Pattern string `mapstructure:"pattern"`
 }
 
 // Config holds all configuration for the application

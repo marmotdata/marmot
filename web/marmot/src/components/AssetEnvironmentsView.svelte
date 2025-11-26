@@ -64,9 +64,9 @@
 	}
 </script>
 
-<div class="space-y-4">
+<div class="space-y-4 p-4">
 	{#if Object.keys(environments).length === 0}
-		<div class="p-4 bg-earthy-brown-50 dark:bg-gray-800 rounded-lg">
+		<div class="p-6 bg-earthy-brown-50 dark:bg-gray-800 rounded-lg">
 			<p class="text-gray-500 dark:text-gray-400 italic">No environments available</p>
 		</div>
 	{:else}
@@ -75,7 +75,7 @@
 				class="bg-earthy-brown-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
 			>
 				<button
-					class="w-full px-4 py-3 flex flex-col text-left hover:bg-earthy-brown-100 dark:hover:bg-gray-700 transition-colors"
+					class="w-full px-6 py-4 flex flex-col text-left hover:bg-earthy-brown-100 dark:hover:bg-gray-700 transition-colors"
 					on:click={() => toggleEnvironment(key)}
 				>
 					<div class="flex items-center justify-between">
@@ -117,41 +117,45 @@
 						</svg>
 					</div>
 					{#if !expandedEnvironments[key]}
-						<div class="mt-3 grid grid-cols-2 gap-3">
+						<div class="mt-4 space-y-3">
 							{#each getMetadataPreview(env.metadata) as [metaKey, metaValue]}
-								<div class="flex items-baseline gap-2 text-sm">
+								<div class="flex items-start gap-3">
 									<span
-										class="font-medium text-gray-900 dark:text-gray-100 truncate min-w-[80px] max-w-[150px]"
+										class="font-medium text-gray-700 dark:text-gray-300 text-sm shrink-0 w-32"
+										title={metaKey}
 									>
 										{metaKey}
 									</span>
-									{#if typeof metaValue === 'boolean'}
-										<span
-											class="px-2 py-1 text-sm rounded-full {metaValue
-												? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-100'
-												: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-100'}"
-										>
-											{formatValue(metaValue)}
-										</span>
-									{:else if Array.isArray(metaValue)}
-										<span
-											class="px-2 py-1 text-sm rounded-full bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
-										>
-											{formatValue(metaValue)}
-										</span>
-									{:else if typeof metaValue === 'number'}
-										<span
-											class="px-2 py-1 text-sm rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-100"
-										>
-											{formatValue(metaValue)}
-										</span>
-									{:else}
-										<span
-											class="px-2 py-1 text-sm rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100"
-										>
-											{formatValue(metaValue)}
-										</span>
-									{/if}
+									<span class="text-gray-400 dark:text-gray-500 shrink-0">→</span>
+									<div class="flex-1 min-w-0">
+										{#if typeof metaValue === 'boolean'}
+											<span
+												class="inline-block px-3 py-1 text-sm font-medium rounded-full {metaValue
+													? 'bg-green-100 dark:bg-green-900/20 text-green-800 dark:text-green-100'
+													: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-100'}"
+											>
+												{formatValue(metaValue)}
+											</span>
+										{:else if Array.isArray(metaValue)}
+											<span
+												class="inline-block px-3 py-1 text-sm font-medium rounded-full bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
+											>
+												{formatValue(metaValue)}
+											</span>
+										{:else if typeof metaValue === 'number'}
+											<span
+												class="inline-block px-3 py-1 text-sm font-medium rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-100"
+											>
+												{formatValue(metaValue)}
+											</span>
+										{:else}
+											<span
+												class="inline-block px-3 py-1 text-sm font-medium rounded-full bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 break-words"
+											>
+												{formatValue(metaValue)}
+											</span>
+										{/if}
+									</div>
 								</div>
 							{/each}
 						</div>

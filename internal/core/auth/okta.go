@@ -140,11 +140,16 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 
 	if p.teamService != nil {
 		providerCfg, ok := p.config.Auth.Providers["okta"]
-		if ok && providerCfg.TeamSync.Enabled {
-			groups := p.extractGroups(userInfo, providerCfg.TeamSync.GroupClaim)
+		if ok {
+			groupClaim := "groups"
+			if providerCfg.TeamSync.Group.Claim != "" {
+				groupClaim = providerCfg.TeamSync.Group.Claim
+			}
+
+			groups := p.extractGroups(userInfo, groupClaim)
 			if len(groups) > 0 {
 				log.Debug().Strs("groups", groups).Str("user_id", usr.ID).Msg("syncing team memberships from SSO")
-				if err := p.teamService.SyncUserTeamsFromSSO(ctx, usr.ID, "okta", groups); err != nil {
+				if err := p.teamService.SyncUserTeamsFromSSO(ctx, usr.ID, "okta", groups, providerCfg.TeamSync); err != nil {
 					log.Error().Err(err).Str("user_id", usr.ID).Msg("failed to sync teams from SSO")
 				}
 			}

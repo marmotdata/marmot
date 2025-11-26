@@ -50,6 +50,7 @@
 	interface UserProfile {
 		id: string;
 		username: string;
+		name: string;
 		email: string;
 		display_name?: string;
 	}
@@ -178,9 +179,15 @@
 		return asset.type;
 	}
 
-	let displayName = $derived(
-		capitalizeFirstLetter(userProfile?.display_name || userProfile?.username || ($auth?.username) || 'there')
-	);
+	let displayName = $derived(() => {
+		// Try to get first name from name field
+		if (userProfile?.name) {
+			const firstName = userProfile.name.split(' ')[0];
+			return capitalizeFirstLetter(firstName);
+		}
+		// Fallback to display_name or username
+		return capitalizeFirstLetter(userProfile?.display_name || userProfile?.username || 'there');
+	});
 
 	async function fetchData() {
 		try {
@@ -214,7 +221,7 @@
 					popularAssets = data.assets || [];
 				}
 			} catch (err) {
-				console.log('Could not fetch popular assets');
+				// Silently fail - metrics are optional
 			}
 
 			// Try to fetch user profile
@@ -224,7 +231,7 @@
 					userProfile = await profileRes.json();
 				}
 			} catch (err) {
-				console.log('Could not fetch user profile, using auth store');
+				// Silently fail - will fall back to auth store
 			}
 		} catch (err) {
 			console.error('Error fetching data:', err);

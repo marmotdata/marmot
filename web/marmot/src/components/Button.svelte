@@ -1,34 +1,26 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
 
-	let {
-		variant = 'filled',
-		icon = null,
-		text = '',
-		href = null,
-		target = null,
-		loading = false,
-		disabled = false,
-		class: className = '',
-		click = (event: MouseEvent) => {}
-	} = $props<{
-		variant?: 'clear' | 'filled';
-		icon?: string | null;
-		text?: string;
-		href?: string | null;
-		target?: string | null;
-		loading?: boolean;
-		disabled?: boolean;
-		class?: string;
-		click?: (event: MouseEvent) => void;
-	}>();
+	export let variant: 'clear' | 'filled' = 'filled';
+	export let icon: string | null = null;
+	export let text: string = '';
+	export let href: string | null = null;
+	export let target: string | null = null;
+	export let loading: boolean = false;
+	export let disabled: boolean = false;
+	export let click: ((event: MouseEvent) => void) | undefined = undefined;
+
+	let className: string = '';
+	export { className as class };
 
 	function handleClick(event: MouseEvent) {
 		if (loading || disabled) {
 			event.preventDefault();
 			return;
 		}
-		click(event);
+		if (click) {
+			click(event);
+		}
 	}
 </script>
 

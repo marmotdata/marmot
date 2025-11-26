@@ -519,10 +519,25 @@
 			<div class="flex items-center justify-center h-full">
 				<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-12 text-center max-w-md">
 					<Icon icon="material-symbols:book-outline" class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
-					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Term Selected</h3>
-					<p class="text-sm text-gray-500 dark:text-gray-400">
-						Select a term from the list to view its details
-					</p>
+					{#if $terms.length === 0}
+						<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Glossary Terms</h3>
+						<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+							Create a term to start describing your business definitions and data concepts
+						</p>
+						{#if canManageGlossary}
+							<Button
+								click={handleNewTerm}
+								icon="material-symbols:add"
+								text="Create Your First Term"
+								variant="filled"
+							/>
+						{/if}
+					{:else}
+						<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Term Selected</h3>
+						<p class="text-sm text-gray-500 dark:text-gray-400">
+							Select a term from the list to view its details
+						</p>
+					{/if}
 				</div>
 			</div>
 		{/if}

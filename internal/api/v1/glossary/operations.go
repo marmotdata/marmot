@@ -23,7 +23,7 @@ type CreateTermRequest struct {
 	Definition   string                 `json:"definition" validate:"required"`
 	Description  *string                `json:"description,omitempty"`
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
-	Owners       []OwnerRequest         `json:"owners" validate:"required,min=1"`
+	Owners       []OwnerRequest         `json:"owners,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
 }
 

@@ -85,72 +85,12 @@
 		}
 	];
 
-	const metadataFields = [
-		{
-			value: 'metadata.type',
-			label: '@metadata.type',
-			description: 'Asset type',
-			category: 'Metadata'
-		},
-		{
-			value: 'metadata.name',
-			label: '@metadata.name',
-			description: 'Asset name',
-			category: 'Metadata'
-		},
-		{
-			value: 'metadata.description',
-			label: '@metadata.description',
-			description: 'Description',
-			category: 'Metadata'
-		},
-		{
-			value: 'metadata.environment',
-			label: '@metadata.environment',
-			description: 'Environment',
-			category: 'Metadata'
-		},
-		{
-			value: 'metadata.owner',
-			label: '@metadata.owner',
-			description: 'Owner',
-			category: 'Metadata'
-		},
-		{ value: 'metadata.team', label: '@metadata.team', description: 'Team', category: 'Metadata' },
-		{
-			value: 'metadata.status',
-			label: '@metadata.status',
-			description: 'Status',
-			category: 'Metadata'
-		},
-		{
-			value: 'metadata.provider',
-			label: '@metadata.provider',
-			description: 'Provider',
-			category: 'Metadata'
-		},
-		{
-			value: 'metadata.created_at',
-			label: '@metadata.created_at',
-			description: 'Created date',
-			category: 'Metadata'
-		},
-		{
-			value: 'metadata.updated_at',
-			label: '@metadata.updated_at',
-			description: 'Updated date',
-			category: 'Metadata'
-		},
-		{
-			value: 'metadata.created_by',
-			label: '@metadata.created_by',
-			description: 'Created by user',
-			category: 'Metadata'
-		},
-		{ value: 'metadata.tags', label: '@metadata.tags', description: 'Tags', category: 'Metadata' }
-	];
+	// Metadata fields fetched from API
+	let metadataFields = $state<{ value: string; label: string; description: string; category: string }[]>([]);
+	let metadataFieldsCache: any[] | null = null;
 
-	const allFields = [...simpleFields, ...metadataFields];
+	// Computed allFields that combines simple fields with fetched metadata fields
+	let allFields = $derived([...simpleFields, ...metadataFields]);
 
 	const operators: { value: Operator; label: string }[] = [
 		{ value: '=', label: 'Equals (=)' },
@@ -164,6 +104,42 @@
 	];
 
 	const booleanOperators: BooleanOperator[] = ['AND', 'OR', 'NOT'];
+
+	// Fetch metadata fields from API
+	async function fetchMetadataFields() {
+		// Use cache if available
+		if (metadataFieldsCache && metadataFieldsCache.length > 0) {
+			metadataFields = metadataFieldsCache.map((f: any) => ({
+				value: `metadata.${f.field}`,
+				label: `@metadata.${f.field}`,
+				description: f.field,
+				category: 'Metadata'
+			}));
+			return;
+		}
+
+		try {
+			const response = await fetchApi('/assets/suggestions/metadata/fields');
+
+			if (!response.ok) {
+				console.error('Failed to fetch metadata fields:', response.statusText);
+				return;
+			}
+
+			const data = await response.json();
+			if (Array.isArray(data) && data.length > 0) {
+				metadataFieldsCache = data;
+				metadataFields = data.map((f: any) => ({
+					value: `metadata.${f.field}`,
+					label: `@metadata.${f.field}`,
+					description: f.field,
+					category: 'Metadata'
+				}));
+			}
+		} catch (error) {
+			console.error('Error fetching metadata fields:', error);
+		}
+	}
 
 	// Parse existing query into builder format when switching to builder mode
 	$effect(() => {
@@ -561,6 +537,9 @@
 	}
 
 	onMount(() => {
+		// Fetch metadata fields from API
+		fetchMetadataFields();
+
 		if (query) {
 			rawQuery = query;
 			if (mode === 'builder') {

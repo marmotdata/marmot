@@ -272,15 +272,11 @@
 	async function fetchMetadataFields(): Promise<MetadataFieldSuggestion[]> {
 		// Only use cache if it has data
 		if (metadataFieldsCache && metadataFieldsCache.length > 0) {
-			console.log('Using cached metadata fields:', metadataFieldsCache.length);
 			return metadataFieldsCache;
 		}
 
-		console.log('Fetching metadata fields from API...');
 		try {
 			const response = await fetchApi('/assets/suggestions/metadata/fields');
-			console.log('API response status:', response.status, response.statusText);
-			console.log('API response headers:', response.headers);
 
 			if (!response.ok) {
 				const errorText = await response.text();
@@ -289,7 +285,6 @@
 			}
 
 			const responseText = await response.text();
-			console.log('Raw API response:', responseText);
 
 			let data: MetadataFieldSuggestion[] = [];
 			try {
@@ -299,11 +294,7 @@
 				return [];
 			}
 
-			console.log('Parsed API data:', data);
-			console.log('Data type:', typeof data, 'Is array:', Array.isArray(data));
-
 			metadataFieldsCache = data || [];
-			console.log('Cached metadata fields:', metadataFieldsCache.length);
 			return metadataFieldsCache;
 		} catch (error) {
 			console.error('Error fetching metadata fields:', error);
@@ -342,12 +333,6 @@
 
 		const cursorPos = input.selectionStart || 0;
 		const fieldInfo = getFieldAtPosition(value, cursorPos);
-		console.log('updateSuggestions - fieldInfo:', {
-			fieldType: fieldInfo.fieldType,
-			field: fieldInfo.field,
-			hasOperator: fieldInfo.hasOperator,
-			value: value.substring(0, cursorPos)
-		});
 
 		// Show field suggestions when user types @
 		if (fieldInfo.showFieldSuggestions) {
@@ -381,17 +366,14 @@
 
 		if (!fieldInfo.hasOperator && fieldInfo.fieldType === 'metadata') {
 			const fields = await fetchMetadataFields();
-			console.log('Fetched metadata fields:', fields ? fields.length : 'null');
 
 			// Check if fields is null or empty
 			if (!fields || fields.length === 0) {
-				console.log('No metadata fields available');
 				showDropdown = false;
 				return;
 			}
 
 			let searchPath = fieldInfo.field ? fieldInfo.field.toLowerCase() : '';
-			console.log('Search path for metadata:', searchPath);
 
 			// Simple approach: show all fields that match the search prefix
 			if (searchPath === '') {
@@ -418,7 +400,6 @@
 					.sort((a, b) => (b.count || 0) - (a.count || 0))
 					.slice(0, 20); // Limit to 20 suggestions
 			}
-			console.log('Built metadata suggestions:', suggestions.length);
 		} else if (fieldInfo.hasOperator) {
 			const prefix = fieldInfo.valuePrefix || '';
 			const fieldKey = fieldInfo.field!;
@@ -463,7 +444,6 @@
 		}
 
 		showDropdown = suggestions.length > 0;
-		console.log('updateSuggestions - showDropdown:', showDropdown, 'suggestions:', suggestions.length);
 	}
 
 	function adjustTextareaHeight() {

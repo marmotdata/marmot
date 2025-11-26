@@ -82,18 +82,23 @@
 		return parts;
 	}
 
+	function openSearchModal() {
+		showSearchModal = true;
+		setTimeout(() => {
+			searchInput?.focus();
+		}, 100);
+	}
+
 	function handleGlobalKeydown(event: KeyboardEvent) {
 		const isCmdOrCtrl = isMac ? event.metaKey : event.ctrlKey;
 
 		if (isCmdOrCtrl && event.key === 'k') {
 			event.preventDefault();
 
-			showSearchModal = !showSearchModal;
-
-			if (showSearchModal && searchInput) {
-				setTimeout(() => {
-					searchInput.focus();
-				}, 100);
+			if (showSearchModal) {
+				showSearchModal = false;
+			} else {
+				openSearchModal();
 			}
 		}
 
@@ -213,7 +218,7 @@
 					<!-- Centered Search (desktop only) -->
 					<div class="hidden sm:flex flex-1 justify-center max-w-3xl mx-auto">
 						<button
-							on:click={() => (showSearchModal = true)}
+							on:click={openSearchModal}
 							class="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors w-full"
 						>
 							<Icon icon="material-symbols:search" class="w-4 h-4" />
@@ -237,7 +242,7 @@
 
 						<!-- Mobile Search Button -->
 						<button
-							on:click={() => (showSearchModal = true)}
+							on:click={openSearchModal}
 							class="sm:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
 							aria-label="Search"
 						>
