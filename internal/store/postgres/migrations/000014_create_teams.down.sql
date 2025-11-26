@@ -10,3 +10,6 @@ DROP TABLE IF EXISTS sso_team_mappings;
 DROP TABLE IF EXISTS asset_owners;
 DROP TABLE IF EXISTS team_members;
 DROP TABLE IF EXISTS teams;
+
+ALTER TABLE glossary_term_owners
+DROP CONSTRAINT IF EXISTS fk_glossary_term_owners_team;

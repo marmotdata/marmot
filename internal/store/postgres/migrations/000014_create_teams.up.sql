@@ -78,3 +78,7 @@ SELECT
 FROM permissions
 WHERE name = 'view_teams'
 ON CONFLICT DO NOTHING;
+
+ALTER TABLE glossary_term_owners
+ADD CONSTRAINT fk_glossary_term_owners_team
+FOREIGN KEY (team_id) REFERENCES teams(id) ON DELETE CASCADE;

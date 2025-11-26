@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS glossary_term_owners (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     glossary_term_id UUID NOT NULL REFERENCES glossary_terms(id) ON DELETE CASCADE,
     user_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    team_id UUID REFERENCES teams(id) ON DELETE CASCADE,
+    team_id UUID,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     CHECK ((user_id IS NOT NULL AND team_id IS NULL) OR (user_id IS NULL AND team_id IS NOT NULL)),
     UNIQUE (glossary_term_id, user_id),
