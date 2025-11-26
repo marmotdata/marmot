@@ -42,6 +42,9 @@
 	$: hasMoreAssets = assetsTotal > assetsOffset + assets.length;
 	$: currentPage = Math.floor(assetsOffset / assetsLimit) + 1;
 	$: totalPages = Math.ceil(assetsTotal / assetsLimit);
+	$: canManageTeams = auth.hasPermission('teams', 'manage');
+	$: isTeamOwner = members.some(m => m.user_id === currentUserId && m.role === 'owner');
+	$: canEditTeam = canManageTeams || isTeamOwner;
 
 	function getIconType(asset: any): string {
 		if (asset.providers && Array.isArray(asset.providers) && asset.providers.length === 1) {
@@ -272,7 +275,7 @@
 						({members.length})
 					</span>
 				</div>
-				{#if !team.created_via_sso}
+				{#if !team.created_via_sso && canEditTeam}
 					<button
 						onclick={handleAddMembersClick}
 						class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-earthy-terracotta-700 dark:text-earthy-terracotta-500 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/30 rounded-lg transition-colors"
@@ -280,7 +283,7 @@
 						<IconifyIcon icon="material-symbols:add" class="w-4 h-4" />
 						Add Member
 					</button>
-				{:else}
+				{:else if team.created_via_sso}
 					<span class="text-sm text-gray-500 dark:text-gray-400">
 						Members are managed via SSO
 					</span>
@@ -326,7 +329,7 @@
 
 							<div class="flex items-center gap-2 flex-shrink-0">
 								<!-- Role Badge/Selector -->
-								{#if member.source === 'manual' && !team.created_via_sso && currentUserId !== member.user_id}
+								{#if member.source === 'manual' && !team.created_via_sso && canEditTeam && currentUserId !== member.user_id}
 									<select
 										value={member.role}
 										onchange={(e) => updateMemberRole(member.user_id, e.currentTarget.value)}
@@ -353,27 +356,41 @@
 								{/if}
 
 								<!-- Actions -->
-								<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-									{#if member.source === 'sso' && currentUserId !== member.user_id}
-										<button
-											onclick={() => convertToManual(member.user_id)}
-											class="text-xs text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
-											title="Convert to manual"
-										>
-											Make Permanent
-										</button>
-									{/if}
-									{#if member.source === 'manual' || !team.created_via_sso}
+								{#if canEditTeam}
+									<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+										{#if member.source === 'sso' && currentUserId !== member.user_id}
+											<button
+												onclick={() => convertToManual(member.user_id)}
+												class="text-xs text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 px-2 py-1.5 rounded hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+												title="Convert to manual"
+											>
+												Make Permanent
+											</button>
+										{/if}
+										{#if (member.source === 'manual' || !team.created_via_sso) && (currentUserId === member.user_id || canEditTeam)}
+											<button
+												onclick={() => removeMemberDirect(member.user_id, member.source)}
+												disabled={removingMemberId === member.user_id}
+												class="p-1.5 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 transition-colors"
+												title={currentUserId === member.user_id ? "Leave team" : "Remove member"}
+											>
+												<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
+											</button>
+										{/if}
+									</div>
+								{:else if currentUserId === member.user_id}
+									<!-- Allow users to leave the team even without edit permissions -->
+									<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
 										<button
 											onclick={() => removeMemberDirect(member.user_id, member.source)}
 											disabled={removingMemberId === member.user_id}
 											class="p-1.5 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 transition-colors"
-											title={currentUserId === member.user_id ? "Leave team" : "Remove member"}
+											title="Leave team"
 										>
 											<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
 										</button>
-									{/if}
-								</div>
+									</div>
+								{/if}
 							</div>
 						</div>
 					{/each}

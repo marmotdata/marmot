@@ -38,7 +38,7 @@
 		onclick={handleClick}
 	>
 		{#if icon}
-			<span class="w-4 h-4 mr-1.5">
+			<span class="w-4 h-4 {text ? 'mr-1.5' : ''}">
 				<Icon icon={`${icon}`} />
 			</span>
 		{/if}
@@ -60,11 +60,11 @@
 		{disabled}
 	>
 		{#if loading}
-			<span class="w-4 h-4 mr-1.5">
+			<span class="w-4 h-4 {text ? 'mr-1.5' : ''}">
 				<Icon icon="bi:arrow-clockwise" class="animate-spin" />
 			</span>
 		{:else if icon}
-			<span class="w-4 h-4 mr-1.5">
+			<span class="w-4 h-4 {text ? 'mr-1.5' : ''}">
 				<Icon icon={`${icon}`} />
 			</span>
 		{/if}

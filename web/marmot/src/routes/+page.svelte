@@ -179,7 +179,7 @@
 		return asset.type;
 	}
 
-	let displayName = $derived(() => {
+	let displayName = $derived.by(() => {
 		// Try to get first name from name field
 		if (userProfile?.name) {
 			const firstName = userProfile.name.split(' ')[0];

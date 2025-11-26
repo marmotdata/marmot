@@ -41,7 +41,7 @@
 <g onmouseenter={() => (isHovered = true)} onmouseleave={() => (isHovered = false)}>
 	<BaseEdge path={edgePath} {markerEnd} {style} />
 
-	{#if isHovered}
+	{#if isHovered && data?.onDelete}
 		<foreignObject
 			x={labelX - 16}
 			y={labelY - 16}

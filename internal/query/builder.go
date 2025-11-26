@@ -241,6 +241,7 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		if filter.FieldType == FieldProvider {
 			return "", nil, paramCount, fmt.Errorf("comparison operators not supported for provider fields")
 		}
+		// Cast to numeric - PostgreSQL will safely handle invalid values with an error
 		condition = fmt.Sprintf("(%s)::numeric > $%d", columnRef, paramCount)
 		params = append(params, fmt.Sprintf("%v", filter.Value))
 
@@ -248,6 +249,7 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		if filter.FieldType == FieldProvider {
 			return "", nil, paramCount, fmt.Errorf("comparison operators not supported for provider fields")
 		}
+		// Cast to numeric - PostgreSQL will safely handle invalid values with an error
 		condition = fmt.Sprintf("(%s)::numeric < $%d", columnRef, paramCount)
 		params = append(params, fmt.Sprintf("%v", filter.Value))
 
@@ -255,6 +257,7 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		if filter.FieldType == FieldProvider {
 			return "", nil, paramCount, fmt.Errorf("comparison operators not supported for provider fields")
 		}
+		// Cast to numeric - PostgreSQL will safely handle invalid values with an error
 		condition = fmt.Sprintf("(%s)::numeric >= $%d", columnRef, paramCount)
 		params = append(params, fmt.Sprintf("%v", filter.Value))
 
@@ -262,6 +265,7 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		if filter.FieldType == FieldProvider {
 			return "", nil, paramCount, fmt.Errorf("comparison operators not supported for provider fields")
 		}
+		// Cast to numeric - PostgreSQL will safely handle invalid values with an error
 		condition = fmt.Sprintf("(%s)::numeric <= $%d", columnRef, paramCount)
 		params = append(params, fmt.Sprintf("%v", filter.Value))
 
@@ -272,6 +276,7 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		if filter.Range == nil {
 			return "", nil, paramCount, fmt.Errorf("range values missing")
 		}
+		// Cast to numeric - PostgreSQL will safely handle invalid values with an error
 		condition = fmt.Sprintf("(%s)::numeric >= $%d AND (%s)::numeric <= $%d",
 			columnRef, paramCount, columnRef, paramCount+1)
 		params = append(params, filter.Range.From, filter.Range.To)

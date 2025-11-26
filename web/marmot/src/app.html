@@ -10,6 +10,11 @@
 		<div style="display: contents">%sveltekit.body%</div>
 
 		<script>
+			// Polyfill for chrome object to prevent errors in non-Chrome browsers
+			if (typeof chrome === 'undefined') {
+				window.chrome = {};
+			}
+
 			(() => {
 				const savedTheme = localStorage.getItem('theme');
 				const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;

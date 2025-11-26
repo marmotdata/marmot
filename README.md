@@ -1,73 +1,120 @@
+<div align="center">
+  <img src="./marmot.svg" width="180">
+
 # Marmot
 
-<div style="text-align: center;">
-<img src="./marmot.svg" width="200">
+**Discover any data asset across your entire org in seconds**
+
+_Open-source catalog for all your data assets. Search everything - tables, topics, queues, buckets, and more._
+
+[Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Quickstart](https://marmotdata.io/docs/quick-start)
 </div>
 
-Marmot is an open-source data catalog that helps teams discover, understand, and govern their data assets. It's designed for modern data ecosystems where data flows through multiple systems, formats, and teams.
+## What is Marmot?
 
-Marmot was designed with the following in mind:
+Marmot is an **open-source data catalog** designed for teams who want powerful data discovery without enterprise complexity. Built with a focus on simplicity and speed, Marmot helps you catalog assets across your entire data stack - from databases and APIs to message queues and data pipelines.
 
-- **Simplicity**: Easy to use UI, single binary deployment
-- **Performance**: Fast search and efficient processing
-- **Extensibility**: Document almost anything with the flexible API
+Unlike traditional catalogs that require extensive infrastructure and configuration, Marmot ships as a **single binary** with an intuitive UI, making it easy to deploy and start cataloging in minutes.
 
-## ✨ Features:
+### Built for Modern Data Teams
 
-- **Find anything fast with flexible queries**: Boolean, text, metadata, and comparison operators for powerful search capabilities
-- **Populate assets with your preferred technology:** CLI, API, Terraform, and Pulumi integrations
-- **Visualize data flows with interactive graphs:** Track dependencies and analyze impact through comprehensive lineage visualization
-- **Documentation and governance:** Markdown documentation support with tagging and classification capabilities
+- **Deploy in Minutes**: Single binary, Docker, or Kubernetes - no complex setup required
+- **Powerful Search**: Powerful query language with full-text, metadata, and boolean operators
+- **Track Lineage**: Interactive dependency graphs to understand data flows and impact
+- **Flexible Integrations**: CLI, REST API, Terraform, and Pulumi - catalog assets your way
+- **Lightweight**: PostgreSQL-backed with minimal resource requirements
 
-https://github.com/user-attachments/assets/a4a72ca2-c0be-4c63-ab52-00c71adc4f4a
+## Key Features
 
-## 🔌Supported Data Sources
+### Search Everything
 
-Marmot offers multiple ways to ingest assets: through its CLI, API, or infrastructure-as-code solutions like Terraform and Pulumi. The CLI features a growing ecosystem of plugins with current support for Kafka, AsyncAPI, PostgreSQL, SQS, SNS, and many others. For assets not covered by existing plugins, Marmot's flexible API and infrastructure-as-code providers enable ingestion of virtually any asset type you need.
+Find any data asset across your entire organisation in seconds. Combine full-text search with structured queries using metadata filters, boolean logic, and comparison operators.
 
-## 📚 Documentation
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/search-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/images/search-light.png">
+    <img alt="Marmot search interface showing filters and search results" src="./docs/images/search-light.png" style="max-height: 400px; width: auto;">
+  </picture>
+</div>
 
-If you want to get started with Marmot quickly following the [quickstart guide in the documentation](https://marmotdata.io/docs/quick-start) to get up and running in minutes.
+---
 
-You can also check out the [API documentation](https://marmotdata.io/api) to help with building custom integrations.
+### Interactive Lineage Visualisation
 
-## 🛠️ Local Development
+Trace data flows from source to destination with interactive dependency graphs. Understand upstream and downstream dependencies, identify bottlenecks, and analyse impact before making changes.
 
-1. Start PostgreSQL:
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/lineage-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/images/lineage-light.png">
+    <img alt="Interactive lineage graph showing data flow and dependencies" src="./docs/images/lineage-light.png" style="max-height: 400px; width: auto;">
+  </picture>
+</div>
 
-```bash
-docker run --name postgres \
-  --network bridge \
-  -e POSTGRES_PASSWORD=postgres \
-  -e POSTGRES_DB=marmot \
-  -p 5432:5432 \
-  -d postgres:latest
-```
+---
 
-2. Start the frontend development server:
+### Metadata-First Architecture
 
-```bash
-cd web/marmot
-pnpm install
-pnpm dev
-```
+Store rich metadata for any asset type. From tables and topics to APIs and dashboards.
 
-3. In another terminal, start the backend:
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/home-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/images/home-light.png">
+    <img alt="Asset detail page showing rich metadata and documentation" src="./docs/images/home-light.png" style="max-height: 400px; width: auto;">
+  </picture>
+</div>
 
-```bash
-make dev
-```
+---
 
-The app will be available at:
+### Team Collaboration
 
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8080
-- API Documentation: http://localhost:8080/swagger/index.html
+Assign ownership, document business context, and create glossaries. Keep your entire team aligned with centralised knowledge about your data assets.
 
-## 🤝 Contributing
+<div align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="./docs/images/team-dark.png">
+    <source media="(prefers-color-scheme: light)" srcset="./docs/images/team-light.png">
+    <img alt="Team management interface showing ownership and collaboration features" src="./docs/images/team-light.png" style="max-height: 400px; width: auto;">
+  </picture>
+</div>
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+---
 
-## ⚖️License
+### Extensible Integration Ecosystem
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+**Populate Your Catalog with:**
+
+- **CLI Plugins**: Kafka, PostgreSQL, AsyncAPI, SQS, SNS, and growing
+- **Infrastructure as Code**: Terraform and Pulumi providers
+- **REST API**: Build custom integrations for any data source
+- **OpenLineage**: Automatic lineage from compatible tools
+
+---
+
+## Quick Start
+
+**New to Marmot?** Follow the [Quickstart Guide](https://marmotdata.io/docs/quick-start) for a guided setup.
+
+> **Interested in exploring Marmot?** Check out the [live demo](https://demo.marmotdata.io)
+
+## Development
+
+See [Local Development](https://marmotdata.io/docs/Develop/local-development) for how to get started developing locally.
+
+## Contributing
+
+All types of contributions are encouraged and valued!
+
+**Ways to Contribute:**
+
+- Report bugs or suggest features via [GitHub Issues](https://github.com/your-org/marmot/issues)
+- Improve documentation
+- Build new plugins for data sources
+
+Before contributing, please check out the [Contributing Guide](CONTRIBUTING.md).
+
+## License
+
+Marmot is open-source software licensed under the [MIT License](LICENSE).

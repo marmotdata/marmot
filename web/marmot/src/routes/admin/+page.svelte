@@ -8,8 +8,8 @@
 	import { onMount } from 'svelte';
 
 	const tabs = [
-		{ id: 'users', label: 'User Management' },
-		{ id: 'teams', label: 'Team Management' }
+		{ id: 'users', label: 'Users' },
+		{ id: 'teams', label: 'Teams' }
 		// { id: 'roles', label: 'Roles & Permissions' }
 	];
 

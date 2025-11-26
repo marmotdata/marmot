@@ -83,8 +83,8 @@
 			}
 
 			const data: TermsListResponse = await response.json();
-			terms.set(data.terms);
-			totalTerms.set(data.total);
+			terms.set(data.terms || []);
+			totalTerms.set(data.total || 0);
 		} catch (err) {
 			error.set(err instanceof Error ? err.message : 'Failed to fetch terms');
 		} finally {

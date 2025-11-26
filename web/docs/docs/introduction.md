@@ -4,24 +4,47 @@ sidebar_position: 1
 
 # Introduction
 
-Marmot is an open-source data catalog that helps teams discover, understand, and govern their data assets. It's designed for modern data ecosystems where data flows through multiple systems, formats, and teams.
+Marmot is an open-source data catalog designed for teams who want powerful data discovery without enterprise complexity. Built with a focus on simplicity and speed, Marmot helps you catalog assets across your entire data stack - from databases and APIs to message queues and data pipelines.
 
-Marmot was designed with the following in mind:
+## Why Marmot?
 
-- **Simplicity**: Easy to use UI, single binary deployment
-- **Performance**: Fast search and efficient processing
-- **Extensibility**: Document almost anything with the flexible API
+Unlike traditional catalogs that require extensive infrastructure and configuration, Marmot ships as a **single binary** with an intuitive UI, making it easy to deploy and start cataloging in minutes.
 
-## ✨ Features:
+### Built for Modern Data Teams
 
-- **Find anything fast with flexible queries**: Boolean, text, metadata, and comparison operators for powerful search capabilities
-- **Populate assets with your preferred technology:** CLI, API, Terraform, and Pulumi integrations
-- **Visualize data flows with interactive graphs:** Track dependencies and analyze impact through comprehensive lineage visualization
-- **Documentation and governance:** Markdown documentation support with tagging and classification capabilities
+- **Deploy in Minutes**: Single binary, Docker, or Kubernetes - no complex setup required
+- **Powerful Search**: Query language with full-text, metadata, and boolean operators
+- **Track Lineage**: Interactive dependency graphs to understand data flows and impact
+- **Flexible Integrations**: CLI, REST API, Terraform, and Pulumi - catalog assets your way
+- **Lightweight**: PostgreSQL-backed with minimal resource requirements
 
-## Next Steps
+## Key Capabilities
 
-- [Quick Start Guide](./quickstart.md)
-- [Data Ingestion Guide](./data-ingestion.md)
-- [Query Language Reference](./query-language.md)
-- [Integration Options](./integration.md)
+### Search Everything
+
+Find any data asset across your entire organisation in seconds. Combine full-text search with structured queries using metadata filters, boolean logic, and comparison operators.
+
+### Interactive Lineage Visualisation
+
+Trace data flows from source to destination with interactive dependency graphs. Understand upstream and downstream dependencies, identify bottlenecks, and analyse impact before making changes.
+
+### Metadata-First Architecture
+
+Store rich metadata for any asset type. From tables and topics to APIs and dashboards - if it matters to your data stack, you can catalog it in Marmot.
+
+### Team Collaboration
+
+Assign ownership, document business context, and create glossaries. Keep your entire team aligned with centralised knowledge about your data assets.
+
+## Getting Started
+
+Ready to dive in? Here's where to go next:
+
+- **[Quick Start Guide](./quick-start.md)** - Get Marmot running in minutes
+- **[Populating Your Catalog](./Populating/overview.md)** - Learn how to add assets
+- **[Query Language](./queries.md)** - Master Marmot's search capabilities
+- **[Deployment Options](./Deploy/overview.md)** - Deploy to production
+
+## Try It Out
+
+Want to see Marmot in action before installing? Check out our [live demo](https://demo.marmotdata.io) to explore the interface and features.
