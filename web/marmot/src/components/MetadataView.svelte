@@ -8,11 +8,15 @@
 
 	let {
 		asset = undefined,
-		metadata: metadataProp = undefined,
+		metadata: metadataProp = $bindable(undefined),
 		readOnly = false,
 		maxDepth = 1,
 		maxCharLength = undefined,
-		showDetailsLink = undefined
+		showDetailsLink = undefined,
+		endpoint = undefined,
+		id = undefined,
+		permissionResource = undefined,
+		permissionAction = undefined
 	}: {
 		asset?: Asset;
 		metadata?: Record<string, any>;
@@ -20,11 +24,39 @@
 		maxDepth?: number;
 		maxCharLength?: number;
 		showDetailsLink?: string;
+		endpoint?: string;
+		id?: string;
+		permissionResource?: string;
+		permissionAction?: string;
 	} = $props();
 
 	// Determine if we're in read-only mode
-	let isReadOnly = $derived(readOnly || !asset);
-	let canManageAssets = $derived(!isReadOnly && auth.hasPermission('assets', 'manage'));
+	// Respect explicit readOnly prop first, otherwise check if we have an entity to edit
+	let isReadOnly = $derived(readOnly);
+	let canEdit = $derived(() => {
+		if (isReadOnly) return false;
+
+		// Check permissions
+		let hasPermission = false;
+		if (permissionResource && permissionAction) {
+			hasPermission = auth.hasPermission(permissionResource, permissionAction);
+			// When permission props are provided, we're in edit mode - allow editing
+			return hasPermission;
+		} else if (asset) {
+			// Default to assets permission for backward compatibility
+			hasPermission = auth.hasPermission('assets', 'manage');
+		}
+
+		if (!hasPermission) return false;
+
+		// Must have either endpoint+id (for auto-save) or asset (for auto-save) to allow editing
+		// If neither is provided, we're in "view-only table mode"
+		if (!endpoint && !id && !asset) {
+			return false;
+		}
+
+		return true;
+	});
 
 	// Use provided metadata or asset metadata
 	let metadata = $state<Record<string, any>>(
@@ -75,11 +107,19 @@
 	}
 
 	async function saveMetadata(updatedMetadata: Record<string, any>) {
-		if (!asset?.id) return;
+		const entityId = id || asset?.id;
+		const apiEndpoint = endpoint || (asset ? '/assets' : null);
+
+		// If no endpoint/id provided, just update the metadata locally (for parent to handle save)
+		if (!entityId || !apiEndpoint) {
+			metadata = updatedMetadata;
+			metadataProp = updatedMetadata;
+			return;
+		}
 
 		saving = true;
 		try {
-			const response = await fetchApi(`/assets/${asset.id}`, {
+			const response = await fetchApi(`${apiEndpoint}/${entityId}`, {
 				method: 'PUT',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -89,22 +129,23 @@
 
 			if (response.ok) {
 				metadata = updatedMetadata;
-				asset.metadata = updatedMetadata;
+				metadataProp = updatedMetadata;
+				if (asset) {
+					asset.metadata = updatedMetadata;
+				}
 			} else {
 				const errorData = await response.json();
 				console.error('Failed to update metadata:', errorData);
-				alert('Failed to update metadata: ' + (errorData.error || 'Unknown error'));
 			}
 		} catch (error) {
 			console.error('Error updating metadata:', error);
-			alert('Error updating metadata: ' + (error instanceof Error ? error.message : 'Unknown error'));
 		} finally {
 			saving = false;
 		}
 	}
 
 	async function addMetadata() {
-		if (!newKey.trim() || !asset?.id) return;
+		if (!newKey.trim()) return;
 
 		const updatedMetadata = { ...metadata, [newKey.trim()]: parseValue(newValue.trim() || '""') };
 		await saveMetadata(updatedMetadata);
@@ -115,8 +156,6 @@
 	}
 
 	async function updateMetadata(key: string) {
-		if (!asset?.id) return;
-
 		const updatedMetadata = { ...metadata, [key]: parseValue(editingValue.trim()) };
 		await saveMetadata(updatedMetadata);
 
@@ -130,7 +169,7 @@
 	}
 
 	async function confirmDeleteMetadata() {
-		if (!asset?.id || !keyToDelete) return;
+		if (!keyToDelete) return;
 
 		const updatedMetadata = { ...metadata };
 		delete updatedMetadata[keyToDelete];
@@ -275,7 +314,7 @@
 								<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
 									Value
 								</th>
-								{#if canManageAssets}
+								{#if canEdit()}
 									<th class="px-4 py-2 w-10"></th>
 								{/if}
 							</tr>
@@ -356,7 +395,7 @@
 											</span>
 										{/if}
 									</td>
-									{#if canManageAssets}
+									{#if canEdit()}
 										<td class="px-4 py-2.5 align-top">
 											{#if editingKey !== key}
 												<button
@@ -419,7 +458,7 @@
 				{/if}
 			</div>
 
-			{#if canManageAssets && !showAddRow}
+			{#if canEdit() && !showAddRow}
 				<div class="border-t border-gray-200 dark:border-gray-700 p-2">
 					<button
 						onclick={() => (showAddRow = true)}

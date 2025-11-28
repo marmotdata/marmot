@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -145,7 +146,29 @@ func (r *PostgresRepository) searchFullText(ctx context.Context, filter Filter) 
 	return results, nil
 }
 
+// renumberParameters renumbers SQL parameters from $2, $3, ... to $1, $2, ...
+// Processes from highest to lowest to avoid conflicts during replacement.
+func renumberParameters(sql string) string {
+	for i := 20; i >= 2; i-- {
+		old := fmt.Sprintf("$%d", i)
+		new := fmt.Sprintf("$%d", i-1)
+		sql = strings.ReplaceAll(sql, old, new)
+	}
+	return sql
+}
+
 func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interface{}) {
+	kindFilters := extractKindFilters(filter.Query)
+	if len(kindFilters) > 0 {
+		// Check for contradictory @kind filters
+		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
+			return "SELECT NULL as type, NULL as id, NULL as name, NULL as description, NULL as metadata, NULL as url, 0 as rank, NULL as updated_at WHERE FALSE", []interface{}{}
+		}
+		filter.Types = kindFilters
+	}
+
+	searchQuery := stripKindFilter(filter.Query)
+
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
@@ -155,29 +178,25 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 	paramCount := 0
 
 	// Only add query parameter if it's being used
-	if filter.Query != "" {
-		params = append(params, filter.Query)
+	if searchQuery != "" {
+		params = append(params, searchQuery)
 		paramCount = 1
 	}
 
 	if includeAssets {
 		var assetQuery string
 
-		// Check if query has structured syntax (@metadata., @kind, @type, @provider, @name, etc.)
-		hasStructuredQuery := filter.Query != "" && (strings.Contains(filter.Query, "@metadata.") ||
-			strings.Contains(filter.Query, "@kind") ||
-			strings.Contains(filter.Query, "@type") ||
-			strings.Contains(filter.Query, "@provider") ||
-			strings.Contains(filter.Query, "@name"))
+		hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
+			strings.Contains(searchQuery, "@type") ||
+			strings.Contains(searchQuery, "@provider") ||
+			strings.Contains(searchQuery, "@name"))
 
 		if hasStructuredQuery {
-			// Use query parser for structured queries
 			parser := query.NewParser()
 			builder := query.NewBuilder()
 
-			parsedQuery, err := parser.Parse(filter.Query)
+			parsedQuery, err := parser.Parse(searchQuery)
 			if err != nil {
-				// If parsing fails, fall back to full-text search
 				hasStructuredQuery = false
 			} else {
 				baseQuery := `SELECT
@@ -208,32 +227,34 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 						'is_stub', is_stub
 					) as metadata,
 					'/discover/' || type || '/' || name as url,
-					ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as rank,
+					1.0 as rank,
 					updated_at
 				FROM assets`
 
 				builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
 				if err == nil {
-					// Extract the inner query from the CTE wrapper if present
 					builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
 					builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
 
-					// Add is_stub filter
 					if strings.Contains(builtQuery, "WHERE") {
 						builtQuery += " AND is_stub = FALSE"
 					} else {
 						builtQuery += " WHERE is_stub = FALSE"
 					}
 
+					// Query builder uses $2, $3, ... with empty $1 placeholder - renumber to $1, $2, ...
+					builtQuery = renumberParameters(builtQuery)
 					assetQuery = builtQuery
 
-					// Update params to include the query params
-					if len(queryParams) > 0 {
-						params = queryParams
+					// Skip first element (empty placeholder) from builder params
+					if len(queryParams) > 1 {
+						params = queryParams[1:]
 						paramCount = len(params)
+					} else {
+						params = []interface{}{}
+						paramCount = 0
 					}
 				} else {
-					// If building fails, fall back to full-text search
 					hasStructuredQuery = false
 				}
 			}
@@ -243,7 +264,7 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 			var rankExpr string
 			var whereClause string
 
-			if filter.Query != "" {
+			if searchQuery != "" {
 				rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
 				whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE"
 			} else {
@@ -311,53 +332,199 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 	}
 
 	if includeGlossary {
-		var rankExpr, whereClause string
-		if filter.Query != "" {
-			rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-			whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL"
-		} else {
-			rankExpr = "0"
-			whereClause = "WHERE deleted_at IS NULL"
+		var glossaryQuery string
+
+		hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
+			strings.Contains(searchQuery, "@name"))
+
+		if hasStructuredQuery {
+			parser := query.NewParser()
+			builder := query.NewBuilder()
+
+			parsedQuery, err := parser.Parse(searchQuery)
+			if err != nil {
+				hasStructuredQuery = false
+			} else {
+				baseQuery := `SELECT
+					'glossary' as type,
+					id::text,
+					name,
+					definition as description,
+					jsonb_build_object(
+						'id', id,
+						'name', name,
+						'definition', definition,
+						'description', description,
+						'parent_term_id', parent_term_id,
+						'metadata', metadata,
+						'tags', tags,
+						'created_at', created_at,
+						'updated_at', updated_at
+					) as metadata,
+					'/glossary/' || id::text as url,
+					1.0 as rank,
+					updated_at
+				FROM glossary_terms`
+
+				builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
+				if err == nil {
+					builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
+					builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
+
+					if strings.Contains(builtQuery, "WHERE") {
+						builtQuery += " AND deleted_at IS NULL"
+					} else {
+						builtQuery += " WHERE deleted_at IS NULL"
+					}
+
+					builtQuery = renumberParameters(builtQuery)
+					glossaryQuery = builtQuery
+
+					if paramCount == 0 && len(queryParams) > 1 {
+						params = queryParams[1:]
+						paramCount = len(params)
+					} else if paramCount == 0 {
+						params = []interface{}{}
+						paramCount = 0
+					}
+				} else {
+					hasStructuredQuery = false
+				}
+			}
 		}
 
-		unions = append(unions, fmt.Sprintf(`
-			SELECT
-				'glossary' as type,
-				id::text,
-				name,
-				definition as description,
-				jsonb_build_object('parent_term_id', parent_term_id) as metadata,
-				'/glossary/' || id::text as url,
-				%s as rank,
-				updated_at
-			FROM glossary_terms
-			%s
-		`, rankExpr, whereClause))
+		if !hasStructuredQuery {
+			var rankExpr, whereClause string
+			if searchQuery != "" {
+				rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
+				whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL"
+			} else {
+				rankExpr = "0"
+				whereClause = "WHERE deleted_at IS NULL"
+			}
+
+			glossaryQuery = fmt.Sprintf(`
+				SELECT
+					'glossary' as type,
+					id::text,
+					name,
+					definition as description,
+					jsonb_build_object(
+						'id', id,
+						'name', name,
+						'definition', definition,
+						'description', description,
+						'parent_term_id', parent_term_id,
+						'metadata', metadata,
+						'tags', tags,
+						'created_at', created_at,
+						'updated_at', updated_at
+					) as metadata,
+					'/glossary/' || id::text as url,
+					%s as rank,
+					updated_at
+				FROM glossary_terms
+				%s
+			`, rankExpr, whereClause)
+		}
+
+		unions = append(unions, glossaryQuery)
 	}
 
 	if includeTeams {
-		var rankExpr, whereClause string
-		if filter.Query != "" {
-			rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-			whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1)"
-		} else {
-			rankExpr = "0"
-			whereClause = ""
+		var teamQuery string
+
+		hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
+			strings.Contains(searchQuery, "@name"))
+
+		if hasStructuredQuery {
+			parser := query.NewParser()
+			builder := query.NewBuilder()
+
+			parsedQuery, err := parser.Parse(searchQuery)
+			if err != nil {
+				hasStructuredQuery = false
+			} else {
+				baseQuery := `SELECT
+					'team' as type,
+					id::text,
+					name,
+					description,
+					jsonb_build_object(
+						'id', id,
+						'name', name,
+						'description', description,
+						'metadata', metadata,
+						'tags', tags,
+						'created_via_sso', created_via_sso,
+						'sso_provider', sso_provider,
+						'created_by', created_by,
+						'created_at', created_at,
+						'updated_at', updated_at
+					) as metadata,
+					'/teams/' || id as url,
+					1.0 as rank,
+					updated_at
+				FROM teams`
+
+				builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
+				if err == nil {
+					builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
+					builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
+
+					builtQuery = renumberParameters(builtQuery)
+					teamQuery = builtQuery
+
+					if paramCount == 0 && len(queryParams) > 1 {
+						params = queryParams[1:]
+						paramCount = len(params)
+					} else if paramCount == 0 {
+						params = []interface{}{}
+						paramCount = 0
+					}
+				} else {
+					hasStructuredQuery = false
+				}
+			}
 		}
 
-		unions = append(unions, fmt.Sprintf(`
-			SELECT
-				'team' as type,
-				id::text,
-				name,
-				description,
-				jsonb_build_object('created_via_sso', created_via_sso) as metadata,
-				'/teams/' || id as url,
-				%s as rank,
-				updated_at
-			FROM teams
-			%s
-		`, rankExpr, whereClause))
+		if !hasStructuredQuery {
+			var rankExpr, whereClause string
+			if searchQuery != "" {
+				rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
+				whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1)"
+			} else {
+				rankExpr = "0"
+				whereClause = ""
+			}
+
+			teamQuery = fmt.Sprintf(`
+				SELECT
+					'team' as type,
+					id::text,
+					name,
+					description,
+					jsonb_build_object(
+						'id', id,
+						'name', name,
+						'description', description,
+						'metadata', metadata,
+						'tags', tags,
+						'created_via_sso', created_via_sso,
+						'sso_provider', sso_provider,
+						'created_by', created_by,
+						'created_at', created_at,
+						'updated_at', updated_at
+					) as metadata,
+					'/teams/' || id as url,
+					%s as rank,
+					updated_at
+				FROM teams
+				%s
+			`, rankExpr, whereClause)
+		}
+
+		unions = append(unions, teamQuery)
 	}
 
 	if len(unions) == 0 {
@@ -385,6 +552,22 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 }
 
 func (r *PostgresRepository) buildFacets(ctx context.Context, filter Filter) (*Facets, error) {
+	kindFilters := extractKindFilters(filter.Query)
+	if len(kindFilters) > 0 {
+		// Check for contradictory @kind filters
+		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
+			return &Facets{
+				Types:      make(map[ResultType]int),
+				AssetTypes: []FacetValue{},
+				Providers:  []FacetValue{},
+				Tags:       []FacetValue{},
+			}, nil
+		}
+		filter.Types = kindFilters
+	}
+
+	searchQuery := stripKindFilter(filter.Query)
+
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
@@ -393,14 +576,14 @@ func (r *PostgresRepository) buildFacets(ctx context.Context, filter Filter) (*F
 	var params []interface{}
 	paramCount := 0
 
-	if filter.Query != "" {
-		params = append(params, filter.Query)
+	if searchQuery != "" {
+		params = append(params, searchQuery)
 		paramCount = 1
 	}
 
 	if includeAssets {
 		var assetQuery string
-		if filter.Query != "" {
+		if searchQuery != "" {
 			assetQuery = `SELECT 'asset' as type, type as asset_type, providers, tags FROM assets WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE`
 		} else {
 			assetQuery = `SELECT 'asset' as type, type as asset_type, providers, tags FROM assets WHERE is_stub = FALSE`
@@ -428,18 +611,18 @@ func (r *PostgresRepository) buildFacets(ctx context.Context, filter Filter) (*F
 	}
 
 	if includeGlossary {
-		if filter.Query != "" {
-			unions = append(unions, `SELECT 'glossary' as type, NULL as asset_type, NULL::text[] as providers, NULL::text[] as tags FROM glossary_terms WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL`)
+		if searchQuery != "" {
+			unions = append(unions, `SELECT 'glossary' as type, NULL as asset_type, NULL::text[] as providers, tags FROM glossary_terms WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL`)
 		} else {
-			unions = append(unions, `SELECT 'glossary' as type, NULL as asset_type, NULL::text[] as providers, NULL::text[] as tags FROM glossary_terms WHERE deleted_at IS NULL`)
+			unions = append(unions, `SELECT 'glossary' as type, NULL as asset_type, NULL::text[] as providers, tags FROM glossary_terms WHERE deleted_at IS NULL`)
 		}
 	}
 
 	if includeTeams {
-		if filter.Query != "" {
-			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, NULL::text[] as tags FROM teams WHERE search_text @@ websearch_to_tsquery('english', $1)`)
+		if searchQuery != "" {
+			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, tags FROM teams WHERE search_text @@ websearch_to_tsquery('english', $1)`)
 		} else {
-			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, NULL::text[] as tags FROM teams`)
+			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, tags FROM teams`)
 		}
 	}
 
@@ -480,7 +663,7 @@ func (r *PostgresRepository) buildFacets(ctx context.Context, filter Filter) (*F
 		tag_counts AS (
 			SELECT UNNEST(tags) as tag, COUNT(*) as count
 			FROM matching_results
-			WHERE type = 'asset' AND tags IS NOT NULL
+			WHERE tags IS NOT NULL
 			GROUP BY tag
 			ORDER BY count DESC
 			LIMIT 50
@@ -541,6 +724,20 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 		return nil, nil
 	}
 
+	kindFilters := extractKindFilters(filter.Query)
+	if len(kindFilters) > 0 {
+		// Check for contradictory @kind filters
+		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
+			return nil, nil
+		}
+		filter.Types = kindFilters
+	}
+
+	searchQuery := stripKindFilter(filter.Query)
+	if searchQuery == "" {
+		return nil, nil
+	}
+
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
@@ -549,7 +746,7 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 	var params []interface{}
 	paramCount := 0
 
-	paramLower := strings.ToLower(filter.Query)
+	paramLower := strings.ToLower(searchQuery)
 	params = append(params, paramLower)
 	params = append(params, paramLower+"%")
 	paramCount = 2
@@ -631,7 +828,17 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 				id::text,
 				name,
 				definition as description,
-				jsonb_build_object('parent_term_id', parent_term_id) as metadata,
+				jsonb_build_object(
+					'id', id,
+					'name', name,
+					'definition', definition,
+					'description', description,
+					'parent_term_id', parent_term_id,
+					'metadata', metadata,
+					'tags', tags,
+					'created_at', created_at,
+					'updated_at', updated_at
+				) as metadata,
 				'/glossary/' || id::text as url,
 				CASE
 					WHEN LOWER(name) = $1 THEN 100
@@ -652,7 +859,18 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 				id::text,
 				name,
 				description,
-				jsonb_build_object('created_via_sso', created_via_sso) as metadata,
+				jsonb_build_object(
+					'id', id,
+					'name', name,
+					'description', description,
+					'metadata', metadata,
+					'tags', tags,
+					'created_via_sso', created_via_sso,
+					'sso_provider', sso_provider,
+					'created_by', created_by,
+					'created_at', created_at,
+					'updated_at', updated_at
+				) as metadata,
 				'/teams/' || id as url,
 				CASE
 					WHEN LOWER(name) = $1 THEN 100
@@ -737,6 +955,20 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 		return nil, nil
 	}
 
+	kindFilters := extractKindFilters(filter.Query)
+	if len(kindFilters) > 0 {
+		// Check for contradictory @kind filters
+		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
+			return nil, nil
+		}
+		filter.Types = kindFilters
+	}
+
+	searchQuery := stripKindFilter(filter.Query)
+	if searchQuery == "" {
+		return nil, nil
+	}
+
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
@@ -745,7 +977,7 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 	var params []interface{}
 	paramCount := 0
 
-	params = append(params, filter.Query)
+	params = append(params, searchQuery)
 	paramCount = 1
 
 	if includeAssets {
@@ -823,7 +1055,17 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 				id::text,
 				name,
 				definition as description,
-				jsonb_build_object('parent_term_id', parent_term_id) as metadata,
+				jsonb_build_object(
+					'id', id,
+					'name', name,
+					'definition', definition,
+					'description', description,
+					'parent_term_id', parent_term_id,
+					'metadata', metadata,
+					'tags', tags,
+					'created_at', created_at,
+					'updated_at', updated_at
+				) as metadata,
 				'/glossary/' || id::text as url,
 				(word_similarity($1, name) * 30) as rank,
 				updated_at
@@ -840,7 +1082,18 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 				id::text,
 				name,
 				description,
-				jsonb_build_object('created_via_sso', created_via_sso) as metadata,
+				jsonb_build_object(
+					'id', id,
+					'name', name,
+					'description', description,
+					'metadata', metadata,
+					'tags', tags,
+					'created_via_sso', created_via_sso,
+					'sso_provider', sso_provider,
+					'created_by', created_by,
+					'created_at', created_at,
+					'updated_at', updated_at
+				) as metadata,
 				'/teams/' || id as url,
 				(word_similarity($1, name) * 30) as rank,
 				updated_at
@@ -914,4 +1167,57 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 	}
 
 	return results, nil
+}
+
+var (
+	kindGlossaryRegex = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?glossary"?`)
+	kindAssetRegex    = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?asset"?`)
+	kindTeamRegex     = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?team"?`)
+	kindStripRegex    = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?(glossary|asset|team)"?`)
+)
+
+func extractKindFilters(queryStr string) []ResultType {
+	if queryStr == "" || !strings.Contains(queryStr, "@kind") {
+		return nil
+	}
+
+	var kinds []ResultType
+
+	if kindGlossaryRegex.MatchString(queryStr) {
+		kinds = append(kinds, ResultTypeGlossary)
+	}
+
+	if kindAssetRegex.MatchString(queryStr) {
+		kinds = append(kinds, ResultTypeAsset)
+	}
+
+	if kindTeamRegex.MatchString(queryStr) {
+		kinds = append(kinds, ResultTypeTeam)
+	}
+
+	// Multiple @kind filters is a contradiction - nothing can be multiple types simultaneously
+	// The query builder returns TRUE for @kind, so we need to detect this at extraction time
+	if len(kinds) > 1 {
+		return []ResultType{"__CONTRADICTION__"}
+	}
+
+	return kinds
+}
+
+func stripKindFilter(queryStr string) string {
+	if !strings.Contains(queryStr, "@kind") {
+		return queryStr
+	}
+
+	result := kindStripRegex.ReplaceAllString(queryStr, "")
+	result = strings.TrimSpace(result)
+
+	result = strings.ReplaceAll(result, "AND AND", "AND")
+	result = strings.ReplaceAll(result, "OR OR", "OR")
+	result = strings.TrimPrefix(result, "AND ")
+	result = strings.TrimPrefix(result, "OR ")
+	result = strings.TrimSuffix(result, " AND")
+	result = strings.TrimSuffix(result, " OR")
+
+	return strings.TrimSpace(result)
 }

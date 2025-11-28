@@ -251,8 +251,10 @@ func (h *Handler) updateTeam(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
 	var req struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
+		Name        *string                `json:"name,omitempty"`
+		Description *string                `json:"description,omitempty"`
+		Metadata    map[string]interface{} `json:"metadata,omitempty"`
+		Tags        []string               `json:"tags,omitempty"`
 	}
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -260,12 +262,7 @@ func (h *Handler) updateTeam(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if req.Name == "" {
-		common.RespondError(w, http.StatusBadRequest, "Name is required")
-		return
-	}
-
-	err := h.teamService.UpdateTeam(r.Context(), id, req.Name, req.Description)
+	err := h.teamService.UpdateTeamFields(r.Context(), id, req.Name, req.Description, req.Metadata, req.Tags)
 	if err != nil {
 		if err == team.ErrTeamNotFound {
 			common.RespondError(w, http.StatusNotFound, "Team not found")

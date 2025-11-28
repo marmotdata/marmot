@@ -101,7 +101,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
-		searchAPI.NewHandler(searchSvc, userSvc, authSvc, config),
+		searchAPI.NewHandler(searchSvc, userSvc, authSvc, metricsService, config),
 		ui.NewHandler(config),
 	}
 

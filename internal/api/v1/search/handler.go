@@ -8,26 +8,30 @@ import (
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/internal/metrics"
 )
 
 type Handler struct {
-	searchService search.Service
-	userService   user.Service
-	authService   auth.Service
-	config        *config.Config
+	searchService  search.Service
+	userService    user.Service
+	authService    auth.Service
+	metricsService *metrics.Service
+	config         *config.Config
 }
 
 func NewHandler(
 	searchService search.Service,
 	userService user.Service,
 	authService auth.Service,
+	metricsService *metrics.Service,
 	config *config.Config,
 ) *Handler {
 	return &Handler{
-		searchService: searchService,
-		userService:   userService,
-		authService:   authService,
-		config:        config,
+		searchService:  searchService,
+		userService:    userService,
+		authService:    authService,
+		metricsService: metricsService,
+		config:         config,
 	}
 }
 

@@ -8,6 +8,8 @@
 	import Icon from '../../../components/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import AssetBlade from '../../../components/AssetBlade.svelte';
+	import Tags from '../../../components/Tags.svelte';
+	import MetadataView from '../../../components/MetadataView.svelte';
 
 	interface Owner {
 		id: string;
@@ -58,6 +60,9 @@
 			loading = true;
 			const response = await fetchApi(`/teams/${teamId}`);
 			team = await response.json();
+			// Initialize tags and metadata if they don't exist
+			if (!team.tags) team.tags = [];
+			if (!team.metadata) team.metadata = {};
 		} catch (err: any) {
 			error = err.message;
 		} finally {
@@ -263,6 +268,46 @@
 			</div>
 		</div>
 
+		<!-- Tags & Metadata Section -->
+		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+			<div class="space-y-5">
+				<!-- Tags -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<IconifyIcon icon="material-symbols:label-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+						<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+							Tags
+						</h3>
+					</div>
+					<Tags
+						bind:tags={team.tags}
+						endpoint="/teams"
+						id={team.id}
+						canEdit={canEditTeam && !team.created_via_sso}
+					/>
+				</div>
+
+				<!-- Metadata -->
+				<div>
+					<div class="flex items-center gap-2 mb-2">
+						<IconifyIcon icon="material-symbols:database-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+						<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+							Metadata
+						</h3>
+					</div>
+					<MetadataView
+						bind:metadata={team.metadata}
+						endpoint="/teams"
+						id={team.id}
+						permissionResource="teams"
+						permissionAction="manage"
+						readOnly={team.created_via_sso}
+						maxDepth={2}
+					/>
+				</div>
+			</div>
+		</div>
+
 		<!-- Members Section -->
 		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
 			<div class="flex items-center justify-between mb-4">
@@ -454,7 +499,7 @@
 							>
 								<div class="flex items-center gap-3 flex-1 min-w-0">
 									<div class="flex-shrink-0">
-										<Icon name={getIconType(asset)} showLabel={false} iconSize="sm" />
+										<Icon name={getIconType(asset)} showLabel={false} size="sm" />
 									</div>
 									<div class="flex-1 min-w-0">
 										<div class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 truncate">

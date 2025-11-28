@@ -12,14 +12,16 @@ import (
 )
 
 type Team struct {
-	ID            string    `json:"id"`
-	Name          string    `json:"name"`
-	Description   string    `json:"description"`
-	CreatedViaSSO bool      `json:"created_via_sso"`
-	SSOProvider   *string   `json:"sso_provider,omitempty"`
-	CreatedBy     *string   `json:"created_by,omitempty"`
-	CreatedAt     time.Time `json:"created_at"`
-	UpdatedAt     time.Time `json:"updated_at"`
+	ID            string                 `json:"id"`
+	Name          string                 `json:"name"`
+	Description   string                 `json:"description"`
+	Metadata      map[string]interface{} `json:"metadata,omitempty"`
+	Tags          []string               `json:"tags,omitempty"`
+	CreatedViaSSO bool                   `json:"created_via_sso"`
+	SSOProvider   *string                `json:"sso_provider,omitempty"`
+	CreatedBy     *string                `json:"created_by,omitempty"`
+	CreatedAt     time.Time              `json:"created_at"`
+	UpdatedAt     time.Time              `json:"updated_at"`
 }
 
 type TeamMember struct {
@@ -103,6 +105,10 @@ func (s *Service) GetTeam(ctx context.Context, id string) (*Team, error) {
 
 func (s *Service) UpdateTeam(ctx context.Context, id, name, description string) error {
 	return s.repo.UpdateTeam(ctx, id, name, description)
+}
+
+func (s *Service) UpdateTeamFields(ctx context.Context, id string, name, description *string, metadata map[string]interface{}, tags []string) error {
+	return s.repo.UpdateTeamFields(ctx, id, name, description, metadata, tags)
 }
 
 func (s *Service) DeleteTeam(ctx context.Context, id string) error {

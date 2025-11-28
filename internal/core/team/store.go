@@ -2,8 +2,10 @@ package team
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
@@ -25,6 +27,7 @@ type Repository interface {
 	GetTeam(ctx context.Context, id string) (*Team, error)
 	GetTeamByName(ctx context.Context, name string) (*Team, error)
 	UpdateTeam(ctx context.Context, id string, name, description string) error
+	UpdateTeamFields(ctx context.Context, id string, name, description *string, metadata map[string]interface{}, tags []string) error
 	DeleteTeam(ctx context.Context, id string) error
 	ListTeams(ctx context.Context, limit, offset int) ([]*Team, int, error)
 	TeamExists(ctx context.Context, id string) (bool, error)
@@ -62,14 +65,21 @@ func NewPostgresRepository(db *pgxpool.Pool) Repository {
 }
 
 func (r *PostgresRepository) CreateTeam(ctx context.Context, team *Team) error {
+	metadataJSON, err := json.Marshal(team.Metadata)
+	if err != nil {
+		return fmt.Errorf("marshaling metadata: %w", err)
+	}
+
 	query := `
-		INSERT INTO teams (name, description, created_via_sso, sso_provider, created_by)
-		VALUES ($1, $2, $3, $4, $5)
+		INSERT INTO teams (name, description, metadata, tags, created_via_sso, sso_provider, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id, created_at, updated_at`
 
-	err := r.db.QueryRow(ctx, query,
+	err = r.db.QueryRow(ctx, query,
 		team.Name,
 		team.Description,
+		metadataJSON,
+		team.Tags,
 		team.CreatedViaSSO,
 		team.SSOProvider,
 		team.CreatedBy,
@@ -88,15 +98,18 @@ func (r *PostgresRepository) CreateTeam(ctx context.Context, team *Team) error {
 
 func (r *PostgresRepository) GetTeam(ctx context.Context, id string) (*Team, error) {
 	query := `
-		SELECT id, name, description, created_via_sso, sso_provider, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, tags, created_via_sso, sso_provider, created_by, created_at, updated_at
 		FROM teams
 		WHERE id = $1`
 
 	team := &Team{}
+	var metadataJSON []byte
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&team.ID,
 		&team.Name,
 		&team.Description,
+		&metadataJSON,
+		&team.Tags,
 		&team.CreatedViaSSO,
 		&team.SSOProvider,
 		&team.CreatedBy,
@@ -111,20 +124,27 @@ func (r *PostgresRepository) GetTeam(ctx context.Context, id string) (*Team, err
 		return nil, fmt.Errorf("failed to get team: %w", err)
 	}
 
+	if err := json.Unmarshal(metadataJSON, &team.Metadata); err != nil {
+		return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+	}
+
 	return team, nil
 }
 
 func (r *PostgresRepository) GetTeamByName(ctx context.Context, name string) (*Team, error) {
 	query := `
-		SELECT id, name, description, created_via_sso, sso_provider, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, tags, created_via_sso, sso_provider, created_by, created_at, updated_at
 		FROM teams
 		WHERE name = $1`
 
 	team := &Team{}
+	var metadataJSON []byte
 	err := r.db.QueryRow(ctx, query, name).Scan(
 		&team.ID,
 		&team.Name,
 		&team.Description,
+		&metadataJSON,
+		&team.Tags,
 		&team.CreatedViaSSO,
 		&team.SSOProvider,
 		&team.CreatedBy,
@@ -137,6 +157,10 @@ func (r *PostgresRepository) GetTeamByName(ctx context.Context, name string) (*T
 			return nil, ErrTeamNotFound
 		}
 		return nil, fmt.Errorf("failed to get team: %w", err)
+	}
+
+	if err := json.Unmarshal(metadataJSON, &team.Metadata); err != nil {
+		return nil, fmt.Errorf("unmarshaling metadata: %w", err)
 	}
 
 	return team, nil
@@ -168,6 +192,79 @@ func (r *PostgresRepository) UpdateTeam(ctx context.Context, id, name, descripti
 			return ErrTeamNameExists
 		}
 		return fmt.Errorf("failed to update team: %w", err)
+	}
+
+	return nil
+}
+
+func (r *PostgresRepository) UpdateTeamFields(ctx context.Context, id string, name, description *string, metadata map[string]interface{}, tags []string) error {
+	// Get existing team to check if it's SSO-managed
+	team, err := r.GetTeam(ctx, id)
+	if err != nil {
+		return err
+	}
+	if team.CreatedViaSSO {
+		return ErrCannotEditSSOTeam
+	}
+
+	// Build dynamic update query
+	updates := []string{}
+	params := []interface{}{}
+	paramCount := 1
+
+	if name != nil {
+		updates = append(updates, fmt.Sprintf("name = $%d", paramCount))
+		params = append(params, *name)
+		paramCount++
+	}
+
+	if description != nil {
+		updates = append(updates, fmt.Sprintf("description = $%d", paramCount))
+		params = append(params, *description)
+		paramCount++
+	}
+
+	if metadata != nil {
+		metadataJSON, err := json.Marshal(metadata)
+		if err != nil {
+			return fmt.Errorf("marshaling metadata: %w", err)
+		}
+		updates = append(updates, fmt.Sprintf("metadata = $%d", paramCount))
+		params = append(params, metadataJSON)
+		paramCount++
+	}
+
+	if tags != nil {
+		updates = append(updates, fmt.Sprintf("tags = $%d", paramCount))
+		params = append(params, tags)
+		paramCount++
+	}
+
+	if len(updates) == 0 {
+		return nil // Nothing to update
+	}
+
+	updates = append(updates, "updated_at = NOW()")
+	params = append(params, id)
+
+	query := fmt.Sprintf(`
+		UPDATE teams
+		SET %s
+		WHERE id = $%d AND created_via_sso = FALSE
+		RETURNING id`, strings.Join(updates, ", "), paramCount)
+
+	var returnedID string
+	err = r.db.QueryRow(ctx, query, params...).Scan(&returnedID)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return ErrTeamNotFound
+		}
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return ErrTeamNameExists
+		}
+		return fmt.Errorf("failed to update team fields: %w", err)
 	}
 
 	return nil
@@ -205,7 +302,7 @@ func (r *PostgresRepository) ListTeams(ctx context.Context, limit, offset int) (
 	}
 
 	query := `
-		SELECT id, name, description, created_via_sso, sso_provider, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, tags, created_via_sso, sso_provider, created_by, created_at, updated_at
 		FROM teams
 		ORDER BY name
 		LIMIT $1 OFFSET $2`
@@ -219,10 +316,13 @@ func (r *PostgresRepository) ListTeams(ctx context.Context, limit, offset int) (
 	teams := []*Team{}
 	for rows.Next() {
 		team := &Team{}
+		var metadataJSON []byte
 		err := rows.Scan(
 			&team.ID,
 			&team.Name,
 			&team.Description,
+			&metadataJSON,
+			&team.Tags,
 			&team.CreatedViaSSO,
 			&team.SSOProvider,
 			&team.CreatedBy,
@@ -231,6 +331,9 @@ func (r *PostgresRepository) ListTeams(ctx context.Context, limit, offset int) (
 		)
 		if err != nil {
 			return nil, 0, fmt.Errorf("failed to scan team: %w", err)
+		}
+		if err := json.Unmarshal(metadataJSON, &team.Metadata); err != nil {
+			return nil, 0, fmt.Errorf("unmarshaling metadata: %w", err)
 		}
 		teams = append(teams, team)
 	}
@@ -376,7 +479,7 @@ func (r *PostgresRepository) ListMembers(ctx context.Context, teamID string) ([]
 
 func (r *PostgresRepository) ListUserTeams(ctx context.Context, userID string) ([]*Team, error) {
 	query := `
-		SELECT t.id, t.name, t.description, t.created_via_sso, t.sso_provider, t.created_by, t.created_at, t.updated_at
+		SELECT t.id, t.name, t.description, t.metadata, t.tags, t.created_via_sso, t.sso_provider, t.created_by, t.created_at, t.updated_at
 		FROM teams t
 		JOIN team_members tm ON t.id = tm.team_id
 		WHERE tm.user_id = $1
@@ -391,10 +494,13 @@ func (r *PostgresRepository) ListUserTeams(ctx context.Context, userID string) (
 	teams := []*Team{}
 	for rows.Next() {
 		team := &Team{}
+		var metadataJSON []byte
 		err := rows.Scan(
 			&team.ID,
 			&team.Name,
 			&team.Description,
+			&metadataJSON,
+			&team.Tags,
 			&team.CreatedViaSSO,
 			&team.SSOProvider,
 			&team.CreatedBy,
@@ -403,6 +509,9 @@ func (r *PostgresRepository) ListUserTeams(ctx context.Context, userID string) (
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan team: %w", err)
+		}
+		if err := json.Unmarshal(metadataJSON, &team.Metadata); err != nil {
+			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
 		}
 		teams = append(teams, team)
 	}

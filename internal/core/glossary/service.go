@@ -24,6 +24,7 @@ type GlossaryTerm struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []Owner                `json:"owners"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Tags         []string               `json:"tags,omitempty"`
 	CreatedAt    time.Time              `json:"created_at"`
 	UpdatedAt    time.Time              `json:"updated_at"`
 	DeletedAt    *time.Time             `json:"deleted_at,omitempty"`
@@ -41,6 +42,7 @@ type CreateTermInput struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []OwnerInput           `json:"owners" validate:"required,min=1,dive"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Tags         []string               `json:"tags,omitempty"`
 }
 
 type UpdateTermInput struct {
@@ -50,6 +52,7 @@ type UpdateTermInput struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []OwnerInput           `json:"owners,omitempty" validate:"omitempty,min=1,dive"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
+	Tags         []string               `json:"tags,omitempty"`
 }
 
 type SearchFilter struct {
@@ -139,6 +142,7 @@ func (s *service) Create(ctx context.Context, input CreateTermInput) (*GlossaryT
 		Description:  input.Description,
 		ParentTermID: input.ParentTermID,
 		Metadata:     input.Metadata,
+		Tags:         input.Tags,
 		CreatedAt:    time.Now().UTC(),
 		UpdatedAt:    time.Now().UTC(),
 	}
@@ -184,6 +188,9 @@ func (s *service) Update(ctx context.Context, id string, input UpdateTermInput) 
 	}
 	if input.Metadata != nil {
 		existing.Metadata = input.Metadata
+	}
+	if input.Tags != nil {
+		existing.Tags = input.Tags
 	}
 
 	if input.ParentTermID != nil {

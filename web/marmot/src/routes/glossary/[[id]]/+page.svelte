@@ -11,6 +11,8 @@
 	import OwnerSelector from '../../../components/OwnerSelector.svelte';
 	import Button from '../../../components/Button.svelte';
 	import Icon from '@iconify/svelte';
+	import Tags from '../../../components/Tags.svelte';
+	import MetadataView from '../../../components/MetadataView.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	const terms: Writable<GlossaryTerm[]> = writable([]);
@@ -83,7 +85,13 @@
 			}
 
 			const data: TermsListResponse = await response.json();
-			terms.set(data.terms || []);
+			// Initialize tags and metadata for all terms
+			const processedTerms = (data.terms || []).map(term => ({
+				...term,
+				tags: term.tags || [],
+				metadata: term.metadata || {}
+			}));
+			terms.set(processedTerms);
 			totalTerms.set(data.total || 0);
 		} catch (err) {
 			error.set(err instanceof Error ? err.message : 'Failed to fetch terms');
@@ -134,6 +142,9 @@
 			const response = await fetchApi(`/glossary/${termId}`);
 			if (response.ok) {
 				const term: GlossaryTerm = await response.json();
+				// Initialize tags and metadata if they don't exist
+				if (!term.tags) term.tags = [];
+				if (!term.metadata) term.metadata = {};
 				selectedTerm = term;
 			}
 		} catch (err) {
@@ -223,6 +234,12 @@
 
 			if (ownersChanged) {
 				updateData.owners = newOwners;
+			}
+
+			// Check if metadata changed
+			const metadataChanged = JSON.stringify(editedTerm.metadata) !== JSON.stringify(selectedTerm.metadata);
+			if (metadataChanged) {
+				updateData.metadata = editedTerm.metadata;
 			}
 
 			if (Object.keys(updateData).length === 0) {
@@ -420,6 +437,48 @@
 								/>
 							{/if}
 						</div>
+
+						<!-- Tags Section -->
+						<div>
+							<div class="flex items-center gap-2 mb-2">
+								<Icon icon="material-symbols:label-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+								<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+									Tags
+								</h3>
+							</div>
+							<Tags
+								bind:tags={selectedTerm.tags}
+								endpoint="/glossary"
+								id={selectedTerm.id}
+								canEdit={canManageGlossary && !isEditing}
+							/>
+						</div>
+
+						<!-- Metadata Section -->
+						<div>
+							<div class="flex items-center gap-2 mb-2">
+								<Icon icon="material-symbols:database-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
+								<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+									Metadata
+								</h3>
+							</div>
+							{#if isEditing && editedTerm}
+								<MetadataView
+									bind:metadata={editedTerm.metadata}
+									permissionResource="glossary"
+									permissionAction="manage"
+									readOnly={false}
+									maxDepth={2}
+								/>
+							{:else}
+								<MetadataView
+									metadata={selectedTerm.metadata}
+									readOnly={false}
+									maxDepth={2}
+								/>
+							{/if}
+						</div>
+
 						<!-- Description (Markdown Body) -->
 						{#if selectedTerm.description || (isEditing && editedTerm)}
 							<div>

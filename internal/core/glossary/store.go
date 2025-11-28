@@ -116,13 +116,13 @@ func (r *PostgresRepository) Create(ctx context.Context, term *GlossaryTerm, own
 	query := `
 		INSERT INTO glossary_terms (
 			name, definition, description, parent_term_id,
-			metadata, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7)
+			metadata, tags, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
 		RETURNING id`
 
 	err = tx.QueryRow(ctx, query,
 		term.Name, term.Definition, term.Description,
-		term.ParentTermID, metadataJSON,
+		term.ParentTermID, metadataJSON, term.Tags,
 		term.CreatedAt, term.UpdatedAt,
 	).Scan(&term.ID)
 
@@ -155,7 +155,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 
 	query := `
 		SELECT id, name, definition, description, parent_term_id,
-			   metadata, created_at, updated_at, deleted_at
+			   metadata, tags, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		WHERE id = $1`
 
@@ -165,7 +165,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&term.ID, &term.Name, &term.Definition,
 		&term.Description, &term.ParentTermID,
-		&metadataJSON, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
+		&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 	)
 
 	duration := time.Since(start)
@@ -213,12 +213,12 @@ func (r *PostgresRepository) Update(ctx context.Context, term *GlossaryTerm, own
 	query := `
 		UPDATE glossary_terms
 		SET name = $1, definition = $2, description = $3, parent_term_id = $4,
-			metadata = $5, updated_at = $6, deleted_at = $7
-		WHERE id = $8`
+			metadata = $5, tags = $6, updated_at = $7, deleted_at = $8
+		WHERE id = $9`
 
 	result, err := tx.Exec(ctx, query,
 		term.Name, term.Definition, term.Description, term.ParentTermID,
-		metadataJSON, term.UpdatedAt, term.DeletedAt, term.ID,
+		metadataJSON, term.Tags, term.UpdatedAt, term.DeletedAt, term.ID,
 	)
 
 	duration := time.Since(start)
@@ -262,7 +262,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 
 	query := `
 		SELECT id, name, definition, description, parent_term_id,
-			   metadata, created_at, updated_at, deleted_at
+			   metadata, tags, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		WHERE deleted_at IS NULL
 		ORDER BY name ASC
@@ -283,7 +283,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 		if err := rows.Scan(
 			&term.ID, &term.Name, &term.Definition,
 			&term.Description, &term.ParentTermID,
-			&metadataJSON, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
+			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_list", time.Since(start), false)
 			return nil, fmt.Errorf("scanning glossary term: %w", err)
@@ -357,7 +357,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 
 	query := fmt.Sprintf(`
 		SELECT id, name, definition, description, parent_term_id,
-			   metadata, created_at, updated_at, deleted_at
+			   metadata, tags, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		%s
 		ORDER BY name ASC
@@ -380,7 +380,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 		if err := rows.Scan(
 			&term.ID, &term.Name, &term.Definition,
 			&term.Description, &term.ParentTermID,
-			&metadataJSON, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
+			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_search", time.Since(start), false)
 			return nil, fmt.Errorf("scanning search result: %w", err)
@@ -415,7 +415,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 
 	query := `
 		SELECT id, name, definition, description, parent_term_id,
-			   metadata, created_at, updated_at, deleted_at
+			   metadata, tags, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		WHERE parent_term_id = $1 AND deleted_at IS NULL
 		ORDER BY name ASC`
@@ -435,7 +435,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 		if err := rows.Scan(
 			&term.ID, &term.Name, &term.Definition,
 			&term.Description, &term.ParentTermID,
-			&metadataJSON, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
+			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_get_children", time.Since(start), false)
 			return nil, fmt.Errorf("scanning child term: %w", err)

@@ -466,6 +466,39 @@ func (r *PostgresRepository) GetMetadataFields(ctx context.Context) ([]MetadataF
    		UNION ALL
 
    		SELECT
+   			key as path,
+   			key as field,
+   			value,
+   			jsonb_typeof(value) as type,
+   			1 as depth,
+   			ARRAY[key] as path_parts,
+   			ARRAY[jsonb_typeof(value)] as types
+   		FROM glossary_terms,
+   			jsonb_each(metadata)
+   		WHERE metadata IS NOT NULL
+   			AND metadata != '{}'::jsonb
+   			AND jsonb_typeof(metadata) = 'object'
+   			AND deleted_at IS NULL
+
+   		UNION ALL
+
+   		SELECT
+   			key as path,
+   			key as field,
+   			value,
+   			jsonb_typeof(value) as type,
+   			1 as depth,
+   			ARRAY[key] as path_parts,
+   			ARRAY[jsonb_typeof(value)] as types
+   		FROM teams,
+   			jsonb_each(metadata)
+   		WHERE metadata IS NOT NULL
+   			AND metadata != '{}'::jsonb
+   			AND jsonb_typeof(metadata) = 'object'
+
+   		UNION ALL
+
+   		SELECT
    			mk.path || '.' || e.key,
    			e.key,
    			e.value,
@@ -497,8 +530,16 @@ func (r *PostgresRepository) GetMetadataFieldsWithContext(ctx context.Context, q
    		SELECT id FROM assets
    		WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE
    	),
+   	matching_glossary AS (
+   		SELECT id FROM glossary_terms
+   		WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL
+   	),
+   	matching_teams AS (
+   		SELECT id FROM teams
+   		WHERE search_text @@ websearch_to_tsquery('english', $1)
+   	),
    	metadata_stats AS (
-   		SELECT 
+   		SELECT
    			key as field,
    			jsonb_typeof(value) as type,
    			COUNT(*) as count,
@@ -508,15 +549,42 @@ func (r *PostgresRepository) GetMetadataFieldsWithContext(ctx context.Context, q
    			jsonb_each(metadata)
    		WHERE metadata != '{}'::jsonb
    		GROUP BY key, jsonb_typeof(value)
+
+   		UNION ALL
+
+   		SELECT
+   			key as field,
+   			jsonb_typeof(value) as type,
+   			COUNT(*) as count,
+   			MODE() WITHIN GROUP (ORDER BY value) as example
+   		FROM glossary_terms g
+   		JOIN matching_glossary mg ON g.id = mg.id,
+   			jsonb_each(metadata)
+   		WHERE metadata != '{}'::jsonb
+   		GROUP BY key, jsonb_typeof(value)
+
+   		UNION ALL
+
+   		SELECT
+   			key as field,
+   			jsonb_typeof(value) as type,
+   			COUNT(*) as count,
+   			MODE() WITHIN GROUP (ORDER BY value) as example
+   		FROM teams t
+   		JOIN matching_teams mt ON t.id = mt.id,
+   			jsonb_each(metadata)
+   		WHERE metadata != '{}'::jsonb
+   		GROUP BY key, jsonb_typeof(value)
    	)
-   	SELECT 
+   	SELECT
    		field,
    		type,
-   		count,
-   		example,
+   		SUM(count)::bigint as count,
+   		(array_agg(example ORDER BY count DESC))[1] as example,
    		ARRAY[field] as path_parts,
    		ARRAY[type] as types
    	FROM metadata_stats
+   	GROUP BY field, type
    	ORDER BY count DESC, field ASC`
 
 	return r.scanMetadataFields(ctx, query, queryContext.Query)
@@ -615,16 +683,30 @@ func (r *PostgresRepository) GetMetadataValues(ctx context.Context, field string
 		return r.scanMetadataValues(ctx, query, prefix, limit)
 
 	default:
-		// Regular metadata field query
 		pathArray := strings.Split(field, ".")
 		query := `
-			WITH RECURSIVE MetadataValues AS (
+			WITH MetadataValues AS (
 				SELECT
-					a.id,
-					jsonb_extract_path(a.metadata, VARIADIC $1::text[]) as value,
-					1 as level
+					a.id::text,
+					jsonb_extract_path(a.metadata, VARIADIC $1::text[]) as value
 				FROM assets a
 				WHERE jsonb_typeof(jsonb_extract_path(a.metadata, VARIADIC $1::text[])) != 'null' AND is_stub = FALSE
+
+				UNION ALL
+
+				SELECT
+					g.id::text,
+					jsonb_extract_path(g.metadata, VARIADIC $1::text[]) as value
+				FROM glossary_terms g
+				WHERE jsonb_typeof(jsonb_extract_path(g.metadata, VARIADIC $1::text[])) != 'null' AND deleted_at IS NULL
+
+				UNION ALL
+
+				SELECT
+					t.id::text,
+					jsonb_extract_path(t.metadata, VARIADIC $1::text[]) as value
+				FROM teams t
+				WHERE jsonb_typeof(jsonb_extract_path(t.metadata, VARIADIC $1::text[])) != 'null'
 			)
 			SELECT
 				value::text,
@@ -725,21 +807,50 @@ func (r *PostgresRepository) GetMetadataValuesWithContext(ctx context.Context, f
 		return r.scanMetadataValues(ctx, query, queryContext.Query, prefix, limit)
 
 	default:
-		// Regular metadata field query
 		query := `
 			WITH matching_assets AS (
 				SELECT id FROM assets
 				WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE
 			),
+			matching_glossary AS (
+				SELECT id FROM glossary_terms
+				WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL
+			),
+			matching_teams AS (
+				SELECT id FROM teams
+				WHERE search_text @@ websearch_to_tsquery('english', $1)
+			),
 			MetadataValues AS (
 				SELECT
-					a.id,
+					a.id::text,
 					je.key,
 					je.value
 				FROM assets a
 				JOIN matching_assets ma ON a.id = ma.id
 				CROSS JOIN LATERAL jsonb_each(a.metadata) AS je
 				WHERE a.metadata IS NOT NULL
+
+				UNION ALL
+
+				SELECT
+					g.id::text,
+					je.key,
+					je.value
+				FROM glossary_terms g
+				JOIN matching_glossary mg ON g.id = mg.id
+				CROSS JOIN LATERAL jsonb_each(g.metadata) AS je
+				WHERE g.metadata IS NOT NULL
+
+				UNION ALL
+
+				SELECT
+					t.id::text,
+					je.key,
+					je.value
+				FROM teams t
+				JOIN matching_teams mt ON t.id = mt.id
+				CROSS JOIN LATERAL jsonb_each(t.metadata) AS je
+				WHERE t.metadata IS NOT NULL
 			)
 			SELECT
 				value::text,

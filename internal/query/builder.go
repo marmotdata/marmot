@@ -142,16 +142,17 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		return condition, params, paramCount + 1, nil
 	}
 
+	// Skip @kind filters - they're used for table selection, not WHERE clauses
+	if filter.FieldType == FieldKind {
+		return "TRUE", nil, paramCount, nil
+	}
+
 	// Build column reference based on field type
 	var columnRef string
 	switch filter.FieldType {
 	case FieldAssetType:
 		// @type queries the type column directly
 		columnRef = "type"
-	case FieldKind:
-		// @kind queries the result kind (asset/glossary/team/user)
-		// In the assets table context, this is always 'asset'
-		columnRef = "'asset'"  // Literal value since assets table only contains assets
 	case FieldProvider:
 		// @provider queries the providers array column
 		columnRef = "providers"
