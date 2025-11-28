@@ -610,6 +610,11 @@ func (r *PostgresRepository) AddAssetOwner(ctx context.Context, assetID, ownerTy
 		return fmt.Errorf("failed to add asset owner: %w", err)
 	}
 
+	_, err = r.db.Exec(ctx, `UPDATE assets SET updated_at = NOW() WHERE id = $1`, assetID)
+	if err != nil {
+		return fmt.Errorf("failed to update asset timestamp: %w", err)
+	}
+
 	return nil
 }
 
@@ -628,6 +633,11 @@ func (r *PostgresRepository) RemoveAssetOwner(ctx context.Context, assetID, owne
 
 	if result.RowsAffected() == 0 {
 		return errors.New("owner not found")
+	}
+
+	_, err = r.db.Exec(ctx, `UPDATE assets SET updated_at = NOW() WHERE id = $1`, assetID)
+	if err != nil {
+		return fmt.Errorf("failed to update asset timestamp: %w", err)
 	}
 
 	return nil

@@ -30,13 +30,77 @@ func NewPostgresRepository(db *pgxpool.Pool, recorder metrics.Recorder) *Postgre
 
 func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Result, int, *Facets, error) {
 	start := time.Now()
+	var results []*Result
+	var err error
+	var searchMethod string
 
-	query, params := r.buildUnifiedSearchQuery(filter)
+	if filter.Query != "" {
+		results, err = r.searchExactMatch(ctx, filter)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "search_exact_match", time.Since(start), false)
+		} else if len(results) > 0 {
+			searchMethod = "exact_match"
+		}
+
+		if len(results) == 0 && err == nil {
+			results, err = r.searchTrigramFuzzy(ctx, filter)
+			if err != nil {
+				r.recorder.RecordDBQuery(ctx, "search_trigram_fuzzy", time.Since(start), false)
+			} else if len(results) > 0 {
+				searchMethod = "trigram_fuzzy"
+			}
+		}
+
+		if len(results) == 0 && err == nil {
+			results, err = r.searchFullText(ctx, filter)
+			if err != nil {
+				r.recorder.RecordDBQuery(ctx, "search_full_text", time.Since(start), false)
+				return nil, 0, nil, fmt.Errorf("executing full-text search: %w", err)
+			}
+			searchMethod = "full_text"
+		}
+
+		if err != nil && len(results) == 0 {
+			return nil, 0, nil, fmt.Errorf("all search tiers failed: %w", err)
+		}
+	} else {
+		results, err = r.searchFullText(ctx, filter)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "search_no_query", time.Since(start), false)
+			return nil, 0, nil, fmt.Errorf("executing search without query: %w", err)
+		}
+		searchMethod = "no_query"
+	}
+
+	facets, err := r.buildFacets(ctx, filter)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
+		return nil, 0, nil, fmt.Errorf("building facets: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "search_"+searchMethod, time.Since(start), true)
+	return results, facets.Types[ResultTypeAsset] + facets.Types[ResultTypeGlossary] + facets.Types[ResultTypeTeam], facets, nil
+}
+
+// searchTypeIncluded checks if a type should be included in search
+func searchTypeIncluded(types []ResultType, target ResultType) bool {
+	if len(types) == 0 {
+		return true // Include all if no filter
+	}
+	for _, t := range types {
+		if t == target {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *PostgresRepository) searchFullText(ctx context.Context, filter Filter) ([]*Result, error) {
+	query, params := r.buildFullTextQuery(filter)
 
 	rows, err := r.db.Query(ctx, query, params...)
 	if err != nil {
-		r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
-		return nil, 0, nil, fmt.Errorf("executing unified search: %w", err)
+		return nil, fmt.Errorf("executing full-text search: %w", err)
 	}
 	defer rows.Close()
 
@@ -58,8 +122,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 			&updatedAt,
 		)
 		if err != nil {
-			r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
-			return nil, 0, nil, fmt.Errorf("scanning search result: %w", err)
+			return nil, fmt.Errorf("scanning full-text search result: %w", err)
 		}
 
 		result.Description = description
@@ -68,8 +131,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 		if len(metadataJSON) > 0 {
 			result.Metadata = make(map[string]interface{})
 			if err := json.Unmarshal(metadataJSON, &result.Metadata); err != nil {
-				r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
-				return nil, 0, nil, fmt.Errorf("unmarshaling metadata: %w", err)
+				return nil, fmt.Errorf("unmarshaling metadata: %w", err)
 			}
 		}
 
@@ -77,35 +139,13 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 	}
 
 	if rows.Err() != nil {
-		r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
-		return nil, 0, nil, fmt.Errorf("iterating search results: %w", rows.Err())
+		return nil, fmt.Errorf("iterating full-text search results: %w", rows.Err())
 	}
 
-	facets, err := r.buildFacets(ctx, filter)
-	if err != nil {
-		r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
-		return nil, 0, nil, fmt.Errorf("building facets: %w", err)
-	}
-
-	r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), true)
-	return results, facets.Types[ResultTypeAsset] + facets.Types[ResultTypeGlossary] + facets.Types[ResultTypeTeam], facets, nil
+	return results, nil
 }
 
-// searchTypeIncluded checks if a type should be included in search
-func searchTypeIncluded(types []ResultType, target ResultType) bool {
-	if len(types) == 0 {
-		return true // Include all if no filter
-	}
-	for _, t := range types {
-		if t == target {
-			return true
-		}
-	}
-	return false
-}
-
-// BuildUnifiedSearchQuery builds the unified search query with proper type filtering
-func (r *PostgresRepository) buildUnifiedSearchQuery(filter Filter) (string, []interface{}) {
+func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interface{}) {
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
@@ -200,16 +240,13 @@ func (r *PostgresRepository) buildUnifiedSearchQuery(filter Filter) (string, []i
 		}
 
 		if !hasStructuredQuery {
-			// Use traditional full-text search
 			var rankExpr string
 			var whereClause string
 
 			if filter.Query != "" {
-				// With search query - use full-text search and ranking
 				rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
 				whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE"
 			} else {
-				// Without search query - return all, order by updated_at
 				rankExpr = "0"
 				whereClause = "WHERE is_stub = FALSE"
 			}
@@ -497,4 +534,384 @@ func (r *PostgresRepository) buildFacets(ctx context.Context, filter Filter) (*F
 	}
 
 	return facets, nil
+}
+
+func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter) ([]*Result, error) {
+	if filter.Query == "" {
+		return nil, nil
+	}
+
+	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
+	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
+	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
+
+	var unions []string
+	var params []interface{}
+	paramCount := 0
+
+	paramLower := strings.ToLower(filter.Query)
+	params = append(params, paramLower)
+	params = append(params, paramLower+"%")
+	paramCount = 2
+
+	if includeAssets {
+		assetQuery := `
+			SELECT
+				'asset' as type,
+				id,
+				name,
+				description,
+				jsonb_build_object(
+					'id', id,
+					'name', name,
+					'mrn', mrn,
+					'type', type,
+					'providers', providers,
+					'environments', environments,
+					'external_links', external_links,
+					'description', description,
+					'user_description', user_description,
+					'metadata', metadata,
+					'schema', schema,
+					'sources', sources,
+					'tags', tags,
+					'created_at', created_at,
+					'created_by', created_by,
+					'updated_at', updated_at,
+					'last_sync_at', last_sync_at,
+					'query', query,
+					'query_language', query_language,
+					'is_stub', is_stub
+				) as metadata,
+				'/discover/' || type || '/' || name as url,
+				CASE
+					WHEN LOWER(name) = $1 THEN 100
+					WHEN LOWER(mrn) = $1 THEN 100
+					WHEN LOWER(name) LIKE $2 THEN 50
+					WHEN LOWER(mrn) LIKE $2 THEN 50
+					ELSE 25
+				END as rank,
+				updated_at
+			FROM assets
+			WHERE is_stub = FALSE
+			AND (
+				LOWER(name) = $1 OR
+				LOWER(mrn) = $1 OR
+				LOWER(type) = $1 OR
+				LOWER(name) LIKE $2 OR
+				LOWER(mrn) LIKE $2 OR
+				LOWER(type) LIKE $2
+			)`
+
+		if len(filter.AssetTypes) > 0 {
+			paramCount++
+			assetQuery += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
+			params = append(params, filter.AssetTypes)
+		}
+
+		if len(filter.Providers) > 0 {
+			paramCount++
+			assetQuery += fmt.Sprintf(" AND providers && $%d", paramCount)
+			params = append(params, filter.Providers)
+		}
+
+		if len(filter.Tags) > 0 {
+			paramCount++
+			assetQuery += fmt.Sprintf(" AND tags && $%d", paramCount)
+			params = append(params, filter.Tags)
+		}
+
+		unions = append(unions, assetQuery)
+	}
+
+	if includeGlossary {
+		unions = append(unions, `
+			SELECT
+				'glossary' as type,
+				id::text,
+				name,
+				definition as description,
+				jsonb_build_object('parent_term_id', parent_term_id) as metadata,
+				'/glossary/' || id::text as url,
+				CASE
+					WHEN LOWER(name) = $1 THEN 100
+					WHEN LOWER(name) LIKE $2 THEN 50
+					ELSE 25
+				END as rank,
+				updated_at
+			FROM glossary_terms
+			WHERE deleted_at IS NULL
+			AND (LOWER(name) = $1 OR LOWER(name) LIKE $2)
+		`)
+	}
+
+	if includeTeams {
+		unions = append(unions, `
+			SELECT
+				'team' as type,
+				id::text,
+				name,
+				description,
+				jsonb_build_object('created_via_sso', created_via_sso) as metadata,
+				'/teams/' || id as url,
+				CASE
+					WHEN LOWER(name) = $1 THEN 100
+					WHEN LOWER(name) LIKE $2 THEN 50
+					ELSE 25
+				END as rank,
+				updated_at
+			FROM teams
+			WHERE (LOWER(name) = $1 OR LOWER(name) LIKE $2)
+		`)
+	}
+
+	if len(unions) == 0 {
+		return nil, nil
+	}
+
+	paramCount++
+	limitParam := paramCount
+	paramCount++
+	offsetParam := paramCount
+
+	query := fmt.Sprintf(`
+		WITH search_results AS (
+			%s
+		)
+		SELECT * FROM search_results
+		ORDER BY rank DESC, updated_at DESC
+		LIMIT $%d OFFSET $%d
+	`, strings.Join(unions, " UNION ALL "), limitParam, offsetParam)
+
+	params = append(params, filter.Limit, filter.Offset)
+
+	rows, err := r.db.Query(ctx, query, params...)
+	if err != nil {
+		return nil, fmt.Errorf("executing exact match search: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*Result
+	for rows.Next() {
+		var result Result
+		var metadataJSON []byte
+		var description *string
+		var updatedAt *time.Time
+
+		err := rows.Scan(
+			&result.Type,
+			&result.ID,
+			&result.Name,
+			&description,
+			&metadataJSON,
+			&result.URL,
+			&result.Rank,
+			&updatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning exact match result: %w", err)
+		}
+
+		result.Description = description
+		result.UpdatedAt = updatedAt
+
+		if len(metadataJSON) > 0 {
+			result.Metadata = make(map[string]interface{})
+			if err := json.Unmarshal(metadataJSON, &result.Metadata); err != nil {
+				return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+			}
+		}
+
+		results = append(results, &result)
+	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("iterating exact match results: %w", rows.Err())
+	}
+
+	return results, nil
+}
+
+func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filter) ([]*Result, error) {
+	if filter.Query == "" {
+		return nil, nil
+	}
+
+	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
+	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
+	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
+
+	var unions []string
+	var params []interface{}
+	paramCount := 0
+
+	params = append(params, filter.Query)
+	paramCount = 1
+
+	if includeAssets {
+		assetQuery := `
+			SELECT
+				'asset' as type,
+				id,
+				name,
+				description,
+				jsonb_build_object(
+					'id', id,
+					'name', name,
+					'mrn', mrn,
+					'type', type,
+					'providers', providers,
+					'environments', environments,
+					'external_links', external_links,
+					'description', description,
+					'user_description', user_description,
+					'metadata', metadata,
+					'schema', schema,
+					'sources', sources,
+					'tags', tags,
+					'created_at', created_at,
+					'created_by', created_by,
+					'updated_at', updated_at,
+					'last_sync_at', last_sync_at,
+					'query', query,
+					'query_language', query_language,
+					'is_stub', is_stub
+				) as metadata,
+				'/discover/' || type || '/' || name as url,
+				(
+					GREATEST(
+						word_similarity($1, name),
+						word_similarity($1, mrn),
+						similarity($1, COALESCE(name, '') || ' ' || COALESCE(mrn, '') || ' ' || COALESCE(type, ''))
+					) * 30 +
+					(EXTRACT(EPOCH FROM NOW() - updated_at) / -86400.0 / 365.0)::numeric * 5
+				) as rank,
+				updated_at
+			FROM assets
+			WHERE is_stub = FALSE
+			AND (
+				word_similarity($1, name) > 0.3 OR
+				word_similarity($1, mrn) > 0.3 OR
+				similarity($1, COALESCE(name, '') || ' ' || COALESCE(mrn, '') || ' ' || COALESCE(type, '')) > 0.25
+			)`
+
+		if len(filter.AssetTypes) > 0 {
+			paramCount++
+			assetQuery += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
+			params = append(params, filter.AssetTypes)
+		}
+
+		if len(filter.Providers) > 0 {
+			paramCount++
+			assetQuery += fmt.Sprintf(" AND providers && $%d", paramCount)
+			params = append(params, filter.Providers)
+		}
+
+		if len(filter.Tags) > 0 {
+			paramCount++
+			assetQuery += fmt.Sprintf(" AND tags && $%d", paramCount)
+			params = append(params, filter.Tags)
+		}
+
+		unions = append(unions, assetQuery)
+	}
+
+	if includeGlossary {
+		unions = append(unions, `
+			SELECT
+				'glossary' as type,
+				id::text,
+				name,
+				definition as description,
+				jsonb_build_object('parent_term_id', parent_term_id) as metadata,
+				'/glossary/' || id::text as url,
+				(word_similarity($1, name) * 30) as rank,
+				updated_at
+			FROM glossary_terms
+			WHERE deleted_at IS NULL
+			AND word_similarity($1, name) > 0.3
+		`)
+	}
+
+	if includeTeams {
+		unions = append(unions, `
+			SELECT
+				'team' as type,
+				id::text,
+				name,
+				description,
+				jsonb_build_object('created_via_sso', created_via_sso) as metadata,
+				'/teams/' || id as url,
+				(word_similarity($1, name) * 30) as rank,
+				updated_at
+			FROM teams
+			WHERE word_similarity($1, name) > 0.3
+		`)
+	}
+
+	if len(unions) == 0 {
+		return nil, nil
+	}
+
+	paramCount++
+	limitParam := paramCount
+	paramCount++
+	offsetParam := paramCount
+
+	query := fmt.Sprintf(`
+		WITH search_results AS (
+			%s
+		)
+		SELECT * FROM search_results
+		ORDER BY rank DESC, updated_at DESC
+		LIMIT $%d OFFSET $%d
+	`, strings.Join(unions, " UNION ALL "), limitParam, offsetParam)
+
+	params = append(params, filter.Limit, filter.Offset)
+
+	rows, err := r.db.Query(ctx, query, params...)
+	if err != nil {
+		return nil, fmt.Errorf("executing trigram fuzzy search: %w", err)
+	}
+	defer rows.Close()
+
+	var results []*Result
+	for rows.Next() {
+		var result Result
+		var metadataJSON []byte
+		var description *string
+		var updatedAt *time.Time
+
+		err := rows.Scan(
+			&result.Type,
+			&result.ID,
+			&result.Name,
+			&description,
+			&metadataJSON,
+			&result.URL,
+			&result.Rank,
+			&updatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning trigram fuzzy result: %w", err)
+		}
+
+		result.Description = description
+		result.UpdatedAt = updatedAt
+
+		if len(metadataJSON) > 0 {
+			result.Metadata = make(map[string]interface{})
+			if err := json.Unmarshal(metadataJSON, &result.Metadata); err != nil {
+				return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+			}
+		}
+
+		results = append(results, &result)
+	}
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("iterating trigram fuzzy results: %w", rows.Err())
+	}
+
+	return results, nil
 }
