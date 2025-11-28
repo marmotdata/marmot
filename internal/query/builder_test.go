@@ -503,7 +503,7 @@ func TestBuildFilterCondition(t *testing.T) {
 			expectedStartIdx: 1,
 			expectedErr:      nil,
 		},
-		// New tests for @kind field
+		// @kind is handled at table selection level, not in WHERE clauses
 		{
 			name: "Kind Equals",
 			filter: Filter{
@@ -512,8 +512,8 @@ func TestBuildFilterCondition(t *testing.T) {
 				Operator:  OpEquals,
 				Value:     "asset",
 			},
-			expectedCond:     "'asset' ILIKE $1",
-			expectedParams:   []interface{}{"asset"},
+			expectedCond:     "TRUE",
+			expectedParams:   nil,
 			expectedStartIdx: 1,
 			expectedErr:      nil,
 		},
@@ -525,8 +525,8 @@ func TestBuildFilterCondition(t *testing.T) {
 				Operator:  OpContains,
 				Value:     "gloss",
 			},
-			expectedCond:     "'asset' ILIKE $1",
-			expectedParams:   []interface{}{"%gloss%"},
+			expectedCond:     "TRUE",
+			expectedParams:   nil,
 			expectedStartIdx: 1,
 			expectedErr:      nil,
 		},
