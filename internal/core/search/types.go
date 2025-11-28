@@ -34,11 +34,22 @@ type Filter struct {
 	Offset     int          `json:"offset" validate:"omitempty,gte=0"`
 }
 
-// Response represents a search response with results and facets
+type FacetValue struct {
+	Value string `json:"value"`
+	Count int    `json:"count"`
+}
+
+type Facets struct {
+	Types      map[ResultType]int `json:"types"`
+	AssetTypes []FacetValue       `json:"asset_types"`
+	Providers  []FacetValue       `json:"providers"`
+	Tags       []FacetValue       `json:"tags"`
+}
+
 type Response struct {
-	Results []*Result           `json:"results"`
-	Total   int                 `json:"total"`
-	Facets  map[ResultType]int  `json:"facets"`
-	Limit   int                 `json:"limit"`
-	Offset  int                 `json:"offset"`
+	Results []*Result `json:"results"`
+	Total   int       `json:"total"`
+	Facets  *Facets   `json:"facets"`
+	Limit   int       `json:"limit"`
+	Offset  int       `json:"offset"`
 }

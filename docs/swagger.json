@@ -4288,14 +4288,51 @@
                 }
             }
         },
-        "search.Response": {
+        "search.FacetValue": {
             "type": "object",
             "properties": {
-                "facets": {
+                "count": {
+                    "type": "integer"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "search.Facets": {
+            "type": "object",
+            "properties": {
+                "asset_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/search.FacetValue"
+                    }
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/search.FacetValue"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/search.FacetValue"
+                    }
+                },
+                "types": {
                     "type": "object",
                     "additionalProperties": {
                         "type": "integer"
                     }
+                }
+            }
+        },
+        "search.Response": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "$ref": "#/definitions/search.Facets"
                 },
                 "limit": {
                     "type": "integer"
@@ -4367,25 +4404,9 @@
                 1000000,
                 1000000000,
                 60000000000,
-                3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
                 3600000000000
             ],
             "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
                 "minDuration",
                 "maxDuration",
                 "Nanosecond",

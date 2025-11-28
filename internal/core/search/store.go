@@ -13,7 +13,7 @@ import (
 )
 
 type Repository interface {
-	Search(ctx context.Context, filter Filter) ([]*Result, int, map[ResultType]int, error)
+	Search(ctx context.Context, filter Filter) ([]*Result, int, *Facets, error)
 }
 
 type PostgresRepository struct {
@@ -28,10 +28,9 @@ func NewPostgresRepository(db *pgxpool.Pool, recorder metrics.Recorder) *Postgre
 	}
 }
 
-func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Result, int, map[ResultType]int, error) {
+func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Result, int, *Facets, error) {
 	start := time.Now()
 
-	// Build the unified search query with type filtering
 	query, params := r.buildUnifiedSearchQuery(filter)
 
 	rows, err := r.db.Query(ctx, query, params...)
@@ -82,24 +81,14 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 		return nil, 0, nil, fmt.Errorf("iterating search results: %w", rows.Err())
 	}
 
-	// Get total count and facets
-	countQuery, countParams := r.buildCountQuery(filter)
-
-	var total, assetCount, glossaryCount, teamCount int
-	err = r.db.QueryRow(ctx, countQuery, countParams...).Scan(&total, &assetCount, &glossaryCount, &teamCount)
+	facets, err := r.buildFacets(ctx, filter)
 	if err != nil {
-		r.recorder.RecordDBQuery(ctx, "unified_search_count", time.Since(start), false)
-		return nil, 0, nil, fmt.Errorf("counting search results: %w", err)
-	}
-
-	facets := map[ResultType]int{
-		ResultTypeAsset:    assetCount,
-		ResultTypeGlossary: glossaryCount,
-		ResultTypeTeam:     teamCount,
+		r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
+		return nil, 0, nil, fmt.Errorf("building facets: %w", err)
 	}
 
 	r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), true)
-	return results, total, facets, nil
+	return results, facets.Types[ResultTypeAsset] + facets.Types[ResultTypeGlossary] + facets.Types[ResultTypeTeam], facets, nil
 }
 
 // searchTypeIncluded checks if a type should be included in search
@@ -358,8 +347,7 @@ func (r *PostgresRepository) buildUnifiedSearchQuery(filter Filter) (string, []i
 	return query, params
 }
 
-// buildCountQuery builds the count query with facets for search results
-func (r *PostgresRepository) buildCountQuery(filter Filter) (string, []interface{}) {
+func (r *PostgresRepository) buildFacets(ctx context.Context, filter Filter) (*Facets, error) {
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
@@ -368,86 +356,145 @@ func (r *PostgresRepository) buildCountQuery(filter Filter) (string, []interface
 	var params []interface{}
 	paramCount := 0
 
-	// Only add query parameter if it's being used
 	if filter.Query != "" {
 		params = append(params, filter.Query)
 		paramCount = 1
 	}
 
 	if includeAssets {
-		var assetCountQuery string
+		var assetQuery string
 		if filter.Query != "" {
-			assetCountQuery = `SELECT 'asset' as type FROM assets WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE`
+			assetQuery = `SELECT 'asset' as type, type as asset_type, providers, tags FROM assets WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE`
 		} else {
-			assetCountQuery = `SELECT 'asset' as type FROM assets WHERE is_stub = FALSE`
+			assetQuery = `SELECT 'asset' as type, type as asset_type, providers, tags FROM assets WHERE is_stub = FALSE`
 		}
 
-		// Add asset type filter
 		if len(filter.AssetTypes) > 0 {
 			paramCount++
-			assetCountQuery += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
+			assetQuery += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
 			params = append(params, filter.AssetTypes)
 		}
 
-		// Add provider filter
 		if len(filter.Providers) > 0 {
 			paramCount++
-			assetCountQuery += fmt.Sprintf(" AND providers && $%d", paramCount)
+			assetQuery += fmt.Sprintf(" AND providers && $%d", paramCount)
 			params = append(params, filter.Providers)
 		}
 
-		// Add tags filter
 		if len(filter.Tags) > 0 {
 			paramCount++
-			assetCountQuery += fmt.Sprintf(" AND tags && $%d", paramCount)
+			assetQuery += fmt.Sprintf(" AND tags && $%d", paramCount)
 			params = append(params, filter.Tags)
 		}
 
-		unions = append(unions, assetCountQuery)
+		unions = append(unions, assetQuery)
 	}
 
 	if includeGlossary {
 		if filter.Query != "" {
-			unions = append(unions, `
-				SELECT 'glossary' as type FROM glossary_terms
-				WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL
-			`)
+			unions = append(unions, `SELECT 'glossary' as type, NULL as asset_type, NULL::text[] as providers, NULL::text[] as tags FROM glossary_terms WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL`)
 		} else {
-			unions = append(unions, `
-				SELECT 'glossary' as type FROM glossary_terms
-				WHERE deleted_at IS NULL
-			`)
+			unions = append(unions, `SELECT 'glossary' as type, NULL as asset_type, NULL::text[] as providers, NULL::text[] as tags FROM glossary_terms WHERE deleted_at IS NULL`)
 		}
 	}
 
 	if includeTeams {
 		if filter.Query != "" {
-			unions = append(unions, `
-				SELECT 'team' as type FROM teams
-				WHERE search_text @@ websearch_to_tsquery('english', $1)
-			`)
+			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, NULL::text[] as tags FROM teams WHERE search_text @@ websearch_to_tsquery('english', $1)`)
 		} else {
-			unions = append(unions, `
-				SELECT 'team' as type FROM teams
-			`)
+			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, NULL::text[] as tags FROM teams`)
 		}
 	}
 
 	if len(unions) == 0 {
-		// No types selected
-		return "SELECT 0 as total, 0 as asset_count, 0 as glossary_count, 0 as team_count", []interface{}{}
+		return &Facets{
+			Types:      map[ResultType]int{},
+			AssetTypes: []FacetValue{},
+			Providers:  []FacetValue{},
+			Tags:       []FacetValue{},
+		}, nil
 	}
 
 	query := fmt.Sprintf(`
-		SELECT
-			COUNT(*) as total,
-			COALESCE(SUM(CASE WHEN type = 'asset' THEN 1 ELSE 0 END), 0) as asset_count,
-			COALESCE(SUM(CASE WHEN type = 'glossary' THEN 1 ELSE 0 END), 0) as glossary_count,
-			COALESCE(SUM(CASE WHEN type = 'team' THEN 1 ELSE 0 END), 0) as team_count
-		FROM (
+		WITH matching_results AS (
 			%s
-		) counts
+		),
+		type_counts AS (
+			SELECT type, COUNT(*) as count
+			FROM matching_results
+			GROUP BY type
+		),
+		asset_type_counts AS (
+			SELECT asset_type, COUNT(*) as count
+			FROM matching_results
+			WHERE type = 'asset' AND asset_type IS NOT NULL
+			GROUP BY asset_type
+			ORDER BY count DESC
+			LIMIT 50
+		),
+		provider_counts AS (
+			SELECT UNNEST(providers) as provider, COUNT(*) as count
+			FROM matching_results
+			WHERE type = 'asset' AND providers IS NOT NULL
+			GROUP BY provider
+			ORDER BY count DESC
+			LIMIT 50
+		),
+		tag_counts AS (
+			SELECT UNNEST(tags) as tag, COUNT(*) as count
+			FROM matching_results
+			WHERE type = 'asset' AND tags IS NOT NULL
+			GROUP BY tag
+			ORDER BY count DESC
+			LIMIT 50
+		)
+		SELECT
+			(SELECT COALESCE(json_object_agg(type, count), '{}'::json) FROM type_counts) as type_facets,
+			(SELECT COALESCE(json_agg(json_build_object('value', asset_type, 'count', count) ORDER BY count DESC), '[]'::json) FROM asset_type_counts) as asset_type_facets,
+			(SELECT COALESCE(json_agg(json_build_object('value', provider, 'count', count) ORDER BY count DESC), '[]'::json) FROM provider_counts) as provider_facets,
+			(SELECT COALESCE(json_agg(json_build_object('value', tag, 'count', count) ORDER BY count DESC), '[]'::json) FROM tag_counts) as tag_facets
 	`, strings.Join(unions, " UNION ALL "))
 
-	return query, params
+	var typeFacetsJSON, assetTypeFacetsJSON, providerFacetsJSON, tagFacetsJSON []byte
+	err := r.db.QueryRow(ctx, query, params...).Scan(&typeFacetsJSON, &assetTypeFacetsJSON, &providerFacetsJSON, &tagFacetsJSON)
+	if err != nil {
+		return nil, fmt.Errorf("querying facets: %w", err)
+	}
+
+	facets := &Facets{
+		Types:      make(map[ResultType]int),
+		AssetTypes: []FacetValue{},
+		Providers:  []FacetValue{},
+		Tags:       []FacetValue{},
+	}
+
+	if len(typeFacetsJSON) > 0 {
+		var typeMap map[string]int
+		if err := json.Unmarshal(typeFacetsJSON, &typeMap); err != nil {
+			return nil, fmt.Errorf("unmarshaling type facets: %w", err)
+		}
+		for k, v := range typeMap {
+			facets.Types[ResultType(k)] = v
+		}
+	}
+
+	if len(assetTypeFacetsJSON) > 0 {
+		if err := json.Unmarshal(assetTypeFacetsJSON, &facets.AssetTypes); err != nil {
+			return nil, fmt.Errorf("unmarshaling asset type facets: %w", err)
+		}
+	}
+
+	if len(providerFacetsJSON) > 0 {
+		if err := json.Unmarshal(providerFacetsJSON, &facets.Providers); err != nil {
+			return nil, fmt.Errorf("unmarshaling provider facets: %w", err)
+		}
+	}
+
+	if len(tagFacetsJSON) > 0 {
+		if err := json.Unmarshal(tagFacetsJSON, &facets.Tags); err != nil {
+			return nil, fmt.Errorf("unmarshaling tag facets: %w", err)
+		}
+	}
+
+	return facets, nil
 }

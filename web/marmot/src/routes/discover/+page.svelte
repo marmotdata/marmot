@@ -25,10 +25,22 @@
 		updated_at?: string;
 	}
 
+	interface FacetValue {
+		value: string;
+		count: number;
+	}
+
+	interface Facets {
+		types: Record<string, number>;
+		asset_types: FacetValue[];
+		providers: FacetValue[];
+		tags: FacetValue[];
+	}
+
 	interface SearchResponse {
 		results: SearchResult[];
 		total: number;
-		facets: Record<string, number>;
+		facets: Facets;
 		limit: number;
 		offset: number;
 	}
@@ -38,7 +50,12 @@
 	// State management
 	const results: Writable<SearchResult[]> = writable([]);
 	const totalResults: Writable<number> = writable(0);
-	const facets: Writable<Record<string, number>> = writable({});
+	const facets: Writable<Facets> = writable({
+		types: {},
+		asset_types: [],
+		providers: [],
+		tags: []
+	});
 	const isLoading: Writable<boolean> = writable(true);
 	const error: Writable<{ status: number; message: string } | null> = writable(null);
 
@@ -54,17 +71,12 @@
 	let searchTimeout: NodeJS.Timeout;
 
 	// Kind filters (Asset, Glossary, Team, User)
-	let selectedKinds: string[] = ['asset', 'glossary', 'team']; // Default: everything except users
+	let selectedKinds: string[] = ['asset', 'glossary', 'team'];
 
 	// Asset-specific filters
 	let selectedTypes: string[] = [];
 	let selectedProviders: string[] = [];
 	let selectedTags: string[] = [];
-
-	// Asset-specific filter options (populated from search results when kind includes asset)
-	let availableTypes = $state<Record<string, number>>({});
-	let availableProviders = $state<Record<string, number>>({});
-	let availableTags = $state<Record<string, number>>({});
 
 	// Create asset modal state
 	let showCreateModal = $state(false);
@@ -143,36 +155,7 @@
 
 			$results = data.results || [];
 			$totalResults = data.total || 0;
-			$facets = data.facets || {};
-
-			// Extract asset-specific filter options from results
-			if (selectedKinds.includes('asset')) {
-				availableTypes = {};
-				availableProviders = {};
-				availableTags = {};
-
-				$results.forEach((result) => {
-					if (result.type === 'asset' && result.metadata) {
-						// Count types (asset types)
-						if (result.metadata.type) {
-							availableTypes[result.metadata.type] =
-								(availableTypes[result.metadata.type] || 0) + 1;
-						}
-						// Count providers
-						if (result.metadata.providers) {
-							result.metadata.providers.forEach((provider: string) => {
-								availableProviders[provider] = (availableProviders[provider] || 0) + 1;
-							});
-						}
-						// Count tags
-						if (result.metadata.tags) {
-							result.metadata.tags.forEach((tag: string) => {
-								availableTags[tag] = (availableTags[tag] || 0) + 1;
-							});
-						}
-					}
-				});
-			}
+			$facets = data.facets || { types: {}, asset_types: [], providers: [], tags: [] };
 		} catch (e: any) {
 			const errorStatus = e.status || 500;
 			$error = { status: errorStatus, message: e.message };
@@ -418,7 +401,7 @@
 									>
 								</div>
 								<span class="text-xs text-gray-500 dark:text-gray-400"
-									>({$facets[kind] || 0})</span
+									>({$facets.types[kind] || 0})</span
 								>
 							</label>
 						{/each}
@@ -426,96 +409,89 @@
 
 					<!-- Asset-specific filters (only show when Asset is selected) -->
 					{#if showAssetFilters}
-						{#if Object.keys(availableTypes).length > 0}
+						{#if $facets.asset_types.length > 0}
 							<div class="mb-4">
 								<h3
 									class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
 								>
 									Type
 								</h3>
-								{#each Object.keys(availableTypes) as type}
+								{#each $facets.asset_types as {value, count}}
 									<label class="flex items-center justify-between mb-2">
 										<div class="flex items-center">
 											<input
 												type="checkbox"
-												checked={selectedTypes.includes(type)}
+												checked={selectedTypes.includes(value)}
 												on:change={(e) => {
 													if (e.target.checked) {
-														selectedTypes = [...selectedTypes, type];
-														// Auto-select only asset kind when type filter is applied
+														selectedTypes = [...selectedTypes, value];
 														selectedKinds = ['asset'];
 													} else {
-														selectedTypes = selectedTypes.filter((t) => t !== type);
+														selectedTypes = selectedTypes.filter((t) => t !== value);
 													}
 													handleFilterChange();
 												}}
 												class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
 											/>
-											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{type}</span>
+											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
 										</div>
-										<span class="text-xs text-gray-500 dark:text-gray-400"
-											>({availableTypes[type]})</span
-										>
+										<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
 									</label>
 								{/each}
 							</div>
 						{/if}
 
-						{#if Object.keys(availableProviders).length > 0}
+						{#if $facets.providers.length > 0}
 							<div class="mb-4">
 								<h3
 									class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
 								>
 									Providers
 								</h3>
-								{#each Object.keys(availableProviders) as provider}
+								{#each $facets.providers as {value, count}}
 									<label class="flex items-center justify-between mb-2">
 										<div class="flex items-center">
 											<input
 												type="checkbox"
-												checked={selectedProviders.includes(provider)}
+												checked={selectedProviders.includes(value)}
 												on:change={(e) => {
 													if (e.target.checked) {
-														selectedProviders = [...selectedProviders, provider];
-														// Auto-select only asset kind when provider filter is applied
+														selectedProviders = [...selectedProviders, value];
 														selectedKinds = ['asset'];
 													} else {
-														selectedProviders = selectedProviders.filter((s) => s !== provider);
+														selectedProviders = selectedProviders.filter((s) => s !== value);
 													}
 													handleFilterChange();
 												}}
 												class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
 											/>
-											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{provider}</span>
+											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
 										</div>
-										<span class="text-xs text-gray-500 dark:text-gray-400"
-											>({availableProviders[provider]})</span
-										>
+										<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
 									</label>
 								{/each}
 							</div>
 						{/if}
 
-						{#if Object.keys(availableTags).length > 0}
+						{#if $facets.tags.length > 0}
 							<div>
 								<h3
 									class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
 								>
 									Tags
 								</h3>
-								{#each Object.keys(availableTags) as tag}
+								{#each $facets.tags as {value, count}}
 									<label class="flex items-center justify-between mb-2 gap-2">
 										<div class="flex items-center min-w-0">
 											<input
 												type="checkbox"
-												checked={selectedTags.includes(tag)}
+												checked={selectedTags.includes(value)}
 												on:change={(e) => {
 													if (e.target.checked) {
-														selectedTags = [...selectedTags, tag];
-														// Auto-select only asset kind when tag filter is applied
+														selectedTags = [...selectedTags, value];
 														selectedKinds = ['asset'];
 													} else {
-														selectedTags = selectedTags.filter((t) => t !== tag);
+														selectedTags = selectedTags.filter((t) => t !== value);
 													}
 													handleFilterChange();
 												}}
@@ -523,14 +499,12 @@
 											/>
 											<span
 												class="ml-2 text-sm text-gray-700 dark:text-gray-300 truncate"
-												title={tag}
+												title={value}
 											>
-												{tag.length > 100 ? tag.slice(0, 100) + '...' : tag}
+												{value.length > 100 ? value.slice(0, 100) + '...' : value}
 											</span>
 										</div>
-										<span class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
-											>({availableTags[tag]})</span
-										>
+										<span class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">({count})</span>
 									</label>
 								{/each}
 							</div>
@@ -767,7 +741,9 @@
 						{:else if $results.length === 0}
 							<div class="flex-1 flex items-center justify-center py-12">
 								<div class="text-center">
-									<IconifyIcon icon="mdi:magnify" class="text-6xl text-gray-400 mb-4" />
+									<div class="flex justify-center mb-4">
+										<IconifyIcon icon="mdi:magnify" class="text-6xl text-gray-400" />
+									</div>
 									<p class="text-gray-600 dark:text-gray-400 text-lg">No results found</p>
 									<p class="text-gray-500 dark:text-gray-500 text-sm mt-2">
 										Try adjusting your search or filters

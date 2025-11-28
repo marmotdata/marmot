@@ -918,12 +918,36 @@ definitions:
     - pipeline_name
     - source_name
     type: object
-  search.Response:
+  search.FacetValue:
     properties:
-      facets:
+      count:
+        type: integer
+      value:
+        type: string
+    type: object
+  search.Facets:
+    properties:
+      asset_types:
+        items:
+          $ref: '#/definitions/search.FacetValue'
+        type: array
+      providers:
+        items:
+          $ref: '#/definitions/search.FacetValue'
+        type: array
+      tags:
+        items:
+          $ref: '#/definitions/search.FacetValue'
+        type: array
+      types:
         additionalProperties:
           type: integer
         type: object
+    type: object
+  search.Response:
+    properties:
+      facets:
+        $ref: '#/definitions/search.Facets'
       limit:
         type: integer
       offset:
@@ -975,24 +999,8 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
     type: integer
     x-enum-varnames:
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
     - minDuration
     - maxDuration
     - Nanosecond
