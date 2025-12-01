@@ -17,7 +17,7 @@ services:
       retries: 5
 
   marmot:
-    image: ghcr.io/marmotdata/marmot:0.3
+    image: ghcr.io/marmotdata/marmot:0.4
     container_name: marmot-service
     depends_on:
       postgres:
@@ -35,16 +35,3 @@ services:
       timeout: 5s
       retries: 5
       start_period: 15s
-
-  # Comment this is out avoid creating test data
-  asset-creator:
-    image: alpine:3.18
-    container_name: marmot-asset-creator
-    depends_on:
-      marmot:
-        condition: service_healthy
-    volumes:
-      - ./create-assets.sh:/create-assets.sh:ro
-    command: ["/bin/sh", "/create-assets.sh"]
-    environment:
-      - MARMOT_API_URL=http://marmot:8080/api/v1

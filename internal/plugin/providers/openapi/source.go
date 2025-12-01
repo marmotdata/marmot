@@ -31,7 +31,7 @@ type Source struct {
 // +marmot:config
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
-	SpecPath          string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications"`
+	SpecPath          string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications" validate:"required"`
 }
 
 const (
@@ -55,8 +55,8 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 
-	if config.SpecPath == "" {
-		return nil, fmt.Errorf("spec_path is required")
+	if err := plugin.ValidateStruct(config); err != nil {
+		return nil, err
 	}
 
 	if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
@@ -340,4 +340,19 @@ func isJSON(path string) bool {
 func isYAML(path string) bool {
 	ext := filepath.Ext(path)
 	return ext == ".yaml" || ext == ".yml"
+}
+
+func init() {
+	meta := plugin.PluginMeta{
+		ID:          "openapi",
+		Name:        "OpenAPI",
+		Description: "Discover OpenAPI v3 specifications",
+		Icon:        "openapi",
+		Category:    "api",
+		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
+	}
+
+	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to register OpenAPI plugin")
+	}
 }

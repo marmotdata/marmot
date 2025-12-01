@@ -3,6 +3,8 @@ package plugin
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"regexp"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,14 +16,15 @@ import (
 )
 
 type AWSCredentials struct {
-	Profile        string `json:"profile,omitempty" description:"AWS profile to use from shared credentials file"`
+	UseDefault     bool   `json:"use_default,omitempty" description:"Use AWS credentials from environment or default profile (recommended)"`
 	ID             string `json:"id,omitempty" description:"AWS access key ID"`
 	Secret         string `json:"secret,omitempty" description:"AWS secret access key" sensitive:"true"`
-	Token          string `json:"token,omitempty" description:"AWS session token"`
+	Token          string `json:"token,omitempty" description:"AWS session token" sensitive:"true"`
+	Profile        string `json:"profile,omitempty" description:"AWS profile to use from shared credentials file"`
 	Role           string `json:"role,omitempty" description:"AWS IAM role ARN to assume"`
 	RoleExternalID string `json:"role_external_id,omitempty" description:"External ID for cross-account role assumption"`
 	Region         string `json:"region,omitempty" description:"AWS region for services"`
-	Endpoint       string `json:"endpoint,omitempty" description:"Custom endpoint URL for AWS services"`
+	Endpoint       string `json:"endpoint,omitempty" description:"Custom endpoint URL for AWS services" validate:"omitempty,url"`
 }
 
 type Filter struct {
@@ -32,7 +35,7 @@ type Filter struct {
 type AWSConfig struct {
 	Credentials    AWSCredentials `json:"credentials" description:"AWS credentials configuration"`
 	TagsToMetadata bool           `json:"tags_to_metadata,omitempty" description:"Convert AWS tags to Marmot metadata"`
-	IncludeTags    []string       `json:"include_tags,omitempty" description:"List of AWS tags to include as metadata"`
+	IncludeTags    []string       `json:"include_tags,omitempty" description:"List of AWS tags to include as metadata. By default, all tags are included."`
 	Filter         Filter         `json:"filter,omitempty" description:"Filter patterns for AWS resources"`
 }
 
@@ -62,6 +65,73 @@ func ExtractAWSConfig(rawConfig map[string]interface{}) (*AWSConfig, error) {
 	return &awsCfg, nil
 }
 
+// DetectAWSCredentials checks if AWS credentials are available from environment or config files
+func DetectAWSCredentials(ctx context.Context) *AWSCredentialStatus {
+	status := &AWSCredentialStatus{
+		Available: false,
+		Sources:   []string{},
+	}
+
+	// Check environment variables
+	if os.Getenv("AWS_ACCESS_KEY_ID") != "" && os.Getenv("AWS_SECRET_ACCESS_KEY") != "" {
+		status.Available = true
+		status.Sources = append(status.Sources, "environment variables")
+	}
+
+	// Check for credentials file
+	homeDir, err := os.UserHomeDir()
+	if err == nil {
+		credsPath := filepath.Join(homeDir, ".aws", "credentials")
+		if _, err := os.Stat(credsPath); err == nil {
+			status.Available = true
+			status.Sources = append(status.Sources, "credentials file (~/.aws/credentials)")
+		}
+	}
+
+	// Check for config file with profile
+	if err == nil {
+		configPath := filepath.Join(homeDir, ".aws", "config")
+		if _, err := os.Stat(configPath); err == nil {
+			if !contains(status.Sources, "credentials file (~/.aws/credentials)") {
+				status.Available = true
+				status.Sources = append(status.Sources, "config file (~/.aws/config)")
+			}
+		}
+	}
+
+	// Check for EC2 instance metadata (IMDS)
+	if os.Getenv("AWS_CONTAINER_CREDENTIALS_RELATIVE_URI") != "" || os.Getenv("AWS_CONTAINER_CREDENTIALS_FULL_URI") != "" {
+		status.Available = true
+		status.Sources = append(status.Sources, "container credentials")
+	}
+
+	// Try to actually load the config to verify credentials work
+	if status.Available {
+		_, err := config.LoadDefaultConfig(ctx)
+		if err != nil {
+			status.Available = false
+			status.Error = err.Error()
+		}
+	}
+
+	return status
+}
+
+type AWSCredentialStatus struct {
+	Available bool     `json:"available"`
+	Sources   []string `json:"sources"`
+	Error     string   `json:"error,omitempty"`
+}
+
+func contains(slice []string, item string) bool {
+	for _, s := range slice {
+		if s == item {
+			return true
+		}
+	}
+	return false
+}
+
 func (a *AWSConfig) NewAWSConfig(ctx context.Context) (aws.Config, error) {
 	var opts []func(*config.LoadOptions) error
 
@@ -69,17 +139,26 @@ func (a *AWSConfig) NewAWSConfig(ctx context.Context) (aws.Config, error) {
 		opts = append(opts, config.WithRegion(a.Credentials.Region))
 	}
 
-	if a.Credentials.ID != "" && a.Credentials.Secret != "" {
-		provider := credentials.NewStaticCredentialsProvider(
-			a.Credentials.ID,
-			a.Credentials.Secret,
-			a.Credentials.Token,
-		)
-		opts = append(opts, config.WithCredentialsProvider(provider))
-	}
+	// If UseDefault is true or no explicit credentials provided, use default credential chain
+	if a.Credentials.UseDefault || (a.Credentials.ID == "" && a.Credentials.Profile == "") {
+		// Just load default config - will follow AWS credential chain
+		if a.Credentials.Profile != "" {
+			opts = append(opts, config.WithSharedConfigProfile(a.Credentials.Profile))
+		}
+	} else {
+		// Use explicit credentials if provided
+		if a.Credentials.ID != "" && a.Credentials.Secret != "" {
+			provider := credentials.NewStaticCredentialsProvider(
+				a.Credentials.ID,
+				a.Credentials.Secret,
+				a.Credentials.Token,
+			)
+			opts = append(opts, config.WithCredentialsProvider(provider))
+		}
 
-	if a.Credentials.Profile != "" {
-		opts = append(opts, config.WithSharedConfigProfile(a.Credentials.Profile))
+		if a.Credentials.Profile != "" {
+			opts = append(opts, config.WithSharedConfigProfile(a.Credentials.Profile))
+		}
 	}
 
 	cfg, err := config.LoadDefaultConfig(ctx, opts...)

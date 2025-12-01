@@ -67,6 +67,7 @@ type Config struct {
 		Host                  string            `mapstructure:"host"`
 		RootURL               string            `mapstructure:"root_url"`
 		CustomResponseHeaders map[string]string `mapstructure:"customer_response_headers"`
+		EncryptionKey         string            `mapstructure:"encryption_key"`
 	} `mapstructure:"server"`
 
 	Metrics struct {
@@ -107,6 +108,13 @@ type Config struct {
 	UI struct {
 		Banner BannerConfig `mapstructure:"banner"`
 	} `mapstructure:"ui"`
+
+	Pipelines struct {
+		MaxWorkers        int `mapstructure:"max_workers"`
+		SchedulerInterval int `mapstructure:"scheduler_interval"`
+		LeaseExpiry       int `mapstructure:"lease_expiry"`
+		ClaimExpiry       int `mapstructure:"claim_expiry"`
+	} `mapstructure:"pipelines"`
 }
 
 type BannerConfig struct {
@@ -180,6 +188,7 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.openlineage.enabled")
 
 	v.BindEnv("server.root_url")
+	v.BindEnv("server.encryption_key")
 
 	// Rate limit env vars
 	v.BindEnv("rate_limit.enabled")
@@ -190,6 +199,12 @@ func loadConfig(configPath string) error {
 	v.BindEnv("ui.banner.variant")
 	v.BindEnv("ui.banner.message")
 	v.BindEnv("ui.banner.id")
+
+	// Pipelines env vars
+	v.BindEnv("pipelines.max_workers")
+	v.BindEnv("pipelines.scheduler_interval")
+	v.BindEnv("pipelines.lease_expiry")
+	v.BindEnv("pipelines.claim_expiry")
 
 	// Set defaults
 	setDefaults(v)
@@ -250,6 +265,12 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("ui.banner.variant", "info")
 	v.SetDefault("ui.banner.message", "")
 	v.SetDefault("ui.banner.id", "banner-1")
+
+	// Pipelines defaults
+	v.SetDefault("pipelines.max_workers", 10)
+	v.SetDefault("pipelines.scheduler_interval", 60)
+	v.SetDefault("pipelines.lease_expiry", 300)
+	v.SetDefault("pipelines.claim_expiry", 30)
 }
 
 // BuildDSN builds a PostgreSQL connection string from config
@@ -303,6 +324,19 @@ func validate(cfg *Config) error {
 	}
 	if cfg.UI.Banner.Enabled && !validVariants[strings.ToLower(cfg.UI.Banner.Variant)] {
 		return fmt.Errorf("invalid banner variant: %s", cfg.UI.Banner.Variant)
+	}
+
+	if cfg.Pipelines.MaxWorkers < 1 {
+		return fmt.Errorf("invalid pipelines.max_workers: must be at least 1")
+	}
+	if cfg.Pipelines.SchedulerInterval < 1 {
+		return fmt.Errorf("invalid pipelines.scheduler_interval: must be at least 1 second")
+	}
+	if cfg.Pipelines.LeaseExpiry < 1 {
+		return fmt.Errorf("invalid pipelines.lease_expiry: must be at least 1 second")
+	}
+	if cfg.Pipelines.ClaimExpiry < 1 {
+		return fmt.Errorf("invalid pipelines.claim_expiry: must be at least 1 second")
 	}
 
 	return nil

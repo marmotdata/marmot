@@ -92,3 +92,46 @@ func extractSensitiveFieldsRecursive(t reflect.Type, prefix string, fields *[]st
 		}
 	}
 }
+
+// MaskSensitiveFieldsFromSpec masks sensitive fields in a config map using the ConfigSpec
+func MaskSensitiveFieldsFromSpec(config RawPluginConfig, configSpec []ConfigField) RawPluginConfig {
+	if config == nil {
+		return nil
+	}
+
+	result := make(RawPluginConfig)
+	for key, value := range config {
+		result[key] = value
+	}
+
+	sensitiveFields := extractSensitiveFieldsFromSpec(configSpec, "")
+
+	for _, fieldPath := range sensitiveFields {
+		maskFieldInMap(result, fieldPath)
+	}
+
+	return result
+}
+
+func extractSensitiveFieldsFromSpec(fields []ConfigField, prefix string) []string {
+	var sensitive []string
+
+	for _, field := range fields {
+		fullPath := field.Name
+		if prefix != "" {
+			fullPath = prefix + field.Name
+		}
+
+		if field.Sensitive {
+			sensitive = append(sensitive, fullPath)
+		}
+
+		// Recursively check nested fields
+		if field.Type == FieldTypeObject && len(field.Fields) > 0 {
+			nestedFields := extractSensitiveFieldsFromSpec(field.Fields, fullPath+".")
+			sensitive = append(sensitive, nestedFields...)
+		}
+	}
+
+	return sensitive
+}

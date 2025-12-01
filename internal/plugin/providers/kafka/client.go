@@ -2,7 +2,9 @@ package kafka
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -32,6 +34,15 @@ func (s *Source) initClient(ctx context.Context) error {
 			return fmt.Errorf("configuring authentication: %w", err)
 		}
 		opts = append(opts, authOpts...)
+	}
+
+	// Configure TLS if enabled (even without authentication)
+	if s.config.TLS != nil && s.config.TLS.Enabled {
+		if tlsOpt, err := s.configureTLS(); err != nil {
+			return fmt.Errorf("configuring TLS: %w", err)
+		} else if tlsOpt != nil {
+			opts = append(opts, *tlsOpt)
+		}
 	}
 
 	client, err := kgo.NewClient(opts...)
@@ -68,6 +79,22 @@ func (s *Source) initSchemaRegistry() error {
 	}
 
 	conf := schemaregistry.NewConfig(s.config.SchemaRegistry.URL)
+
+	// Create custom HTTP client with TLS configuration if URL uses HTTPS
+	if s.config.SchemaRegistry.SkipVerify && (len(s.config.SchemaRegistry.URL) > 5 && s.config.SchemaRegistry.URL[:5] == "https") {
+		tlsConfig := &tls.Config{
+			InsecureSkipVerify: true,
+		}
+
+		transport := &http.Transport{
+			TLSClientConfig: tlsConfig,
+		}
+
+		conf.HTTPClient = &http.Client{
+			Transport: transport,
+			Timeout:   30 * time.Second,
+		}
+	}
 
 	if userInfo, ok := s.config.SchemaRegistry.Config["basic.auth.user.info"]; ok {
 		conf.BasicAuthUserInfo = userInfo

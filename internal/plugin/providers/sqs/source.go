@@ -51,8 +51,12 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
-	s.config = config
 
+	if err := plugin.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	s.config = config
 	return rawConfig, nil
 }
 
@@ -266,4 +270,19 @@ func extractQueueName(queueURL string) string {
 func extractQueueNameFromArn(arn string) string {
 	parts := strings.Split(arn, ":")
 	return parts[len(parts)-1]
+}
+
+func init() {
+	meta := plugin.PluginMeta{
+		ID:          "sqs",
+		Name:        "AWS SQS",
+		Description: "Discover SQS queues from AWS accounts",
+		Icon:        "sqs",
+		Category:    "messaging",
+		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
+	}
+
+	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to register SQS plugin")
+	}
 }

@@ -17,9 +17,9 @@
 		pipeline_name: string;
 		source_name: string;
 		run_id: string;
-		status: 'running' | 'success' | 'failed' | 'cancelled';
+		status: 'pending' | 'claimed' | 'running' | 'succeeded' | 'failed' | 'cancelled';
 		started_at: string;
-		completed_at?: string;
+		finished_at?: string;
 		error_message?: string;
 		config?: any;
 		summary?: IngestionRunSummary;
@@ -78,7 +78,7 @@
 				offset: ((entitiesPage - 1) * entitiesLimit).toString()
 			});
 
-			const response = await fetchApi(`/runs/entities/${run.id}?${params}`);
+			const response = await fetchApi(`/ingestion/runs/${run.id}/entities?${params}`);
 			if (!response.ok) throw new Error('Failed to fetch entities');
 
 			const data: RunEntitiesResponse = await response.json();
@@ -101,8 +101,10 @@
 
 	function getStatusColor(status: string): string {
 		const colors: Record<string, string> = {
+			pending: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300',
+			claimed: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300',
 			running: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300',
-			success: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
+			succeeded: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
 			failed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300',
 			cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300',
 			created: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300',
@@ -115,8 +117,10 @@
 
 	function getStatusIcon(status: string): string {
 		const icons: Record<string, string> = {
+			pending: 'material-symbols:schedule',
+			claimed: 'material-symbols:assignment-ind',
 			running: 'material-symbols:sync',
-			success: 'material-symbols:check-circle',
+			succeeded: 'material-symbols:check-circle',
 			failed: 'material-symbols:error',
 			cancelled: 'material-symbols:cancel',
 			created: 'material-symbols:add-circle',
@@ -268,7 +272,7 @@
 									<div>
 										<dt class="font-medium text-gray-500 dark:text-gray-400">Duration</dt>
 										<dd class="mt-1 text-gray-900 dark:text-gray-100">
-											{formatDuration(run.started_at, run.completed_at)}
+											{formatDuration(run.started_at, run.finished_at)}
 										</dd>
 									</div>
 									<div>

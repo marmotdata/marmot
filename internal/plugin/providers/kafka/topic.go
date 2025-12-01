@@ -66,8 +66,11 @@ func (s *Source) createTopicAsset(ctx context.Context, topic string) (asset.Asse
 		}
 	}
 
+	var schema map[string]string
 	if s.schemaRegistry != nil {
-		if err := s.enrichWithSchemaRegistry(topic, metadata); err != nil {
+		var err error
+		schema, err = s.enrichWithSchemaRegistry(topic, metadata)
+		if err != nil {
 			log.Warn().Err(err).Str("topic", topic).Msg("Failed to get schema information")
 		}
 	}
@@ -84,6 +87,7 @@ func (s *Source) createTopicAsset(ctx context.Context, topic string) (asset.Asse
 		Providers:   []string{"Kafka"},
 		Description: &description,
 		Metadata:    metadata,
+		Schema:      schema,
 		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Kafka",

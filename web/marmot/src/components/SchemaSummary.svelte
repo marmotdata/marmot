@@ -8,9 +8,7 @@
 	} from '$lib/schema/utils';
 	import type { SchemaSection, Field } from '$lib/schema/types';
 
-	let { schema = undefined }: { schema?: any } = $props();
-
-	let showRawSchema = $state(false);
+	let { schema = undefined, showRawSchema = false }: { schema?: any; showRawSchema?: boolean } = $props();
 	let activeTab = $state('');
 	let schemaSections = $state<SchemaSection[]>([]);
 	let processedSchemas = $state<Record<string, { fields: Field[]; example: any }>>({});
@@ -248,7 +246,18 @@
 			</div>
 		{/if}
 
-		{#if visibleFields.length > 0}
+		{#key activeTab + '-' + showRawSchema}
+			{#if showRawSchema && activeSchema}
+				{#if typeof activeSchema === 'string'}
+					{#if activeSchema.includes('syntax = "proto') || activeSchema.includes('message ') || activeSchema.includes('type: record')}
+						<CodeBlock code={activeSchema} />
+					{:else}
+						<CodeBlock code={prettyPrintSchema(activeSchema)} />
+					{/if}
+				{:else}
+					<CodeBlock code={JSON.stringify(activeSchema, null, 2)} />
+				{/if}
+			{:else if visibleFields.length > 0}
 			<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
 					<div class="divide-y divide-gray-100 dark:divide-gray-700">
 						{#each visibleFields as field}
@@ -452,11 +461,12 @@
 					</div>
 				{/each}
 			{/if}
-		{:else}
-			<div class="text-center py-12 text-gray-500 dark:text-gray-400">
-				<p>No fields available for {activeTab} schema</p>
-			</div>
-		{/if}
+			{:else}
+				<div class="text-center py-12 text-gray-500 dark:text-gray-400">
+					<p>No fields available for {activeTab} schema</p>
+				</div>
+			{/if}
+		{/key}
 	{:else}
 		<div class="text-center py-12 text-gray-500 dark:text-gray-400">
 			<p>No schema available</p>

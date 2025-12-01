@@ -32,7 +32,7 @@ import (
 // +marmot:config
 type Config struct {
 	plugin.BaseConfig   `json:",inline"`
-	SpecPath            string `json:"spec_path"`
+	SpecPath            string `json:"spec_path" validate:"required"`
 	ResolveExternalDocs bool   `json:"resolve_external_docs,omitempty"`
 }
 
@@ -56,8 +56,8 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 
-	if config.SpecPath == "" {
-		return nil, fmt.Errorf("spec_path is required")
+	if err := plugin.ValidateStruct(config); err != nil {
+		return nil, err
 	}
 
 	if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
@@ -397,4 +397,19 @@ func determineEdgeType(channel *asyncapi2.Channel) string {
 func isAsyncAPIFile(path string) bool {
 	ext := filepath.Ext(path)
 	return ext == ".yaml" || ext == ".yml" || ext == ".json"
+}
+
+func init() {
+	meta := plugin.PluginMeta{
+		ID:          "asyncapi",
+		Name:        "AsyncAPI",
+		Description: "Discover data from AsyncAPI specifications",
+		Icon:        "asyncapi",
+		Category:    "api",
+		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
+	}
+
+	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to register AsyncAPI plugin")
+	}
 }

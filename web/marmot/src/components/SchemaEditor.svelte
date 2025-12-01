@@ -26,6 +26,7 @@
 	let saving = $state(false);
 	let showDeleteModal = $state(false);
 	let keyToDelete = $state<string | null>(null);
+	let showRawSchema = $state(false);
 
 	// Load schemas from asset
 	$effect(() => {
@@ -190,8 +191,17 @@
 	{#if Object.keys(schemas).length > 1 || showAddSchema}
 		<!-- Schema Tabs -->
 		<div class="flex items-center justify-between gap-4 mb-4">
-			<div class="flex flex-wrap gap-2">
-				{#if showAddSchema}
+			<div class="flex items-center gap-4">
+				{#if !showAddSchema && !editingKey}
+					<button
+						class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 transition-colors"
+						onclick={() => (showRawSchema = !showRawSchema)}
+					>
+						{showRawSchema ? 'Show Formatted' : 'Show Raw'}
+					</button>
+				{/if}
+				<div class="flex flex-wrap gap-2">
+					{#if showAddSchema}
 					<button
 						class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800"
 						aria-selected={true}
@@ -200,17 +210,18 @@
 						New Schema
 					</button>
 				{/if}
-				{#each Object.keys(schemas) as schemaKey}
-					<button
-						class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab === schemaKey && !showAddSchema
-							? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800'
-							: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}"
-						aria-selected={activeTab === schemaKey && !showAddSchema}
-						onclick={() => { showAddSchema = false; setActiveTab(schemaKey); }}
-					>
-						{schemaKey}
-					</button>
-				{/each}
+					{#each Object.keys(schemas) as schemaKey}
+						<button
+							class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab === schemaKey && !showAddSchema
+								? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800'
+								: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}"
+							aria-selected={activeTab === schemaKey && !showAddSchema}
+							onclick={() => { showAddSchema = false; setActiveTab(schemaKey); }}
+						>
+							{schemaKey}
+						</button>
+					{/each}
+				</div>
 			</div>
 			{#if canManageAssets}
 				<div class="flex gap-2">
@@ -245,29 +256,53 @@
 		</div>
 	{:else if Object.keys(schemas).length === 1 && canManageAssets}
 		<!-- Single schema - just show action buttons -->
-		<div class="flex items-center justify-end gap-2 mb-4">
-			<button
-				onclick={() => (showAddSchema = true)}
-				class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-earthy-terracotta-300 dark:border-earthy-terracotta-700 text-earthy-terracotta-700 dark:text-earthy-terracotta-300 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 transition-colors"
-				title="Add schema"
-			>
-				<IconifyIcon icon="material-symbols:add" class="w-4 h-4 mr-1" />
-				Add Schema
-			</button>
-			{#if activeTab}
+		<div class="flex items-center justify-between gap-2 mb-4">
+			<div>
+				{#if !showAddSchema && !editingKey}
+					<button
+						class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 transition-colors"
+						onclick={() => (showRawSchema = !showRawSchema)}
+					>
+						{showRawSchema ? 'Show Formatted' : 'Show Raw'}
+					</button>
+				{/if}
+			</div>
+			<div class="flex items-center gap-2">
 				<button
-					onclick={() => startEdit(activeTab)}
-					class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-					title="Edit schema"
+					onclick={() => (showAddSchema = true)}
+					class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md border border-earthy-terracotta-300 dark:border-earthy-terracotta-700 text-earthy-terracotta-700 dark:text-earthy-terracotta-300 hover:bg-earthy-terracotta-50 dark:hover:bg-earthy-terracotta-900/20 transition-colors"
+					title="Add schema"
 				>
-					<IconifyIcon icon="material-symbols:edit-outline" class="w-4 h-4" />
+					<IconifyIcon icon="material-symbols:add" class="w-4 h-4 mr-1" />
+					Add Schema
 				</button>
+				{#if activeTab}
+					<button
+						onclick={() => startEdit(activeTab)}
+						class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+						title="Edit schema"
+					>
+						<IconifyIcon icon="material-symbols:edit-outline" class="w-4 h-4" />
+					</button>
+					<button
+						onclick={() => promptDelete(activeTab)}
+						class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+						title="Delete schema"
+					>
+						<IconifyIcon icon="material-symbols:delete-outline" class="w-4 h-4" />
+					</button>
+				{/if}
+			</div>
+		</div>
+	{:else if Object.keys(schemas).length === 1 && !canManageAssets}
+		<!-- Single schema - non-editable, just show Show Raw button -->
+		<div class="flex items-center mb-4">
+			{#if !showAddSchema && !editingKey}
 				<button
-					onclick={() => promptDelete(activeTab)}
-					class="p-1.5 text-gray-500 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
-					title="Delete schema"
+					class="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 shadow-sm text-sm font-medium rounded-lg text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500 transition-colors"
+					onclick={() => (showRawSchema = !showRawSchema)}
 				>
-					<IconifyIcon icon="material-symbols:delete-outline" class="w-4 h-4" />
+					{showRawSchema ? 'Show Formatted' : 'Show Raw'}
 				</button>
 			{/if}
 		</div>
@@ -368,7 +403,7 @@
 			<!-- View mode -->
 			<div>
 				{#key activeTab}
-					<SchemaSummary schema={{ [activeTab]: schemas[activeTab] }} />
+					<SchemaSummary schema={{ [activeTab]: schemas[activeTab] }} {showRawSchema} />
 				{/key}
 			</div>
 		{/if}

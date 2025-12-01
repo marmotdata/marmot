@@ -48,8 +48,11 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	s.config = config
+	if err := plugin.ValidateStruct(config); err != nil {
+		return nil, err
+	}
 
+	s.config = config
 	return rawConfig, nil
 }
 
@@ -179,4 +182,19 @@ func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (asset
 func extractTopicName(arn string) string {
 	parts := strings.Split(arn, ":")
 	return parts[len(parts)-1]
+}
+
+func init() {
+	meta := plugin.PluginMeta{
+		ID:          "sns",
+		Name:        "AWS SNS",
+		Description: "Discover SNS topics from AWS accounts",
+		Icon:        "sns",
+		Category:    "messaging",
+		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
+	}
+
+	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to register SNS plugin")
+	}
 }

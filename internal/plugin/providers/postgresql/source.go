@@ -27,11 +27,11 @@ type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
 	// Connection configuration
-	Host     string `json:"host" description:"PostgreSQL server hostname or IP address"`
-	Port     int    `json:"port" description:"PostgreSQL server port (default: 5432)"`
-	User     string `json:"user" description:"Username for authentication"`
+	Host     string `json:"host" description:"PostgreSQL server hostname or IP address" validate:"required"`
+	Port     int    `json:"port" description:"PostgreSQL server port" default:"5432" validate:"omitempty,min=1,max=65535"`
+	User     string `json:"user" description:"Username for authentication" validate:"required"`
 	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
-	SSLMode  string `json:"ssl_mode" description:"SSL mode (disable, require, verify-ca, verify-full)"`
+	SSLMode  string `json:"ssl_mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
 
 	// Discovery configuration
 	IncludeDatabases     bool           `json:"include_databases" description:"Whether to discover databases" default:"true"`
@@ -69,38 +69,16 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting PostgreSQL config validation")
-
-	if config.Host == "" {
-		return nil, fmt.Errorf("host is required")
-	}
-
 	if config.Port == 0 {
 		config.Port = 5432
-	}
-
-	if config.User == "" {
-		return nil, fmt.Errorf("user is required")
 	}
 
 	if config.SSLMode == "" {
 		config.SSLMode = "disable"
 	}
 
-	if !config.IncludeDatabases {
-		config.IncludeDatabases = true
-	}
-
-	if !config.IncludeColumns {
-		config.IncludeColumns = true
-	}
-
-	if !config.EnableMetrics {
-		config.EnableMetrics = true
-	}
-
-	if !config.DiscoverForeignKeys {
-		config.DiscoverForeignKeys = true
+	if err := plugin.ValidateStruct(config); err != nil {
+		return nil, err
 	}
 
 	s.config = config
@@ -807,4 +785,19 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 	}
 
 	return statistics
+}
+
+func init() {
+	meta := plugin.PluginMeta{
+		ID:          "postgresql",
+		Name:        "PostgreSQL",
+		Description: "Discover databases, schemas, and tables from PostgreSQL instances",
+		Icon:        "postgresql",
+		Category:    "database",
+		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
+	}
+
+	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to register PostgreSQL plugin")
+	}
 }

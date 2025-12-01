@@ -49,6 +49,7 @@
 	</a>
 {:else}
 	<button
+		type="button"
 		class="inline-flex items-center text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 dark:focus:ring-offset-gray-800 focus:ring-earthy-terracotta-600 transition-colors px-4 py-2 rounded-lg shadow-sm
 		{variant === 'clear'
 			? 'text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-700 hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/20 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-500'

@@ -48,8 +48,12 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
-	s.config = config
 
+	if err := plugin.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	s.config = config
 	return rawConfig, nil
 }
 
@@ -252,4 +256,19 @@ func (s *Source) createBucketAsset(ctx context.Context, bucket types.Bucket) (as
 			Priority:   1,
 		}},
 	}, nil
+}
+
+func init() {
+	meta := plugin.PluginMeta{
+		ID:          "s3",
+		Name:        "AWS S3",
+		Description: "Discover S3 buckets from AWS accounts",
+		Icon:        "s3",
+		Category:    "storage",
+		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
+	}
+
+	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to register S3 plugin")
+	}
 }

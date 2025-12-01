@@ -11,19 +11,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/marmotdata/marmot/internal/plugin/providers/asyncapi"
-	"github.com/marmotdata/marmot/internal/plugin/providers/bigquery"
-	"github.com/marmotdata/marmot/internal/plugin/providers/kafka"
-	"github.com/marmotdata/marmot/internal/plugin/providers/mongodb"
-	"github.com/marmotdata/marmot/internal/plugin/providers/mysql"
-	"github.com/marmotdata/marmot/internal/plugin/providers/openapi"
-	"github.com/marmotdata/marmot/internal/plugin/providers/postgresql"
-	"github.com/marmotdata/marmot/internal/plugin/providers/s3"
-	"github.com/marmotdata/marmot/internal/plugin/providers/sns"
-	"github.com/marmotdata/marmot/internal/plugin/providers/sqs"
-
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"sigs.k8s.io/yaml"
@@ -204,25 +193,6 @@ func newAPIClient(baseURL, apiKey string) *apiClient {
 		apiKey:  apiKey,
 		client:  &http.Client{Timeout: httpTimeout},
 	}
-}
-
-type sourceFactory struct {
-	source func() plugin.Source
-	config func() interface{}
-}
-
-// TODO: a better registry is needed at some point
-var sourceRegistry = map[string]sourceFactory{
-	"asyncapi":   {source: func() plugin.Source { return &asyncapi.Source{} }, config: func() interface{} { return &asyncapi.Config{} }},
-	"sns":        {source: func() plugin.Source { return &sns.Source{} }, config: func() interface{} { return &sns.Config{} }},
-	"sqs":        {source: func() plugin.Source { return &sqs.Source{} }, config: func() interface{} { return &sqs.Config{} }},
-	"kafka":      {source: func() plugin.Source { return &kafka.Source{} }, config: func() interface{} { return &kafka.Config{} }},
-	"postgresql": {source: func() plugin.Source { return &postgresql.Source{} }, config: func() interface{} { return &postgresql.Config{} }},
-	"mongodb":    {source: func() plugin.Source { return &mongodb.Source{} }, config: func() interface{} { return &mongodb.Config{} }},
-	"mysql":      {source: func() plugin.Source { return &mysql.Source{} }, config: func() interface{} { return &mysql.Config{} }},
-	"bigquery":   {source: func() plugin.Source { return &bigquery.Source{} }, config: func() interface{} { return &bigquery.Config{} }},
-	"s3":         {source: func() plugin.Source { return &s3.Source{} }, config: func() interface{} { return &s3.Config{} }},
-	"openapi":    {source: func() plugin.Source { return &openapi.Source{} }, config: func() interface{} { return &openapi.Config{} }},
 }
 
 func (c *apiClient) startRun(ctx context.Context, request StartRunRequest) (*plugin.Run, error) {
@@ -407,23 +377,25 @@ func runDestroy(ctx context.Context, config plugin.Config, client *apiClient) er
 }
 
 func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, overallSummary *Summary, config plugin.Config) error {
+	registry := plugin.GetRegistry()
+
 	for sourceName, rawConfig := range run {
-		srcFactory, ok := sourceRegistry[sourceName]
-		if !ok {
+		entry, err := registry.Get(sourceName)
+		if err != nil {
 			return fmt.Errorf("unknown source: %s", sourceName)
 		}
 
-		source := srcFactory.source()
+		source := entry.Source
 
 		printSourceHeader(sourceName)
 
-		_, err := source.Validate(rawConfig)
+		_, err = source.Validate(rawConfig)
 		if err != nil {
 			printError(fmt.Sprintf("Config validation failed: %v", err))
 			return err
 		}
 
-		maskedConfig := rawConfig.MaskSensitiveFields(srcFactory.config())
+		maskedConfig := plugin.MaskSensitiveFieldsFromSpec(rawConfig, entry.Meta.ConfigSpec)
 
 		printStep("Starting run...")
 		startTime := time.Now()

@@ -22,11 +22,11 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	BootstrapServers string            `json:"bootstrap_servers" description:"Comma-separated list of bootstrap servers"`
+	BootstrapServers string            `json:"bootstrap_servers" description:"Comma-separated list of bootstrap servers" validate:"required"`
 	ClientID         string            `json:"client_id" description:"Client ID for the consumer"`
 	Authentication   *AuthConfig       `json:"authentication,omitempty" description:"Authentication configuration"`
 	ConsumerConfig   map[string]string `json:"consumer_config,omitempty" description:"Additional consumer configuration"`
-	ClientTimeout    int               `json:"client_timeout_seconds" description:"Request timeout in seconds"`
+	ClientTimeout    int               `json:"client_timeout_seconds" description:"Request timeout in seconds" validate:"omitempty,min=1,max=300"`
 	TLS              *TLSConfig        `json:"tls,omitempty" description:"TLS configuration"`
 
 	SchemaRegistry *SchemaRegistryConfig `json:"schema_registry,omitempty" description:"Schema Registry configuration"`
@@ -40,10 +40,10 @@ type Config struct {
 
 // Authentication configuration
 type AuthConfig struct {
-	Type      string `json:"type" description:"Authentication type: none, sasl_plaintext, sasl_ssl, ssl"`
+	Type      string `json:"type" description:"Authentication type: none, sasl_plaintext, sasl_ssl, ssl" validate:"omitempty,oneof=none sasl_plaintext sasl_ssl ssl"`
 	Username  string `json:"username,omitempty" description:"SASL username"`
 	Password  string `json:"password,omitempty" description:"SASL password" sensitive:"true"`
-	Mechanism string `json:"mechanism,omitempty" description:"SASL mechanism: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512"`
+	Mechanism string `json:"mechanism,omitempty" description:"SASL mechanism: PLAIN, SCRAM-SHA-256, SCRAM-SHA-512" validate:"omitempty,oneof=PLAIN SCRAM-SHA-256 SCRAM-SHA-512"`
 }
 
 // TLS configuration
@@ -57,9 +57,10 @@ type TLSConfig struct {
 
 // Schema Registry configuration
 type SchemaRegistryConfig struct {
-	URL     string            `json:"url" description:"Schema Registry URL"`
-	Config  map[string]string `json:"config,omitempty" description:"Additional Schema Registry configuration"`
-	Enabled bool              `json:"enabled" description:"Whether to use Schema Registry"`
+	URL        string            `json:"url" description:"Schema Registry URL" validate:"omitempty,url"`
+	Config     map[string]string `json:"config,omitempty" description:"Additional Schema Registry configuration"`
+	Enabled    bool              `json:"enabled" description:"Whether to use Schema Registry"`
+	SkipVerify bool              `json:"skip_verify,omitempty" description:"Skip TLS certificate verification"`
 }
 
 // Example configuration for the plugin
@@ -103,32 +104,24 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting Kafka config validation")
-
 	config.ApplyDefaults()
 
-	if config.BootstrapServers == "" {
-		return nil, fmt.Errorf("bootstrap_servers is required")
+	if err := plugin.ValidateStruct(config); err != nil {
+		return nil, err
 	}
 
 	if config.Authentication != nil {
 		authType := config.Authentication.Type
-		switch authType {
-		case "sasl_plaintext", "sasl_ssl", "ssl":
-			if authType == "sasl_plaintext" || authType == "sasl_ssl" {
-				if config.Authentication.Username == "" {
-					return nil, fmt.Errorf("username is required for %s authentication", authType)
-				}
-				if config.Authentication.Password == "" {
-					return nil, fmt.Errorf("password is required for %s authentication", authType)
-				}
-				if config.Authentication.Mechanism == "" {
-					return nil, fmt.Errorf("mechanism is required for %s authentication", authType)
-				}
+		if authType == "sasl_plaintext" || authType == "sasl_ssl" {
+			if config.Authentication.Username == "" {
+				return nil, fmt.Errorf("username is required for %s authentication", authType)
 			}
-		case "none", "":
-		default:
-			return nil, fmt.Errorf("unsupported authentication type: %s. Valid types are: sasl_plaintext, sasl_ssl, ssl, none", authType)
+			if config.Authentication.Password == "" {
+				return nil, fmt.Errorf("password is required for %s authentication", authType)
+			}
+			if config.Authentication.Mechanism == "" {
+				return nil, fmt.Errorf("mechanism is required for %s authentication", authType)
+			}
 		}
 	}
 
@@ -171,4 +164,19 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	return &plugin.DiscoveryResult{
 		Assets: assets,
 	}, nil
+}
+
+func init() {
+	meta := plugin.PluginMeta{
+		ID:          "kafka",
+		Name:        "Kafka",
+		Description: "Discover Kafka topics from Kafka clusters",
+		Icon:        "kafka",
+		Category:    "streaming",
+		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
+	}
+
+	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to register Kafka plugin")
+	}
 }

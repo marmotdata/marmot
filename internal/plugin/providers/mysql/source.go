@@ -25,12 +25,12 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	Host     string `json:"host" description:"MySQL server hostname or IP address"`
-	Port     int    `json:"port" description:"MySQL server port (default: 3306)"`
-	User     string `json:"user" description:"Username for authentication"`
+	Host     string `json:"host" description:"MySQL server hostname or IP address" validate:"required"`
+	Port     int    `json:"port" description:"MySQL server port" default:"3306" validate:"omitempty,min=1,max=65535"`
+	User     string `json:"user" description:"Username for authentication" validate:"required"`
 	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
-	Database string `json:"database" description:"Database name to connect to"`
-	TLS      string `json:"tls" description:"TLS configuration (false, true, skip-verify, preferred)"`
+	Database string `json:"database" description:"Database name to connect to" validate:"required"`
+	TLS      string `json:"tls" description:"TLS configuration (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
 
 	IncludeColumns      bool           `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
 	IncludeRowCounts    bool           `json:"include_row_counts" description:"Whether to include approximate row counts" default:"true"`
@@ -63,32 +63,17 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting MySQL config validation")
-
-	if config.Host == "" {
-		return nil, fmt.Errorf("host is required")
-	}
 	if config.Port == 0 {
 		config.Port = 3306
-	}
-	if config.User == "" {
-		return nil, fmt.Errorf("user is required")
-	}
-	if config.Database == "" {
-		return nil, fmt.Errorf("database is required")
 	}
 	if config.TLS == "" {
 		config.TLS = "false"
 	}
-	if !config.IncludeColumns {
-		config.IncludeColumns = true
+
+	if err := plugin.ValidateStruct(config); err != nil {
+		return nil, err
 	}
-	if !config.IncludeRowCounts {
-		config.IncludeRowCounts = true
-	}
-	if !config.DiscoverForeignKeys {
-		config.DiscoverForeignKeys = true
-	}
+
 	s.config = config
 	return rawConfig, nil
 }
@@ -421,4 +406,19 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 	}
 
 	return lineages, nil
+}
+
+func init() {
+	meta := plugin.PluginMeta{
+		ID:          "mysql",
+		Name:        "MySQL",
+		Description: "Discover databases and tables from MySQL instances",
+		Icon:        "mysql",
+		Category:    "database",
+		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
+	}
+
+	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to register MySQL plugin")
+	}
 }

@@ -27,7 +27,7 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	ProjectID             string `json:"project_id" description:"Google Cloud Project ID"`
+	ProjectID             string `json:"project_id" description:"Google Cloud Project ID" validate:"required"`
 	CredentialsPath       string `json:"credentials_path,omitempty" description:"Path to service account credentials JSON file"`
 	CredentialsJSON       string `json:"credentials_json,omitempty" description:"Service account credentials JSON content" sensitive:"true"`
 	UseDefaultCredentials bool   `json:"use_default_credentials" description:"Use default Google Cloud credentials" default:"false"`
@@ -39,7 +39,7 @@ type Config struct {
 	DatasetFilter         *plugin.Filter `json:"dataset_filter,omitempty" description:"Filter configuration for datasets"`
 	TableFilter           *plugin.Filter `json:"table_filter,omitempty" description:"Filter configuration for tables"`
 	ExcludeSystemDatasets bool           `json:"exclude_system_datasets" description:"Whether to exclude system datasets (_script, _analytics, etc.)" default:"true"`
-	MaxConcurrentRequests int            `json:"max_concurrent_requests" description:"Maximum number of concurrent API requests" default:"10"`
+	MaxConcurrentRequests int            `json:"max_concurrent_requests" description:"Maximum number of concurrent API requests" default:"10" validate:"omitempty,min=1,max=100"`
 }
 
 // +marmot:example-config
@@ -81,12 +81,10 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	log.Debug().Interface("raw_config", rawConfig).Msg("Starting BigQuery config validation")
-
 	config.ApplyDefaults()
 
-	if config.ProjectID == "" {
-		return nil, fmt.Errorf("project_id is required")
+	if err := plugin.ValidateStruct(config); err != nil {
+		return nil, err
 	}
 
 	authMethods := 0
@@ -593,4 +591,19 @@ func (s *Source) extractRequiredFields(fields bigquery.Schema) []string {
 		}
 	}
 	return required
+}
+
+func init() {
+	meta := plugin.PluginMeta{
+		ID:          "bigquery",
+		Name:        "BigQuery",
+		Description: "Discover datasets and tables from Google BigQuery projects",
+		Icon:        "bigquery",
+		Category:    "data-warehouse",
+		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
+	}
+
+	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
+		log.Fatal().Err(err).Msg("Failed to register BigQuery plugin")
+	}
 }

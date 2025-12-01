@@ -13,9 +13,9 @@
 		pipeline_name: string;
 		source_name: string;
 		run_id: string;
-		status: 'running' | 'completed' | 'failed' | 'cancelled';
+		status: 'pending' | 'claimed' | 'running' | 'succeeded' | 'failed' | 'cancelled';
 		started_at: string;
-		completed_at?: string;
+		finished_at?: string;
 		error_message?: string;
 		config?: any;
 		summary?: IngestionRunSummary;
@@ -27,9 +27,13 @@
 
 	function getStatusColor(status: string): string {
 		switch (status) {
+			case 'pending':
+				return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300';
+			case 'claimed':
+				return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300';
 			case 'running':
 				return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
-			case 'completed':
+			case 'succeeded':
 				return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
 			case 'failed':
 				return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
@@ -42,9 +46,13 @@
 
 	function getStatusIcon(status: string): string {
 		switch (status) {
+			case 'pending':
+				return 'material-symbols:schedule';
+			case 'claimed':
+				return 'material-symbols:assignment-ind';
 			case 'running':
 				return 'material-symbols:sync';
-			case 'completed':
+			case 'succeeded':
 				return 'material-symbols:check-circle';
 			case 'failed':
 				return 'material-symbols:error';
@@ -169,7 +177,7 @@
 				Duration
 			</dt>
 			<dd class="text-gray-900 dark:text-gray-100">
-				{formatDuration(run.started_at, run.completed_at)}
+				{formatDuration(run.started_at, run.finished_at)}
 			</dd>
 		</div>
 
@@ -236,7 +244,7 @@
 					icon="material-symbols:error"
 					class="h-3 w-3 text-red-400 mt-0.5 flex-shrink-0"
 				/>
-				<p class="ml-2 text-red-700 dark:text-red-300 line-clamp-1 truncate">
+				<p class="ml-2 text-red-700 dark:text-red-300 break-words">
 					{run.error_message}
 				</p>
 			</div>

@@ -25,12 +25,8 @@ type SourceRun map[string]RawPluginConfig
 type RawPluginConfig map[string]interface{}
 
 type BaseConfig struct {
-	GlobalDocumentation         []string       `json:"global_documentation,omitempty"`
-	GlobalDocumentationPosition string         `json:"global_documentation_position,omitempty"`
-	Metadata                    MetadataConfig `json:"metadata,omitempty"`
-	Tags                        TagsConfig     `json:"tags,omitempty"`
-	ExternalLinks               []ExternalLink `json:"external_links,omitempty"`
-	AWSConfig                   *AWSConfig     `json:"aws,omitempty"`
+	Tags          TagsConfig     `json:"tags,omitempty" description:"Tags to apply to discovered assets"`
+	ExternalLinks []ExternalLink `json:"external_links,omitempty" description:"External links to show on all assets"`
 }
 
 // PluginConfig combines base config with plugin-specific fields
@@ -39,15 +35,11 @@ type PluginConfig struct {
 	Source     string `json:"source,omitempty"`
 }
 
-type MetadataConfig struct {
-	Allow []string `json:"allow,omitempty"`
-}
-
 // ExternalLink defines an external resource link
 type ExternalLink struct {
-	Name string `json:"name"`
-	Icon string `json:"icon"`
-	URL  string `json:"url"`
+	Name string `json:"name" description:"Display name for the link" validate:"required"`
+	Icon string `json:"icon,omitempty" description:"Icon identifier for the link"`
+	URL  string `json:"url" description:"URL to the external resource" validate:"required,url"`
 }
 
 // DiscoveryResult contains all discovered assets, lineage, and documentation

@@ -129,7 +129,7 @@
 				{#each terms as term}
 					<div class="rounded border border-gray-200 dark:border-gray-700">
 						<a
-							href="/glossary?term={term.term_id}"
+							href="/glossary/{term.term_id}"
 							class="flex items-start gap-2 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
 						>
 							<div class="flex-1 min-w-0">

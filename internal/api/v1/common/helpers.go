@@ -20,6 +20,14 @@ func RespondError(w http.ResponseWriter, status int, message string) {
 	RespondJSON(w, status, ErrorResponse{Error: message})
 }
 
+// RespondValidationError sends a validation error response with field-level errors
+func RespondValidationError(w http.ResponseWriter, message string, fields []ValidationError) {
+	RespondJSON(w, http.StatusBadRequest, ValidationErrorResponse{
+		Error:  message,
+		Fields: fields,
+	})
+}
+
 // ParseLimit parses and validates limit parameter
 func ParseLimit(limitStr string, defaultLimit, maxLimit int) int {
 	if limitStr == "" {

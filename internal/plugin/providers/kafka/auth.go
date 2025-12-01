@@ -38,14 +38,6 @@ func (s *Source) configureAuthentication() ([]kgo.Opt, error) {
 		opts = append(opts, kgo.SASL(mechanism))
 	}
 
-	if s.config.TLS != nil && s.config.TLS.Enabled {
-		if tlsOpt, err := s.configureTLS(); err != nil {
-			return nil, fmt.Errorf("configuring TLS: %w", err)
-		} else if tlsOpt != nil {
-			opts = append(opts, *tlsOpt)
-		}
-	}
-
 	return opts, nil
 }
 

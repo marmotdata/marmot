@@ -426,6 +426,13 @@ definitions:
       error:
         type: string
     type: object
+  common.ValidationError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
   github_com_marmotdata_marmot_internal_api_v1_runs.DestroyRunResponse:
     properties:
       assets_deleted:
@@ -667,6 +674,17 @@ definitions:
       count:
         type: integer
     type: object
+  plugin.AWSCredentialStatus:
+    properties:
+      available:
+        type: boolean
+      error:
+        type: string
+      sources:
+        items:
+          type: string
+        type: array
+    type: object
   plugin.RawPluginConfig:
     additionalProperties: true
     type: object
@@ -874,6 +892,54 @@ definitions:
     - metric_name
     - value
     type: object
+  runs.JobRun:
+    properties:
+      assets_created:
+        type: integer
+      assets_deleted:
+        type: integer
+      assets_updated:
+        type: integer
+      claimed_at:
+        type: string
+      claimed_by:
+        type: string
+      config:
+        additionalProperties: true
+        type: object
+      created_at:
+        type: string
+      created_by:
+        type: string
+      documentation_added:
+        type: integer
+      error_message:
+        type: string
+      finished_at:
+        type: string
+      id:
+        type: string
+      lineage_created:
+        type: integer
+      log:
+        type: string
+      pipeline_name:
+        type: string
+      plugin_run_id:
+        type: string
+      run_id:
+        type: string
+      schedule_id:
+        type: string
+      source_name:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      updated_at:
+        type: string
+    type: object
   runs.RunEntitiesResponse:
     properties:
       entities:
@@ -906,6 +972,34 @@ definitions:
       status:
         type: string
     type: object
+  runs.Schedule:
+    properties:
+      config:
+        additionalProperties: true
+        type: object
+      created_at:
+        type: string
+      created_by:
+        type: string
+      cron_expression:
+        type: string
+      enabled:
+        type: boolean
+      id:
+        type: string
+      last_run_at:
+        type: string
+      last_run_status:
+        type: string
+      name:
+        type: string
+      next_run_at:
+        type: string
+      plugin_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
   runs.StartRunRequest:
     properties:
       config:
@@ -917,6 +1011,77 @@ definitions:
     required:
     - pipeline_name
     - source_name
+    type: object
+  schedules.CreateScheduleRequest:
+    properties:
+      config:
+        additionalProperties: true
+        type: object
+      cron_expression:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+      plugin_id:
+        type: string
+    type: object
+  schedules.ListJobRunsResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      runs:
+        items:
+          $ref: '#/definitions/runs.JobRun'
+        type: array
+      total:
+        type: integer
+    type: object
+  schedules.ListSchedulesResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      schedules:
+        items:
+          $ref: '#/definitions/runs.Schedule'
+        type: array
+      total:
+        type: integer
+    type: object
+  schedules.UpdateScheduleRequest:
+    properties:
+      config:
+        additionalProperties: true
+        type: object
+      cron_expression:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+      plugin_id:
+        type: string
+    type: object
+  schedules.ValidateConfigRequest:
+    properties:
+      config:
+        additionalProperties: true
+        type: object
+      plugin_id:
+        type: string
+    type: object
+  schedules.ValidateConfigResponse:
+    properties:
+      errors:
+        items:
+          $ref: '#/definitions/common.ValidationError'
+        type: array
+      valid:
+        type: boolean
     type: object
   search.FacetValue:
     properties:
@@ -991,8 +1156,6 @@ definitions:
     - ResultTypeTeam
   time.Duration:
     enum:
-    - -9223372036854775808
-    - 9223372036854775807
     - 1
     - 1000
     - 1000000
@@ -1006,8 +1169,6 @@ definitions:
     - 60000000000
     type: integer
     x-enum-varnames:
-    - minDuration
-    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
@@ -1229,6 +1390,356 @@ info:
   title: Marmot API
   version: "0.1"
 paths:
+  /api/v1/ingestion/runs:
+    get:
+      parameters:
+      - description: Filter by schedule ID
+        in: query
+        name: schedule_id
+        type: string
+      - description: Filter by status
+        in: query
+        name: status
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schedules.ListJobRunsResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: List ingestion job runs
+      tags:
+      - ingestion
+  /api/v1/ingestion/runs/{id}:
+    get:
+      parameters:
+      - description: Job run ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/runs.JobRun'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get a job run by ID
+      tags:
+      - ingestion
+  /api/v1/ingestion/runs/{id}/cancel:
+    post:
+      parameters:
+      - description: Job run ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Cancel a running job
+      tags:
+      - ingestion
+  /api/v1/ingestion/runs/{id}/entities:
+    get:
+      parameters:
+      - description: Job run ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get entities for a job run
+      tags:
+      - ingestion
+  /api/v1/ingestion/schedules:
+    get:
+      parameters:
+      - description: Filter by enabled status
+        in: query
+        name: enabled
+        type: boolean
+      - description: Limit
+        in: query
+        name: limit
+        type: integer
+      - description: Offset
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schedules.ListSchedulesResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: List ingestion schedules
+      tags:
+      - ingestion
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Schedule configuration
+        in: body
+        name: schedule
+        required: true
+        schema:
+          $ref: '#/definitions/schedules.CreateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/runs.Schedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Create a new ingestion schedule
+      tags:
+      - ingestion
+  /api/v1/ingestion/schedules/{id}:
+    delete:
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Delete an ingestion schedule
+      tags:
+      - ingestion
+    get:
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/runs.Schedule'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Get an ingestion schedule by ID
+      tags:
+      - ingestion
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated schedule configuration
+        in: body
+        name: schedule
+        required: true
+        schema:
+          $ref: '#/definitions/schedules.UpdateScheduleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/runs.Schedule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Update an ingestion schedule
+      tags:
+      - ingestion
+  /api/v1/ingestion/schedules/{id}/trigger:
+    post:
+      parameters:
+      - description: Schedule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/runs.JobRun'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Manually trigger an ingestion schedule
+      tags:
+      - ingestion
+  /api/v1/ingestion/validate:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Config to validate
+        in: body
+        name: config
+        required: true
+        schema:
+          $ref: '#/definitions/schedules.ValidateConfigRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/schedules.ValidateConfigResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/common.ErrorResponse'
+      summary: Validate plugin configuration
+      tags:
+      - ingestion
   /api/v1/lineage:
     post:
       consumes:
@@ -1446,6 +1957,20 @@ paths:
       summary: Get top search queries
       tags:
       - metrics
+  /api/v1/plugins/aws/credentials/status:
+    get:
+      description: Detects if AWS credentials are available from environment or config
+        files
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/plugin.AWSCredentialStatus'
+      summary: Get AWS credential detection status
+      tags:
+      - plugins
   /assets:
     post:
       consumes:
