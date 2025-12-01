@@ -48,9 +48,8 @@ func (b *JobRunBroadcaster) BroadcastJobRunCancelled(run *runs.JobRun) {
 
 // jobRunToMap converts a JobRun to a map for JSON serialization
 func jobRunToMap(run *runs.JobRun) map[string]interface{} {
-	// Marshal and unmarshal to convert struct to map
 	data, _ := json.Marshal(run)
 	var payload map[string]interface{}
-	json.Unmarshal(data, &payload)
+	_ = json.Unmarshal(data, &payload)
 	return payload
 }

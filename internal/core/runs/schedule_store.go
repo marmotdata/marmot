@@ -306,7 +306,6 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 	var countQuery string
 	var listQuery string
 	var args []interface{}
-	argPos := 1
 
 	if enabled != nil {
 		countQuery = `SELECT COUNT(*) FROM ingestion_schedules WHERE enabled = $1`
@@ -326,7 +325,6 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 			ORDER BY s.name
 			LIMIT $2 OFFSET $3`
 		args = append(args, *enabled)
-		argPos++
 	} else {
 		countQuery = `SELECT COUNT(*) FROM ingestion_schedules`
 		listQuery = `

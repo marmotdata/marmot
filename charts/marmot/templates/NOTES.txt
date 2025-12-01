@@ -1,5 +1,69 @@
-{{- if .Values.postgresql.enabled }}
-⚠️  WARNING: You are using the embedded PostgreSQL database.
-⚠️  This is NOT recommended for production use!
-⚠️  For production deployments, please use an external PostgreSQL instance.
+Thank you for installing {{ .Chart.Name }}!
+
+Your release is named {{ .Release.Name }}.
+
+To access Marmot:
+
+{{- if .Values.ingress.enabled }}
+{{- range .Values.ingress.hosts }}
+  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ .host }}
 {{- end }}
+{{- else if contains "NodePort" .Values.service.type }}
+  export NODE_PORT=$(kubectl get --namespace {{ .Release.Namespace }} -o jsonpath="{.spec.ports[0].nodePort}" services {{ include "marmot.fullname" . }})
+  export NODE_IP=$(kubectl get nodes --namespace {{ .Release.Namespace }} -o jsonpath="{.items[0].status.addresses[0].address}")
+  echo http://$NODE_IP:$NODE_PORT
+{{- else if contains "LoadBalancer" .Values.service.type }}
+  export SERVICE_IP=$(kubectl get svc --namespace {{ .Release.Namespace }} {{ include "marmot.fullname" . }} --template "{{"{{ range (index .status.loadBalancer.ingress 0) }}{{.}}{{ end }}"}}")
+  echo http://$SERVICE_IP:{{ .Values.service.port }}
+{{- else if contains "ClusterIP" .Values.service.type }}
+  kubectl port-forward --namespace {{ .Release.Namespace }} svc/{{ include "marmot.fullname" . }} 8080:{{ .Values.service.port }}
+  echo http://127.0.0.1:8080
+{{- end }}
+
+Default credentials: admin / admin
+
+{{- if and (not .Values.config.server.encryptionKey) (not .Values.config.server.encryptionKeySecretRef) .Values.config.server.autoGenerateEncryptionKey }}
+
+═══════════════════════════════════════════════════════════════
+⚠️  ENCRYPTION KEY AUTO-GENERATED
+═══════════════════════════════════════════════════════════════
+
+An encryption key was automatically generated and stored in:
+  Secret: {{ include "marmot.fullname" . }}-encryption-key
+  Namespace: {{ .Release.Namespace }}
+
+BACK UP THIS KEY IMMEDIATELY:
+
+  kubectl get secret {{ include "marmot.fullname" . }}-encryption-key \
+    -n {{ .Release.Namespace }} \
+    -o jsonpath='{.data.encryption-key}' | base64 -d
+
+Store this key securely! Loss of this key means:
+  • Permanent loss of encrypted pipeline credentials
+  • Inability to decrypt existing pipeline configurations
+
+The secret will persist even if you uninstall this release.
+
+═══════════════════════════════════════════════════════════════
+{{- end }}
+
+{{- if .Values.config.server.allowUnencrypted }}
+
+═══════════════════════════════════════════════════════════════
+⚠️  WARNING: ENCRYPTION DISABLED
+═══════════════════════════════════════════════════════════════
+
+Pipeline credentials will be stored in PLAINTEXT in the database.
+This is a SECURITY RISK and should only be used for development.
+
+To enable encryption:
+  1. Generate a key: marmot generate-encryption-key
+  2. Store in a secret and update your values.yaml
+  3. Upgrade this release
+
+═══════════════════════════════════════════════════════════════
+{{- end }}
+
+For more information:
+  Docs: https://docs.marmotdata.io
+  Support: https://github.com/marmotdata/marmot/issues

@@ -1,0 +1,21 @@
+{{- if and (not .Values.config.server.encryptionKey) (not .Values.config.server.encryptionKeySecretRef) .Values.config.server.autoGenerateEncryptionKey }}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "marmot.fullname" . }}-encryption-key-manager
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: encryption-key-manager
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+rules:
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["get", "list", "create", "update", "patch"]
+- apiGroups: [""]
+  resources: ["secrets"]
+  resourceNames: ["{{ include "marmot.fullname" . }}-encryption-key"]
+  verbs: ["get", "update", "patch"]
+{{- end }}

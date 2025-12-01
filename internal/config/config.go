@@ -68,6 +68,7 @@ type Config struct {
 		RootURL               string            `mapstructure:"root_url"`
 		CustomResponseHeaders map[string]string `mapstructure:"customer_response_headers"`
 		EncryptionKey         string            `mapstructure:"encryption_key"`
+		AllowUnencrypted      bool              `mapstructure:"allow_unencrypted"`
 	} `mapstructure:"server"`
 
 	Metrics struct {
@@ -189,6 +190,7 @@ func loadConfig(configPath string) error {
 
 	v.BindEnv("server.root_url")
 	v.BindEnv("server.encryption_key")
+	v.BindEnv("server.allow_unencrypted")
 
 	// Rate limit env vars
 	v.BindEnv("rate_limit.enabled")
@@ -222,6 +224,7 @@ func setDefaults(v *viper.Viper) {
 	// Server defaults
 	v.SetDefault("server.port", 8080)
 	v.SetDefault("server.host", "0.0.0.0")
+	v.SetDefault("server.allow_unencrypted", false)
 
 	// Metrics defaults
 	v.SetDefault("metrics.enabled", false)

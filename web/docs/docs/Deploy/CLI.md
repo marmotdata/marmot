@@ -26,19 +26,33 @@ If you prefer to install manually:
    sudo mv marmot /usr/local/bin/
    ```
 
+## Generate Encryption Key
+
+Generate a secure encryption key for pipeline credentials:
+
+```bash
+marmot generate-encryption-key
+```
+
 ## Running Marmot
 
 ```bash
-marmot run --config /path/to/config.yaml
+# Set the encryption key
+export MARMOT_SERVER_ENCRYPTION_KEY="your-generated-key"
+
+marmot server --config /path/to/config.yaml
 ```
 
 > **The default username and password is admin:admin**
 
 ## Configuration
 
-Create a `config.yaml` file with your database connection details. You can read more about [available configuration options here.](/docs/configure)
+Create a `config.yaml` file with your database and server settings:
 
 ```yaml
+server:
+  encryption_key: "your-generated-key"  # Or use MARMOT_SERVER_ENCRYPTION_KEY env var
+
 database:
   host: localhost
   port: 5432
@@ -46,3 +60,14 @@ database:
   password: password
   name: marmot
 ```
+
+### Development Without Encryption
+
+For development only (credentials stored in plaintext):
+
+```yaml
+server:
+  allow_unencrypted: true
+```
+
+Read more about [available configuration options here.](/docs/configure)

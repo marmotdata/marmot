@@ -155,7 +155,7 @@ func (s *Scheduler) jobDispatcher() {
 							Str("run_id", j.ID).
 							Msg("Worker panic recovered")
 						errorMsg := fmt.Sprintf("Worker panic: %v", r)
-						s.service.CompleteJobRun(context.Background(), j.ID, false, &errorMsg, 0, 0, 0, 0, 0)
+						_ = s.service.CompleteJobRun(context.Background(), j.ID, false, &errorMsg, 0, 0, 0, 0, 0)
 					}
 					<-s.semaphore
 					s.activeWorkers.Add(-1)
@@ -320,34 +320,34 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 	schedule, err := w.service.GetSchedule(ctx, *run.ScheduleID)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to get schedule: %v", err)
-		w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
+		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
 		return fmt.Errorf("getting schedule: %w", err)
 	}
 
 	if err := DecryptScheduleConfig(schedule, w.encryptor); err != nil {
 		errorMsg := fmt.Sprintf("Failed to decrypt config: %v", err)
-		w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
+		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
 		return fmt.Errorf("decrypting config: %w", err)
 	}
 
 	source, err := w.registry.GetSource(schedule.PluginID)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to get plugin source: %v", err)
-		w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
+		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
 		return fmt.Errorf("getting plugin source: %w", err)
 	}
 
 	validatedConfig, err := source.Validate(schedule.Config)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to validate plugin config: %v", err)
-		w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
+		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
 		return fmt.Errorf("validating plugin config: %w", err)
 	}
 
 	pluginRun, err := w.runsService.StartRun(ctx, "scheduled", schedule.Name, "scheduler", validatedConfig)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to start run: %v", err)
-		w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
+		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
 		return fmt.Errorf("starting run: %w", err)
 	}
 
@@ -359,8 +359,8 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 	result, err := source.Discover(ctx, validatedConfig)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Plugin discovery failed: %v", err)
-		w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
-		w.runsService.CompleteRun(ctx, pluginRun.RunID, plugin.StatusFailed, nil, err.Error())
+		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
+		_ = w.runsService.CompleteRun(ctx, pluginRun.RunID, plugin.StatusFailed, nil, err.Error())
 		return fmt.Errorf("executing plugin: %w", err)
 	}
 
@@ -433,8 +433,8 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 	)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to process entities: %v", err)
-		w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
-		w.runsService.CompleteRun(ctx, pluginRun.RunID, plugin.StatusFailed, nil, err.Error())
+		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
+		_ = w.runsService.CompleteRun(ctx, pluginRun.RunID, plugin.StatusFailed, nil, err.Error())
 		return fmt.Errorf("processing entities: %w", err)
 	}
 
@@ -471,7 +471,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		DocumentationAdded: docsAdded,
 		TotalEntities:      len(result.Assets) + len(result.Lineage) + len(result.Documentation),
 	}
-	w.runsService.CompleteRun(ctx, pluginRun.RunID, plugin.StatusCompleted, summary, "")
+	_ = w.runsService.CompleteRun(ctx, pluginRun.RunID, plugin.StatusCompleted, summary, "")
 
 	err = w.service.CompleteJobRun(
 		ctx,

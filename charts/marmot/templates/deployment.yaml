@@ -59,7 +59,34 @@ spec:
             - name: MARMOT_SERVER_ROOT_URL
               value: {{ .Values.config.server.rootUrl | quote }}
             {{- end }}
-            
+            {{- if or .Values.config.server.encryptionKey .Values.config.server.encryptionKeySecretRef .Values.config.server.autoGenerateEncryptionKey }}
+            - name: MARMOT_SERVER_ENCRYPTION_KEY
+              {{- if .Values.config.server.encryptionKeySecretRef }}
+              {{- if and .Values.config.server.encryptionKey .Values.config.server.encryptionKeySecretRef }}
+              {{- fail "Cannot specify both config.server.encryptionKey and config.server.encryptionKeySecretRef" }}
+              {{- end }}
+              {{- if .Values.config.server.autoGenerateEncryptionKey }}
+              {{- fail "Cannot specify both config.server.autoGenerateEncryptionKey and config.server.encryptionKeySecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.server.encryptionKeySecretRef.name }}
+                  key: {{ .Values.config.server.encryptionKeySecretRef.key }}
+              {{- else if .Values.config.server.encryptionKey }}
+              {{- if .Values.config.server.autoGenerateEncryptionKey }}
+              {{- fail "Cannot specify both config.server.autoGenerateEncryptionKey and config.server.encryptionKey" }}
+              {{- end }}
+              value: {{ .Values.config.server.encryptionKey | quote }}
+              {{- else if .Values.config.server.autoGenerateEncryptionKey }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "marmot.fullname" . }}-encryption-key
+                  key: encryption-key
+              {{- end }}
+            {{- end }}
+            - name: MARMOT_SERVER_ALLOW_UNENCRYPTED
+              value: {{ .Values.config.server.allowUnencrypted | quote }}
+
             # Database configuration - use subchart values if enabled
             - name: MARMOT_DATABASE_HOST
               {{- if .Values.postgresql.enabled }}
@@ -126,6 +153,8 @@ spec:
             {{- end }}
 
             # Auth configuration
+            - name: MARMOT_AUTH_OPENLINEAGE_ENABLED
+              value: {{ .Values.config.auth.openlineage.enabled | quote }}
             - name: MARMOT_AUTH_ANONYMOUS_ENABLED
               value: {{ .Values.config.auth.anonymous.enabled | quote }}
             - name: MARMOT_AUTH_ANONYMOUS_ROLE
@@ -162,7 +191,35 @@ spec:
               value: {{ .Values.config.auth.providers.okta.clientSecret | quote }}
               {{- end }}
             {{- end }}
-            
+
+            # Rate limit configuration
+            - name: MARMOT_RATE_LIMIT_ENABLED
+              value: {{ .Values.config.rateLimit.enabled | quote }}
+
+            # UI configuration
+            - name: MARMOT_UI_BANNER_ENABLED
+              value: {{ .Values.config.ui.banner.enabled | quote }}
+            {{- if .Values.config.ui.banner.enabled }}
+            - name: MARMOT_UI_BANNER_DISMISSIBLE
+              value: {{ .Values.config.ui.banner.dismissible | quote }}
+            - name: MARMOT_UI_BANNER_VARIANT
+              value: {{ .Values.config.ui.banner.variant | quote }}
+            - name: MARMOT_UI_BANNER_MESSAGE
+              value: {{ .Values.config.ui.banner.message | quote }}
+            - name: MARMOT_UI_BANNER_ID
+              value: {{ .Values.config.ui.banner.id | quote }}
+            {{- end }}
+
+            # Pipelines configuration
+            - name: MARMOT_PIPELINES_MAX_WORKERS
+              value: {{ .Values.config.pipelines.maxWorkers | quote }}
+            - name: MARMOT_PIPELINES_SCHEDULER_INTERVAL
+              value: {{ .Values.config.pipelines.schedulerInterval | quote }}
+            - name: MARMOT_PIPELINES_LEASE_EXPIRY
+              value: {{ .Values.config.pipelines.leaseExpiry | quote }}
+            - name: MARMOT_PIPELINES_CLAIM_EXPIRY
+              value: {{ .Values.config.pipelines.claimExpiry | quote }}
+
             # Additional environment variables
             {{- range $key, $value := .Values.env }}
             - name: {{ $key }}

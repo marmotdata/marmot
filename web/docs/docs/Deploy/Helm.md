@@ -78,6 +78,62 @@ Deploy with your custom configuration:
 helm install marmot marmotdata/marmot -f custom-values.yaml
 ```
 
+## Encryption Key
+
+Marmot requires an encryption key to protect sensitive pipeline credentials. The Helm chart auto-generates one by default:
+
+```yaml
+config:
+  server:
+    autoGenerateEncryptionKey: true
+```
+
+**Back up the auto-generated key:**
+
+```bash
+kubectl get secret <release-name>-marmot-encryption-key \
+  -o jsonpath='{.data.encryption-key}' | base64 -d
+```
+
+### Use Your Own Key
+
+Generate a key:
+
+```bash
+marmot generate-encryption-key
+# or
+openssl rand -base64 32
+```
+
+Create a secret:
+
+```bash
+kubectl create secret generic marmot-encryption \
+  --from-literal=encryption-key="your-generated-key"
+```
+
+Configure Marmot to use it:
+
+```yaml
+config:
+  server:
+    autoGenerateEncryptionKey: false
+    encryptionKeySecretRef:
+      name: marmot-encryption
+      key: encryption-key
+```
+
+### Disable Encryption (Not Recommended)
+
+For development/testing only:
+
+```yaml
+config:
+  server:
+    autoGenerateEncryptionKey: false
+    allowUnencrypted: true
+```
+
 For all available configuration options, see the [chart's values.yaml](https://github.com/marmotdata/marmot/blob/main/charts/marmot/values.yaml) or run:
 
 ```bash

@@ -107,8 +107,42 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		var err error
 		scheduleEncryptor, err = runService.GetEncryptor(config)
 		if err != nil {
-			log.Warn().Err(err).Msg("Failed to initialize encryption for schedules - sensitive fields will not be encrypted")
+			log.Fatal().Err(err).Msg("Failed to initialize encryption - invalid encryption key")
 		}
+		log.Info().Msg("Encryption enabled for pipeline credentials")
+	} else {
+		if !config.Server.AllowUnencrypted {
+			log.Fatal().Msg(
+				"═══════════════════════════════════════════════════════════════\n" +
+					"⚠️  ENCRYPTION KEY REQUIRED\n" +
+					"═══════════════════════════════════════════════════════════════\n" +
+					"Marmot requires an encryption key to protect sensitive pipeline credentials.\n" +
+					"\n" +
+					"To generate a key, run:\n" +
+					"  marmot generate-encryption-key\n" +
+					"\n" +
+					"Then set it via:\n" +
+					"  export MARMOT_SERVER_ENCRYPTION_KEY=\"your-generated-key\"\n" +
+					"\n" +
+					"Or to run WITHOUT encryption (NOT RECOMMENDED):\n" +
+					"  export MARMOT_SERVER_ALLOW_UNENCRYPTED=true\n" +
+					"\n" +
+					"⚠️  Running unencrypted means pipeline credentials will be stored\n" +
+					"    in PLAINTEXT in the database. This is a SECURITY RISK.\n" +
+					"═══════════════════════════════════════════════════════════════",
+			)
+		}
+		log.Warn().Msg(
+			"═══════════════════════════════════════════════════════════════\n" +
+				"⚠️  WARNING: ENCRYPTION DISABLED\n" +
+				"═══════════════════════════════════════════════════════════════\n" +
+				"Pipeline credentials will be stored in PLAINTEXT in the database.\n" +
+				"This is a SECURITY RISK and should only be used for development.\n" +
+				"\n" +
+				"To enable encryption, run:\n" +
+				"  marmot generate-encryption-key\n" +
+				"═══════════════════════════════════════════════════════════════",
+		)
 	}
 
 	pluginRegistry := plugin.GetRegistry()

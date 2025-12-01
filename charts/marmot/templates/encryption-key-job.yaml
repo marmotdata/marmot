@@ -1,0 +1,75 @@
+{{- if and (not .Values.config.server.encryptionKey) (not .Values.config.server.encryptionKeySecretRef) .Values.config.server.autoGenerateEncryptionKey }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "marmot.fullname" . }}-encryption-key-generator
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: encryption-key-generator
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      name: {{ include "marmot.fullname" . }}-encryption-key-generator
+      labels:
+        {{- include "marmot.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: encryption-key-generator
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "marmot.serviceAccountName" . }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+      containers:
+      - name: generate-key
+        image: bitnami/kubectl:latest
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        command:
+        - /bin/bash
+        - -c
+        - |
+          set -e
+
+          SECRET_NAME="{{ include "marmot.fullname" . }}-encryption-key"
+          NAMESPACE="{{ .Release.Namespace }}"
+
+          echo "Checking if encryption key secret exists..."
+
+          if kubectl get secret "$SECRET_NAME" -n "$NAMESPACE" &>/dev/null; then
+            echo "✅ Encryption key secret already exists: $SECRET_NAME"
+            echo "   Skipping key generation"
+            exit 0
+          fi
+
+          echo "Generating new encryption key..."
+          # Generate a 32-byte random key and encode as base64
+          ENCRYPTION_KEY=$(openssl rand -base64 32)
+
+          echo "Creating Kubernetes secret: $SECRET_NAME"
+          kubectl create secret generic "$SECRET_NAME" \
+            --namespace="$NAMESPACE" \
+            --from-literal=encryption-key="$ENCRYPTION_KEY"
+
+          kubectl label secret "$SECRET_NAME" \
+            --namespace="$NAMESPACE" \
+            app.kubernetes.io/name={{ include "marmot.name" . }} \
+            app.kubernetes.io/instance={{ .Release.Name }} \
+            app.kubernetes.io/managed-by={{ .Release.Service }} \
+            app.kubernetes.io/component=encryption-key
+
+          kubectl annotate secret "$SECRET_NAME" \
+            --namespace="$NAMESPACE" \
+            "helm.sh/resource-policy"="keep"
+
+          echo "✅ Encryption key generated and stored in secret: $SECRET_NAME"
+{{- end }}
