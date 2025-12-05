@@ -26,6 +26,7 @@ type Repository interface {
 	CreateTeam(ctx context.Context, team *Team) error
 	GetTeam(ctx context.Context, id string) (*Team, error)
 	GetTeamByName(ctx context.Context, name string) (*Team, error)
+	FindSimilarTeamNames(ctx context.Context, searchTerm string, limit int) ([]string, error)
 	UpdateTeam(ctx context.Context, id string, name, description string) error
 	UpdateTeamFields(ctx context.Context, id string, name, description *string, metadata map[string]interface{}, tags []string) error
 	DeleteTeam(ctx context.Context, id string) error
@@ -152,11 +153,42 @@ func (r *PostgresRepository) GetTeamByName(ctx context.Context, name string) (*T
 		&team.UpdatedAt,
 	)
 
+	if err == nil {
+		if err := json.Unmarshal(metadataJSON, &team.Metadata); err != nil {
+			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+		}
+		return team, nil
+	}
+
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return nil, fmt.Errorf("failed to get team: %w", err)
+	}
+
+	queryILike := `
+		SELECT id, name, description, metadata, tags, created_via_sso, sso_provider, created_by, created_at, updated_at
+		FROM teams
+		WHERE name ILIKE $1
+		LIMIT 1`
+
+	team = &Team{}
+	err = r.db.QueryRow(ctx, queryILike, name).Scan(
+		&team.ID,
+		&team.Name,
+		&team.Description,
+		&metadataJSON,
+		&team.Tags,
+		&team.CreatedViaSSO,
+		&team.SSOProvider,
+		&team.CreatedBy,
+		&team.CreatedAt,
+		&team.UpdatedAt,
+	)
+
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrTeamNotFound
 		}
-		return nil, fmt.Errorf("failed to get team: %w", err)
+		return nil, fmt.Errorf("failed to get team (case-insensitive): %w", err)
 	}
 
 	if err := json.Unmarshal(metadataJSON, &team.Metadata); err != nil {
@@ -164,6 +196,39 @@ func (r *PostgresRepository) GetTeamByName(ctx context.Context, name string) (*T
 	}
 
 	return team, nil
+}
+
+// FindSimilarTeamNames finds team names similar to the given search term
+func (r *PostgresRepository) FindSimilarTeamNames(ctx context.Context, searchTerm string, limit int) ([]string, error) {
+	if limit == 0 {
+		limit = 5
+	}
+
+	query := `
+		SELECT name
+		FROM teams
+		WHERE name ILIKE $1
+		ORDER BY name
+		LIMIT $2`
+
+	// Use wildcards for partial matching
+	pattern := "%" + searchTerm + "%"
+	rows, err := r.db.Query(ctx, query, pattern, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find similar teams: %w", err)
+	}
+	defer rows.Close()
+
+	var names []string
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, fmt.Errorf("failed to scan team name: %w", err)
+		}
+		names = append(names, name)
+	}
+
+	return names, rows.Err()
 }
 
 func (r *PostgresRepository) UpdateTeam(ctx context.Context, id, name, description string) error {

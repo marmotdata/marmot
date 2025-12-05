@@ -2,7 +2,9 @@ package v1
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -10,9 +12,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/marmotdata/marmot/docs"
 	"github.com/marmotdata/marmot/internal/api/v1/assets"
+	"github.com/marmotdata/marmot/internal/api/v1/health"
 	"github.com/marmotdata/marmot/internal/crypto"
 
-	// Plugin imports - blank imports trigger init() functions to register plugins
+	// Plugin imports
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/asyncapi"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/bigquery"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dbt"
@@ -24,14 +27,16 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/s3"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sns"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sqs"
+
 	"github.com/marmotdata/marmot/internal/api/v1/auth"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
-	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
+	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
+	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
 	searchAPI "github.com/marmotdata/marmot/internal/api/v1/search"
 	"github.com/marmotdata/marmot/internal/api/v1/teams"
 	"github.com/marmotdata/marmot/internal/api/v1/ui"
@@ -112,37 +117,35 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		log.Info().Msg("Encryption enabled for pipeline credentials")
 	} else {
 		if !config.Server.AllowUnencrypted {
-			log.Fatal().Msg(
-				"═══════════════════════════════════════════════════════════════\n" +
-					"⚠️  ENCRYPTION KEY REQUIRED\n" +
-					"═══════════════════════════════════════════════════════════════\n" +
-					"Marmot requires an encryption key to protect sensitive pipeline credentials.\n" +
-					"\n" +
-					"To generate a key, run:\n" +
-					"  marmot generate-encryption-key\n" +
-					"\n" +
-					"Then set it via:\n" +
-					"  export MARMOT_SERVER_ENCRYPTION_KEY=\"your-generated-key\"\n" +
-					"\n" +
-					"Or to run WITHOUT encryption (NOT RECOMMENDED):\n" +
-					"  export MARMOT_SERVER_ALLOW_UNENCRYPTED=true\n" +
-					"\n" +
-					"⚠️  Running unencrypted means pipeline credentials will be stored\n" +
-					"    in PLAINTEXT in the database. This is a SECURITY RISK.\n" +
-					"═══════════════════════════════════════════════════════════════",
-			)
+			fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
+			fmt.Fprintln(os.Stderr, "⚠️  ENCRYPTION KEY REQUIRED")
+			fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
+			fmt.Fprintln(os.Stderr, "Marmot requires an encryption key to protect sensitive pipeline credentials.")
+			fmt.Fprintln(os.Stderr, "")
+			fmt.Fprintln(os.Stderr, "To generate a key, run:")
+			fmt.Fprintln(os.Stderr, "  marmot generate-encryption-key")
+			fmt.Fprintln(os.Stderr, "")
+			fmt.Fprintln(os.Stderr, "Then set it via:")
+			fmt.Fprintln(os.Stderr, "  export MARMOT_SERVER_ENCRYPTION_KEY=\"your-generated-key\"")
+			fmt.Fprintln(os.Stderr, "")
+			fmt.Fprintln(os.Stderr, "Or to run WITHOUT encryption (NOT RECOMMENDED):")
+			fmt.Fprintln(os.Stderr, "  export MARMOT_SERVER_ALLOW_UNENCRYPTED=true")
+			fmt.Fprintln(os.Stderr, "")
+			fmt.Fprintln(os.Stderr, "⚠️  Running unencrypted means pipeline credentials will be stored")
+			fmt.Fprintln(os.Stderr, "    in PLAINTEXT in the database. This is a SECURITY RISK.")
+			fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
+			log.Fatal().Msg("Encryption key required")
 		}
-		log.Warn().Msg(
-			"═══════════════════════════════════════════════════════════════\n" +
-				"⚠️  WARNING: ENCRYPTION DISABLED\n" +
-				"═══════════════════════════════════════════════════════════════\n" +
-				"Pipeline credentials will be stored in PLAINTEXT in the database.\n" +
-				"This is a SECURITY RISK and should only be used for development.\n" +
-				"\n" +
-				"To enable encryption, run:\n" +
-				"  marmot generate-encryption-key\n" +
-				"═══════════════════════════════════════════════════════════════",
-		)
+		fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
+		fmt.Fprintln(os.Stderr, "⚠️  WARNING: ENCRYPTION DISABLED")
+		fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
+		fmt.Fprintln(os.Stderr, "Pipeline credentials will be stored in PLAINTEXT in the database.")
+		fmt.Fprintln(os.Stderr, "This is a SECURITY RISK and should only be used for development.")
+		fmt.Fprintln(os.Stderr, "")
+		fmt.Fprintln(os.Stderr, "To enable encryption, run:")
+		fmt.Fprintln(os.Stderr, "  marmot generate-encryption-key")
+		fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
+		log.Warn().Msg("Encryption disabled - credentials stored in plaintext")
 	}
 
 	pluginRegistry := plugin.GetRegistry()
@@ -180,10 +183,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	}
 
 	server.handlers = []interface{ Routes() []common.Route }{
+		health.NewHandler(),
 		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, teamSvc, config),
 		users.NewHandler(userSvc, authSvc, config),
 		auth.NewHandler(authSvc, oauthManager, userSvc, config),
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
+		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, lineageSvc, authSvc, config),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),

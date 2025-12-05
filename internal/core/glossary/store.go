@@ -322,9 +322,11 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	conditions := []string{}
 
 	if filter.Query != "" {
-		conditions = append(conditions, fmt.Sprintf("search_text @@ plainto_tsquery('english', $%d)", argCount))
+		// Use both full-text search AND ILIKE for better matching (especially acronyms)
+		conditions = append(conditions, fmt.Sprintf("(search_text @@ plainto_tsquery('english', $%d) OR name ILIKE $%d)", argCount, argCount+1))
 		args = append(args, filter.Query)
-		argCount++
+		args = append(args, "%"+filter.Query+"%")
+		argCount += 2
 	}
 
 	if filter.ParentTermID != nil {
@@ -338,7 +340,8 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 
 	if len(filter.OwnerIDs) > 0 {
-		conditions = append(conditions, fmt.Sprintf("owner_id = ANY($%d)", argCount))
+		// Use subquery to filter by owners from the junction table
+		conditions = append(conditions, fmt.Sprintf("id IN (SELECT glossary_term_id FROM glossary_term_owners WHERE user_id = ANY($%d) OR team_id = ANY($%d))", argCount, argCount))
 		args = append(args, filter.OwnerIDs)
 		argCount++
 	}

@@ -17,6 +17,7 @@ type Repository interface {
 	CreateUser(ctx context.Context, user *User, password string) error
 	GetUser(ctx context.Context, id string) (*User, error)
 	GetUserByUsername(ctx context.Context, email string) (*User, error)
+	FindSimilarUsernames(ctx context.Context, searchTerm string, limit int) ([]string, error)
 	GetUserByProviderID(ctx context.Context, provider string, providerUserID string) (*User, error)
 	UpdateUser(ctx context.Context, id string, updates map[string]interface{}) error
 	UpdatePreferences(ctx context.Context, userID string, preferences map[string]interface{}) error
@@ -502,7 +503,82 @@ func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username str
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
 		WHERE u.username = $1`
 
-	return scanUser(r.db.QueryRow(ctx, query, username))
+	user, err := scanUser(r.db.QueryRow(ctx, query, username))
+	if err == nil {
+		return user, nil
+	}
+
+	if !errors.Is(err, ErrUserNotFound) {
+		return nil, err
+	}
+
+	queryILike := `
+		WITH role_perms AS (
+			SELECT rp.role_id,
+				   json_agg(json_build_object(
+					   'id', p.id,
+					   'name', p.name,
+					   'description', p.description,
+					   'resource_type', p.resource_type,
+					   'action', p.action
+				   )) as permissions
+			FROM role_permissions rp
+			JOIN permissions p ON p.id = rp.permission_id
+			GROUP BY rp.role_id
+		),
+		user_roles AS (
+			SELECT ur.user_id,
+				   json_agg(json_build_object(
+					   'id', r.id,
+					   'name', r.name,
+					   'description', r.description,
+					   'permissions', COALESCE(rp.permissions, '[]'::json)
+				   )) as roles
+			FROM user_roles ur
+			JOIN roles r ON r.id = ur.role_id
+			LEFT JOIN role_perms rp ON rp.role_id = r.id
+			GROUP BY ur.user_id
+		)
+		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+			   COALESCE(ur.roles, '[]'::json)
+		FROM users u
+		LEFT JOIN user_roles ur ON ur.user_id = u.id
+		WHERE u.username ILIKE $1
+		LIMIT 1`
+
+	return scanUser(r.db.QueryRow(ctx, queryILike, username))
+}
+
+// FindSimilarUsernames finds usernames similar to the given search term
+func (r *PostgresRepository) FindSimilarUsernames(ctx context.Context, searchTerm string, limit int) ([]string, error) {
+	if limit == 0 {
+		limit = 5
+	}
+
+	query := `
+		SELECT username
+		FROM users
+		WHERE username ILIKE $1
+		ORDER BY username
+		LIMIT $2`
+
+	pattern := "%" + searchTerm + "%"
+	rows, err := r.db.Query(ctx, query, pattern, limit)
+	if err != nil {
+		return nil, fmt.Errorf("failed to find similar users: %w", err)
+	}
+	defer rows.Close()
+
+	var usernames []string
+	for rows.Next() {
+		var username string
+		if err := rows.Scan(&username); err != nil {
+			return nil, fmt.Errorf("failed to scan username: %w", err)
+		}
+		usernames = append(usernames, username)
+	}
+
+	return usernames, rows.Err()
 }
 
 func (r *PostgresRepository) GetUserByProviderID(ctx context.Context, provider string, providerUserID string) (*User, error) {

@@ -48,3 +48,7 @@ Ready to dive in? Here's where to go next:
 ## Try It Out
 
 Want to see Marmot in action before installing? Check out our [live demo](https://demo.marmotdata.io) to explore the interface and features.
+
+## Community
+
+Join our [Discord community](https://discord.gg/tMgc9ayB) to get help, share feedback, and connect with other Marmot users.

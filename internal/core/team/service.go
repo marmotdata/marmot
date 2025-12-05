@@ -103,6 +103,14 @@ func (s *Service) GetTeam(ctx context.Context, id string) (*Team, error) {
 	return s.repo.GetTeam(ctx, id)
 }
 
+func (s *Service) GetTeamByName(ctx context.Context, name string) (*Team, error) {
+	return s.repo.GetTeamByName(ctx, name)
+}
+
+func (s *Service) FindSimilarTeamNames(ctx context.Context, searchTerm string, limit int) ([]string, error) {
+	return s.repo.FindSimilarTeamNames(ctx, searchTerm, limit)
+}
+
 func (s *Service) UpdateTeam(ctx context.Context, id, name, description string) error {
 	return s.repo.UpdateTeam(ctx, id, name, description)
 }

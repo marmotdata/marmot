@@ -86,6 +86,7 @@ type Service interface {
 	Delete(ctx context.Context, currentUserId string, id string) error
 	Get(ctx context.Context, id string) (*User, error)
 	GetUserByUsername(ctx context.Context, username string) (*User, error)
+	FindSimilarUsernames(ctx context.Context, searchTerm string, limit int) ([]string, error)
 	List(ctx context.Context, filter Filter) ([]*User, int, error)
 
 	// Authentication
@@ -291,6 +292,10 @@ func (s *service) GetUserByUsername(ctx context.Context, username string) (*User
 		return nil, err
 	}
 	return user, nil
+}
+
+func (s *service) FindSimilarUsernames(ctx context.Context, searchTerm string, limit int) ([]string, error) {
+	return s.repo.FindSimilarUsernames(ctx, searchTerm, limit)
 }
 
 func (s *service) Get(ctx context.Context, id string) (*User, error) {

@@ -37,43 +37,39 @@ func NewHandler(hub *Hub, userSvc user.Service, authSvc auth.Service, config *co
 		CheckOrigin: func(r *http.Request) bool {
 			origin := r.Header.Get("Origin")
 
-			// In production, only allow same origin
-			// In development, allow localhost on any port
-			if isProduction() {
-				// Only allow connections from the same origin (server's root URL)
-				rootURL := config.Server.RootURL
-				if rootURL == "" {
-					// If no root URL configured, allow from same host
-					expectedOrigin := "http://" + r.Host
-					if r.TLS != nil {
-						expectedOrigin = "https://" + r.Host
-					}
-					allowed := origin == expectedOrigin
-					log.Debug().
-						Str("origin", origin).
-						Str("expected", expectedOrigin).
-						Bool("allowed", allowed).
-						Msg("Websocket origin check (production, no root URL)")
-					return allowed
-				}
-				allowed := strings.HasPrefix(origin, rootURL)
+			if config.Server.RootURL != "" {
+				allowed := strings.HasPrefix(origin, config.Server.RootURL)
 				log.Debug().
 					Str("origin", origin).
-					Str("root_url", rootURL).
+					Str("root_url", config.Server.RootURL).
 					Bool("allowed", allowed).
-					Msg("Websocket origin check (production)")
+					Bool("production", isProduction()).
+					Msg("Websocket origin check (using root_url)")
 				return allowed
 			}
 
-			// Development: allow localhost and 127.0.0.1 on any port
+			if isProduction() {
+				expectedOrigin := "http://" + r.Host
+				if r.TLS != nil {
+					expectedOrigin = "https://" + r.Host
+				}
+				allowed := origin == expectedOrigin
+				log.Debug().
+					Str("origin", origin).
+					Str("expected", expectedOrigin).
+					Bool("allowed", allowed).
+					Msg("Websocket origin check (production, using request host)")
+				return allowed
+			}
+
 			isLocalhost := strings.HasPrefix(origin, "http://localhost:") ||
-						  strings.HasPrefix(origin, "https://localhost:") ||
-						  strings.HasPrefix(origin, "http://127.0.0.1:") ||
-						  strings.HasPrefix(origin, "https://127.0.0.1:")
+				strings.HasPrefix(origin, "https://localhost:") ||
+				strings.HasPrefix(origin, "http://127.0.0.1:") ||
+				strings.HasPrefix(origin, "https://127.0.0.1:")
 			log.Debug().
 				Str("origin", origin).
 				Bool("is_localhost", isLocalhost).
-				Msg("Websocket origin check (development)")
+				Msg("Websocket origin check (development, localhost only)")
 			return isLocalhost
 		},
 	})
@@ -102,7 +98,6 @@ func (h *Handler) Routes() []common.Route {
 					Str("upgrade", r.Header.Get("Upgrade")).
 					Msg("Websocket connection request")
 
-				// Use the pre-created websocket handler
 				h.wsHandler.ServeHTTP(w, r)
 			},
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{

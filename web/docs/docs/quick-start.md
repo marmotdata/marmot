@@ -34,3 +34,7 @@ docker compose up
 4. Once started, you should be able to acces to the Marmot UI at [http://localhost:8080](http://localhost:8080)
 
 > **The default username and password is admin:admin**
+
+## Getting Help
+
+Join our [Discord community](https://discord.gg/tMgc9ayB) to ask questions and connect with other Marmot users.
