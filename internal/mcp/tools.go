@@ -41,7 +41,7 @@ type DiscoverDataInput struct {
 
 type MetadataFilterInput struct {
 	Key      string `json:"key"`
-	Operator string `json:"operator"` // =, >, <, >=, <=, contains
+	Operator string `json:"operator"`
 	Value    any    `json:"value"`
 }
 
@@ -51,13 +51,12 @@ type FindOwnershipInput struct {
 	Username             string `json:"username,omitempty"`
 	TeamID               string `json:"team_id,omitempty"`
 	TeamName             string `json:"team_name,omitempty"`
-	IncludeAssets        bool   `json:"include_assets,omitempty"`         // default: true
-	IncludeGlossaryTerms bool   `json:"include_glossary_terms,omitempty"` // default: true
+	IncludeAssets        bool   `json:"include_assets,omitempty"`
+	IncludeGlossaryTerms bool   `json:"include_glossary_terms,omitempty"`
 	Limit                int    `json:"limit,omitempty"`
 	Offset               int    `json:"offset,omitempty"`
 }
 
-// LookupTermInput searches or gets specific glossary terms
 type LookupTermInput struct {
 	Query   string `json:"query,omitempty"`
 	TermID  string `json:"term_id,omitempty"`
@@ -97,16 +96,13 @@ func (tc *ToolContext) getAssetByID(ctx context.Context, id string) (*mcpsdk.Cal
 		), nil, nil
 	}
 
-	// Format as rich markdown card
 	formatted := FormatAssetCard(asset, tc.config.Server.RootURL)
 
-	// Fetch and add lineage information
 	lineageResp, err := tc.lineageService.GetAssetLineage(ctx, id, 5, "both")
 	if err == nil && lineageResp != nil {
 		formatted += "\n\n" + tc.formatLineage(lineageResp)
 	}
 
-	// Add next actions
 	nextActions := map[string]string{
 		"Find who owns this": fmt.Sprintf(`{"asset_id": "%s"}`, asset.ID),
 		"Search for similar":  fmt.Sprintf(`{"query": "%s", "types": ["%s"]}`, *asset.Name, asset.Type),
@@ -135,16 +131,13 @@ func (tc *ToolContext) getAssetByMRN(ctx context.Context, mrn string) (*mcpsdk.C
 		), nil, nil
 	}
 
-	// Format as rich markdown card
 	formatted := FormatAssetCard(asset, tc.config.Server.RootURL)
 
-	// Fetch and add lineage information
 	lineageResp, err := tc.lineageService.GetAssetLineage(ctx, asset.ID, 5, "both")
 	if err == nil && lineageResp != nil {
 		formatted += "\n\n" + tc.formatLineage(lineageResp)
 	}
 
-	// Add next actions
 	nextActions := map[string]string{
 		"Find who owns this": fmt.Sprintf(`{"asset_id": "%s"}`, asset.ID),
 		"Search for similar":  fmt.Sprintf(`{"query": "%s", "types": ["%s"]}`, *asset.Name, asset.Type),
@@ -161,15 +154,13 @@ func (tc *ToolContext) getAssetByMRN(ctx context.Context, mrn string) (*mcpsdk.C
 }
 
 func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput) (*mcpsdk.CallToolResult, any, error) {
-	// Set default and enforce maximum limit
 	if args.Limit == 0 {
 		args.Limit = 20
 	}
 	if args.Limit > 100 {
-		args.Limit = 100 // Hard cap to protect server
+		args.Limit = 100
 	}
 
-	// Treat "*" as empty query (browse all)
 	query := args.Query
 	if query == "*" {
 		query = ""
@@ -205,17 +196,12 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 		), nil, nil
 	}
 
-	// Show summary instead of list when:
-	// 1. No specific search query (just browsing/filtering)
-	// 2. No offset (first page)
-	// 3. Large result set (>20) OR browsing everything
 	shouldShowSummary := query == "" && args.Offset == 0 && (total > 20 || (len(args.Types) == 0 && len(args.Providers) == 0 && len(args.Tags) == 0))
 
 	if shouldShowSummary && total > 0 {
 		return tc.formatCatalogSummary(total, availableFilters, args)
 	}
 
-	// Apply metadata filters if provided
 	if len(args.MetadataFilters) > 0 {
 		filteredAssets := []*asset.Asset{}
 		for _, a := range assets {
@@ -227,13 +213,9 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 		total = len(assets)
 	}
 
-	// Format as rich markdown list
 	formatted := FormatAssetList(assets, total, tc.config.Server.RootURL)
-
-	// Add summary with filters
 	formatted += "\n\n" + FormatSearchSummary(total, len(assets), availableFilters)
 
-	// Add next actions
 	var nextActions map[string]string
 	if len(assets) == 0 {
 		nextActions = map[string]string{
@@ -241,7 +223,6 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 			"List all assets": `{"limit": 50}`,
 		}
 	} else if total > args.Offset+len(assets) {
-		// More results available
 		nextActions = map[string]string{
 			"Get next page":     fmt.Sprintf(`{"offset": %d, "limit": %d}`, args.Offset+args.Limit, args.Limit),
 			"Get asset details": `{"id": "asset-id"}`,
@@ -274,19 +255,16 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 	}, nil, nil
 }
 
-// findOwnership - Bidirectional ownership queries
 func (tc *ToolContext) findOwnership(
 	ctx context.Context,
 	req *mcpsdk.CallToolRequest,
 	args FindOwnershipInput,
 ) (*mcpsdk.CallToolResult, any, error) {
-	// Set defaults
 	if !args.IncludeAssets && !args.IncludeGlossaryTerms {
 		args.IncludeAssets = true
 		args.IncludeGlossaryTerms = true
 	}
 
-	// Validate input
 	hasAssetID := args.AssetID != ""
 	hasOwner := args.UserID != "" || args.Username != "" || args.TeamID != "" || args.TeamName != ""
 
@@ -313,12 +291,10 @@ func (tc *ToolContext) findOwnership(
 		), nil, nil
 	}
 
-	// Find owners of an asset
 	if hasAssetID {
 		return tc.findAssetOwners(ctx, args.AssetID)
 	}
 
-	// Find what a user/team owns
 	return tc.findOwnedByEntity(ctx, args)
 }
 
@@ -334,7 +310,6 @@ func (tc *ToolContext) findAssetOwners(ctx context.Context, assetID string) (*mc
 		), nil, nil
 	}
 
-	// Get owners via team service
 	owners, err := tc.teamService.ListAssetOwners(ctx, assetID)
 	if err != nil {
 		return tc.errorWithGuidance(
@@ -344,7 +319,6 @@ func (tc *ToolContext) findAssetOwners(ctx context.Context, assetID string) (*mc
 		), nil, nil
 	}
 
-	// Format as markdown
 	var parts []string
 	icon := getAssetIcon(asset.Type)
 	parts = append(parts, fmt.Sprintf("# %s %s", icon, *asset.Name))
@@ -355,8 +329,6 @@ func (tc *ToolContext) findAssetOwners(ctx context.Context, assetID string) (*mc
 		parts = append(parts, fmt.Sprintf("🔗 [View in Marmot](%s/discover/%s/%s)", tc.config.Server.RootURL, asset.Type, *asset.Name))
 	}
 	parts = append(parts, "")
-
-	// Owners section
 	parts = append(parts, "## 👥 Owners")
 	parts = append(parts, "")
 
@@ -378,7 +350,6 @@ func (tc *ToolContext) findAssetOwners(ctx context.Context, assetID string) (*mc
 
 	formatted := strings.Join(parts, "\n")
 
-	// Next actions
 	nextActions := map[string]string{
 		"Get full asset details": fmt.Sprintf(`{"id": "%s"}`, asset.ID),
 	}
@@ -387,7 +358,7 @@ func (tc *ToolContext) findAssetOwners(ctx context.Context, assetID string) (*mc
 		for _, owner := range owners {
 			if owner.Type == "user" {
 				nextActions[fmt.Sprintf("Find all of %s's data", owner.Name)] = fmt.Sprintf(`{"user_id": "%s"}`, owner.ID)
-				break // Just show one example
+				break
 			} else {
 				nextActions[fmt.Sprintf("Find all of %s's data", owner.Name)] = fmt.Sprintf(`{"team_id": "%s"}`, owner.ID)
 				break
@@ -407,24 +378,21 @@ func (tc *ToolContext) findAssetOwners(ctx context.Context, assetID string) (*mc
 }
 
 func (tc *ToolContext) findOwnedByEntity(ctx context.Context, args FindOwnershipInput) (*mcpsdk.CallToolResult, any, error) {
-	// Set default and enforce maximum limit
 	if args.Limit == 0 {
 		args.Limit = 50
 	}
 	if args.Limit > 100 {
-		args.Limit = 100 // Hard cap to protect server
+		args.Limit = 100
 	}
 
 	isUser := args.UserID != "" || args.Username != ""
 
-	// Resolve user/team ID
 	var entityID, entityName, entityType string
 	if isUser {
 		userID := args.UserID
 		if userID == "" {
 			user, err := tc.userService.GetUserByUsername(ctx, args.Username)
 			if err != nil {
-				// Try to find similar usernames for suggestions
 				suggestions, _ := tc.userService.FindSimilarUsernames(ctx, args.Username, 5)
 
 				nextActions := map[string]string{
@@ -457,7 +425,6 @@ func (tc *ToolContext) findOwnedByEntity(ctx context.Context, args FindOwnership
 		if teamID == "" {
 			team, err := tc.teamService.GetTeamByName(ctx, args.TeamName)
 			if err != nil {
-				// Try to find similar team names for suggestions
 				suggestions, _ := tc.teamService.FindSimilarTeamNames(ctx, args.TeamName, 5)
 
 				nextActions := map[string]string{
@@ -490,7 +457,6 @@ func (tc *ToolContext) findOwnedByEntity(ctx context.Context, args FindOwnership
 	var assets []*asset.Asset
 	var terms []*glossary.GlossaryTerm
 
-	// Get assets if requested
 	if args.IncludeAssets {
 		ownerType := entityType
 		filter := asset.SearchFilter{
@@ -511,7 +477,6 @@ func (tc *ToolContext) findOwnedByEntity(ctx context.Context, args FindOwnership
 		assets = assetResults
 	}
 
-	// Get glossary terms if requested
 	if args.IncludeGlossaryTerms {
 		filter := glossary.SearchFilter{
 			OwnerIDs: []string{entityID},
@@ -530,10 +495,8 @@ func (tc *ToolContext) findOwnedByEntity(ctx context.Context, args FindOwnership
 		terms = result.Terms
 	}
 
-	// Format as rich ownership display
 	formatted := FormatOwnershipResult(entityName, entityType, assets, terms, tc.config.Server.RootURL)
 
-	// Next actions
 	nextActions := map[string]string{
 		"Get asset details": `{"id": "asset-id"}`,
 		"Get term details":  `Use lookup_term with {"term_id": "term-id"}`,
@@ -554,13 +517,11 @@ func (tc *ToolContext) findOwnedByEntity(ctx context.Context, args FindOwnership
 	}, nil, nil
 }
 
-// lookupTerm - Business glossary lookups
 func (tc *ToolContext) lookupTerm(
 	ctx context.Context,
 	req *mcpsdk.CallToolRequest,
 	args LookupTermInput,
 ) (*mcpsdk.CallToolResult, any, error) {
-	// Validate input
 	if args.Query == "" && args.TermID == "" {
 		return tc.errorWithGuidance(
 			"No search criteria provided",
@@ -572,12 +533,10 @@ func (tc *ToolContext) lookupTerm(
 		), nil, nil
 	}
 
-	// Direct lookup by ID
 	if args.TermID != "" {
 		return tc.getTermByID(ctx, args.TermID)
 	}
 
-	// Search mode
 	return tc.searchTerms(ctx, args)
 }
 
@@ -593,10 +552,8 @@ func (tc *ToolContext) getTermByID(ctx context.Context, termID string) (*mcpsdk.
 		), nil, nil
 	}
 
-	// Format as rich term card
 	formatted := FormatTermCard(term, tc.config.Server.RootURL)
 
-	// Next actions
 	nextActions := map[string]string{}
 
 	if term.ParentTermID != nil && *term.ParentTermID != "" {
@@ -628,12 +585,11 @@ func (tc *ToolContext) getTermByID(ctx context.Context, termID string) (*mcpsdk.
 }
 
 func (tc *ToolContext) searchTerms(ctx context.Context, args LookupTermInput) (*mcpsdk.CallToolResult, any, error) {
-	// Set default and enforce maximum limit
 	if args.Limit == 0 {
 		args.Limit = 20
 	}
 	if args.Limit > 100 {
-		args.Limit = 100 // Hard cap to protect server
+		args.Limit = 100
 	}
 
 	filter := glossary.SearchFilter{
@@ -681,7 +637,6 @@ func (tc *ToolContext) searchTerms(ctx context.Context, args LookupTermInput) (*
 	}, nil, nil
 }
 
-// Helper: Error with guidance
 func (tc *ToolContext) errorWithGuidance(
 	what string,
 	why string,
@@ -706,7 +661,6 @@ func (tc *ToolContext) errorWithGuidance(
 	}
 }
 
-// Helper: Match metadata filters (same as before)
 func matchesMetadataFilters(a asset.Asset, filters []MetadataFilterInput) bool {
 	if a.Metadata == nil {
 		return false
@@ -794,7 +748,6 @@ func (tc *ToolContext) formatLineage(lineageResp *lineage.LineageResponse) strin
 	parts = append(parts, "## 🔄 Data Lineage")
 	parts = append(parts, "")
 
-	// Separate upstream and downstream
 	upstream := []lineage.LineageNode{}
 	downstream := []lineage.LineageNode{}
 
@@ -804,10 +757,8 @@ func (tc *ToolContext) formatLineage(lineageResp *lineage.LineageResponse) strin
 		} else if node.Depth > 0 {
 			downstream = append(downstream, node)
 		}
-		// Depth == 0 is the current asset, skip it
 	}
 
-	// Show upstream
 	if len(upstream) > 0 {
 		parts = append(parts, "### ⬅️ Upstream Dependencies")
 		parts = append(parts, "")
@@ -820,7 +771,6 @@ func (tc *ToolContext) formatLineage(lineageResp *lineage.LineageResponse) strin
 		parts = append(parts, "")
 	}
 
-	// Show downstream
 	if len(downstream) > 0 {
 		parts = append(parts, "### ➡️ Downstream Consumers")
 		parts = append(parts, "")
@@ -845,7 +795,6 @@ func (tc *ToolContext) formatLineage(lineageResp *lineage.LineageResponse) strin
 func (tc *ToolContext) formatCatalogSummary(total int, filters asset.AvailableFilters, args DiscoverDataInput) (*mcpsdk.CallToolResult, any, error) {
 	var parts []string
 
-	// Header
 	if len(args.Types) > 0 || len(args.Providers) > 0 || len(args.Tags) > 0 {
 		parts = append(parts, "# 📊 Catalog Summary (Filtered)")
 	} else {
@@ -855,7 +804,6 @@ func (tc *ToolContext) formatCatalogSummary(total int, filters asset.AvailableFi
 	parts = append(parts, fmt.Sprintf("**Total Assets:** %d", total))
 	parts = append(parts, "")
 
-	// Applied filters
 	if len(args.Types) > 0 || len(args.Providers) > 0 || len(args.Tags) > 0 {
 		parts = append(parts, "**Applied Filters:**")
 		if len(args.Types) > 0 {
@@ -870,7 +818,6 @@ func (tc *ToolContext) formatCatalogSummary(total int, filters asset.AvailableFi
 		parts = append(parts, "")
 	}
 
-	// Breakdown by type
 	if len(filters.Types) > 0 {
 		parts = append(parts, "## 📦 By Asset Type")
 		parts = append(parts, "")
@@ -881,7 +828,6 @@ func (tc *ToolContext) formatCatalogSummary(total int, filters asset.AvailableFi
 		parts = append(parts, "")
 	}
 
-	// Breakdown by provider
 	if len(filters.Providers) > 0 {
 		parts = append(parts, "## 🔌 By Provider")
 		parts = append(parts, "")
@@ -891,7 +837,6 @@ func (tc *ToolContext) formatCatalogSummary(total int, filters asset.AvailableFi
 		parts = append(parts, "")
 	}
 
-	// Top tags (limit to 10)
 	if len(filters.Tags) > 0 {
 		parts = append(parts, "## 🏷️  Top Tags")
 		parts = append(parts, "")
@@ -909,27 +854,23 @@ func (tc *ToolContext) formatCatalogSummary(total int, filters asset.AvailableFi
 
 	formatted := strings.Join(parts, "\n")
 
-	// Next actions - drilling down
 	nextActions := map[string]string{}
 
 	if len(args.Types) == 0 && len(filters.Types) > 0 {
-		// Offer to drill down by type
 		for assetType := range filters.Types {
 			nextActions[fmt.Sprintf("View all %s", assetType)] = fmt.Sprintf(`{"types": ["%s"]}`, assetType)
-			break // Just show one example
+			break
 		}
 	}
 
 	if len(args.Providers) == 0 && len(filters.Providers) > 0 {
-		// Offer to drill down by provider
 		for provider := range filters.Providers {
 			nextActions[fmt.Sprintf("View all %s assets", provider)] = fmt.Sprintf(`{"providers": ["%s"]}`, provider)
-			break // Just show one example
+			break
 		}
 	}
 
 	if len(nextActions) == 0 {
-		// Offer to see actual assets
 		nextActions["View asset list"] = `{"limit": 50}`
 	}
 

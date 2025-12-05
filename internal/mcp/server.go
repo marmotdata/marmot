@@ -11,13 +11,11 @@ import (
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
-// GlossaryService interface for glossary operations (avoiding circular import)
 type GlossaryService interface {
 	Get(ctx context.Context, id string) (*glossary.GlossaryTerm, error)
 	Search(ctx context.Context, filter glossary.SearchFilter) (*glossary.ListResult, error)
 }
 
-// TeamService interface for team operations (avoiding circular import)
 type TeamService interface {
 	GetTeam(ctx context.Context, id string) (*Team, error)
 	GetTeamByName(ctx context.Context, name string) (*Team, error)
@@ -89,7 +87,6 @@ func (s *Server) registerTools(server *mcpsdk.Server, user *user.User) {
 		config:          s.config,
 	}
 
-	// Tool 1: discover_data - Unified data discovery
 	mcpsdk.AddTool(server, &mcpsdk.Tool{
 		Name: "discover_data",
 		Description: `<usecase>
@@ -118,7 +115,6 @@ Returns either a summary breakdown (for browse/count queries) or asset list with
 </instructions>`,
 	}, tc.discoverData)
 
-	// Tool 2: find_ownership - Bidirectional ownership queries
 	mcpsdk.AddTool(server, &mcpsdk.Tool{
 		Name: "find_ownership",
 		Description: `<usecase>
@@ -138,7 +134,6 @@ Returns ownership details and suggests related queries.
 </instructions>`,
 	}, tc.findOwnership)
 
-	// Tool 3: lookup_term - Business glossary
 	mcpsdk.AddTool(server, &mcpsdk.Tool{
 		Name: "lookup_term",
 		Description: `<usecase>

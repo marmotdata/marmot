@@ -645,3 +645,67 @@ div[class*="toggle_"] {
   margin-right: 0 !important;
   padding-right: 0 !important;
 }
+
+/* Code block styling to match main UI */
+div[class^="codeBlockContainer"] {
+  background: #f9fafb !important;
+  border-radius: 0.5rem !important;
+  margin: 1rem 0 !important;
+}
+
+html[data-theme="dark"] div[class^="codeBlockContainer"] {
+  background: #1f2937 !important;
+}
+
+div[class^="codeBlockContent"] {
+  background: transparent !important;
+}
+
+div[class^="codeBlockContainer"] pre {
+  background: transparent !important;
+  margin: 0 !important;
+  padding: 1.5rem !important;
+}
+
+div[class^="codeBlockContainer"] code {
+  background: transparent !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace !important;
+}
+
+/* Copy button styling to match main UI */
+button[class*="copyButton"] {
+  background: #f3f4f6 !important;
+  color: #4b5563 !important;
+  border-radius: 0.375rem !important;
+  padding: 0.25rem 0.5rem !important;
+  font-size: 0.75rem !important;
+  transition: all 0.2s ease !important;
+}
+
+button[class*="copyButton"]:hover {
+  background: #e5e7eb !important;
+}
+
+html[data-theme="dark"] button[class*="copyButton"] {
+  background: #374151 !important;
+  color: #d1d5db !important;
+}
+
+html[data-theme="dark"] button[class*="copyButton"]:hover {
+  background: #4b5563 !important;
+}
+
+/* Inline code styling */
+code:not([class*="language-"]) {
+  background: #f3f4f6 !important;
+  color: #1f2937 !important;
+  padding: 0.125rem 0.375rem !important;
+  border-radius: 0.25rem !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace !important;
+  border: none !important;
+}
+
+html[data-theme="dark"] code:not([class*="language-"]) {
+  background: #374151 !important;
+  color: #f9fafb !important;
+}

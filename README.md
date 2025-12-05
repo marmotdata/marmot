@@ -7,7 +7,7 @@
 
 _Open-source catalog for all your data assets. Search everything - tables, topics, queues, buckets, and more._
 
-[Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Quickstart](https://marmotdata.io/docs/quick-start)
+[Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Quickstart](https://marmotdata.io/docs/quick-start) • [Community](https://discord.gg/tMgc9ayB)
 
 </div>
 
@@ -25,7 +25,7 @@ Unlike traditional catalogs that require extensive infrastructure and configurat
 - **Flexible Integrations**: CLI, REST API, Terraform, and Pulumi - catalog assets your way
 - **Lightweight**: PostgreSQL-backed with minimal resource requirements
 
-## Key Features
+## Features
 
 ### Search Everything
 
@@ -90,6 +90,14 @@ Assign ownership, document business context, and create glossaries. Keep your en
 ## Development
 
 See [Local Development](https://marmotdata.io/docs/Develop/local-development) for how to get started developing locally.
+
+## Community
+
+Join our [Discord community](https://discord.gg/tMgc9ayB) to:
+
+- Get help and support
+- Share feedback and ideas
+- Stay updated on new features
 
 ## Contributing
 

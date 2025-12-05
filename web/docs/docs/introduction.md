@@ -18,7 +18,7 @@ Unlike traditional catalogs that require extensive infrastructure and configurat
 - **Flexible Integrations**: CLI, REST API, Terraform, and Pulumi - catalog assets your way
 - **Lightweight**: PostgreSQL-backed with minimal resource requirements
 
-## Key Capabilities
+## Features
 
 ### Search Everything
 

@@ -1,9 +1,9 @@
-import { themes as prismThemes } from "prism-react-renderer";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 import type * as Redocusaurus from "redocusaurus";
 import tailwindPlugin from "./plugins/tailwind-config.cjs";
 import unpluginIconsPlugin from "./plugins/unplugin-icons.cjs";
+import { lightTheme, darkTheme } from "./src/theme/prismTheme";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
 
@@ -110,6 +110,11 @@ const config: Config = {
         { to: "/api", label: "API", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
         {
+          href: "https://discord.gg/tMgc9ayB",
+          label: "Community",
+          position: "left",
+        },
+        {
           href: "https://demo.marmotdata.io",
           label: "✨ Live Demo",
           position: "right",
@@ -143,10 +148,10 @@ const config: Config = {
         {
           title: "Community",
           items: [
-            // {
-            //   label: "Discord",
-            //   href: "https://discordapp.com/invite/docusaurus",
-            // },
+            {
+              label: "Discord",
+              href: "https://discord.gg/tMgc9ayB",
+            },
           ],
         },
         {
@@ -162,8 +167,8 @@ const config: Config = {
       copyright: `Copyright © ${new Date().getFullYear()} Marmot.`,
     },
     prism: {
-      theme: prismThemes.github,
-      darkTheme: prismThemes.vsDark,
+      theme: lightTheme,
+      darkTheme: darkTheme,
     },
   } satisfies Preset.ThemeConfig,
 };
