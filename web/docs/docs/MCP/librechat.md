@@ -1,6 +1,6 @@
 # LibreChat
 
-Open-source ChatGPT alternative with native MCP support.
+Universal AI chat interface supporting multiple providers with native MCP support.
 
 ## Configuration
 

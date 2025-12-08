@@ -17,6 +17,7 @@
 		type: 'user' | 'team';
 		username?: string;
 		email?: string;
+		profile_picture?: string;
 	}
 
 	let team: any = null;
@@ -39,7 +40,8 @@
 		name: m.name,
 		type: 'user' as const,
 		username: m.username,
-		email: m.email
+		email: m.email,
+		profile_picture: m.profile_picture
 	}));
 	$: hasMoreAssets = assetsTotal > assetsOffset + assets.length;
 	$: currentPage = Math.floor(assetsOffset / assetsLimit) + 1;
@@ -339,7 +341,7 @@
 			<div class="relative w-full mb-4" style="min-height: 1px;">
 				<OwnerSelector
 					bind:this={ownerSelectorRef}
-					selectedOwners={members.map(m => ({ id: m.user_id, name: m.name, type: 'user' as const, username: m.provider_username, email: m.provider_email }))}
+					selectedOwners={members.map(m => ({ id: m.user_id, name: m.name, type: 'user' as const, username: m.provider_username, email: m.provider_email, profile_picture: m.profile_picture }))}
 					onChange={handleMembersChange}
 					userOnly={true}
 					hideAddButton={true}

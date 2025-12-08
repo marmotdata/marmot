@@ -58,19 +58,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schedules.ListJobRunsResponse"
+                            "$ref": "#/definitions/v1_schedules.ListJobRunsResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -104,19 +104,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -144,19 +144,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -203,19 +203,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -254,19 +254,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schedules.ListSchedulesResponse"
+                            "$ref": "#/definitions/v1_schedules.ListSchedulesResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -289,7 +289,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/schedules.CreateScheduleRequest"
+                            "$ref": "#/definitions/v1_schedules.CreateScheduleRequest"
                         }
                     }
                 ],
@@ -303,19 +303,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -349,19 +349,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -391,7 +391,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/schedules.UpdateScheduleRequest"
+                            "$ref": "#/definitions/v1_schedules.UpdateScheduleRequest"
                         }
                     }
                 ],
@@ -405,25 +405,25 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -449,19 +449,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -492,19 +492,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -529,7 +529,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/schedules.ValidateConfigRequest"
+                            "$ref": "#/definitions/v1_schedules.ValidateConfigRequest"
                         }
                     }
                 ],
@@ -537,19 +537,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schedules.ValidateConfigResponse"
+                            "$ref": "#/definitions/v1_schedules.ValidateConfigResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -586,13 +586,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -668,19 +668,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/metrics.GetMetricsResponse"
+                            "$ref": "#/definitions/v1_metrics.GetMetricsResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -700,7 +700,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/metrics.AssetsByOwnerResponse"
+                            "$ref": "#/definitions/v1_metrics.AssetsByOwnerResponse"
                         }
                     }
                 }
@@ -720,7 +720,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/metrics.AssetsByProviderResponse"
+                            "$ref": "#/definitions/v1_metrics.AssetsByProviderResponse"
                         }
                     }
                 }
@@ -740,7 +740,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/metrics.AssetsByTypeResponse"
+                            "$ref": "#/definitions/v1_metrics.AssetsByTypeResponse"
                         }
                     }
                 }
@@ -760,7 +760,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/metrics.TotalAssetsResponse"
+                            "$ref": "#/definitions/v1_metrics.TotalAssetsResponse"
                         }
                     }
                 }
@@ -780,7 +780,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/metrics.AssetsWithSchemasResponse"
+                            "$ref": "#/definitions/v1_metrics.AssetsWithSchemasResponse"
                         }
                     }
                 }
@@ -918,7 +918,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/assets.CreateRequest"
+                            "$ref": "#/definitions/v1_assets.CreateRequest"
                         }
                     }
                 ],
@@ -932,19 +932,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -994,7 +994,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1020,7 +1020,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/assets.DocumentationCreateRequest"
+                            "$ref": "#/definitions/v1_assets.DocumentationCreateRequest"
                         }
                     }
                 ],
@@ -1034,13 +1034,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1066,7 +1066,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/assets.BatchDocumentationRequest"
+                            "$ref": "#/definitions/v1_assets.BatchDocumentationRequest"
                         }
                     }
                 ],
@@ -1074,19 +1074,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/assets.BatchDocumentationResponse"
+                            "$ref": "#/definitions/v1_assets.BatchDocumentationResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1125,13 +1125,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1171,7 +1171,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1213,13 +1213,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1264,13 +1264,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1306,19 +1306,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/assets.SearchResponse"
+                            "$ref": "#/definitions/v1_assets.SearchResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1356,13 +1356,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1444,19 +1444,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/assets.SearchResponse"
+                            "$ref": "#/definitions/v1_assets.SearchResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1485,7 +1485,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1536,13 +1536,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1586,7 +1586,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1609,13 +1609,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/assets.AssetSummaryResponse"
+                            "$ref": "#/definitions/v1_assets.AssetSummaryResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1653,13 +1653,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1690,7 +1690,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/assets.UpdateRequest"
+                            "$ref": "#/definitions/v1_assets.UpdateRequest"
                         }
                     }
                 ],
@@ -1704,19 +1704,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1749,19 +1749,19 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1804,25 +1804,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/assets.RunHistoryResponse"
+                            "$ref": "#/definitions/v1_assets.RunHistoryResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1858,25 +1858,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/assets.HistogramResponse"
+                            "$ref": "#/definitions/v1_assets.HistogramResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1909,7 +1909,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/assets.TagRequest"
+                            "$ref": "#/definitions/v1_assets.TagRequest"
                         }
                     }
                 ],
@@ -1923,13 +1923,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1960,7 +1960,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/assets.TagRequest"
+                            "$ref": "#/definitions/v1_assets.TagRequest"
                         }
                     }
                 ],
@@ -1974,13 +1974,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2018,7 +2018,7 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2049,7 +2049,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/assets.AddTermsRequest"
+                            "$ref": "#/definitions/v1_assets.AddTermsRequest"
                         }
                     }
                 ],
@@ -2066,13 +2066,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2103,7 +2103,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/assets.RemoveTermRequest"
+                            "$ref": "#/definitions/v1_assets.RemoveTermRequest"
                         }
                     }
                 ],
@@ -2120,19 +2120,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/auth/config": {
+        "/auth-providers": {
             "get": {
                 "description": "Returns the enabled auth providers without sensitive data",
                 "produces": [
@@ -2152,17 +2152,24 @@ const docTemplate = `{
                 }
             }
         },
-        "/auth/okta/callback": {
+        "/auth/{provider}/callback": {
             "get": {
-                "description": "Processes the OAuth callback from Okta",
+                "description": "Processes the OAuth callback from any provider",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "auth"
                 ],
-                "summary": "Handle Okta OAuth callback",
+                "summary": "Handle OAuth callback",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth provider (okta, google, github, etc.)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Authorization code",
@@ -2188,28 +2195,49 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
             }
         },
-        "/auth/okta/login": {
+        "/auth/{provider}/login": {
             "get": {
-                "description": "Redirects the user to Okta for authentication",
+                "description": "Redirects the user to the OAuth provider for authentication",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "auth"
                 ],
-                "summary": "Initiate Okta OAuth login",
+                "summary": "Initiate OAuth login",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth provider (okta, google, github, etc.)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Custom redirect URI for CLI login",
+                        "name": "redirect_uri",
+                        "in": "query"
+                    }
+                ],
                 "responses": {
                     "307": {
                         "description": "Temporary Redirect",
@@ -2217,10 +2245,16 @@ const docTemplate = `{
                             "type": "string"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2278,19 +2312,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2329,14 +2363,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/lineage.BatchLineageResult"
+                                "$ref": "#/definitions/v1_lineage.BatchLineageResult"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2376,13 +2410,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2421,13 +2455,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2461,13 +2495,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2496,7 +2530,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_runs.DestroyRunResponse"
+                            "$ref": "#/definitions/v1_runs.DestroyRunResponse"
                         }
                     }
                 }
@@ -2593,7 +2627,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/runs.BatchCreateRequest"
+                            "$ref": "#/definitions/v1_runs.BatchCreateRequest"
                         }
                     }
                 ],
@@ -2601,7 +2635,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/runs.BatchCreateResponse"
+                            "$ref": "#/definitions/v1_runs.BatchCreateResponse"
                         }
                     }
                 }
@@ -2647,7 +2681,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/runs.CompleteRunRequest"
+                            "$ref": "#/definitions/v1_runs.CompleteRunRequest"
                         }
                     }
                 ],
@@ -2684,7 +2718,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/runs.StartRunRequest"
+                            "$ref": "#/definitions/v1_runs.StartRunRequest"
                         }
                     }
                 ],
@@ -2776,7 +2810,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/runs.RunEntitiesResponse"
+                            "$ref": "#/definitions/v1_runs.RunEntitiesResponse"
                         }
                     }
                 }
@@ -2835,13 +2869,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2861,7 +2895,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ui.UIConfigResponse"
+                            "$ref": "#/definitions/v1_ui.UIConfigResponse"
                         }
                     }
                 }
@@ -2922,13 +2956,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/users.ListUsersResponse"
+                            "$ref": "#/definitions/v1_users.ListUsersResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2966,13 +3000,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3004,7 +3038,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3028,7 +3062,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.CreateAPIKeyRequest"
+                            "$ref": "#/definitions/v1_users.CreateAPIKeyRequest"
                         }
                     }
                 ],
@@ -3042,7 +3076,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3077,7 +3111,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3103,27 +3137,33 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.LoginRequest"
+                            "$ref": "#/definitions/v1_users.LoginRequest"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "Custom redirect URI for CLI login",
+                        "name": "redirect_uri",
+                        "in": "query"
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/users.TokenResponse"
+                            "$ref": "#/definitions/v1_users.TokenResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3157,7 +3197,7 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3183,7 +3223,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.OAuthLinkRequest"
+                            "$ref": "#/definitions/v1_users.OAuthLinkRequest"
                         }
                     }
                 ],
@@ -3194,7 +3234,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3236,7 +3276,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3274,7 +3314,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3300,7 +3340,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/users.UpdatePasswordRequest"
+                            "$ref": "#/definitions/v1_users.UpdatePasswordRequest"
                         }
                     }
                 ],
@@ -3308,19 +3348,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/users.TokenResponse"
+                            "$ref": "#/definitions/v1_users.TokenResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3358,13 +3398,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3409,13 +3449,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3448,13 +3488,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/common.ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3797,298 +3837,6 @@ const docTemplate = `{
                 }
             }
         },
-        "assets.AddTermsRequest": {
-            "type": "object",
-            "required": [
-                "term_ids"
-            ],
-            "properties": {
-                "term_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "assets.AssetSummaryResponse": {
-            "type": "object",
-            "properties": {
-                "services": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "tags": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "types": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "assets.BatchDocumentationRequest": {
-            "type": "object",
-            "required": [
-                "documentation"
-            ],
-            "properties": {
-                "documentation": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/assetdocs.Documentation"
-                    }
-                }
-            }
-        },
-        "assets.BatchDocumentationResponse": {
-            "type": "object",
-            "properties": {
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/assets.BatchDocumentationResult"
-                    }
-                }
-            }
-        },
-        "assets.BatchDocumentationResult": {
-            "type": "object",
-            "properties": {
-                "documentation": {
-                    "$ref": "#/definitions/assetdocs.Documentation"
-                },
-                "error": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "assets.CreateRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "providers",
-                "type"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "environments": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/asset.Environment"
-                    }
-                },
-                "external_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/asset.ExternalLink"
-                    }
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "schema": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "sources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/asset.AssetSource"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "assets.DocumentationCreateRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "mrn",
-                "source"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "mrn": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                }
-            }
-        },
-        "assets.HistogramResponse": {
-            "type": "object",
-            "properties": {
-                "buckets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/asset.HistogramBucket"
-                    }
-                },
-                "period": {
-                    "type": "string"
-                }
-            }
-        },
-        "assets.RemoveTermRequest": {
-            "type": "object",
-            "required": [
-                "term_id"
-            ],
-            "properties": {
-                "term_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "assets.RunHistoryResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "run_history": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/asset.RunHistory"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "assets.SearchResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/asset.Asset"
-                    }
-                },
-                "filters": {
-                    "$ref": "#/definitions/asset.AvailableFilters"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "assets.TagRequest": {
-            "type": "object",
-            "required": [
-                "tag"
-            ],
-            "properties": {
-                "tag": {
-                    "type": "string"
-                }
-            }
-        },
-        "assets.UpdateRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "environments": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/asset.Environment"
-                    }
-                },
-                "external_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/asset.ExternalLink"
-                    }
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "schema": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "sources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/asset.AssetSource"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "type": {
-                    "type": "string"
-                },
-                "user_description": {
-                    "type": "string"
-                }
-            }
-        },
         "auth.AuthConfig": {
             "type": "object",
             "properties": {
@@ -4100,7 +3848,7 @@ const docTemplate = `{
                 }
             }
         },
-        "common.ErrorResponse": {
+        "github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse": {
             "type": "object",
             "properties": {
                 "error": {
@@ -4108,82 +3856,13 @@ const docTemplate = `{
                 }
             }
         },
-        "common.ValidationError": {
+        "github_com_marmotdata_marmot_internal_api_v1_common.ValidationError": {
             "type": "object",
             "properties": {
                 "field": {
                     "type": "string"
                 },
                 "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_marmotdata_marmot_internal_api_v1_runs.DestroyRunResponse": {
-            "type": "object",
-            "properties": {
-                "assets_deleted": {
-                    "type": "integer"
-                },
-                "deleted_entity_mrns": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "documentation_deleted": {
-                    "type": "integer"
-                },
-                "lineage_deleted": {
-                    "type": "integer"
-                }
-            }
-        },
-        "github_com_marmotdata_marmot_internal_api_v1_runs.DocumentationResult": {
-            "type": "object",
-            "properties": {
-                "asset_mrn": {
-                    "type": "string"
-                },
-                "error": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "github_com_marmotdata_marmot_internal_api_v1_runs.LineageResult": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "target": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "lineage.BatchLineageResult": {
-            "type": "object",
-            "properties": {
-                "edge": {
-                    "$ref": "#/definitions/lineage.LineageEdge"
-                },
-                "status": {
-                    "description": "\"created\", \"duplicate\", or \"existing\"",
                     "type": "string"
                 }
             }
@@ -4376,96 +4055,6 @@ const docTemplate = `{
                 }
             }
         },
-        "metrics.AssetsByOwnerResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "metrics.AssetsByProviderResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "metrics.AssetsByTypeResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "metrics.AssetsWithSchemasResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "percentage": {
-                    "type": "number"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "metrics.GetMetricsRequest": {
-            "type": "object",
-            "properties": {
-                "aggregation": {
-                    "type": "string"
-                },
-                "bucket_size": {
-                    "type": "string"
-                },
-                "end": {
-                    "type": "string"
-                },
-                "labels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "metric_names": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "start": {
-                    "type": "string"
-                }
-            }
-        },
-        "metrics.GetMetricsResponse": {
-            "type": "object",
-            "properties": {
-                "metrics": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/metrics.AggregatedMetric"
-                    }
-                },
-                "query": {
-                    "$ref": "#/definitions/metrics.GetMetricsRequest"
-                }
-            }
-        },
         "metrics.QueryCount": {
             "type": "object",
             "properties": {
@@ -4477,14 +4066,6 @@ const docTemplate = `{
                 },
                 "query_type": {
                     "type": "string"
-                }
-            }
-        },
-        "metrics.TotalAssetsResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
                 }
             }
         },
@@ -4594,224 +4175,6 @@ const docTemplate = `{
                 }
             }
         },
-        "runs.BatchAssetResult": {
-            "type": "object",
-            "properties": {
-                "asset": {},
-                "error": {
-                    "type": "string"
-                },
-                "mrn": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "provider": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "runs.BatchCreateRequest": {
-            "type": "object",
-            "required": [
-                "assets",
-                "pipeline_name",
-                "run_id",
-                "source_name"
-            ],
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/runs.CreateAssetRequest"
-                    }
-                },
-                "config": {
-                    "$ref": "#/definitions/plugin.RawPluginConfig"
-                },
-                "documentation": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/runs.CreateDocRequest"
-                    }
-                },
-                "lineage": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/runs.CreateLineageRequest"
-                    }
-                },
-                "pipeline_name": {
-                    "type": "string"
-                },
-                "run_id": {
-                    "type": "string"
-                },
-                "source_name": {
-                    "type": "string"
-                },
-                "statistics": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/runs.CreateStatRequest"
-                    }
-                }
-            }
-        },
-        "runs.BatchCreateResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/runs.BatchAssetResult"
-                    }
-                },
-                "documentation": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_runs.DocumentationResult"
-                    }
-                },
-                "lineage": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_runs.LineageResult"
-                    }
-                },
-                "stale_entities_removed": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "runs.CompleteRunRequest": {
-            "type": "object",
-            "required": [
-                "run_id",
-                "status"
-            ],
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "run_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/plugin.RunStatus"
-                },
-                "summary": {
-                    "$ref": "#/definitions/plugin.RunSummary"
-                }
-            }
-        },
-        "runs.CreateAssetRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "external_links": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "schema": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "sources": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "runs.CreateDocRequest": {
-            "type": "object",
-            "properties": {
-                "asset_mrn": {
-                    "type": "string"
-                },
-                "content": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "runs.CreateLineageRequest": {
-            "type": "object",
-            "properties": {
-                "source": {
-                    "type": "string"
-                },
-                "target": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "runs.CreateStatRequest": {
-            "type": "object",
-            "required": [
-                "asset_mrn",
-                "metric_name",
-                "value"
-            ],
-            "properties": {
-                "asset_mrn": {
-                    "type": "string"
-                },
-                "metric_name": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "number"
-                }
-            }
-        },
         "runs.JobRun": {
             "type": "object",
             "properties": {
@@ -4884,26 +4247,6 @@ const docTemplate = `{
                 }
             }
         },
-        "runs.RunEntitiesResponse": {
-            "type": "object",
-            "properties": {
-                "entities": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/runs.RunEntity"
-                    }
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
         "runs.RunEntity": {
             "type": "object",
             "properties": {
@@ -4972,132 +4315,6 @@ const docTemplate = `{
                 },
                 "updated_at": {
                     "type": "string"
-                }
-            }
-        },
-        "runs.StartRunRequest": {
-            "type": "object",
-            "required": [
-                "pipeline_name",
-                "source_name"
-            ],
-            "properties": {
-                "config": {
-                    "$ref": "#/definitions/plugin.RawPluginConfig"
-                },
-                "pipeline_name": {
-                    "type": "string"
-                },
-                "source_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "schedules.CreateScheduleRequest": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "cron_expression": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "plugin_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "schedules.ListJobRunsResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "runs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/runs.JobRun"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "schedules.ListSchedulesResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "schedules": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/runs.Schedule"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "schedules.UpdateScheduleRequest": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "cron_expression": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "plugin_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "schedules.ValidateConfigRequest": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "plugin_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "schedules.ValidateConfigResponse": {
-            "type": "object",
-            "properties": {
-                "errors": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/common.ValidationError"
-                    }
-                },
-                "valid": {
-                    "type": "boolean"
                 }
             }
         },
@@ -5218,10 +4435,16 @@ const docTemplate = `{
                 1000000000,
                 60000000000,
                 3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
                 1,
                 1000,
                 1000000,
                 1000000000,
+                60000000000,
+                3600000000000,
+                -9223372036854775808,
+                9223372036854775807,
                 1,
                 1000,
                 1000000,
@@ -5243,10 +4466,16 @@ const docTemplate = `{
                 "Second",
                 "Minute",
                 "Hour",
+                "minDuration",
+                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
+                "Minute",
+                "Hour",
+                "minDuration",
+                "maxDuration",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
@@ -5259,34 +4488,6 @@ const docTemplate = `{
                 "Second",
                 "Minute"
             ]
-        },
-        "ui.BannerResponse": {
-            "type": "object",
-            "properties": {
-                "dismissible": {
-                    "type": "boolean"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "message": {
-                    "type": "string"
-                },
-                "variant": {
-                    "type": "string"
-                }
-            }
-        },
-        "ui.UIConfigResponse": {
-            "type": "object",
-            "properties": {
-                "banner": {
-                    "$ref": "#/definitions/ui.BannerResponse"
-                }
-            }
         },
         "user.APIKey": {
             "type": "object",
@@ -5338,6 +4539,9 @@ const docTemplate = `{
                 "password": {
                     "type": "string",
                     "minLength": 8
+                },
+                "profile_picture": {
+                    "type": "string"
                 },
                 "role_names": {
                     "type": "array",
@@ -5413,6 +4617,9 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
+                "profile_picture": {
+                    "type": "string"
+                },
                 "role_names": {
                     "type": "array",
                     "minItems": 1,
@@ -5444,6 +4651,9 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
+                "profile_picture": {
+                    "type": "string"
+                },
                 "roles": {
                     "type": "array",
                     "items": {
@@ -5458,7 +4668,858 @@ const docTemplate = `{
                 }
             }
         },
-        "users.CreateAPIKeyRequest": {
+        "v1_assets.AddTermsRequest": {
+            "type": "object",
+            "required": [
+                "term_ids"
+            ],
+            "properties": {
+                "term_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_assets.AssetSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "services": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "types": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "v1_assets.BatchDocumentationRequest": {
+            "type": "object",
+            "required": [
+                "documentation"
+            ],
+            "properties": {
+                "documentation": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/assetdocs.Documentation"
+                    }
+                }
+            }
+        },
+        "v1_assets.BatchDocumentationResponse": {
+            "type": "object",
+            "properties": {
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_assets.BatchDocumentationResult"
+                    }
+                }
+            }
+        },
+        "v1_assets.BatchDocumentationResult": {
+            "type": "object",
+            "properties": {
+                "documentation": {
+                    "$ref": "#/definitions/assetdocs.Documentation"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.CreateRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "providers",
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "environments": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/asset.Environment"
+                    }
+                },
+                "external_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.ExternalLink"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.AssetSource"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.DocumentationCreateRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "mrn",
+                "source"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.HistogramResponse": {
+            "type": "object",
+            "properties": {
+                "buckets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.HistogramBucket"
+                    }
+                },
+                "period": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.RemoveTermRequest": {
+            "type": "object",
+            "required": [
+                "term_id"
+            ],
+            "properties": {
+                "term_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.RunHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "run_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.RunHistory"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_assets.SearchResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.Asset"
+                    }
+                },
+                "filters": {
+                    "$ref": "#/definitions/asset.AvailableFilters"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_assets.TagRequest": {
+            "type": "object",
+            "required": [
+                "tag"
+            ],
+            "properties": {
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.UpdateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "environments": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/asset.Environment"
+                    }
+                },
+                "external_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.ExternalLink"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.AssetSource"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_lineage.BatchLineageResult": {
+            "type": "object",
+            "properties": {
+                "edge": {
+                    "$ref": "#/definitions/lineage.LineageEdge"
+                },
+                "status": {
+                    "description": "\"created\", \"duplicate\", or \"existing\"",
+                    "type": "string"
+                }
+            }
+        },
+        "v1_metrics.AssetsByOwnerResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "v1_metrics.AssetsByProviderResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "v1_metrics.AssetsByTypeResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "v1_metrics.AssetsWithSchemasResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "percentage": {
+                    "type": "number"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_metrics.GetMetricsRequest": {
+            "type": "object",
+            "properties": {
+                "aggregation": {
+                    "type": "string"
+                },
+                "bucket_size": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "metric_names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "start": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_metrics.GetMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "metrics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/metrics.AggregatedMetric"
+                    }
+                },
+                "query": {
+                    "$ref": "#/definitions/v1_metrics.GetMetricsRequest"
+                }
+            }
+        },
+        "v1_metrics.TotalAssetsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_runs.BatchAssetResult": {
+            "type": "object",
+            "properties": {
+                "asset": {},
+                "error": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.BatchCreateRequest": {
+            "type": "object",
+            "required": [
+                "assets",
+                "pipeline_name",
+                "run_id",
+                "source_name"
+            ],
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.CreateAssetRequest"
+                    }
+                },
+                "config": {
+                    "$ref": "#/definitions/plugin.RawPluginConfig"
+                },
+                "documentation": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.CreateDocRequest"
+                    }
+                },
+                "lineage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.CreateLineageRequest"
+                    }
+                },
+                "pipeline_name": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "source_name": {
+                    "type": "string"
+                },
+                "statistics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.CreateStatRequest"
+                    }
+                }
+            }
+        },
+        "v1_runs.BatchCreateResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.BatchAssetResult"
+                    }
+                },
+                "documentation": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.DocumentationResult"
+                    }
+                },
+                "lineage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.LineageResult"
+                    }
+                },
+                "stale_entities_removed": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_runs.CompleteRunRequest": {
+            "type": "object",
+            "required": [
+                "run_id",
+                "status"
+            ],
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/plugin.RunStatus"
+                },
+                "summary": {
+                    "$ref": "#/definitions/plugin.RunSummary"
+                }
+            }
+        },
+        "v1_runs.CreateAssetRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "external_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.CreateDocRequest": {
+            "type": "object",
+            "properties": {
+                "asset_mrn": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.CreateLineageRequest": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.CreateStatRequest": {
+            "type": "object",
+            "required": [
+                "asset_mrn",
+                "metric_name",
+                "value"
+            ],
+            "properties": {
+                "asset_mrn": {
+                    "type": "string"
+                },
+                "metric_name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "v1_runs.DestroyRunResponse": {
+            "type": "object",
+            "properties": {
+                "assets_deleted": {
+                    "type": "integer"
+                },
+                "deleted_entity_mrns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "documentation_deleted": {
+                    "type": "integer"
+                },
+                "lineage_deleted": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_runs.DocumentationResult": {
+            "type": "object",
+            "properties": {
+                "asset_mrn": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.LineageResult": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.RunEntitiesResponse": {
+            "type": "object",
+            "properties": {
+                "entities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.RunEntity"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_runs.StartRunRequest": {
+            "type": "object",
+            "required": [
+                "pipeline_name",
+                "source_name"
+            ],
+            "properties": {
+                "config": {
+                    "$ref": "#/definitions/plugin.RawPluginConfig"
+                },
+                "pipeline_name": {
+                    "type": "string"
+                },
+                "source_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_schedules.CreateScheduleRequest": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cron_expression": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_schedules.ListJobRunsResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "runs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.JobRun"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_schedules.ListSchedulesResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "schedules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.Schedule"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_schedules.UpdateScheduleRequest": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cron_expression": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_schedules.ValidateConfigRequest": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "plugin_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_schedules.ValidateConfigResponse": {
+            "type": "object",
+            "properties": {
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ValidationError"
+                    }
+                },
+                "valid": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1_ui.BannerResponse": {
+            "type": "object",
+            "properties": {
+                "dismissible": {
+                    "type": "boolean"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "variant": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_ui.UIConfigResponse": {
+            "type": "object",
+            "properties": {
+                "banner": {
+                    "$ref": "#/definitions/v1_ui.BannerResponse"
+                }
+            }
+        },
+        "v1_users.CreateAPIKeyRequest": {
             "type": "object",
             "required": [
                 "name"
@@ -5472,7 +5533,7 @@ const docTemplate = `{
                 }
             }
         },
-        "users.ListUsersResponse": {
+        "v1_users.ListUsersResponse": {
             "type": "object",
             "properties": {
                 "limit": {
@@ -5492,7 +5553,7 @@ const docTemplate = `{
                 }
             }
         },
-        "users.LoginRequest": {
+        "v1_users.LoginRequest": {
             "type": "object",
             "required": [
                 "password",
@@ -5507,7 +5568,7 @@ const docTemplate = `{
                 }
             }
         },
-        "users.OAuthLinkRequest": {
+        "v1_users.OAuthLinkRequest": {
             "type": "object",
             "required": [
                 "provider",
@@ -5531,7 +5592,7 @@ const docTemplate = `{
                 }
             }
         },
-        "users.TokenResponse": {
+        "v1_users.TokenResponse": {
             "type": "object",
             "properties": {
                 "access_token": {
@@ -5539,6 +5600,9 @@ const docTemplate = `{
                 },
                 "expires_in": {
                     "type": "integer"
+                },
+                "redirect_uri": {
+                    "type": "string"
                 },
                 "requires_password_change": {
                     "type": "boolean"
@@ -5548,7 +5612,7 @@ const docTemplate = `{
                 }
             }
         },
-        "users.UpdatePasswordRequest": {
+        "v1_users.UpdatePasswordRequest": {
             "type": "object",
             "required": [
                 "new_password"

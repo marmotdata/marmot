@@ -3,13 +3,19 @@
 	import { fetchApi } from '$lib/api';
 	import Button from './Button.svelte';
 
+	interface Props {
+		redirectUri?: string;
+	}
+
+	let { redirectUri = '' }: Props = $props();
+
 	let enabledProviders: string[] = [];
 	let loading = true;
 	let error = '';
 
 	onMount(async () => {
 		try {
-			const response = await fetchApi('/auth/config');
+			const response = await fetchApi('/auth-providers', { skipAuth: true, prefix: '' });
 			if (!response.ok) {
 				throw new Error('Failed to fetch auth configuration');
 			}
@@ -22,10 +28,18 @@
 		}
 	});
 
-	function handleOktaLogin() {
-		const currentPath = window.location.pathname + window.location.search;
-		const returnTo = encodeURIComponent(currentPath);
-		window.location.href = `/api/v1/auth/okta/login?returnTo=${returnTo}`;
+	function handleOAuthLogin(provider: string) {
+		let url = `/auth/${provider}/login`;
+
+		if (redirectUri) {
+			url += `?redirect_uri=${encodeURIComponent(redirectUri)}`;
+		} else {
+			const currentPath = window.location.pathname + window.location.search;
+			const returnTo = encodeURIComponent(currentPath);
+			url += `?returnTo=${returnTo}`;
+		}
+
+		window.location.href = url;
 	}
 </script>
 
@@ -51,14 +65,59 @@
 		</div>
 	</div>
 
-	<div class="mt-6 space-y-4">
+	<div class="mt-6 space-y-3">
+		{#if enabledProviders.includes('google')}
+			<Button
+				variant="clear"
+				icon="simple-icons:google"
+				text="Sign in with Google"
+				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+				click={() => handleOAuthLogin('google')}
+			/>
+		{/if}
+		{#if enabledProviders.includes('github')}
+			<Button
+				variant="clear"
+				icon="simple-icons:github"
+				text="Sign in with GitHub"
+				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+				click={() => handleOAuthLogin('github')}
+			/>
+		{/if}
+		{#if enabledProviders.includes('gitlab')}
+			<Button
+				variant="clear"
+				icon="simple-icons:gitlab"
+				text="Sign in with GitLab"
+				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+				click={() => handleOAuthLogin('gitlab')}
+			/>
+		{/if}
 		{#if enabledProviders.includes('okta')}
 			<Button
 				variant="clear"
-				icon="person"
+				icon="simple-icons:okta"
 				text="Sign in with Okta"
-				class="w-full justify-center border border-gray-300 dark:border-gray-600"
-				click={handleOktaLogin}
+				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+				click={() => handleOAuthLogin('okta')}
+			/>
+		{/if}
+		{#if enabledProviders.includes('slack')}
+			<Button
+				variant="clear"
+				icon="simple-icons:slack"
+				text="Sign in with Slack"
+				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+				click={() => handleOAuthLogin('slack')}
+			/>
+		{/if}
+		{#if enabledProviders.includes('auth0')}
+			<Button
+				variant="clear"
+				icon="simple-icons:auth0"
+				text="Sign in with Auth0"
+				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+				click={() => handleOAuthLogin('auth0')}
 			/>
 		{/if}
 	</div>

@@ -45,7 +45,7 @@ Choose your AI assistant to see configuration examples:
 - **[Claude Code](./claude-code.md)** - Claude's command-line interface
 - **[Cursor](./cursor.md)** - The AI-first code editor
 - **[Cline](./cline.md)** - VS Code extension for AI-powered coding
-- **[LibreChat](./librechat.md)** - Open-source ChatGPT alternative
+- **[LibreChat](./librechat.md)** - Universal AI chat interface supporting multiple providers
 
 ## Available Tools
 

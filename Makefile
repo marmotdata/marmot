@@ -7,7 +7,7 @@ VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null 
 LDFLAGS_VERSION=-X "github.com/marmotdata/marmot/cmd.Version=$(VERSION)"
 
 swagger:
-	swag init -d internal/api/v1 --generalInfo server.go --parseDependency --output docs
+	swag init -d internal/api --generalInfo v1/server.go --parseDependency --output docs
 
 build:
 	go build -o bin/$(BINARY_NAME) cmd/main.go

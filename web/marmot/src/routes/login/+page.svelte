@@ -19,9 +19,11 @@
 	let passwordInput: HTMLInputElement;
 	let newPasswordInput: HTMLInputElement;
 	let confirmPasswordInput: HTMLInputElement;
+	let redirectUri = $state('');
 
 	onMount(() => {
 		usernameInput.focus();
+		redirectUri = $page.url.searchParams.get('redirect_uri') || '';
 	});
 
 	function handleUsernameKeydown(event: KeyboardEvent) {
@@ -53,7 +55,12 @@
 		loading = true;
 
 		try {
-			const response = await fetch('/api/v1/users/login', {
+			let url = '/api/v1/users/login';
+			if (redirectUri) {
+				url += `?redirect_uri=${encodeURIComponent(redirectUri)}`;
+			}
+
+			const response = await fetch(url, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -75,9 +82,14 @@
 			}
 
 			if (data.access_token) {
-				auth.setToken(data.access_token);
-				const redirectTo = $page.url.searchParams.get('redirect') || '/';
-				goto(redirectTo);
+				if (data.redirect_uri) {
+					window.location.href = `${data.redirect_uri}?token=${data.access_token}`;
+				} else {
+					// Normal web login
+					auth.setToken(data.access_token);
+					const redirectTo = $page.url.searchParams.get('redirect') || '/';
+					goto(redirectTo);
+				}
 			} else {
 				throw new Error('No token received from server');
 			}
@@ -142,107 +154,146 @@
 	}
 </script>
 
-<div class="min-h-screen flex items-center justify-center bg-earthy-brown-50 dark:bg-gray-900">
-	<div class="max-w-md w-full space-y-8 p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-		<div>
-			<div class="flex justify-center">
-				<img src="/images/marmot.svg" alt="Marmot" class="h-24 w-24" />
+<div class="min-h-screen flex items-center justify-center bg-earthy-brown-50 dark:bg-gray-900 px-4">
+	<div class="max-w-md w-full space-y-6">
+		<!-- Logo and Title -->
+		<div class="text-center">
+			<div class="flex justify-center mb-6">
+				<img src="/images/marmot.svg" alt="Marmot" class="h-20 w-20" />
 			</div>
-			<h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900 dark:text-gray-100">
-				{showPasswordChangeForm ? 'Change Password' : 'Sign in to Marmot'}
-			</h2>
+			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
+				{showPasswordChangeForm ? 'Change Password' : 'Sign In'}
+			</h1>
 			{#if showPasswordChangeForm}
-				<p class="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					You must change your password before continuing
 				</p>
 			{/if}
 		</div>
 
-		{#if error}
-			<div class="bg-red-50 dark:bg-red-900/50 text-red-600 dark:text-red-400 p-4 rounded-md">
-				{error}
-			</div>
-		{/if}
+		<!-- Main Card -->
+		<div
+			class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg p-8"
+		>
+			{#if error}
+				<div
+					class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg flex items-start gap-3"
+				>
+					<Icon icon="material-symbols:error-outline" class="w-5 h-5 flex-shrink-0 mt-0.5" />
+					<p class="text-sm">{error}</p>
+				</div>
+			{/if}
 
-		{#if !showPasswordChangeForm}
-			<form on:submit|preventDefault={handleSubmit} class="mt-8 space-y-6">
-				<div class="rounded-md shadow-sm space-y-4">
-					<div>
-						<label for="username" class="sr-only">Username</label>
-						<input
-							bind:this={usernameInput}
-							id="username"
-							bind:value={username}
-							type="text"
-							required
-							on:keydown={handleUsernameKeydown}
-							class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700"
-							placeholder="Username"
+			{#if !showPasswordChangeForm}
+				<form on:submit|preventDefault={handleSubmit} class="space-y-5">
+					<div class="space-y-4">
+						<div>
+							<label
+								for="username"
+								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+							>
+								Username
+							</label>
+							<input
+								bind:this={usernameInput}
+								id="username"
+								bind:value={username}
+								type="text"
+								required
+								on:keydown={handleUsernameKeydown}
+								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
+								placeholder="Enter your username"
+							/>
+						</div>
+						<div>
+							<label
+								for="password"
+								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+							>
+								Password
+							</label>
+							<input
+								bind:this={passwordInput}
+								id="password"
+								bind:value={password}
+								type="password"
+								required
+								on:keydown={handlePasswordKeydown}
+								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
+								placeholder="Enter your password"
+							/>
+						</div>
+					</div>
+
+					<Button
+						class="w-full justify-center"
+						type="submit"
+						{loading}
+						text="Sign in"
+						variant="filled"
+					/>
+				</form>
+
+				<OAuthButtons {redirectUri} />
+			{:else}
+				<form on:submit|preventDefault={handlePasswordChange} class="space-y-5">
+					<div class="space-y-4">
+						<div>
+							<label
+								for="new-password"
+								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+							>
+								New Password
+							</label>
+							<input
+								bind:this={newPasswordInput}
+								id="new-password"
+								bind:value={newPassword}
+								type="password"
+								required
+								on:keydown={handleNewPasswordKeydown}
+								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
+								placeholder="Enter new password (min 8 characters)"
+							/>
+						</div>
+						<div>
+							<label
+								for="confirm-password"
+								class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+							>
+								Confirm Password
+							</label>
+							<input
+								bind:this={confirmPasswordInput}
+								id="confirm-password"
+								bind:value={confirmPassword}
+								type="password"
+								required
+								on:keydown={handleConfirmPasswordKeydown}
+								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
+								placeholder="Confirm new password"
+							/>
+						</div>
+					</div>
+
+					<div class="space-y-3">
+						<Button
+							class="w-full justify-center"
+							type="submit"
+							{loading}
+							text="Change Password"
+							variant="filled"
+						/>
+						<Button
+							class="w-full justify-center"
+							text="Back to Login"
+							variant="clear"
+							icon="material-symbols:arrow-back"
+							click={goBackToLogin}
 						/>
 					</div>
-					<div>
-						<label for="password" class="sr-only">Password</label>
-						<input
-							bind:this={passwordInput}
-							id="password"
-							bind:value={password}
-							type="password"
-							required
-							on:keydown={handlePasswordKeydown}
-							class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700"
-							placeholder="Password"
-						/>
-					</div>
-				</div>
-
-				<div>
-					<Button class="w-full" type="submit" {loading} text="Sign in" variant="filled" />
-				</div>
-			</form>
-
-			<OAuthButtons />
-		{:else}
-			<form on:submit|preventDefault={handlePasswordChange} class="mt-8 space-y-6">
-				<div class="rounded-md shadow-sm space-y-4">
-					<div>
-						<label for="new-password" class="sr-only">New Password</label>
-						<input
-							bind:this={newPasswordInput}
-							id="new-password"
-							bind:value={newPassword}
-							type="password"
-							required
-							on:keydown={handleNewPasswordKeydown}
-							class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700"
-							placeholder="New Password"
-						/>
-					</div>
-					<div>
-						<label for="confirm-password" class="sr-only">Confirm Password</label>
-						<input
-							bind:this={confirmPasswordInput}
-							id="confirm-password"
-							bind:value={confirmPassword}
-							type="password"
-							required
-							on:keydown={handleConfirmPasswordKeydown}
-							class="appearance-none rounded-lg relative block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 placeholder-gray-500 dark:placeholder-gray-400 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700"
-							placeholder="Confirm Password"
-						/>
-					</div>
-				</div>
-
-				<div class="space-y-3">
-					<Button class="w-full" type="submit" {loading} text="Change Password" variant="filled" />
-					<button
-						type="button"
-						on:click={goBackToLogin}
-						class="w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-					>
-						Back to Login
-					</button>
-				</div>
-			</form>
-		{/if}
+				</form>
+			{/if}
+		</div>
 	</div>
 </div>

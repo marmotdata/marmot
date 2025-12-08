@@ -29,6 +29,7 @@ type User struct {
 	ID                 string                 `json:"id"`
 	Username           string                 `json:"username"`
 	Name               string                 `json:"name"`
+	ProfilePicture     string                 `json:"profile_picture,omitempty"`
 	Active             bool                   `json:"active"`
 	MustChangePassword bool                   `json:"must_change_password"`
 	Preferences        map[string]interface{} `json:"preferences"`
@@ -53,10 +54,11 @@ type Permission struct {
 }
 
 type CreateUserInput struct {
-	Username  string   `json:"username" validate:"required,min=3,max=255"`
-	Name      string   `json:"name" validate:"required"`
-	Password  string   `json:"password" validate:"required_without=OAuthProvider,min=8"`
-	RoleNames []string `json:"role_names" validate:"required,min=1"`
+	Username       string   `json:"username" validate:"required,min=3,max=255"`
+	Name           string   `json:"name" validate:"required"`
+	Password       string   `json:"password" validate:"required_without=OAuthProvider,min=8"`
+	ProfilePicture string   `json:"profile_picture,omitempty"`
+	RoleNames      []string `json:"role_names" validate:"required,min=1"`
 
 	OAuthProvider     string                 `json:"oauth_provider,omitempty"`
 	OAuthProviderID   string                 `json:"oauth_provider_id,omitempty"`
@@ -64,12 +66,13 @@ type CreateUserInput struct {
 }
 
 type UpdateUserInput struct {
-	Email       *string                `json:"email,omitempty" validate:"omitempty,email"`
-	Name        *string                `json:"name,omitempty"`
-	Password    *string                `json:"password,omitempty" validate:"omitempty,min=8"`
-	Active      *bool                  `json:"active,omitempty"`
-	Preferences map[string]interface{} `json:"preferences,omitempty"`
-	RoleNames   []string               `json:"role_names,omitempty" validate:"omitempty,min=1"`
+	Email          *string                `json:"email,omitempty" validate:"omitempty,email"`
+	Name           *string                `json:"name,omitempty"`
+	ProfilePicture *string                `json:"profile_picture,omitempty"`
+	Password       *string                `json:"password,omitempty" validate:"omitempty,min=8"`
+	Active         *bool                  `json:"active,omitempty"`
+	Preferences    map[string]interface{} `json:"preferences,omitempty"`
+	RoleNames      []string               `json:"role_names,omitempty" validate:"omitempty,min=1"`
 }
 
 type Filter struct {
@@ -96,6 +99,7 @@ type Service interface {
 	GetPermissionsByRoleName(ctx context.Context, roleName string) ([]Permission, error)
 
 	// OAuth
+	GetUserByProviderID(ctx context.Context, provider string, providerUserID string) (*User, error)
 	AuthenticateOAuth(ctx context.Context, provider string, providerUserID string, userInfo map[string]interface{}) (*User, error)
 	LinkOAuthAccount(ctx context.Context, userID string, provider string, providerUserID string, userInfo map[string]interface{}) error
 	UnlinkOAuthAccount(ctx context.Context, userID string, provider string) error
@@ -239,6 +243,10 @@ func (s *service) Update(ctx context.Context, id string, input UpdateUserInput) 
 		updates["name"] = *input.Name
 	}
 
+	if input.ProfilePicture != nil {
+		updates["profile_picture"] = *input.ProfilePicture
+	}
+
 	if input.Password != nil {
 		hash, err := bcrypt.GenerateFromPassword([]byte(*input.Password), bcrypt.DefaultCost)
 		if err != nil {
@@ -288,6 +296,14 @@ func (s *service) Delete(ctx context.Context, currentUserId string, id string) e
 
 func (s *service) GetUserByUsername(ctx context.Context, username string) (*User, error) {
 	user, err := s.repo.GetUserByUsername(ctx, username)
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *service) GetUserByProviderID(ctx context.Context, provider string, providerUserID string) (*User, error) {
+	user, err := s.repo.GetUserByProviderID(ctx, provider, providerUserID)
 	if err != nil {
 		return nil, err
 	}

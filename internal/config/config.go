@@ -8,10 +8,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-type AuthConfig struct {
-	Providers map[string]*OAuthProviderConfig `mapstructure:"providers"`
-}
-
 type AnonymousAuthConfig struct {
 	Enabled bool   `mapstructure:"enabled"`
 	Role    string `mapstructure:"role"`
@@ -99,9 +95,14 @@ type Config struct {
 	} `mapstructure:"logging"`
 
 	Auth struct {
-		Providers   map[string]*OAuthProviderConfig `mapstructure:"providers"`
-		Anonymous   AnonymousAuthConfig             `mapstructure:"anonymous"`
-		OpenLineage OpenLineageAuthConfig           `mapstructure:"openlineage"`
+		Google      *OAuthProviderConfig  `mapstructure:"google"`
+		GitHub      *OAuthProviderConfig  `mapstructure:"github"`
+		GitLab      *OAuthProviderConfig  `mapstructure:"gitlab"`
+		Okta        *OAuthProviderConfig  `mapstructure:"okta"`
+		Slack       *OAuthProviderConfig  `mapstructure:"slack"`
+		Auth0       *OAuthProviderConfig  `mapstructure:"auth0"`
+		Anonymous   AnonymousAuthConfig   `mapstructure:"anonymous"`
+		OpenLineage OpenLineageAuthConfig `mapstructure:"openlineage"`
 	} `mapstructure:"auth"`
 
 	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
@@ -172,17 +173,61 @@ func loadConfig(configPath string) error {
 	v.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	v.AutomaticEnv()
 
-	// Explicitly bind nested provider config env vars
-	v.BindEnv("auth.providers.okta.client_id")
-	v.BindEnv("auth.providers.okta.client_secret")
-	v.BindEnv("auth.providers.okta.url")
-	v.BindEnv("auth.providers.okta.redirect_url")
-	v.BindEnv("auth.providers.okta.enabled")
-	v.BindEnv("auth.providers.okta.type")
-	v.BindEnv("auth.providers.okta.name")
-	v.BindEnv("auth.providers.okta.allow_signup")
-	v.BindEnv("auth.providers.okta.team_sync.enabled")
-	v.BindEnv("auth.providers.okta.team_sync.group_claim")
+	// Explicitly bind auth provider config env vars
+	v.BindEnv("auth.okta.client_id")
+	v.BindEnv("auth.okta.client_secret")
+	v.BindEnv("auth.okta.url")
+	v.BindEnv("auth.okta.redirect_url")
+	v.BindEnv("auth.okta.enabled")
+	v.BindEnv("auth.okta.type")
+	v.BindEnv("auth.okta.name")
+	v.BindEnv("auth.okta.allow_signup")
+	v.BindEnv("auth.okta.team_sync.enabled")
+	v.BindEnv("auth.okta.team_sync.group_claim")
+
+	v.BindEnv("auth.google.client_id")
+	v.BindEnv("auth.google.client_secret")
+	v.BindEnv("auth.google.redirect_url")
+	v.BindEnv("auth.google.enabled")
+	v.BindEnv("auth.google.type")
+	v.BindEnv("auth.google.name")
+	v.BindEnv("auth.google.allow_signup")
+
+	v.BindEnv("auth.github.client_id")
+	v.BindEnv("auth.github.client_secret")
+	v.BindEnv("auth.github.redirect_url")
+	v.BindEnv("auth.github.enabled")
+	v.BindEnv("auth.github.type")
+	v.BindEnv("auth.github.name")
+	v.BindEnv("auth.github.allow_signup")
+
+	v.BindEnv("auth.gitlab.client_id")
+	v.BindEnv("auth.gitlab.client_secret")
+	v.BindEnv("auth.gitlab.url")
+	v.BindEnv("auth.gitlab.redirect_url")
+	v.BindEnv("auth.gitlab.enabled")
+	v.BindEnv("auth.gitlab.type")
+	v.BindEnv("auth.gitlab.name")
+	v.BindEnv("auth.gitlab.allow_signup")
+
+	v.BindEnv("auth.slack.client_id")
+	v.BindEnv("auth.slack.client_secret")
+	v.BindEnv("auth.slack.redirect_url")
+	v.BindEnv("auth.slack.enabled")
+	v.BindEnv("auth.slack.type")
+	v.BindEnv("auth.slack.name")
+	v.BindEnv("auth.slack.allow_signup")
+
+	v.BindEnv("auth.auth0.client_id")
+	v.BindEnv("auth.auth0.client_secret")
+	v.BindEnv("auth.auth0.url")
+	v.BindEnv("auth.auth0.redirect_url")
+	v.BindEnv("auth.auth0.enabled")
+	v.BindEnv("auth.auth0.type")
+	v.BindEnv("auth.auth0.name")
+	v.BindEnv("auth.auth0.allow_signup")
+	v.BindEnv("auth.auth0.team_sync.enabled")
+	v.BindEnv("auth.auth0.team_sync.group_claim")
 
 	v.BindEnv("auth.anonymous.enabled")
 	v.BindEnv("auth.anonymous.role")
@@ -252,12 +297,40 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("logging.format", "json")
 
 	// Auth defaults
-	v.SetDefault("auth.providers.okta.type", "okta")
-	v.SetDefault("auth.providers.okta.name", "Okta")
-	v.SetDefault("auth.providers.okta.allow_signup", true)
-	v.SetDefault("auth.providers.okta.scopes", []string{"openid", "profile", "email", "groups", "offline_access"})
-	v.SetDefault("auth.providers.okta.team_sync.enabled", false)
-	v.SetDefault("auth.providers.okta.team_sync.group_claim", "groups")
+	v.SetDefault("auth.okta.type", "okta")
+	v.SetDefault("auth.okta.name", "Okta")
+	v.SetDefault("auth.okta.allow_signup", true)
+	v.SetDefault("auth.okta.scopes", []string{"openid", "profile", "email", "groups", "offline_access"})
+	v.SetDefault("auth.okta.team_sync.enabled", false)
+	v.SetDefault("auth.okta.team_sync.group_claim", "groups")
+
+	v.SetDefault("auth.google.type", "google")
+	v.SetDefault("auth.google.name", "Google")
+	v.SetDefault("auth.google.allow_signup", true)
+	v.SetDefault("auth.google.scopes", []string{"openid", "profile", "email"})
+
+	v.SetDefault("auth.github.type", "github")
+	v.SetDefault("auth.github.name", "GitHub")
+	v.SetDefault("auth.github.allow_signup", true)
+	v.SetDefault("auth.github.scopes", []string{"user:email"})
+
+	v.SetDefault("auth.gitlab.type", "gitlab")
+	v.SetDefault("auth.gitlab.name", "GitLab")
+	v.SetDefault("auth.gitlab.allow_signup", true)
+	v.SetDefault("auth.gitlab.url", "https://gitlab.com")
+	v.SetDefault("auth.gitlab.scopes", []string{"openid", "profile", "email"})
+
+	v.SetDefault("auth.slack.type", "slack")
+	v.SetDefault("auth.slack.name", "Slack")
+	v.SetDefault("auth.slack.allow_signup", true)
+	v.SetDefault("auth.slack.scopes", []string{"openid", "profile", "email"})
+
+	v.SetDefault("auth.auth0.type", "auth0")
+	v.SetDefault("auth.auth0.name", "Auth0")
+	v.SetDefault("auth.auth0.allow_signup", true)
+	v.SetDefault("auth.auth0.scopes", []string{"openid", "profile", "email"})
+	v.SetDefault("auth.auth0.team_sync.enabled", false)
+	v.SetDefault("auth.auth0.team_sync.group_claim", "groups")
 
 	// Rate limit defaults
 	v.SetDefault("rate_limit.enabled", false)

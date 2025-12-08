@@ -5,11 +5,13 @@
 	import { auth, isAnonymousMode } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
+	import { fetchApi } from '$lib/api';
 	import UserIcon from '~icons/heroicons/user-16-solid';
 	import Icon from '@iconify/svelte';
 	import Banner from '$lib/components/Banner.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import GlobalSearch from '../components/GlobalSearch.svelte';
+	import Avatar from '../components/Avatar.svelte';
 
 	interface BannerConfig {
 		enabled: boolean;
@@ -19,6 +21,13 @@
 		id: string;
 	}
 
+	interface UserProfile {
+		id: string;
+		username: string;
+		name: string;
+		profile_picture?: string;
+	}
+
 	let bannerConfig: BannerConfig | null = null;
 	let isDropdownOpen = false;
 	let isAdmin = false;
@@ -26,6 +35,7 @@
 	let manualNavigation = false;
 	let showSearchModal = false;
 	let searchInput: GlobalSearch;
+	let userProfile: UserProfile | null = null;
 
 	const appName = 'Marmot';
 	const isMac = browser && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
@@ -118,6 +128,16 @@
 
 		if (browser && $auth) {
 			isAdmin = auth.hasRole('admin');
+
+			// Fetch user profile
+			try {
+				const profileRes = await fetchApi('/users/me');
+				if (profileRes.ok) {
+					userProfile = await profileRes.json();
+				}
+			} catch (err) {
+				console.error('Failed to fetch user profile:', err);
+			}
 		}
 
 		if (browser) {
@@ -303,16 +323,24 @@
 						<div class="relative">
 							<div>
 								<button
-									class="max-w-xs flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+									class="max-w-xs flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500"
 									id="user-menu"
 									aria-haspopup="true"
 									on:click|stopPropagation={toggleDropdown}
 								>
-									<div
-										class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
-									>
-										<UserIcon class="h-5 w-5 text-gray-600 dark:text-gray-300" />
-									</div>
+									{#if userProfile}
+										<Avatar
+											name={userProfile.name || userProfile.username}
+											profilePicture={userProfile.profile_picture}
+											size="sm"
+										/>
+									{:else}
+										<div
+											class="h-8 w-8 rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center"
+										>
+											<UserIcon class="h-5 w-5 text-gray-600 dark:text-gray-300" />
+										</div>
+									{/if}
 								</button>
 							</div>
 							{#if isDropdownOpen}

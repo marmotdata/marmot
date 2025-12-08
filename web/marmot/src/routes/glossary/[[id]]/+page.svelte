@@ -450,7 +450,7 @@
 								bind:tags={selectedTerm.tags}
 								endpoint="/glossary"
 								id={selectedTerm.id}
-								canEdit={canManageGlossary && !isEditing}
+								canEdit={canManageGlossary && isEditing}
 							/>
 						</div>
 

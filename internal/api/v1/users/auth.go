@@ -24,6 +24,7 @@ type TokenResponse struct {
 	TokenType              string `json:"token_type"`
 	ExpiresIn              int64  `json:"expires_in"`
 	RequiresPasswordChange bool   `json:"requires_password_change"`
+	RedirectURI            string `json:"redirect_uri,omitempty"`
 }
 
 type OAuthLinkRequest struct {
@@ -39,6 +40,7 @@ type OAuthLinkRequest struct {
 // @Accept json
 // @Produce json
 // @Param credentials body LoginRequest true "Login credentials"
+// @Param redirect_uri query string false "Custom redirect URI for CLI login"
 // @Success 200 {object} TokenResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 400 {object} common.ErrorResponse
@@ -80,11 +82,14 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	redirectURI := r.URL.Query().Get("redirect_uri")
+
 	response := TokenResponse{
 		AccessToken:            token,
 		TokenType:              "Bearer",
 		ExpiresIn:              24 * 60 * 60,
 		RequiresPasswordChange: authenticatedUser.MustChangePassword,
+		RedirectURI:            redirectURI,
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)

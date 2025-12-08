@@ -45,10 +45,13 @@ func (r *PostgresRepository) loadOwners(ctx context.Context, termID string) ([]O
 			COALESCE(u.id::text, t.id::text) as id,
 			u.username,
 			COALESCE(u.name, t.name) as name,
-			CASE WHEN u.id IS NOT NULL THEN 'user' ELSE 'team' END as type
+			CASE WHEN u.id IS NOT NULL THEN 'user' ELSE 'team' END as type,
+			ui.provider_email,
+			u.profile_picture
 		FROM glossary_term_owners gto
 		LEFT JOIN users u ON gto.user_id = u.id
 		LEFT JOIN teams t ON gto.team_id = t.id
+		LEFT JOIN user_identities ui ON u.id = ui.user_id
 		WHERE gto.glossary_term_id = $1
 		ORDER BY type, COALESCE(u.username, t.name)`
 
@@ -61,7 +64,7 @@ func (r *PostgresRepository) loadOwners(ctx context.Context, termID string) ([]O
 	owners := []Owner{}
 	for rows.Next() {
 		var owner Owner
-		if err := rows.Scan(&owner.ID, &owner.Username, &owner.Name, &owner.Type); err != nil {
+		if err := rows.Scan(&owner.ID, &owner.Username, &owner.Name, &owner.Type, &owner.Email, &owner.ProfilePicture); err != nil {
 			return nil, fmt.Errorf("scanning owner: %w", err)
 		}
 		owners = append(owners, owner)

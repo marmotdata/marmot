@@ -23,6 +23,7 @@
 		type: 'user' | 'team';
 		username?: string;
 		email?: string;
+		profile_picture?: string;
 	}
 
 	export let asset: Asset | null = null;

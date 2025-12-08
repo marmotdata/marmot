@@ -3,6 +3,7 @@
 	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
 	import { Users, User } from 'lucide-svelte';
+	import Avatar from './Avatar.svelte';
 
 	export let selectedOwners: Owner[] | null = [];
 	export let onChange: (owners: Owner[]) => void = () => {};
@@ -23,6 +24,7 @@
 		type: 'user' | 'team';
 		username?: string; // For users
 		email?: string; // For users
+		profile_picture?: string; // For users
 	}
 
 	let searchResults: Owner[] = [];
@@ -169,17 +171,17 @@
 					: 'bg-gray-200 dark:bg-gray-700'} flex-shrink-0 {owner.type === 'team' && !disabled ? 'cursor-pointer' : 'cursor-default'} transition-colors"
 				title={owner.type === 'user' ? `@${owner.username}` : `Team: ${owner.name}`}
 			>
-				<div
-					class="w-6 h-6 rounded-full {owner.type === 'team'
-						? 'bg-blue-200 dark:bg-blue-800'
-						: 'bg-gray-300 dark:bg-gray-600'} flex items-center justify-center text-gray-700 dark:text-gray-300 text-xs font-medium flex-shrink-0"
-				>
-					{#if owner.type === 'team'}
+				{#if owner.type === 'team'}
+					<div
+						class="w-6 h-6 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center text-gray-700 dark:text-gray-300 text-xs font-medium flex-shrink-0"
+					>
 						<Users class="h-3 w-3" />
-					{:else}
-						{getOwnerInitial(owner)}
-					{/if}
-				</div>
+					</div>
+				{:else}
+					<div class="flex-shrink-0">
+						<Avatar name={owner.name} profilePicture={owner.profile_picture} size="xs" />
+					</div>
+				{/if}
 				<span
 					class="text-sm {owner.type === 'team'
 						? 'text-blue-900 dark:text-blue-100'
@@ -254,17 +256,17 @@
 									? 'bg-gray-100 dark:bg-gray-700'
 									: 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}"
 							>
-								<div
-									class="w-8 h-8 rounded-full {owner.type === 'team'
-										? 'bg-blue-100 dark:bg-blue-900'
-										: 'bg-gray-200 dark:bg-gray-700'} flex items-center justify-center text-gray-700 dark:text-gray-300 text-sm font-medium flex-shrink-0"
-								>
-									{#if owner.type === 'team'}
+								{#if owner.type === 'team'}
+									<div
+										class="w-8 h-8 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center text-gray-700 dark:text-gray-300 text-sm font-medium flex-shrink-0"
+									>
 										<Users class="h-4 w-4" />
-									{:else}
-										{getOwnerInitial(owner)}
-									{/if}
-								</div>
+									</div>
+								{:else}
+									<div class="flex-shrink-0">
+										<Avatar name={owner.name} profilePicture={owner.profile_picture} size="sm" />
+									</div>
+								{/if}
 								<div class="flex-1 min-w-0 text-left">
 									<div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex items-center gap-2">
 										{owner.name}

@@ -118,10 +118,7 @@
 	let pipelinesOffset = $derived((pipelinesPage - 1) * pipelinesPageSize);
 
 	let showGettingStarted = $derived(
-		!loading &&
-			runs &&
-			runs.length === 0 &&
-			selectedStatuses.length === 0
+		!loading && runs && runs.length === 0 && selectedStatuses.length === 0
 	);
 
 	const availableStatuses = ['pending', 'claimed', 'running', 'succeeded', 'failed', 'cancelled'];
@@ -451,7 +448,12 @@
 				const newSet = new Set(runningPipelines);
 				newSet.add(jobRun.schedule_id);
 				runningPipelines = newSet;
-				console.log('Pipeline marked as running:', jobRun.schedule_id, 'Total running:', runningPipelines.size);
+				console.log(
+					'Pipeline marked as running:',
+					jobRun.schedule_id,
+					'Total running:',
+					runningPipelines.size
+				);
 			} else if (
 				event.type === 'job_run_completed' ||
 				event.type === 'job_run_cancelled' ||
@@ -463,12 +465,23 @@
 				const newSet = new Set(runningPipelines);
 				newSet.delete(jobRun.schedule_id);
 				runningPipelines = newSet;
-				console.log('Pipeline completed:', jobRun.schedule_id, 'Status:', jobRun.status, 'Total running:', runningPipelines.size);
+				console.log(
+					'Pipeline completed:',
+					jobRun.schedule_id,
+					'Status:',
+					jobRun.status,
+					'Total running:',
+					runningPipelines.size
+				);
 
 				// Update the pipeline's last_run_status and last_run_at
 				pipelines = pipelines.map((p) =>
 					p.id === jobRun.schedule_id
-						? { ...p, last_run_status: jobRun.status, last_run_at: jobRun.finished_at || jobRun.updated_at }
+						? {
+								...p,
+								last_run_status: jobRun.status,
+								last_run_at: jobRun.finished_at || jobRun.updated_at
+							}
 						: p
 				);
 			}
@@ -561,9 +574,7 @@
 <div class="container max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
 	<div class="mb-6">
 		<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Runs</h1>
-		<p class="text-gray-600 dark:text-gray-400 mt-1">
-			Monitor ingestion runs and manage pipelines
-		</p>
+		<p class="text-gray-600 dark:text-gray-400 mt-1">Monitor ingestion runs and manage pipelines</p>
 	</div>
 
 	<!-- Tab Navigation -->
@@ -576,7 +587,10 @@
 					? 'border-earthy-terracotta-700 text-earthy-terracotta-700'
 					: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
 			>
-				<IconifyIcon icon="material-symbols:account-tree" class="inline-block h-5 w-5 mr-2 -mt-0.5" />
+				<IconifyIcon
+					icon="material-symbols:account-tree"
+					class="inline-block h-5 w-5 mr-2 -mt-0.5"
+				/>
 				Pipelines
 			</button>
 			<button
@@ -596,7 +610,9 @@
 	{#if activeTab === 'pipelines'}
 		{#if pipelinesLoading}
 			<div class="flex items-center justify-center py-12">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
+				<div
+					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
+				></div>
 			</div>
 		{:else if pipelinesError}
 			<div
@@ -629,9 +645,7 @@
 						icon="material-symbols:account-tree"
 						class="mx-auto h-12 w-12 text-gray-400 mb-4"
 					/>
-					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-						No Pipelines
-					</h3>
+					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Pipelines</h3>
 					<p class="text-gray-500 dark:text-gray-400 mb-6">
 						{#if canManageIngestion}
 							Create a pipeline to ingest data - run on a schedule or trigger manually
@@ -655,28 +669,43 @@
 					</p>
 				</div>
 
-				<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6">
+				<div
+					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden mb-6"
+				>
 					<table class="w-full">
-						<thead class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700">
+						<thead
+							class="bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
+						>
 							<tr>
 								<th class="px-4 py-3 w-16"></th>
-								<th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th
+									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+								>
 									Pipeline
 								</th>
-								<th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th
+									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+								>
 									Status
 								</th>
-								<th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th
+									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+								>
 									Schedule
 								</th>
-								<th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th
+									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+								>
 									Last Run
 								</th>
-								<th class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+								<th
+									class="px-6 py-3 text-left text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+								>
 									Next Run
 								</th>
-								<th class="px-6 py-3 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-									Actions
+								<th
+									class="px-6 py-3 text-right text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wider"
+								>
 								</th>
 							</tr>
 						</thead>
@@ -723,166 +752,80 @@
 		{/if}
 	{:else if activeTab === 'history'}
 		{#if loading}
-		<div class="flex items-center justify-center py-12">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
-		</div>
-	{:else if error}
-		<div
-			class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-		>
-			<div class="flex">
-				<IconifyIcon icon="material-symbols:error" class="h-5 w-5 text-red-400 mt-0.5" />
-				<div class="ml-3">
-					<h3 class="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
-					<p class="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
+			<div class="flex items-center justify-center py-12">
+				<div
+					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
+				></div>
+			</div>
+		{:else if error}
+			<div
+				class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
+			>
+				<div class="flex">
+					<IconifyIcon icon="material-symbols:error" class="h-5 w-5 text-red-400 mt-0.5" />
+					<div class="ml-3">
+						<h3 class="text-sm font-medium text-red-800 dark:text-red-200">Error</h3>
+						<p class="mt-1 text-sm text-red-700 dark:text-red-300">{error}</p>
+					</div>
 				</div>
 			</div>
-		</div>
-	{:else if showGettingStarted}
-		<GettingStarted />
-	{:else}
-		<!-- Filters -->
-		<div
-			class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6"
-		>
-			<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-				<!-- Status Filter -->
-				<div class="relative">
-					<button
-						class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700"
-						onclick={() => (showStatusDropdown = !showStatusDropdown)}
-					>
-						<span class="flex items-center">
-							<IconifyIcon icon="material-symbols:filter-list" class="h-4 w-4 mr-2" />
-							{selectedStatuses.length === 0
-								? 'All Statuses'
-								: selectedStatuses.length === 1
-									? selectedStatuses[0].charAt(0).toUpperCase() + selectedStatuses[0].slice(1)
-									: `${selectedStatuses.length} Statuses`}
-						</span>
-						<IconifyIcon icon="material-symbols:expand-more" class="h-4 w-4" />
-					</button>
-
-					{#if showStatusDropdown}
-						<div
-							class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto"
-						>
-							{#each availableStatuses as status}
-								<div
-									class="cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 dark:hover:bg-gray-600"
-									onclick={() => handleStatusToggle(status)}
-								>
-									<div class="flex items-center">
-										<input
-											type="checkbox"
-											checked={selectedStatuses.includes(status)}
-											class="h-4 w-4 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
-											readonly
-										/>
-										<span class="ml-3 text-gray-900 dark:text-gray-100 capitalize">{status}</span>
-									</div>
-								</div>
-							{/each}
-						</div>
-					{/if}
-				</div>
-
-				<!-- Clear Filters -->
-				<Button variant="clear" click={resetFilters} text="Clear Filters" class="w-full" />
-			</div>
-		</div>
-
-		<!-- Top Pagination -->
-		{#if totalPages > 1}
-			<div class="flex items-center justify-between mb-6">
-				<div class="text-sm text-gray-600 dark:text-gray-400">
-					Page {currentPage} of {totalPages}
-				</div>
-
-				<div class="flex items-center gap-2">
-					{#if currentPage > 2}
-						<Button variant="clear" click={() => goToPage(1)} text="1" />
-						{#if currentPage > 3}
-							<span class="text-gray-500">...</span>
-						{/if}
-					{/if}
-
-					{#if currentPage > 1}
-						<Button
-							variant="clear"
-							click={() => goToPage(currentPage - 1)}
-							text={(currentPage - 1).toString()}
-						/>
-					{/if}
-
-					<Button variant="filled" text={currentPage.toString()} disabled />
-
-					{#if currentPage < totalPages}
-						<Button
-							variant="clear"
-							click={() => goToPage(currentPage + 1)}
-							text={(currentPage + 1).toString()}
-						/>
-					{/if}
-
-					{#if currentPage < totalPages - 1}
-						{#if currentPage < totalPages - 2}
-							<span class="text-gray-500">...</span>
-						{/if}
-						<Button
-							variant="clear"
-							click={() => goToPage(totalPages)}
-							text={totalPages.toString()}
-						/>
-					{/if}
-				</div>
-
-				<div class="flex items-center gap-2">
-					<Button
-						variant="clear"
-						click={() => goToPage(currentPage - 1)}
-						disabled={currentPage === 1}
-						icon="material-symbols:chevron-left"
-						text="Previous"
-					/>
-					<Button
-						variant="clear"
-						click={() => goToPage(currentPage + 1)}
-						disabled={currentPage === totalPages}
-						text="Next"
-						icon="material-symbols:chevron-right"
-					/>
-				</div>
-			</div>
-		{/if}
-
-		{#if runs.length === 0}
-			<div class="text-center py-12">
-				<IconifyIcon icon="material-symbols:sync" class="mx-auto h-12 w-12 text-gray-400 mb-4" />
-				<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No Ingestion Runs</h3>
-				<p class="text-gray-500 dark:text-gray-400">
-					{selectedStatuses.length > 0
-						? 'No runs match your current filters'
-						: 'No ingestion runs have been executed yet'}
-				</p>
-			</div>
+		{:else if showGettingStarted}
+			<GettingStarted />
 		{:else}
-			<div class="mb-4">
-				<p class="text-gray-600 dark:text-gray-400">
-					Showing {runs.length} of {total} runs
-					{selectedStatuses.length > 0 ? `with selected statuses` : ''}
-				</p>
+			<!-- Filters -->
+			<div
+				class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 mb-6"
+			>
+				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+					<!-- Status Filter -->
+					<div class="relative">
+						<button
+							class="w-full flex items-center justify-between px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700"
+							onclick={() => (showStatusDropdown = !showStatusDropdown)}
+						>
+							<span class="flex items-center">
+								<IconifyIcon icon="material-symbols:filter-list" class="h-4 w-4 mr-2" />
+								{selectedStatuses.length === 0
+									? 'All Statuses'
+									: selectedStatuses.length === 1
+										? selectedStatuses[0].charAt(0).toUpperCase() + selectedStatuses[0].slice(1)
+										: `${selectedStatuses.length} Statuses`}
+							</span>
+							<IconifyIcon icon="material-symbols:expand-more" class="h-4 w-4" />
+						</button>
+
+						{#if showStatusDropdown}
+							<div
+								class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto"
+							>
+								{#each availableStatuses as status}
+									<div
+										class="cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 dark:hover:bg-gray-600"
+										onclick={() => handleStatusToggle(status)}
+									>
+										<div class="flex items-center">
+											<input
+												type="checkbox"
+												checked={selectedStatuses.includes(status)}
+												class="h-4 w-4 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
+												readonly
+											/>
+											<span class="ml-3 text-gray-900 dark:text-gray-100 capitalize">{status}</span>
+										</div>
+									</div>
+								{/each}
+							</div>
+						{/if}
+					</div>
+
+					<!-- Clear Filters -->
+					<Button variant="clear" click={resetFilters} text="Clear Filters" class="w-full" />
+				</div>
 			</div>
 
-			<div class="grid gap-4 mb-6">
-				{#each runs as run}
-					<IngestionRunCard {run} onClick={() => handleRunClick(run)} />
-				{/each}
-			</div>
-
-			<!-- Bottom Pagination -->
+			<!-- Top Pagination -->
 			{#if totalPages > 1}
-				<div class="flex items-center justify-between">
+				<div class="flex items-center justify-between mb-6">
 					<div class="text-sm text-gray-600 dark:text-gray-400">
 						Page {currentPage} of {totalPages}
 					</div>
@@ -943,18 +886,108 @@
 					</div>
 				</div>
 			{/if}
-		{/if}
 
-		{#if showStatusDropdown}
-			<div
-				class="fixed inset-0 z-5"
-				onclick={() => {
-					showStatusDropdown = false;
-				}}
-			></div>
+			{#if runs.length === 0}
+				<div class="text-center py-12">
+					<IconifyIcon icon="material-symbols:sync" class="mx-auto h-12 w-12 text-gray-400 mb-4" />
+					<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+						No Ingestion Runs
+					</h3>
+					<p class="text-gray-500 dark:text-gray-400">
+						{selectedStatuses.length > 0
+							? 'No runs match your current filters'
+							: 'No ingestion runs have been executed yet'}
+					</p>
+				</div>
+			{:else}
+				<div class="mb-4">
+					<p class="text-gray-600 dark:text-gray-400">
+						Showing {runs.length} of {total} runs
+						{selectedStatuses.length > 0 ? `with selected statuses` : ''}
+					</p>
+				</div>
+
+				<div class="grid gap-4 mb-6">
+					{#each runs as run}
+						<IngestionRunCard {run} onClick={() => handleRunClick(run)} />
+					{/each}
+				</div>
+
+				<!-- Bottom Pagination -->
+				{#if totalPages > 1}
+					<div class="flex items-center justify-between">
+						<div class="text-sm text-gray-600 dark:text-gray-400">
+							Page {currentPage} of {totalPages}
+						</div>
+
+						<div class="flex items-center gap-2">
+							{#if currentPage > 2}
+								<Button variant="clear" click={() => goToPage(1)} text="1" />
+								{#if currentPage > 3}
+									<span class="text-gray-500">...</span>
+								{/if}
+							{/if}
+
+							{#if currentPage > 1}
+								<Button
+									variant="clear"
+									click={() => goToPage(currentPage - 1)}
+									text={(currentPage - 1).toString()}
+								/>
+							{/if}
+
+							<Button variant="filled" text={currentPage.toString()} disabled />
+
+							{#if currentPage < totalPages}
+								<Button
+									variant="clear"
+									click={() => goToPage(currentPage + 1)}
+									text={(currentPage + 1).toString()}
+								/>
+							{/if}
+
+							{#if currentPage < totalPages - 1}
+								{#if currentPage < totalPages - 2}
+									<span class="text-gray-500">...</span>
+								{/if}
+								<Button
+									variant="clear"
+									click={() => goToPage(totalPages)}
+									text={totalPages.toString()}
+								/>
+							{/if}
+						</div>
+
+						<div class="flex items-center gap-2">
+							<Button
+								variant="clear"
+								click={() => goToPage(currentPage - 1)}
+								disabled={currentPage === 1}
+								icon="material-symbols:chevron-left"
+								text="Previous"
+							/>
+							<Button
+								variant="clear"
+								click={() => goToPage(currentPage + 1)}
+								disabled={currentPage === totalPages}
+								text="Next"
+								icon="material-symbols:chevron-right"
+							/>
+						</div>
+					</div>
+				{/if}
+			{/if}
+
+			{#if showStatusDropdown}
+				<div
+					class="fixed inset-0 z-5"
+					onclick={() => {
+						showStatusDropdown = false;
+					}}
+				></div>
+			{/if}
 		{/if}
 	{/if}
-{/if}
 </div>
 
 {#if selectedRun}

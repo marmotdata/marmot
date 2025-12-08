@@ -56,11 +56,13 @@ func NewPostgresRepository(db *pgxpool.Pool) Repository {
 func scanUser(row pgx.Row) (*User, error) {
 	var user User
 	var preferencesJSON, rolesJSON []byte
+	var profilePicture *string
 
 	err := row.Scan(
 		&user.ID,
 		&user.Username,
 		&user.Name,
+		&profilePicture,
 		&user.Active,
 		&user.MustChangePassword,
 		&preferencesJSON,
@@ -74,6 +76,10 @@ func scanUser(row pgx.Row) (*User, error) {
 			return nil, ErrUserNotFound
 		}
 		return nil, fmt.Errorf("scanning user: %w", err)
+	}
+
+	if profilePicture != nil {
+		user.ProfilePicture = *profilePicture
 	}
 
 	user.Preferences = make(map[string]interface{})
@@ -96,10 +102,12 @@ func scanUsers(rows pgx.Rows) ([]*User, error) {
 	for rows.Next() {
 		var user User
 		var preferencesJSON, rolesJSON []byte
+		var profilePicture *string
 		err := rows.Scan(
 			&user.ID,
 			&user.Username,
 			&user.Name,
+			&profilePicture,
 			&user.Active,
 			&user.MustChangePassword,
 			&preferencesJSON,
@@ -109,6 +117,10 @@ func scanUsers(rows pgx.Rows) ([]*User, error) {
 		)
 		if err != nil {
 			return nil, fmt.Errorf("scanning user: %w", err)
+		}
+
+		if profilePicture != nil {
+			user.ProfilePicture = *profilePicture
 		}
 
 		user.Preferences = make(map[string]interface{})
@@ -151,13 +163,19 @@ func (r *PostgresRepository) CreateUser(ctx context.Context, user *User, passwor
 	}
 
 	query := `
-    INSERT INTO users (username, name, password_hash, active, must_change_password, preferences, created_at, updated_at)
-    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    INSERT INTO users (username, name, profile_picture, password_hash, active, must_change_password, preferences, created_at, updated_at)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
     RETURNING id`
+
+	var profilePicture *string
+	if user.ProfilePicture != "" {
+		profilePicture = &user.ProfilePicture
+	}
 
 	err = r.db.QueryRow(ctx, query,
 		user.Username,
 		user.Name,
+		profilePicture,
 		passwordHash,
 		user.Active,
 		user.MustChangePassword,
@@ -203,7 +221,7 @@ func (r *PostgresRepository) GetUser(ctx context.Context, id string) (*User, err
 			WHERE ur.user_id = $1
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -258,7 +276,7 @@ func (r *PostgresRepository) ListUsers(ctx context.Context, filter Filter) ([]*U
 			JOIN roles r ON r.id = ur.role_id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -497,7 +515,7 @@ func (r *PostgresRepository) GetUserByUsername(ctx context.Context, username str
 			LEFT JOIN role_perms rp ON rp.role_id = r.id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		LEFT JOIN user_roles ur ON ur.user_id = u.id
@@ -609,7 +627,7 @@ func (r *PostgresRepository) GetUserByProviderID(ctx context.Context, provider s
 			LEFT JOIN role_perms rp ON rp.role_id = r.id
 			GROUP BY ur.user_id
 		)
-		SELECT u.id, u.username, u.name, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
+		SELECT u.id, u.username, u.name, u.profile_picture, u.active, u.must_change_password, u.preferences, u.created_at, u.updated_at,
 			   COALESCE(ur.roles, '[]'::json)
 		FROM users u
 		JOIN user_identities ui ON ui.user_id = u.id

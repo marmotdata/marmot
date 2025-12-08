@@ -4,6 +4,7 @@ export interface Owner {
   name: string;
   type: 'user' | 'team';
   email?: string;
+  profile_picture?: string;
 }
 
 export interface GlossaryTerm {

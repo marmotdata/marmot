@@ -31,3 +31,11 @@ func (m *OAuthManager) GetProvider(providerType string) (OAuthProvider, bool) {
 	provider, exists := m.providers[providerType]
 	return provider, exists
 }
+
+func (m *OAuthManager) GetProviderNames() []string {
+	names := make([]string, 0, len(m.providers))
+	for name := range m.providers {
+		names = append(names, name)
+	}
+	return names
+}

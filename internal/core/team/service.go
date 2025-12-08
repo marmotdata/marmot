@@ -36,9 +36,10 @@ type TeamMember struct {
 
 type TeamMemberWithUser struct {
 	TeamMember
-	Username string  `json:"username"`
-	Name     string  `json:"name"`
-	Email    *string `json:"email,omitempty"`
+	Username       string  `json:"username"`
+	Name           string  `json:"name"`
+	Email          *string `json:"email,omitempty"`
+	ProfilePicture *string `json:"profile_picture,omitempty"`
 }
 
 type SSOTeamMapping struct {
@@ -59,10 +60,12 @@ type AssetOwner struct {
 }
 
 type Owner struct {
-	Type  string  `json:"type"`
-	ID    string  `json:"id"`
-	Name  string  `json:"name"`
-	Email *string `json:"email,omitempty"`
+	Type           string  `json:"type"`
+	ID             string  `json:"id"`
+	Name           string  `json:"name"`
+	Username       *string `json:"username,omitempty"`
+	Email          *string `json:"email,omitempty"`
+	ProfilePicture *string `json:"profile_picture,omitempty"`
 }
 
 const (

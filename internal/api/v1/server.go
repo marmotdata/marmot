@@ -28,7 +28,7 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sns"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sqs"
 
-	"github.com/marmotdata/marmot/internal/api/v1/auth"
+	"github.com/marmotdata/marmot/internal/api/auth"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
@@ -164,14 +164,57 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	oauthManager := authService.NewOAuthManager()
 
-	if config.Auth.Providers != nil {
-		if oktaConfig, exists := config.Auth.Providers["okta"]; exists && oktaConfig != nil && oktaConfig.Enabled {
-			if oktaConfig.ClientID != "" && oktaConfig.ClientSecret != "" && oktaConfig.URL != "" {
-				oktaProvider := authService.NewOktaProvider(config, userSvc, authSvc, teamSvc)
-				oauthManager.RegisterProvider(oktaProvider)
-			} else {
-				log.Warn().Msg("Incomplete Okta configuration found - provider will not be initialized")
-			}
+	if oktaConfig := config.Auth.Okta; oktaConfig != nil && oktaConfig.Enabled {
+		if oktaConfig.ClientID != "" && oktaConfig.ClientSecret != "" && oktaConfig.URL != "" {
+			oktaProvider := authService.NewOktaProvider(config, userSvc, authSvc, teamSvc)
+			oauthManager.RegisterProvider(oktaProvider)
+		} else {
+			log.Warn().Msg("Incomplete Okta configuration found - provider will not be initialized")
+		}
+	}
+
+	if googleConfig := config.Auth.Google; googleConfig != nil && googleConfig.Enabled {
+		if googleConfig.ClientID != "" && googleConfig.ClientSecret != "" {
+			googleProvider := authService.NewGoogleProvider(config, userSvc)
+			oauthManager.RegisterProvider(googleProvider)
+		} else {
+			log.Warn().Msg("Incomplete Google configuration found - provider will not be initialized")
+		}
+	}
+
+	if githubConfig := config.Auth.GitHub; githubConfig != nil && githubConfig.Enabled {
+		if githubConfig.ClientID != "" && githubConfig.ClientSecret != "" {
+			githubProvider := authService.NewGitHubProvider(config, userSvc)
+			oauthManager.RegisterProvider(githubProvider)
+		} else {
+			log.Warn().Msg("Incomplete GitHub configuration found - provider will not be initialized")
+		}
+	}
+
+	if gitlabConfig := config.Auth.GitLab; gitlabConfig != nil && gitlabConfig.Enabled {
+		if gitlabConfig.ClientID != "" && gitlabConfig.ClientSecret != "" {
+			gitlabProvider := authService.NewGitLabProvider(config, userSvc)
+			oauthManager.RegisterProvider(gitlabProvider)
+		} else {
+			log.Warn().Msg("Incomplete GitLab configuration found - provider will not be initialized")
+		}
+	}
+
+	if slackConfig := config.Auth.Slack; slackConfig != nil && slackConfig.Enabled {
+		if slackConfig.ClientID != "" && slackConfig.ClientSecret != "" {
+			slackProvider := authService.NewSlackProvider(config, userSvc)
+			oauthManager.RegisterProvider(slackProvider)
+		} else {
+			log.Warn().Msg("Incomplete Slack configuration found - provider will not be initialized")
+		}
+	}
+
+	if auth0Config := config.Auth.Auth0; auth0Config != nil && auth0Config.Enabled {
+		if auth0Config.ClientID != "" && auth0Config.ClientSecret != "" && auth0Config.URL != "" {
+			auth0Provider := authService.NewAuth0Provider(config, userSvc, authSvc, teamSvc)
+			oauthManager.RegisterProvider(auth0Provider)
+		} else {
+			log.Warn().Msg("Incomplete Auth0 configuration found - provider will not be initialized")
 		}
 	}
 

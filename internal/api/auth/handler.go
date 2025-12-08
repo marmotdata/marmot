@@ -28,25 +28,19 @@ func NewHandler(authService auth.Service, oauthManager *auth.OAuthManager, userS
 func (h *Handler) Routes() []common.Route {
 	return []common.Route{
 		{
-			Path:    "/api/v1/auth/config",
+			Path:    "/auth-providers",
 			Method:  http.MethodGet,
 			Handler: h.getAuthConfig,
 		},
 		{
-			Path:    "/api/v1/auth/okta/login",
+			Path:    "/auth/{provider}/login",
 			Method:  http.MethodGet,
-			Handler: h.handleOktaLogin,
-			// Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-			// 	common.WithAuth(h.userService, h.authService),
-			// },
+			Handler: h.handleOAuthLogin,
 		},
 		{
-			Path:    "/api/v1/auth/okta/callback",
+			Path:    "/auth/{provider}/callback",
 			Method:  http.MethodGet,
-			Handler: h.handleOktaCallback,
-			// Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-			// 	common.WithAuth(h.userService, h.authService),
-			// },
+			Handler: h.handleOAuthCallback,
 		},
 	}
 }

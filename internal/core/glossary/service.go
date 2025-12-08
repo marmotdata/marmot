@@ -10,10 +10,12 @@ import (
 )
 
 type Owner struct {
-	ID       string  `json:"id"`
-	Username *string `json:"username,omitempty"` // Only for user owners
-	Name     string  `json:"name"`
-	Type     string  `json:"type"` // "user" or "team"
+	ID             string  `json:"id"`
+	Username       *string `json:"username,omitempty"` // Only for user owners
+	Name           string  `json:"name"`
+	Type           string  `json:"type"` // "user" or "team"
+	Email          *string `json:"email,omitempty"`
+	ProfilePicture *string `json:"profile_picture,omitempty"`
 }
 
 type GlossaryTerm struct {

@@ -505,7 +505,7 @@ func (r *PostgresRepository) ListMembers(ctx context.Context, teamID string) ([]
 	query := `
 		SELECT
 			tm.id, tm.team_id, tm.user_id, tm.role, tm.source, tm.sso_provider, tm.joined_at,
-			u.username, u.name, ui.provider_email
+			u.username, u.name, ui.provider_email, u.profile_picture
 		FROM team_members tm
 		JOIN users u ON tm.user_id = u.id
 		LEFT JOIN user_identities ui ON tm.user_id = ui.user_id AND ui.provider = tm.sso_provider
@@ -532,6 +532,7 @@ func (r *PostgresRepository) ListMembers(ctx context.Context, teamID string) ([]
 			&member.Username,
 			&member.Name,
 			&member.Email,
+			&member.ProfilePicture,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan member: %w", err)
@@ -826,7 +827,9 @@ func (r *PostgresRepository) ListAssetOwners(ctx context.Context, assetID string
 			END as owner_type,
 			COALESCE(ao.user_id, ao.team_id) as owner_id,
 			COALESCE(u.name, t.name) as name,
-			ui.provider_email
+			u.username,
+			ui.provider_email,
+			u.profile_picture
 		FROM asset_owners ao
 		LEFT JOIN users u ON ao.user_id = u.id
 		LEFT JOIN teams t ON ao.team_id = t.id
@@ -847,7 +850,9 @@ func (r *PostgresRepository) ListAssetOwners(ctx context.Context, assetID string
 			&owner.Type,
 			&owner.ID,
 			&owner.Name,
+			&owner.Username,
 			&owner.Email,
+			&owner.ProfilePicture,
 		)
 		if err != nil {
 			return nil, fmt.Errorf("failed to scan owner: %w", err)
@@ -897,7 +902,7 @@ func (r *PostgresRepository) SearchOwners(ctx context.Context, query string, lim
 
 	// Search users
 	usersQuery := `
-		SELECT 'user' as type, u.id, u.name, ui.provider_email
+		SELECT 'user' as type, u.id, u.name, u.username, ui.provider_email, u.profile_picture
 		FROM users u
 		LEFT JOIN user_identities ui ON u.id = ui.user_id
 		WHERE u.name ILIKE '%' || $1 || '%' OR u.username ILIKE '%' || $1 || '%'
@@ -912,7 +917,7 @@ func (r *PostgresRepository) SearchOwners(ctx context.Context, query string, lim
 
 	for userRows.Next() {
 		owner := &Owner{}
-		if err := userRows.Scan(&owner.Type, &owner.ID, &owner.Name, &owner.Email); err != nil {
+		if err := userRows.Scan(&owner.Type, &owner.ID, &owner.Name, &owner.Username, &owner.Email, &owner.ProfilePicture); err != nil {
 			return nil, fmt.Errorf("failed to scan user: %w", err)
 		}
 		owners = append(owners, owner)
@@ -920,7 +925,7 @@ func (r *PostgresRepository) SearchOwners(ctx context.Context, query string, lim
 
 	// Search teams
 	teamsQuery := `
-		SELECT 'team' as type, id, name, NULL as email
+		SELECT 'team' as type, id, name, NULL as username, NULL as email, NULL as profile_picture
 		FROM teams
 		WHERE name ILIKE '%' || $1 || '%'
 		ORDER BY name
@@ -934,7 +939,7 @@ func (r *PostgresRepository) SearchOwners(ctx context.Context, query string, lim
 
 	for teamRows.Next() {
 		owner := &Owner{}
-		if err := teamRows.Scan(&owner.Type, &owner.ID, &owner.Name, &owner.Email); err != nil {
+		if err := teamRows.Scan(&owner.Type, &owner.ID, &owner.Name, &owner.Username, &owner.Email, &owner.ProfilePicture); err != nil {
 			return nil, fmt.Errorf("failed to scan team: %w", err)
 		}
 		owners = append(owners, owner)
