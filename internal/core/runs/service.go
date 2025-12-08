@@ -308,7 +308,11 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 	staleEntities := s.GetStaleEntities(ctx, lastCheckpoints, currentMRNs)
 	for _, staleMRN := range staleEntities {
 		if err := s.assetService.DeleteByMRN(ctx, staleMRN); err != nil {
-			log.Error().Err(err).Str("asset_mrn", staleMRN).Msg("Failed to delete stale asset")
+			if errors.Is(err, asset.ErrAssetNotFound) {
+				log.Debug().Str("asset_mrn", staleMRN).Msg("Stale asset already deleted")
+			} else {
+				log.Error().Err(err).Str("asset_mrn", staleMRN).Msg("Failed to delete stale asset")
+			}
 		}
 
 		entity := &RunEntity{

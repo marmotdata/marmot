@@ -10,7 +10,7 @@
 		cancelText?: string;
 		variant?: 'danger' | 'warning' | 'info';
 		onConfirm: () => void;
-		onCancel: () => void;
+		onCancel?: () => void;
 	}
 
 	let {
@@ -23,6 +23,14 @@
 		onConfirm,
 		onCancel
 	}: Props = $props();
+
+	function handleCancel() {
+		if (onCancel) {
+			onCancel();
+		} else {
+			show = false;
+		}
+	}
 
 	let variantColors = $derived(
 		variant === 'danger'
@@ -51,8 +59,8 @@
 {#if show}
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
-		onclick={onCancel}
-		onkeydown={(e) => e.key === 'Escape' && onCancel()}
+		onclick={handleCancel}
+		onkeydown={(e) => e.key === 'Escape' && handleCancel()}
 		role="button"
 		tabindex="-1"
 	>
@@ -82,7 +90,7 @@
 			<div
 				class="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700"
 			>
-				<Button variant="clear" click={onCancel} text={cancelText} />
+				<Button variant="clear" click={handleCancel} text={cancelText} />
 				<button
 					onclick={onConfirm}
 					class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors {variantColors.buttonClass}"

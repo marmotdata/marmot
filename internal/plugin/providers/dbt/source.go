@@ -9,12 +9,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/mrn"
@@ -27,28 +26,16 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	// Source configuration - either local or S3
-	SourceType string `json:"source_type" description:"Source type for DBT artifacts (local or s3)" validate:"required,oneof=local s3"`
+	TargetPath string `json:"target_path" description:"Path to DBT target directory containing manifest.json, catalog.json, etc." validate:"required"`
 
-	// Local filesystem configuration
-	TargetPath string `json:"target_path,omitempty" description:"Path to DBT target directory containing manifest.json, catalog.json, etc." validate:"required_if=SourceType local"`
-
-	// S3 configuration
-	*plugin.AWSConfig `json:",inline"`
-	S3Bucket          string `json:"s3_bucket,omitempty" description:"S3 bucket containing DBT artifacts" validate:"required_if=SourceType s3"`
-	S3Prefix          string `json:"s3_prefix,omitempty" description:"S3 prefix/folder for DBT artifacts (optional)"`
-
-	// DBT project configuration
 	ProjectName string `json:"project_name" description:"DBT project name" validate:"required"`
 	Environment string `json:"environment,omitempty" description:"Environment name (e.g., production, staging)" default:"production"`
 
-	// Artifact configuration
 	IncludeManifest    bool `json:"include_manifest" description:"Include manifest.json for model definitions" default:"true"`
 	IncludeCatalog     bool `json:"include_catalog" description:"Include catalog.json for table/column descriptions" default:"true"`
 	IncludeRunResults  bool `json:"include_run_results" description:"Include run_results.json for test results" default:"false"`
 	IncludeSourcesJSON bool `json:"include_sources_json" description:"Include sources.json for source definitions" default:"false"`
 
-	// Discovery configuration
 	DiscoverModels  bool           `json:"discover_models" description:"Discover DBT models" default:"true"`
 	DiscoverSources bool           `json:"discover_sources" description:"Discover DBT sources" default:"true"`
 	DiscoverTests   bool           `json:"discover_tests" description:"Discover DBT tests" default:"false"`
@@ -58,7 +45,6 @@ type Config struct {
 // Example configuration for the plugin
 // +marmot:example-config
 var _ = `
-source_type: "local"
 target_path: "/path/to/dbt/project/target"
 project_name: "analytics"
 environment: "production"
@@ -173,20 +159,19 @@ type DBTRunResults struct {
 }
 
 type RunResult struct {
-	UniqueID       string                 `json:"unique_id"`
-	Status         string                 `json:"status"`
-	ExecutionTime  float64                `json:"execution_time"`
-	Message        string                 `json:"message"`
-	Failures       int                    `json:"failures"`
+	UniqueID        string                 `json:"unique_id"`
+	Status          string                 `json:"status"`
+	ExecutionTime   float64                `json:"execution_time"`
+	Message         string                 `json:"message"`
+	Failures        int                    `json:"failures"`
 	AdapterResponse map[string]interface{} `json:"adapter_response"`
-	Thread         string                 `json:"thread_id"`
+	Thread          string                 `json:"thread_id"`
 }
 
 type Source struct {
-	config    *Config
-	s3Client  *s3.Client
-	manifest  *DBTManifest
-	catalog   *DBTCatalog
+	config     *Config
+	manifest   *DBTManifest
+	catalog    *DBTCatalog
 	runResults *DBTRunResults
 }
 
@@ -196,24 +181,12 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	// Set defaults
 	if config.Environment == "" {
 		config.Environment = "production"
 	}
 
 	if err := plugin.ValidateStruct(config); err != nil {
 		return nil, err
-	}
-
-	// Validate source-specific requirements
-	if config.SourceType == "local" {
-		if config.TargetPath == "" {
-			return nil, fmt.Errorf("target_path is required when source_type is local")
-		}
-	} else if config.SourceType == "s3" {
-		if config.S3Bucket == "" {
-			return nil, fmt.Errorf("s3_bucket is required when source_type is s3")
-		}
 	}
 
 	s.config = config
@@ -227,14 +200,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	s.config = config
 
-	// Initialize S3 client if needed
-	if config.SourceType == "s3" {
-		if err := s.initS3Client(ctx); err != nil {
-			return nil, fmt.Errorf("initializing S3 client: %w", err)
-		}
-	}
-
-	// Load DBT artifacts
 	if err := s.loadArtifacts(ctx); err != nil {
 		return nil, fmt.Errorf("loading DBT artifacts: %w", err)
 	}
@@ -264,23 +229,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
-}
-
-func (s *Source) initS3Client(ctx context.Context) error {
-	awsConfig, err := plugin.ExtractAWSConfig(plugin.RawPluginConfig(map[string]interface{}{
-		"credentials": s.config.AWSConfig,
-	}))
-	if err != nil {
-		return fmt.Errorf("extracting AWS config: %w", err)
-	}
-
-	awsCfg, err := awsConfig.NewAWSConfig(ctx)
-	if err != nil {
-		return fmt.Errorf("creating AWS config: %w", err)
-	}
-
-	s.s3Client = s3.NewFromConfig(awsCfg)
-	return nil
 }
 
 func (s *Source) loadArtifacts(ctx context.Context) error {
@@ -335,13 +283,6 @@ func (s *Source) loadArtifacts(ctx context.Context) error {
 }
 
 func (s *Source) readArtifact(ctx context.Context, filename string) ([]byte, error) {
-	if s.config.SourceType == "local" {
-		return s.readLocalArtifact(filename)
-	}
-	return s.readS3Artifact(ctx, filename)
-}
-
-func (s *Source) readLocalArtifact(filename string) ([]byte, error) {
 	path := filepath.Join(s.config.TargetPath, filename)
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -350,27 +291,32 @@ func (s *Source) readLocalArtifact(filename string) ([]byte, error) {
 	return data, nil
 }
 
-func (s *Source) readS3Artifact(ctx context.Context, filename string) ([]byte, error) {
-	key := filename
-	if s.config.S3Prefix != "" {
-		key = filepath.Join(s.config.S3Prefix, filename)
+func (s *Source) getProviderName() string {
+	if s.manifest == nil || s.manifest.Metadata.AdapterType == "" {
+		return "DBT"
 	}
 
-	result, err := s.s3Client.GetObject(ctx, &s3.GetObjectInput{
-		Bucket: &s.config.S3Bucket,
-		Key:    &key,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("getting S3 object s3://%s/%s: %w", s.config.S3Bucket, key, err)
+	adapter := s.manifest.Metadata.AdapterType
+	switch strings.ToLower(adapter) {
+	case "postgres", "postgresql":
+		return "Postgres"
+	case "duckdb":
+		return "DuckDB"
+	case "snowflake":
+		return "Snowflake"
+	case "bigquery":
+		return "BigQuery"
+	case "redshift":
+		return "Redshift"
+	case "mysql":
+		return "MySQL"
+	case "sqlserver", "mssql":
+		return "SQLServer"
+	case "databricks":
+		return "Databricks"
+	default:
+		return "DBT"
 	}
-	defer result.Body.Close()
-
-	data, err := io.ReadAll(result.Body)
-	if err != nil {
-		return nil, fmt.Errorf("reading S3 object body: %w", err)
-	}
-
-	return data, nil
 }
 
 func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
@@ -378,12 +324,10 @@ func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
 	var lineages []lineage.LineageEdge
 
 	for nodeID, node := range s.manifest.Nodes {
-		// Only process models
 		if node.ResourceType != "model" {
 			continue
 		}
 
-		// Apply model filter
 		if s.config.ModelFilter != nil {
 			if !plugin.ShouldIncludeResource(node.Name, *s.config.ModelFilter) {
 				log.Debug().Str("model", node.Name).Msg("Skipping model due to filter")
@@ -391,11 +335,15 @@ func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
 			}
 		}
 
-		asset := s.createModelAsset(node, nodeID)
-		assets = append(assets, asset)
+		jobAsset := s.createModelAsset(node, nodeID)
+		assets = append(assets, jobAsset)
 
-		// Create lineage from dependencies
-		modelLineages := s.createModelLineage(node)
+		materializedAsset := s.createMaterializedTableAsset(node, nodeID)
+		if materializedAsset.MRN != nil {
+			assets = append(assets, materializedAsset)
+		}
+
+		modelLineages := s.createModelLineage(node, nodeID)
 		lineages = append(lineages, modelLineages...)
 	}
 
@@ -403,27 +351,29 @@ func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
 }
 
 func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset {
-	// Determine the full table name
-	tableName := node.Name
-	if node.Alias != "" {
-		tableName = node.Alias
+	modelName := node.Name
+	jobName := fmt.Sprintf("%s.%s.%s", s.config.ProjectName, node.PackageName, modelName)
+
+	materialization := node.Materialized
+	if materialization == "" {
+		materialization = "table"
 	}
 
-	fullyQualifiedName := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
-
-	// Build metadata
 	metadata := make(map[string]interface{})
 	metadata["dbt_unique_id"] = node.UniqueID
 	metadata["dbt_package"] = node.PackageName
 	metadata["dbt_path"] = node.Path
 	metadata["dbt_original_path"] = node.OriginalPath
-	metadata["dbt_materialized"] = node.Materialized
+	metadata["dbt_materialized"] = materialization
 	metadata["database"] = node.Database
 	metadata["schema"] = node.Schema
-	metadata["table_name"] = tableName
-	metadata["fully_qualified_name"] = fullyQualifiedName
+	metadata["model_name"] = modelName
 	metadata["project_name"] = s.config.ProjectName
 	metadata["environment"] = s.config.Environment
+
+	if node.Alias != "" {
+		metadata["alias"] = node.Alias
+	}
 
 	if s.manifest.Metadata.AdapterType != "" {
 		metadata["adapter_type"] = s.manifest.Metadata.AdapterType
@@ -432,36 +382,14 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 		metadata["dbt_version"] = s.manifest.Metadata.DBTVersion
 	}
 
-	// Add config metadata
 	for k, v := range node.Config {
 		metadata[fmt.Sprintf("config_%s", k)] = v
 	}
 
-	// Add custom meta
 	for k, v := range node.Meta {
 		metadata[fmt.Sprintf("meta_%s", k)] = v
 	}
 
-	// Merge catalog metadata if available
-	if s.catalog != nil {
-		if catalogNode, exists := s.catalog.Nodes[nodeID]; exists {
-			if catalogNode.Metadata.Owner != "" {
-				metadata["owner"] = catalogNode.Metadata.Owner
-			}
-			if catalogNode.Metadata.Comment != "" {
-				metadata["catalog_comment"] = catalogNode.Metadata.Comment
-			}
-
-			// Add table stats
-			for statKey, stat := range catalogNode.Stats {
-				if stat.Include {
-					metadata[fmt.Sprintf("stat_%s", statKey)] = stat.Value
-				}
-			}
-		}
-	}
-
-	// Add test results if available
 	if s.runResults != nil {
 		for _, result := range s.runResults.Results {
 			if result.UniqueID == node.UniqueID {
@@ -478,33 +406,128 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 		}
 	}
 
-	// Build schema information as map[string]string (column name -> type)
+	allTags := append([]string{}, node.Tags...)
+	allTags = append(allTags, s.config.Tags...)
+
+	mrnValue := mrn.New("Job", "DBT", jobName)
+
+	description := node.Description
+	if description == "" {
+		description = fmt.Sprintf("DBT model %s", modelName)
+	}
+
+	var query *string
+	var queryLanguage *string
+	if node.CompiledSQL != "" {
+		query = &node.CompiledSQL
+		lang := "sql"
+		queryLanguage = &lang
+	} else if node.RawSQL != "" {
+		query = &node.RawSQL
+		lang := "sql"
+		queryLanguage = &lang
+	} else if node.RawCode != "" {
+		query = &node.RawCode
+		lang := "sql"
+		queryLanguage = &lang
+	}
+
+	if node.RawSQL != "" && node.RawSQL != node.CompiledSQL {
+		metadata["raw_sql"] = node.RawSQL
+	}
+
+	return asset.Asset{
+		Name:          &jobName,
+		MRN:           &mrnValue,
+		Type:          "Job",
+		Providers:     []string{"DBT"},
+		Description:   &description,
+		Metadata:      metadata,
+		Tags:          allTags,
+		Query:         query,
+		QueryLanguage: queryLanguage,
+		Sources: []asset.AssetSource{{
+			Name:       "DBT",
+			LastSyncAt: time.Now(),
+			Properties: metadata,
+			Priority:   1,
+		}},
+	}
+}
+
+func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) asset.Asset {
+	tableName := node.Name
+	if node.Alias != "" {
+		tableName = node.Alias
+	}
+
+	tableFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
+
+	assetType := "Table"
+	materialization := node.Materialized
+	if materialization == "" {
+		materialization = "table"
+	}
+
+	switch materialization {
+	case "view":
+		assetType = "View"
+	case "table", "incremental":
+		assetType = "Table"
+	case "ephemeral":
+		return asset.Asset{}
+	default:
+		assetType = "Table"
+	}
+
+	provider := s.getProviderName()
+
+	metadata := make(map[string]interface{})
+	metadata["dbt_model"] = node.Name
+	metadata["database"] = node.Database
+	metadata["schema"] = node.Schema
+	metadata["table_name"] = tableName
+	metadata["fully_qualified_name"] = tableFQN
+	metadata["materialized_by"] = "dbt"
+
+	if s.catalog != nil {
+		if catalogNode, exists := s.catalog.Nodes[nodeID]; exists {
+			if catalogNode.Metadata.Owner != "" {
+				metadata["owner"] = catalogNode.Metadata.Owner
+			}
+			if catalogNode.Metadata.Comment != "" {
+				metadata["catalog_comment"] = catalogNode.Metadata.Comment
+			}
+
+			for statKey, stat := range catalogNode.Stats {
+				if stat.Include {
+					metadata[fmt.Sprintf("stat_%s", statKey)] = stat.Value
+				}
+			}
+		}
+	}
+
 	schema := make(map[string]string)
 	if len(node.Columns) > 0 {
 		for _, col := range node.Columns {
 			if col.DataType != "" {
 				schema[col.Name] = col.DataType
 			}
-			// Store column description in metadata
 			if col.Description != "" {
 				metadata[fmt.Sprintf("column_%s_description", col.Name)] = col.Description
 			}
-			// Store column tags in metadata
 			if len(col.Tags) > 0 {
 				metadata[fmt.Sprintf("column_%s_tags", col.Name)] = col.Tags
 			}
 		}
 	}
 
-	// Merge catalog column information
 	if s.catalog != nil {
 		if catalogNode, exists := s.catalog.Nodes[nodeID]; exists {
-			// Add or update with catalog columns
 			for _, catalogCol := range catalogNode.Columns {
 				if catalogCol.Type != "" {
 					schema[catalogCol.Name] = catalogCol.Type
 				}
-				// Store catalog comment in metadata if description not already set
 				if catalogCol.Comment != "" {
 					key := fmt.Sprintf("column_%s_description", catalogCol.Name)
 					if _, exists := metadata[key]; !exists {
@@ -515,23 +538,21 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 		}
 	}
 
-	// Combine tags from config
 	allTags := append([]string{}, node.Tags...)
 	allTags = append(allTags, s.config.Tags...)
 
-	// Create MRN
-	mrnValue := mrn.New("Table", "DBT", fullyQualifiedName)
+	mrnValue := mrn.New(assetType, provider, tableFQN)
 
 	description := node.Description
 	if description == "" {
-		description = fmt.Sprintf("DBT model: %s", tableName)
+		description = fmt.Sprintf("%s %s in %s.%s", assetType, tableName, node.Database, node.Schema)
 	}
 
 	return asset.Asset{
-		Name:        &tableName,
+		Name:        &tableFQN,
 		MRN:         &mrnValue,
-		Type:        "Table",
-		Providers:   []string{"DBT"},
+		Type:        assetType,
+		Providers:   []string{provider},
 		Description: &description,
 		Metadata:    metadata,
 		Tags:        allTags,
@@ -545,34 +566,31 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 	}
 }
 
-func (s *Source) createModelLineage(node ManifestNode) []lineage.LineageEdge {
+func (s *Source) createModelLineage(node ManifestNode, nodeID string) []lineage.LineageEdge {
 	var lineages []lineage.LineageEdge
 
-	// Get fully qualified name for this model
 	modelName := node.Name
-	if node.Alias != "" {
-		modelName = node.Alias
-	}
-	targetFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, modelName)
-	targetMRN := mrn.New("Table", "DBT", targetFQN)
+	jobName := fmt.Sprintf("%s.%s.%s", s.config.ProjectName, node.PackageName, modelName)
+	jobMRN := mrn.New("Job", "DBT", jobName)
 
-	// Create lineage edges for each dependency
+	provider := s.getProviderName()
+
 	for _, depNodeID := range node.DependsOn.Nodes {
-		// Look up the dependency node
 		var depNode ManifestNode
 		var found bool
+		var isSource bool
 
-		// Check in nodes (models)
 		if n, exists := s.manifest.Nodes[depNodeID]; exists {
 			depNode = n
 			found = true
+			isSource = false
 		}
 
-		// Check in sources
 		if !found {
 			if n, exists := s.manifest.Sources[depNodeID]; exists {
 				depNode = n
 				found = true
+				isSource = true
 			}
 		}
 
@@ -581,18 +599,53 @@ func (s *Source) createModelLineage(node ManifestNode) []lineage.LineageEdge {
 			continue
 		}
 
-		// Build source MRN
 		depName := depNode.Name
 		if depNode.Alias != "" {
 			depName = depNode.Alias
 		}
-		sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
-		sourceMRN := mrn.New("Table", "DBT", sourceFQN)
+
+		var sourceMRN string
+		if isSource {
+			sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
+			sourceMRN = mrn.New("Table", provider, sourceFQN)
+		} else {
+			sourceType := "Table"
+			if depNode.Materialized == "view" {
+				sourceType = "View"
+			}
+			sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
+			sourceMRN = mrn.New(sourceType, provider, sourceFQN)
+		}
 
 		lineages = append(lineages, lineage.LineageEdge{
 			Source: sourceMRN,
-			Target: targetMRN,
+			Target: jobMRN,
 			Type:   "DEPENDS_ON",
+		})
+	}
+
+	materialization := node.Materialized
+	if materialization == "" {
+		materialization = "table"
+	}
+
+	if materialization != "ephemeral" {
+		tableName := node.Name
+		if node.Alias != "" {
+			tableName = node.Alias
+		}
+		targetFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
+
+		targetType := "Table"
+		if materialization == "view" {
+			targetType = "View"
+		}
+		targetMRN := mrn.New(targetType, provider, targetFQN)
+
+		lineages = append(lineages, lineage.LineageEdge{
+			Source: jobMRN,
+			Target: targetMRN,
+			Type:   "CREATES",
 		})
 	}
 
@@ -616,7 +669,8 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 		tableName = node.Alias
 	}
 
-	fullyQualifiedName := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
+	tableFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
+	provider := s.getProviderName()
 
 	metadata := make(map[string]interface{})
 	metadata["dbt_unique_id"] = node.UniqueID
@@ -624,27 +678,23 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 	metadata["database"] = node.Database
 	metadata["schema"] = node.Schema
 	metadata["table_name"] = tableName
-	metadata["fully_qualified_name"] = fullyQualifiedName
+	metadata["fully_qualified_name"] = tableFQN
 	metadata["project_name"] = s.config.ProjectName
 	metadata["environment"] = s.config.Environment
 	metadata["resource_type"] = "source"
 
-	// Add custom meta
 	for k, v := range node.Meta {
 		metadata[fmt.Sprintf("meta_%s", k)] = v
 	}
 
-	// Build schema as map[string]string (column name -> type)
 	schema := make(map[string]string)
 	for _, col := range node.Columns {
 		if col.DataType != "" {
 			schema[col.Name] = col.DataType
 		}
-		// Store column description in metadata
 		if col.Description != "" {
 			metadata[fmt.Sprintf("column_%s_description", col.Name)] = col.Description
 		}
-		// Store column tags in metadata
 		if len(col.Tags) > 0 {
 			metadata[fmt.Sprintf("column_%s_tags", col.Name)] = col.Tags
 		}
@@ -654,17 +704,17 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 	allTags = append(allTags, s.config.Tags...)
 	allTags = append(allTags, "dbt-source")
 
-	mrnValue := mrn.New("Table", "DBT", fullyQualifiedName)
+	mrnValue := mrn.New("Table", provider, tableFQN)
 	description := node.Description
 	if description == "" {
 		description = fmt.Sprintf("DBT source: %s", tableName)
 	}
 
 	return asset.Asset{
-		Name:        &tableName,
+		Name:        &tableFQN,
 		MRN:         &mrnValue,
 		Type:        "Table",
-		Providers:   []string{"DBT"},
+		Providers:   []string{provider},
 		Description: &description,
 		Metadata:    metadata,
 		Tags:        allTags,

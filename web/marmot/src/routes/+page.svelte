@@ -292,7 +292,8 @@
 			spark: 'apachespark',
 			airflow: 'apacheairflow',
 			flink: 'apacheflink',
-			hive: 'apachehive'
+			hive: 'apachehive',
+			openapi: 'openapiinitiative'
 		};
 		const normalizedProvider = provider.toLowerCase();
 		return iconMap[normalizedProvider] || normalizedProvider;
