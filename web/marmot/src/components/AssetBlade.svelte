@@ -122,12 +122,12 @@
 	async function handleOwnersChange(newOwners: Owner[]) {
 		if (!asset?.id || !canManageAssets) return;
 
-		const currentOwnerKeys = new Set(owners.map(o => `${o.type}-${o.id}`));
-		const newOwnerKeys = new Set(newOwners.map(o => `${o.type}-${o.id}`));
+		const currentOwnerKeys = new Set(owners.map((o) => `${o.type}-${o.id}`));
+		const newOwnerKeys = new Set(newOwners.map((o) => `${o.type}-${o.id}`));
 
 		// Find added and removed owners
-		const added = newOwners.filter(o => !currentOwnerKeys.has(`${o.type}-${o.id}`));
-		const removed = owners.filter(o => !newOwnerKeys.has(`${o.type}-${o.id}`));
+		const added = newOwners.filter((o) => !currentOwnerKeys.has(`${o.type}-${o.id}`));
+		const removed = owners.filter((o) => !newOwnerKeys.has(`${o.type}-${o.id}`));
 
 		try {
 			// Add new owners
@@ -237,12 +237,9 @@
 		transition:fly={{ x: staticPlacement ? 0 : 400, duration: staticPlacement ? 0 : 200 }}
 	>
 		{#if staticPlacement && onToggleCollapse}
-			<a
-				href="#"
-				onclick={(e) => {
-					e.preventDefault();
-					onToggleCollapse();
-				}}
+			<button
+				type="button"
+				onclick={onToggleCollapse}
 				class="flex-shrink-0 w-8 flex items-center justify-center transition-colors hover:bg-gray-100 dark:hover:bg-gray-800"
 				aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
 			>
@@ -256,256 +253,297 @@
 				>
 					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
 				</svg>
-			</a>
+			</button>
 		{/if}
 
 		{#if !collapsed}
-		<div class="flex-1 flex flex-col min-w-0 min-h-0">
-		<div
-			class="flex-none bg-earthy-brown-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center"
-		>
-			<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Asset Details</h2>
-			{#if !staticPlacement}
-				<div class="flex items-center space-x-4">
-					<Button
-						icon="material-symbols:screenshot-monitor-outline"
-						href={fullViewUrl}
-						text="Full View"
-						variant="filled"
-					/>
-					<a
-						href="#"
-						onclick={(e) => { e.preventDefault(); onClose(); }}
-						class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-					>
-						<IconifyIcon icon="material-symbols:close" class="w-5 h-5" />
-					</a>
-				</div>
-			{/if}
-		</div>
-
-		<div class="flex-1 overflow-y-auto min-h-0 {staticPlacement ? 'pr-6 py-6' : 'p-6'}">
-			<div class="space-y-4">
-				<!-- Asset Header -->
-				{#if staticPlacement}
-					<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-						<div class="flex items-start gap-3 mb-3">
-							<div class="flex-shrink-0">
-								<Icon name={currentIconName} iconSize="md" />
-							</div>
-							<div class="flex-1 min-w-0">
-								<h3 class="font-semibold text-base text-gray-900 dark:text-gray-100 truncate">
-									{asset.name || ''}
-								</h3>
-								<p class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5">
-									{asset.mrn || ''}
-								</p>
-							</div>
-						</div>
-						<div class="space-y-4">
-							<div>
-								<div class="flex items-center gap-2 mb-2">
-									<IconifyIcon icon="material-symbols:label-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-									<h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-										Tags
-									</h4>
-								</div>
-								<AssetTags {asset} editable={staticPlacement} />
-							</div>
-							<div>
-								<div class="flex items-center gap-2 mb-2">
-									<IconifyIcon icon="material-symbols:person-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-									<h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-										Owners
-									</h4>
-								</div>
-								{#if loadingOwners}
-									<div class="flex items-center justify-center py-4">
-										<div class="animate-spin h-5 w-5 border-b-2 border-earthy-terracotta-700 rounded-full"></div>
-									</div>
-								{:else}
-									<OwnerSelector
-										selectedOwners={owners}
-										onChange={handleOwnersChange}
-										disabled={!canManageAssets}
-									/>
-								{/if}
-							</div>
-						</div>
-					</div>
-				{:else}
-					<a href={`${fullViewUrl}`} class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all">
-						<div class="flex items-start gap-3 mb-3">
-							<div class="flex-shrink-0">
-								<Icon name={currentIconName} iconSize="md" />
-							</div>
-							<div class="flex-1 min-w-0">
-								<h3 class="font-semibold text-base text-gray-900 dark:text-gray-100 truncate">
-									{asset.name || ''}
-								</h3>
-								<p class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5">
-									{asset.mrn || ''}
-								</p>
-							</div>
-						</div>
-						<div class="space-y-4">
-							<div>
-								<div class="flex items-center gap-2 mb-2">
-									<IconifyIcon icon="material-symbols:label-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-									<h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-										Tags
-									</h4>
-								</div>
-								<AssetTags {asset} editable={false} />
-							</div>
-							<div>
-								<div class="flex items-center gap-2 mb-2">
-									<IconifyIcon icon="material-symbols:person-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-									<h4 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-										Owners
-									</h4>
-								</div>
-								{#if loadingOwners}
-									<div class="flex items-center justify-center py-4">
-										<div class="animate-spin h-5 w-5 border-b-2 border-earthy-terracotta-700 rounded-full"></div>
-									</div>
-								{:else}
-									<OwnerSelector
-										selectedOwners={owners}
-										onChange={() => {}}
-										disabled={true}
-									/>
-								{/if}
-							</div>
-						</div>
-					</a>
-				{/if}
-
-				<!-- Descriptions and Glossary Terms -->
-				{#if hasDescriptionsOrTerms}
-					<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-						<div class="space-y-5">
-							<AssetDescriptions {asset} editable={staticPlacement} />
-							<AssetGlossaryTerms {asset} editable={staticPlacement} />
-						</div>
-					</div>
-				{/if}
-
-				<!-- Run History -->
-				{#if !shouldHideRunHistory && asset.has_run_history}
-					<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-						<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
-							Run History
-						</h3>
-						<RunHistory assetId={asset.id} minimal={true} {asset} />
-					</div>
-				{/if}
-
-				<!-- Data Lineage -->
-				{#if hasNonCurrentNodes}
-					<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-						<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
-							Data Lineage
-						</h3>
-
-						{#if loadingLineage}
-							<div class="flex items-center justify-center py-8">
-								<div class="animate-spin h-6 w-6 border-b-2 border-earthy-terracotta-700 rounded-full"></div>
-							</div>
-						{:else if lineageError}
-							<div class="text-sm text-red-600 dark:text-red-400">{lineageError}</div>
-						{:else if lineage}
-							{#if lineage.nodes.filter((n) => n.depth < 0).length > 0}
-								<div class="mb-4">
-									<h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">
-										Upstream
-									</h4>
-									<div class="space-y-2">
-										{#each filteredLineage.nodes.filter((n) => n.depth < 0) as node}
-											<LineageViewNode
-												{node}
-												expanded={expandedAssets.has(node.id)}
-												onClick={() => toggleAssetExpansion(node.id)}
-												maxMetadataDepth={0}
-												compact={true}
-											/>
-										{/each}
-									</div>
-								</div>
-							{/if}
-
-							{#if lineage.nodes.filter((n) => n.depth > 0).length > 0}
-								<div>
-									<h4 class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2">
-										Downstream
-									</h4>
-									<div class="space-y-2">
-										{#each filteredLineage.nodes.filter((n) => n.depth > 0) as node}
-											<LineageViewNode
-												{node}
-												expanded={expandedAssets.has(node.id)}
-												onClick={() => toggleAssetExpansion(node.id)}
-												maxMetadataDepth={0}
-												compact={true}
-											/>
-										{/each}
-									</div>
-								</div>
-							{/if}
-						{/if}
-					</div>
-				{/if}
-
-				<!-- Additional Details -->
-				<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5">
-					<h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
-						Details
-					</h4>
-					<dl class="space-y-3">
-						<div>
-							<dt class="text-xs text-gray-500 dark:text-gray-400">Created By</dt>
-							<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
-								{asset.created_by || 'Unknown'}
-							</dd>
-						</div>
-						<div>
-							<dt class="text-xs text-gray-500 dark:text-gray-400">Created At</dt>
-							<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
-								{asset.created_at ? formatDate(asset.created_at) : 'Unknown'}
-							</dd>
-						</div>
-						<div>
-							<dt class="text-xs text-gray-500 dark:text-gray-400">Last Updated</dt>
-							<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
-								{asset.updated_at ? formatDate(asset.updated_at) : 'Unknown'}
-							</dd>
-						</div>
-						{#if asset.parent_mrn}
-							<div>
-								<dt class="text-xs text-gray-500 dark:text-gray-400">Parent Asset</dt>
-								<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5 font-mono text-xs break-all">
-									{asset.parent_mrn}
-								</dd>
-							</div>
-						{/if}
-					</dl>
-				</div>
-			</div>
-		</div>
-
-		<!-- Delete Button Footer -->
-		{#if canManageAssets}
-			<div class="flex-none border-t border-gray-200 dark:border-gray-700 bg-earthy-brown-50 dark:bg-gray-900 px-6 py-4 flex justify-end">
-				<button
-					onclick={() => (showDeleteModal = true)}
-					class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+			<div class="flex-1 flex flex-col min-w-0 min-h-0">
+				<div
+					class="flex-none bg-earthy-brown-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex justify-between items-center"
 				>
-					<IconifyIcon icon="material-symbols:delete-outline-rounded" class="w-4 h-4" />
-					Delete Asset
-				</button>
+					<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Asset Details</h2>
+					{#if !staticPlacement}
+						<div class="flex items-center space-x-4">
+							<Button
+								icon="material-symbols:screenshot-monitor-outline"
+								href={fullViewUrl}
+								text="Full View"
+								variant="filled"
+							/>
+							<button
+								type="button"
+								onclick={onClose}
+								class="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+							>
+								<IconifyIcon icon="material-symbols:close" class="w-5 h-5" />
+							</button>
+						</div>
+					{/if}
+				</div>
+
+				<div class="flex-1 overflow-y-auto min-h-0 {staticPlacement ? 'pr-6 py-6' : 'p-6'}">
+					<div class="space-y-4">
+						<!-- Asset Header -->
+						{#if staticPlacement}
+							<div
+								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+							>
+								<div class="flex items-start gap-3 mb-3">
+									<div class="flex-shrink-0">
+										<Icon name={currentIconName} iconSize="md" />
+									</div>
+									<div class="flex-1 min-w-0">
+										<h3 class="font-semibold text-base text-gray-900 dark:text-gray-100 truncate">
+											{asset.name || ''}
+										</h3>
+										<p class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5">
+											{asset.mrn || ''}
+										</p>
+									</div>
+								</div>
+								<div class="space-y-4">
+									<div>
+										<div class="flex items-center gap-2 mb-2">
+											<IconifyIcon
+												icon="material-symbols:label-outline"
+												class="w-4 h-4 text-gray-500 dark:text-gray-400"
+											/>
+											<h4
+												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+											>
+												Tags
+											</h4>
+										</div>
+										<AssetTags {asset} editable={staticPlacement} />
+									</div>
+									<div>
+										<div class="flex items-center gap-2 mb-2">
+											<IconifyIcon
+												icon="material-symbols:person-outline"
+												class="w-4 h-4 text-gray-500 dark:text-gray-400"
+											/>
+											<h4
+												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+											>
+												Owners
+											</h4>
+										</div>
+										{#if loadingOwners}
+											<div class="flex items-center justify-center py-4">
+												<div
+													class="animate-spin h-5 w-5 border-b-2 border-earthy-terracotta-700 rounded-full"
+												></div>
+											</div>
+										{:else}
+											<OwnerSelector
+												selectedOwners={owners}
+												onChange={handleOwnersChange}
+												disabled={!canManageAssets}
+											/>
+										{/if}
+									</div>
+								</div>
+							</div>
+						{:else}
+							<a
+								href={`${fullViewUrl}`}
+								class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all"
+							>
+								<div class="flex items-start gap-3 mb-3">
+									<div class="flex-shrink-0">
+										<Icon name={currentIconName} iconSize="md" />
+									</div>
+									<div class="flex-1 min-w-0">
+										<h3 class="font-semibold text-base text-gray-900 dark:text-gray-100 truncate">
+											{asset.name || ''}
+										</h3>
+										<p class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5">
+											{asset.mrn || ''}
+										</p>
+									</div>
+								</div>
+								<div class="space-y-4">
+									<div>
+										<div class="flex items-center gap-2 mb-2">
+											<IconifyIcon
+												icon="material-symbols:label-outline"
+												class="w-4 h-4 text-gray-500 dark:text-gray-400"
+											/>
+											<h4
+												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+											>
+												Tags
+											</h4>
+										</div>
+										<AssetTags {asset} editable={false} />
+									</div>
+									<div>
+										<div class="flex items-center gap-2 mb-2">
+											<IconifyIcon
+												icon="material-symbols:person-outline"
+												class="w-4 h-4 text-gray-500 dark:text-gray-400"
+											/>
+											<h4
+												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+											>
+												Owners
+											</h4>
+										</div>
+										{#if loadingOwners}
+											<div class="flex items-center justify-center py-4">
+												<div
+													class="animate-spin h-5 w-5 border-b-2 border-earthy-terracotta-700 rounded-full"
+												></div>
+											</div>
+										{:else}
+											<OwnerSelector selectedOwners={owners} onChange={() => {}} disabled={true} />
+										{/if}
+									</div>
+								</div>
+							</a>
+						{/if}
+
+						<!-- Descriptions and Glossary Terms -->
+						{#if hasDescriptionsOrTerms}
+							<div
+								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+							>
+								<div class="space-y-5">
+									<AssetDescriptions {asset} editable={staticPlacement} />
+									<AssetGlossaryTerms {asset} editable={staticPlacement} />
+								</div>
+							</div>
+						{/if}
+
+						<!-- Run History -->
+						{#if !shouldHideRunHistory && asset.has_run_history}
+							<div
+								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+							>
+								<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+									Run History
+								</h3>
+								<RunHistory assetId={asset.id} minimal={true} {asset} />
+							</div>
+						{/if}
+
+						<!-- Data Lineage -->
+						{#if hasNonCurrentNodes}
+							<div
+								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+							>
+								<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+									Data Lineage
+								</h3>
+
+								{#if loadingLineage}
+									<div class="flex items-center justify-center py-8">
+										<div
+											class="animate-spin h-6 w-6 border-b-2 border-earthy-terracotta-700 rounded-full"
+										></div>
+									</div>
+								{:else if lineageError}
+									<div class="text-sm text-red-600 dark:text-red-400">{lineageError}</div>
+								{:else if lineage}
+									{#if lineage.nodes.filter((n) => n.depth < 0).length > 0}
+										<div class="mb-4">
+											<h4
+												class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2"
+											>
+												Upstream
+											</h4>
+											<div class="space-y-2">
+												{#each filteredLineage.nodes.filter((n) => n.depth < 0) as node}
+													<LineageViewNode
+														{node}
+														expanded={expandedAssets.has(node.id)}
+														onClick={() => toggleAssetExpansion(node.id)}
+														maxMetadataDepth={0}
+														compact={true}
+													/>
+												{/each}
+											</div>
+										</div>
+									{/if}
+
+									{#if lineage.nodes.filter((n) => n.depth > 0).length > 0}
+										<div>
+											<h4
+												class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2"
+											>
+												Downstream
+											</h4>
+											<div class="space-y-2">
+												{#each filteredLineage.nodes.filter((n) => n.depth > 0) as node}
+													<LineageViewNode
+														{node}
+														expanded={expandedAssets.has(node.id)}
+														onClick={() => toggleAssetExpansion(node.id)}
+														maxMetadataDepth={0}
+														compact={true}
+													/>
+												{/each}
+											</div>
+										</div>
+									{/if}
+								{/if}
+							</div>
+						{/if}
+
+						<!-- Additional Details -->
+						<div
+							class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+						>
+							<h4 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Details</h4>
+							<dl class="space-y-3">
+								<div>
+									<dt class="text-xs text-gray-500 dark:text-gray-400">Created By</dt>
+									<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
+										{asset.created_by || 'Unknown'}
+									</dd>
+								</div>
+								<div>
+									<dt class="text-xs text-gray-500 dark:text-gray-400">Created At</dt>
+									<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
+										{asset.created_at ? formatDate(asset.created_at) : 'Unknown'}
+									</dd>
+								</div>
+								<div>
+									<dt class="text-xs text-gray-500 dark:text-gray-400">Last Updated</dt>
+									<dd class="text-sm text-gray-900 dark:text-gray-100 mt-0.5">
+										{asset.updated_at ? formatDate(asset.updated_at) : 'Unknown'}
+									</dd>
+								</div>
+								{#if asset.parent_mrn}
+									<div>
+										<dt class="text-xs text-gray-500 dark:text-gray-400">Parent Asset</dt>
+										<dd
+											class="text-sm text-gray-900 dark:text-gray-100 mt-0.5 font-mono text-xs break-all"
+										>
+											{asset.parent_mrn}
+										</dd>
+									</div>
+								{/if}
+							</dl>
+						</div>
+					</div>
+				</div>
+
+				<!-- Delete Button Footer -->
+				{#if canManageAssets}
+					<div
+						class="flex-none border-t border-gray-200 dark:border-gray-700 bg-earthy-brown-50 dark:bg-gray-900 px-6 py-4 flex justify-end"
+					>
+						<button
+							onclick={() => (showDeleteModal = true)}
+							class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+						>
+							<IconifyIcon icon="material-symbols:delete-outline-rounded" class="w-4 h-4" />
+							Delete Asset
+						</button>
+					</div>
+				{/if}
 			</div>
-		{/if}
-		</div>
 		{/if}
 	</div>
 {/if}
@@ -527,17 +565,24 @@
 			<div class="p-6">
 				<div class="flex items-start gap-4">
 					<div class="flex-shrink-0">
-						<IconifyIcon icon="material-symbols:warning-rounded" class="w-12 h-12 text-red-600 dark:text-red-400" />
+						<IconifyIcon
+							icon="material-symbols:warning-rounded"
+							class="w-12 h-12 text-red-600 dark:text-red-400"
+						/>
 					</div>
 					<div class="flex-1">
 						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
 							Delete Asset
 						</h3>
 						<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-							Are you sure you want to delete <span class="font-semibold text-gray-900 dark:text-gray-100">"{asset.name}"</span>? This action cannot be undone.
+							Are you sure you want to delete <span
+								class="font-semibold text-gray-900 dark:text-gray-100">"{asset.name}"</span
+							>? This action cannot be undone.
 						</p>
 						{#if deleteError}
-							<div class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+							<div
+								class="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+							>
 								<p class="text-sm text-red-800 dark:text-red-200">{deleteError}</p>
 							</div>
 						{/if}

@@ -9,9 +9,9 @@
 
 	let { redirectUri = '' }: Props = $props();
 
-	let enabledProviders: string[] = [];
-	let loading = true;
-	let error = '';
+	let enabledProviders = $state<string[]>([]);
+	let loading = $state(true);
+	let error = $state('');
 
 	onMount(async () => {
 		try {

@@ -112,7 +112,8 @@
 	function startEdit(key: string) {
 		editingKey = key;
 		editSchemaName = key;
-		editSchemaContent = typeof schemas[key] === 'string' ? schemas[key] : JSON.stringify(schemas[key], null, 2);
+		editSchemaContent =
+			typeof schemas[key] === 'string' ? schemas[key] : JSON.stringify(schemas[key], null, 2);
 	}
 
 	function cancelEdit() {
@@ -202,21 +203,25 @@
 				{/if}
 				<div class="flex flex-wrap gap-2">
 					{#if showAddSchema}
-					<button
-						class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800"
-						aria-selected={true}
-					>
-						<IconifyIcon icon="material-symbols:add" class="w-4 h-4 inline-block mr-1" />
-						New Schema
-					</button>
-				{/if}
+						<button
+							class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800"
+							aria-selected={true}
+						>
+							<IconifyIcon icon="material-symbols:add" class="w-4 h-4 inline-block mr-1" />
+							New Schema
+						</button>
+					{/if}
 					{#each Object.keys(schemas) as schemaKey}
 						<button
-							class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab === schemaKey && !showAddSchema
+							class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab ===
+								schemaKey && !showAddSchema
 								? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border-earthy-terracotta-200 dark:border-earthy-terracotta-800'
 								: 'text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800'}"
 							aria-selected={activeTab === schemaKey && !showAddSchema}
-							onclick={() => { showAddSchema = false; setActiveTab(schemaKey); }}
+							onclick={() => {
+								showAddSchema = false;
+								setActiveTab(schemaKey);
+							}}
 						>
 							{schemaKey}
 						</button>
@@ -309,11 +314,12 @@
 	{/if}
 
 	{#if Object.keys(schemas).length > 0 || showAddSchema}
-
 		<!-- Active Schema Content -->
 		{#if showAddSchema}
 			<!-- Add New Schema -->
-			<div class="p-4 space-y-4 border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800">
+			<div
+				class="p-4 space-y-4 border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800"
+			>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 						Schema Name
@@ -357,7 +363,9 @@
 			</div>
 		{:else if activeTab && editingKey === activeTab}
 			<!-- Edit mode -->
-			<div class="p-4 space-y-4 border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800">
+			<div
+				class="p-4 space-y-4 border border-gray-200 dark:border-gray-700 rounded-b-lg bg-white dark:bg-gray-800"
+			>
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
 						Schema Name

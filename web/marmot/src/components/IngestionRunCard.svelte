@@ -220,7 +220,9 @@
 					<div class="text-xs text-gray-500 dark:text-gray-400">Updated</div>
 				</div>
 				<div class="text-center">
-					<div class="text-lg font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-700">
+					<div
+						class="text-lg font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
+					>
 						{run.summary.assets_deleted}
 					</div>
 					<div class="text-xs text-gray-500 dark:text-gray-400">Deleted</div>

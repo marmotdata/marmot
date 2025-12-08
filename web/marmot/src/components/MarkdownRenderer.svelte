@@ -70,7 +70,9 @@
 	}
 	:global(.prose pre code) {
 		@apply bg-transparent px-0 py-0;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+		font-family:
+			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+			monospace;
 		font-size: 0.875rem;
 		background: transparent !important;
 		display: block;

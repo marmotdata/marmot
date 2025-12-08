@@ -52,10 +52,16 @@
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
 		onclick={onCancel}
+		onkeydown={(e) => e.key === 'Escape' && onCancel()}
+		role="button"
+		tabindex="-1"
 	>
 		<div
 			class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full overflow-hidden"
 			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
+			role="dialog"
+			tabindex="-1"
 		>
 			<div class="p-6">
 				<div class="flex items-start gap-4">
@@ -73,7 +79,9 @@
 				</div>
 			</div>
 
-			<div class="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
+			<div
+				class="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700"
+			>
 				<Button variant="clear" click={onCancel} text={cancelText} />
 				<button
 					onclick={onConfirm}

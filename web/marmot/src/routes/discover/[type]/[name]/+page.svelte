@@ -53,23 +53,18 @@
 	}
 
 	let visibleTabs = $derived(
-		[
-			'metadata',
-			'environments',
-			'schema',
-			'documentation',
-			'run-history',
-			'lineage'
-		].filter((tab) => {
-			if (
-				tab === 'environments' &&
-				(!asset?.environments || Object.keys(asset.environments).length === 0)
-			)
-				return false;
-			if (tab === 'documentation' && !asset?.documentation) return false;
-			if (tab === 'run-history' && !asset?.has_run_history) return false;
-			return true;
-		})
+		['metadata', 'environments', 'schema', 'documentation', 'run-history', 'lineage'].filter(
+			(tab) => {
+				if (
+					tab === 'environments' &&
+					(!asset?.environments || Object.keys(asset.environments).length === 0)
+				)
+					return false;
+				if (tab === 'documentation' && !asset?.documentation) return false;
+				if (tab === 'run-history' && !asset?.has_run_history) return false;
+				return true;
+			}
+		)
 	);
 
 	$effect(() => {
@@ -145,7 +140,6 @@
 								class="py-3 px-2 border-b-2 font-medium text-sm {activeTab === tab
 									? 'border-earthy-terracotta-700 text-earthy-terracotta-700'
 									: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
-								aria-selected={activeTab === tab}
 								onclick={() => setActiveTab(tab)}
 							>
 								{tab === 'run-history' ? 'Run History' : tab.charAt(0).toUpperCase() + tab.slice(1)}
@@ -184,7 +178,7 @@
 							</div>
 						{:else if activeTab === 'schema'}
 							<div class="mt-6">
-								<SchemaEditor asset={asset} />
+								<SchemaEditor {asset} />
 							</div>
 						{:else if activeTab === 'documentation'}
 							<div class="mt-6">

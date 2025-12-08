@@ -21,8 +21,8 @@
 	let showProviderDropdown = $state(false);
 	let selectedTypeIndex = $state(-1);
 	let selectedProviderIndex = $state(-1);
-	let typeDropdownElement: HTMLDivElement;
-	let providerDropdownElement: HTMLDivElement;
+	let typeDropdownElement = $state<HTMLDivElement>();
+	let providerDropdownElement = $state<HTMLDivElement>();
 
 	// Get unique suggestions with proper casing
 	let filteredTypes = $derived(
@@ -36,9 +36,7 @@
 	let filteredProviders = $derived(
 		Object.keys(providerIconMap)
 			.filter((provider) =>
-				providerIconMap[provider].displayName
-					.toLowerCase()
-					.includes(providerSearch.toLowerCase())
+				providerIconMap[provider].displayName.toLowerCase().includes(providerSearch.toLowerCase())
 			)
 			.map((provider) => ({ key: provider, display: providerIconMap[provider].displayName }))
 	);
@@ -225,8 +223,8 @@
 	<div class="fixed inset-0 z-50 flex items-start justify-center pt-[10vh] px-4 overflow-y-auto">
 		<div
 			class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm transition-opacity"
-			on:click={handleClose}
-			on:keypress={(e) => e.key === 'Enter' && handleClose()}
+			onclick={handleClose}
+			onkeydown={(e) => e.key === 'Enter' && handleClose()}
 			role="button"
 			tabindex="0"
 		></div>
@@ -239,15 +237,13 @@
 				class="flex items-center justify-between px-6 py-5 border-b border-gray-200 dark:border-gray-700"
 			>
 				<div>
-					<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-						Create New Asset
-					</h3>
+					<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Create New Asset</h3>
 					<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
 						Add a new asset to your data catalog
 					</p>
 				</div>
 				<button
-					on:click={handleClose}
+					onclick={handleClose}
 					disabled={isCreating}
 					class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors disabled:opacity-50"
 				>
@@ -269,7 +265,13 @@
 				</div>
 			{/if}
 
-			<form on:submit|preventDefault={createAsset} class="p-6">
+			<form
+				onsubmit={(e) => {
+					e.preventDefault();
+					createAsset();
+				}}
+				class="p-6"
+			>
 				<div class="space-y-6">
 					<!-- Basic Information Section -->
 					<div class="space-y-4">
@@ -304,13 +306,13 @@
 								<input
 									type="text"
 									bind:value={typeSearch}
-									on:input={() => {
+									oninput={() => {
 										newAssetType = typeSearch;
 										showTypeDropdown = true;
 									}}
-									on:focus={() => (showTypeDropdown = true)}
-									on:blur={() => setTimeout(() => (showTypeDropdown = false), 200)}
-									on:keydown={handleTypeKeydown}
+									onfocus={() => (showTypeDropdown = true)}
+									onblur={() => setTimeout(() => (showTypeDropdown = false), 200)}
+									onkeydown={handleTypeKeydown}
 									disabled={isCreating}
 									placeholder="e.g., Table, Queue, Topic, Database..."
 									class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 transition-all font-mono"
@@ -321,10 +323,10 @@
 										bind:this={typeDropdownElement}
 										class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
 									>
-										{#each filteredTypes as typeObj, index}
+										{#each filteredTypes as typeObj, index (typeObj.key)}
 											<button
 												type="button"
-												on:click={() => selectType(typeObj)}
+												onclick={() => selectType(typeObj)}
 												class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-left {index ===
 												selectedTypeIndex
 													? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/30'
@@ -353,14 +355,14 @@
 
 							{#if newAssetProviders.length > 0}
 								<div class="flex flex-wrap gap-2 mb-2">
-									{#each newAssetProviders as provider}
+									{#each newAssetProviders as provider, index (index)}
 										<span
 											class="inline-flex items-center gap-2 px-3 py-1.5 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 rounded-lg border border-earthy-terracotta-200 dark:border-earthy-terracotta-800"
 										>
 											<span class="text-sm font-medium">{provider}</span>
 											<button
 												type="button"
-												on:click={() => removeProvider(provider)}
+												onclick={() => removeProvider(provider)}
 												disabled={isCreating}
 												class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200 transition-colors disabled:opacity-50"
 											>
@@ -375,9 +377,9 @@
 								<input
 									type="text"
 									bind:value={providerSearch}
-									on:focus={() => (showProviderDropdown = true)}
-									on:blur={() => setTimeout(() => (showProviderDropdown = false), 200)}
-									on:keydown={handleProviderKeydown}
+									onfocus={() => (showProviderDropdown = true)}
+									onblur={() => setTimeout(() => (showProviderDropdown = false), 200)}
+									onkeydown={handleProviderKeydown}
 									disabled={isCreating}
 									placeholder="e.g., Kafka, Snowflake, PostgreSQL, Airflow..."
 									class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:bg-gray-700 dark:text-gray-100 disabled:opacity-50 transition-all font-mono"
@@ -387,12 +389,10 @@
 										bind:this={providerDropdownElement}
 										class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
 									>
-										{#each filteredProviders as providerObj, index}
+										{#each filteredProviders as providerObj, index (providerObj.key)}
 											<button
 												type="button"
-												on:click={() => {
-													toggleProvider(providerObj);
-												}}
+												onclick={() => toggleProvider(providerObj)}
 												class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-left {index ===
 												selectedProviderIndex
 													? 'bg-blue-50 dark:bg-blue-900/30'

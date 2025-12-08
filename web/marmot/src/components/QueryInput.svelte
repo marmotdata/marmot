@@ -687,11 +687,7 @@
 		/>
 	{:else}
 		<div class="relative">
-			<div
-				bind:this={overlayDiv}
-				class="syntax-highlight-overlay"
-				aria-hidden="true"
-			>
+			<div bind:this={overlayDiv} class="syntax-highlight-overlay" aria-hidden="true">
 				{#each getHighlightedText(value) as part}
 					<span class={part.class}>{part.text}</span>
 				{/each}
@@ -773,7 +769,9 @@
 		right: 0;
 		bottom: 0;
 		padding: 0.5rem 0.75rem;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+		font-family:
+			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+			monospace;
 		font-size: 0.875rem;
 		line-height: 1.5;
 		word-wrap: break-word;
@@ -792,7 +790,9 @@
 		background: transparent;
 		color: transparent;
 		caret-color: #111827;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+		font-family:
+			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+			monospace;
 		font-size: 0.875rem;
 		line-height: 1.5;
 		word-wrap: break-word;

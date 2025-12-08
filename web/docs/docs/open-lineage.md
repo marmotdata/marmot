@@ -70,15 +70,15 @@ To disable authentication for the OpenLineage endpoint, set the following config
 **Config file**
 
 ```yaml
-auth:
-  openlineage:
+openlineage:
+  auth:
     enabled: false
 ```
 
 **Environment variable:**
 
 ```bash
-export MARMOT_AUTH_OPENLINEAGE_ENABLED=false
+export MARMOT_OPENLINEAGE_AUTH_ENABLED=false
 ```
 
 :::warning

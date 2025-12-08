@@ -387,7 +387,7 @@
 		// Position delete confirmation near the bin icon
 		deletePosition = {
 			x: position.x - 100, // Center the dialog (width ~200px)
-			y: position.y + 10   // Slightly below the bin icon
+			y: position.y + 10 // Slightly below the bin icon
 		};
 
 		showDeleteButton = true;
@@ -476,7 +476,9 @@
 		>
 			{#if loading && (!nodes || nodes.length === 0)}
 				<div class="absolute inset-0 flex items-center justify-center bg-inherit z-10">
-					<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
+					<div
+						class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
+					></div>
 				</div>
 			{/if}
 
@@ -547,7 +549,10 @@
 		tabindex="-1"
 	>
 		<div class="flex items-center gap-3">
-			<IconifyIcon icon="material-symbols:warning-rounded" class="w-6 h-6 text-red-600 dark:text-red-400" />
+			<IconifyIcon
+				icon="material-symbols:warning-rounded"
+				class="w-6 h-6 text-red-600 dark:text-red-400"
+			/>
 			<div>
 				<p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
 					Delete this lineage connection?

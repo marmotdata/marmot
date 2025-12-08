@@ -58,7 +58,8 @@
 			},
 			editorProps: {
 				attributes: {
-					class: 'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[100px] px-3 py-2'
+					class:
+						'prose prose-sm dark:prose-invert max-w-none focus:outline-none min-h-[100px] px-3 py-2'
 				}
 			}
 		});
@@ -140,7 +141,7 @@
 		<button
 			type="button"
 			on:click={toggleBold}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('bold')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
@@ -152,7 +153,7 @@
 		<button
 			type="button"
 			on:click={toggleItalic}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('italic')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
@@ -164,7 +165,7 @@
 		<button
 			type="button"
 			on:click={toggleCode}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('code')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
@@ -178,7 +179,7 @@
 		<button
 			type="button"
 			on:click={() => toggleHeading(1)}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('heading', { level: 1 })
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
@@ -190,7 +191,7 @@
 		<button
 			type="button"
 			on:click={() => toggleHeading(2)}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('heading', { level: 2 })
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
@@ -202,7 +203,7 @@
 		<button
 			type="button"
 			on:click={() => toggleHeading(3)}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('heading', { level: 3 })
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed text-sm font-bold"
@@ -216,7 +217,7 @@
 		<button
 			type="button"
 			on:click={toggleBulletList}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('bulletList')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
@@ -228,7 +229,7 @@
 		<button
 			type="button"
 			on:click={toggleOrderedList}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('orderedList')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
@@ -242,7 +243,7 @@
 		<button
 			type="button"
 			on:click={toggleBlockquote}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('blockquote')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
@@ -254,7 +255,7 @@
 		<button
 			type="button"
 			on:click={toggleCodeBlock}
-			disabled={disabled}
+			{disabled}
 			class="p-1.5 rounded {isActive('codeBlock')
 				? 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 				: 'hover:bg-gray-200 dark:hover:bg-gray-700'} disabled:opacity-50 disabled:cursor-not-allowed"
@@ -269,7 +270,7 @@
 			<button
 				type="button"
 				on:click={unsetLink}
-				disabled={disabled}
+				{disabled}
 				class="p-1.5 rounded bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 disabled:opacity-50 disabled:cursor-not-allowed"
 				title="Remove Link"
 			>
@@ -279,7 +280,7 @@
 			<button
 				type="button"
 				on:click={setLink}
-				disabled={disabled}
+				{disabled}
 				class="p-1.5 rounded hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
 				title="Add Link"
 			>

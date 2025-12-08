@@ -4443,19 +4443,16 @@ const docTemplate = `{
                 1000000000,
                 60000000000,
                 3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
+                1,
+                1000,
+                1000000,
+                1000000000,
                 1,
                 1000,
                 1000000,
                 1000000000,
                 60000000000,
-                3600000000000,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000
+                3600000000000
             ],
             "x-enum-varnames": [
                 "minDuration",
@@ -4474,19 +4471,16 @@ const docTemplate = `{
                 "Second",
                 "Minute",
                 "Hour",
-                "minDuration",
-                "maxDuration",
+                "Nanosecond",
+                "Microsecond",
+                "Millisecond",
+                "Second",
                 "Nanosecond",
                 "Microsecond",
                 "Millisecond",
                 "Second",
                 "Minute",
-                "Hour",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute"
+                "Hour"
             ]
         },
         "user.APIKey": {
@@ -4641,6 +4635,12 @@ const docTemplate = `{
                 "id": {
                     "type": "string"
                 },
+                "identities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user.UserIdentity"
+                    }
+                },
                 "must_change_password": {
                     "type": "boolean"
                 },
@@ -4664,6 +4664,36 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.UserIdentity": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "provider_data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "provider_email": {
+                    "type": "string"
+                },
+                "provider_user_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                },
+                "user_id": {
                     "type": "string"
                 }
             }

@@ -228,7 +228,9 @@
 
 						{#if loadingTerms}
 							<div class="flex items-center justify-center py-4">
-								<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-earthy-terracotta-700"></div>
+								<div
+									class="animate-spin rounded-full h-4 w-4 border-b-2 border-earthy-terracotta-700"
+								></div>
 							</div>
 						{:else if availableTerms.length > 0}
 							<div class="space-y-1.5 max-h-48 overflow-y-auto">

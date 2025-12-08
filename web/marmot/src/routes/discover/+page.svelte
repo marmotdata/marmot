@@ -60,23 +60,23 @@
 	const error: Writable<{ status: number; message: string } | null> = writable(null);
 
 	// Pagination
-	let currentPage = 1;
+	let currentPage = $state(1);
 	const itemsPerPage = 20;
 
 	// Selected asset for blade
 	let selectedAsset = $state<Asset | null>(null);
 
 	// Search query from URL
-	let searchQuery = '';
-	let searchTimeout: NodeJS.Timeout;
+	let searchQuery = $state('');
+	let searchTimeout: ReturnType<typeof setTimeout>;
 
 	// Kind filters (Asset, Glossary, Team, User)
-	let selectedKinds: string[] = ['asset', 'glossary', 'team'];
+	let selectedKinds = $state<string[]>(['asset', 'glossary', 'team']);
 
 	// Asset-specific filters
-	let selectedTypes: string[] = [];
-	let selectedProviders: string[] = [];
-	let selectedTags: string[] = [];
+	let selectedTypes = $state<string[]>([]);
+	let selectedProviders = $state<string[]>([]);
+	let selectedTags = $state<string[]>([]);
 
 	// Create asset modal state
 	let showCreateModal = $state(false);
@@ -88,9 +88,21 @@
 	let filtersExpanded = $state(true);
 	let queryBuilderExpanded = $state(false);
 
+	// Track previous URL to detect actual changes (use null to allow first load)
+	let previousUrl = $state<string | null>(null);
+
 	// Initialize filters from URL
 	$effect(() => {
-		const searchParams = new URLSearchParams($page.url.search);
+		const currentUrl = $page.url.search;
+
+		// Only process if URL actually changed (but allow first load when previousUrl is null)
+		if (previousUrl !== null && previousUrl === currentUrl) {
+			return;
+		}
+
+		previousUrl = currentUrl;
+
+		const searchParams = new URLSearchParams(currentUrl);
 		searchQuery = searchParams.get('q') || '';
 		selectedKinds = searchParams.get('kind')?.split(',').filter(Boolean) || [
 			'asset',
@@ -136,8 +148,7 @@
 			// Add asset-specific filters (only if asset kind is selected)
 			if (selectedKinds.includes('asset')) {
 				if (selectedTypes.length) queryParams.append('asset_types', selectedTypes.join(','));
-				if (selectedProviders.length)
-					queryParams.append('providers', selectedProviders.join(','));
+				if (selectedProviders.length) queryParams.append('providers', selectedProviders.join(','));
 				if (selectedTags.length) queryParams.append('tags', selectedTags.join(','));
 			}
 
@@ -230,10 +241,7 @@
 		}
 	}
 
-	function removeFilter(
-		filterType: 'kind' | 'types' | 'providers' | 'tags',
-		value: string
-	) {
+	function removeFilter(filterType: 'kind' | 'types' | 'providers' | 'tags', value: string) {
 		if (filterType === 'kind') {
 			selectedKinds = selectedKinds.filter((v) => v !== value);
 		} else if (filterType === 'types') {
@@ -321,13 +329,12 @@
 			selectedKinds.includes('glossary') &&
 			selectedKinds.includes('team')
 		) ||
-		selectedTypes.length > 0 ||
-		selectedProviders.length > 0 ||
-		selectedTags.length > 0
+			selectedTypes.length > 0 ||
+			selectedProviders.length > 0 ||
+			selectedTags.length > 0
 	);
 
 	let showAssetFilters = $derived(selectedKinds.includes('asset'));
-
 </script>
 
 <svelte:head>
@@ -344,7 +351,7 @@
 					class="sticky top-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
 				>
 					<button
-						on:click={() => (filtersExpanded = !filtersExpanded)}
+						onclick={() => (filtersExpanded = !filtersExpanded)}
 						class="w-full px-3 py-2 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 						title={filtersExpanded ? 'Collapse filters' : 'Expand filters'}
 					>
@@ -361,156 +368,157 @@
 					</button>
 
 					{#if filtersExpanded}
-					<div class="p-3">
-
-					<!-- Clear Filters Link -->
-					<div class="mb-3">
-						<button
-							on:click={clearAllFilters}
-							class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-300 font-medium"
-						>
-							Clear filters
-						</button>
-					</div>
-
-					<!-- Kinds -->
-					<div class="mb-4">
-						<h3
-							class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
-						>
-							Kind
-						</h3>
-						{#each ['asset', 'glossary', 'team'] as kind}
-							<label class="flex items-center justify-between mb-2">
-								<div class="flex items-center">
-									<input
-										type="checkbox"
-										checked={selectedKinds.includes(kind)}
-										on:change={(e) => {
-											if (e.target.checked) {
-												selectedKinds = [...selectedKinds, kind];
-											} else {
-												selectedKinds = selectedKinds.filter((k) => k !== kind);
-											}
-											handleFilterChange();
-										}}
-										class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
-									/>
-									<span class="ml-2 text-sm text-gray-700 dark:text-gray-300 capitalize"
-										>{kind}</span
-									>
-								</div>
-								<span class="text-xs text-gray-500 dark:text-gray-400"
-									>({$facets.types[kind] || 0})</span
+						<div class="p-3">
+							<!-- Clear Filters Link -->
+							<div class="mb-3">
+								<button
+									onclick={clearAllFilters}
+									class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-300 font-medium"
 								>
-							</label>
-						{/each}
-					</div>
+									Clear filters
+								</button>
+							</div>
 
-					<!-- Asset-specific filters (only show when Asset is selected) -->
-					{#if showAssetFilters}
-						{#if $facets.asset_types.length > 0}
+							<!-- Kinds -->
 							<div class="mb-4">
 								<h3
 									class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
 								>
-									Type
+									Kind
 								</h3>
-								{#each $facets.asset_types as {value, count}}
+								{#each ['asset', 'glossary', 'team'] as kind}
 									<label class="flex items-center justify-between mb-2">
 										<div class="flex items-center">
 											<input
 												type="checkbox"
-												checked={selectedTypes.includes(value)}
-												on:change={(e) => {
+												checked={selectedKinds.includes(kind)}
+												onchange={(e) => {
 													if (e.target.checked) {
-														selectedTypes = [...selectedTypes, value];
-														selectedKinds = ['asset'];
+														selectedKinds = [...selectedKinds, kind];
 													} else {
-														selectedTypes = selectedTypes.filter((t) => t !== value);
+														selectedKinds = selectedKinds.filter((k) => k !== kind);
 													}
 													handleFilterChange();
 												}}
 												class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
 											/>
-											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
-										</div>
-										<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
-									</label>
-								{/each}
-							</div>
-						{/if}
-
-						{#if $facets.providers.length > 0}
-							<div class="mb-4">
-								<h3
-									class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
-								>
-									Providers
-								</h3>
-								{#each $facets.providers as {value, count}}
-									<label class="flex items-center justify-between mb-2">
-										<div class="flex items-center">
-											<input
-												type="checkbox"
-												checked={selectedProviders.includes(value)}
-												on:change={(e) => {
-													if (e.target.checked) {
-														selectedProviders = [...selectedProviders, value];
-														selectedKinds = ['asset'];
-													} else {
-														selectedProviders = selectedProviders.filter((s) => s !== value);
-													}
-													handleFilterChange();
-												}}
-												class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
-											/>
-											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
-										</div>
-										<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
-									</label>
-								{/each}
-							</div>
-						{/if}
-
-						{#if $facets.tags.length > 0}
-							<div>
-								<h3
-									class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
-								>
-									Tags
-								</h3>
-								{#each $facets.tags as {value, count}}
-									<label class="flex items-center justify-between mb-2 gap-2">
-										<div class="flex items-center min-w-0">
-											<input
-												type="checkbox"
-												checked={selectedTags.includes(value)}
-												on:change={(e) => {
-													if (e.target.checked) {
-														selectedTags = [...selectedTags, value];
-														selectedKinds = ['asset'];
-													} else {
-														selectedTags = selectedTags.filter((t) => t !== value);
-													}
-													handleFilterChange();
-												}}
-												class="flex-shrink-0 rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
-											/>
-											<span
-												class="ml-2 text-sm text-gray-700 dark:text-gray-300 truncate"
-												title={value}
+											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300 capitalize"
+												>{kind}</span
 											>
-												{value.length > 100 ? value.slice(0, 100) + '...' : value}
-											</span>
 										</div>
-										<span class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400">({count})</span>
+										<span class="text-xs text-gray-500 dark:text-gray-400"
+											>({$facets.types[kind] || 0})</span
+										>
 									</label>
 								{/each}
 							</div>
-						{/if}
-					{/if}
-					</div>
+
+							<!-- Asset-specific filters (only show when Asset is selected) -->
+							{#if showAssetFilters}
+								{#if $facets.asset_types.length > 0}
+									<div class="mb-4">
+										<h3
+											class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
+										>
+											Type
+										</h3>
+										{#each $facets.asset_types as { value, count }}
+											<label class="flex items-center justify-between mb-2">
+												<div class="flex items-center">
+													<input
+														type="checkbox"
+														checked={selectedTypes.includes(value)}
+														onchange={(e) => {
+															if (e.target.checked) {
+																selectedTypes = [...selectedTypes, value];
+																selectedKinds = ['asset'];
+															} else {
+																selectedTypes = selectedTypes.filter((t) => t !== value);
+															}
+															handleFilterChange();
+														}}
+														class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
+													/>
+													<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
+												</div>
+												<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
+											</label>
+										{/each}
+									</div>
+								{/if}
+
+								{#if $facets.providers.length > 0}
+									<div class="mb-4">
+										<h3
+											class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
+										>
+											Providers
+										</h3>
+										{#each $facets.providers as { value, count }}
+											<label class="flex items-center justify-between mb-2">
+												<div class="flex items-center">
+													<input
+														type="checkbox"
+														checked={selectedProviders.includes(value)}
+														onchange={(e) => {
+															if (e.target.checked) {
+																selectedProviders = [...selectedProviders, value];
+																selectedKinds = ['asset'];
+															} else {
+																selectedProviders = selectedProviders.filter((s) => s !== value);
+															}
+															handleFilterChange();
+														}}
+														class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
+													/>
+													<span class="ml-2 text-sm text-gray-700 dark:text-gray-300">{value}</span>
+												</div>
+												<span class="text-xs text-gray-500 dark:text-gray-400">({count})</span>
+											</label>
+										{/each}
+									</div>
+								{/if}
+
+								{#if $facets.tags.length > 0}
+									<div>
+										<h3
+											class="text-xs font-semibold text-gray-600 dark:text-gray-400 mb-2 uppercase tracking-wider"
+										>
+											Tags
+										</h3>
+										{#each $facets.tags as { value, count }}
+											<label class="flex items-center justify-between mb-2 gap-2">
+												<div class="flex items-center min-w-0">
+													<input
+														type="checkbox"
+														checked={selectedTags.includes(value)}
+														onchange={(e) => {
+															if (e.target.checked) {
+																selectedTags = [...selectedTags, value];
+																selectedKinds = ['asset'];
+															} else {
+																selectedTags = selectedTags.filter((t) => t !== value);
+															}
+															handleFilterChange();
+														}}
+														class="flex-shrink-0 rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
+													/>
+													<span
+														class="ml-2 text-sm text-gray-700 dark:text-gray-300 truncate"
+														title={value}
+													>
+														{value.length > 100 ? value.slice(0, 100) + '...' : value}
+													</span>
+												</div>
+												<span class="flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
+													>({count})</span
+												>
+											</label>
+										{/each}
+									</div>
+								{/if}
+							{/if}
+						</div>
 					{/if}
 				</div>
 			</div>
@@ -539,7 +547,11 @@
 
 					<!-- Query Builder (Collapsible) -->
 					<div class="mb-3">
-						<QueryBuilder query={searchQuery} onQueryChange={handleSearch} initiallyExpanded={queryBuilderExpanded} />
+						<QueryBuilder
+							query={searchQuery}
+							onQueryChange={handleSearch}
+							initiallyExpanded={queryBuilderExpanded}
+						/>
 					</div>
 
 					{#if hasActiveFilters}
@@ -553,7 +565,7 @@
 									Active Filters
 								</h2>
 								<button
-									on:click={clearAllFilters}
+									onclick={clearAllFilters}
 									class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-100 font-medium"
 								>
 									Clear all
@@ -569,7 +581,7 @@
 										>
 										{type}
 										<button
-											on:click={() => removeFilter('types', type)}
+											onclick={() => removeFilter('types', type)}
 											class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
 											aria-label={`Remove ${type} filter`}
 										>
@@ -599,7 +611,7 @@
 										>
 										{provider}
 										<button
-											on:click={() => removeFilter('providers', provider)}
+											onclick={() => removeFilter('providers', provider)}
 											class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
 											aria-label={`Remove ${provider} filter`}
 										>
@@ -629,7 +641,7 @@
 										>
 										{tag}
 										<button
-											on:click={() => removeFilter('tags', tag)}
+											onclick={() => removeFilter('tags', tag)}
 											class="ml-0.5 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200"
 											aria-label={`Remove ${tag} filter`}
 										>
@@ -700,14 +712,14 @@
 						</p>
 						<div class="flex gap-1.5">
 							<button
-								on:click={() => handlePageChange(currentPage - 1)}
+								onclick={() => handlePageChange(currentPage - 1)}
 								disabled={currentPage === 1}
 								class="px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 							>
 								Previous
 							</button>
 							<button
-								on:click={() => handlePageChange(currentPage + 1)}
+								onclick={() => handlePageChange(currentPage + 1)}
 								disabled={currentPage * itemsPerPage >= $totalResults}
 								class="px-3 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 							>
@@ -755,8 +767,11 @@
 								{#if result.type === 'asset'}
 									<!-- Asset card -->
 									<div
+										role="button"
+										tabindex="0"
 										class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all cursor-pointer group"
-										on:click={() => handleAssetClick(result.id)}
+										onclick={() => handleAssetClick(result.id)}
+										onkeydown={(e) => e.key === 'Enter' && handleAssetClick(result.id)}
 									>
 										<div class="flex justify-between items-start mb-2">
 											<div class="flex items-center gap-2 flex-1 min-w-0">
@@ -775,7 +790,7 @@
 												</div>
 											</div>
 											<button
-												on:click={(e) => handleTypeClick(result.metadata?.type, e)}
+												onclick={(e) => handleTypeClick(result.metadata?.type, e)}
 												class="flex-shrink-0 text-xs {getTagColor(
 													result.metadata?.type
 												)} px-2 py-0.5 rounded hover:opacity-80 transition-opacity font-medium"
@@ -794,7 +809,7 @@
 											<div class="flex flex-wrap gap-1 mb-2">
 												{#each result.metadata.tags.slice(0, 3) as tag}
 													<button
-														on:click={(e) => handleTagClick(tag, e)}
+														onclick={(e) => handleTagClick(tag, e)}
 														class="inline-flex items-center gap-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/30 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700 transition-colors"
 													>
 														<IconifyIcon icon="material-symbols:label-outline" class="w-3 h-3" />
@@ -826,8 +841,11 @@
 								{:else}
 									<!-- Non-asset card -->
 									<div
+										role="button"
+										tabindex="0"
 										class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all cursor-pointer group"
-										on:click={() => navigateToResult(result)}
+										onclick={() => navigateToResult(result)}
+										onkeydown={(e) => e.key === 'Enter' && navigateToResult(result)}
 									>
 										<div class="flex justify-between items-start mb-2">
 											<div class="flex items-center gap-2 flex-1 min-w-0">
@@ -866,7 +884,6 @@
 		</div>
 	</div>
 </div>
-
 
 <CreateAssetModal bind:show={showCreateModal} onSuccess={fetchResults} />
 

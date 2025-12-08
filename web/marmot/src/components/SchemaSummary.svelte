@@ -8,7 +8,8 @@
 	} from '$lib/schema/utils';
 	import type { SchemaSection, Field } from '$lib/schema/types';
 
-	let { schema = undefined, showRawSchema = false }: { schema?: any; showRawSchema?: boolean } = $props();
+	let { schema = undefined, showRawSchema = false }: { schema?: any; showRawSchema?: boolean } =
+		$props();
 	let activeTab = $state('');
 	let schemaSections = $state<SchemaSection[]>([]);
 	let processedSchemas = $state<Record<string, { fields: Field[]; example: any }>>({});
@@ -140,7 +141,8 @@
 			error: 'bg-red-100 dark:bg-red-900/20 text-red-800 dark:text-red-100',
 			object: 'bg-indigo-100 dark:bg-indigo-900/20 text-indigo-800 dark:text-indigo-100',
 			array: 'bg-teal-100 dark:bg-teal-900/20 text-teal-800 dark:text-teal-100',
-			string: 'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100',
+			string:
+				'bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-100',
 			number: 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-100',
 			integer: 'bg-emerald-100 dark:bg-emerald-900/20 text-emerald-800 dark:text-emerald-100',
 			boolean: 'bg-pink-100 dark:bg-pink-900/20 text-pink-800 dark:text-pink-100'
@@ -258,7 +260,9 @@
 					<CodeBlock code={JSON.stringify(activeSchema, null, 2)} />
 				{/if}
 			{:else if visibleFields.length > 0}
-			<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden">
+				<div
+					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
+				>
 					<div class="divide-y divide-gray-100 dark:divide-gray-700">
 						{#each visibleFields as field}
 							{@const fieldPath = field.name}
@@ -443,24 +447,24 @@
 							</div>
 						{/each}
 					</div>
-			</div>
-
-			{#if activeExample && typeof activeExample === 'object' && Object.keys(activeExample).length > 0}
-				<div class="space-y-4">
-					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-						{schemaExamples.length > 1 ? 'Examples' : 'Example'}
-					</h3>
-					<CodeBlock code={JSON.stringify(activeExample, null, 2)} />
 				</div>
-			{/if}
 
-			{#if schemaExamples.length > 1}
-				{#each schemaExamples.slice(1) as example, i}
-					<div class="mt-4">
-						<CodeBlock code={JSON.stringify(example, null, 2)} />
+				{#if activeExample && typeof activeExample === 'object' && Object.keys(activeExample).length > 0}
+					<div class="space-y-4">
+						<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+							{schemaExamples.length > 1 ? 'Examples' : 'Example'}
+						</h3>
+						<CodeBlock code={JSON.stringify(activeExample, null, 2)} />
 					</div>
-				{/each}
-			{/if}
+				{/if}
+
+				{#if schemaExamples.length > 1}
+					{#each schemaExamples.slice(1) as example, i}
+						<div class="mt-4">
+							<CodeBlock code={JSON.stringify(example, null, 2)} />
+						</div>
+					{/each}
+				{/if}
 			{:else}
 				<div class="text-center py-12 text-gray-500 dark:text-gray-400">
 					<p>No fields available for {activeTab} schema</p>

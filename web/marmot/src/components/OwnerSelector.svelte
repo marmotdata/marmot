@@ -92,7 +92,9 @@
 		isOpen = true;
 
 		try {
-			const response = await fetchApi(`/owners/search?q=${encodeURIComponent(searchQuery)}&limit=50`);
+			const response = await fetchApi(
+				`/owners/search?q=${encodeURIComponent(searchQuery)}&limit=50`
+			);
 			if (response.ok) {
 				const data = await response.json();
 				let results = data.owners || [];
@@ -125,7 +127,9 @@
 	}
 
 	function removeOwner(owner: Owner) {
-		const newOwners = safeSelectedOwners.filter((o) => !(o.id === owner.id && o.type === owner.type));
+		const newOwners = safeSelectedOwners.filter(
+			(o) => !(o.id === owner.id && o.type === owner.type)
+		);
 		selectedOwners = newOwners;
 		onChange(newOwners);
 	}
@@ -163,54 +167,57 @@
 	{#if !hideSelectedOwners}
 		<div class="flex flex-wrap items-center gap-2">
 			{#each safeSelectedOwners as owner (owner.id + '-' + owner.type)}
-			<button
-				type="button"
-				on:click={() => handleOwnerClick(owner)}
-				class="group relative flex items-center gap-2 px-2 py-1.5 rounded-full {owner.type === 'team'
-					? 'bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800'
-					: 'bg-gray-200 dark:bg-gray-700'} flex-shrink-0 {owner.type === 'team' && !disabled ? 'cursor-pointer' : 'cursor-default'} transition-colors"
-				title={owner.type === 'user' ? `@${owner.username}` : `Team: ${owner.name}`}
-			>
-				{#if owner.type === 'team'}
-					<div
-						class="w-6 h-6 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center text-gray-700 dark:text-gray-300 text-xs font-medium flex-shrink-0"
-					>
-						<Users class="h-3 w-3" />
-					</div>
-				{:else}
-					<div class="flex-shrink-0">
-						<Avatar name={owner.name} profilePicture={owner.profile_picture} size="xs" />
-					</div>
-				{/if}
-				<span
-					class="text-sm {owner.type === 'team'
-						? 'text-blue-900 dark:text-blue-100'
-						: 'text-gray-900 dark:text-gray-100'} pr-1">{owner.name}</span
+				<button
+					type="button"
+					on:click={() => handleOwnerClick(owner)}
+					class="group relative flex items-center gap-2 px-2 py-1.5 rounded-full {owner.type ===
+					'team'
+						? 'bg-blue-100 dark:bg-blue-900 hover:bg-blue-200 dark:hover:bg-blue-800'
+						: 'bg-gray-200 dark:bg-gray-700'} flex-shrink-0 {owner.type === 'team' && !disabled
+						? 'cursor-pointer'
+						: 'cursor-default'} transition-colors"
+					title={owner.type === 'user' ? `@${owner.username}` : `Team: ${owner.name}`}
 				>
-				{#if !disabled}
-					<button
-						type="button"
-						on:click|stopPropagation={() => removeOwner(owner)}
-						class="absolute inset-0 rounded-full bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10"
-						title="Remove {owner.name}"
+					{#if owner.type === 'team'}
+						<div
+							class="w-6 h-6 rounded-full bg-blue-200 dark:bg-blue-800 flex items-center justify-center text-gray-700 dark:text-gray-300 text-xs font-medium flex-shrink-0"
+						>
+							<Users class="h-3 w-3" />
+						</div>
+					{:else}
+						<div class="flex-shrink-0">
+							<Avatar name={owner.name} profilePicture={owner.profile_picture} size="xs" />
+						</div>
+					{/if}
+					<span
+						class="text-sm {owner.type === 'team'
+							? 'text-blue-900 dark:text-blue-100'
+							: 'text-gray-900 dark:text-gray-100'} pr-1">{owner.name}</span
 					>
-						<Icon icon="material-symbols:close" class="h-5 w-5" />
-					</button>
-				{/if}
-			</button>
-		{/each}
+					{#if !disabled}
+						<button
+							type="button"
+							on:click|stopPropagation={() => removeOwner(owner)}
+							class="absolute inset-0 rounded-full bg-red-500 hover:bg-red-600 text-white opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-10"
+							title="Remove {owner.name}"
+						>
+							<Icon icon="material-symbols:close" class="h-5 w-5" />
+						</button>
+					{/if}
+				</button>
+			{/each}
 
-		{#if !disabled && !hideAddButton}
-			<button
-				type="button"
-				on:click={openAddOwner}
-				class="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors flex items-center justify-center flex-shrink-0"
-				title="Add owner"
-			>
-				<Icon icon="material-symbols:add" class="h-4 w-4" />
-			</button>
-		{/if}
-	</div>
+			{#if !disabled && !hideAddButton}
+				<button
+					type="button"
+					on:click={openAddOwner}
+					class="w-8 h-8 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 transition-colors flex items-center justify-center flex-shrink-0"
+					title="Add owner"
+				>
+					<Icon icon="material-symbols:add" class="h-4 w-4" />
+				</button>
+			{/if}
+		</div>
 	{/if}
 
 	{#if isOpen}
@@ -235,8 +242,12 @@
 						Type at least {minSearchLength} characters to search
 					</div>
 				{:else if isLoading}
-					<div class="px-4 py-8 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-						<div class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"></div>
+					<div
+						class="px-4 py-8 flex items-center justify-center gap-2 text-sm text-gray-500 dark:text-gray-400"
+					>
+						<div
+							class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-gray-600"
+						></div>
 						Searching...
 					</div>
 				{:else if searchResults.length === 0}
@@ -252,7 +263,8 @@
 							<button
 								type="button"
 								on:click={() => addOwner(owner)}
-								class="w-full flex items-center gap-3 px-4 py-2.5 transition-colors {index === focusedIndex
+								class="w-full flex items-center gap-3 px-4 py-2.5 transition-colors {index ===
+								focusedIndex
 									? 'bg-gray-100 dark:bg-gray-700'
 									: 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}"
 							>
@@ -268,10 +280,14 @@
 									</div>
 								{/if}
 								<div class="flex-1 min-w-0 text-left">
-									<div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex items-center gap-2">
+									<div
+										class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate flex items-center gap-2"
+									>
 										{owner.name}
 										{#if owner.type === 'team'}
-											<span class="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
+											<span
+												class="text-xs px-1.5 py-0.5 rounded bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200"
+											>
 												Team
 											</span>
 										{/if}

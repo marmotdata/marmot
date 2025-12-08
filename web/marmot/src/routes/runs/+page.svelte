@@ -802,6 +802,9 @@
 									<div
 										class="cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 dark:hover:bg-gray-600"
 										onclick={() => handleStatusToggle(status)}
+										onkeydown={(e) => e.key === 'Enter' && handleStatusToggle(status)}
+										role="button"
+										tabindex="0"
 									>
 										<div class="flex items-center">
 											<input
@@ -984,6 +987,9 @@
 					onclick={() => {
 						showStatusDropdown = false;
 					}}
+					onkeydown={(e) => e.key === 'Escape' && (showStatusDropdown = false)}
+					role="button"
+					tabindex="-1"
 				></div>
 			{/if}
 		{/if}

@@ -50,7 +50,7 @@ auth:
 | `logging.format`             | Log format (json, console)             | `json`      | `MARMOT_LOGGING_FORMAT`             |
 | `auth.anonymous.enabled`     | Enable anonymous authentication        | `false`     | `MARMOT_AUTH_ANONYMOUS_ENABLED`     |
 | `auth.anonymous.role`        | Role to be assigned to anonymous users | `user`      | `MARMOT_AUTH_ANONYMOUS_ROLE`        |
-| `auth.openlineage.enabled`   | Enable auth for OpenLineage endpoint   | `true`      | `MARMOT_AUTH_OPENLINEAGE_ENABLED`   |
+| `openlineage.auth.enabled`   | Enable auth for OpenLineage endpoint   | `true`      | `MARMOT_OPENLINEAGE_AUTH_ENABLED`   |
 
 ## Configuration Loading
 

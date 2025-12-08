@@ -15,14 +15,14 @@
 	class="bg-white dark:bg-gray-800 p-4 transition-colors duration-150
     {!compact
 		? 'rounded-lg border border-gray-200 dark:border-gray-700 shadow-md dark:shadow-gray-700'
-		: ''} 
+		: ''}
     hover:bg-gray-50 dark:hover:bg-gray-700
     {selected ? '!bg-gray-100 dark:!bg-gray-700' : ''}
     {!compact ? 'cursor-pointer' : ''}"
 	role="button"
 	tabindex="0"
-	on:click={onClick}
-	on:keydown={(e) => e.key === 'Enter' && onClick()}
+	onclick={onClick}
+	onkeydown={(e) => e.key === 'Enter' && onClick()}
 >
 	<div class="flex items-start space-x-4">
 		<div class="flex-shrink-0">
@@ -35,7 +35,7 @@
 			<p class="text-sm text-gray-500 dark:text-gray-400 truncate">{asset.mrn || ''}</p>
 			{#if asset.tags && asset.tags.length > 0}
 				<div class="mt-2 flex flex-wrap gap-2">
-					{#each asset.tags as tag}
+					{#each asset.tags as tag, index (index)}
 						<span
 							class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
 						>

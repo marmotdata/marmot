@@ -107,7 +107,9 @@
 	}
 </script>
 
-<tr class="group hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-0">
+<tr
+	class="group hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-0"
+>
 	<!-- Play Button -->
 	<td class="px-4 py-4 w-16">
 		{#if onTrigger && canManageIngestion}
@@ -152,10 +154,7 @@
 					schedule.last_run_status
 				)}"
 			>
-				<IconifyIcon
-					icon={getStatusIcon(schedule.last_run_status)}
-					class="h-3.5 w-3.5 mr-1.5"
-				/>
+				<IconifyIcon icon={getStatusIcon(schedule.last_run_status)} class="h-3.5 w-3.5 mr-1.5" />
 				{schedule.last_run_status.charAt(0).toUpperCase() + schedule.last_run_status.slice(1)}
 			</span>
 		{:else}

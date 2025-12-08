@@ -56,11 +56,7 @@
 </script>
 
 {#if profilePicture}
-	<img
-		src={profilePicture}
-		alt={name}
-		class="rounded-full {sizeClass} object-cover"
-	/>
+	<img src={profilePicture} alt={name} class="rounded-full {sizeClass} object-cover" />
 {:else}
 	<div
 		class="rounded-full {sizeClass} {bgColor} flex items-center justify-center text-white font-semibold"

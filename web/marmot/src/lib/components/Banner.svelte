@@ -13,9 +13,12 @@
 
 	$: variantClasses = {
 		info: 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-50',
-		warning: 'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950/40 dark:to-yellow-900/40 border-yellow-300 dark:border-yellow-700 text-yellow-900 dark:text-yellow-50',
-		error: 'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950/40 dark:to-red-900/40 border-red-300 dark:border-red-700 text-red-900 dark:text-red-50',
-		success: 'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/40 dark:to-green-900/40 border-green-300 dark:border-green-700 text-green-900 dark:text-green-50'
+		warning:
+			'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950/40 dark:to-yellow-900/40 border-yellow-300 dark:border-yellow-700 text-yellow-900 dark:text-yellow-50',
+		error:
+			'bg-gradient-to-r from-red-50 to-red-100 dark:from-red-950/40 dark:to-red-900/40 border-red-300 dark:border-red-700 text-red-900 dark:text-red-50',
+		success:
+			'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/40 dark:to-green-900/40 border-green-300 dark:border-green-700 text-green-900 dark:text-green-50'
 	};
 
 	$: iconMap = {
@@ -27,9 +30,12 @@
 
 	$: linkColorClasses = {
 		info: 'text-blue-800 dark:text-blue-200 hover:text-blue-950 dark:hover:text-blue-100 font-semibold',
-		warning: 'text-yellow-800 dark:text-yellow-200 hover:text-yellow-950 dark:hover:text-yellow-100 font-semibold',
-		error: 'text-red-800 dark:text-red-200 hover:text-red-950 dark:hover:text-red-100 font-semibold',
-		success: 'text-green-800 dark:text-green-200 hover:text-green-950 dark:hover:text-green-100 font-semibold'
+		warning:
+			'text-yellow-800 dark:text-yellow-200 hover:text-yellow-950 dark:hover:text-yellow-100 font-semibold',
+		error:
+			'text-red-800 dark:text-red-200 hover:text-red-950 dark:hover:text-red-100 font-semibold',
+		success:
+			'text-green-800 dark:text-green-200 hover:text-green-950 dark:hover:text-green-100 font-semibold'
 	};
 
 	onMount(() => {
@@ -52,7 +58,9 @@
 		}
 	}
 
-	function parseMarkdownLinks(text: string): { type: 'text' | 'link'; content: string; url?: string }[] {
+	function parseMarkdownLinks(
+		text: string
+	): { type: 'text' | 'link'; content: string; url?: string }[] {
 		const parts: { type: 'text' | 'link'; content: string; url?: string }[] = [];
 		const linkRegex = /\[([^\]]+)\]\(([^)]+)\)/g;
 		let lastIndex = 0;

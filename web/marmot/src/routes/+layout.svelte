@@ -212,7 +212,7 @@
 	<title>{dynamicTitle}</title>
 </svelte:head>
 
-<svelte:window on:click={closeDropdown} on:keydown={handleGlobalKeydown} />
+<svelte:window onclick={closeDropdown} onkeydown={handleGlobalKeydown} />
 
 <div class="h-screen flex flex-col">
 	{#if !$page.url.pathname.startsWith('/login') && bannerConfig}
@@ -238,7 +238,7 @@
 					<!-- Centered Search (desktop only) -->
 					<div class="hidden sm:flex flex-1 justify-center max-w-3xl mx-auto">
 						<button
-							on:click={openSearchModal}
+							onclick={openSearchModal}
 							class="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors w-full"
 						>
 							<Icon icon="material-symbols:search" class="w-4 h-4" />
@@ -251,7 +251,9 @@
 									<span class="text-gray-600 dark:text-gray-400">Search everything...</span>
 								{/if}
 							</span>
-							<kbd class="px-2 py-0.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded flex-shrink-0">
+							<kbd
+								class="px-2 py-0.5 text-xs font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded flex-shrink-0"
+							>
 								{isMac ? '⌘' : 'Ctrl'}K
 							</kbd>
 						</button>
@@ -259,10 +261,9 @@
 
 					<!-- Right side: Menu Items -->
 					<div class="flex items-center space-x-4 flex-shrink-0">
-
 						<!-- Mobile Search Button -->
 						<button
-							on:click={openSearchModal}
+							onclick={openSearchModal}
 							class="sm:hidden p-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 transition-colors"
 							aria-label="Search"
 						>
@@ -271,8 +272,9 @@
 
 						<a
 							href="/discover"
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
-								.url.pathname.startsWith('/discover')
+							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+								'/discover'
+							)
 								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
 						>
@@ -297,8 +299,9 @@
 
 						<a
 							href="/glossary"
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
-								.url.pathname.startsWith('/glossary')
+							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+								'/glossary'
+							)
 								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
 						>
@@ -326,7 +329,10 @@
 									class="max-w-xs flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-500"
 									id="user-menu"
 									aria-haspopup="true"
-									on:click|stopPropagation={toggleDropdown}
+									onclick={(e) => {
+										e.stopPropagation();
+										toggleDropdown();
+									}}
 								>
 									{#if userProfile}
 										<Avatar
@@ -364,24 +370,24 @@
 												role="menuitem">Admin</a
 											>
 										{/if}
-										<a
-											href="#"
-											on:click|preventDefault={handleLogout}
-											class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+										<button
+											type="button"
+											onclick={handleLogout}
+											class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 											role="menuitem"
 										>
 											Logout
-										</a>
+										</button>
 									{:else}
 										<!-- User is in anonymous mode -->
-										<a
-											href="#"
-											on:click|preventDefault={handleLogin}
-											class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+										<button
+											type="button"
+											onclick={handleLogin}
+											class="w-full text-left block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 											role="menuitem"
 										>
 											Login
-										</a>
+										</button>
 									{/if}
 								</div>
 							{/if}
@@ -406,18 +412,25 @@
 {#if showSearchModal}
 	<div
 		class="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm z-50 flex items-start justify-center pt-[15vh] px-4"
-		on:click={() => (showSearchModal = false)}
+		onclick={() => (showSearchModal = false)}
+		onkeydown={(e) => e.key === 'Escape' && (showSearchModal = false)}
 		role="button"
 		tabindex="-1"
 	>
 		<div
 			class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-visible"
-			on:click|stopPropagation
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"
 			tabindex="-1"
 		>
 			<div class="p-6 search-modal-input">
-				<GlobalSearch bind:this={searchInput} autofocus={true} initialQuery={currentSearchQuery} onNavigate={() => (showSearchModal = false)} />
+				<GlobalSearch
+					bind:this={searchInput}
+					autofocus={true}
+					initialQuery={currentSearchQuery}
+					onNavigate={() => (showSearchModal = false)}
+				/>
 			</div>
 		</div>
 	</div>

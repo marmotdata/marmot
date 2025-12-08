@@ -629,19 +629,16 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
+    - 1
+    - 1000
+    - 1000000
+    - 1000000000
     - 1
     - 1000
     - 1000000
     - 1000000000
     - 60000000000
     - 3600000000000
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
     type: integer
     x-enum-varnames:
     - minDuration
@@ -660,19 +657,16 @@ definitions:
     - Second
     - Minute
     - Hour
-    - minDuration
-    - maxDuration
+    - Nanosecond
+    - Microsecond
+    - Millisecond
+    - Second
     - Nanosecond
     - Microsecond
     - Millisecond
     - Second
     - Minute
     - Hour
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
   user.APIKey:
     properties:
       created_at:
@@ -776,6 +770,10 @@ definitions:
         type: string
       id:
         type: string
+      identities:
+        items:
+          $ref: '#/definitions/user.UserIdentity'
+        type: array
       must_change_password:
         type: boolean
       name:
@@ -792,6 +790,26 @@ definitions:
       updated_at:
         type: string
       username:
+        type: string
+    type: object
+  user.UserIdentity:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      provider:
+        type: string
+      provider_data:
+        additionalProperties: true
+        type: object
+      provider_email:
+        type: string
+      provider_user_id:
+        type: string
+      updated_at:
+        type: string
+      user_id:
         type: string
     type: object
   v1_assets.AddTermsRequest:

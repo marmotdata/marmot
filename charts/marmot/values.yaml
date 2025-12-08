@@ -143,10 +143,6 @@ config:
       enabled: false
       role: "user"
 
-    # OpenLineage authentication
-    openlineage:
-      enabled: true
-
     # OAuth providers (e.g., Okta, Google, etc.)
     providers: {}
       # okta:
@@ -200,6 +196,11 @@ config:
     schedulerInterval: 60  # seconds
     leaseExpiry: 300  # seconds
     claimExpiry: 30  # seconds
+
+  # OpenLineage configuration
+  openlineage:
+    auth:
+      enabled: true
 
 monitoring:
   serviceMonitor:

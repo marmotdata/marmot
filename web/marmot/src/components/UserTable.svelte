@@ -3,6 +3,7 @@
 	import { auth } from '$lib/stores/auth';
 	import EditUserForm from './EditUserForm.svelte';
 	import DeleteModal from './DeleteModal.svelte';
+	import { Lock, User as UserIcon, Mail } from 'lucide-svelte';
 
 	export let users = [];
 	export let editingUserId = null;
@@ -29,6 +30,18 @@
 			console.error('Failed to delete user:', err);
 		}
 	}
+
+	function getProviderDisplay(provider: string): string {
+		const providerMap: Record<string, string> = {
+			google: 'Google',
+			github: 'GitHub',
+			gitlab: 'GitLab',
+			okta: 'Okta',
+			slack: 'Slack',
+			auth0: 'Auth0'
+		};
+		return providerMap[provider] || provider.charAt(0).toUpperCase() + provider.slice(1);
+	}
 </script>
 
 <div class="overflow-x-auto">
@@ -42,6 +55,10 @@
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
 					>Name</th
+				>
+				<th
+					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
+					>Auth</th
 				>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
@@ -61,7 +78,7 @@
 			{#each users as user}
 				<tr class="hover:bg-earthy-brown-100 dark:hover:bg-gray-800 transition-colors">
 					{#if editingUserId === user.id}
-						<td colspan="5">
+						<td colspan="6">
 							<EditUserForm
 								{user}
 								onCancel={() => onEdit(null)}
@@ -77,6 +94,27 @@
 							>{user.name}</td
 						>
 						<td class="px-6 py-4 whitespace-nowrap">
+							{#if user.identities && user.identities.length > 0}
+								<div class="flex flex-wrap gap-1">
+									{#each user.identities as identity}
+										<span
+											class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+										>
+											<Lock class="h-3 w-3 mr-1" />
+											{getProviderDisplay(identity.provider)}
+										</span>
+									{/each}
+								</div>
+							{:else}
+								<span
+									class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+								>
+									<Mail class="h-3 w-3 mr-1" />
+									Password
+								</span>
+							{/if}
+						</td>
+						<td class="px-6 py-4 whitespace-nowrap">
 							<div class="flex flex-wrap gap-1">
 								{#each user.roles as role}
 									<span
@@ -88,7 +126,7 @@
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap">
 							<span
-								class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.active ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+								class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user.active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}
 							>
 								{user.active ? 'Active' : 'Inactive'}
 							</span>
@@ -97,7 +135,7 @@
 							{#if currentUserId !== user.id}
 								<button
 									type="button"
-									class="text-earthy-terracotta-700 hover:text-earthy-terracotta-700 mr-3"
+									class="text-earthy-terracotta-700 hover:text-earthy-terracotta-800 dark:text-earthy-terracotta-500 dark:hover:text-earthy-terracotta-400 mr-3"
 									on:click={() => onEdit(user.id)}
 								>
 									Edit
@@ -106,7 +144,7 @@
 							{#if currentUserId !== user.id && user.username !== 'admin'}
 								<button
 									type="button"
-									class="text-red-600 hover:text-red-900"
+									class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
 									on:click={() => {
 										userToDelete = user;
 										showDeleteModal = true;

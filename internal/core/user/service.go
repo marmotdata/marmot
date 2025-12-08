@@ -34,6 +34,7 @@ type User struct {
 	MustChangePassword bool                   `json:"must_change_password"`
 	Preferences        map[string]interface{} `json:"preferences"`
 	Roles              []Role                 `json:"roles"`
+	Identities         []UserIdentity         `json:"identities,omitempty"`
 	CreatedAt          time.Time              `json:"created_at"`
 	UpdatedAt          time.Time              `json:"updated_at"`
 }
@@ -319,6 +320,16 @@ func (s *service) Get(ctx context.Context, id string) (*User, error) {
 	if err != nil {
 		return nil, fmt.Errorf("getting user: %w", err)
 	}
+
+	identities, err := s.repo.GetUserIdentities(ctx, id)
+	if err != nil {
+		return nil, fmt.Errorf("getting user identities: %w", err)
+	}
+
+	for _, identity := range identities {
+		user.Identities = append(user.Identities, *identity)
+	}
+
 	return user, nil
 }
 
@@ -330,6 +341,16 @@ func (s *service) List(ctx context.Context, filter Filter) ([]*User, int, error)
 	users, total, err := s.repo.ListUsers(ctx, filter)
 	if err != nil {
 		return nil, 0, fmt.Errorf("listing users: %w", err)
+	}
+
+	for _, user := range users {
+		identities, err := s.repo.GetUserIdentities(ctx, user.ID)
+		if err != nil {
+			return nil, 0, fmt.Errorf("getting user identities: %w", err)
+		}
+		for _, identity := range identities {
+			user.Identities = append(user.Identities, *identity)
+		}
 	}
 
 	return users, total, nil

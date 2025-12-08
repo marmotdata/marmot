@@ -1,7 +1,11 @@
 <script lang="ts">
 	import IconifyIcon from '@iconify/svelte';
 
-	let { tags = $bindable([]), disabled = false, placeholder = "Type a tag and press Enter..." }: { tags: string[]; disabled?: boolean; placeholder?: string } = $props();
+	let {
+		tags = $bindable([]),
+		disabled = false,
+		placeholder = 'Type a tag and press Enter...'
+	}: { tags: string[]; disabled?: boolean; placeholder?: string } = $props();
 
 	let tagInput = $state('');
 
@@ -16,7 +20,7 @@
 	}
 
 	function removeTag(tag: string) {
-		tags = tags.filter(t => t !== tag);
+		tags = tags.filter((t) => t !== tag);
 	}
 </script>
 
@@ -32,7 +36,9 @@
 	{#if tags.length > 0}
 		<div class="flex flex-wrap gap-2">
 			{#each tags as tag}
-				<span class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg">
+				<span
+					class="inline-flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg"
+				>
 					{tag}
 					<button
 						type="button"

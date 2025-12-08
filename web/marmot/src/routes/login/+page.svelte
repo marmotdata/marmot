@@ -15,20 +15,20 @@
 	let loading = $state(false);
 	let showPasswordChangeForm = $state(false);
 	let loginData: any = $state(null);
-	let usernameInput: HTMLInputElement;
-	let passwordInput: HTMLInputElement;
-	let newPasswordInput: HTMLInputElement;
-	let confirmPasswordInput: HTMLInputElement;
+	let usernameInput = $state<HTMLInputElement>();
+	let passwordInput = $state<HTMLInputElement>();
+	let newPasswordInput = $state<HTMLInputElement>();
+	let confirmPasswordInput = $state<HTMLInputElement>();
 	let redirectUri = $state('');
 
 	onMount(() => {
-		usernameInput.focus();
+		usernameInput?.focus();
 		redirectUri = $page.url.searchParams.get('redirect_uri') || '';
 	});
 
 	function handleUsernameKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && username) {
-			passwordInput.focus();
+			passwordInput?.focus();
 		}
 	}
 
@@ -40,7 +40,7 @@
 
 	function handleNewPasswordKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && newPassword) {
-			confirmPasswordInput.focus();
+			confirmPasswordInput?.focus();
 		}
 	}
 
@@ -185,7 +185,13 @@
 			{/if}
 
 			{#if !showPasswordChangeForm}
-				<form on:submit|preventDefault={handleSubmit} class="space-y-5">
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						handleSubmit();
+					}}
+					class="space-y-5"
+				>
 					<div class="space-y-4">
 						<div>
 							<label
@@ -200,7 +206,7 @@
 								bind:value={username}
 								type="text"
 								required
-								on:keydown={handleUsernameKeydown}
+								onkeydown={handleUsernameKeydown}
 								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
 								placeholder="Enter your username"
 							/>
@@ -218,7 +224,7 @@
 								bind:value={password}
 								type="password"
 								required
-								on:keydown={handlePasswordKeydown}
+								onkeydown={handlePasswordKeydown}
 								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
 								placeholder="Enter your password"
 							/>
@@ -236,7 +242,13 @@
 
 				<OAuthButtons {redirectUri} />
 			{:else}
-				<form on:submit|preventDefault={handlePasswordChange} class="space-y-5">
+				<form
+					onsubmit={(e) => {
+						e.preventDefault();
+						handlePasswordChange();
+					}}
+					class="space-y-5"
+				>
 					<div class="space-y-4">
 						<div>
 							<label
@@ -251,7 +263,7 @@
 								bind:value={newPassword}
 								type="password"
 								required
-								on:keydown={handleNewPasswordKeydown}
+								onkeydown={handleNewPasswordKeydown}
 								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
 								placeholder="Enter new password (min 8 characters)"
 							/>
@@ -269,7 +281,7 @@
 								bind:value={confirmPassword}
 								type="password"
 								required
-								on:keydown={handleConfirmPasswordKeydown}
+								onkeydown={handleConfirmPasswordKeydown}
 								class="appearance-none rounded-lg block w-full px-4 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-transparent bg-white dark:bg-gray-700 transition-all"
 								placeholder="Confirm new password"
 							/>

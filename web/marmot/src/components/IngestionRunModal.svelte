@@ -197,8 +197,10 @@
 		style="backdrop-filter: blur(8px);"
 		transition:fade={{ duration: 200 }}
 		onclick={handleBackdropClick}
+		onkeydown={(e) => e.key === 'Escape' && handleClose()}
 		role="dialog"
 		aria-modal="true"
+		tabindex="-1"
 	>
 		<div
 			class="bg-white dark:bg-gray-800 rounded-lg shadow-xl my-8 overflow-hidden relative max-w-7xl w-full max-h-[90vh]"
@@ -319,7 +321,8 @@
 										</div>
 										<div class="flex justify-between items-center">
 											<span class="text-sm text-gray-600 dark:text-gray-400">Deleted</span>
-											<span class="text-lg font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
+											<span
+												class="text-lg font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
 												>{run.summary.assets_deleted}</span
 											>
 										</div>
@@ -396,7 +399,9 @@
 
 						{#if entitiesLoading}
 							<div class="flex items-center justify-center py-8">
-								<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"></div>
+								<div
+									class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"
+								></div>
 							</div>
 						{:else if entitiesError}
 							<div

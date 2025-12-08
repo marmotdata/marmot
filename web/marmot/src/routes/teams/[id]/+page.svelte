@@ -35,7 +35,7 @@
 
 	$: teamId = $page.params.id;
 	$: currentUserId = auth.getCurrentUserId();
-	$: memberOwners = members.map(m => ({
+	$: memberOwners = members.map((m) => ({
 		id: m.user_id,
 		name: m.name,
 		type: 'user' as const,
@@ -47,7 +47,7 @@
 	$: currentPage = Math.floor(assetsOffset / assetsLimit) + 1;
 	$: totalPages = Math.ceil(assetsTotal / assetsLimit);
 	$: canManageTeams = auth.hasPermission('teams', 'manage');
-	$: isTeamOwner = members.some(m => m.user_id === currentUserId && m.role === 'owner');
+	$: isTeamOwner = members.some((m) => m.user_id === currentUserId && m.role === 'owner');
 	$: canEditTeam = canManageTeams || isTeamOwner;
 
 	function getIconType(asset: any): string {
@@ -113,7 +113,6 @@
 		}
 	}
 
-
 	async function convertToManual(userId: string) {
 		if (!confirm('Convert this member to manual? They will no longer be managed by SSO.')) {
 			return;
@@ -127,9 +126,11 @@
 			if (response.ok) {
 				await fetchMembers();
 			} else {
-				const data = await response.json();
+				const errorData = await response.json();
+				console.error('Failed to convert member to manual:', errorData);
 			}
-		} catch (err: any) {
+		} catch (err) {
+			console.error('Failed to convert member to manual:', err);
 		}
 	}
 
@@ -143,9 +144,11 @@
 			if (response.ok) {
 				await fetchMembers();
 			} else {
-				const data = await response.json();
+				const errorData = await response.json();
+				console.error('Failed to update member role:', errorData);
 			}
-		} catch (err: any) {
+		} catch (err) {
+			console.error('Failed to update member role:', err);
 		}
 	}
 
@@ -161,8 +164,8 @@
 
 		try {
 			// Find only the newly added members (ones not in current members list)
-			const currentMemberIds = new Set(members.map(m => m.user_id));
-			const ownersToAdd = newOwners.filter(owner => !currentMemberIds.has(owner.id));
+			const currentMemberIds = new Set(members.map((m) => m.user_id));
+			const ownersToAdd = newOwners.filter((owner) => !currentMemberIds.has(owner.id));
 
 			// Add only the new members
 			for (const owner of ownersToAdd) {
@@ -174,20 +177,21 @@
 					})
 				});
 				if (!response.ok) {
-					const data = await response.json();
+					const errorData = await response.json();
+					console.error('Failed to add team member:', errorData);
 					await fetchMembers();
 					return;
 				}
 			}
 
 			await fetchMembers();
-		} catch (err: any) {
+		} catch (err) {
+			console.error('Failed to add team members:', err);
 			await fetchMembers();
 		}
 	}
 
 	async function removeMemberDirect(userId: string, source: string) {
-
 		try {
 			removingMemberId = userId;
 			const response = await fetchApi(`/teams/${teamId}/members/${userId}`, {
@@ -197,9 +201,11 @@
 			if (response.ok) {
 				await fetchMembers();
 			} else {
-				const data = await response.json();
+				const errorData = await response.json();
+				console.error('Failed to remove team member:', errorData);
 			}
-		} catch (err: any) {
+		} catch (err) {
+			console.error('Failed to remove team member:', err);
 		} finally {
 			removingMemberId = null;
 		}
@@ -231,7 +237,7 @@
 
 	{#if loading}
 		<div class="flex justify-center p-8">
-			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700" />
+			<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
 		</div>
 	{:else if error}
 		<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
@@ -239,7 +245,9 @@
 		</div>
 	{:else if team}
 		<!-- Team Header -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+		<div
+			class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
+		>
 			<div class="flex items-start gap-4">
 				<div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-lg">
 					<Users class="h-8 w-8 text-blue-700 dark:text-blue-300" />
@@ -250,7 +258,9 @@
 							{team.name}
 						</h1>
 						{#if team.created_via_sso}
-							<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+							<span
+								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+							>
 								<Lock class="h-3 w-3 mr-1" />
 								SSO Managed
 							</span>
@@ -271,13 +281,20 @@
 		</div>
 
 		<!-- Tags & Metadata Section -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+		<div
+			class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
+		>
 			<div class="space-y-5">
 				<!-- Tags -->
 				<div>
 					<div class="flex items-center gap-2 mb-2">
-						<IconifyIcon icon="material-symbols:label-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-						<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+						<IconifyIcon
+							icon="material-symbols:label-outline"
+							class="w-4 h-4 text-gray-500 dark:text-gray-400"
+						/>
+						<h3
+							class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+						>
 							Tags
 						</h3>
 					</div>
@@ -292,8 +309,13 @@
 				<!-- Metadata -->
 				<div>
 					<div class="flex items-center gap-2 mb-2">
-						<IconifyIcon icon="material-symbols:database-outline" class="w-4 h-4 text-gray-500 dark:text-gray-400" />
-						<h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+						<IconifyIcon
+							icon="material-symbols:database-outline"
+							class="w-4 h-4 text-gray-500 dark:text-gray-400"
+						/>
+						<h3
+							class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
+						>
 							Metadata
 						</h3>
 					</div>
@@ -311,13 +333,16 @@
 		</div>
 
 		<!-- Members Section -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6">
+		<div
+			class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 mb-6"
+		>
 			<div class="flex items-center justify-between mb-4">
 				<div class="flex items-center gap-2">
-					<IconifyIcon icon="material-symbols:group" class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-					<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-						Members
-					</h2>
+					<IconifyIcon
+						icon="material-symbols:group"
+						class="w-5 h-5 text-gray-500 dark:text-gray-400"
+					/>
+					<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Members</h2>
 					<span class="text-sm text-gray-500 dark:text-gray-400">
 						({members.length})
 					</span>
@@ -341,7 +366,14 @@
 			<div class="relative w-full mb-4" style="min-height: 1px;">
 				<OwnerSelector
 					bind:this={ownerSelectorRef}
-					selectedOwners={members.map(m => ({ id: m.user_id, name: m.name, type: 'user' as const, username: m.provider_username, email: m.provider_email, profile_picture: m.profile_picture }))}
+					selectedOwners={members.map((m) => ({
+						id: m.user_id,
+						name: m.name,
+						type: 'user' as const,
+						username: m.provider_username,
+						email: m.provider_email,
+						profile_picture: m.profile_picture
+					}))}
 					onChange={handleMembersChange}
 					userOnly={true}
 					hideAddButton={true}
@@ -356,10 +388,14 @@
 				</div>
 			{:else}
 				<div class="space-y-1">
-					{#each members as member}
-						<div class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group">
+					{#each members as member (member.user_id)}
+						<div
+							class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
+						>
 							<div class="flex items-center gap-3 flex-1 min-w-0">
-								<div class="w-9 h-9 rounded-full bg-gradient-to-br from-earthy-terracotta-400 to-earthy-terracotta-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
+								<div
+									class="w-9 h-9 rounded-full bg-gradient-to-br from-earthy-terracotta-400 to-earthy-terracotta-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0"
+								>
 									{member.name.charAt(0).toUpperCase()}
 								</div>
 								<div class="flex-1 min-w-0">
@@ -386,7 +422,12 @@
 										<option value="owner">Owner</option>
 									</select>
 								{:else}
-									<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {member.role === 'owner' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'}">
+									<span
+										class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {member.role ===
+										'owner'
+											? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
+											: 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'}"
+									>
 										{#if member.role === 'owner'}
 											<Shield class="h-3 w-3 mr-1" />
 										{/if}
@@ -396,7 +437,9 @@
 
 								<!-- Source Badge -->
 								{#if member.source === 'sso'}
-									<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+									<span
+										class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+									>
 										<Lock class="h-3 w-3 mr-1" />
 										SSO
 									</span>
@@ -404,7 +447,9 @@
 
 								<!-- Actions -->
 								{#if canEditTeam}
-									<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+									<div
+										class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+									>
 										{#if member.source === 'sso' && currentUserId !== member.user_id}
 											<button
 												onclick={() => convertToManual(member.user_id)}
@@ -419,7 +464,7 @@
 												onclick={() => removeMemberDirect(member.user_id, member.source)}
 												disabled={removingMemberId === member.user_id}
 												class="p-1.5 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50 transition-colors"
-												title={currentUserId === member.user_id ? "Leave team" : "Remove member"}
+												title={currentUserId === member.user_id ? 'Leave team' : 'Remove member'}
 											>
 												<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
 											</button>
@@ -427,7 +472,9 @@
 									</div>
 								{:else if currentUserId === member.user_id}
 									<!-- Allow users to leave the team even without edit permissions -->
-									<div class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+									<div
+										class="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity"
+									>
 										<button
 											onclick={() => removeMemberDirect(member.user_id, member.source)}
 											disabled={removingMemberId === member.user_id}
@@ -446,13 +493,13 @@
 		</div>
 
 		<!-- Assets Section -->
-		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+		<div
+			class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
+		>
 			<div class="flex items-center justify-between mb-4">
 				<div class="flex items-center gap-2">
 					<Database class="w-5 h-5 text-gray-500 dark:text-gray-400" />
-					<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">
-						Assets Owned
-					</h2>
+					<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100">Assets Owned</h2>
 					<span class="text-sm text-gray-500 dark:text-gray-400">
 						({assetsTotal})
 					</span>
@@ -485,7 +532,9 @@
 			<div>
 				{#if loadingAssets}
 					<div class="flex justify-center py-8">
-						<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700" />
+						<div
+							class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
+						></div>
 					</div>
 				{:else if assets.length === 0}
 					<div class="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -493,7 +542,7 @@
 					</div>
 				{:else}
 					<div class="space-y-1">
-						{#each assets as asset}
+						{#each assets as asset (asset.id)}
 							<a
 								href="/discover/{asset.type}/{encodeURIComponent(asset.name)}"
 								onclick={(e) => handleAssetClick(e, asset)}
@@ -504,7 +553,9 @@
 										<Icon name={getIconType(asset)} showLabel={false} size="sm" />
 									</div>
 									<div class="flex-1 min-w-0">
-										<div class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 truncate">
+										<div
+											class="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 truncate"
+										>
 											{asset.name}
 										</div>
 										<div class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono">
@@ -512,7 +563,9 @@
 										</div>
 									</div>
 								</div>
-								<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+								<span
+									class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+								>
 									{asset.type}
 								</span>
 							</a>

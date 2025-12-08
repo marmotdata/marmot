@@ -6,8 +6,8 @@
 
 	let {
 		show = $bindable(false),
-		sourceMrn,
-		targetMrn,
+		sourceMrn: _sourceMrn,
+		targetMrn: _targetMrn,
 		direction,
 		position,
 		onAdd
@@ -25,7 +25,7 @@
 	let isSearching = $state(false);
 	let isAdding = $state(false);
 	let error = $state('');
-	let searchTimeout: NodeJS.Timeout;
+	let searchTimeout: ReturnType<typeof setTimeout>;
 	let searchInputElement: HTMLInputElement;
 	let selectedIndex = $state(-1);
 	let resultButtons: HTMLButtonElement[] = [];
@@ -46,7 +46,8 @@
 
 	// Reset selected index when search results change
 	$effect(() => {
-		searchResults;
+		// Track searchResults to trigger effect
+		void searchResults;
 		selectedIndex = -1;
 		resultButtons = [];
 	});
@@ -143,12 +144,7 @@
 
 {#if show}
 	<!-- Invisible backdrop to close on click outside -->
-	<div
-		class="fixed inset-0 z-[100]"
-		onclick={handleClose}
-		role="button"
-		tabindex="-1"
-	></div>
+	<div class="fixed inset-0 z-[100]" onclick={handleClose} role="button" tabindex="-1"></div>
 
 	<!-- Inline search box -->
 	<div
@@ -162,7 +158,9 @@
 			<div class="flex items-center justify-between mb-3">
 				<div class="flex items-center gap-2">
 					<IconifyIcon
-						icon={direction === 'upstream' ? 'material-symbols:arrow-back-rounded' : 'material-symbols:arrow-forward-rounded'}
+						icon={direction === 'upstream'
+							? 'material-symbols:arrow-back-rounded'
+							: 'material-symbols:arrow-forward-rounded'}
 						class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
 					/>
 					<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
@@ -198,10 +196,14 @@
 			<div class="max-h-80 overflow-y-auto">
 				{#if isSearching}
 					<div class="flex items-center justify-center py-6">
-						<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"></div>
+						<div
+							class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"
+						></div>
 					</div>
 				{:else if error}
-					<div class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+					<div
+						class="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg"
+					>
 						<p class="text-xs text-red-800 dark:text-red-200">{error}</p>
 					</div>
 				{:else if searchQuery && searchResults.length === 0}
@@ -210,12 +212,15 @@
 					</div>
 				{:else if searchResults.length > 0}
 					<div class="space-y-1">
-						{#each searchResults as asset, index}
+						{#each searchResults as asset, index (asset.id)}
 							<button
 								bind:this={resultButtons[index]}
 								onclick={() => handleSelectAsset(asset)}
 								disabled={isAdding}
-								class="w-full p-2.5 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 border rounded-lg transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed {selectedIndex === index ? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 border-earthy-terracotta-300 dark:border-earthy-terracotta-800' : 'border-transparent hover:border-gray-200 dark:hover:border-gray-600'}"
+								class="w-full p-2.5 flex items-center gap-2 hover:bg-gray-50 dark:hover:bg-gray-700 border rounded-lg transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed {selectedIndex ===
+								index
+									? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 border-earthy-terracotta-300 dark:border-earthy-terracotta-800'
+									: 'border-transparent hover:border-gray-200 dark:hover:border-gray-600'}"
 							>
 								<div class="flex-shrink-0">
 									<Icon
@@ -233,7 +238,9 @@
 									</div>
 								</div>
 								{#if isAdding}
-									<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-earthy-terracotta-700"></div>
+									<div
+										class="animate-spin rounded-full h-4 w-4 border-b-2 border-earthy-terracotta-700"
+									></div>
 								{:else}
 									<IconifyIcon
 										icon="material-symbols:add-circle-outline"

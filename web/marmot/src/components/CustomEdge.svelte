@@ -17,14 +17,16 @@
 
 	let isHovered = $state(false);
 
-	const [edgePath, labelX, labelY] = $derived(getBezierPath({
-		sourceX,
-		sourceY,
-		sourcePosition,
-		targetX,
-		targetY,
-		targetPosition
-	}));
+	const [edgePath, labelX, labelY] = $derived(
+		getBezierPath({
+			sourceX,
+			sourceY,
+			sourcePosition,
+			targetX,
+			targetY,
+			targetPosition
+		})
+	);
 
 	function handleDeleteClick(event: MouseEvent) {
 		event.stopPropagation();

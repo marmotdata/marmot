@@ -150,11 +150,25 @@ spec:
             {{- if .Values.config.metrics.enabled }}
             - name: MARMOT_METRICS_PORT
               value: {{ .Values.config.metrics.port | quote }}
+            {{- if .Values.config.metrics.ownerMetadataFields }}
+            - name: MARMOT_METRICS_OWNER_METADATA_FIELDS
+              value: {{ .Values.config.metrics.ownerMetadataFields | join "," | quote }}
+            {{- end }}
+            {{- if .Values.config.metrics.schemas.excludedAssetTypes }}
+            - name: MARMOT_METRICS_SCHEMAS_EXCLUDED_ASSET_TYPES
+              value: {{ .Values.config.metrics.schemas.excludedAssetTypes | join "," | quote }}
+            {{- end }}
+            {{- if .Values.config.metrics.schemas.excludedProviders }}
+            - name: MARMOT_METRICS_SCHEMAS_EXCLUDED_PROVIDERS
+              value: {{ .Values.config.metrics.schemas.excludedProviders | join "," | quote }}
+            {{- end }}
             {{- end }}
 
+            # OpenLineage configuration
+            - name: MARMOT_OPENLINEAGE_AUTH_ENABLED
+              value: {{ .Values.config.openlineage.auth.enabled | quote }}
+
             # Auth configuration
-            - name: MARMOT_AUTH_OPENLINEAGE_ENABLED
-              value: {{ .Values.config.auth.openlineage.enabled | quote }}
             - name: MARMOT_AUTH_ANONYMOUS_ENABLED
               value: {{ .Values.config.auth.anonymous.enabled | quote }}
             - name: MARMOT_AUTH_ANONYMOUS_ROLE
@@ -189,6 +203,125 @@ spec:
                   key: {{ .Values.config.auth.providers.okta.clientSecretRef.key }}
               {{- else }}
               value: {{ .Values.config.auth.providers.okta.clientSecret | quote }}
+              {{- end }}
+            {{- end }}
+
+            {{- if and .Values.config.auth.providers .Values.config.auth.providers.google .Values.config.auth.providers.google.enabled }}
+            - name: MARMOT_AUTH_GOOGLE_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_GOOGLE_CLIENT_ID
+              value: {{ .Values.config.auth.providers.google.clientId | quote }}
+            - name: MARMOT_AUTH_GOOGLE_REDIRECT_URL
+              value: {{ .Values.config.auth.providers.google.redirectUrl | quote }}
+            - name: MARMOT_AUTH_GOOGLE_ALLOW_SIGNUP
+              value: {{ .Values.config.auth.providers.google.allowSignup | quote }}
+            - name: MARMOT_AUTH_GOOGLE_CLIENT_SECRET
+              {{- if .Values.config.auth.providers.google.clientSecretRef }}
+              {{- if and .Values.config.auth.providers.google.clientSecret .Values.config.auth.providers.google.clientSecretRef }}
+              {{- fail "Cannot specify both config.auth.providers.google.clientSecret and config.auth.providers.google.clientSecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.auth.providers.google.clientSecretRef.name }}
+                  key: {{ .Values.config.auth.providers.google.clientSecretRef.key }}
+              {{- else }}
+              value: {{ .Values.config.auth.providers.google.clientSecret | quote }}
+              {{- end }}
+            {{- end }}
+
+            {{- if and .Values.config.auth.providers .Values.config.auth.providers.github .Values.config.auth.providers.github.enabled }}
+            - name: MARMOT_AUTH_GITHUB_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_GITHUB_CLIENT_ID
+              value: {{ .Values.config.auth.providers.github.clientId | quote }}
+            - name: MARMOT_AUTH_GITHUB_REDIRECT_URL
+              value: {{ .Values.config.auth.providers.github.redirectUrl | quote }}
+            - name: MARMOT_AUTH_GITHUB_ALLOW_SIGNUP
+              value: {{ .Values.config.auth.providers.github.allowSignup | quote }}
+            - name: MARMOT_AUTH_GITHUB_CLIENT_SECRET
+              {{- if .Values.config.auth.providers.github.clientSecretRef }}
+              {{- if and .Values.config.auth.providers.github.clientSecret .Values.config.auth.providers.github.clientSecretRef }}
+              {{- fail "Cannot specify both config.auth.providers.github.clientSecret and config.auth.providers.github.clientSecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.auth.providers.github.clientSecretRef.name }}
+                  key: {{ .Values.config.auth.providers.github.clientSecretRef.key }}
+              {{- else }}
+              value: {{ .Values.config.auth.providers.github.clientSecret | quote }}
+              {{- end }}
+            {{- end }}
+
+            {{- if and .Values.config.auth.providers .Values.config.auth.providers.gitlab .Values.config.auth.providers.gitlab.enabled }}
+            - name: MARMOT_AUTH_GITLAB_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_GITLAB_CLIENT_ID
+              value: {{ .Values.config.auth.providers.gitlab.clientId | quote }}
+            - name: MARMOT_AUTH_GITLAB_URL
+              value: {{ .Values.config.auth.providers.gitlab.url | quote }}
+            - name: MARMOT_AUTH_GITLAB_REDIRECT_URL
+              value: {{ .Values.config.auth.providers.gitlab.redirectUrl | quote }}
+            - name: MARMOT_AUTH_GITLAB_ALLOW_SIGNUP
+              value: {{ .Values.config.auth.providers.gitlab.allowSignup | quote }}
+            - name: MARMOT_AUTH_GITLAB_CLIENT_SECRET
+              {{- if .Values.config.auth.providers.gitlab.clientSecretRef }}
+              {{- if and .Values.config.auth.providers.gitlab.clientSecret .Values.config.auth.providers.gitlab.clientSecretRef }}
+              {{- fail "Cannot specify both config.auth.providers.gitlab.clientSecret and config.auth.providers.gitlab.clientSecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.auth.providers.gitlab.clientSecretRef.name }}
+                  key: {{ .Values.config.auth.providers.gitlab.clientSecretRef.key }}
+              {{- else }}
+              value: {{ .Values.config.auth.providers.gitlab.clientSecret | quote }}
+              {{- end }}
+            {{- end }}
+
+            {{- if and .Values.config.auth.providers .Values.config.auth.providers.slack .Values.config.auth.providers.slack.enabled }}
+            - name: MARMOT_AUTH_SLACK_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_SLACK_CLIENT_ID
+              value: {{ .Values.config.auth.providers.slack.clientId | quote }}
+            - name: MARMOT_AUTH_SLACK_REDIRECT_URL
+              value: {{ .Values.config.auth.providers.slack.redirectUrl | quote }}
+            - name: MARMOT_AUTH_SLACK_ALLOW_SIGNUP
+              value: {{ .Values.config.auth.providers.slack.allowSignup | quote }}
+            - name: MARMOT_AUTH_SLACK_CLIENT_SECRET
+              {{- if .Values.config.auth.providers.slack.clientSecretRef }}
+              {{- if and .Values.config.auth.providers.slack.clientSecret .Values.config.auth.providers.slack.clientSecretRef }}
+              {{- fail "Cannot specify both config.auth.providers.slack.clientSecret and config.auth.providers.slack.clientSecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.auth.providers.slack.clientSecretRef.name }}
+                  key: {{ .Values.config.auth.providers.slack.clientSecretRef.key }}
+              {{- else }}
+              value: {{ .Values.config.auth.providers.slack.clientSecret | quote }}
+              {{- end }}
+            {{- end }}
+
+            {{- if and .Values.config.auth.providers .Values.config.auth.providers.auth0 .Values.config.auth.providers.auth0.enabled }}
+            - name: MARMOT_AUTH_AUTH0_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_AUTH0_CLIENT_ID
+              value: {{ .Values.config.auth.providers.auth0.clientId | quote }}
+            - name: MARMOT_AUTH_AUTH0_URL
+              value: {{ .Values.config.auth.providers.auth0.url | quote }}
+            - name: MARMOT_AUTH_AUTH0_REDIRECT_URL
+              value: {{ .Values.config.auth.providers.auth0.redirectUrl | quote }}
+            - name: MARMOT_AUTH_AUTH0_ALLOW_SIGNUP
+              value: {{ .Values.config.auth.providers.auth0.allowSignup | quote }}
+            - name: MARMOT_AUTH_AUTH0_CLIENT_SECRET
+              {{- if .Values.config.auth.providers.auth0.clientSecretRef }}
+              {{- if and .Values.config.auth.providers.auth0.clientSecret .Values.config.auth.providers.auth0.clientSecretRef }}
+              {{- fail "Cannot specify both config.auth.providers.auth0.clientSecret and config.auth.providers.auth0.clientSecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.auth.providers.auth0.clientSecretRef.name }}
+                  key: {{ .Values.config.auth.providers.auth0.clientSecretRef.key }}
+              {{- else }}
+              value: {{ .Values.config.auth.providers.auth0.clientSecret | quote }}
               {{- end }}
             {{- end }}
 

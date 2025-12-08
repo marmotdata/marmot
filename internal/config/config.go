@@ -13,10 +13,6 @@ type AnonymousAuthConfig struct {
 	Role    string `mapstructure:"role"`
 }
 
-type OpenLineageAuthConfig struct {
-	Enabled bool `mapstructure:"enabled"`
-}
-
 type RateLimitConfig struct {
 	Enabled bool `mapstructure:"enabled"`
 }
@@ -95,15 +91,20 @@ type Config struct {
 	} `mapstructure:"logging"`
 
 	Auth struct {
-		Google      *OAuthProviderConfig  `mapstructure:"google"`
-		GitHub      *OAuthProviderConfig  `mapstructure:"github"`
-		GitLab      *OAuthProviderConfig  `mapstructure:"gitlab"`
-		Okta        *OAuthProviderConfig  `mapstructure:"okta"`
-		Slack       *OAuthProviderConfig  `mapstructure:"slack"`
-		Auth0       *OAuthProviderConfig  `mapstructure:"auth0"`
-		Anonymous   AnonymousAuthConfig   `mapstructure:"anonymous"`
-		OpenLineage OpenLineageAuthConfig `mapstructure:"openlineage"`
+		Google    *OAuthProviderConfig `mapstructure:"google"`
+		GitHub    *OAuthProviderConfig `mapstructure:"github"`
+		GitLab    *OAuthProviderConfig `mapstructure:"gitlab"`
+		Okta      *OAuthProviderConfig `mapstructure:"okta"`
+		Slack     *OAuthProviderConfig `mapstructure:"slack"`
+		Auth0     *OAuthProviderConfig `mapstructure:"auth0"`
+		Anonymous AnonymousAuthConfig  `mapstructure:"anonymous"`
 	} `mapstructure:"auth"`
+
+	OpenLineage struct {
+		Auth struct {
+			Enabled bool `mapstructure:"enabled"`
+		} `mapstructure:"auth"`
+	} `mapstructure:"openlineage"`
 
 	RateLimit RateLimitConfig `mapstructure:"rate_limit"`
 
@@ -231,7 +232,8 @@ func loadConfig(configPath string) error {
 
 	v.BindEnv("auth.anonymous.enabled")
 	v.BindEnv("auth.anonymous.role")
-	v.BindEnv("auth.openlineage.enabled")
+
+	v.BindEnv("openlineage.auth.enabled")
 
 	v.BindEnv("server.root_url")
 	v.BindEnv("server.encryption_key")
@@ -290,7 +292,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("database.conn_lifetime", 5) // minutes
 
 	v.SetDefault("auth.anonymous.role", "user")
-	v.SetDefault("auth.openlineage.enabled", true)
+
+	// OpenLineage defaults
+	v.SetDefault("openlineage.auth.enabled", true)
 
 	// Logging defaults
 	v.SetDefault("logging.level", "info")

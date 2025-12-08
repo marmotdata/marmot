@@ -11,10 +11,17 @@
 	let newTag = $state('');
 	let showTagInput = $state(false);
 	let savingTag = $state(false);
+	let tagInputElement = $state<HTMLInputElement>();
 
 	$effect(() => {
 		if (asset?.id) {
 			tags = asset.tags || [];
+		}
+	});
+
+	$effect(() => {
+		if (showTagInput && tagInputElement) {
+			tagInputElement.focus();
 		}
 	});
 
@@ -87,7 +94,7 @@
 
 		{#if tags.length > 0 || showTagInput}
 			<div class="flex flex-wrap gap-1.5">
-				{#each tags as tag}
+				{#each tags as tag, index (index)}
 					<span
 						class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200"
 					>
@@ -113,12 +120,12 @@
 				{#if showTagInput}
 					<div class="inline-flex items-center gap-1.5">
 						<input
+							bind:this={tagInputElement}
 							type="text"
 							bind:value={newTag}
 							onkeydown={(e) => e.key === 'Enter' && addTag()}
 							placeholder="tag name"
 							class="px-2 py-0.5 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-transparent w-24"
-							autofocus
 						/>
 						<button
 							onclick={addTag}

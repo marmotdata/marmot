@@ -19,14 +19,17 @@
 {#if sources && sources.length > 0}
 	<div class="mb-6">
 		<div class="space-y-4">
-			{#each sources as source}
+			{#each sources as source (source.name)}
 				<div
 					class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
 				>
 					<div class="flex justify-between items-start">
 						<div
 							class="flex items-center cursor-pointer"
-							on:click={() => toggleSource(source.name)}
+							onclick={() => toggleSource(source.name)}
+							onkeydown={(e) => e.key === 'Enter' && toggleSource(source.name)}
+							role="button"
+							tabindex="0"
 						>
 							<div class="mr-2">
 								<Arrow expanded={expandedSources.has(source.name)} />

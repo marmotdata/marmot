@@ -122,7 +122,6 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 	redirectURICookie, err := r.Cookie("oauth_redirect_uri")
 	var frontendURL string
 	if err == nil && redirectURICookie.Value != "" {
-		// Clear the cookie (match Secure flag with original request)
 		isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 		http.SetCookie(w, &http.Cookie{
 			Name:     "oauth_redirect_uri",

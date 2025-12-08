@@ -12,9 +12,7 @@
 
 {#if compact}
 	<!-- Compact Mode -->
-	<div
-		class="rounded border border-gray-200 dark:border-gray-700"
-	>
+	<div class="rounded border border-gray-200 dark:border-gray-700">
 		<a
 			href={`/discover/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
 			class="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
@@ -46,10 +44,11 @@
 	</div>
 {:else}
 	<!-- Full Mode -->
-	<div
-		class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
-	>
-		<div class="flex p-4 cursor-pointer hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700" on:click={onClick}>
+	<div class="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+		<div
+			class="flex p-4 cursor-pointer hover:bg-earthy-terracotta-50 dark:hover:bg-gray-700"
+			on:click={onClick}
+		>
 			<div class="flex items-start space-x-3 flex-1 min-w-0">
 				<Icon
 					name={node.asset.providers?.length === 1 ? node.asset.providers[0] : node.type}

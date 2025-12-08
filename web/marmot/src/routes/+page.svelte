@@ -314,12 +314,11 @@
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 			{#each quickStats as stat}
-				<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+				<div
+					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+				>
 					<div class="flex items-center justify-between mb-2">
-						<Icon
-							icon={stat.icon}
-							class="w-8 h-8 text-gray-400 dark:text-gray-500"
-						/>
+						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
 					</div>
 					{#if !isLoading}
 						<div class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
@@ -344,11 +343,15 @@
 					class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:border-earthy-terracotta-500 dark:hover:border-earthy-terracotta-600 hover:shadow-lg transition-all"
 				>
 					<div class="flex items-start gap-4">
-						<div class="flex-shrink-0 w-10 h-10 {colors.bg} rounded-lg flex items-center justify-center">
+						<div
+							class="flex-shrink-0 w-10 h-10 {colors.bg} rounded-lg flex items-center justify-center"
+						>
 							<Icon icon={action.icon} class="w-6 h-6 {colors.text}" />
 						</div>
 						<div class="flex-1 min-w-0">
-							<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors">
+							<h3
+								class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
+							>
 								{action.title}
 							</h3>
 							<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
@@ -375,7 +378,9 @@
 								See all →
 							</a>
 						</div>
-						<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700">
+						<div
+							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700"
+						>
 							{#each popularAssets as asset}
 								<button
 									onclick={() => navigateToAsset(asset)}
@@ -413,9 +418,7 @@
 					<!-- User Assets fallback -->
 					<div>
 						<div class="flex items-center justify-between mb-4">
-							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-								Your Assets
-							</h2>
+							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Your Assets</h2>
 							<a
 								href="/discover"
 								class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
@@ -423,13 +426,18 @@
 								View all →
 							</a>
 						</div>
-						<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+						<div
+							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
+						>
 							{#if userAssets.length > 0}
 								<div class="divide-y divide-gray-200 dark:divide-gray-700">
 									{#each userAssets as asset}
 										<a
 											href="/discover/{asset.type}/{encodeURIComponent(asset.name)}"
-											onclick={(e) => { e.preventDefault(); handleAssetClick(asset); }}
+											onclick={(e) => {
+												e.preventDefault();
+												handleAssetClick(asset);
+											}}
 											class="flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
 										>
 											<div class="flex-shrink-0">
@@ -441,9 +449,13 @@
 												>
 													{asset.name}
 												</h3>
-												<p class="text-xs text-gray-600 dark:text-gray-400 truncate font-mono">{asset.mrn}</p>
+												<p class="text-xs text-gray-600 dark:text-gray-400 truncate font-mono">
+													{asset.mrn}
+												</p>
 											</div>
-											<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+											<span
+												class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+											>
 												{asset.type}
 											</span>
 										</a>
@@ -451,8 +463,13 @@
 								</div>
 							{:else}
 								<div class="flex flex-col items-center justify-center py-12 px-4">
-									<div class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4">
-										<Icon icon="material-symbols:inbox" class="w-8 h-8 text-gray-400 dark:text-gray-500" />
+									<div
+										class="w-16 h-16 rounded-full bg-gray-100 dark:bg-gray-700 flex items-center justify-center mb-4"
+									>
+										<Icon
+											icon="material-symbols:inbox"
+											class="w-8 h-8 text-gray-400 dark:text-gray-500"
+										/>
 									</div>
 									<p class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-1">
 										No assets currently assigned to you
@@ -468,10 +485,10 @@
 
 				<!-- Data Breakdown -->
 				<div>
-					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-						Overview
-					</h2>
-					<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Overview</h2>
+					<div
+						class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+					>
 						<!-- Asset Types -->
 						<div class="mb-6">
 							<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
@@ -489,13 +506,17 @@
 											{item.type}
 										</span>
 										<div class="flex items-center gap-3">
-											<div class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+											<div
+												class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+											>
 												<div
 													class="h-full bg-earthy-terracotta-500 transition-all"
 													style="width: {(item.count / totalAssets) * 100}%"
 												></div>
 											</div>
-											<span class="text-sm font-semibold text-gray-600 dark:text-gray-400 w-12 text-right">
+											<span
+												class="text-sm font-semibold text-gray-600 dark:text-gray-400 w-12 text-right"
+											>
 												{item.count}
 											</span>
 										</div>
@@ -527,13 +548,17 @@
 											</span>
 										</div>
 										<div class="flex items-center gap-3">
-											<div class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+											<div
+												class="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden"
+											>
 												<div
 													class="h-full bg-blue-500 transition-all"
 													style="width: {(item.count / totalAssets) * 100}%"
 												></div>
 											</div>
-											<span class="text-sm font-semibold text-gray-600 dark:text-gray-400 w-12 text-right">
+											<span
+												class="text-sm font-semibold text-gray-600 dark:text-gray-400 w-12 text-right"
+											>
 												{item.count}
 											</span>
 										</div>
@@ -549,7 +574,9 @@
 			{#if topTags.length > 0}
 				<div>
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Popular Tags</h2>
-					<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+					<div
+						class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+					>
 						<div class="flex flex-wrap gap-2">
 							{#each topTags as item}
 								<button
@@ -600,12 +627,11 @@
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 			{#each quickStats as stat}
-				<div class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+				<div
+					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+				>
 					<div class="flex items-center justify-between mb-2">
-						<Icon
-							icon={stat.icon}
-							class="w-8 h-8 text-gray-400 dark:text-gray-500"
-						/>
+						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
 					</div>
 					<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>
 					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
@@ -624,11 +650,15 @@
 					class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:border-earthy-terracotta-500 dark:hover:border-earthy-terracotta-600 hover:shadow-lg transition-all"
 				>
 					<div class="flex items-start gap-4">
-						<div class="flex-shrink-0 w-10 h-10 {colors.bg} rounded-lg flex items-center justify-center">
+						<div
+							class="flex-shrink-0 w-10 h-10 {colors.bg} rounded-lg flex items-center justify-center"
+						>
 							<Icon icon={action.icon} class="w-6 h-6 {colors.text}" />
 						</div>
 						<div class="flex-1 min-w-0">
-							<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors">
+							<h3
+								class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
+							>
 								{action.title}
 							</h3>
 							<p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">

@@ -86,7 +86,9 @@
 	];
 
 	// Metadata fields fetched from API
-	let metadataFields = $state<{ value: string; label: string; description: string; category: string }[]>([]);
+	let metadataFields = $state<
+		{ value: string; label: string; description: string; category: string }[]
+	>([]);
 	let metadataFieldsCache: any[] | null = null;
 
 	// Computed allFields that combines simple fields with fetched metadata fields

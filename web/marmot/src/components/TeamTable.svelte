@@ -2,6 +2,8 @@
 	import { createEventDispatcher } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import { Users, Lock, Trash2 } from 'lucide-svelte';
+	import { goto } from '$app/navigation';
+	import DeleteModal from './DeleteModal.svelte';
 
 	export let teams: any[];
 	export let totalTeams: number;
@@ -11,32 +13,32 @@
 	const dispatch = createEventDispatcher();
 
 	let deletingTeamId: string | null = null;
+	let showDeleteModal = false;
+	let teamToDelete: any = null;
 
-	async function deleteTeam(teamId: string) {
-		if (!confirm('Are you sure you want to delete this team?')) {
-			return;
-		}
+	async function handleDeleteTeam() {
+		if (!teamToDelete) return;
 
 		try {
-			deletingTeamId = teamId;
-			const response = await fetchApi(`/teams/${teamId}`, {
+			deletingTeamId = teamToDelete.id;
+			const response = await fetchApi(`/teams/${teamToDelete.id}`, {
 				method: 'DELETE'
 			});
 
 			if (response.ok) {
-				dispatch('delete', teamId);
+				dispatch('delete', teamToDelete.id);
+				showDeleteModal = false;
+				teamToDelete = null;
 			} else {
 				const data = await response.json();
-				alert(data.error || 'Failed to delete team');
+				console.error(data.error || 'Failed to delete team');
 			}
 		} catch (err: any) {
-			alert(err.message);
+			console.error(err.message);
 		} finally {
 			deletingTeamId = null;
 		}
 	}
-
-	import { goto } from '$app/navigation';
 
 	function goToTeamPage(teamId: string) {
 		goto(`/teams/${teamId}`);
@@ -50,23 +52,34 @@
 	<table class="min-w-full">
 		<thead>
 			<tr>
-				<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800">
+				<th
+					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
+				>
 					Team
 				</th>
-				<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800">
+				<th
+					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
+				>
 					Description
 				</th>
-				<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800">
+				<th
+					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
+				>
 					Source
 				</th>
-				<th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800">
+				<th
+					class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
+				>
 					Actions
 				</th>
 			</tr>
 		</thead>
 		<tbody class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:bg-gray-900">
 			{#each teams as team (team.id)}
-				<tr class="hover:bg-earthy-brown-100 dark:hover:bg-gray-800 cursor-pointer transition-colors" on:click={() => goToTeamPage(team.id)}>
+				<tr
+					class="hover:bg-earthy-brown-100 dark:hover:bg-gray-800 cursor-pointer transition-colors"
+					on:click={() => goToTeamPage(team.id)}
+				>
 					<td class="px-6 py-4 whitespace-nowrap">
 						<div class="flex items-center">
 							<Users class="h-5 w-5 text-gray-400 mr-2" />
@@ -84,20 +97,30 @@
 					</td>
 					<td class="px-6 py-4 whitespace-nowrap">
 						{#if team.created_via_sso}
-							<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+							<span
+								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+							>
 								<Lock class="h-3 w-3 mr-1" />
 								SSO ({team.sso_provider})
 							</span>
 						{:else}
-							<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+							<span
+								class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+							>
 								Manual
 							</span>
 						{/if}
 					</td>
-					<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium" on:click|stopPropagation>
+					<td
+						class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+						on:click|stopPropagation
+					>
 						{#if !team.created_via_sso}
 							<button
-								on:click={() => deleteTeam(team.id)}
+								on:click={() => {
+									teamToDelete = team;
+									showDeleteModal = true;
+								}}
 								disabled={deletingTeamId === team.id}
 								class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50"
 								title="Delete team"
@@ -105,7 +128,10 @@
 								<Trash2 class="h-4 w-4" />
 							</button>
 						{:else}
-							<span class="text-gray-400 dark:text-gray-600" title="SSO-managed teams cannot be deleted">
+							<span
+								class="text-gray-400 dark:text-gray-600"
+								title="SSO-managed teams cannot be deleted"
+							>
 								<Lock class="h-4 w-4" />
 							</span>
 						{/if}
@@ -116,13 +142,13 @@
 	</table>
 
 	{#if teams.length === 0}
-		<div class="text-center py-8 text-gray-500 dark:text-gray-400">
-			No teams found
-		</div>
+		<div class="text-center py-8 text-gray-500 dark:text-gray-400">No teams found</div>
 	{/if}
 
 	{#if totalPages > 1}
-		<div class="bg-white dark:bg-gray-900 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700">
+		<div
+			class="bg-white dark:bg-gray-900 px-4 py-3 flex items-center justify-between border-t border-gray-200 dark:border-gray-700"
+		>
 			<div class="flex-1 flex justify-between sm:hidden">
 				<button
 					on:click={() => dispatch('pageChange', Math.max(0, offset - limit))}
@@ -169,3 +195,17 @@
 		</div>
 	{/if}
 </div>
+
+<DeleteModal
+	show={showDeleteModal}
+	title="Delete Team"
+	message="Are you sure you want to delete this team? This action cannot be undone."
+	confirmText="Delete"
+	resourceName={teamToDelete?.name || ''}
+	requireConfirmation={true}
+	onConfirm={handleDeleteTeam}
+	onCancel={() => {
+		showDeleteModal = false;
+		teamToDelete = null;
+	}}
+/>

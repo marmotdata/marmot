@@ -59,9 +59,7 @@
 	});
 
 	// Use provided metadata or asset metadata
-	let metadata = $state<Record<string, any>>(
-		metadataProp || asset?.metadata || {}
-	);
+	let metadata = $state<Record<string, any>>(metadataProp || asset?.metadata || {});
 
 	let showAddRow = $state(false);
 	let editingKey = $state<string | null>(null);
@@ -245,7 +243,9 @@
 			{#each metadataEntries as [key, value]}
 				<div class="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-2 last:pb-0">
 					<div class="flex items-start gap-2">
-						<dt class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[120px] flex-shrink-0">
+						<dt
+							class="text-sm font-medium text-gray-600 dark:text-gray-400 min-w-[120px] flex-shrink-0"
+						>
 							{key}
 						</dt>
 						<dd class="text-sm text-gray-900 dark:text-gray-100 flex-1 min-w-0">
@@ -258,14 +258,21 @@
 										<span class="ml-1">View Details</span>
 									</summary>
 									<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded">
-										<pre class="text-xs text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(value, null, 2)}</pre>
+										<pre
+											class="text-xs text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(
+												value,
+												null,
+												2
+											)}</pre>
 									</div>
 								</details>
 							{:else if isArray(value)}
 								<div class="flex flex-wrap gap-1">
 									{#each value as item, i}
 										{#if i < 5}
-											<span class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
+											<span
+												class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded"
+											>
 												{truncateValue(item?.toString() || '')}
 											</span>
 										{/if}
@@ -308,10 +315,14 @@
 					<table class="min-w-full">
 						<thead>
 							<tr class="border-b border-gray-200 dark:border-gray-700">
-								<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+								<th
+									class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
+								>
 									Key
 								</th>
-								<th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400">
+								<th
+									class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-400"
+								>
 									Value
 								</th>
 								{#if canEdit()}
@@ -321,8 +332,12 @@
 						</thead>
 						<tbody>
 							{#each metadataEntries as [key, value]}
-								<tr class="group border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
-									<td class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 align-top">
+								<tr
+									class="group border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
+								>
+									<td
+										class="px-4 py-2.5 text-sm font-medium text-gray-700 dark:text-gray-300 align-top"
+									>
 										{key}
 									</td>
 									<td class="px-4 py-2.5 text-sm align-top">
@@ -361,7 +376,10 @@
 														class="p-1.5 text-red-600 dark:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
 														title="Delete"
 													>
-														<IconifyIcon icon="material-symbols:delete-outline-rounded" class="w-5 h-5" />
+														<IconifyIcon
+															icon="material-symbols:delete-outline-rounded"
+															class="w-5 h-5"
+														/>
 													</button>
 												</div>
 											</div>
@@ -378,13 +396,20 @@
 													<span class="ml-1">View object</span>
 												</summary>
 												<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs">
-													<pre class="text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(value, null, 2)}</pre>
+													<pre
+														class="text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(
+															value,
+															null,
+															2
+														)}</pre>
 												</div>
 											</details>
 										{:else if isArray(value)}
 											<div class="flex flex-wrap gap-1.5">
 												{#each value as item}
-													<span class="px-2 py-0.5 text-xs bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 rounded">
+													<span
+														class="px-2 py-0.5 text-xs bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 rounded"
+													>
 														{item?.toString() || ''}
 													</span>
 												{/each}
@@ -403,7 +428,10 @@
 													class="opacity-0 group-hover:opacity-100 p-1.5 text-gray-400 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-500 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-all"
 													title="Edit"
 												>
-													<IconifyIcon icon="material-symbols:edit-outline-rounded" class="w-4 h-4" />
+													<IconifyIcon
+														icon="material-symbols:edit-outline-rounded"
+														class="w-4 h-4"
+													/>
 												</button>
 											{/if}
 										</td>
@@ -412,7 +440,9 @@
 							{/each}
 
 							{#if showAddRow}
-								<tr class="group border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30">
+								<tr
+									class="group border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30"
+								>
 									<td class="px-4 py-2">
 										<input
 											type="text"

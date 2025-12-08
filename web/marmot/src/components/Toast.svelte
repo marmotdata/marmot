@@ -10,13 +10,7 @@
 		onClose: () => void;
 	}
 
-	let {
-		show = $bindable(),
-		message,
-		variant = 'info',
-		duration = 3000,
-		onClose
-	}: Props = $props();
+	let { show = $bindable(), message, variant = 'info', duration = 3000, onClose }: Props = $props();
 
 	let variantStyles = $derived(
 		variant === 'success'
@@ -61,7 +55,10 @@
 		<div
 			class="flex items-center gap-3 min-w-[300px] max-w-md px-4 py-3 {variantStyles.bg} border {variantStyles.border} rounded-lg shadow-lg"
 		>
-			<IconifyIcon icon={variantStyles.icon} class="h-5 w-5 {variantStyles.iconColor} flex-shrink-0" />
+			<IconifyIcon
+				icon={variantStyles.icon}
+				class="h-5 w-5 {variantStyles.iconColor} flex-shrink-0"
+			/>
 			<p class="flex-1 text-sm font-medium {variantStyles.textColor}">
 				{message}
 			</p>

@@ -34,7 +34,9 @@
 	}
 </script>
 
-<div class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700">
+<div
+	class="mb-6 bg-white dark:bg-gray-800 p-4 rounded-lg border border-gray-200 dark:border-gray-700"
+>
 	<h3 class="text-lg font-medium mb-4">Create New Team</h3>
 
 	<form on:submit|preventDefault={handleSubmit} class="space-y-4">
@@ -53,7 +55,10 @@
 		</div>
 
 		<div>
-			<label for="description" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+			<label
+				for="description"
+				class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+			>
 				Description
 			</label>
 			<textarea

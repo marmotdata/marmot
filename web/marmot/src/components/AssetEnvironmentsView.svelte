@@ -130,7 +130,8 @@
 								<span class="text-gray-300 dark:text-gray-600">•</span>
 							{/each}
 							<span class="text-xs text-gray-500 dark:text-gray-500 italic">
-								{Object.keys(env.metadata).length} {Object.keys(env.metadata).length === 1 ? 'field' : 'fields'}
+								{Object.keys(env.metadata).length}
+								{Object.keys(env.metadata).length === 1 ? 'field' : 'fields'}
 							</span>
 						</div>
 					{/if}

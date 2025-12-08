@@ -161,7 +161,7 @@
 			on:focus={() => searchQuery && (showResults = true)}
 			type="text"
 			placeholder="Search assets, glossary, teams..."
-			autofocus={autofocus}
+			{autofocus}
 			class="block w-full pl-10 pr-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400 focus:border-transparent text-base"
 		/>
 
@@ -174,7 +174,7 @@
 						type="button"
 						tabindex="-1"
 						on:click={() => navigateToResult(result)}
-						on:mouseenter={() => selectedIndex = index}
+						on:mouseenter={() => (selectedIndex = index)}
 						class="w-full text-left px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors {selectedIndex ===
 						index
 							? 'bg-blue-50 dark:bg-blue-900/20'
@@ -190,14 +190,21 @@
 									/>
 								</div>
 							{:else}
-								<Icon icon={getTypeIcon(result.type)} class="text-xl text-gray-600 dark:text-gray-400 flex-shrink-0" />
+								<Icon
+									icon={getTypeIcon(result.type)}
+									class="text-xl text-gray-600 dark:text-gray-400 flex-shrink-0"
+								/>
 							{/if}
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2">
 									<p class="font-medium text-gray-900 dark:text-white truncate">
 										{result.name}
 									</p>
-									<span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getTypeColor(result.type)}">
+									<span
+										class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium {getTypeColor(
+											result.type
+										)}"
+									>
 										{result.type}
 									</span>
 								</div>
@@ -210,9 +217,14 @@
 						</div>
 					</button>
 				{/each}
-				<div class="px-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700">
+				<div
+					class="px-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700"
+				>
 					<p class="text-xs text-gray-500 dark:text-gray-400">
-						Press <kbd class="px-1 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded">Enter</kbd> to see all results
+						Press <kbd
+							class="px-1 py-0.5 text-xs font-semibold bg-gray-200 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded"
+							>Enter</kbd
+						> to see all results
 					</p>
 				</div>
 			</div>

@@ -27,7 +27,10 @@
 	class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 h-full"
 >
 	<div class="flex items-center gap-2 mb-4">
-		<IconifyIcon {icon} class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-700" />
+		<IconifyIcon
+			{icon}
+			class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
+		/>
 		<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">{title}</h3>
 		{#if data.length > limit}
 			<span class="text-xs text-gray-500 dark:text-gray-400">Top {limit}</span>

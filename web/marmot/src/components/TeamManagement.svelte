@@ -56,7 +56,9 @@
 	}
 </script>
 
-<div class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+<div
+	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+>
 	<div class="p-6">
 		<div class="flex justify-between items-center mb-6">
 			<div class="flex-1 max-w-md">

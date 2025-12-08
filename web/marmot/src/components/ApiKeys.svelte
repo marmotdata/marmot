@@ -4,9 +4,17 @@
 	import DeleteModal from './DeleteModal.svelte';
 	import Button from './Button.svelte';
 
-	let apiKeys: any[] | null = null;
+	interface ApiKey {
+		id: string;
+		name: string;
+		key?: string;
+		created_at: string;
+		last_used_at: string | null;
+	}
+
+	let apiKeys: ApiKey[] | null = null;
 	let newKeyName = '';
-	let keyToDelete: any = null;
+	let keyToDelete: ApiKey | null = null;
 	let showDeleteDialog = false;
 	let newlyCreatedKey: string | null = null;
 	let copied = false;
@@ -132,7 +140,7 @@
 							type="text"
 							id="key-name"
 							bind:value={newKeyName}
-							on:keydown={handleKeydown}
+							onkeydown={handleKeydown}
 							class="block w-full px-4 py-3 bg-white dark:bg-gray-800 rounded-md shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm border-gray-300 dark:border-gray-600"
 							placeholder="Enter a descriptive name for your key"
 						/>
@@ -206,7 +214,7 @@
 					<tbody
 						class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:divide-gray-700 dark:bg-gray-900"
 					>
-						{#each apiKeys as key}
+						{#each apiKeys as key (key.id)}
 							<tr class="hover:bg-earthy-brown-100 dark:hover:bg-gray-700 transition-colors">
 								<td
 									class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100"

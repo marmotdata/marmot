@@ -64,7 +64,9 @@
 	}
 </script>
 
-<div class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+<div
+	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+>
 	<div class="p-6">
 		<div class="flex justify-between items-center mb-6">
 			<div class="flex-1 max-w-md">
@@ -84,7 +86,7 @@
 		</div>
 
 		{#if creatingUser}
-			<CreateUserForm onUserCreated={handleUserCreated} />
+			<CreateUserForm onUserCreated={handleUserCreated} onCancel={() => (creatingUser = false)} />
 		{/if}
 
 		{#if loading && !users.length}
@@ -97,8 +99,8 @@
 			</div>
 		{:else}
 			<UserTable
-				users={users}
-				editingUserId={editingUserId}
+				{users}
+				{editingUserId}
 				onEdit={(userId) => (editingUserId = userId)}
 				onUpdate={handleUserUpdated}
 				onDelete={handleUserDeleted}

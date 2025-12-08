@@ -44,10 +44,16 @@
 	}
 </script>
 
-<div class="bg-earthy-brown-50 dark:bg-gray-900 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 dark:border-gray-700">
+<div
+	class="bg-earthy-brown-50 dark:bg-gray-900 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 dark:border-gray-700 dark:border-gray-700"
+>
 	<div class="p-6">
 		<div class="flex justify-between items-center mb-6">
-			<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200">Roles & Permissions</h3>
+			<h3
+				class="text-lg font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200"
+			>
+				Roles & Permissions
+			</h3>
 			<button
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
 				on:click={() => (creatingRole = !creatingRole)}
@@ -57,11 +63,20 @@
 		</div>
 
 		{#if creatingRole}
-			<div class="mb-6 bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-lg p-6 animate-slide-down">
-				<h4 class="text-base font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200 mb-4">Create New Role</h4>
+			<div
+				class="mb-6 bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-lg p-6 animate-slide-down"
+			>
+				<h4
+					class="text-base font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200 mb-4"
+				>
+					Create New Role
+				</h4>
 				<div class="space-y-4">
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300">Role Name</label>
+						<label
+							class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
+							>Role Name</label
+						>
 						<input
 							type="text"
 							bind:value={newRole.name}
@@ -69,7 +84,10 @@
 						/>
 					</div>
 					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300">Description</label>
+						<label
+							class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
+							>Description</label
+						>
 						<textarea
 							bind:value={newRole.description}
 							class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
@@ -90,7 +108,9 @@
 
 		{#if loading && !roles.length}
 			<div class="flex justify-center p-8">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
+				<div
+					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
+				></div>
 			</div>
 		{:else if error}
 			<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">
@@ -119,15 +139,24 @@
 							>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:bg-gray-900 dark:bg-gray-900 dark:bg-gray-900">
+					<tbody
+						class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:bg-gray-900 dark:bg-gray-900 dark:bg-gray-900"
+					>
 						{#each roles as role}
-							<tr class="hover:bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 transition-colors">
+							<tr
+								class="hover:bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 transition-colors"
+							>
 								{#if editingRoleId === role.id}
 									<td colspan="4">
-										<div class="bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-lg p-4 animate-slide-down">
+										<div
+											class="bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-lg p-4 animate-slide-down"
+										>
 											<div class="space-y-4">
 												<div>
-													<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300">Role Name</label>
+													<label
+														class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
+														>Role Name</label
+													>
 													<input
 														type="text"
 														bind:value={role.name}
@@ -135,7 +164,10 @@
 													/>
 												</div>
 												<div>
-													<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300">Description</label>
+													<label
+														class="block text-sm font-medium text-gray-700 dark:text-gray-300 dark:text-gray-300 dark:text-gray-300"
+														>Description</label
+													>
 													<textarea
 														bind:value={role.description}
 														class="mt-1 block w-full px-4 py-2 bg-white dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 rounded-md shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm border-gray-300 dark:border-gray-600 dark:border-gray-600 dark:border-gray-600"
@@ -159,11 +191,16 @@
 										</div>
 									</td>
 								{:else}
-									<td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200"
+									<td
+										class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100 dark:text-gray-100 dark:text-gray-100 dark:text-gray-200"
 										>{role.name}</td
 									>
-									<td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 dark:text-gray-400">{role.description}</td>
-									<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 dark:text-gray-400"
+									<td
+										class="px-6 py-4 text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 dark:text-gray-400"
+										>{role.description}</td
+									>
+									<td
+										class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 dark:text-gray-400 dark:text-gray-400"
 										>{role.users?.length || 0} users</td
 									>
 									<td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

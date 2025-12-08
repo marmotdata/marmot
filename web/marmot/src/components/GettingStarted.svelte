@@ -42,7 +42,9 @@
 		>
 			<IconifyIcon
 				icon="material-symbols:rocket-launch"
-				class="{condensed ? 'h-6 w-6' : 'h-8 w-8'} text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
+				class="{condensed
+					? 'h-6 w-6'
+					: 'h-8 w-8'} text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
 			/>
 		</div>
 
