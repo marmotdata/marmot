@@ -39,7 +39,7 @@ require (
 	github.com/twmb/franz-go/pkg/kadm v1.15.0
 	github.com/twmb/franz-go/pkg/kmsg v1.9.0
 	go.mongodb.org/mongo-driver v1.7.6
-	golang.org/x/crypto v0.42.0
+	golang.org/x/crypto v0.45.0
 	golang.org/x/oauth2 v0.30.0
 	google.golang.org/api v0.232.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -160,13 +160,14 @@ require (
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/exp v0.0.0-20250531010427-b6e5de432a8b // indirect
-	golang.org/x/mod v0.27.0 // indirect
-	golang.org/x/net v0.43.0 // indirect
+	golang.org/x/mod v0.29.0 // indirect
+	golang.org/x/net v0.47.0 // indirect
 	golang.org/x/sync v0.18.0 // indirect
-	golang.org/x/sys v0.36.0 // indirect
-	golang.org/x/text v0.29.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
+	golang.org/x/telemetry v0.0.0-20251008203120-078029d740a8 // indirect
+	golang.org/x/text v0.31.0 // indirect
 	golang.org/x/time v0.11.0 // indirect
-	golang.org/x/tools v0.36.0 // indirect
+	golang.org/x/tools v0.38.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	google.golang.org/genproto v0.0.0-20250303144028-a0af3efb3deb // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20250505200425-f936aa4a68b2 // indirect
