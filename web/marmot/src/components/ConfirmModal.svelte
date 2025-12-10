@@ -9,7 +9,9 @@
 		confirmText?: string;
 		cancelText?: string;
 		variant?: 'danger' | 'warning' | 'info';
-		onConfirm: () => void;
+		checkboxLabel?: string;
+		checkboxChecked?: boolean;
+		onConfirm: (checkboxValue?: boolean) => void;
 		onCancel?: () => void;
 	}
 
@@ -20,6 +22,8 @@
 		confirmText = 'Confirm',
 		cancelText = 'Cancel',
 		variant = 'danger',
+		checkboxLabel,
+		checkboxChecked = $bindable(false),
 		onConfirm,
 		onCancel
 	}: Props = $props();
@@ -85,18 +89,32 @@
 						</p>
 					</div>
 				</div>
+				{#if checkboxLabel}
+					<div class="mt-4 mx-6 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+						<label class="flex items-center gap-3 cursor-pointer group">
+							<input
+								type="checkbox"
+								bind:checked={checkboxChecked}
+								class="w-5 h-5 text-amber-600 bg-white dark:bg-gray-700 border-amber-300 dark:border-amber-700 rounded focus:ring-2 focus:ring-amber-500 dark:focus:ring-amber-600 cursor-pointer transition-all"
+							/>
+							<span class="text-sm font-medium text-amber-900 dark:text-amber-100 group-hover:text-amber-800 dark:group-hover:text-amber-50 transition-colors">
+								{checkboxLabel}
+							</span>
+						</label>
+					</div>
+				{/if}
 			</div>
 
-			<div
-				class="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-200 dark:border-gray-700"
-			>
-				<Button variant="clear" click={handleCancel} text={cancelText} />
-				<button
-					onclick={onConfirm}
-					class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors {variantColors.buttonClass}"
-				>
-					{confirmText}
-				</button>
+			<div class="border-t border-gray-200 dark:border-gray-700">
+				<div class="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
+					<Button variant="clear" click={handleCancel} text={cancelText} />
+					<button
+						onclick={() => onConfirm(checkboxChecked)}
+						class="inline-flex items-center px-4 py-2 rounded-lg text-sm font-medium transition-colors {variantColors.buttonClass}"
+					>
+						{confirmText}
+					</button>
+				</div>
 			</div>
 		</div>
 	</div>

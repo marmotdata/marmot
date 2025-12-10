@@ -14,7 +14,7 @@ import (
 
 type Repository interface {
 	GetAssetLineage(ctx context.Context, assetID string, limit int, direction string) (*LineageResponse, error)
-	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string) (string, error)
+	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string) (string, error)
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
 	GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error)
@@ -140,7 +140,7 @@ func (r *PostgresRepository) DeleteDirectLineage(ctx context.Context, edgeID str
 	return tx.Commit(ctx)
 }
 
-func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string) (string, error) {
+func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string) (string, error) {
 	// Check if edge already exists
 	exists, err := r.EdgeExists(ctx, sourceMRN, targetMRN)
 	if err != nil {
@@ -168,10 +168,15 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 	edgeID := uuid.New()
 	now := time.Now()
 
+	// Use the actual lineage type (DEPENDS_ON, CREATES, TRANSFORMS, etc.)
+	if lineageType == "" {
+		lineageType = "DIRECT"
+	}
+
 	eventData := map[string]interface{}{
 		"source": sourceMRN,
 		"target": targetMRN,
-		"type":   "DIRECT",
+		"type":   lineageType,
 	}
 	eventDataJSON, err := json.Marshal(eventData)
 	if err != nil {

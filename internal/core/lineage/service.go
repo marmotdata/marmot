@@ -10,7 +10,7 @@ import (
 
 type Service interface {
 	GetAssetLineage(ctx context.Context, assetID string, limit int, direction string) (*LineageResponse, error)
-	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string) (string, error)
+	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string) (string, error)
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
 	GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error)
@@ -64,8 +64,8 @@ func (s *service) GetDirectLineage(ctx context.Context, edgeID string) (*Lineage
 	return s.repo.GetDirectLineage(ctx, edgeID)
 }
 
-func (s *service) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string) (string, error) {
-	return s.repo.CreateDirectLineage(ctx, sourceMRN, targetMRN)
+func (s *service) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string) (string, error) {
+	return s.repo.CreateDirectLineage(ctx, sourceMRN, targetMRN, lineageType)
 }
 
 func (s *service) DeleteDirectLineage(ctx context.Context, edgeID string) error {

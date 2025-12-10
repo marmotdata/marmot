@@ -226,7 +226,7 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 						'query_language', query_language,
 						'is_stub', is_stub
 					) as metadata,
-					'/discover/' || type || '/' || name as url,
+					'/discover/' || type || '/' || providers[1] || '/' || SUBSTRING(mrn FROM 'mrn://[^/]+/[^/]+/(.+)') as url,
 					1.0 as rank,
 					updated_at
 				FROM assets`
@@ -300,7 +300,7 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 						'query_language', query_language,
 						'is_stub', is_stub
 					) as metadata,
-					'/discover/' || type || '/' || name as url,
+					'/discover/' || type || '/' || providers[1] || '/' || SUBSTRING(mrn FROM 'mrn://[^/]+/[^/]+/(.+)') as url,
 					%s as rank,
 					updated_at
 				FROM assets
@@ -780,7 +780,7 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 					'query_language', query_language,
 					'is_stub', is_stub
 				) as metadata,
-				'/discover/' || type || '/' || name as url,
+				'/discover/' || type || '/' || providers[1] || '/' || SUBSTRING(mrn FROM 'mrn://[^/]+/[^/]+/(.+)') as url,
 				CASE
 					WHEN LOWER(name) = $1 THEN 100
 					WHEN LOWER(mrn) = $1 THEN 100
@@ -1009,7 +1009,7 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 					'query_language', query_language,
 					'is_stub', is_stub
 				) as metadata,
-				'/discover/' || type || '/' || name as url,
+				'/discover/' || type || '/' || providers[1] || '/' || SUBSTRING(mrn FROM 'mrn://[^/]+/[^/]+/(.+)') as url,
 				(
 					GREATEST(
 						word_similarity($1, name),

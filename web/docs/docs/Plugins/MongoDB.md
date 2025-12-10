@@ -30,25 +30,21 @@ The following configuration options are available:
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | auth_source | string | false | Authentication database name |
-| aws | AWSConfig | false |  |
 | collection_filter | plugin.Filter | false | Filter configuration for collections |
 | connection_uri | string | false | MongoDB connection URI (overrides host/port/user/password) |
 | database_filter | plugin.Filter | false | Filter configuration for databases |
 | exclude_system_dbs | bool | false | Whether to exclude system databases (admin, config, local) |
-| external_links | []ExternalLink | false |  |
-| global_documentation | []string | false |  |
-| global_documentation_position | string | false |  |
+| external_links | []ExternalLink | false | External links to show on all assets |
 | host | string | false | MongoDB server hostname or IP address |
 | include_collections | bool | false | Whether to discover collections |
 | include_databases | bool | false | Whether to discover databases |
 | include_indexes | bool | false | Whether to include index information |
 | include_views | bool | false | Whether to include views |
-| metadata | MetadataConfig | false |  |
 | password | string | false | Password for authentication |
-| port | int | false | MongoDB server port (default: 27017) |
+| port | int | false | MongoDB server port |
 | sample_schema | bool | false | Sample documents to infer schema |
-| sample_size | int | false | Number of documents to sample (default: 1000, -1 for entire collection) |
-| tags | TagsConfig | false |  |
+| sample_size | int | false | Number of documents to sample (-1 for entire collection) |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
 | tls | bool | false | Enable TLS/SSL for connection |
 | tls_insecure | bool | false | Skip verification of server certificate |
 | use_random_sampling | bool | false | Use random sampling for schema inference |

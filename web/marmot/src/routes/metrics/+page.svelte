@@ -125,9 +125,11 @@
 	}
 
 	function handleAssetClick(item: any) {
-		if (item.asset_type && item.asset_name) {
+		// Metrics items don't have MRN, so use the individual fields
+		// Note: This might have the same issue if asset_name doesn't include schema
+		if (item.asset_type && item.asset_name && item.asset_provider) {
 			goto(
-				`/discover/${encodeURIComponent(item.asset_type)}/${encodeURIComponent(item.asset_name)}`
+				`/discover/${encodeURIComponent(item.asset_type)}/${encodeURIComponent(item.asset_provider)}/${encodeURIComponent(item.asset_name)}`
 			);
 		}
 	}

@@ -2569,13 +2569,18 @@ paths:
       summary: List assets with pagination
       tags:
       - assets
-  /assets/lookup/{type}/{name}:
+  /assets/lookup/{type}/{service}/{name}:
     get:
-      description: Get an asset using its type and name
+      description: Get an asset by its type, service (provider), and name
       parameters:
       - description: Asset type
         in: path
         name: type
+        required: true
+        type: string
+      - description: Service/Provider name
+        in: path
+        name: service
         required: true
         type: string
       - description: Asset name
@@ -2598,7 +2603,7 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
-      summary: Lookup asset by type and name
+      summary: Lookup asset by type, service, and name
       tags:
       - assets
   /assets/match-pattern:

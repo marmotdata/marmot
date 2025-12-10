@@ -19,6 +19,18 @@ import SnowflakeIcon from '~icons/logos/snowflake-icon';
 import KubernetesIcon from '~icons/logos/kubernetes';
 import AMQPIcon from '~icons/logos/rabbitmq-icon';
 import BigQueryIcon from '~icons/logos/google-cloud';
+import DuckDBIcon from '~icons/devicon/duckdb';
+import DatabricksIcon from '~icons/simple-icons/databricks';
+import ClickHouseIcon from '~icons/devicon/clickhouse';
+import TrinoIcon from '~icons/simple-icons/trino';
+import TeradataIcon from '~icons/simple-icons/teradata';
+import OracleIcon from '~icons/devicon/oracle';
+import SalesforceIcon from '~icons/devicon/salesforce';
+import AthenaIcon from '~icons/logos/aws-athena';
+import RedshiftIcon from '~icons/logos/aws-redshift';
+import GlueIcon from '~icons/logos/aws-glue';
+import AzureIcon from '~icons/logos/microsoft-azure';
+import SingleStoreIcon from '~icons/logos/singlestore-icon';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -37,6 +49,12 @@ import Graph4 from '~icons/material-symbols/graph-4';
 import Endpoint from '~icons/material-symbols/api-rounded';
 import OpenLineage from '~icons/material-symbols/flowchart-outline-sharp';
 import FolderDataOutline from '~icons/material-symbols/folder-data-outline';
+import StreamOutline from '~icons/material-symbols/stream';
+import InputOutline from '~icons/material-symbols/input';
+import OutputOutline from '~icons/material-symbols/output';
+import BookOutline from '~icons/material-symbols/book-2-outline';
+import DnsOutline from '~icons/material-symbols/dns-outline';
+import SyncAltOutline from '~icons/material-symbols/sync-alt';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
 
@@ -70,10 +88,44 @@ export const providerIconMap: Record<
 	bigquery: { default: BigQueryIcon, displayName: 'BigQuery' },
 	amqp: { default: AMQPIcon, displayName: 'AMQP' },
 	rabbitmq: { default: AMQPIcon, displayName: 'RabbitMQ' },
+	duckdb: { default: DuckDBIcon, displayName: 'DuckDB' },
 	openlineage: {
 		default: OpenLineage,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'OpenLineage'
+	},
+	databricks: { default: DatabricksIcon, class: 'text-[#FF3621]', displayName: 'Databricks' },
+	clickhouse: { default: ClickHouseIcon, displayName: 'ClickHouse' },
+	trino: { default: TrinoIcon, class: 'text-[#DD00A1]', displayName: 'Trino' },
+	starburst: { default: TrinoIcon, class: 'text-[#DD00A1]', displayName: 'Starburst' },
+	teradata: { default: TeradataIcon, class: 'text-[#F37440]', displayName: 'Teradata' },
+	oracle: { default: OracleIcon, displayName: 'Oracle' },
+	salesforce: { default: SalesforceIcon, displayName: 'Salesforce' },
+	athena: { default: AthenaIcon, displayName: 'Athena' },
+	redshift: { default: RedshiftIcon, displayName: 'Redshift' },
+	'aws-glue': { default: GlueIcon, displayName: 'AWS Glue' },
+	glue: { default: GlueIcon, displayName: 'AWS Glue' },
+	'azure-synapse': { default: AzureIcon, displayName: 'Azure Synapse' },
+	synapse: { default: AzureIcon, displayName: 'Azure Synapse' },
+	'microsoft-fabric': { default: AzureIcon, displayName: 'Microsoft Fabric' },
+	fabric: { default: AzureIcon, displayName: 'Microsoft Fabric' },
+	singlestore: { default: SingleStoreIcon, displayName: 'SingleStore' },
+	alloydb: { default: PostgresqlIcon, displayName: 'AlloyDB' },
+	postgres: { default: PostgresqlIcon, displayName: 'Postgres' },
+	materialize: {
+		default: DatabaseOutlineIcon,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Materialize'
+	},
+	dremio: {
+		default: DatabaseOutlineIcon,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Dremio'
+	},
+	netezza: {
+		default: DatabaseOutlineIcon,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Netezza'
 	}
 };
 
@@ -158,7 +210,52 @@ export const typeIconMap: Record<
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'Endpoint'
 	},
-	job: { default: FolderDataOutline, class: 'text-gray-900 dark:text-gray-100', displayName: 'Job' }
+	job: {
+		default: FolderDataOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Job'
+	},
+	// Specialized dbt adapter asset types
+	'materialized-view': {
+		default: SyncAltOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Materialized View'
+	},
+	'dynamic-table': {
+		default: SyncAltOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Dynamic Table'
+	},
+	'streaming-table': {
+		default: StreamOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Streaming Table'
+	},
+	dictionary: {
+		default: BookOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Dictionary'
+	},
+	'distributed-table': {
+		default: DnsOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Distributed Table'
+	},
+	source: {
+		default: InputOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Source'
+	},
+	sink: {
+		default: OutputOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Sink'
+	},
+	'data-model-object': {
+		default: DatasetOutlineRounded,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Data Model Object'
+	}
 };
 
 // Combined map for backward compatibility

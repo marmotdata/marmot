@@ -57,6 +57,17 @@
 		return asset.type;
 	}
 
+	function getAssetUrl(asset: any): string {
+		if (!asset.mrn) return '#';
+		// Parse MRN: mrn://type/service/full.qualified.name
+		const mrnParts = asset.mrn.replace('mrn://', '').split('/');
+		if (mrnParts.length < 3) return '#';
+		const type = mrnParts[0];
+		const service = mrnParts[1];
+		const fullName = mrnParts.slice(2).join('/');
+		return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(service)}/${encodeURIComponent(fullName)}`;
+	}
+
 	async function fetchTeam() {
 		try {
 			loading = true;
@@ -544,7 +555,7 @@
 					<div class="space-y-1">
 						{#each assets as asset (asset.id)}
 							<a
-								href="/discover/{asset.type}/{encodeURIComponent(asset.name)}"
+								href={getAssetUrl(asset)}
 								onclick={(e) => handleAssetClick(e, asset)}
 								class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
 							>

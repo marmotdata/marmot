@@ -102,7 +102,9 @@
 	let showConfirmModal = $state(false);
 	let confirmModalTitle = $state('');
 	let confirmModalMessage = $state('');
-	let confirmModalAction = $state<(() => void) | null>(null);
+	let confirmModalCheckboxLabel = $state('');
+	let confirmModalCheckboxChecked = $state(false);
+	let confirmModalAction = $state<((checkboxValue?: boolean) => void) | null>(null);
 
 	// Toast state
 	let showToast = $state(false);
@@ -404,10 +406,16 @@
 	async function handleDeletePipeline(pipeline: Pipeline) {
 		confirmModalTitle = 'Delete Pipeline';
 		confirmModalMessage = `Are you sure you want to delete pipeline "${pipeline.name}"? This action cannot be undone.`;
-		confirmModalAction = async () => {
+		confirmModalCheckboxLabel = 'Delete all resources created by this pipeline';
+		confirmModalCheckboxChecked = false;
+		confirmModalAction = async (teardown?: boolean) => {
 			showConfirmModal = false;
 			try {
-				const response = await fetchApi(`/ingestion/schedules/${pipeline.id}`, {
+				const url = teardown
+					? `/ingestion/schedules/${pipeline.id}?teardown=true`
+					: `/ingestion/schedules/${pipeline.id}`;
+
+				const response = await fetchApi(url, {
 					method: 'DELETE'
 				});
 
@@ -416,7 +424,9 @@
 					throw new Error(data.error || 'Failed to delete pipeline');
 				}
 
-				toastMessage = `Pipeline "${pipeline.name}" deleted successfully`;
+				toastMessage = teardown
+					? `Pipeline "${pipeline.name}" and all its assets deleted successfully`
+					: `Pipeline "${pipeline.name}" deleted successfully`;
 				toastVariant = 'success';
 				showToast = true;
 
@@ -1004,7 +1014,9 @@
 	bind:show={showConfirmModal}
 	title={confirmModalTitle}
 	message={confirmModalMessage}
-	onConfirm={confirmModalAction}
+	checkboxLabel={confirmModalCheckboxLabel}
+	bind:checkboxChecked={confirmModalCheckboxChecked}
+	onConfirm={(checkboxValue) => confirmModalAction?.(checkboxValue)}
 />
 
 <Toast bind:show={showToast} message={toastMessage} variant={toastVariant} />

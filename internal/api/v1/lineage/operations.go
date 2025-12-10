@@ -81,7 +81,12 @@ func (h *Handler) createDirectLineage(w http.ResponseWriter, r *http.Request) {
 		Str("remote_addr", r.RemoteAddr).
 		Msg("Creating direct lineage connection")
 
-	edgeID, err := h.lineageService.CreateDirectLineage(r.Context(), edge.Source, edge.Target)
+	// Use edge.Type if provided, otherwise default to empty string
+	lineageType := ""
+	if edge.Type != "" {
+		lineageType = edge.Type
+	}
+	edgeID, err := h.lineageService.CreateDirectLineage(r.Context(), edge.Source, edge.Target, lineageType)
 	if err != nil {
 		log.Error().Err(err).
 			Str("source", edge.Source).

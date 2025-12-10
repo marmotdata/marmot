@@ -61,8 +61,16 @@
 		: '';
 
 	$: isVisible = asset != null;
-	$: fullViewUrl =
-		assetUrl || `/discover/${asset?.type.toLowerCase()}/${encodeURIComponent(asset?.name)}`;
+	$: fullViewUrl = (() => {
+		if (assetUrl) return assetUrl;
+		if (!asset?.mrn || !asset?.type) return '';
+		// Parse MRN to extract service and full name: mrn://type/service/full.qualified.name
+		const mrnParts = asset.mrn.replace('mrn://', '').split('/');
+		if (mrnParts.length < 3) return '';
+		const service = mrnParts[1];
+		const fullName = mrnParts.slice(2).join('/'); // Get everything after service
+		return `/discover/${asset.type.toLowerCase()}/${service}/${encodeURIComponent(fullName)}`;
+	})();
 
 	let loadingLineage = false;
 	let lineageError: string | null = null;

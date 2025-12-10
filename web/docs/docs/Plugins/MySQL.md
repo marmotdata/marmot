@@ -29,20 +29,16 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| aws | AWSConfig | false |  |
 | database | string | false | Database name to connect to |
 | discover_foreign_keys | bool | false | Whether to discover foreign key relationships |
-| external_links | []ExternalLink | false |  |
-| global_documentation | []string | false |  |
-| global_documentation_position | string | false |  |
+| external_links | []ExternalLink | false | External links to show on all assets |
 | host | string | false | MySQL server hostname or IP address |
 | include_columns | bool | false | Whether to include column information in table metadata |
 | include_row_counts | bool | false | Whether to include approximate row counts |
-| metadata | MetadataConfig | false |  |
 | password | string | false | Password for authentication |
-| port | int | false | MySQL server port (default: 3306) |
+| port | int | false | MySQL server port |
 | table_filter | plugin.Filter | false | Filter configuration for tables |
-| tags | TagsConfig | false |  |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
 | tls | string | false | TLS configuration (false, true, skip-verify, preferred) |
 | user | string | false | Username for authentication |
 

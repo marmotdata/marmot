@@ -1170,21 +1170,28 @@
                 }
             }
         },
-        "/assets/lookup/{type}/{name}": {
+        "/assets/lookup/{type}/{service}/{name}": {
             "get": {
-                "description": "Get an asset using its type and name",
+                "description": "Get an asset by its type, service (provider), and name",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "assets"
                 ],
-                "summary": "Lookup asset by type and name",
+                "summary": "Lookup asset by type, service, and name",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Asset type",
                         "name": "type",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Service/Provider name",
+                        "name": "service",
                         "in": "path",
                         "required": true
                     },

@@ -9,6 +9,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -231,32 +232,37 @@ func parseFilter(r *http.Request) (asset.Filter, error) {
 	}, nil
 }
 
-// @Summary Lookup asset by type and name
-// @Description Get an asset using its type and name
+// @Summary Lookup asset by type, service, and name
+// @Description Get an asset by its type, service (provider), and name
 // @Tags assets
 // @Produce json
 // @Param type path string true "Asset type"
+// @Param service path string true "Service/Provider name"
 // @Param name path string true "Asset name"
 // @Success 200 {object} asset.Asset
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/lookup/{type}/{name} [get]
+// @Router /assets/lookup/{type}/{service}/{name} [get]
 func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
-	assetType := strings.ToUpper(strings.TrimPrefix(r.URL.Path, "/api/v1/assets/lookup/"))
-	if assetType == "" {
+	pathPart := strings.TrimPrefix(r.URL.Path, "/api/v1/assets/lookup/")
+	if pathPart == "" {
 		common.RespondError(w, http.StatusBadRequest, "Asset type is required")
 		return
 	}
 
-	parts := strings.SplitN(assetType, "/", 2)
-	if len(parts) != 2 {
-		common.RespondError(w, http.StatusBadRequest, "Asset name is required")
+	parts := strings.SplitN(pathPart, "/", 3)
+
+	if len(parts) != 3 {
+		common.RespondError(w, http.StatusBadRequest, "Invalid path format. Expected /assets/lookup/{type}/{service}/{name}")
 		return
 	}
-	assetType = parts[0]
-	assetName := parts[1]
 
-	result, err := h.assetService.GetByTypeAndName(r.Context(), assetType, assetName)
+	assetType := strings.ToUpper(parts[0])
+	assetService := parts[1]
+	assetName := parts[2]
+
+	mrnStr := mrn.New(assetType, assetService, assetName)
+	result, err := h.assetService.GetByMRN(r.Context(), mrnStr)
 	if err != nil {
 		switch err {
 		case asset.ErrAssetNotFound:
@@ -266,8 +272,7 @@ func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
 				Err(err).
 				Str("endpoint", r.URL.Path).
 				Str("method", r.Method).
-				Str("assetType", assetType).
-				Str("assetName", assetName).
+				Str("mrn", mrnStr).
 				Msg("Failed to lookup asset")
 
 			common.RespondError(w, http.StatusInternalServerError, "Failed to lookup asset")

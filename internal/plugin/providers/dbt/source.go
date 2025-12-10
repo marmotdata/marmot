@@ -149,6 +149,13 @@ type CatalogStat struct {
 	Include     bool        `json:"include"`
 }
 
+// DbtSchemaColumn represents a column in the dbt schema format
+type DbtSchemaColumn struct {
+	Name        string `json:"name"`
+	Type        string `json:"type,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
 type DBTRunResults struct {
 	Metadata      ManifestMetadata `json:"metadata"`
 	Results       []RunResult      `json:"results"`
@@ -220,8 +227,14 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		assets = append(assets, sourceAssets...)
 	}
 
+	// Discover seeds
+	if s.manifest != nil {
+		seedAssets := s.discoverSeeds()
+		assets = append(assets, seedAssets...)
+	}
+
 	log.Info().
-		Int("models", len(assets)).
+		Int("assets", len(assets)).
 		Int("lineages", len(lineages)).
 		Msg("DBT discovery completed")
 
@@ -291,32 +304,28 @@ func (s *Source) readArtifact(ctx context.Context, filename string) ([]byte, err
 	return data, nil
 }
 
-func (s *Source) getProviderName() string {
+// getAdapter returns the appropriate adapter for the current manifest
+func (s *Source) getAdapter() Adapter {
 	if s.manifest == nil || s.manifest.Metadata.AdapterType == "" {
-		return "DBT"
+		return &GenericAdapter{}
 	}
+	return GetAdapter(strings.ToLower(s.manifest.Metadata.AdapterType))
+}
 
-	adapter := s.manifest.Metadata.AdapterType
-	switch strings.ToLower(adapter) {
-	case "postgres", "postgresql":
-		return "Postgres"
-	case "duckdb":
-		return "DuckDB"
-	case "snowflake":
-		return "Snowflake"
-	case "bigquery":
-		return "BigQuery"
-	case "redshift":
-		return "Redshift"
-	case "mysql":
-		return "MySQL"
-	case "sqlserver", "mssql":
-		return "SQLServer"
-	case "databricks":
-		return "Databricks"
-	default:
-		return "DBT"
+func (s *Source) getProviderName() string {
+	return s.getAdapter().Name()
+}
+
+func (s *Source) getMaterialization(node ManifestNode) string {
+	if node.Materialized != "" {
+		return node.Materialized
 	}
+	if node.Config != nil {
+		if mat, ok := node.Config["materialized"].(string); ok {
+			return mat
+		}
+	}
+	return ""
 }
 
 func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
@@ -335,8 +344,10 @@ func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
 			}
 		}
 
-		jobAsset := s.createModelAsset(node, nodeID)
-		assets = append(assets, jobAsset)
+		modelAsset := s.createModelAsset(node, nodeID)
+		if modelAsset.MRN != nil {
+			assets = append(assets, modelAsset)
+		}
 
 		materializedAsset := s.createMaterializedTableAsset(node, nodeID)
 		if materializedAsset.MRN != nil {
@@ -352,11 +363,20 @@ func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
 
 func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset {
 	modelName := node.Name
-	jobName := fmt.Sprintf("%s.%s.%s", s.config.ProjectName, node.PackageName, modelName)
+	tableName := modelName
+	if node.Alias != "" {
+		tableName = node.Alias
+	}
 
-	materialization := node.Materialized
+	fqn := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
+
+	materialization := s.getMaterialization(node)
 	if materialization == "" {
 		materialization = "table"
+	}
+
+	if materialization == "ephemeral" {
+		return asset.Asset{}
 	}
 
 	metadata := make(map[string]interface{})
@@ -368,6 +388,8 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 	metadata["database"] = node.Database
 	metadata["schema"] = node.Schema
 	metadata["model_name"] = modelName
+	metadata["table_name"] = tableName
+	metadata["fully_qualified_name"] = fqn
 	metadata["project_name"] = s.config.ProjectName
 	metadata["environment"] = s.config.Environment
 
@@ -380,10 +402,6 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 	}
 	if s.manifest.Metadata.DBTVersion != "" {
 		metadata["dbt_version"] = s.manifest.Metadata.DBTVersion
-	}
-
-	for k, v := range node.Config {
-		metadata[fmt.Sprintf("config_%s", k)] = v
 	}
 
 	for k, v := range node.Meta {
@@ -406,29 +424,48 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 		}
 	}
 
+	if s.catalog != nil {
+		if catalogNode, exists := s.catalog.Nodes[nodeID]; exists {
+			if catalogNode.Metadata.Owner != "" {
+				metadata["owner"] = catalogNode.Metadata.Owner
+			}
+			if catalogNode.Metadata.Comment != "" {
+				metadata["catalog_comment"] = catalogNode.Metadata.Comment
+			}
+
+			for statKey, stat := range catalogNode.Stats {
+				if stat.Include {
+					metadata[fmt.Sprintf("stat_%s", statKey)] = stat.Value
+				}
+			}
+		}
+	}
+
 	allTags := append([]string{}, node.Tags...)
 	allTags = append(allTags, s.config.Tags...)
 
-	mrnValue := mrn.New("Job", "DBT", jobName)
+	mrnValue := mrn.New("Model", "DBT", fqn)
 
 	description := node.Description
 	if description == "" {
-		description = fmt.Sprintf("DBT model %s", modelName)
+		description = fmt.Sprintf("DBT model %s materialized as %s", modelName, materialization)
 	}
 
 	var query *string
 	var queryLanguage *string
-	if node.CompiledSQL != "" {
-		query = &node.CompiledSQL
-		lang := "sql"
+	lang := "sql"
+
+	if node.CompiledCode != "" {
+		query = &node.CompiledCode
 		queryLanguage = &lang
-	} else if node.RawSQL != "" {
-		query = &node.RawSQL
-		lang := "sql"
+	} else if node.CompiledSQL != "" {
+		query = &node.CompiledSQL
 		queryLanguage = &lang
 	} else if node.RawCode != "" {
 		query = &node.RawCode
-		lang := "sql"
+		queryLanguage = &lang
+	} else if node.RawSQL != "" {
+		query = &node.RawSQL
 		queryLanguage = &lang
 	}
 
@@ -436,20 +473,22 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 		metadata["raw_sql"] = node.RawSQL
 	}
 
+	cleanMetadata := s.cleanMetadata(metadata)
+
 	return asset.Asset{
-		Name:          &jobName,
+		Name:          &modelName,
 		MRN:           &mrnValue,
-		Type:          "Job",
+		Type:          "Model",
 		Providers:     []string{"DBT"},
 		Description:   &description,
-		Metadata:      metadata,
+		Metadata:      cleanMetadata,
 		Tags:          allTags,
 		Query:         query,
 		QueryLanguage: queryLanguage,
 		Sources: []asset.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
-			Properties: metadata,
+			Properties: cleanMetadata,
 			Priority:   1,
 		}},
 	}
@@ -463,24 +502,22 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 
 	tableFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
 
-	assetType := "Table"
-	materialization := node.Materialized
+	materialization := s.getMaterialization(node)
 	if materialization == "" {
-		materialization = "table"
+		materialization = s.getAdapter().DefaultMaterialization()
 	}
 
-	switch materialization {
-	case "view":
-		assetType = "View"
-	case "table", "incremental":
-		assetType = "Table"
-	case "ephemeral":
+	if materialization == "ephemeral" {
 		return asset.Asset{}
-	default:
-		assetType = "Table"
 	}
 
-	provider := s.getProviderName()
+	adapter := s.getAdapter()
+	assetType := adapter.AssetTypeForMaterialization(materialization)
+	if assetType == "Ephemeral" {
+		return asset.Asset{}
+	}
+
+	provider := adapter.Name()
 
 	metadata := make(map[string]interface{})
 	metadata["dbt_model"] = node.Name
@@ -507,17 +544,13 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 		}
 	}
 
-	schema := make(map[string]string)
+	columnMap := make(map[string]*DbtSchemaColumn)
 	if len(node.Columns) > 0 {
 		for _, col := range node.Columns {
-			if col.DataType != "" {
-				schema[col.Name] = col.DataType
-			}
-			if col.Description != "" {
-				metadata[fmt.Sprintf("column_%s_description", col.Name)] = col.Description
-			}
-			if len(col.Tags) > 0 {
-				metadata[fmt.Sprintf("column_%s_tags", col.Name)] = col.Tags
+			columnMap[col.Name] = &DbtSchemaColumn{
+				Name:        col.Name,
+				Type:        col.DataType,
+				Description: col.Description,
 			}
 		}
 	}
@@ -525,16 +558,32 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 	if s.catalog != nil {
 		if catalogNode, exists := s.catalog.Nodes[nodeID]; exists {
 			for _, catalogCol := range catalogNode.Columns {
-				if catalogCol.Type != "" {
-					schema[catalogCol.Name] = catalogCol.Type
-				}
-				if catalogCol.Comment != "" {
-					key := fmt.Sprintf("column_%s_description", catalogCol.Name)
-					if _, exists := metadata[key]; !exists {
-						metadata[key] = catalogCol.Comment
+				if existing, ok := columnMap[catalogCol.Name]; ok {
+					if catalogCol.Type != "" {
+						existing.Type = catalogCol.Type
+					}
+					if existing.Description == "" && catalogCol.Comment != "" {
+						existing.Description = catalogCol.Comment
+					}
+				} else {
+					columnMap[catalogCol.Name] = &DbtSchemaColumn{
+						Name:        catalogCol.Name,
+						Type:        catalogCol.Type,
+						Description: catalogCol.Comment,
 					}
 				}
 			}
+		}
+	}
+
+	schema := make(map[string]string)
+	if len(columnMap) > 0 {
+		columns := make([]DbtSchemaColumn, 0, len(columnMap))
+		for _, col := range columnMap {
+			columns = append(columns, *col)
+		}
+		if columnsJSON, err := json.Marshal(columns); err == nil {
+			schema["dbt"] = string(columnsJSON)
 		}
 	}
 
@@ -548,54 +597,93 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 		description = fmt.Sprintf("%s %s in %s.%s", assetType, tableName, node.Database, node.Schema)
 	}
 
+	cleanMetadata := s.cleanMetadata(metadata)
+
 	return asset.Asset{
-		Name:        &tableFQN,
+		Name:        &tableName,
 		MRN:         &mrnValue,
 		Type:        assetType,
 		Providers:   []string{provider},
 		Description: &description,
-		Metadata:    metadata,
+		Metadata:    cleanMetadata,
 		Tags:        allTags,
 		Schema:      schema,
 		Sources: []asset.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
-			Properties: metadata,
+			Properties: cleanMetadata,
 			Priority:   1,
 		}},
 	}
 }
 
+func (s *Source) cleanMetadata(metadata map[string]interface{}) map[string]interface{} {
+	cleaned := make(map[string]interface{})
+	for k, v := range metadata {
+		if v == nil {
+			continue
+		}
+		if str, ok := v.(string); ok && str == "" {
+			continue
+		}
+		if slice, ok := v.([]interface{}); ok && len(slice) == 0 {
+			continue
+		}
+		if m, ok := v.(map[string]interface{}); ok && len(m) == 0 {
+			continue
+		}
+		cleaned[k] = v
+	}
+	return cleaned
+}
+
 func (s *Source) createModelLineage(node ManifestNode, nodeID string) []lineage.LineageEdge {
 	var lineages []lineage.LineageEdge
 
-	modelName := node.Name
-	jobName := fmt.Sprintf("%s.%s.%s", s.config.ProjectName, node.PackageName, modelName)
-	jobMRN := mrn.New("Job", "DBT", jobName)
+	adapter := s.getAdapter()
+	provider := adapter.Name()
+	materialization := s.getMaterialization(node)
+	if materialization == "" {
+		materialization = adapter.DefaultMaterialization()
+	}
 
-	provider := s.getProviderName()
+	if materialization == "ephemeral" {
+		return lineages
+	}
+
+	tableName := node.Name
+	if node.Alias != "" {
+		tableName = node.Alias
+	}
+	targetFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
+	modelMRN := mrn.New("Model", "DBT", targetFQN)
+
+	outputType := adapter.AssetTypeForMaterialization(materialization)
+	if outputType == "Ephemeral" {
+		return lineages
+	}
+	outputMRN := mrn.New(outputType, provider, targetFQN)
 
 	for _, depNodeID := range node.DependsOn.Nodes {
 		var depNode ManifestNode
 		var found bool
-		var isSource bool
+		var resourceType string
 
 		if n, exists := s.manifest.Nodes[depNodeID]; exists {
 			depNode = n
 			found = true
-			isSource = false
+			resourceType = n.ResourceType
 		}
 
 		if !found {
 			if n, exists := s.manifest.Sources[depNodeID]; exists {
 				depNode = n
 				found = true
-				isSource = true
+				resourceType = "source"
 			}
 		}
 
 		if !found {
-			log.Debug().Str("dep_id", depNodeID).Msg("Dependency node not found")
 			continue
 		}
 
@@ -603,51 +691,37 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []lineage.
 		if depNode.Alias != "" {
 			depName = depNode.Alias
 		}
+		sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
 
 		var sourceMRN string
-		if isSource {
-			sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
+		if resourceType == "source" || resourceType == "seed" {
 			sourceMRN = mrn.New("Table", provider, sourceFQN)
-		} else {
-			sourceType := "Table"
-			if depNode.Materialized == "view" {
-				sourceType = "View"
+		} else if resourceType == "model" {
+			depMaterialization := s.getMaterialization(depNode)
+			if depMaterialization == "" {
+				depMaterialization = adapter.DefaultMaterialization()
 			}
-			sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
-			sourceMRN = mrn.New(sourceType, provider, sourceFQN)
+			depType := adapter.AssetTypeForMaterialization(depMaterialization)
+			if depType == "Ephemeral" {
+				depType = "Table"
+			}
+			sourceMRN = mrn.New(depType, provider, sourceFQN)
+		} else {
+			sourceMRN = mrn.New("Table", provider, sourceFQN)
 		}
 
 		lineages = append(lineages, lineage.LineageEdge{
 			Source: sourceMRN,
-			Target: jobMRN,
+			Target: modelMRN,
 			Type:   "DEPENDS_ON",
 		})
 	}
 
-	materialization := node.Materialized
-	if materialization == "" {
-		materialization = "table"
-	}
-
-	if materialization != "ephemeral" {
-		tableName := node.Name
-		if node.Alias != "" {
-			tableName = node.Alias
-		}
-		targetFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
-
-		targetType := "Table"
-		if materialization == "view" {
-			targetType = "View"
-		}
-		targetMRN := mrn.New(targetType, provider, targetFQN)
-
-		lineages = append(lineages, lineage.LineageEdge{
-			Source: jobMRN,
-			Target: targetMRN,
-			Type:   "CREATES",
-		})
-	}
+	lineages = append(lineages, lineage.LineageEdge{
+		Source: modelMRN,
+		Target: outputMRN,
+		Type:   "CREATES",
+	})
 
 	return lineages
 }
@@ -688,15 +762,17 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 	}
 
 	schema := make(map[string]string)
-	for _, col := range node.Columns {
-		if col.DataType != "" {
-			schema[col.Name] = col.DataType
+	if len(node.Columns) > 0 {
+		columns := make([]DbtSchemaColumn, 0, len(node.Columns))
+		for _, col := range node.Columns {
+			columns = append(columns, DbtSchemaColumn{
+				Name:        col.Name,
+				Type:        col.DataType,
+				Description: col.Description,
+			})
 		}
-		if col.Description != "" {
-			metadata[fmt.Sprintf("column_%s_description", col.Name)] = col.Description
-		}
-		if len(col.Tags) > 0 {
-			metadata[fmt.Sprintf("column_%s_tags", col.Name)] = col.Tags
+		if columnsJSON, err := json.Marshal(columns); err == nil {
+			schema["dbt"] = string(columnsJSON)
 		}
 	}
 
@@ -710,19 +786,109 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 		description = fmt.Sprintf("DBT source: %s", tableName)
 	}
 
+	cleanMetadata := s.cleanMetadata(metadata)
+
 	return asset.Asset{
-		Name:        &tableFQN,
+		Name:        &tableName,
 		MRN:         &mrnValue,
 		Type:        "Table",
 		Providers:   []string{provider},
 		Description: &description,
-		Metadata:    metadata,
+		Metadata:    cleanMetadata,
 		Tags:        allTags,
 		Schema:      schema,
 		Sources: []asset.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
-			Properties: metadata,
+			Properties: cleanMetadata,
+			Priority:   1,
+		}},
+	}
+}
+
+func (s *Source) discoverSeeds() []asset.Asset {
+	var assets []asset.Asset
+
+	for nodeID, node := range s.manifest.Nodes {
+		if node.ResourceType != "seed" {
+			continue
+		}
+
+		asset := s.createSeedAsset(node, nodeID)
+		assets = append(assets, asset)
+	}
+
+	return assets
+}
+
+func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
+	seedName := node.Name
+	if node.Alias != "" {
+		seedName = node.Alias
+	}
+
+	tableFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, seedName)
+	provider := s.getProviderName()
+
+	metadata := make(map[string]interface{})
+	metadata["dbt_unique_id"] = node.UniqueID
+	metadata["dbt_package"] = node.PackageName
+	metadata["database"] = node.Database
+	metadata["schema"] = node.Schema
+	metadata["table_name"] = seedName
+	metadata["fully_qualified_name"] = tableFQN
+	metadata["project_name"] = s.config.ProjectName
+	metadata["environment"] = s.config.Environment
+	metadata["resource_type"] = "seed"
+
+	if node.Path != "" {
+		metadata["seed_file_path"] = node.Path
+	}
+
+	for k, v := range node.Meta {
+		metadata[fmt.Sprintf("meta_%s", k)] = v
+	}
+
+	schema := make(map[string]string)
+	if len(node.Columns) > 0 {
+		columns := make([]DbtSchemaColumn, 0, len(node.Columns))
+		for _, col := range node.Columns {
+			columns = append(columns, DbtSchemaColumn{
+				Name:        col.Name,
+				Type:        col.DataType,
+				Description: col.Description,
+			})
+		}
+		if columnsJSON, err := json.Marshal(columns); err == nil {
+			schema["dbt"] = string(columnsJSON)
+		}
+	}
+
+	allTags := append([]string{}, node.Tags...)
+	allTags = append(allTags, s.config.Tags...)
+	allTags = append(allTags, "dbt-seed")
+
+	mrnValue := mrn.New("Table", provider, tableFQN)
+	description := node.Description
+	if description == "" {
+		description = fmt.Sprintf("DBT seed: %s", seedName)
+	}
+
+	cleanMetadata := s.cleanMetadata(metadata)
+
+	return asset.Asset{
+		Name:        &seedName,
+		MRN:         &mrnValue,
+		Type:        "Table",
+		Providers:   []string{provider},
+		Description: &description,
+		Metadata:    cleanMetadata,
+		Tags:        allTags,
+		Schema:      schema,
+		Sources: []asset.AssetSource{{
+			Name:       "DBT",
+			LastSyncAt: time.Now(),
+			Properties: cleanMetadata,
 			Priority:   1,
 		}},
 	}

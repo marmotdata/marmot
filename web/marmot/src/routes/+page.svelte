@@ -245,10 +245,39 @@
 		selectedAsset = asset;
 	}
 
+	function getAssetUrl(asset: RecentAsset | PopularAsset): string {
+		// Extract type, service, and full name from MRN
+		let mrn = '';
+		if ('mrn' in asset && asset.mrn) {
+			mrn = asset.mrn;
+		}
+
+		if (!mrn) {
+			// Fallback for assets without MRN
+			const type = 'asset_type' in asset ? asset.asset_type : asset.type;
+			const name = 'asset_name' in asset ? asset.asset_name : asset.name;
+			let provider = '';
+			if ('asset_provider' in asset) {
+				provider = asset.asset_provider;
+			} else if ('provider' in asset && asset.provider) {
+				provider = asset.provider;
+			} else if ('providers' in asset && asset.providers && asset.providers.length > 0) {
+				provider = asset.providers[0];
+			}
+			return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(provider)}/${encodeURIComponent(name)}`;
+		}
+
+		// Parse MRN: mrn://type/service/full.qualified.name
+		const mrnParts = mrn.replace('mrn://', '').split('/');
+		if (mrnParts.length < 3) return '#';
+		const type = mrnParts[0];
+		const service = mrnParts[1];
+		const fullName = mrnParts.slice(2).join('/');
+		return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(service)}/${encodeURIComponent(fullName)}`;
+	}
+
 	function navigateToAsset(asset: RecentAsset | PopularAsset) {
-		const type = 'asset_type' in asset ? asset.asset_type : asset.type;
-		const name = 'asset_name' in asset ? asset.asset_name : asset.name;
-		goto(`/discover/${encodeURIComponent(type)}/${encodeURIComponent(name)}`);
+		goto(getAssetUrl(asset));
 	}
 
 	function navigateToType(type: string) {
@@ -434,7 +463,7 @@
 								<div class="divide-y divide-gray-200 dark:divide-gray-700">
 									{#each userAssets as asset}
 										<a
-											href="/discover/{asset.type}/{encodeURIComponent(asset.name)}"
+											href={getAssetUrl(asset)}
 											onclick={(e) => {
 												e.preventDefault();
 												handleAssetClick(asset);

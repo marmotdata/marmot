@@ -25,23 +25,19 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| aws | AWSConfig | false |  |
 | credentials_json | string | false | Service account credentials JSON content |
 | credentials_path | string | false | Path to service account credentials JSON file |
 | dataset_filter | plugin.Filter | false | Filter configuration for datasets |
 | exclude_system_datasets | bool | false | Whether to exclude system datasets (_script, _analytics, etc.) |
-| external_links | []ExternalLink | false |  |
-| global_documentation | []string | false |  |
-| global_documentation_position | string | false |  |
+| external_links | []ExternalLink | false | External links to show on all assets |
 | include_datasets | bool | false | Whether to discover datasets |
 | include_external_tables | bool | false | Whether to discover external tables |
 | include_table_stats | bool | false | Whether to include table statistics (row count, size) |
 | include_views | bool | false | Whether to discover views |
 | max_concurrent_requests | int | false | Maximum number of concurrent API requests |
-| metadata | MetadataConfig | false |  |
 | project_id | string | false | Google Cloud Project ID |
 | table_filter | plugin.Filter | false | Filter configuration for tables |
-| tags | TagsConfig | false |  |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
 | use_default_credentials | bool | false | Use default Google Cloud credentials |
 
 ## Available Metadata

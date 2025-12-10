@@ -8,13 +8,24 @@
 	export let onClick: () => void;
 	export let maxMetadataDepth = 1;
 	export let compact = false;
+
+	function getAssetUrl(): string {
+		if (!node.asset?.mrn) return '#';
+		// Parse MRN: mrn://type/service/full.qualified.name
+		const mrnParts = node.asset.mrn.replace('mrn://', '').split('/');
+		if (mrnParts.length < 3) return '#';
+		const type = mrnParts[0];
+		const service = mrnParts[1];
+		const fullName = mrnParts.slice(2).join('/');
+		return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(service)}/${encodeURIComponent(fullName)}`;
+	}
 </script>
 
 {#if compact}
 	<!-- Compact Mode -->
 	<div class="rounded border border-gray-200 dark:border-gray-700">
 		<a
-			href={`/discover/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
+			href={getAssetUrl()}
 			class="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
 		>
 			<Icon
@@ -66,7 +77,7 @@
 			</div>
 			<div class="flex items-center gap-2 flex-shrink-0 ml-4">
 				<a
-					href={`/discover/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
+					href={getAssetUrl()}
 					class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-earthy-terracotta-700 whitespace-nowrap"
 					on:click|stopPropagation
 				>
@@ -114,7 +125,7 @@
 								metadata={node.asset.metadata}
 								maxDepth={0}
 								maxCharLength={50}
-								showDetailsLink={`/discover/${node.asset?.type.toLowerCase()}/${encodeURIComponent(node.asset?.name)}`}
+								showDetailsLink={getAssetUrl()}
 							/>
 						</div>
 					</div>

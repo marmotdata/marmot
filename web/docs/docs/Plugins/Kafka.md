@@ -92,19 +92,15 @@ The following configuration options are available:
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | authentication | AuthConfig | false | Authentication configuration |
-| aws | AWSConfig | false |  |
 | bootstrap_servers | string | false | Comma-separated list of bootstrap servers |
 | client_id | string | false | Client ID for the consumer |
 | client_timeout_seconds | int | false | Request timeout in seconds |
 | consumer_config | map[string]string | false | Additional consumer configuration |
-| external_links | []ExternalLink | false |  |
-| global_documentation | []string | false |  |
-| global_documentation_position | string | false |  |
+| external_links | []ExternalLink | false | External links to show on all assets |
 | include_partition_info | bool | false | Whether to include partition information in metadata |
 | include_topic_config | bool | false | Whether to include topic configuration in metadata |
-| metadata | MetadataConfig | false |  |
 | schema_registry | SchemaRegistryConfig | false | Schema Registry configuration |
-| tags | TagsConfig | false |  |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
 | tls | TLSConfig | false | TLS configuration |
 | topic_filter | plugin.Filter | false | Filter configuration for topics |
 

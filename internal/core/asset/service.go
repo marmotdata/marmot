@@ -69,8 +69,8 @@ type CreateInput struct {
 	Sources       []AssetSource          `json:"sources"`
 	Environments  map[string]Environment `json:"environments"`
 	ExternalLinks []ExternalLink         `json:"external_links"`
-	Query         string                 `json:"query"`
-	QueryLanguage string                 `json:"query_language"`
+	Query         *string                `json:"query,omitempty"`
+	QueryLanguage *string                `json:"query_language,omitempty"`
 	IsStub        bool                   `json:"is_stub"`
 }
 
@@ -86,8 +86,8 @@ type UpdateInput struct {
 	Sources         []AssetSource          `json:"sources"`
 	Environments    map[string]Environment `json:"environments"`
 	ExternalLinks   []ExternalLink         `json:"external_links"`
-	Query           string                 `json:"query"`
-	QueryLanguage   string                 `json:"query_language"`
+	Query           *string                `json:"query,omitempty"`
+	QueryLanguage   *string                `json:"query_language,omitempty"`
 }
 
 type Filter struct {
@@ -370,8 +370,8 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 		CreatedAt:     now,
 		UpdatedAt:     now,
 		LastSyncAt:    now,
-		Query:         &input.Query,
-		QueryLanguage: &input.QueryLanguage,
+		Query:         input.Query,
+		QueryLanguage: input.QueryLanguage,
 		IsStub:        input.IsStub,
 	}
 	if asset.Tags == nil {
@@ -518,12 +518,12 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		asset.ExternalLinks = input.ExternalLinks
 		updated = true
 	}
-	if input.Query != "" {
-		asset.Query = &input.Query
+	if input.Query != nil {
+		asset.Query = input.Query
 		updated = true
 	}
-	if input.QueryLanguage != "" {
-		asset.QueryLanguage = &input.QueryLanguage
+	if input.QueryLanguage != nil {
+		asset.QueryLanguage = input.QueryLanguage
 		updated = true
 	}
 

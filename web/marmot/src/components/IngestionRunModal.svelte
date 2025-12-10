@@ -152,19 +152,15 @@
 	}
 
 	function getAssetUrl(entity: RunEntity): string {
-		if (entity.entity_type !== 'asset') return '';
+		if (entity.entity_type !== 'asset' || !entity.entity_mrn) return '';
 
-		const parts = entity.entity_mrn.split('://');
-		if (parts.length !== 2) return '';
-
-		const [, rest] = parts;
-		const pathParts = rest.split('/');
-		if (pathParts.length < 3) return '';
-
-		const type = pathParts[0];
-		const name = pathParts.slice(2).join('/');
-
-		return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(entity.entity_name)}`;
+		// Parse MRN: mrn://type/service/full.qualified.name
+		const mrnParts = entity.entity_mrn.replace('mrn://', '').split('/');
+		if (mrnParts.length < 3) return '';
+		const type = mrnParts[0];
+		const service = mrnParts[1];
+		const fullName = mrnParts.slice(2).join('/');
+		return `/discover/${encodeURIComponent(type)}/${encodeURIComponent(service)}/${encodeURIComponent(fullName)}`;
 	}
 
 	function shouldShowAssetLink(entity: RunEntity): boolean {

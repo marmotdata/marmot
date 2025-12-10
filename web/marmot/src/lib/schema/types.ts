@@ -32,4 +32,4 @@ export interface SchemaProcessingResult {
 	example: any;
 }
 
-export type SchemaType = 'json' | 'avro' | 'protobuf';
+export type SchemaType = 'json' | 'avro' | 'protobuf' | 'dbt';

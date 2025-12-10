@@ -24,13 +24,9 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| aws | AWSConfig | false |  |
-| external_links | []ExternalLink | false |  |
-| global_documentation | []string | false |  |
-| global_documentation_position | string | false |  |
-| metadata | MetadataConfig | false |  |
+| external_links | []ExternalLink | false | External links to show on all assets |
 | spec_path | string | false | Path to the directory containing the OpenAPI specifications |
-| tags | TagsConfig | false |  |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
 
 ## Available Metadata
 
@@ -46,9 +42,9 @@ The following metadata fields are available:
 | description | string | A verbose explanation of the operation behaviour. |
 | external_docs | string | Link to the external documentation |
 | http_method | string | HTTP method |
-| license_identifier | string | SPDX licence expression for the API |
-| license_name | string | Name of the licence |
-| license_url | string | URL of the licence |
+| license_identifier | string | SPDX license experession for the API |
+| license_name | string | Name of the license |
+| license_url | string | URL of the license |
 | num_deprecated_endpoints | int | Number of deprecated endpoints in the OpenAPI specification |
 | num_endpoints | int | Number of endpoints in the OpenAPI specification |
 | openapi_version | string | Version of the OpenAPI spec |

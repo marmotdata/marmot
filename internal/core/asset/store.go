@@ -167,7 +167,8 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*Asset, error)
 }
 
 func (r *PostgresRepository) GetByMRN(ctx context.Context, qualifiedName string) (*Asset, error) {
-	return r.scanSingleAsset(ctx, baseSelectAsset+" WHERE mrn = $1", qualifiedName)
+	query := baseSelectAsset + " WHERE LOWER(mrn) = LOWER($1) AND is_stub = FALSE"
+	return r.scanSingleAsset(ctx, query, qualifiedName)
 }
 
 func (r *PostgresRepository) GetByTypeAndName(ctx context.Context, assetType, name string) (*Asset, error) {

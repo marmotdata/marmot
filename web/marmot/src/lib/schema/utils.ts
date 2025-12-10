@@ -2,6 +2,7 @@ import type { Field, SchemaSection, SchemaProcessingResult, SchemaType } from '.
 import { processJsonSchema, isJsonSchema, validateJsonSchema } from './json';
 import { processAvroSchema, isAvroSchema, validateAvroSchema } from './avro';
 import { processProtobufSchema, isProtobufSchema, validateProtobufSchema } from './protobuf';
+import { processDbtSchema, isDbtSchema, validateDbtSchema } from './dbt';
 
 /**
  * Format example (ensures JSON is properly parsed if it's a string)
@@ -63,6 +64,10 @@ export function isSchemaAvailable(schemaSection: any): boolean {
 			// For non-JSON strings (YAML, Avro, Protobuf)
 			return isStringSchema(schemaSection);
 		}
+	}
+
+	if (isDbtSchema(schemaSection)) {
+		return true;
 	}
 
 	if (isJsonSchema(schemaSection)) {
@@ -139,7 +144,8 @@ export function detectSchemaType(schemaSection: any): SchemaType {
 		return 'json';
 	}
 
-	// Object-based detection logic - check JSON first since it's most common
+	// Object-based detection logic - check dbt first since it's a simple array format
+	if (isDbtSchema(schemaSection)) return 'dbt';
 	if (isJsonSchema(schemaSection)) return 'json';
 	if (isAvroSchema(schemaSection)) return 'avro';
 	if (isProtobufSchema(schemaSection)) return 'protobuf';
@@ -177,6 +183,9 @@ export function processSchema(schemaSection: any): SchemaProcessingResult {
 
 	try {
 		switch (schemaType) {
+			case 'dbt':
+				fields = processDbtSchema(processableSchema);
+				break;
 			case 'avro':
 				fields = processAvroSchema(processableSchema);
 				break;
@@ -258,6 +267,8 @@ export function validateSchema(schema: any): any[] {
 		const schemaType = detectSchemaType(cleanSchema);
 
 		switch (schemaType) {
+			case 'dbt':
+				return validateDbtSchema(cleanSchema);
 			case 'json':
 				return validateJsonSchema(cleanSchema);
 			case 'avro':

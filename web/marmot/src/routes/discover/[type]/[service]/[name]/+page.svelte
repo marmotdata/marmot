@@ -13,6 +13,7 @@
 	import SchemaEditor from '$lib/../components/SchemaEditor.svelte';
 	import AssetEnvironmentsView from '$lib/../components/AssetEnvironmentsView.svelte';
 	import RunHistory from '$lib/../components/RunHistory.svelte';
+	import CodeBlock from '$lib/../components/CodeBlock.svelte';
 
 	let asset: Asset | null = $state(null);
 	let loading = $state(true);
@@ -21,6 +22,7 @@
 
 	let activeTab = $derived($page.url.searchParams.get('tab') || 'metadata');
 	let assetType = $derived($page.params.type);
+	let assetService = $derived($page.params.service);
 	let assetName = $derived($page.params.name);
 
 	async function fetchAsset() {
@@ -28,7 +30,7 @@
 			loading = true;
 			error = null;
 			const response = await fetchApi(
-				`/assets/lookup/${assetType}/${encodeURIComponent(assetName)}`
+				`/assets/lookup/${assetType}/${assetService}/${encodeURIComponent(assetName)}`
 			);
 			if (!response.ok) {
 				throw new Error('Failed to fetch asset');
@@ -53,13 +55,14 @@
 	}
 
 	let visibleTabs = $derived(
-		['metadata', 'environments', 'schema', 'documentation', 'run-history', 'lineage'].filter(
+		['metadata', 'query', 'environments', 'schema', 'documentation', 'run-history', 'lineage'].filter(
 			(tab) => {
 				if (
 					tab === 'environments' &&
 					(!asset?.environments || Object.keys(asset.environments).length === 0)
 				)
 					return false;
+				if (tab === 'query' && !asset?.query) return false;
 				if (tab === 'documentation' && !asset?.documentation) return false;
 				if (tab === 'run-history' && !asset?.has_run_history) return false;
 				return true;
@@ -68,7 +71,7 @@
 	);
 
 	$effect(() => {
-		if (assetType && assetName) {
+		if (assetType && assetService && assetName) {
 			fetchAsset();
 		}
 	});
@@ -164,6 +167,21 @@
 										Asset Sources
 									</h3>
 									<AssetSources sources={asset.sources} />
+								{/if}
+							</div>
+						{:else if activeTab === 'query'}
+							<div class="mt-6">
+								{#if asset.query}
+									{#if asset.query_language}
+										<div class="text-xs text-gray-500 dark:text-gray-400 mb-2 uppercase">
+											{asset.query_language}
+										</div>
+									{/if}
+									<CodeBlock code={asset.query} language={asset.query_language || 'sql'} />
+								{:else}
+									<div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+										<p class="text-gray-500 dark:text-gray-400 italic">No query available</p>
+									</div>
 								{/if}
 							</div>
 						{:else if activeTab === 'environments'}

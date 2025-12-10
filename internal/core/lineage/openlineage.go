@@ -167,7 +167,7 @@ func (s *service) createDAGTaskLineage(ctx context.Context, event *RunEvent, job
 			return err
 		}
 
-		if _, err := s.CreateDirectLineage(ctx, dagMRN, jobAssetMRN); err != nil {
+		if _, err := s.CreateDirectLineage(ctx, dagMRN, jobAssetMRN, "CONTAINS"); err != nil {
 			log.Warn().Err(err).
 				Str("dag_mrn", dagMRN).
 				Str("task_mrn", jobAssetMRN).
@@ -252,7 +252,7 @@ func (s *service) createProjectModelLineage(ctx context.Context, event *RunEvent
 		parentNamespace,
 		projectJobName)
 
-	if _, err := s.CreateDirectLineage(ctx, projectMRN, jobAssetMRN); err != nil {
+	if _, err := s.CreateDirectLineage(ctx, projectMRN, jobAssetMRN, "CONTAINS"); err != nil{
 		log.Warn().Err(err).
 			Str("project_mrn", projectMRN).
 			Str("model_mrn", jobAssetMRN).
@@ -297,6 +297,15 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 
 	runMetadata := s.extractRunMetadata(event)
 
+	var queryPtr *string
+	var queryLanguagePtr *string
+	if query != "" {
+		queryPtr = &query
+	}
+	if queryLanguage != "" {
+		queryLanguagePtr = &queryLanguage
+	}
+
 	createInput := asset.CreateInput{
 		Name:          &jobName,
 		MRN:           &mrn,
@@ -306,8 +315,8 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 		Metadata:      metadata,
 		Tags:          []string{"openlineage", strings.ToLower(assetType), strings.ToLower(provider)},
 		CreatedBy:     createdBy,
-		Query:         query,
-		QueryLanguage: queryLanguage,
+		Query:         queryPtr,
+		QueryLanguage: queryLanguagePtr,
 		Sources: []asset.AssetSource{{
 			Name:       "OpenLineage",
 			LastSyncAt: event.EventTime,
@@ -336,8 +345,8 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 			}
 
 			if query != "" {
-				updateInput.Query = query
-				updateInput.QueryLanguage = queryLanguage
+				updateInput.Query = &query
+				updateInput.QueryLanguage = &queryLanguage
 			}
 
 			if _, updateErr := s.assetSvc.Update(ctx, existingAsset.ID, updateInput); updateErr != nil {
@@ -378,7 +387,7 @@ func (s *service) processDatasets(ctx context.Context, event *RunEvent, jobAsset
 	}
 
 	for _, inputMRN := range inputMRNs {
-		if _, err := s.CreateDirectLineage(ctx, inputMRN, jobAssetMRN); err != nil {
+		if _, err := s.CreateDirectLineage(ctx, inputMRN, jobAssetMRN, "CONSUMES"); err != nil {
 			log.Warn().Err(err).
 				Str("input_mrn", inputMRN).
 				Str("job_mrn", jobAssetMRN).
@@ -387,7 +396,7 @@ func (s *service) processDatasets(ctx context.Context, event *RunEvent, jobAsset
 	}
 
 	for _, outputMRN := range outputMRNs {
-		if _, err := s.CreateDirectLineage(ctx, jobAssetMRN, outputMRN); err != nil {
+		if _, err := s.CreateDirectLineage(ctx, jobAssetMRN, outputMRN, "PRODUCES"); err != nil {
 			log.Warn().Err(err).
 				Str("job_mrn", jobAssetMRN).
 				Str("output_mrn", outputMRN).
@@ -446,8 +455,8 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 			updateInput.Schema = schema
 		}
 		if query != "" {
-			updateInput.Query = query
-			updateInput.QueryLanguage = queryLanguage
+			updateInput.Query = &query
+			updateInput.QueryLanguage = &queryLanguage
 		}
 
 		if _, updateErr := s.assetSvc.Update(ctx, existingAsset.ID, updateInput); updateErr != nil {
@@ -477,8 +486,8 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 	}
 
 	if query != "" {
-		createInput.Query = query
-		createInput.QueryLanguage = queryLanguage
+		createInput.Query = &query
+		createInput.QueryLanguage = &queryLanguage
 	}
 
 	_, err = s.assetSvc.Create(ctx, createInput)

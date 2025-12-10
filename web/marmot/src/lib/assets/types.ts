@@ -30,6 +30,8 @@ export interface Asset {
 	has_run_history: boolean;
 	environments?: Record<string, Environment>;
 	sources: AssetSource[];
+	query?: string;
+	query_language?: string;
 }
 
 export interface GlossaryTerm {

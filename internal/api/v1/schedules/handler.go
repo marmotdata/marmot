@@ -504,6 +504,42 @@ func (h *Handler) deleteSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Check if user wants to teardown all assets/lineage created by this pipeline
+	teardown := r.URL.Query().Get("teardown") == "true"
+
+	if teardown {
+		// Get the schedule to find the pipeline name
+		schedule, err := h.service.GetSchedule(r.Context(), id)
+		if err != nil {
+			if err == runs.ErrScheduleNotFound {
+				common.RespondError(w, http.StatusNotFound, "Schedule not found")
+				return
+			}
+			log.Error().Err(err).Msg("Failed to get schedule for teardown")
+			common.RespondError(w, http.StatusInternalServerError, "Failed to get schedule")
+			return
+		}
+
+		// Destroy all entities created by this pipeline
+		log.Info().
+			Str("schedule_id", id).
+			Str("pipeline_name", schedule.Name).
+			Msg("Tearing down pipeline entities before deletion")
+
+		destroyResp, err := h.runService.DestroyPipeline(r.Context(), schedule.Name)
+		if err != nil {
+			log.Error().Err(err).Str("pipeline_name", schedule.Name).Msg("Failed to destroy pipeline entities")
+			common.RespondError(w, http.StatusInternalServerError, "Failed to teardown pipeline entities")
+			return
+		}
+
+		log.Info().
+			Str("pipeline_name", schedule.Name).
+			Int("assets_deleted", destroyResp.AssetsDeleted).
+			Int("lineage_deleted", destroyResp.LineageDeleted).
+			Msg("Pipeline entities torn down successfully")
+	}
+
 	err := h.service.DeleteSchedule(r.Context(), id)
 	if err != nil {
 		if err == runs.ErrScheduleNotFound {

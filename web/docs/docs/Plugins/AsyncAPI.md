@@ -25,14 +25,10 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| aws | AWSConfig | false |  |
-| external_links | []ExternalLink | false |  |
-| global_documentation | []string | false |  |
-| global_documentation_position | string | false |  |
-| metadata | MetadataConfig | false |  |
+| external_links | []ExternalLink | false | External links to show on all assets |
 | resolve_external_docs | bool | false |  |
 | spec_path | string | false |  |
-| tags | TagsConfig | false |  |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
 
 ## Available Metadata
 

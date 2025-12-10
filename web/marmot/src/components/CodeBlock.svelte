@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import Prism from 'prismjs';
-	import 'prism-themes/themes/prism-one-dark.css';
 	import 'prismjs/components/prism-json';
 	import 'prismjs/components/prism-sql';
 
@@ -45,7 +44,7 @@
 	}
 </script>
 
-<div class="bg-gray-50 dark:bg-gray-800 rounded-lg">
+<div class="code-block bg-gray-50 dark:bg-gray-800 rounded-lg">
 	<div class="relative">
 		<button
 			on:click={copyToClipboard}
@@ -77,7 +76,7 @@
 			{/if}
 		</button>
 
-		<pre class="p-6 text-gray-900 dark:text-gray-100 overflow-x-auto"><code
+		<pre class="p-6 overflow-x-auto"><code
 				bind:this={element}
 				class="language-{language}">{formatted}</code
 			></pre>
@@ -99,5 +98,121 @@
 		white-space: pre;
 		width: max-content;
 		min-width: 100%;
+	}
+
+	/* Light theme - Earthy colors matching Docusaurus */
+	.code-block :global(code[class*='language-']),
+	.code-block :global(pre[class*='language-']) {
+		color: #1f2937;
+	}
+
+	.code-block :global(.token.comment),
+	.code-block :global(.token.prolog),
+	.code-block :global(.token.doctype),
+	.code-block :global(.token.cdata) {
+		color: #4a674a;
+		font-style: italic;
+	}
+
+	.code-block :global(.token.namespace) {
+		opacity: 0.7;
+	}
+
+	.code-block :global(.token.string),
+	.code-block :global(.token.attr-value) {
+		color: #35593b;
+	}
+
+	.code-block :global(.token.punctuation),
+	.code-block :global(.token.operator) {
+		color: #4a674a;
+	}
+
+	.code-block :global(.token.entity),
+	.code-block :global(.token.url),
+	.code-block :global(.token.symbol),
+	.code-block :global(.token.number),
+	.code-block :global(.token.boolean),
+	.code-block :global(.token.variable),
+	.code-block :global(.token.constant),
+	.code-block :global(.token.property),
+	.code-block :global(.token.regex),
+	.code-block :global(.token.inserted) {
+		color: #7b5935;
+	}
+
+	.code-block :global(.token.atrule),
+	.code-block :global(.token.keyword),
+	.code-block :global(.token.attr-name),
+	.code-block :global(.token.selector) {
+		color: #8d3718;
+	}
+
+	.code-block :global(.token.function),
+	.code-block :global(.token.deleted),
+	.code-block :global(.token.tag) {
+		color: #b34822;
+	}
+
+	.code-block :global(.token.function-variable) {
+		color: #b34822;
+	}
+
+	/* Dark theme - Brighter earthy tones matching Docusaurus */
+	:global(.dark) .code-block :global(code[class*='language-']),
+	:global(.dark) .code-block :global(pre[class*='language-']) {
+		color: #f3f4f6;
+	}
+
+	:global(.dark) .code-block :global(.token.comment),
+	:global(.dark) .code-block :global(.token.prolog),
+	:global(.dark) .code-block :global(.token.doctype),
+	:global(.dark) .code-block :global(.token.cdata) {
+		color: #a8c5a8;
+		font-style: italic;
+	}
+
+	:global(.dark) .code-block :global(.token.namespace) {
+		opacity: 0.7;
+	}
+
+	:global(.dark) .code-block :global(.token.string),
+	:global(.dark) .code-block :global(.token.attr-value) {
+		color: #b9d9b9;
+	}
+
+	:global(.dark) .code-block :global(.token.punctuation),
+	:global(.dark) .code-block :global(.token.operator) {
+		color: #d1e5d1;
+	}
+
+	:global(.dark) .code-block :global(.token.entity),
+	:global(.dark) .code-block :global(.token.url),
+	:global(.dark) .code-block :global(.token.symbol),
+	:global(.dark) .code-block :global(.token.number),
+	:global(.dark) .code-block :global(.token.boolean),
+	:global(.dark) .code-block :global(.token.variable),
+	:global(.dark) .code-block :global(.token.constant),
+	:global(.dark) .code-block :global(.token.property),
+	:global(.dark) .code-block :global(.token.regex),
+	:global(.dark) .code-block :global(.token.inserted) {
+		color: #f0d97e;
+	}
+
+	:global(.dark) .code-block :global(.token.atrule),
+	:global(.dark) .code-block :global(.token.keyword),
+	:global(.dark) .code-block :global(.token.attr-name),
+	:global(.dark) .code-block :global(.token.selector) {
+		color: #ffa77d;
+	}
+
+	:global(.dark) .code-block :global(.token.function),
+	:global(.dark) .code-block :global(.token.deleted),
+	:global(.dark) .code-block :global(.token.tag) {
+		color: #ffb899;
+	}
+
+	:global(.dark) .code-block :global(.token.function-variable) {
+		color: #ffb899;
 	}
 </style>

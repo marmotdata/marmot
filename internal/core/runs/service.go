@@ -35,6 +35,7 @@ var (
 
 type CreateAssetInput struct {
 	Name          string                 `json:"name"`
+	MRN           *string                `json:"mrn,omitempty"`
 	Type          string                 `json:"type"`
 	Providers     []string               `json:"providers"`
 	Description   *string                `json:"description"`
@@ -43,6 +44,8 @@ type CreateAssetInput struct {
 	Tags          []string               `json:"tags"`
 	Sources       []string               `json:"sources"`
 	ExternalLinks []map[string]string    `json:"external_links"`
+	Query         *string                `json:"query,omitempty"`
+	QueryLanguage *string                `json:"query_language,omitempty"`
 }
 
 type ProcessAssetsResponse struct {
@@ -223,7 +226,12 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 
 	currentMRNs := make([]string, 0, len(assets))
 	for _, ast := range assets {
-		assetMRN := mrn.New(ast.Type, ast.Providers[0], ast.Name)
+		var assetMRN string
+		if ast.MRN != nil && *ast.MRN != "" {
+			assetMRN = *ast.MRN
+		} else {
+			assetMRN = mrn.New(ast.Type, ast.Providers[0], ast.Name)
+		}
 		currentMRNs = append(currentMRNs, assetMRN)
 
 		assetHash := s.hashAsset(ast)
@@ -248,6 +256,8 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				Schema:        convertSchemaToStringMap(ast.Schema),
 				Tags:          ast.Tags,
 				ExternalLinks: convertToAssetExternalLinks(ast.ExternalLinks),
+				Query:         ast.Query,
+				QueryLanguage: ast.QueryLanguage,
 				CreatedBy:     run.CreatedBy,
 			}
 			if _, err := s.assetService.Create(ctx, createInput); err != nil {
@@ -264,6 +274,8 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				Schema:        convertSchemaToStringMap(ast.Schema),
 				Tags:          ast.Tags,
 				ExternalLinks: convertToAssetExternalLinks(ast.ExternalLinks),
+				Query:         ast.Query,
+				QueryLanguage: ast.QueryLanguage,
 			}
 			existingAsset, err := s.assetService.GetByMRN(ctx, assetMRN)
 			if err != nil {
@@ -342,8 +354,8 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		}
 
 		if status == StatusCreated {
-			if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target); err != nil {
-				log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Msg("Failed to create lineage")
+			if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target, lin.Type); err != nil {
+				log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
 				status = StatusFailed
 			}
 		}

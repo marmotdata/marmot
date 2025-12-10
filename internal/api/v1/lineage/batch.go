@@ -61,7 +61,12 @@ func (h *Handler) batchCreateLineage(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		if _, err := h.lineageService.CreateDirectLineage(r.Context(), edge.Source, edge.Target); err != nil {
+		// Use edge.Type if provided, otherwise default to empty string
+		lineageType := ""
+		if edge.Type != "" {
+			lineageType = edge.Type
+		}
+		if _, err := h.lineageService.CreateDirectLineage(r.Context(), edge.Source, edge.Target, lineageType); err != nil {
 			log.Error().Err(err).
 				Str("source", edge.Source).
 				Str("target", edge.Target).

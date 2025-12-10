@@ -344,7 +344,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		return fmt.Errorf("validating plugin config: %w", err)
 	}
 
-	pluginRun, err := w.runsService.StartRun(ctx, "scheduled", schedule.Name, "scheduler", validatedConfig)
+	pluginRun, err := w.runsService.StartRun(ctx, schedule.Name, schedule.PluginID, "scheduler", validatedConfig)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to start run: %v", err)
 		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)
@@ -383,6 +383,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 
 		assetsInput = append(assetsInput, CreateAssetInput{
 			Name:          name,
+			MRN:           a.MRN,
 			Type:          a.Type,
 			Providers:     a.Providers,
 			Description:   a.Description,
@@ -391,6 +392,8 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 			Tags:          a.Tags,
 			Sources:       sources,
 			ExternalLinks: convertAssetExternalLinks(a.ExternalLinks),
+			Query:         a.Query,
+			QueryLanguage: a.QueryLanguage,
 		})
 	}
 
@@ -428,8 +431,8 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		lineageInput,
 		docsInput,
 		statsInput,
-		"scheduled",
 		schedule.Name,
+		schedule.PluginID,
 	)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to process entities: %v", err)
