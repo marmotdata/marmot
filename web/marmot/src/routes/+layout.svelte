@@ -312,6 +312,20 @@
 						</a>
 
 						<a
+							href="/products"
+							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+								'/products'
+							)
+								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
+						>
+							<span class="w-4 h-4 mr-1.5">
+								<Icon icon="material-symbols:inventory-2" />
+							</span>
+							<span>Products</span>
+						</a>
+
+						<a
 							href="/metrics"
 							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
 								.url.pathname === '/metrics'

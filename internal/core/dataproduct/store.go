@@ -1,0 +1,1065 @@
+package dataproduct
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"regexp"
+	"strings"
+	"time"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/metrics"
+	"github.com/marmotdata/marmot/internal/query"
+)
+
+type Repository interface {
+	Create(ctx context.Context, dp *DataProduct, owners []OwnerInput) error
+	Get(ctx context.Context, id string) (*DataProduct, error)
+	Update(ctx context.Context, dp *DataProduct, owners []OwnerInput) error
+	Delete(ctx context.Context, id string) error
+	List(ctx context.Context, offset, limit int) (*ListResult, error)
+	Search(ctx context.Context, filter SearchFilter) (*ListResult, error)
+
+	AddAssets(ctx context.Context, dataProductID string, assetIDs []string, createdBy string) error
+	RemoveAsset(ctx context.Context, dataProductID string, assetID string) error
+	GetManualAssets(ctx context.Context, dataProductID string, limit, offset int) (*AssetsResult, error)
+
+	CreateRule(ctx context.Context, dataProductID string, rule *RuleInput) (*Rule, error)
+	UpdateRule(ctx context.Context, ruleID string, rule *RuleInput) (*Rule, error)
+	DeleteRule(ctx context.Context, ruleID string) error
+	GetRules(ctx context.Context, dataProductID string) ([]Rule, error)
+	GetRule(ctx context.Context, ruleID string) (*Rule, error)
+
+	ResolveAssets(ctx context.Context, dataProductID string, limit, offset int) (*ResolvedAssets, error)
+	ExecuteRule(ctx context.Context, rule *Rule) ([]string, error)
+	PreviewRule(ctx context.Context, rule *RuleInput, limit int) (*RulePreview, error)
+
+	GetDataProductsForAsset(ctx context.Context, assetID string) ([]*DataProduct, error)
+}
+
+type PostgresRepository struct {
+	db       *pgxpool.Pool
+	recorder metrics.Recorder
+}
+
+func NewPostgresRepository(db *pgxpool.Pool, recorder metrics.Recorder) *PostgresRepository {
+	return &PostgresRepository{
+		db:       db,
+		recorder: recorder,
+	}
+}
+
+func (r *PostgresRepository) loadOwners(ctx context.Context, dataProductID string) ([]Owner, error) {
+	q := `
+		SELECT
+			COALESCE(u.id::text, t.id::text) as id,
+			u.username,
+			COALESCE(u.name, t.name) as name,
+			CASE WHEN u.id IS NOT NULL THEN 'user' ELSE 'team' END as type,
+			ui.provider_email,
+			u.profile_picture
+		FROM data_product_owners dpo
+		LEFT JOIN users u ON dpo.user_id = u.id
+		LEFT JOIN teams t ON dpo.team_id = t.id
+		LEFT JOIN user_identities ui ON u.id = ui.user_id
+		WHERE dpo.data_product_id = $1
+		ORDER BY type, COALESCE(u.username, t.name)`
+
+	rows, err := r.db.Query(ctx, q, dataProductID)
+	if err != nil {
+		return nil, fmt.Errorf("loading owners: %w", err)
+	}
+	defer rows.Close()
+
+	owners := []Owner{}
+	for rows.Next() {
+		var owner Owner
+		if err := rows.Scan(&owner.ID, &owner.Username, &owner.Name, &owner.Type, &owner.Email, &owner.ProfilePicture); err != nil {
+			return nil, fmt.Errorf("scanning owner: %w", err)
+		}
+		owners = append(owners, owner)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating owners: %w", err)
+	}
+
+	return owners, nil
+}
+
+func (r *PostgresRepository) setOwners(ctx context.Context, tx pgx.Tx, dataProductID string, owners []OwnerInput) error {
+	_, err := tx.Exec(ctx, "DELETE FROM data_product_owners WHERE data_product_id = $1", dataProductID)
+	if err != nil {
+		return fmt.Errorf("deleting existing owners: %w", err)
+	}
+
+	for _, owner := range owners {
+		var q string
+		if owner.Type == "user" {
+			q = "INSERT INTO data_product_owners (data_product_id, user_id) VALUES ($1, $2)"
+		} else {
+			q = "INSERT INTO data_product_owners (data_product_id, team_id) VALUES ($1, $2)"
+		}
+
+		_, err := tx.Exec(ctx, q, dataProductID, owner.ID)
+		if err != nil {
+			return fmt.Errorf("inserting owner: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func (r *PostgresRepository) loadRules(ctx context.Context, dataProductID string) ([]Rule, error) {
+	q := `
+		SELECT id, data_product_id, name, description, rule_type, query_expression,
+			   metadata_field, pattern_type, pattern_value, priority, is_enabled,
+			   created_at, updated_at
+		FROM data_product_rules
+		WHERE data_product_id = $1
+		ORDER BY priority ASC, created_at ASC`
+
+	rows, err := r.db.Query(ctx, q, dataProductID)
+	if err != nil {
+		return nil, fmt.Errorf("loading rules: %w", err)
+	}
+	defer rows.Close()
+
+	rules := []Rule{}
+	for rows.Next() {
+		var rule Rule
+		if err := rows.Scan(
+			&rule.ID, &rule.DataProductID, &rule.Name, &rule.Description,
+			&rule.RuleType, &rule.QueryExpression, &rule.MetadataField,
+			&rule.PatternType, &rule.PatternValue, &rule.Priority,
+			&rule.IsEnabled, &rule.CreatedAt, &rule.UpdatedAt,
+		); err != nil {
+			return nil, fmt.Errorf("scanning rule: %w", err)
+		}
+		rules = append(rules, rule)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating rules: %w", err)
+	}
+
+	return rules, nil
+}
+
+func (r *PostgresRepository) getAssetCounts(ctx context.Context, dataProductID string) (int, int, error) {
+	var manualCount, ruleCount int
+	err := r.db.QueryRow(ctx, `
+		SELECT
+			COUNT(*) FILTER (WHERE source = 'manual'),
+			COUNT(*) FILTER (WHERE source = 'rule')
+		FROM data_product_memberships
+		WHERE data_product_id = $1`, dataProductID).Scan(&manualCount, &ruleCount)
+	if err != nil {
+		return 0, 0, fmt.Errorf("counting assets: %w", err)
+	}
+
+	return manualCount, ruleCount, nil
+}
+
+func (r *PostgresRepository) Create(ctx context.Context, dp *DataProduct, owners []OwnerInput) error {
+	start := time.Now()
+
+	metadataJSON, err := json.Marshal(dp.Metadata)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_create", time.Since(start), false)
+		return fmt.Errorf("marshaling metadata: %w", err)
+	}
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_create", time.Since(start), false)
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	q := `
+		INSERT INTO data_products (name, description, documentation, metadata, tags, created_by, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		RETURNING id`
+
+	err = tx.QueryRow(ctx, q,
+		dp.Name, dp.Description, dp.Documentation, metadataJSON, dp.Tags,
+		dp.CreatedBy, dp.CreatedAt, dp.UpdatedAt,
+	).Scan(&dp.ID)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_create", time.Since(start), false)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return ErrConflict
+		}
+		return fmt.Errorf("creating data product: %w", err)
+	}
+
+	if err := r.setOwners(ctx, tx, dp.ID, owners); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_create", time.Since(start), false)
+		return fmt.Errorf("setting owners: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_create", time.Since(start), false)
+		return fmt.Errorf("committing transaction: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_create", time.Since(start), true)
+	return nil
+}
+
+func (r *PostgresRepository) Get(ctx context.Context, id string) (*DataProduct, error) {
+	start := time.Now()
+
+	q := `
+		SELECT id, name, description, documentation, metadata, tags, created_by, created_at, updated_at
+		FROM data_products
+		WHERE id = $1`
+
+	var dp DataProduct
+	var metadataJSON []byte
+
+	err := r.db.QueryRow(ctx, q, id).Scan(
+		&dp.ID, &dp.Name, &dp.Description, &dp.Documentation, &metadataJSON,
+		&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+	)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_get", duration, true)
+			return nil, ErrNotFound
+		}
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get", duration, false)
+		return nil, fmt.Errorf("getting data product: %w", err)
+	}
+
+	if err := json.Unmarshal(metadataJSON, &dp.Metadata); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get", duration, false)
+		return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+	}
+
+	dp.Owners, err = r.loadOwners(ctx, id)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get", duration, false)
+		return nil, fmt.Errorf("loading owners: %w", err)
+	}
+
+	dp.Rules, err = r.loadRules(ctx, id)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get", duration, false)
+		return nil, fmt.Errorf("loading rules: %w", err)
+	}
+
+	dp.ManualAssetCount, dp.RuleAssetCount, _ = r.getAssetCounts(ctx, id)
+	dp.AssetCount = dp.ManualAssetCount + dp.RuleAssetCount
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_get", duration, true)
+	return &dp, nil
+}
+
+func (r *PostgresRepository) Update(ctx context.Context, dp *DataProduct, owners []OwnerInput) error {
+	start := time.Now()
+
+	metadataJSON, err := json.Marshal(dp.Metadata)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_update", time.Since(start), false)
+		return fmt.Errorf("marshaling metadata: %w", err)
+	}
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_update", time.Since(start), false)
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	q := `
+		UPDATE data_products
+		SET name = $1, description = $2, documentation = $3, metadata = $4, tags = $5, updated_at = $6
+		WHERE id = $7`
+
+	result, err := tx.Exec(ctx, q,
+		dp.Name, dp.Description, dp.Documentation, metadataJSON, dp.Tags, dp.UpdatedAt, dp.ID,
+	)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_update", duration, false)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return ErrConflict
+		}
+		return fmt.Errorf("updating data product: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_update", duration, true)
+		return ErrNotFound
+	}
+
+	if owners != nil {
+		if err := r.setOwners(ctx, tx, dp.ID, owners); err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_update", duration, false)
+			return fmt.Errorf("setting owners: %w", err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_update", duration, false)
+		return fmt.Errorf("committing transaction: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_update", duration, true)
+	return nil
+}
+
+func (r *PostgresRepository) Delete(ctx context.Context, id string) error {
+	start := time.Now()
+
+	result, err := r.db.Exec(ctx, "DELETE FROM data_products WHERE id = $1", id)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_delete", duration, false)
+		return fmt.Errorf("deleting data product: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_delete", duration, true)
+		return ErrNotFound
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_delete", duration, true)
+	return nil
+}
+
+func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*ListResult, error) {
+	start := time.Now()
+
+	countQuery := `SELECT COUNT(*) FROM data_products`
+
+	var total int
+	if err := r.db.QueryRow(ctx, countQuery).Scan(&total); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_list_count", time.Since(start), false)
+		return nil, fmt.Errorf("counting data products: %w", err)
+	}
+
+	q := `
+		SELECT id, name, description, documentation, metadata, tags, created_by, created_at, updated_at
+		FROM data_products
+		ORDER BY name ASC
+		LIMIT $1 OFFSET $2`
+
+	rows, err := r.db.Query(ctx, q, limit, offset)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
+		return nil, fmt.Errorf("listing data products: %w", err)
+	}
+	defer rows.Close()
+
+	var products []*DataProduct
+	for rows.Next() {
+		var dp DataProduct
+		var metadataJSON []byte
+
+		if err := rows.Scan(
+			&dp.ID, &dp.Name, &dp.Description, &dp.Documentation, &metadataJSON,
+			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+		); err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
+			return nil, fmt.Errorf("scanning data product: %w", err)
+		}
+
+		if err := json.Unmarshal(metadataJSON, &dp.Metadata); err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
+			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+		}
+
+		dp.Owners, err = r.loadOwners(ctx, dp.ID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
+			return nil, fmt.Errorf("loading owners for %s: %w", dp.ID, err)
+		}
+
+		dp.ManualAssetCount, dp.RuleAssetCount, _ = r.getAssetCounts(ctx, dp.ID)
+		dp.AssetCount = dp.ManualAssetCount + dp.RuleAssetCount
+
+		products = append(products, &dp)
+	}
+
+	if err := rows.Err(); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
+		return nil, fmt.Errorf("iterating data products: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), true)
+	return &ListResult{DataProducts: products, Total: total}, nil
+}
+
+func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*ListResult, error) {
+	start := time.Now()
+
+	args := []interface{}{}
+	argCount := 1
+
+	baseWhere := "WHERE 1=1"
+	conditions := []string{}
+
+	if filter.Query != "" {
+		conditions = append(conditions, fmt.Sprintf("(search_text @@ plainto_tsquery('english', $%d) OR name ILIKE $%d)", argCount, argCount+1))
+		args = append(args, filter.Query)
+		args = append(args, "%"+filter.Query+"%")
+		argCount += 2
+	}
+
+	if len(filter.Tags) > 0 {
+		conditions = append(conditions, fmt.Sprintf("tags @> $%d", argCount))
+		args = append(args, filter.Tags)
+		argCount++
+	}
+
+	if len(filter.OwnerIDs) > 0 {
+		conditions = append(conditions, fmt.Sprintf("id IN (SELECT data_product_id FROM data_product_owners WHERE user_id = ANY($%d) OR team_id = ANY($%d))", argCount, argCount))
+		args = append(args, filter.OwnerIDs)
+		argCount++
+	}
+
+	where := baseWhere
+	if len(conditions) > 0 {
+		where = fmt.Sprintf("%s AND %s", baseWhere, strings.Join(conditions, " AND "))
+	}
+
+	countQuery := fmt.Sprintf("SELECT COUNT(*) FROM data_products %s", where)
+	var total int
+	if err := r.db.QueryRow(ctx, countQuery, args...).Scan(&total); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_search_count", time.Since(start), false)
+		return nil, fmt.Errorf("counting search results: %w", err)
+	}
+
+	q := fmt.Sprintf(`
+		SELECT id, name, description, documentation, metadata, tags, created_by, created_at, updated_at
+		FROM data_products
+		%s
+		ORDER BY name ASC
+		LIMIT $%d OFFSET $%d`, where, argCount, argCount+1)
+
+	args = append(args, filter.Limit, filter.Offset)
+
+	rows, err := r.db.Query(ctx, q, args...)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
+		return nil, fmt.Errorf("searching data products: %w", err)
+	}
+	defer rows.Close()
+
+	var products []*DataProduct
+	for rows.Next() {
+		var dp DataProduct
+		var metadataJSON []byte
+
+		if err := rows.Scan(
+			&dp.ID, &dp.Name, &dp.Description, &dp.Documentation, &metadataJSON,
+			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+		); err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
+			return nil, fmt.Errorf("scanning search result: %w", err)
+		}
+
+		if err := json.Unmarshal(metadataJSON, &dp.Metadata); err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
+			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+		}
+
+		dp.Owners, err = r.loadOwners(ctx, dp.ID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
+			return nil, fmt.Errorf("loading owners for %s: %w", dp.ID, err)
+		}
+
+		dp.ManualAssetCount, dp.RuleAssetCount, _ = r.getAssetCounts(ctx, dp.ID)
+		dp.AssetCount = dp.ManualAssetCount + dp.RuleAssetCount
+
+		products = append(products, &dp)
+	}
+
+	if err := rows.Err(); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
+		return nil, fmt.Errorf("iterating search results: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), true)
+	return &ListResult{DataProducts: products, Total: total}, nil
+}
+
+func (r *PostgresRepository) AddAssets(ctx context.Context, dataProductID string, assetIDs []string, createdBy string) error {
+	start := time.Now()
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_add_assets", time.Since(start), false)
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	for _, assetID := range assetIDs {
+		q := `
+			INSERT INTO data_product_memberships (data_product_id, asset_id, source, rule_id)
+			VALUES ($1, $2, $3, NULL)
+			ON CONFLICT (data_product_id, asset_id) DO UPDATE SET source = $3, rule_id = NULL`
+
+		_, err := tx.Exec(ctx, q, dataProductID, assetID, SourceManual)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_add_assets", time.Since(start), false)
+			return fmt.Errorf("adding asset %s: %w", assetID, err)
+		}
+	}
+
+	// Update membership stats
+	_, err = tx.Exec(ctx, `
+		UPDATE data_products
+		SET membership_count = (
+			SELECT COUNT(*) FROM data_product_memberships WHERE data_product_id = $1
+		),
+		memberships_updated_at = NOW()
+		WHERE id = $1`, dataProductID)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_add_assets", time.Since(start), false)
+		return fmt.Errorf("updating membership stats: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_add_assets", time.Since(start), false)
+		return fmt.Errorf("committing transaction: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_add_assets", time.Since(start), true)
+	return nil
+}
+
+func (r *PostgresRepository) RemoveAsset(ctx context.Context, dataProductID string, assetID string) error {
+	start := time.Now()
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_remove_asset", time.Since(start), false)
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	result, err := tx.Exec(ctx,
+		"DELETE FROM data_product_memberships WHERE data_product_id = $1 AND asset_id = $2 AND source = $3",
+		dataProductID, assetID, SourceManual)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_remove_asset", time.Since(start), false)
+		return fmt.Errorf("removing asset: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_remove_asset", time.Since(start), true)
+		return ErrNotFound
+	}
+
+	// Update membership stats
+	_, err = tx.Exec(ctx, `
+		UPDATE data_products
+		SET membership_count = (
+			SELECT COUNT(*) FROM data_product_memberships WHERE data_product_id = $1
+		),
+		memberships_updated_at = NOW()
+		WHERE id = $1`, dataProductID)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_remove_asset", time.Since(start), false)
+		return fmt.Errorf("updating membership stats: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_remove_asset", time.Since(start), false)
+		return fmt.Errorf("committing transaction: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_remove_asset", time.Since(start), true)
+	return nil
+}
+
+func (r *PostgresRepository) GetManualAssets(ctx context.Context, dataProductID string, limit, offset int) (*AssetsResult, error) {
+	start := time.Now()
+
+	var total int
+	err := r.db.QueryRow(ctx,
+		"SELECT COUNT(*) FROM data_product_memberships WHERE data_product_id = $1 AND source = $2",
+		dataProductID, SourceManual).Scan(&total)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_manual_assets", time.Since(start), false)
+		return nil, fmt.Errorf("counting assets: %w", err)
+	}
+
+	q := `
+		SELECT asset_id FROM data_product_memberships
+		WHERE data_product_id = $1 AND source = $4
+		ORDER BY created_at DESC
+		LIMIT $2 OFFSET $3`
+
+	rows, err := r.db.Query(ctx, q, dataProductID, limit, offset, SourceManual)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_manual_assets", time.Since(start), false)
+		return nil, fmt.Errorf("querying assets: %w", err)
+	}
+	defer rows.Close()
+
+	var assetIDs []string
+	for rows.Next() {
+		var assetID string
+		if err := rows.Scan(&assetID); err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_get_manual_assets", time.Since(start), false)
+			return nil, fmt.Errorf("scanning asset ID: %w", err)
+		}
+		assetIDs = append(assetIDs, assetID)
+	}
+
+	if err := rows.Err(); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_manual_assets", time.Since(start), false)
+		return nil, fmt.Errorf("iterating assets: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_get_manual_assets", time.Since(start), true)
+	return &AssetsResult{AssetIDs: assetIDs, Total: total}, nil
+}
+
+func (r *PostgresRepository) CreateRule(ctx context.Context, dataProductID string, rule *RuleInput) (*Rule, error) {
+	start := time.Now()
+
+	q := `
+		INSERT INTO data_product_rules (
+			data_product_id, name, description, rule_type, query_expression,
+			metadata_field, pattern_type, pattern_value, priority, is_enabled,
+			created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+		RETURNING id`
+
+	now := time.Now().UTC()
+	var id string
+	err := r.db.QueryRow(ctx, q,
+		dataProductID, rule.Name, rule.Description, rule.RuleType, rule.QueryExpression,
+		rule.MetadataField, rule.PatternType, rule.PatternValue, rule.Priority, rule.IsEnabled,
+		now, now,
+	).Scan(&id)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_create_rule", duration, false)
+		return nil, fmt.Errorf("creating rule: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_create_rule", duration, true)
+	return r.GetRule(ctx, id)
+}
+
+func (r *PostgresRepository) UpdateRule(ctx context.Context, ruleID string, rule *RuleInput) (*Rule, error) {
+	start := time.Now()
+
+	q := `
+		UPDATE data_product_rules
+		SET name = $1, description = $2, rule_type = $3, query_expression = $4,
+			metadata_field = $5, pattern_type = $6, pattern_value = $7,
+			priority = $8, is_enabled = $9, updated_at = $10
+		WHERE id = $11`
+
+	result, err := r.db.Exec(ctx, q,
+		rule.Name, rule.Description, rule.RuleType, rule.QueryExpression,
+		rule.MetadataField, rule.PatternType, rule.PatternValue,
+		rule.Priority, rule.IsEnabled, time.Now().UTC(), ruleID,
+	)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_update_rule", duration, false)
+		return nil, fmt.Errorf("updating rule: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_update_rule", duration, true)
+		return nil, ErrRuleNotFound
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_update_rule", duration, true)
+	return r.GetRule(ctx, ruleID)
+}
+
+func (r *PostgresRepository) DeleteRule(ctx context.Context, ruleID string) error {
+	start := time.Now()
+
+	result, err := r.db.Exec(ctx, "DELETE FROM data_product_rules WHERE id = $1", ruleID)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_delete_rule", duration, false)
+		return fmt.Errorf("deleting rule: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_delete_rule", duration, true)
+		return ErrRuleNotFound
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_delete_rule", duration, true)
+	return nil
+}
+
+func (r *PostgresRepository) GetRules(ctx context.Context, dataProductID string) ([]Rule, error) {
+	return r.loadRules(ctx, dataProductID)
+}
+
+func (r *PostgresRepository) GetRule(ctx context.Context, ruleID string) (*Rule, error) {
+	start := time.Now()
+
+	q := `
+		SELECT id, data_product_id, name, description, rule_type, query_expression,
+			   metadata_field, pattern_type, pattern_value, priority, is_enabled,
+			   created_at, updated_at
+		FROM data_product_rules
+		WHERE id = $1`
+
+	var rule Rule
+	err := r.db.QueryRow(ctx, q, ruleID).Scan(
+		&rule.ID, &rule.DataProductID, &rule.Name, &rule.Description,
+		&rule.RuleType, &rule.QueryExpression, &rule.MetadataField,
+		&rule.PatternType, &rule.PatternValue, &rule.Priority,
+		&rule.IsEnabled, &rule.CreatedAt, &rule.UpdatedAt,
+	)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_get_rule", duration, true)
+			return nil, ErrRuleNotFound
+		}
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_rule", duration, false)
+		return nil, fmt.Errorf("getting rule: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_get_rule", duration, true)
+	return &rule, nil
+}
+
+func (r *PostgresRepository) ResolveAssets(ctx context.Context, dataProductID string, limit, offset int) (*ResolvedAssets, error) {
+	start := time.Now()
+
+	// Get counts by source
+	var manualCount, ruleCount int
+	err := r.db.QueryRow(ctx, `
+		SELECT
+			COUNT(*) FILTER (WHERE source = 'manual'),
+			COUNT(*) FILTER (WHERE source = 'rule')
+		FROM data_product_memberships
+		WHERE data_product_id = $1`, dataProductID).Scan(&manualCount, &ruleCount)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_resolve_assets", time.Since(start), false)
+		return nil, fmt.Errorf("counting memberships: %w", err)
+	}
+
+	total := manualCount + ruleCount
+
+	// Get paginated asset IDs
+	q := `
+		SELECT asset_id, source
+		FROM data_product_memberships
+		WHERE data_product_id = $1
+		ORDER BY source, created_at DESC
+		LIMIT $2 OFFSET $3`
+
+	rows, err := r.db.Query(ctx, q, dataProductID, limit, offset)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_resolve_assets", time.Since(start), false)
+		return nil, fmt.Errorf("querying memberships: %w", err)
+	}
+	defer rows.Close()
+
+	allAssets := []string{}
+	manualAssets := []string{}
+	dynamicAssets := []string{}
+	for rows.Next() {
+		var assetID, source string
+		if err := rows.Scan(&assetID, &source); err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_resolve_assets", time.Since(start), false)
+			return nil, fmt.Errorf("scanning membership: %w", err)
+		}
+		allAssets = append(allAssets, assetID)
+		if source == "manual" {
+			manualAssets = append(manualAssets, assetID)
+		} else {
+			dynamicAssets = append(dynamicAssets, assetID)
+		}
+	}
+
+	if err := rows.Err(); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_resolve_assets", time.Since(start), false)
+		return nil, fmt.Errorf("iterating memberships: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_resolve_assets", time.Since(start), true)
+	return &ResolvedAssets{
+		ManualAssets:  manualAssets,
+		DynamicAssets: dynamicAssets,
+		AllAssets:     allAssets,
+		Total:         total,
+	}, nil
+}
+
+func (r *PostgresRepository) ExecuteRule(ctx context.Context, rule *Rule) ([]string, error) {
+	start := time.Now()
+
+	var assetIDs []string
+	var err error
+
+	if rule.RuleType == RuleTypeQuery && rule.QueryExpression != nil {
+		assetIDs, err = r.executeQueryRule(ctx, *rule.QueryExpression)
+	} else if rule.RuleType == RuleTypeMetadataMatch {
+		assetIDs, err = r.executeMetadataMatchRule(ctx, rule)
+	} else {
+		return nil, fmt.Errorf("unsupported rule type: %s", rule.RuleType)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_execute_rule", time.Since(start), err == nil)
+	return assetIDs, err
+}
+
+func (r *PostgresRepository) executeQueryRule(ctx context.Context, queryExpression string) ([]string, error) {
+	parser := query.NewParser()
+	builder := query.NewBuilder()
+
+	parsedQuery, err := parser.Parse(queryExpression)
+	if err != nil {
+		return nil, fmt.Errorf("parsing query: %w", err)
+	}
+
+	// Base query without WHERE - BuildSQL will add WHERE clause
+	baseQuery := `WITH search_results AS (SELECT id, 1.0 as search_rank FROM assets`
+
+	sqlQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
+	if err != nil {
+		return nil, fmt.Errorf("building SQL: %w", err)
+	}
+
+	// Add is_stub filter after BuildSQL constructs the query
+	// We need to inject it into the CTE before the closing paren
+	sqlQuery = strings.Replace(sqlQuery,
+		") SELECT * FROM search_results",
+		" AND is_stub = FALSE) SELECT id, search_rank FROM search_results",
+		1)
+
+	// If there was no WHERE clause added by BuildSQL, we need to add WHERE instead of AND
+	if !strings.Contains(sqlQuery, "WHERE") {
+		sqlQuery = strings.Replace(sqlQuery,
+			" AND is_stub = FALSE)",
+			" WHERE is_stub = FALSE)",
+			1)
+	}
+
+	// Query builder uses $2, $3, ... with empty $1 placeholder - renumber to $1, $2, ...
+	sqlQuery = renumberParameters(sqlQuery)
+
+	// Skip first element (empty placeholder) from builder params
+	var params []interface{}
+	if len(queryParams) > 1 {
+		params = queryParams[1:]
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := r.db.Query(ctx, sqlQuery, params...)
+	if err != nil {
+		return nil, fmt.Errorf("executing query: %w", err)
+	}
+	defer rows.Close()
+
+	var assetIDs []string
+	for rows.Next() {
+		var id string
+		var rank float64
+		if err := rows.Scan(&id, &rank); err != nil {
+			return nil, fmt.Errorf("scanning result: %w", err)
+		}
+		assetIDs = append(assetIDs, id)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating results: %w", err)
+	}
+
+	return assetIDs, nil
+}
+
+func (r *PostgresRepository) executeMetadataMatchRule(ctx context.Context, rule *Rule) ([]string, error) {
+	if rule.MetadataField == nil || rule.PatternType == nil || rule.PatternValue == nil {
+		return nil, fmt.Errorf("metadata match rule missing required fields")
+	}
+
+	var condition string
+	var args []interface{}
+
+	fieldPath := strings.Split(*rule.MetadataField, ".")
+	var columnRef string
+	if len(fieldPath) > 1 {
+		jsonPath := ""
+		for i, field := range fieldPath[:len(fieldPath)-1] {
+			if i > 0 {
+				jsonPath += "->"
+			}
+			jsonPath += fmt.Sprintf("'%s'", field)
+		}
+		columnRef = fmt.Sprintf("metadata->%s->>'%s'", jsonPath, fieldPath[len(fieldPath)-1])
+	} else {
+		columnRef = fmt.Sprintf("metadata->>'%s'", fieldPath[0])
+	}
+
+	switch *rule.PatternType {
+	case PatternTypeExact:
+		condition = fmt.Sprintf("%s = $1", columnRef)
+		args = append(args, *rule.PatternValue)
+	case PatternTypeWildcard:
+		pattern := strings.ReplaceAll(*rule.PatternValue, "*", "%")
+		condition = fmt.Sprintf("%s ILIKE $1", columnRef)
+		args = append(args, pattern)
+	case PatternTypeRegex:
+		if _, err := regexp.Compile(*rule.PatternValue); err != nil {
+			return nil, fmt.Errorf("invalid regex pattern: %w", err)
+		}
+		condition = fmt.Sprintf("%s ~ $1", columnRef)
+		args = append(args, *rule.PatternValue)
+	case PatternTypePrefix:
+		condition = fmt.Sprintf("%s LIKE $1", columnRef)
+		args = append(args, *rule.PatternValue+"%")
+	default:
+		return nil, fmt.Errorf("unsupported pattern type: %s", *rule.PatternType)
+	}
+
+	q := fmt.Sprintf("SELECT id FROM assets WHERE is_stub = FALSE AND %s", condition)
+
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	rows, err := r.db.Query(ctx, q, args...)
+	if err != nil {
+		return nil, fmt.Errorf("executing metadata query: %w", err)
+	}
+	defer rows.Close()
+
+	var assetIDs []string
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			return nil, fmt.Errorf("scanning result: %w", err)
+		}
+		assetIDs = append(assetIDs, id)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating results: %w", err)
+	}
+
+	return assetIDs, nil
+}
+
+func (r *PostgresRepository) PreviewRule(ctx context.Context, rule *RuleInput, limit int) (*RulePreview, error) {
+	start := time.Now()
+
+	tempRule := &Rule{
+		RuleType:        rule.RuleType,
+		QueryExpression: rule.QueryExpression,
+		MetadataField:   rule.MetadataField,
+		PatternType:     rule.PatternType,
+		PatternValue:    rule.PatternValue,
+		IsEnabled:       true,
+	}
+
+	assetIDs, err := r.ExecuteRule(ctx, tempRule)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_preview_rule", time.Since(start), false)
+		return &RulePreview{
+			AssetIDs:   []string{},
+			AssetCount: 0,
+			Errors:     []string{err.Error()},
+		}, nil
+	}
+
+	total := len(assetIDs)
+	if limit > 0 && limit < len(assetIDs) {
+		assetIDs = assetIDs[:limit]
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_preview_rule", time.Since(start), true)
+	return &RulePreview{
+		AssetIDs:   assetIDs,
+		AssetCount: total,
+	}, nil
+}
+
+func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetID string) ([]*DataProduct, error) {
+	start := time.Now()
+
+	q := `
+		SELECT DISTINCT dp.id, dp.name, dp.description, dp.documentation, dp.metadata, dp.tags,
+			   dp.created_by, dp.created_at, dp.updated_at
+		FROM data_products dp
+		JOIN data_product_memberships dpm ON dp.id = dpm.data_product_id
+		WHERE dpm.asset_id = $1
+		ORDER BY dp.name ASC`
+
+	rows, err := r.db.Query(ctx, q, assetID)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), false)
+		return nil, fmt.Errorf("querying data products: %w", err)
+	}
+	defer rows.Close()
+
+	var products []*DataProduct
+	for rows.Next() {
+		var dp DataProduct
+		var metadataJSON []byte
+
+		if err := rows.Scan(
+			&dp.ID, &dp.Name, &dp.Description, &dp.Documentation, &metadataJSON,
+			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+		); err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), false)
+			return nil, fmt.Errorf("scanning data product: %w", err)
+		}
+
+		if err := json.Unmarshal(metadataJSON, &dp.Metadata); err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), false)
+			return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+		}
+
+		dp.Owners, err = r.loadOwners(ctx, dp.ID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), false)
+			return nil, fmt.Errorf("loading owners for %s: %w", dp.ID, err)
+		}
+
+		products = append(products, &dp)
+	}
+
+	if err := rows.Err(); err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), false)
+		return nil, fmt.Errorf("iterating data products: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), true)
+	return products, nil
+}

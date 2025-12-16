@@ -5,7 +5,7 @@
 	import type { Asset } from '$lib/assets/types';
 	import AssetBlade from '$lib/../components/AssetBlade.svelte';
 	import Button from '$lib/../components/Button.svelte';
-	import AssetDocumentation from '$lib/../components/AssetDocumentation.svelte';
+	import Documentation from '$lib/../components/Documentation.svelte';
 	import AssetSources from '$lib/../components/AssetSources.svelte';
 	import MetadataView from '$lib/../components/MetadataView.svelte';
 	import Lineage from '$lib/../components/Lineage.svelte';
@@ -14,6 +14,8 @@
 	import AssetEnvironmentsView from '$lib/../components/AssetEnvironmentsView.svelte';
 	import RunHistory from '$lib/../components/RunHistory.svelte';
 	import CodeBlock from '$lib/../components/CodeBlock.svelte';
+	import Tabs, { type Tab } from '$lib/../components/Tabs.svelte';
+	import IconifyIcon from '@iconify/svelte';
 
 	let asset: Asset | null = $state(null);
 	let loading = $state(true);
@@ -54,20 +56,27 @@
 		window.history.back();
 	}
 
+	const allTabs: Tab[] = [
+		{ id: 'metadata', label: 'Metadata', icon: 'material-symbols:data-object' },
+		{ id: 'query', label: 'Query', icon: 'material-symbols:code' },
+		{ id: 'environments', label: 'Environments', icon: 'material-symbols:deployed-code' },
+		{ id: 'schema', label: 'Schema', icon: 'material-symbols:table' },
+		{ id: 'documentation', label: 'Documentation', icon: 'material-symbols:description' },
+		{ id: 'run-history', label: 'Run History', icon: 'material-symbols:history' },
+		{ id: 'lineage', label: 'Lineage', icon: 'material-symbols:account-tree' }
+	];
+
 	let visibleTabs = $derived(
-		['metadata', 'query', 'environments', 'schema', 'documentation', 'run-history', 'lineage'].filter(
-			(tab) => {
-				if (
-					tab === 'environments' &&
-					(!asset?.environments || Object.keys(asset.environments).length === 0)
-				)
-					return false;
-				if (tab === 'query' && !asset?.query) return false;
-				if (tab === 'documentation' && !asset?.documentation) return false;
-				if (tab === 'run-history' && !asset?.has_run_history) return false;
-				return true;
-			}
-		)
+		allTabs.filter((tab) => {
+			if (
+				tab.id === 'environments' &&
+				(!asset?.environments || Object.keys(asset.environments).length === 0)
+			)
+				return false;
+			if (tab.id === 'query' && !asset?.query) return false;
+			if (tab.id === 'run-history' && !asset?.has_run_history) return false;
+			return true;
+		})
 	);
 
 	$effect(() => {
@@ -137,18 +146,11 @@
 						</div>
 					</div>
 
-					<div class="border-b border-gray-200 dark:border-gray-700">
-						{#each visibleTabs as tab}
-							<button
-								class="py-3 px-2 border-b-2 font-medium text-sm {activeTab === tab
-									? 'border-earthy-terracotta-700 text-earthy-terracotta-700'
-									: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'}"
-								onclick={() => setActiveTab(tab)}
-							>
-								{tab === 'run-history' ? 'Run History' : tab.charAt(0).toUpperCase() + tab.slice(1)}
-							</button>
-						{/each}
-					</div>
+					<Tabs
+						tabs={visibleTabs}
+						bind:activeTab
+						onTabChange={setActiveTab}
+					/>
 				{/if}
 			</div>
 
@@ -200,7 +202,7 @@
 							</div>
 						{:else if activeTab === 'documentation'}
 							<div class="mt-6">
-								<AssetDocumentation mrn={asset.mrn} />
+								<Documentation mrn={asset.mrn} />
 							</div>
 						{:else if activeTab === 'run-history'}
 							<div class="mt-6">

@@ -203,12 +203,23 @@ type Service interface {
 	RemoveTerm(ctx context.Context, assetID string, termID string) error
 	GetTerms(ctx context.Context, assetID string) ([]AssetTerm, error)
 	GetAssetsByTerm(ctx context.Context, termID string, limit, offset int) ([]*Asset, int, error)
+
+	// SetMembershipObserver registers an observer for asset create/delete events.
+	SetMembershipObserver(observer MembershipObserver)
+}
+
+// MembershipObserver is notified when assets are created or deleted.
+// This allows the data product membership service to update memberships.
+type MembershipObserver interface {
+	OnAssetCreated(ctx context.Context, asset *Asset)
+	OnAssetDeleted(ctx context.Context, assetID string) error
 }
 
 type service struct {
-	repo      Repository
-	validator *validator.Validate
-	metrics   MetricsClient
+	repo               Repository
+	validator          *validator.Validate
+	metrics            MetricsClient
+	membershipObserver MembershipObserver
 }
 
 type Logger interface {
@@ -240,6 +251,10 @@ func WithMetrics(metrics MetricsClient) ServiceOption {
 	return func(s *service) {
 		s.metrics = metrics
 	}
+}
+
+func (s *service) SetMembershipObserver(observer MembershipObserver) {
+	s.membershipObserver = observer
 }
 
 func (s *service) GetRunHistoryHistogram(ctx context.Context, assetID string, days int) ([]HistogramBucket, error) {
@@ -383,6 +398,11 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 			return nil, ErrAlreadyExists
 		}
 		return nil, fmt.Errorf("failed to create asset: %w", err)
+	}
+
+	// Notify membership observer asynchronously
+	if s.membershipObserver != nil {
+		s.membershipObserver.OnAssetCreated(ctx, asset)
 	}
 
 	return asset, nil
@@ -579,6 +599,13 @@ func UpdateSources(existing, new []AssetSource) []AssetSource {
 }
 
 func (s *service) Delete(ctx context.Context, id string) error {
+	// Notify membership observer before deletion
+	if s.membershipObserver != nil {
+		if err := s.membershipObserver.OnAssetDeleted(ctx, id); err != nil {
+			log.Warn().Err(err).Str("asset_id", id).Msg("Failed to notify membership observer of deletion")
+		}
+	}
+
 	if err := s.repo.Delete(ctx, id); err != nil {
 		if errors.Is(err, ErrNotFound) {
 			return ErrAssetNotFound

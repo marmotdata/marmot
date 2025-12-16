@@ -5,10 +5,7 @@
 
 	marked.setOptions({
 		gfm: true,
-		breaks: true,
-		headerIds: false,
-		mangle: false,
-		sanitize: false
+		breaks: true
 	});
 
 	export let mrn: string;

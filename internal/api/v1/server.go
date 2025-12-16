@@ -30,6 +30,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/auth"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/api/v1/dataproducts"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"
@@ -45,6 +46,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
+	dataproductService "github.com/marmotdata/marmot/internal/core/dataproduct"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
@@ -70,6 +72,10 @@ type Server struct {
 	wsHub          *websocket.Hub
 	scheduler      *runService.Scheduler
 
+	// Data product membership evaluation
+	membershipService    *dataproductService.MembershipService
+	membershipReconciler *dataproductService.Reconciler
+
 	handlers []interface{ Routes() []common.Route }
 }
 
@@ -87,6 +93,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	runRepo := runService.NewPostgresRepository(db)
 	glossaryRepo := glossaryService.NewPostgresRepository(db, recorder)
 	searchRepo := searchService.NewPostgresRepository(db, recorder)
+	dataProductRepo := dataproductService.NewPostgresRepository(db, recorder)
 
 	assetSvc := asset.NewService(assetRepo)
 	userSvc := userService.NewService(userRepo)
@@ -98,6 +105,32 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	teamRepo := teamService.NewPostgresRepository(db)
 	teamSvc := teamService.NewService(teamRepo)
 	searchSvc := searchService.NewService(searchRepo)
+	dataProductSvc := dataproductService.NewService(dataProductRepo)
+	membershipRepo := dataproductService.NewPostgresMembershipRepository(db, recorder)
+	membershipSvc := dataproductService.NewMembershipService(
+		dataProductRepo,
+		membershipRepo,
+		assetSvc,
+		&dataproductService.MembershipConfig{
+			MaxWorkers:    5,
+			BatchSize:     50,
+			FlushInterval: 500 * time.Millisecond,
+		},
+	)
+	membershipReconciler := dataproductService.NewReconciler(membershipSvc, &dataproductService.ReconcilerConfig{
+		Interval: 30 * time.Minute,
+	})
+
+	// Start membership evaluation services
+	membershipSvc.Start(context.Background())
+	membershipReconciler.Start(context.Background())
+
+	// Register membership service with asset service for event hooks
+	assetSvc.SetMembershipObserver(membershipSvc)
+
+	// Register membership service with data product service for rule event hooks
+	dataProductSvc.SetRuleObserver(membershipSvc)
+
 	scheduleRepo := runService.NewSchedulePostgresRepository(db)
 	scheduleSvc := runService.NewScheduleService(scheduleRepo)
 
@@ -219,10 +252,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	}
 
 	server := &Server{
-		config:         config,
-		metricsService: metricsService,
-		wsHub:          wsHub,
-		scheduler:      scheduler,
+		config:               config,
+		metricsService:       metricsService,
+		wsHub:                wsHub,
+		scheduler:            scheduler,
+		membershipService:    membershipSvc,
+		membershipReconciler: membershipReconciler,
 	}
 
 	server.handlers = []interface{ Routes() []common.Route }{
@@ -235,6 +270,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
+		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
 		searchAPI.NewHandler(searchSvc, userSvc, authSvc, metricsService, config),
 		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config),
@@ -247,6 +283,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 }
 
 func (s *Server) Stop() {
+	if s.membershipReconciler != nil {
+		s.membershipReconciler.Stop()
+	}
+	if s.membershipService != nil {
+		s.membershipService.Stop()
+	}
 	if s.scheduler != nil {
 		s.scheduler.Stop()
 	}

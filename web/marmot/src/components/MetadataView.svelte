@@ -33,8 +33,17 @@
 	// Determine if we're in read-only mode
 	// Respect explicit readOnly prop first, otherwise check if we have an entity to edit
 	let isReadOnly = $derived(readOnly);
+
+	// Local-only mode: when no endpoint/id/asset, just update the bound metadata directly (for create forms)
+	const isLocalMode = $derived(!endpoint && !id && !asset);
+
 	let canEdit = $derived(() => {
 		if (isReadOnly) return false;
+
+		// Local mode (create forms): always allow editing since we're just updating bound state
+		if (isLocalMode) {
+			return true;
+		}
 
 		// Check permissions
 		let hasPermission = false;
@@ -48,12 +57,6 @@
 		}
 
 		if (!hasPermission) return false;
-
-		// Must have either endpoint+id (for auto-save) or asset (for auto-save) to allow editing
-		// If neither is provided, we're in "view-only table mode"
-		if (!endpoint && !id && !asset) {
-			return false;
-		}
 
 		return true;
 	});
@@ -297,8 +300,6 @@
 {:else}
 	<!-- Editable Mode -->
 	<div class="space-y-4">
-		<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300">Metadata</h3>
-
 		<div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
 			<div class="overflow-x-auto">
 				{#if metadataEntries.length === 0 && !showAddRow}

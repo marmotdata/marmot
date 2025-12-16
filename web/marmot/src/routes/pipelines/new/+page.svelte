@@ -5,6 +5,8 @@
 	import Button from '../../../components/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '../../../components/Icon.svelte';
+	import Stepper from '../../../components/Stepper.svelte';
+	import Step from '../../../components/Step.svelte';
 	import cronstrue from 'cronstrue';
 	import { Cron } from 'croner';
 
@@ -57,17 +59,19 @@
 	} | null>(null);
 	let loadingAwsStatus = $state(false);
 
-	const steps = [
-		{ number: 1, title: 'Basic Info', icon: 'material-symbols:info-outline' },
-		{ number: 2, title: 'Choose Plugin', icon: 'material-symbols:extension' },
-		{ number: 3, title: 'Configure', icon: 'material-symbols:settings' },
-		{ number: 4, title: 'Schedule', icon: 'material-symbols:schedule' }
-	];
+	let totalSteps = $state(0);
 
 	let canProceedToStep2 = $derived(name.trim() !== '');
 	let canProceedToStep3 = $derived(selectedPluginId !== '');
 	let configValidated = $state(false);
 	let canProceedToStep4 = $derived(configValidated); // Must validate config first
+
+	function canNavigateToStep(stepNumber: number): boolean {
+		if (stepNumber === 2) return canProceedToStep2;
+		if (stepNumber === 3) return canProceedToStep3;
+		if (stepNumber === 4) return canProceedToStep4;
+		return false;
+	}
 
 	let selectedPlugin = $derived(plugins.find((p) => p.id === selectedPluginId) || null);
 
@@ -455,52 +459,17 @@
 	<!-- Step Indicator -->
 	<div class="border-b border-gray-200 dark:border-gray-700">
 		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-			<div class="flex items-center justify-between">
-				{#each steps as step, index}
-					<div class="flex items-center {index < steps.length - 1 ? 'flex-1' : ''}">
-						<button
-							onclick={() => {
-								if (
-									step.number < currentStep ||
-									(step.number === 2 && canProceedToStep2) ||
-									(step.number === 3 && canProceedToStep3) ||
-									(step.number === 4 && canProceedToStep4)
-								) {
-									currentStep = step.number;
-								}
-							}}
-							class="flex items-center gap-3 {currentStep === step.number
-								? ''
-								: 'opacity-60 hover:opacity-80'} transition-opacity"
-						>
-							<div
-								class="flex items-center justify-center w-10 h-10 rounded-full {currentStep ===
-								step.number
-									? 'bg-earthy-terracotta-600 text-white'
-									: currentStep > step.number
-										? 'bg-green-600 text-white'
-										: 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}"
-							>
-								{#if currentStep > step.number}
-									<IconifyIcon icon="material-symbols:check" class="h-5 w-5" />
-								{:else}
-									<IconifyIcon icon={step.icon} class="h-5 w-5" />
-								{/if}
-							</div>
-							<span class="text-sm font-medium text-gray-900 dark:text-gray-100 hidden sm:block">
-								{step.title}
-							</span>
-						</button>
-						{#if index < steps.length - 1}
-							<div
-								class="flex-1 h-0.5 mx-4 {currentStep > step.number
-									? 'bg-green-600'
-									: 'bg-gray-200 dark:bg-gray-700'}"
-							></div>
-						{/if}
-					</div>
-				{/each}
-			</div>
+			<Stepper
+				{currentStep}
+				bind:totalSteps
+				onStepClick={(step) => (currentStep = step)}
+				{canNavigateToStep}
+			>
+				<Step title="Basic Info" icon="material-symbols:info-outline" />
+				<Step title="Choose Plugin" icon="material-symbols:extension" />
+				<Step title="Configure" icon="material-symbols:settings" />
+				<Step title="Schedule" icon="material-symbols:schedule" />
+			</Stepper>
 		</div>
 	</div>
 
@@ -1115,7 +1084,7 @@
 		{/if}
 
 		<!-- Step 4: Schedule Configuration -->
-		{#if currentStep === 4}
+		{#if currentStep === totalSteps}
 			<div
 				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
 			>
@@ -1245,7 +1214,7 @@
 				{/if}
 			</div>
 			<div class="flex items-center gap-3">
-				{#if currentStep < 4}
+				{#if currentStep < totalSteps}
 					<Button
 						variant="filled"
 						click={handleNextStep}

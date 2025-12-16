@@ -10,8 +10,8 @@
 		saving = $bindable(false)
 	}: {
 		tags: string[];
-		endpoint: string;
-		id: string;
+		endpoint?: string;
+		id?: string;
 		canEdit?: boolean;
 		saving?: boolean;
 	} = $props();
@@ -19,12 +19,27 @@
 	let newTag = $state('');
 	let showTagInput = $state(false);
 
+	// Local-only mode: when no endpoint/id, just update the bound tags array directly
+	const isLocalMode = $derived(!endpoint || !id);
+
 	async function addTag() {
-		if (!newTag.trim() || !id) return;
+		if (!newTag.trim()) return;
+
+		const tagToAdd = newTag.trim();
+
+		// Local-only mode: just update the tags array directly
+		if (isLocalMode) {
+			if (!tags.includes(tagToAdd)) {
+				tags = [...tags, tagToAdd];
+			}
+			newTag = '';
+			showTagInput = false;
+			return;
+		}
 
 		saving = true;
 		try {
-			const updatedTags = [...tags, newTag.trim()];
+			const updatedTags = [...tags, tagToAdd];
 
 			const response = await fetchApi(`${endpoint}/${id}`, {
 				method: 'PUT',
@@ -49,7 +64,11 @@
 	}
 
 	async function removeTag(tag: string) {
-		if (!id) return;
+		// Local-only mode: just update the tags array directly
+		if (isLocalMode) {
+			tags = tags.filter((t) => t !== tag);
+			return;
+		}
 
 		saving = true;
 		try {

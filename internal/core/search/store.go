@@ -80,7 +80,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 	}
 
 	r.recorder.RecordDBQuery(ctx, "search_"+searchMethod, time.Since(start), true)
-	return results, facets.Types[ResultTypeAsset] + facets.Types[ResultTypeGlossary] + facets.Types[ResultTypeTeam], facets, nil
+	return results, facets.Types[ResultTypeAsset] + facets.Types[ResultTypeGlossary] + facets.Types[ResultTypeTeam] + facets.Types[ResultTypeDataProduct], facets, nil
 }
 
 // searchTypeIncluded checks if a type should be included in search
@@ -172,6 +172,7 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
+	includeDataProducts := searchTypeIncluded(filter.Types, ResultTypeDataProduct)
 
 	var unions []string
 	var params []interface{}
@@ -527,6 +528,98 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 		unions = append(unions, teamQuery)
 	}
 
+	if includeDataProducts {
+		var dataProductQuery string
+
+		hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
+			strings.Contains(searchQuery, "@name"))
+
+		if hasStructuredQuery {
+			parser := query.NewParser()
+			builder := query.NewBuilder()
+
+			parsedQuery, err := parser.Parse(searchQuery)
+			if err != nil {
+				hasStructuredQuery = false
+			} else {
+				baseQuery := `SELECT
+					'data_product' as type,
+					id::text,
+					name,
+					description,
+					jsonb_build_object(
+						'id', id,
+						'name', name,
+						'description', description,
+						'metadata', metadata,
+						'tags', tags,
+						'created_by', created_by,
+						'created_at', created_at,
+						'updated_at', updated_at
+					) as metadata,
+					'/products/' || id::text as url,
+					1.0 as rank,
+					updated_at
+				FROM data_products`
+
+				builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
+				if err == nil {
+					builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
+					builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
+
+					builtQuery = renumberParameters(builtQuery)
+					dataProductQuery = builtQuery
+
+					if paramCount == 0 && len(queryParams) > 1 {
+						params = queryParams[1:]
+						paramCount = len(params)
+					} else if paramCount == 0 {
+						params = []interface{}{}
+						paramCount = 0
+					}
+				} else {
+					hasStructuredQuery = false
+				}
+			}
+		}
+
+		if !hasStructuredQuery {
+			var rankExpr, whereClause string
+			if searchQuery != "" {
+				rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
+				whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1)"
+			} else {
+				rankExpr = "0"
+				whereClause = ""
+			}
+
+			dataProductQuery = fmt.Sprintf(`
+				SELECT
+					'data_product' as type,
+					id::text,
+					name,
+					description,
+					jsonb_build_object(
+						'id', id,
+						'name', name,
+						'description', description,
+						'metadata', metadata,
+						'tags', tags,
+						'created_by', created_by,
+						'created_at', created_at,
+						'updated_at', updated_at
+					) as metadata,
+					'/products/' || id::text as url,
+					%s as rank,
+					updated_at
+				FROM data_products
+				%s
+			`, rankExpr, whereClause)
+		}
+
+		unions = append(unions, dataProductQuery)
+	}
+
 	if len(unions) == 0 {
 		// No types selected, return empty query
 		return "SELECT NULL as type, NULL as id, NULL as name, NULL as description, NULL as metadata, NULL as url, 0 as rank, NULL as updated_at WHERE FALSE", []interface{}{}
@@ -571,6 +664,7 @@ func (r *PostgresRepository) buildFacets(ctx context.Context, filter Filter) (*F
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
+	includeDataProducts := searchTypeIncluded(filter.Types, ResultTypeDataProduct)
 
 	var unions []string
 	var params []interface{}
@@ -623,6 +717,14 @@ func (r *PostgresRepository) buildFacets(ctx context.Context, filter Filter) (*F
 			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, tags FROM teams WHERE search_text @@ websearch_to_tsquery('english', $1)`)
 		} else {
 			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, tags FROM teams`)
+		}
+	}
+
+	if includeDataProducts {
+		if searchQuery != "" {
+			unions = append(unions, `SELECT 'data_product' as type, NULL as asset_type, NULL::text[] as providers, tags FROM data_products WHERE search_text @@ websearch_to_tsquery('english', $1)`)
+		} else {
+			unions = append(unions, `SELECT 'data_product' as type, NULL as asset_type, NULL::text[] as providers, tags FROM data_products`)
 		}
 	}
 
@@ -741,6 +843,7 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
+	includeDataProducts := searchTypeIncluded(filter.Types, ResultTypeDataProduct)
 
 	var unions []string
 	var params []interface{}
@@ -883,6 +986,35 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 		`)
 	}
 
+	if includeDataProducts {
+		unions = append(unions, `
+			SELECT
+				'data_product' as type,
+				id::text,
+				name,
+				description,
+				jsonb_build_object(
+					'id', id,
+					'name', name,
+					'description', description,
+					'metadata', metadata,
+					'tags', tags,
+					'created_by', created_by,
+					'created_at', created_at,
+					'updated_at', updated_at
+				) as metadata,
+				'/products/' || id::text as url,
+				CASE
+					WHEN LOWER(name) = $1 THEN 100
+					WHEN LOWER(name) LIKE $2 THEN 50
+					ELSE 25
+				END as rank,
+				updated_at
+			FROM data_products
+			WHERE (LOWER(name) = $1 OR LOWER(name) LIKE $2)
+		`)
+	}
+
 	if len(unions) == 0 {
 		return nil, nil
 	}
@@ -972,6 +1104,7 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
 	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
 	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
+	includeDataProducts := searchTypeIncluded(filter.Types, ResultTypeDataProduct)
 
 	var unions []string
 	var params []interface{}
@@ -1102,6 +1235,31 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 		`)
 	}
 
+	if includeDataProducts {
+		unions = append(unions, `
+			SELECT
+				'data_product' as type,
+				id::text,
+				name,
+				description,
+				jsonb_build_object(
+					'id', id,
+					'name', name,
+					'description', description,
+					'metadata', metadata,
+					'tags', tags,
+					'created_by', created_by,
+					'created_at', created_at,
+					'updated_at', updated_at
+				) as metadata,
+				'/products/' || id::text as url,
+				(word_similarity($1, name) * 30) as rank,
+				updated_at
+			FROM data_products
+			WHERE word_similarity($1, name) > 0.3
+		`)
+	}
+
 	if len(unions) == 0 {
 		return nil, nil
 	}
@@ -1170,10 +1328,11 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 }
 
 var (
-	kindGlossaryRegex = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?glossary"?`)
-	kindAssetRegex    = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?asset"?`)
-	kindTeamRegex     = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?team"?`)
-	kindStripRegex    = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?(glossary|asset|team)"?`)
+	kindGlossaryRegex    = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?glossary"?`)
+	kindAssetRegex       = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?asset"?`)
+	kindTeamRegex        = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?team"?`)
+	kindDataProductRegex = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?data_product"?`)
+	kindStripRegex       = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?(glossary|asset|team|data_product)"?`)
 )
 
 func extractKindFilters(queryStr string) []ResultType {
@@ -1193,6 +1352,10 @@ func extractKindFilters(queryStr string) []ResultType {
 
 	if kindTeamRegex.MatchString(queryStr) {
 		kinds = append(kinds, ResultTypeTeam)
+	}
+
+	if kindDataProductRegex.MatchString(queryStr) {
+		kinds = append(kinds, ResultTypeDataProduct)
 	}
 
 	// Multiple @kind filters is a contradiction - nothing can be multiple types simultaneously

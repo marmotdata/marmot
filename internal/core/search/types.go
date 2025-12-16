@@ -6,9 +6,10 @@ import "time"
 type ResultType string
 
 const (
-	ResultTypeAsset    ResultType = "asset"
-	ResultTypeGlossary ResultType = "glossary"
-	ResultTypeTeam     ResultType = "team"
+	ResultTypeAsset       ResultType = "asset"
+	ResultTypeGlossary    ResultType = "glossary"
+	ResultTypeTeam        ResultType = "team"
+	ResultTypeDataProduct ResultType = "data_product"
 )
 
 // Result represents a unified search result

@@ -15,7 +15,7 @@
 	import { auth } from '$lib/stores/auth';
 
 	interface SearchResult {
-		type: 'asset' | 'glossary' | 'team';
+		type: 'asset' | 'glossary' | 'team' | 'data_product';
 		id: string;
 		name: string;
 		description?: string;
@@ -70,8 +70,8 @@
 	let searchQuery = $state('');
 	let searchTimeout: ReturnType<typeof setTimeout>;
 
-	// Kind filters (Asset, Glossary, Team, User)
-	let selectedKinds = $state<string[]>(['asset', 'glossary', 'team']);
+	// Kind filters (Asset, Glossary, Team, Data Product)
+	let selectedKinds = $state<string[]>(['asset', 'glossary', 'team', 'data_product']);
 
 	// Asset-specific filters
 	let selectedTypes = $state<string[]>([]);
@@ -107,7 +107,8 @@
 		selectedKinds = searchParams.get('kind')?.split(',').filter(Boolean) || [
 			'asset',
 			'glossary',
-			'team'
+			'team',
+			'data_product'
 		];
 		selectedTypes = searchParams.get('types')?.split(',').filter(Boolean) || [];
 		selectedProviders = searchParams.get('providers')?.split(',').filter(Boolean) || [];
@@ -255,7 +256,7 @@
 	}
 
 	function clearAllFilters() {
-		selectedKinds = ['asset', 'glossary', 'team'];
+		selectedKinds = ['asset', 'glossary', 'team', 'data_product'];
 		selectedTypes = [];
 		selectedProviders = [];
 		selectedTags = [];
@@ -297,7 +298,8 @@
 		const iconMap: Record<string, string> = {
 			asset: 'mdi:database',
 			glossary: 'mdi:book-open-variant',
-			team: 'mdi:account-group'
+			team: 'mdi:account-group',
+			data_product: 'mdi:package-variant-closed'
 		};
 		return iconMap[type] || 'mdi:file-document';
 	}
@@ -306,9 +308,20 @@
 		const colorMap: Record<string, string> = {
 			asset: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
 			glossary: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+			data_product: 'bg-earthy-terracotta-100 text-earthy-terracotta-800 dark:bg-earthy-terracotta-900 dark:text-earthy-terracotta-300'
 		};
 		return colorMap[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+	}
+
+	function getKindLabel(kind: string): string {
+		const labels: Record<string, string> = {
+			asset: 'Asset',
+			glossary: 'Glossary',
+			team: 'Team',
+			data_product: 'Product'
+		};
+		return labels[kind] || kind;
 	}
 
 	function getResultSubtitle(result: SearchResult): string {
@@ -322,12 +335,13 @@
 	}
 
 	let hasActiveFilters = $derived(
-		// Check if kinds differ from default (asset, glossary, team - NOT user)
+		// Check if kinds differ from default (asset, glossary, team, data_product)
 		!(
-			selectedKinds.length === 3 &&
+			selectedKinds.length === 4 &&
 			selectedKinds.includes('asset') &&
 			selectedKinds.includes('glossary') &&
-			selectedKinds.includes('team')
+			selectedKinds.includes('team') &&
+			selectedKinds.includes('data_product')
 		) ||
 			selectedTypes.length > 0 ||
 			selectedProviders.length > 0 ||
@@ -386,7 +400,7 @@
 								>
 									Kind
 								</h3>
-								{#each ['asset', 'glossary', 'team'] as kind}
+								{#each ['asset', 'data_product', 'glossary', 'team'] as kind}
 									<label class="flex items-center justify-between mb-2">
 										<div class="flex items-center">
 											<input
@@ -402,8 +416,8 @@
 												}}
 												class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 dark:bg-gray-800"
 											/>
-											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300 capitalize"
-												>{kind}</span
+											<span class="ml-2 text-sm text-gray-700 dark:text-gray-300"
+												>{getKindLabel(kind)}</span
 											>
 										</div>
 										<span class="text-xs text-gray-500 dark:text-gray-400"
@@ -863,9 +877,9 @@
 											<span
 												class="flex-shrink-0 text-xs {getResultTypeColor(
 													result.type
-												)} px-2 py-0.5 rounded font-medium capitalize"
+												)} px-2 py-0.5 rounded font-medium"
 											>
-												{result.type}
+												{getKindLabel(result.type)}
 											</span>
 										</div>
 

@@ -7,11 +7,19 @@
 	let {
 		query = '',
 		onQueryChange,
-		initiallyExpanded = false
+		initiallyExpanded = false,
+		showRunButton = true,
+		runButtonText = 'Run Query',
+		runButtonIcon = 'mdi:play-circle',
+		onRunClick
 	}: {
 		query?: string;
 		onQueryChange: (query: string) => void;
 		initiallyExpanded?: boolean;
+		showRunButton?: boolean;
+		runButtonText?: string;
+		runButtonIcon?: string;
+		onRunClick?: (query: string) => void;
 	} = $props();
 
 	type Operator = '=' | 'contains' | '!=' | '>' | '<' | '>=' | '<=' | 'range';
@@ -67,6 +75,40 @@
 	let expanded = $state(initiallyExpanded);
 	let freeTextExpanded = $state(true);
 	let filtersExpanded = $state(true);
+
+	// Auto-sync query changes when showRunButton is false
+	// This uses an effect that tracks the reactive state dependencies
+	$effect(() => {
+		if (!showRunButton) {
+			if (mode === 'builder') {
+				// Build query from current filter state - this tracks filters, freeText
+				let queryParts: string[] = [];
+				if (freeText.trim()) {
+					queryParts.push(freeText.trim());
+				}
+				filters.forEach((filter, index) => {
+					if (!filter.field || !filter.value) return;
+					if (index > 0 || freeText.trim()) {
+						queryParts.push(filter.booleanOp);
+					}
+					let filterStr = `@${filter.field}`;
+					if (filter.operator === 'range' && filter.rangeFrom && filter.rangeTo) {
+						filterStr += ` range [${filter.rangeFrom} TO ${filter.rangeTo}]`;
+					} else {
+						const needsQuotes = filter.value.includes(' ');
+						const valueStr = needsQuotes ? `"${filter.value}"` : filter.value;
+						filterStr += ` ${filter.operator} ${valueStr}`;
+					}
+					queryParts.push(filterStr);
+				});
+				const query = queryParts.join(' ');
+				onQueryChange(query);
+			} else {
+				// Code mode - track rawQuery
+				onQueryChange(rawQuery);
+			}
+		}
+	});
 
 	// Field structure - separate simple fields from nested metadata
 	const simpleFields = [
@@ -244,6 +286,10 @@
 			rawQuery = buildQueryString();
 		}
 		onQueryChange(rawQuery);
+		// Call custom run handler if provided
+		if (onRunClick) {
+			onRunClick(rawQuery);
+		}
 	}
 
 	function toggleMode() {
@@ -922,13 +968,15 @@
 				<IconifyIcon icon="mdi:book-open-variant" class="w-4 h-4" />
 				View Documentation
 			</a>
-			<button
-				onclick={applyQuery}
-				class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition-colors bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600"
-			>
-				<IconifyIcon icon="mdi:play-circle" class="w-4 h-4" />
-				Run Query
-			</button>
+			{#if showRunButton}
+				<button
+					onclick={applyQuery}
+					class="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-lg shadow-sm transition-colors bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600"
+				>
+					<IconifyIcon icon={runButtonIcon} class="w-4 h-4" />
+					{runButtonText}
+				</button>
+			{/if}
 		</div>
 	{/if}
 </div>
