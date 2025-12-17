@@ -31,22 +31,20 @@ type RuleRequest struct {
 }
 
 type CreateRequest struct {
-	Name          string                 `json:"name" validate:"required"`
-	Description   *string                `json:"description,omitempty"`
-	Documentation *string                `json:"documentation,omitempty"`
-	Metadata      map[string]interface{} `json:"metadata,omitempty"`
-	Tags          []string               `json:"tags,omitempty"`
-	Owners        []OwnerRequest         `json:"owners,omitempty"`
-	Rules         []RuleRequest          `json:"rules,omitempty"`
+	Name        string                 `json:"name" validate:"required"`
+	Description *string                `json:"description,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Owners      []OwnerRequest         `json:"owners,omitempty"`
+	Rules       []RuleRequest          `json:"rules,omitempty"`
 }
 
 type UpdateRequest struct {
-	Name          *string                `json:"name,omitempty"`
-	Description   *string                `json:"description,omitempty"`
-	Documentation *string                `json:"documentation,omitempty"`
-	Metadata      map[string]interface{} `json:"metadata,omitempty"`
-	Tags          []string               `json:"tags,omitempty"`
-	Owners        []OwnerRequest         `json:"owners,omitempty"`
+	Name        *string                `json:"name,omitempty"`
+	Description *string                `json:"description,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Owners      []OwnerRequest         `json:"owners,omitempty"`
 }
 
 type AddAssetsRequest struct {
@@ -94,13 +92,12 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := dataproduct.CreateInput{
-		Name:          req.Name,
-		Description:   req.Description,
-		Documentation: req.Documentation,
-		Metadata:      req.Metadata,
-		Tags:          req.Tags,
-		Owners:        owners,
-		Rules:         rules,
+		Name:        req.Name,
+		Description: req.Description,
+		Metadata:    req.Metadata,
+		Tags:        req.Tags,
+		Owners:      owners,
+		Rules:       rules,
 	}
 
 	dp, err := h.dataProductService.Create(r.Context(), input)
@@ -169,12 +166,11 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	}
 
 	input := dataproduct.UpdateInput{
-		Name:          req.Name,
-		Description:   req.Description,
-		Documentation: req.Documentation,
-		Metadata:      req.Metadata,
-		Tags:          req.Tags,
-		Owners:        owners,
+		Name:        req.Name,
+		Description: req.Description,
+		Metadata:    req.Metadata,
+		Tags:        req.Tags,
+		Owners:      owners,
 	}
 
 	dp, err := h.dataProductService.Update(r.Context(), id, input)

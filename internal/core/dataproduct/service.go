@@ -12,11 +12,28 @@ import (
 )
 
 const (
-	DefaultLimit        = 50
-	MaxLimit            = 100
-	MaxRules            = 10
+	DefaultLimit         = 50
+	MaxLimit             = 100
+	MaxRules             = 10
 	MaxReconcileProducts = 10000
 )
+
+type CreateInput struct {
+	Name        string                 `json:"name" validate:"required,min=1,max=255"`
+	Description *string                `json:"description,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Owners      []OwnerInput           `json:"owners" validate:"required,min=1,dive"`
+	Rules       []RuleInput            `json:"rules,omitempty" validate:"omitempty,dive"`
+}
+
+type UpdateInput struct {
+	Name        *string                `json:"name,omitempty" validate:"omitempty,min=1,max=255"`
+	Description *string                `json:"description,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Owners      []OwnerInput           `json:"owners,omitempty" validate:"omitempty,min=1,dive"`
+}
 
 type Service interface {
 	Create(ctx context.Context, input CreateInput) (*DataProduct, error)
@@ -83,13 +100,12 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*DataProduct, 
 
 	now := time.Now().UTC()
 	dp := &DataProduct{
-		Name:          input.Name,
-		Description:   input.Description,
-		Documentation: input.Documentation,
-		Metadata:      input.Metadata,
-		Tags:          input.Tags,
-		CreatedAt:     now,
-		UpdatedAt:     now,
+		Name:        input.Name,
+		Description: input.Description,
+		Metadata:    input.Metadata,
+		Tags:        input.Tags,
+		CreatedAt:   now,
+		UpdatedAt:   now,
 	}
 
 	if err := s.repo.Create(ctx, dp, input.Owners); err != nil {
@@ -130,9 +146,6 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*Da
 	}
 	if input.Description != nil {
 		existing.Description = input.Description
-	}
-	if input.Documentation != nil {
-		existing.Documentation = input.Documentation
 	}
 	if input.Metadata != nil {
 		existing.Metadata = input.Metadata

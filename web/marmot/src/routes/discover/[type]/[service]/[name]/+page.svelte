@@ -5,7 +5,7 @@
 	import type { Asset } from '$lib/assets/types';
 	import AssetBlade from '$lib/../components/AssetBlade.svelte';
 	import Button from '$lib/../components/Button.svelte';
-	import Documentation from '$lib/../components/Documentation.svelte';
+	import DocumentationSystem from '$lib/../components/docs/DocumentationSystem.svelte';
 	import AssetSources from '$lib/../components/AssetSources.svelte';
 	import MetadataView from '$lib/../components/MetadataView.svelte';
 	import Lineage from '$lib/../components/Lineage.svelte';
@@ -155,7 +155,7 @@
 			</div>
 
 			<div class="flex-1 overflow-y-auto overflow-x-auto px-8">
-				<div class="pb-16">
+				<div class="pb-16 max-w-7xl mx-auto">
 					<div class="rounded-lg max-w-full overflow-x-auto">
 						{#if !asset}
 							<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
@@ -201,8 +201,8 @@
 								<SchemaEditor {asset} />
 							</div>
 						{:else if activeTab === 'documentation'}
-							<div class="mt-6">
-								<Documentation mrn={asset.mrn} />
+							<div class="mt-6" style="height: calc(100vh - 320px); min-height: 400px;">
+								<DocumentationSystem entityType="asset" entityId={asset.mrn} />
 							</div>
 						{:else if activeTab === 'run-history'}
 							<div class="mt-6">

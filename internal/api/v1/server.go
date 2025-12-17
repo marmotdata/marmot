@@ -31,6 +31,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/auth"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/dataproducts"
+	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docs"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"
@@ -47,6 +48,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
 	dataproductService "github.com/marmotdata/marmot/internal/core/dataproduct"
+	docsService "github.com/marmotdata/marmot/internal/core/docs"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
@@ -106,6 +108,8 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	teamSvc := teamService.NewService(teamRepo)
 	searchSvc := searchService.NewService(searchRepo)
 	dataProductSvc := dataproductService.NewService(dataProductRepo)
+	docsRepo := docsService.NewPostgresRepository(db)
+	docsSvc := docsService.NewService(docsRepo)
 	membershipRepo := dataproductService.NewPostgresMembershipRepository(db, recorder)
 	membershipSvc := dataproductService.NewMembershipService(
 		dataProductRepo,
@@ -271,6 +275,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
 		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config),
+		docsAPI.NewHandler(docsSvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
 		searchAPI.NewHandler(searchSvc, userSvc, authSvc, metricsService, config),
 		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config),

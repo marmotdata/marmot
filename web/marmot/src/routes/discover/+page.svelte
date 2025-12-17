@@ -5,8 +5,10 @@
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import type { Asset } from '$lib/assets/types';
+	import type { DataProduct } from '$lib/dataproducts/types';
 	import QueryInput from '../../components/QueryInput.svelte';
 	import AssetBlade from '../../components/AssetBlade.svelte';
+	import ProductBlade from '../../components/ProductBlade.svelte';
 	import Icon from '../../components/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '../../components/Button.svelte';
@@ -65,6 +67,9 @@
 
 	// Selected asset for blade
 	let selectedAsset = $state<Asset | null>(null);
+
+	// Selected product for blade
+	let selectedProduct = $state<DataProduct | null>(null);
 
 	// Search query from URL
 	let searchQuery = $state('');
@@ -279,6 +284,24 @@
 		}
 	}
 
+	async function handleDataProductClick(productId: string) {
+		try {
+			const response = await fetchApi(`/products/${productId}`);
+			if (response.ok) {
+				const product: DataProduct = await response.json();
+				// Ensure arrays are initialized
+				product.tags = product.tags || [];
+				product.owners = product.owners || [];
+				product.rules = product.rules || [];
+				selectedProduct = product;
+			} else {
+				console.error('Failed to load data product');
+			}
+		} catch (err) {
+			console.error('Error loading data product:', err);
+		}
+	}
+
 	function navigateToResult(result: SearchResult) {
 		goto(result.url);
 	}
@@ -322,6 +345,14 @@
 			data_product: 'Product'
 		};
 		return labels[kind] || kind;
+	}
+
+	function formatDate(dateString: string): string {
+		return new Date(dateString).toLocaleDateString('en-US', {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric'
+		});
 	}
 
 	function getResultSubtitle(result: SearchResult): string {
@@ -841,19 +872,102 @@
 										<div
 											class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 pt-1.5 border-t border-gray-100 dark:border-gray-700"
 										>
-											<span>{result.metadata?.created_by || 'Unknown'}</span>
-											<span>•</span>
+											{#if result.metadata?.created_by}
+												<span>{result.metadata.created_by}</span>
+												<span>•</span>
+											{/if}
 											<span>
 												{#if result.metadata?.created_at}
-													{new Date(result.metadata.created_at).toLocaleDateString()}
-												{:else}
-													Unknown
+													{formatDate(result.metadata.created_at)}
+												{/if}
+											</span>
+										</div>
+									</div>
+								{:else if result.type === 'data_product'}
+									<!-- Data Product card -->
+									<div
+										role="button"
+										tabindex="0"
+										class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all cursor-pointer group"
+										onclick={() => handleDataProductClick(result.id)}
+										onkeydown={(e) => e.key === 'Enter' && handleDataProductClick(result.id)}
+									>
+										<div class="flex justify-between items-start mb-2">
+											<div class="flex items-center gap-2 flex-1 min-w-0">
+												<div class="flex-shrink-0">
+													<div
+														class="w-8 h-8 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center"
+													>
+														<IconifyIcon
+															icon="mdi:package-variant-closed"
+															class="w-4 h-4 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+														/>
+													</div>
+												</div>
+												<div class="min-w-0 flex-1">
+													<h3
+														class="font-semibold text-sm text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-700 transition-colors"
+													>
+														{result.name}
+													</h3>
+													<div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+														{#if result.metadata?.asset_count !== undefined}
+															<span class="flex items-center gap-1">
+																<IconifyIcon icon="material-symbols:database" class="w-3 h-3" />
+																{result.metadata.asset_count} assets
+															</span>
+														{/if}
+														{#if result.metadata?.owner_count}
+															<span class="flex items-center gap-1">
+																<IconifyIcon icon="material-symbols:person" class="w-3 h-3" />
+																{result.metadata.owner_count}
+															</span>
+														{/if}
+													</div>
+												</div>
+											</div>
+										</div>
+
+										{#if result.description}
+											<p class="text-xs text-gray-600 dark:text-gray-400 mb-2 line-clamp-1">
+												{result.description}
+											</p>
+										{/if}
+
+										{#if result.metadata?.tags && result.metadata.tags.length > 0}
+											<div class="flex flex-wrap gap-1 mb-2">
+												{#each result.metadata.tags.slice(0, 3) as tag}
+													<span
+														class="inline-flex items-center gap-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded"
+													>
+														<IconifyIcon icon="material-symbols:label-outline" class="w-3 h-3" />
+														{tag}
+													</span>
+												{/each}
+												{#if result.metadata.tags.length > 3}
+													<span class="text-xs text-gray-500 dark:text-gray-400 px-1.5 py-0.5">
+														+{result.metadata.tags.length - 3}
+													</span>
+												{/if}
+											</div>
+										{/if}
+
+										<div
+											class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 pt-1.5 border-t border-gray-100 dark:border-gray-700"
+										>
+											{#if result.metadata?.created_by}
+												<span>{result.metadata.created_by}</span>
+												<span>•</span>
+											{/if}
+											<span>
+												{#if result.updated_at}
+													Updated {formatDate(result.updated_at)}
 												{/if}
 											</span>
 										</div>
 									</div>
 								{:else}
-									<!-- Non-asset card -->
+									<!-- Other non-asset card (glossary, team) -->
 									<div
 										role="button"
 										tabindex="0"
@@ -903,4 +1017,8 @@
 
 {#if selectedAsset}
 	<AssetBlade bind:asset={selectedAsset} onClose={() => (selectedAsset = null)} />
+{/if}
+
+{#if selectedProduct}
+	<ProductBlade bind:product={selectedProduct} onClose={() => (selectedProduct = null)} />
 {/if}

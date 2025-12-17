@@ -16,6 +16,133 @@ import (
 	"github.com/marmotdata/marmot/internal/query"
 )
 
+var (
+	ErrNotFound     = errors.New("data product not found")
+	ErrConflict     = errors.New("data product with this name already exists")
+	ErrInvalidInput = errors.New("invalid input")
+	ErrRuleNotFound = errors.New("rule not found")
+)
+
+type RuleType string
+
+const (
+	RuleTypeQuery         RuleType = "query"
+	RuleTypeMetadataMatch RuleType = "metadata_match"
+)
+
+const (
+	PatternTypeExact    = "exact"
+	PatternTypeWildcard = "wildcard"
+	PatternTypeRegex    = "regex"
+	PatternTypePrefix   = "prefix"
+)
+
+const (
+	SourceManual = "manual"
+	SourceRule   = "rule"
+)
+
+const (
+	TargetTypeAssetType   = "asset_type"
+	TargetTypeProvider    = "provider"
+	TargetTypeTag         = "tag"
+	TargetTypeMetadataKey = "metadata_key"
+	TargetTypeQuery       = "query"
+)
+
+type DataProduct struct {
+	ID          string                 `json:"id"`
+	Name        string                 `json:"name"`
+	Description *string                `json:"description,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Owners      []Owner                `json:"owners"`
+	Rules       []Rule                 `json:"rules,omitempty"`
+	CreatedBy   *string                `json:"created_by,omitempty"`
+	CreatedAt   time.Time              `json:"created_at"`
+	UpdatedAt   time.Time              `json:"updated_at"`
+
+	AssetCount       int `json:"asset_count,omitempty"`
+	ManualAssetCount int `json:"manual_asset_count,omitempty"`
+	RuleAssetCount   int `json:"rule_asset_count,omitempty"`
+}
+
+type Owner struct {
+	ID             string  `json:"id"`
+	Username       *string `json:"username,omitempty"`
+	Name           string  `json:"name"`
+	Type           string  `json:"type"`
+	Email          *string `json:"email,omitempty"`
+	ProfilePicture *string `json:"profile_picture,omitempty"`
+}
+
+type OwnerInput struct {
+	ID   string `json:"id" validate:"required"`
+	Type string `json:"type" validate:"required,oneof=user team"`
+}
+
+type Rule struct {
+	ID              string    `json:"id"`
+	DataProductID   string    `json:"data_product_id"`
+	Name            string    `json:"name"`
+	Description     *string   `json:"description,omitempty"`
+	RuleType        RuleType  `json:"rule_type"`
+	QueryExpression *string   `json:"query_expression,omitempty"`
+	MetadataField   *string   `json:"metadata_field,omitempty"`
+	PatternType     *string   `json:"pattern_type,omitempty"`
+	PatternValue    *string   `json:"pattern_value,omitempty"`
+	Priority        int       `json:"priority"`
+	IsEnabled       bool      `json:"is_enabled"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+
+	MatchedAssetCount int `json:"matched_asset_count,omitempty"`
+}
+
+type RuleInput struct {
+	ID              *string  `json:"id,omitempty"`
+	Name            string   `json:"name" validate:"required,min=1,max=255"`
+	Description     *string  `json:"description,omitempty"`
+	RuleType        RuleType `json:"rule_type" validate:"required,oneof=query metadata_match"`
+	QueryExpression *string  `json:"query_expression,omitempty"`
+	MetadataField   *string  `json:"metadata_field,omitempty"`
+	PatternType     *string  `json:"pattern_type,omitempty" validate:"omitempty,oneof=exact wildcard regex prefix"`
+	PatternValue    *string  `json:"pattern_value,omitempty"`
+	Priority        int      `json:"priority"`
+	IsEnabled       bool     `json:"is_enabled"`
+}
+
+type SearchFilter struct {
+	Query    string   `json:"query,omitempty"`
+	OwnerIDs []string `json:"owner_ids,omitempty"`
+	Tags     []string `json:"tags,omitempty"`
+	Limit    int      `json:"limit,omitempty" validate:"omitempty,gte=0,lte=100"`
+	Offset   int      `json:"offset,omitempty" validate:"omitempty,gte=0"`
+}
+
+type ListResult struct {
+	DataProducts []*DataProduct `json:"data_products"`
+	Total        int            `json:"total"`
+}
+
+type ResolvedAssets struct {
+	ManualAssets  []string `json:"manual_assets"`
+	DynamicAssets []string `json:"dynamic_assets"`
+	AllAssets     []string `json:"all_assets"`
+	Total         int      `json:"total"`
+}
+
+type RulePreview struct {
+	AssetIDs   []string `json:"asset_ids"`
+	AssetCount int      `json:"asset_count"`
+	Errors     []string `json:"errors,omitempty"`
+}
+
+type AssetsResult struct {
+	AssetIDs []string `json:"asset_ids"`
+	Total    int      `json:"total"`
+}
+
 type Repository interface {
 	Create(ctx context.Context, dp *DataProduct, owners []OwnerInput) error
 	Get(ctx context.Context, id string) (*DataProduct, error)
@@ -182,12 +309,12 @@ func (r *PostgresRepository) Create(ctx context.Context, dp *DataProduct, owners
 	defer tx.Rollback(ctx)
 
 	q := `
-		INSERT INTO data_products (name, description, documentation, metadata, tags, created_by, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		INSERT INTO data_products (name, description, metadata, tags, created_by, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`
 
 	err = tx.QueryRow(ctx, q,
-		dp.Name, dp.Description, dp.Documentation, metadataJSON, dp.Tags,
+		dp.Name, dp.Description, metadataJSON, dp.Tags,
 		dp.CreatedBy, dp.CreatedAt, dp.UpdatedAt,
 	).Scan(&dp.ID)
 
@@ -218,7 +345,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*DataProduct, 
 	start := time.Now()
 
 	q := `
-		SELECT id, name, description, documentation, metadata, tags, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at
 		FROM data_products
 		WHERE id = $1`
 
@@ -226,7 +353,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*DataProduct, 
 	var metadataJSON []byte
 
 	err := r.db.QueryRow(ctx, q, id).Scan(
-		&dp.ID, &dp.Name, &dp.Description, &dp.Documentation, &metadataJSON,
+		&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
 		&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
 	)
 
@@ -283,11 +410,11 @@ func (r *PostgresRepository) Update(ctx context.Context, dp *DataProduct, owners
 
 	q := `
 		UPDATE data_products
-		SET name = $1, description = $2, documentation = $3, metadata = $4, tags = $5, updated_at = $6
-		WHERE id = $7`
+		SET name = $1, description = $2, metadata = $3, tags = $4, updated_at = $5
+		WHERE id = $6`
 
 	result, err := tx.Exec(ctx, q,
-		dp.Name, dp.Description, dp.Documentation, metadataJSON, dp.Tags, dp.UpdatedAt, dp.ID,
+		dp.Name, dp.Description, metadataJSON, dp.Tags, dp.UpdatedAt, dp.ID,
 	)
 
 	duration := time.Since(start)
@@ -355,7 +482,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 	}
 
 	q := `
-		SELECT id, name, description, documentation, metadata, tags, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at
 		FROM data_products
 		ORDER BY name ASC
 		LIMIT $1 OFFSET $2`
@@ -373,7 +500,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 		var metadataJSON []byte
 
 		if err := rows.Scan(
-			&dp.ID, &dp.Name, &dp.Description, &dp.Documentation, &metadataJSON,
+			&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
 			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
@@ -447,7 +574,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 
 	q := fmt.Sprintf(`
-		SELECT id, name, description, documentation, metadata, tags, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at
 		FROM data_products
 		%s
 		ORDER BY name ASC
@@ -468,7 +595,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 		var metadataJSON []byte
 
 		if err := rows.Scan(
-			&dp.ID, &dp.Name, &dp.Description, &dp.Documentation, &metadataJSON,
+			&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
 			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
@@ -524,7 +651,6 @@ func (r *PostgresRepository) AddAssets(ctx context.Context, dataProductID string
 		}
 	}
 
-	// Update membership stats
 	_, err = tx.Exec(ctx, `
 		UPDATE data_products
 		SET membership_count = (
@@ -570,7 +696,6 @@ func (r *PostgresRepository) RemoveAsset(ctx context.Context, dataProductID stri
 		return ErrNotFound
 	}
 
-	// Update membership stats
 	_, err = tx.Exec(ctx, `
 		UPDATE data_products
 		SET membership_count = (
@@ -759,7 +884,6 @@ func (r *PostgresRepository) GetRule(ctx context.Context, ruleID string) (*Rule,
 func (r *PostgresRepository) ResolveAssets(ctx context.Context, dataProductID string, limit, offset int) (*ResolvedAssets, error) {
 	start := time.Now()
 
-	// Get counts by source
 	var manualCount, ruleCount int
 	err := r.db.QueryRow(ctx, `
 		SELECT
@@ -774,7 +898,6 @@ func (r *PostgresRepository) ResolveAssets(ctx context.Context, dataProductID st
 
 	total := manualCount + ruleCount
 
-	// Get paginated asset IDs
 	q := `
 		SELECT asset_id, source
 		FROM data_product_memberships
@@ -1014,7 +1137,7 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 	start := time.Now()
 
 	q := `
-		SELECT DISTINCT dp.id, dp.name, dp.description, dp.documentation, dp.metadata, dp.tags,
+		SELECT DISTINCT dp.id, dp.name, dp.description, dp.metadata, dp.tags,
 			   dp.created_by, dp.created_at, dp.updated_at
 		FROM data_products dp
 		JOIN data_product_memberships dpm ON dp.id = dpm.data_product_id
@@ -1034,7 +1157,7 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 		var metadataJSON []byte
 
 		if err := rows.Scan(
-			&dp.ID, &dp.Name, &dp.Description, &dp.Documentation, &metadataJSON,
+			&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
 			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), false)
