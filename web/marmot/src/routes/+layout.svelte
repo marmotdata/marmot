@@ -10,8 +10,9 @@
 	import Icon from '@iconify/svelte';
 	import Banner from '$lib/components/Banner.svelte';
 	import Footer from '$lib/components/Footer.svelte';
-	import GlobalSearch from '../components/GlobalSearch.svelte';
-	import Avatar from '../components/Avatar.svelte';
+	import GlobalSearch from '$components/query/GlobalSearch.svelte';
+	import Avatar from '$components/user/Avatar.svelte';
+	import ToastContainer from '$components/ui/ToastContainer.svelte';
 
 	interface BannerConfig {
 		enabled: boolean;
@@ -37,13 +38,10 @@
 	let searchInput: GlobalSearch;
 	let userProfile: UserProfile | null = null;
 
-	const appName = 'Marmot';
 	const isMac = browser && navigator.platform.toUpperCase().indexOf('MAC') >= 0;
 
-	// Get current search query from URL
 	$: currentSearchQuery = $page.url.searchParams.get('q') || '';
 
-	// Syntax highlighting for search query display
 	function getHighlightedText(text: string): { text: string; class: string }[] {
 		if (!text) return [];
 
@@ -129,7 +127,6 @@
 		if (browser && $auth) {
 			isAdmin = auth.hasRole('admin');
 
-			// Fetch user profile
 			try {
 				const profileRes = await fetchApi('/users/me');
 				if (profileRes.ok) {
@@ -449,3 +446,5 @@
 		</div>
 	</div>
 {/if}
+
+<ToastContainer />

@@ -4,12 +4,14 @@
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import { Users, Lock, ArrowLeft, Shield, Database } from 'lucide-svelte';
-	import OwnerSelector from '../../../components/OwnerSelector.svelte';
-	import Icon from '../../../components/Icon.svelte';
+	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import Icon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import AssetBlade from '../../../components/AssetBlade.svelte';
-	import Tags from '../../../components/Tags.svelte';
-	import MetadataView from '../../../components/MetadataView.svelte';
+	import AssetBlade from '$components/asset/AssetBlade.svelte';
+	import Tags from '$components/shared/Tags.svelte';
+	import MetadataView from '$components/shared/MetadataView.svelte';
+	import type { Team, TeamMember } from '$lib/teams/types';
+	import type { Asset } from '$lib/assets/types';
 
 	interface Owner {
 		id: string;
@@ -20,9 +22,9 @@
 		profile_picture?: string;
 	}
 
-	let team: any = null;
-	let members: any[] = [];
-	let assets: any[] = [];
+	let team: Team | null = null;
+	let members: TeamMember[] = [];
+	let assets: Asset[] = [];
 	let assetsTotal = 0;
 	let assetsLimit = 20;
 	let assetsOffset = 0;
@@ -30,8 +32,8 @@
 	let loadingAssets = false;
 	let error: string | null = null;
 	let removingMemberId: string | null = null;
-	let ownerSelectorRef: any;
-	let selectedAsset: any = null;
+	let ownerSelectorRef: OwnerSelector | null = null;
+	let selectedAsset: Asset | null = null;
 
 	$: teamId = $page.params.id;
 	$: currentUserId = auth.getCurrentUserId();
@@ -50,16 +52,15 @@
 	$: isTeamOwner = members.some((m) => m.user_id === currentUserId && m.role === 'owner');
 	$: canEditTeam = canManageTeams || isTeamOwner;
 
-	function getIconType(asset: any): string {
+	function getIconType(asset: Asset): string {
 		if (asset.providers && Array.isArray(asset.providers) && asset.providers.length === 1) {
 			return asset.providers[0];
 		}
 		return asset.type;
 	}
 
-	function getAssetUrl(asset: any): string {
+	function getAssetUrl(asset: Asset): string {
 		if (!asset.mrn) return '#';
-		// Parse MRN: mrn://type/service/full.qualified.name
 		const mrnParts = asset.mrn.replace('mrn://', '').split('/');
 		if (mrnParts.length < 3) return '#';
 		const type = mrnParts[0];
@@ -73,11 +74,10 @@
 			loading = true;
 			const response = await fetchApi(`/teams/${teamId}`);
 			team = await response.json();
-			// Initialize tags and metadata if they don't exist
 			if (!team.tags) team.tags = [];
 			if (!team.metadata) team.metadata = {};
-		} catch (err: any) {
-			error = err.message;
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'An error occurred';
 		} finally {
 			loading = false;
 		}
@@ -88,8 +88,8 @@
 			const response = await fetchApi(`/teams/${teamId}/members`);
 			const data = await response.json();
 			members = data.members;
-		} catch (err: any) {
-			error = err.message;
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'An error occurred';
 		}
 	}
 
@@ -103,7 +103,7 @@
 			const data = await response.json();
 			assets = data.assets || [];
 			assetsTotal = data.total || 0;
-		} catch (err: any) {
+		} catch (err) {
 			console.error('Failed to fetch team assets:', err);
 			assets = [];
 			assetsTotal = 0;
@@ -174,11 +174,9 @@
 		if (team.created_via_sso || newOwners.length === 0) return;
 
 		try {
-			// Find only the newly added members (ones not in current members list)
 			const currentMemberIds = new Set(members.map((m) => m.user_id));
 			const ownersToAdd = newOwners.filter((owner) => !currentMemberIds.has(owner.id));
 
-			// Add only the new members
 			for (const owner of ownersToAdd) {
 				const response = await fetchApi(`/teams/${teamId}/members`, {
 					method: 'POST',
@@ -222,7 +220,7 @@
 		}
 	}
 
-	function handleAssetClick(e: Event, asset: any) {
+	function handleAssetClick(e: Event, asset: Asset) {
 		e.preventDefault();
 		selectedAsset = asset;
 	}

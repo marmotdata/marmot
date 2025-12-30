@@ -4,25 +4,20 @@
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import type { DataProduct } from '$lib/dataproducts/types';
-	import ProductBlade from '../../components/ProductBlade.svelte';
+	import ProductBlade from '$components/product/ProductBlade.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import Button from '../../components/Button.svelte';
+	import Button from '$components/ui/Button.svelte';
 	import { auth } from '$lib/stores/auth';
 
-	// State management
 	const recentProducts: Writable<DataProduct[]> = writable([]);
 	const allProducts: Writable<DataProduct[]> = writable([]);
 	const totalProducts: Writable<number> = writable(0);
 	const isLoading: Writable<boolean> = writable(true);
 	const error: Writable<{ status: number; message: string } | null> = writable(null);
 
-	// Selected product for blade
 	let selectedProduct = $state<DataProduct | null>(null);
-
-	// Permission check
 	let canManageProducts = $derived(auth.hasPermission('assets', 'manage'));
 
-	// Fetch products on mount
 	$effect(() => {
 		if (browser) {
 			fetchProducts();
@@ -34,7 +29,6 @@
 		$error = null;
 
 		try {
-			// Fetch all products
 			const response = await fetchApi('/products/list?limit=100');
 
 			if (!response.ok) {
@@ -227,7 +221,9 @@
 		{:else}
 			<!-- Recently Updated Section -->
 			<section class="mb-8">
-				<h2 class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-4">
+				<h2
+					class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-4"
+				>
 					Recently Updated
 				</h2>
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -280,11 +276,14 @@
 			<!-- All Products List -->
 			<section>
 				<div class="flex items-center justify-between mb-4">
-					<h2 class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider">
+					<h2
+						class="text-sm font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider"
+					>
 						All Products
 					</h2>
 					<span class="text-xs text-gray-500 dark:text-gray-400">
-						{$totalProducts} {$totalProducts === 1 ? 'product' : 'products'}
+						{$totalProducts}
+						{$totalProducts === 1 ? 'product' : 'products'}
 					</span>
 				</div>
 				<div

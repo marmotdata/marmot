@@ -1,8 +1,7 @@
 <script lang="ts">
-	import Sidebar from '../../components/Sidebar.svelte';
-	import UserManagement from '../../components/UserManagement.svelte';
-	import TeamManagement from '../../components/TeamManagement.svelte';
-	// import RoleManagement from '../../components/RoleManagement.svelte';
+	import Sidebar from '$components/ui/Sidebar.svelte';
+	import UserManagement from '$components/user/UserManagement.svelte';
+	import TeamManagement from '$components/team/TeamManagement.svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
@@ -10,14 +9,11 @@
 	const tabs = [
 		{ id: 'users', label: 'Users' },
 		{ id: 'teams', label: 'Teams' }
-		// { id: 'roles', label: 'Roles & Permissions' }
 	];
 
-	// Get the current tab from the URL, or default to the first tab's ID
 	$: activeTab = $page.url.searchParams.get('tab') || tabs[0]?.id;
 
 	onMount(() => {
-		// If there's no 'tab' query parameter, set it to the default tab
 		if (!$page.url.searchParams.has('tab')) {
 			goto(`?tab=${tabs[0]?.id}`, { replaceState: true });
 		}
@@ -37,10 +33,6 @@
 				<div class="animate-slide-down">
 					<TeamManagement />
 				</div>
-				<!-- {:else if activeTab === 'roles'} -->
-				<!-- 	<div class="animate-slide-down"> -->
-				<!-- 		<RoleManagement /> -->
-				<!-- 	</div> -->
 			{/if}
 		</div>
 	</div>

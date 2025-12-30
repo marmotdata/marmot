@@ -83,9 +83,13 @@
 </script>
 
 {#if iconComponent}
-	<svelte:component this={iconComponent} class="{sizeClass} {iconClass}" />
+	<svelte:component this={iconComponent} class="{sizeClass} {iconClass}" aria-hidden="true" />
 {:else if iconUrl}
-	<img src={iconUrl} alt="" class="{sizeClass} object-contain" />
+	<img src={iconUrl} alt="" class="{sizeClass} object-contain" aria-hidden="true" />
 {:else}
-	<Icon icon="mdi:database" class="{sizeClass} text-gray-600 dark:text-gray-400" />
+	<Icon
+		icon="mdi:database"
+		class="{sizeClass} text-gray-600 dark:text-gray-400"
+		aria-hidden="true"
+	/>
 {/if}

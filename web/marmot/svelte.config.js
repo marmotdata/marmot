@@ -22,6 +22,9 @@ const config = {
 		}),
 		paths: {
 			base: ''
+		},
+		alias: {
+			$components: 'src/components'
 		}
 	}
 };

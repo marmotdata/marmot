@@ -1,4 +1,4 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate lint frontend-build actionlint
+.PHONY: swagger build run test clean dev release docker-build dev-deps generate lint frontend-build actionlint frontend-lint frontend-typecheck
 
 # Build variables
 BINARY_NAME=marmot
@@ -40,8 +40,14 @@ generate:
 	find web/docs/docs/Plugins -type d -empty -delete
 	go generate ./...
 
-lint:
+lint: frontend-lint
 	golangci-lint run --config=./.github/.golangci.yaml ./... -v
+
+frontend-lint:
+	cd web/marmot && pnpm run lint
+
+frontend-typecheck:
+	cd web/marmot && pnpm run check
 
 actionlint:
 	actionlint

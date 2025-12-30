@@ -240,7 +240,13 @@
 
 	// Only sync content when value changes externally (not from our own edits)
 	$effect(() => {
-		if (editor && !editor.isDestroyed && value !== undefined && value !== lastExternalValue && !isUpdating) {
+		if (
+			editor &&
+			!editor.isDestroyed &&
+			value !== undefined &&
+			value !== lastExternalValue &&
+			!isUpdating
+		) {
 			isUpdating = true;
 			lastExternalValue = value;
 			const html = value ? (marked(value) as string) : '';
@@ -423,80 +429,110 @@
 
 	// Reactive toolbar state - derived from selection changes only
 	// Check for tableCell since cursor is inside cells, not the table itself
-	let isInTable = $derived((() => {
-		void selectionVersion;
-		return (editor?.isActive('tableCell') || editor?.isActive('tableHeader')) ?? false;
-	})());
+	let isInTable = $derived(
+		(() => {
+			void selectionVersion;
+			return (editor?.isActive('tableCell') || editor?.isActive('tableHeader')) ?? false;
+		})()
+	);
 
-	let isBoldActive = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('bold') ?? false;
-	})());
+	let isBoldActive = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('bold') ?? false;
+		})()
+	);
 
-	let isItalicActive = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('italic') ?? false;
-	})());
+	let isItalicActive = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('italic') ?? false;
+		})()
+	);
 
-	let isCodeActive = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('code') ?? false;
-	})());
+	let isCodeActive = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('code') ?? false;
+		})()
+	);
 
-	let isHeading1Active = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('heading', { level: 1 }) ?? false;
-	})());
+	let isHeading1Active = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('heading', { level: 1 }) ?? false;
+		})()
+	);
 
-	let isHeading2Active = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('heading', { level: 2 }) ?? false;
-	})());
+	let isHeading2Active = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('heading', { level: 2 }) ?? false;
+		})()
+	);
 
-	let isHeading3Active = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('heading', { level: 3 }) ?? false;
-	})());
+	let isHeading3Active = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('heading', { level: 3 }) ?? false;
+		})()
+	);
 
-	let isBulletListActive = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('bulletList') ?? false;
-	})());
+	let isBulletListActive = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('bulletList') ?? false;
+		})()
+	);
 
-	let isOrderedListActive = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('orderedList') ?? false;
-	})());
+	let isOrderedListActive = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('orderedList') ?? false;
+		})()
+	);
 
-	let isBlockquoteActive = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('blockquote') ?? false;
-	})());
+	let isBlockquoteActive = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('blockquote') ?? false;
+		})()
+	);
 
-	let isCodeBlockActive = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('codeBlock') ?? false;
-	})());
+	let isCodeBlockActive = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('codeBlock') ?? false;
+		})()
+	);
 
-	let isLinkActive = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive('link') ?? false;
-	})());
+	let isLinkActive = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive('link') ?? false;
+		})()
+	);
 
-	let isAlignLeft = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive({ textAlign: 'left' }) ?? true;
-	})());
+	let isAlignLeft = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive({ textAlign: 'left' }) ?? true;
+		})()
+	);
 
-	let isAlignCenter = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive({ textAlign: 'center' }) ?? false;
-	})());
+	let isAlignCenter = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive({ textAlign: 'center' }) ?? false;
+		})()
+	);
 
-	let isAlignRight = $derived((() => {
-		void selectionVersion;
-		return editor?.isActive({ textAlign: 'right' }) ?? false;
-	})());
+	let isAlignRight = $derived(
+		(() => {
+			void selectionVersion;
+			return editor?.isActive({ textAlign: 'right' }) ?? false;
+		})()
+	);
 </script>
 
 <input
@@ -855,7 +891,9 @@
 
 	:global(.ProseMirror pre code) {
 		@apply bg-transparent p-0;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+		font-family:
+			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+			monospace;
 		font-size: 0.875rem;
 		display: block;
 		white-space: pre;

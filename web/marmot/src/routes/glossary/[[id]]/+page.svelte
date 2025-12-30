@@ -5,14 +5,14 @@
 	import { goto } from '$app/navigation';
 	import { fetchApi } from '$lib/api';
 	import type { GlossaryTerm, TermsListResponse, Owner } from '$lib/glossary/types';
-	import QueryInput from '../../../components/QueryInput.svelte';
-	import MarkdownRenderer from '../../../components/MarkdownRenderer.svelte';
-	import RichTextEditor from '../../../components/RichTextEditor.svelte';
-	import OwnerSelector from '../../../components/OwnerSelector.svelte';
-	import Button from '../../../components/Button.svelte';
+	import QueryInput from '$components/query/QueryInput.svelte';
+	import MarkdownRenderer from '$components/ui/MarkdownRenderer.svelte';
+	import RichTextEditor from '$components/editor/RichTextEditor.svelte';
+	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import Button from '$components/ui/Button.svelte';
 	import Icon from '@iconify/svelte';
-	import Tags from '../../../components/Tags.svelte';
-	import MetadataView from '../../../components/MetadataView.svelte';
+	import Tags from '$components/shared/Tags.svelte';
+	import MetadataView from '$components/shared/MetadataView.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	const terms: Writable<GlossaryTerm[]> = writable([]);
@@ -21,7 +21,7 @@
 	const error: Writable<string | null> = writable(null);
 
 	let searchQuery = $page.url.searchParams.get('q') || '';
-	let searchTimeout: NodeJS.Timeout;
+	let searchTimeout: ReturnType<typeof setTimeout>;
 
 	let selectedTerm: GlossaryTerm | null = null;
 	let showCreateModal = false;
@@ -45,19 +45,15 @@
 			searchQuery = query;
 		}
 
-		// Handle term selection from URL path
 		const termId = $page.params.id;
 		if (termId && (!selectedTerm || selectedTerm.id !== termId)) {
-			// Find the term in the loaded terms
 			const term = $terms.find((t) => t.id === termId);
 			if (term) {
 				selectedTerm = term;
 			} else if (termId) {
-				// Try to load the term directly if not in the list
 				loadTermById(termId);
 			}
 		} else if (!termId && !selectedTerm && $terms.length > 0) {
-			// Auto-select first term if no term is selected and no term in URL
 			selectTerm($terms[0]);
 		}
 	}
@@ -85,7 +81,6 @@
 			}
 
 			const data: TermsListResponse = await response.json();
-			// Initialize tags and metadata for all terms
 			const processedTerms = (data.terms || []).map((term) => ({
 				...term,
 				tags: term.tags || [],

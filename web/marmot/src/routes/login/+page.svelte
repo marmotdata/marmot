@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
-	import Button from '../../components/Button.svelte';
-	import OAuthButtons from '../../components/OAuthButtons.svelte';
+	import Button from '$components/ui/Button.svelte';
+	import OAuthButtons from '$components/auth/OAuthButtons.svelte';
 	import { onMount } from 'svelte';
 	import { auth } from '$lib/stores/auth';
 	import Icon from '@iconify/svelte';
@@ -85,7 +85,6 @@
 				if (data.redirect_uri) {
 					window.location.href = `${data.redirect_uri}?token=${data.access_token}`;
 				} else {
-					// Normal web login
 					auth.setToken(data.access_token);
 					const redirectTo = $page.url.searchParams.get('redirect') || '/';
 					goto(redirectTo);

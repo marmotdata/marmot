@@ -172,8 +172,8 @@ export function processAvroSchema(schema: any): Field[] {
 						indentLevel: 0
 					});
 
-					let currentIndent = 0;
-					let currentField = null;
+					const currentIndent = 0;
+					const currentField = null;
 
 					for (let i = 0; i < lines.length; i++) {
 						const line = lines[i];
@@ -223,7 +223,7 @@ export function processAvroSchema(schema: any): Field[] {
 			avroSchema = schema;
 		}
 
-		let fields: Field[] = [];
+		const fields: Field[] = [];
 
 		if (avroSchema.type === 'record' && avroSchema.fields) {
 			fields.push({

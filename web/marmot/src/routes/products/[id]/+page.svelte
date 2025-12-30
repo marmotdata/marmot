@@ -11,34 +11,30 @@
 		RuleInput
 	} from '$lib/dataproducts/types';
 	import type { Asset } from '$lib/assets/types';
-	import ProductBlade from '../../../components/ProductBlade.svelte';
-	import Button from '../../../components/Button.svelte';
+	import ProductBlade from '$components/product/ProductBlade.svelte';
+	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import MetadataView from '../../../components/MetadataView.svelte';
-	import AssetIcon from '../../../components/Icon.svelte';
-	import DocumentationSystem from '../../../components/docs/DocumentationSystem.svelte';
-	import Tabs, { type Tab } from '../../../components/Tabs.svelte';
-	import QueryBuilder from '../../../components/QueryBuilder.svelte';
-	import ConfirmModal from '../../../components/ConfirmModal.svelte';
+	import MetadataView from '$components/shared/MetadataView.svelte';
+	import AssetIcon from '$components/ui/Icon.svelte';
+	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
+	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
+	import QueryBuilder from '$components/query/QueryBuilder.svelte';
+	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	let productId = $derived($page.params.id);
 	let activeTab = $derived($page.url.searchParams.get('tab') || 'documentation');
 
-	// Data
 	let product = $state<DataProduct | null>(null);
 	let resolvedAssets = $state<ResolvedAssetsResponse | null>(null);
 	let assetDetails = $state<Map<string, Asset>>(new Map());
 
-	// Loading states
 	let isLoading = $state(true);
 	let loadError = $state<string | null>(null);
 	let isLoadingAssets = $state(false);
 
-	// Blade state
 	let bladeCollapsed = $state(false);
 
-	// Rule editing state
 	let showRuleForm = $state(false);
 	let editingRule = $state<Rule | null>(null);
 	let ruleForm = $state<RuleInput>({
@@ -54,21 +50,17 @@
 	let rulePreviewResults = $state<any[]>([]);
 	let rulePreviewTotal = $state(0);
 
-	// Confirm modal state
 	let showDeleteRuleModal = $state(false);
 	let ruleToDelete = $state<Rule | null>(null);
 
-	// Asset management state
 	let assetSearchQuery = $state('');
 	let assetSearchResults = $state<Asset[]>([]);
 	let isSearchingAssets = $state(false);
 	let isAddingAsset = $state(false);
 	let removingAssetId = $state<string | null>(null);
 
-	// Permissions
 	let canManage = $derived(auth.hasPermission('assets', 'manage'));
 
-	// Tabs configuration
 	const tabs: Tab[] = [
 		{ id: 'documentation', label: 'Documentation', icon: 'material-symbols:description' },
 		{ id: 'metadata', label: 'Metadata', icon: 'material-symbols:data-object' },

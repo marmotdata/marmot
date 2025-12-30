@@ -3,19 +3,17 @@
 	import { goto } from '$app/navigation';
 	import { fetchApi } from '$lib/api';
 	import type { Asset } from '$lib/assets/types';
-	import AssetBlade from '$lib/../components/AssetBlade.svelte';
-	import Button from '$lib/../components/Button.svelte';
-	import DocumentationSystem from '$lib/../components/docs/DocumentationSystem.svelte';
-	import AssetSources from '$lib/../components/AssetSources.svelte';
-	import MetadataView from '$lib/../components/MetadataView.svelte';
-	import Lineage from '$lib/../components/Lineage.svelte';
-	import SchemaSummary from '$lib/../components/SchemaSummary.svelte';
-	import SchemaEditor from '$lib/../components/SchemaEditor.svelte';
-	import AssetEnvironmentsView from '$lib/../components/AssetEnvironmentsView.svelte';
-	import RunHistory from '$lib/../components/RunHistory.svelte';
-	import CodeBlock from '$lib/../components/CodeBlock.svelte';
-	import Tabs, { type Tab } from '$lib/../components/Tabs.svelte';
-	import IconifyIcon from '@iconify/svelte';
+	import AssetBlade from '$components/asset/AssetBlade.svelte';
+	import Button from '$components/ui/Button.svelte';
+	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
+	import AssetSources from '$components/asset/AssetSources.svelte';
+	import MetadataView from '$components/shared/MetadataView.svelte';
+	import Lineage from '$components/lineage/Lineage.svelte';
+	import SchemaEditor from '$components/schema/SchemaEditor.svelte';
+	import AssetEnvironmentsView from '$components/asset/AssetEnvironmentsView.svelte';
+	import RunHistory from '$components/runs/RunHistory.svelte';
+	import CodeBlock from '$components/editor/CodeBlock.svelte';
+	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
 
 	let asset: Asset | null = $state(null);
 	let loading = $state(true);
@@ -146,11 +144,7 @@
 						</div>
 					</div>
 
-					<Tabs
-						tabs={visibleTabs}
-						bind:activeTab
-						onTabChange={setActiveTab}
-					/>
+					<Tabs tabs={visibleTabs} bind:activeTab onTabChange={setActiveTab} />
 				{/if}
 			</div>
 

@@ -511,7 +511,7 @@ export function processJsonSchema(schemaSection: any): Field[] {
 			schema = schemaSection;
 		}
 
-		let fields: Field[] = [];
+		const fields: Field[] = [];
 
 		if (schema.anyOf || schema.oneOf || schema.allOf || schema.not) {
 			fields.push(...processComposition('root', schema, schema, 0, ''));

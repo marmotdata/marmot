@@ -3,10 +3,9 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import Icon from '@iconify/svelte';
-	import { auth } from '$lib/stores/auth';
-	import GettingStarted from '../components/GettingStarted.svelte';
-	import AssetBlade from '../components/AssetBlade.svelte';
-	import IconComponent from '../components/Icon.svelte';
+	import GettingStarted from '$components/ui/GettingStarted.svelte';
+	import AssetBlade from '$components/asset/AssetBlade.svelte';
+	import IconComponent from '$components/ui/Icon.svelte';
 
 	interface QuickStat {
 		label: string;
@@ -60,7 +59,6 @@
 		providers: {},
 		tags: {}
 	});
-	let recentAssets = $state<RecentAsset[]>([]);
 	let popularAssets = $state<PopularAsset[]>([]);
 	let userAssets = $state<RecentAsset[]>([]);
 	let isLoading = $state(true);
@@ -180,12 +178,10 @@
 	}
 
 	let displayName = $derived.by(() => {
-		// Try to get first name from name field
 		if (userProfile?.name) {
 			const firstName = userProfile.name.split(' ')[0];
 			return capitalizeFirstLetter(firstName);
 		}
-		// Fallback to display_name or username
 		return capitalizeFirstLetter(userProfile?.display_name || userProfile?.username || 'there');
 	});
 
@@ -201,15 +197,13 @@
 				summary = await summaryRes.json();
 			}
 			if (recentRes.ok) {
-				const recentData = await recentRes.json();
-				recentAssets = recentData.assets || [];
+				await recentRes.json();
 			}
 			if (userAssetsRes.ok) {
 				const userData = await userAssetsRes.json();
 				userAssets = userData.assets || [];
 			}
 
-			// Fetch popular assets from metrics
 			try {
 				const now = new Date();
 				const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
@@ -220,18 +214,17 @@
 					const data = await popularRes.json();
 					popularAssets = data.assets || [];
 				}
-			} catch (err) {
-				// Silently fail - metrics are optional
+			} catch {
+				// Metrics are optional
 			}
 
-			// Try to fetch user profile
 			try {
 				const profileRes = await fetchApi('/users/me');
 				if (profileRes.ok) {
 					userProfile = await profileRes.json();
 				}
-			} catch (err) {
-				// Silently fail - will fall back to auth store
+			} catch {
+				// Profile fetch is optional
 			}
 		} catch (err) {
 			console.error('Error fetching data:', err);

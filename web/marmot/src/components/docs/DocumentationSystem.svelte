@@ -3,8 +3,7 @@
 	import Icon from '@iconify/svelte';
 	import DocPageTree from './DocPageTree.svelte';
 	import DocEditor from './DocEditor.svelte';
-	import Button from '../Button.svelte';
-	import ConfirmModal from '../ConfirmModal.svelte';
+	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import type { Page, PageTree, EntityType } from '$lib/docs/types';
@@ -70,7 +69,9 @@
 		loadError = null;
 
 		try {
-			const response = await fetchApi(`/docs/entity/${entityType}/${encodeURIComponent(entityId)}/pages`);
+			const response = await fetchApi(
+				`/docs/entity/${entityType}/${encodeURIComponent(entityId)}/pages`
+			);
 			if (!response.ok) {
 				throw new Error('Failed to load documentation');
 			}
@@ -116,14 +117,17 @@
 
 	async function createPage(parentId: string | null) {
 		try {
-			const response = await fetchApi(`/docs/entity/${entityType}/${encodeURIComponent(entityId)}/pages`, {
-				method: 'POST',
-				body: JSON.stringify({
-					parent_id: parentId,
-					title: 'Untitled',
-					content: ''
-				})
-			});
+			const response = await fetchApi(
+				`/docs/entity/${entityType}/${encodeURIComponent(entityId)}/pages`,
+				{
+					method: 'POST',
+					body: JSON.stringify({
+						parent_id: parentId,
+						title: 'Untitled',
+						content: ''
+					})
+				}
+			);
 
 			if (!response.ok) {
 				throw new Error('Failed to create page');
@@ -217,20 +221,11 @@
 		}
 	}
 
-
-	function formatBytes(bytes: number): string {
-		if (bytes === 0) return '0 B';
-		const k = 1024;
-		const sizes = ['B', 'KB', 'MB', 'GB'];
-		const i = Math.floor(Math.log(bytes) / Math.log(k));
-		return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
-	}
-
 	function renderMarkdown(content: string): string {
 		// Configure marked with syntax highlighting
 		const renderer = new marked.Renderer();
 
-		renderer.code = function({ text, lang }: { text: string; lang?: string }) {
+		renderer.code = function ({ text, lang }: { text: string; lang?: string }) {
 			const language = lang && lowlight.registered(lang) ? lang : 'plaintext';
 			try {
 				const highlighted = lowlight.highlight(language, text);
@@ -244,18 +239,21 @@
 
 		return marked(content, { renderer }) as string;
 	}
-
 </script>
 
 <div class="flex h-full">
 	<!-- Sidebar: Page Tree (minimal style) -->
 	<div
-		class="flex-shrink-0 flex flex-col transition-all duration-200 {sidebarCollapsed ? 'w-10' : 'w-56'}"
+		class="flex-shrink-0 flex flex-col transition-all duration-200 {sidebarCollapsed
+			? 'w-10'
+			: 'w-56'}"
 	>
 		<!-- Collapse toggle -->
 		<div class="flex items-center justify-between p-2">
 			{#if !sidebarCollapsed}
-				<span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">Pages</span>
+				<span class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+					>Pages</span
+				>
 			{/if}
 			<button
 				type="button"
@@ -296,7 +294,6 @@
 					/>
 				{/if}
 			</div>
-
 		{/if}
 	</div>
 
@@ -334,18 +331,20 @@
 								<div class="relative">
 									<button
 										type="button"
-										onclick={() => showEmojiPicker = !showEmojiPicker}
+										onclick={() => (showEmojiPicker = !showEmojiPicker)}
 										class="text-4xl hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg p-1 transition-colors"
 										title="Change emoji"
 									>
 										{editedEmoji || '📄'}
 									</button>
 									{#if showEmojiPicker}
-										<div class="absolute top-full left-0 mt-1 z-50 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700">
-											<emoji-picker
-												bind:this={emojiPickerElement}
-											></emoji-picker>
-											<div class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 py-2 flex justify-between rounded-b-lg">
+										<div
+											class="absolute top-full left-0 mt-1 z-50 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700"
+										>
+											<emoji-picker bind:this={emojiPickerElement}></emoji-picker>
+											<div
+												class="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-3 py-2 flex justify-between rounded-b-lg"
+											>
 												<button
 													type="button"
 													onclick={handleRemoveEmoji}
@@ -355,7 +354,7 @@
 												</button>
 												<button
 													type="button"
-													onclick={() => showEmojiPicker = false}
+													onclick={() => (showEmojiPicker = false)}
 													class="text-xs text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
 												>
 													Close
@@ -373,7 +372,9 @@
 							</div>
 						{:else}
 							<!-- H1 with emoji and title combined -->
-							<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3">
+							<h1
+								class="text-3xl font-bold text-gray-900 dark:text-gray-100 flex items-center gap-3"
+							>
 								{#if selectedPage.emoji}
 									<span>{selectedPage.emoji}</span>
 								{/if}
@@ -477,7 +478,6 @@
 	}}
 />
 
-
 <style>
 	/* Emoji picker dark mode support */
 	:global(.dark emoji-picker) {
@@ -501,7 +501,9 @@
 
 	:global(.doc-content pre code) {
 		@apply bg-transparent p-0;
-		font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+		font-family:
+			ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+			monospace;
 		font-size: 0.875rem;
 		display: block;
 		white-space: pre;

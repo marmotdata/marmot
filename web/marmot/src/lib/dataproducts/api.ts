@@ -92,9 +92,7 @@ export async function getDataProductAssets(
 	offset: number = 0,
 	limit: number = 50
 ): Promise<AssetsResponse> {
-	const response = await fetchApi(
-		`/products/assets/${id}?offset=${offset}&limit=${limit}`
-	);
+	const response = await fetchApi(`/products/assets/${id}?offset=${offset}&limit=${limit}`);
 	if (!response.ok) {
 		throw new Error('Failed to get data product assets');
 	}

@@ -6,14 +6,14 @@
 	import { fetchApi } from '$lib/api';
 	import { websocketService, type JobRunEvent } from '$lib/websocket';
 	import { auth } from '$lib/stores/auth';
-	import Button from '../../components/Button.svelte';
+	import { toasts } from '$lib/stores/toast';
+	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import IngestionRunCard from '../../components/IngestionRunCard.svelte';
-	import IngestionRunModal from '../../components/IngestionRunModal.svelte';
-	import GettingStarted from '../../components/GettingStarted.svelte';
-	import ScheduleCard from '../../components/ScheduleCard.svelte';
-	import ConfirmModal from '../../components/ConfirmModal.svelte';
-	import Toast from '../../components/Toast.svelte';
+	import IngestionRunCard from '$components/runs/IngestionRunCard.svelte';
+	import IngestionRunModal from '$components/runs/IngestionRunModal.svelte';
+	import GettingStarted from '$components/ui/GettingStarted.svelte';
+	import ScheduleCard from '$components/runs/ScheduleCard.svelte';
+	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
 
 	let canManageIngestion = $derived(auth.hasPermission('ingestion', 'manage'));
 
@@ -90,7 +90,6 @@
 	let showStatusDropdown = $state(false);
 	let activeTab = $state<Tab>('pipelines');
 
-	// Pipelines state
 	let pipelines = $state<Pipeline[]>([]);
 	let pipelinesLoading = $state(false);
 	let pipelinesError = $state<string | null>(null);
@@ -98,7 +97,6 @@
 	let pipelinesPage = $state(1);
 	let pipelinesPageSize = $state(10);
 
-	// Confirmation modal state
 	let showConfirmModal = $state(false);
 	let confirmModalTitle = $state('');
 	let confirmModalMessage = $state('');
@@ -106,12 +104,6 @@
 	let confirmModalCheckboxChecked = $state(false);
 	let confirmModalAction = $state<((checkboxValue?: boolean) => void) | null>(null);
 
-	// Toast state
-	let showToast = $state(false);
-	let toastMessage = $state('');
-	let toastVariant = $state<'success' | 'error' | 'info'>('info');
-
-	// Running pipelines tracking
 	let runningPipelines = $state<Set<string>>(new Set());
 
 	let totalPages = $derived(Math.ceil(total / pageSize));
@@ -168,11 +160,9 @@
 		const url = new URL($page.url);
 		if (tab === 'pipelines') {
 			url.searchParams.set('tab', 'pipelines');
-			// Fetch pipelines when switching to pipelines tab
 			fetchPipelines();
 		} else {
 			url.searchParams.set('tab', 'history');
-			// Fetch runs when switching to history tab
 			fetchRuns();
 		}
 		goto(url.toString(), { replaceState: true, noScroll: true });
@@ -331,9 +321,7 @@
 			pollPipelineStatus(pipeline.id);
 		} catch (err) {
 			const errorMsg = err instanceof Error ? err.message : 'Failed to trigger pipeline';
-			toastMessage = errorMsg;
-			toastVariant = 'error';
-			showToast = true;
+			toasts.error(errorMsg);
 		}
 	}
 
@@ -368,13 +356,10 @@
 
 					// Show completion toast
 					if (latestRun.status === 'succeeded') {
-						toastMessage = `Pipeline completed successfully!`;
-						toastVariant = 'success';
+						toasts.success('Pipeline completed successfully!');
 					} else if (latestRun.status === 'failed') {
-						toastMessage = `Pipeline failed: ${latestRun.error_message || 'Unknown error'}`;
-						toastVariant = 'error';
+						toasts.error(`Pipeline failed: ${latestRun.error_message || 'Unknown error'}`);
 					}
-					showToast = true;
 
 					// Refresh pipelines list to update last_run_at
 					fetchPipelines();
@@ -424,19 +409,16 @@
 					throw new Error(data.error || 'Failed to delete pipeline');
 				}
 
-				toastMessage = teardown
+				const successMsg = teardown
 					? `Pipeline "${pipeline.name}" and all its assets deleted successfully`
 					: `Pipeline "${pipeline.name}" deleted successfully`;
-				toastVariant = 'success';
-				showToast = true;
+				toasts.success(successMsg);
 
 				// Refresh the list
 				fetchPipelines();
 			} catch (err) {
 				const errorMsg = err instanceof Error ? err.message : 'Failed to delete pipeline';
-				toastMessage = errorMsg;
-				toastVariant = 'error';
-				showToast = true;
+				toasts.error(errorMsg);
 			}
 		};
 		showConfirmModal = true;
@@ -1018,5 +1000,3 @@
 	bind:checkboxChecked={confirmModalCheckboxChecked}
 	onConfirm={(checkboxValue) => confirmModalAction?.(checkboxValue)}
 />
-
-<Toast bind:show={showToast} message={toastMessage} variant={toastVariant} />

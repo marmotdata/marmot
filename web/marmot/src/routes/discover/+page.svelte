@@ -6,14 +6,13 @@
 	import { browser } from '$app/environment';
 	import type { Asset } from '$lib/assets/types';
 	import type { DataProduct } from '$lib/dataproducts/types';
-	import QueryInput from '../../components/QueryInput.svelte';
-	import AssetBlade from '../../components/AssetBlade.svelte';
-	import ProductBlade from '../../components/ProductBlade.svelte';
-	import Icon from '../../components/Icon.svelte';
+	import AssetBlade from '$components/asset/AssetBlade.svelte';
+	import ProductBlade from '$components/product/ProductBlade.svelte';
+	import Icon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import Button from '../../components/Button.svelte';
-	import QueryBuilder from '../../components/QueryBuilder.svelte';
-	import CreateAssetModal from '../../components/CreateAssetModal.svelte';
+	import Button from '$components/ui/Button.svelte';
+	import QueryBuilder from '$components/query/QueryBuilder.svelte';
+	import CreateAssetModal from '$components/shared/CreateAssetModal.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	interface SearchResult {
@@ -47,9 +46,6 @@
 		offset: number;
 	}
 
-	let placeholder = 'Search everything...';
-
-	// State management
 	const results: Writable<SearchResult[]> = writable([]);
 	const totalResults: Writable<number> = writable(0);
 	const facets: Writable<Facets> = writable({
@@ -61,39 +57,20 @@
 	const isLoading: Writable<boolean> = writable(true);
 	const error: Writable<{ status: number; message: string } | null> = writable(null);
 
-	// Pagination
 	let currentPage = $state(1);
 	const itemsPerPage = 20;
-
-	// Selected asset for blade
 	let selectedAsset = $state<Asset | null>(null);
-
-	// Selected product for blade
 	let selectedProduct = $state<DataProduct | null>(null);
-
-	// Search query from URL
 	let searchQuery = $state('');
 	let searchTimeout: ReturnType<typeof setTimeout>;
-
-	// Kind filters (Asset, Glossary, Team, Data Product)
 	let selectedKinds = $state<string[]>(['asset', 'glossary', 'team', 'data_product']);
-
-	// Asset-specific filters
 	let selectedTypes = $state<string[]>([]);
 	let selectedProviders = $state<string[]>([]);
 	let selectedTags = $state<string[]>([]);
-
-	// Create asset modal state
 	let showCreateModal = $state(false);
-
-	// Permission check
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
-
-	// Collapsible sections
 	let filtersExpanded = $state(true);
 	let queryBuilderExpanded = $state(false);
-
-	// Track previous URL to detect actual changes (use null to allow first load)
 	let previousUrl = $state<string | null>(null);
 
 	// Initialize filters from URL
@@ -332,7 +309,8 @@
 			asset: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
 			glossary: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
 			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-			data_product: 'bg-earthy-terracotta-100 text-earthy-terracotta-800 dark:bg-earthy-terracotta-900 dark:text-earthy-terracotta-300'
+			data_product:
+				'bg-earthy-terracotta-100 text-earthy-terracotta-800 dark:bg-earthy-terracotta-900 dark:text-earthy-terracotta-300'
 		};
 		return colorMap[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
 	}
@@ -910,7 +888,9 @@
 													>
 														{result.name}
 													</h3>
-													<div class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+													<div
+														class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400"
+													>
 														{#if result.metadata?.asset_count !== undefined}
 															<span class="flex items-center gap-1">
 																<IconifyIcon icon="material-symbols:database" class="w-3 h-3" />

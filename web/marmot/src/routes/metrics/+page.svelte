@@ -2,12 +2,12 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { fetchApi } from '$lib/api';
-	import Button from '../../components/Button.svelte';
+	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import TopMetricsTable from '../../components/MetricsTable.svelte';
-	import MetricCard from '../../components/MetricCard.svelte';
-	import PieChart from '../../components/MetricPieChart.svelte';
-	import BarChart from '../../components/MetricBarChart.svelte';
+	import TopMetricsTable from '$components/metrics/MetricsTable.svelte';
+	import MetricCard from '$components/metrics/MetricCard.svelte';
+	import PieChart from '$components/metrics/MetricPieChart.svelte';
+	import BarChart from '$components/metrics/MetricBarChart.svelte';
 
 	interface TimeRange {
 		label: string;
@@ -125,8 +125,6 @@
 	}
 
 	function handleAssetClick(item: any) {
-		// Metrics items don't have MRN, so use the individual fields
-		// Note: This might have the same issue if asset_name doesn't include schema
 		if (item.asset_type && item.asset_name && item.asset_provider) {
 			goto(
 				`/discover/${encodeURIComponent(item.asset_type)}/${encodeURIComponent(item.asset_provider)}/${encodeURIComponent(item.asset_name)}`

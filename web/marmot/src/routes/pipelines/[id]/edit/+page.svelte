@@ -3,9 +3,9 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { fetchApi } from '$lib/api';
-	import Button from '../../../../components/Button.svelte';
+	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import Icon from '../../../../components/Icon.svelte';
+	import Icon from '$components/ui/Icon.svelte';
 	import cronstrue from 'cronstrue';
 	import { Cron } from 'croner';
 
@@ -103,7 +103,6 @@
 		})
 	);
 
-	// Show top 5 plugins by default, or all if searching
 	let displayedPlugins = $derived(
 		pluginSearchQuery ? filteredPlugins : filteredPlugins.slice(0, 5)
 	);
@@ -142,18 +141,15 @@
 	function fillMissingDefaults(fields: ConfigField[], configObj: Record<string, any>) {
 		for (const field of fields) {
 			if (field.type === 'object' && field.is_array) {
-				// Ensure array of objects exists as array
 				if (!configObj[field.name] || !Array.isArray(configObj[field.name])) {
 					configObj[field.name] = [];
 				}
 			} else if (field.type === 'object' && field.fields) {
-				// Ensure nested object exists
 				if (!configObj[field.name]) {
 					configObj[field.name] = {};
 				}
 				fillMissingDefaults(field.fields, configObj[field.name]);
 			} else if (field.type === 'multiselect') {
-				// Ensure multiselect exists as array
 				if (!configObj[field.name] || !Array.isArray(configObj[field.name])) {
 					configObj[field.name] = [];
 				}
@@ -174,14 +170,12 @@
 			if (!response.ok) throw new Error('Failed to fetch pipeline');
 			const pipeline = await response.json();
 
-			// Populate form with existing data
 			name = pipeline.name;
 			selectedPluginId = pipeline.plugin_id;
 			cronExpression = pipeline.cron_expression || '';
 			disableSchedule = !pipeline.enabled && !!pipeline.cron_expression;
 			config = pipeline.config || {};
 
-			// Fill in missing default values
 			const plugin = plugins.find((p) => p.id === pipeline.plugin_id);
 			if (plugin && plugin.config_spec) {
 				fillMissingDefaults(plugin.config_spec, config);

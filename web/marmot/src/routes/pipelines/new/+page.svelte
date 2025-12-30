@@ -2,11 +2,11 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { fetchApi } from '$lib/api';
-	import Button from '../../../components/Button.svelte';
+	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import Icon from '../../../components/Icon.svelte';
-	import Stepper from '../../../components/Stepper.svelte';
-	import Step from '../../../components/Step.svelte';
+	import Icon from '$components/ui/Icon.svelte';
+	import Stepper from '$components/ui/Stepper.svelte';
+	import Step from '$components/ui/Step.svelte';
 	import cronstrue from 'cronstrue';
 	import { Cron } from 'croner';
 
@@ -49,6 +49,12 @@
 	let error = $state<string | null>(null);
 	let pluginSearchQuery = $state('');
 	let currentStep = $state(1);
+	const steps = [
+		{ title: 'Basic Info' },
+		{ title: 'Choose Plugin' },
+		{ title: 'Configure' },
+		{ title: 'Schedule' }
+	];
 	let validating = $state(false);
 	let fieldErrors = $state<Record<string, string>>({});
 	let expandedSections = $state<Record<string, boolean>>({});
@@ -118,7 +124,6 @@
 		})
 	);
 
-	// Show all plugins
 	let displayedPlugins = $derived(filteredPlugins);
 
 	async function fetchPlugins() {
@@ -141,8 +146,6 @@
 			saving = true;
 			error = null;
 
-			// If no schedule, pipeline is manual-only and always enabled
-			// If schedule is provided, enabled depends on disableSchedule checkbox
 			const enabled = cronExpression.trim() === '' ? true : !disableSchedule;
 
 			const body = {
@@ -164,7 +167,6 @@
 				throw new Error(data.error || 'Failed to create pipeline');
 			}
 
-			// Navigate back to runs page with pipelines tab
 			goto('/runs?tab=pipelines');
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to create pipeline';
@@ -176,14 +178,11 @@
 	function initializeConfigDefaults(fields: ConfigField[], configObj: Record<string, any> = {}) {
 		for (const field of fields) {
 			if (field.type === 'object' && field.is_array) {
-				// Initialize array of objects as empty array
 				configObj[field.name] = [];
 			} else if (field.type === 'object' && field.fields) {
-				// Initialize nested object
 				configObj[field.name] = {};
 				initializeConfigDefaults(field.fields, configObj[field.name]);
 			} else if (field.type === 'multiselect') {
-				// Initialize multiselect as empty array
 				configObj[field.name] = [];
 			} else if (field.default !== undefined && field.default !== null) {
 				configObj[field.name] = field.default;
