@@ -97,7 +97,8 @@ func (p *Auth0Provider) HandleCallback(ctx context.Context, code string) (*user.
 	}
 
 	usr, err := p.userService.GetUserByProviderID(ctx, "auth0", providerUserID)
-	if err == nil {
+	switch {
+	case err == nil:
 		log.Debug().Str("user_id", usr.ID).Msg("found existing user")
 		profilePicture, _ := userInfo["picture"].(string)
 		if profilePicture != "" && usr.ProfilePicture != profilePicture {
@@ -108,7 +109,7 @@ func (p *Auth0Provider) HandleCallback(ctx context.Context, code string) (*user.
 				log.Warn().Err(err).Str("user_id", usr.ID).Msg("failed to update profile picture")
 			}
 		}
-	} else if err == user.ErrUserNotFound {
+	case err == user.ErrUserNotFound:
 		email, ok := userInfo["email"].(string)
 		if !ok || email == "" {
 			return nil, fmt.Errorf("email not provided by Auth0")
@@ -141,7 +142,7 @@ func (p *Auth0Provider) HandleCallback(ctx context.Context, code string) (*user.
 			return nil, fmt.Errorf("failed to create user: %w", err)
 		}
 		log.Debug().Str("user_id", usr.ID).Str("name", name).Str("email", email).Msg("created new user")
-	} else {
+	default:
 		return nil, fmt.Errorf("failed to get user by provider ID: %w", err)
 	}
 

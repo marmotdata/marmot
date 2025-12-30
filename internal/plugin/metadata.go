@@ -75,12 +75,13 @@ func MapToMetadata(source interface{}) map[string]interface{} {
 			value = SensitiveMask
 		}
 
-		if field.Type.Kind() == reflect.Struct && !sensitive {
+		switch {
+		case field.Type.Kind() == reflect.Struct && !sensitive:
 			nestedMetadata := MapToMetadata(value)
 			for k, v := range nestedMetadata {
 				setNestedValue(metadata, metadataTag+"."+k, v)
 			}
-		} else if field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct && !sensitive {
+		case field.Type.Kind() == reflect.Slice && field.Type.Elem().Kind() == reflect.Struct && !sensitive:
 			sliceValue := v.Field(i)
 			for j := 0; j < sliceValue.Len(); j++ {
 				nestedMetadata := MapToMetadata(sliceValue.Index(j).Interface())
@@ -88,7 +89,7 @@ func MapToMetadata(source interface{}) map[string]interface{} {
 					setNestedValue(metadata, metadataTag+"."+k, v)
 				}
 			}
-		} else {
+		default:
 			setNestedValue(metadata, metadataTag, value)
 		}
 	}

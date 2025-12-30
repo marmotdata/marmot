@@ -139,13 +139,14 @@ func (p *Parser) Parse(queryStr string) (*Query, error) {
 			}
 			filter.OrigQuery = queryStr
 
-			if notOperatorNext {
+			switch {
+			case notOperatorNext:
 				query.Bool.MustNot = append(query.Bool.MustNot, filter)
 				notOperatorNext = false
-			} else if nextIsOrClause {
+			case nextIsOrClause:
 				query.Bool.Should = append(query.Bool.Should, filter)
 				nextIsOrClause = false
-			} else {
+			default:
 				query.Bool.Must = append(query.Bool.Must, filter)
 			}
 

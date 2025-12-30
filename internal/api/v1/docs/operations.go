@@ -363,7 +363,7 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write(image.Data)
+	_, _ = w.Write(image.Data)
 }
 
 func (h *Handler) deleteImage(w http.ResponseWriter, r *http.Request) {

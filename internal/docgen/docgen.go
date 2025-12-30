@@ -323,8 +323,8 @@ func processFile(pluginDoc *PluginDoc, file *ast.File, registry *TypeRegistry) {
 
 	// Process all declarations
 	ast.Inspect(file, func(n ast.Node) bool {
-		switch d := n.(type) {
-		case *ast.GenDecl:
+		d, ok := n.(*ast.GenDecl)
+		if ok {
 			if d.Tok == token.TYPE {
 				for _, spec := range d.Specs {
 					if ts, ok := spec.(*ast.TypeSpec); ok {

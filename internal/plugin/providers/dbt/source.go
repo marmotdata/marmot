@@ -455,16 +455,17 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 	var queryLanguage *string
 	lang := "sql"
 
-	if node.CompiledCode != "" {
+	switch {
+	case node.CompiledCode != "":
 		query = &node.CompiledCode
 		queryLanguage = &lang
-	} else if node.CompiledSQL != "" {
+	case node.CompiledSQL != "":
 		query = &node.CompiledSQL
 		queryLanguage = &lang
-	} else if node.RawCode != "" {
+	case node.RawCode != "":
 		query = &node.RawCode
 		queryLanguage = &lang
-	} else if node.RawSQL != "" {
+	case node.RawSQL != "":
 		query = &node.RawSQL
 		queryLanguage = &lang
 	}
@@ -694,9 +695,10 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []lineage.
 		sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
 
 		var sourceMRN string
-		if resourceType == "source" || resourceType == "seed" {
+		switch {
+		case resourceType == "source" || resourceType == "seed":
 			sourceMRN = mrn.New("Table", provider, sourceFQN)
-		} else if resourceType == "model" {
+		case resourceType == "model":
 			depMaterialization := s.getMaterialization(depNode)
 			if depMaterialization == "" {
 				depMaterialization = adapter.DefaultMaterialization()
@@ -706,7 +708,7 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []lineage.
 				depType = "Table"
 			}
 			sourceMRN = mrn.New(depType, provider, sourceFQN)
-		} else {
+		default:
 			sourceMRN = mrn.New("Table", provider, sourceFQN)
 		}
 

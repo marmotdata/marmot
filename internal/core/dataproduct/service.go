@@ -347,7 +347,8 @@ func (s *service) GetDataProductsForAsset(ctx context.Context, assetID string) (
 }
 
 func (s *service) validateRule(input RuleInput) error {
-	if input.RuleType == RuleTypeQuery {
+	switch input.RuleType {
+	case RuleTypeQuery:
 		if input.QueryExpression == nil || *input.QueryExpression == "" {
 			return fmt.Errorf("%w: query_expression required for query rule type", ErrInvalidInput)
 		}
@@ -356,7 +357,7 @@ func (s *service) validateRule(input RuleInput) error {
 		if _, err := parser.Parse(*input.QueryExpression); err != nil {
 			return fmt.Errorf("%w: invalid query syntax: %v", ErrInvalidInput, err)
 		}
-	} else if input.RuleType == RuleTypeMetadataMatch {
+	case RuleTypeMetadataMatch:
 		if input.MetadataField == nil || *input.MetadataField == "" {
 			return fmt.Errorf("%w: metadata_field required for metadata_match rule type", ErrInvalidInput)
 		}
@@ -372,7 +373,7 @@ func (s *service) validateRule(input RuleInput) error {
 				return fmt.Errorf("%w: invalid regex pattern: %v", ErrInvalidInput, err)
 			}
 		}
-	} else {
+	default:
 		return fmt.Errorf("%w: invalid rule_type", ErrInvalidInput)
 	}
 

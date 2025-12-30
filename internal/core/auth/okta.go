@@ -99,7 +99,8 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 	}
 
 	usr, err := p.userService.GetUserByProviderID(ctx, "okta", providerUserID)
-	if err == nil {
+	switch {
+	case err == nil:
 		log.Debug().Str("user_id", usr.ID).Msg("found existing user")
 		profilePicture, _ := userInfo["picture"].(string)
 		if profilePicture != "" && usr.ProfilePicture != profilePicture {
@@ -110,7 +111,7 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 				log.Warn().Err(err).Str("user_id", usr.ID).Msg("failed to update profile picture")
 			}
 		}
-	} else if err == user.ErrUserNotFound {
+	case err == user.ErrUserNotFound:
 		email, ok := userInfo["email"].(string)
 		if !ok || email == "" {
 			return nil, fmt.Errorf("email not provided by Okta")
@@ -143,7 +144,7 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 			return nil, fmt.Errorf("failed to create user: %w", err)
 		}
 		log.Debug().Str("user_id", usr.ID).Str("name", name).Str("email", email).Msg("created new user")
-	} else {
+	default:
 		return nil, fmt.Errorf("failed to get user by provider ID: %w", err)
 	}
 

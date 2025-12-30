@@ -199,15 +199,16 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		}
 
 		// Use case-insensitive comparisons for type, kind, provider, and name fields
-		if filter.FieldType == FieldProvider {
+		switch {
+		case filter.FieldType == FieldProvider:
 			// For provider array, use case-insensitive ANY comparison
 			condition = fmt.Sprintf("EXISTS (SELECT 1 FROM unnest(%s) AS elem WHERE elem ILIKE $%d)", columnRef, paramCount)
 			params = append(params, filter.Value)
-		} else if filter.FieldType == FieldAssetType || filter.FieldType == FieldKind || filter.FieldType == FieldName {
+		case filter.FieldType == FieldAssetType || filter.FieldType == FieldKind || filter.FieldType == FieldName:
 			// For type, kind, and name, use case-insensitive ILIKE
 			condition = fmt.Sprintf("%s ILIKE $%d", columnRef, paramCount)
 			params = append(params, filter.Value)
-		} else {
+		default:
 			// For metadata fields, use exact match
 			condition = fmt.Sprintf("%s = $%d", columnRef, paramCount)
 			params = append(params, filter.Value)
@@ -224,15 +225,16 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 		}
 
 	case OpNotEquals:
-		if filter.FieldType == FieldProvider {
+		switch {
+		case filter.FieldType == FieldProvider:
 			// For provider array, use case-insensitive NOT comparison
 			condition = fmt.Sprintf("NOT EXISTS (SELECT 1 FROM unnest(%s) AS elem WHERE elem ILIKE $%d)", columnRef, paramCount)
 			params = append(params, filter.Value)
-		} else if filter.FieldType == FieldAssetType || filter.FieldType == FieldKind || filter.FieldType == FieldName {
+		case filter.FieldType == FieldAssetType || filter.FieldType == FieldKind || filter.FieldType == FieldName:
 			// For type, kind, and name, use case-insensitive NOT ILIKE
 			condition = fmt.Sprintf("%s NOT ILIKE $%d", columnRef, paramCount)
 			params = append(params, filter.Value)
-		} else {
+		default:
 			// For metadata fields, use exact !=
 			condition = fmt.Sprintf("%s != $%d", columnRef, paramCount)
 			params = append(params, filter.Value)

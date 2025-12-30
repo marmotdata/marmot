@@ -130,11 +130,12 @@ func (s *Service) GetMetrics(ctx context.Context, opts QueryOptions) ([]Aggregat
 	duration := opts.TimeRange.End.Sub(opts.TimeRange.Start)
 
 	if duration > 24*time.Hour && opts.BucketSize == 0 {
-		if duration > 30*24*time.Hour {
+		switch {
+		case duration > 30*24*time.Hour:
 			opts.BucketSize = 24 * time.Hour
-		} else if duration > 7*24*time.Hour {
+		case duration > 7*24*time.Hour:
 			opts.BucketSize = time.Hour
-		} else {
+		default:
 			opts.BucketSize = 5 * time.Minute
 		}
 

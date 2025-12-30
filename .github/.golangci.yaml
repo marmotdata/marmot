@@ -1,5 +1,7 @@
 version: "2"
 linters:
+  enable:
+    - gocritic
   settings:
     errcheck:
       exclude-functions:

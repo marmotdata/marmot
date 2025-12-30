@@ -217,12 +217,13 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 	formatted += "\n\n" + FormatSearchSummary(total, len(assets), availableFilters)
 
 	var nextActions map[string]string
-	if len(assets) == 0 {
+	switch {
+	case len(assets) == 0:
 		nextActions = map[string]string{
 			"Broaden search":  "Remove filters or try a different query",
 			"List all assets": `{"limit": 50}`,
 		}
-	} else if total > args.Offset+len(assets) {
+	case total > args.Offset+len(assets):
 		nextActions = map[string]string{
 			"Get next page":     fmt.Sprintf(`{"offset": %d, "limit": %d}`, args.Offset+args.Limit, args.Limit),
 			"Get asset details": `{"id": "asset-id"}`,
@@ -233,7 +234,7 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 		if len(args.Types) > 0 {
 			nextActions["Get next page"] = fmt.Sprintf(`{"types": %s, "offset": %d, "limit": %d}`, formatJSON(args.Types), args.Offset+args.Limit, args.Limit)
 		}
-	} else {
+	default:
 		nextActions = map[string]string{
 			"Get full details": `{"id": "asset-id"}`,
 			"Find who owns":    `Use find_ownership tool`,
@@ -616,12 +617,13 @@ func (tc *ToolContext) searchTerms(ctx context.Context, args LookupTermInput) (*
 	}
 
 	nextActions := map[string]string{}
-	if len(result.Terms) == 0 {
+	switch {
+	case len(result.Terms) == 0:
 		nextActions["No results"] = "Try a different query or browse all terms"
-	} else if len(result.Terms) == args.Limit {
+	case len(result.Terms) == args.Limit:
 		nextActions["Get more results"] = fmt.Sprintf(`{"query": "%s", "offset": %d, "limit": %d}`, args.Query, args.Offset+args.Limit, args.Limit)
 		nextActions["Get full details"] = `Use lookup_term with {"term_id": "term-id"} for complete information`
-	} else {
+	default:
 		nextActions["Get full details"] = `Use lookup_term with {"term_id": "term-id"} for any term`
 	}
 

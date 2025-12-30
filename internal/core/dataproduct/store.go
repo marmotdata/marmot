@@ -949,11 +949,12 @@ func (r *PostgresRepository) ExecuteRule(ctx context.Context, rule *Rule) ([]str
 	var assetIDs []string
 	var err error
 
-	if rule.RuleType == RuleTypeQuery && rule.QueryExpression != nil {
+	switch {
+	case rule.RuleType == RuleTypeQuery && rule.QueryExpression != nil:
 		assetIDs, err = r.executeQueryRule(ctx, *rule.QueryExpression)
-	} else if rule.RuleType == RuleTypeMetadataMatch {
+	case rule.RuleType == RuleTypeMetadataMatch:
 		assetIDs, err = r.executeMetadataMatchRule(ctx, rule)
-	} else {
+	default:
 		return nil, fmt.Errorf("unsupported rule type: %s", rule.RuleType)
 	}
 
