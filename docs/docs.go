@@ -2265,6 +2265,414 @@ const docTemplate = `{
                 }
             }
         },
+        "/glossary/": {
+            "post": {
+                "description": "Create a new glossary term with name, definition, and optional metadata",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Create glossary term",
+                "parameters": [
+                    {
+                        "description": "Glossary term to create",
+                        "name": "term",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_glossary.CreateTermRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/glossary.GlossaryTerm"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/glossary/ancestors/{id}": {
+            "get": {
+                "description": "Retrieve all ancestor terms of a glossary term (parent chain)",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Get ancestor terms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/glossary/children/{id}": {
+            "get": {
+                "description": "Retrieve all child terms of a glossary term",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Get child terms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Parent Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/glossary/list": {
+            "get": {
+                "description": "Retrieve a paginated list of all glossary terms",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "List glossary terms",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Maximum number of terms to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of terms to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/glossary.ListResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/glossary/search": {
+            "get": {
+                "description": "Search for glossary terms by query string and filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Search glossary terms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by parent term ID",
+                        "name": "parent_term_id",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 20,
+                        "description": "Maximum number of terms to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of terms to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/glossary.ListResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/glossary/{id}": {
+            "get": {
+                "description": "Retrieve a glossary term by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Get glossary term",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/glossary.GlossaryTerm"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update an existing glossary term by its ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Update glossary term",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Glossary term update data",
+                        "name": "term",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_glossary.UpdateTermRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/glossary.GlossaryTerm"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a glossary term by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Delete glossary term",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/lineage/assets/{id}": {
             "get": {
                 "description": "Get upstream and downstream lineage for a specific asset",
@@ -4116,6 +4524,90 @@ const docTemplate = `{
                 }
             }
         },
+        "glossary.GlossaryTerm": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "definition": {
+                    "type": "string"
+                },
+                "deleted_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/glossary.Owner"
+                    }
+                },
+                "parent_term_id": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "glossary.ListResult": {
+            "type": "object",
+            "properties": {
+                "terms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/glossary.GlossaryTerm"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "glossary.Owner": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"user\" or \"team\"",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "Only for user owners",
+                    "type": "string"
+                }
+            }
+        },
         "lineage.Dataset": {
             "type": "object",
             "properties": {
@@ -5178,6 +5670,83 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "user_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_glossary.CreateTermRequest": {
+            "type": "object",
+            "required": [
+                "definition",
+                "name"
+            ],
+            "properties": {
+                "definition": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_glossary.OwnerRequest"
+                    }
+                },
+                "parent_term_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_glossary.OwnerRequest": {
+            "type": "object",
+            "required": [
+                "id",
+                "type"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "team"
+                    ]
+                }
+            }
+        },
+        "v1_glossary.UpdateTermRequest": {
+            "type": "object",
+            "properties": {
+                "definition": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_glossary.OwnerRequest"
+                    }
+                },
+                "parent_term_id": {
                     "type": "string"
                 }
             }

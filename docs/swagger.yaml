@@ -267,6 +267,62 @@ definitions:
       message:
         type: string
     type: object
+  glossary.GlossaryTerm:
+    properties:
+      created_at:
+        type: string
+      definition:
+        type: string
+      deleted_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/glossary.Owner'
+        type: array
+      parent_term_id:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  glossary.ListResult:
+    properties:
+      terms:
+        items:
+          $ref: '#/definitions/glossary.GlossaryTerm'
+        type: array
+      total:
+        type: integer
+    type: object
+  glossary.Owner:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      profile_picture:
+        type: string
+      type:
+        description: '"user" or "team"'
+        type: string
+      username:
+        description: Only for user owners
+        type: string
+    type: object
   lineage.Dataset:
     properties:
       facets:
@@ -976,6 +1032,58 @@ definitions:
       type:
         type: string
       user_description:
+        type: string
+    type: object
+  v1_glossary.CreateTermRequest:
+    properties:
+      definition:
+        type: string
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/v1_glossary.OwnerRequest'
+        type: array
+      parent_term_id:
+        type: string
+    required:
+    - definition
+    - name
+    type: object
+  v1_glossary.OwnerRequest:
+    properties:
+      id:
+        type: string
+      type:
+        enum:
+        - user
+        - team
+        type: string
+    required:
+    - id
+    - type
+    type: object
+  v1_glossary.UpdateTermRequest:
+    properties:
+      definition:
+        type: string
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/v1_glossary.OwnerRequest'
+        type: array
+      parent_term_id:
         type: string
     type: object
   v1_lineage.BatchLineageResult:
@@ -2915,6 +3023,278 @@ paths:
       summary: Initiate OAuth login
       tags:
       - auth
+  /glossary/:
+    post:
+      consumes:
+      - application/json
+      description: Create a new glossary term with name, definition, and optional
+        metadata
+      parameters:
+      - description: Glossary term to create
+        in: body
+        name: term
+        required: true
+        schema:
+          $ref: '#/definitions/v1_glossary.CreateTermRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/glossary.GlossaryTerm'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Create glossary term
+      tags:
+      - glossary
+  /glossary/{id}:
+    delete:
+      description: Delete a glossary term by its ID
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Delete glossary term
+      tags:
+      - glossary
+    get:
+      description: Retrieve a glossary term by its ID
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/glossary.GlossaryTerm'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get glossary term
+      tags:
+      - glossary
+    put:
+      consumes:
+      - application/json
+      description: Update an existing glossary term by its ID
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Glossary term update data
+        in: body
+        name: term
+        required: true
+        schema:
+          $ref: '#/definitions/v1_glossary.UpdateTermRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/glossary.GlossaryTerm'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Update glossary term
+      tags:
+      - glossary
+  /glossary/ancestors/{id}:
+    get:
+      description: Retrieve all ancestor terms of a glossary term (parent chain)
+      parameters:
+      - description: Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get ancestor terms
+      tags:
+      - glossary
+  /glossary/children/{id}:
+    get:
+      description: Retrieve all child terms of a glossary term
+      parameters:
+      - description: Parent Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get child terms
+      tags:
+      - glossary
+  /glossary/list:
+    get:
+      description: Retrieve a paginated list of all glossary terms
+      parameters:
+      - default: 20
+        description: Maximum number of terms to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of terms to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/glossary.ListResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List glossary terms
+      tags:
+      - glossary
+  /glossary/search:
+    get:
+      description: Search for glossary terms by query string and filters
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Filter by parent term ID
+        in: query
+        name: parent_term_id
+        type: string
+      - default: 20
+        description: Maximum number of terms to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of terms to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/glossary.ListResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Search glossary terms
+      tags:
+      - glossary
   /lineage/assets/{id}:
     get:
       consumes:
