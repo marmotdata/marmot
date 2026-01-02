@@ -50,6 +50,18 @@ export interface DataProduct {
 	asset_count?: number;
 	manual_asset_count?: number;
 	rule_asset_count?: number;
+	icon_url?: string;
+}
+
+export interface ProductImageMeta {
+	id: string;
+	data_product_id: string;
+	purpose: 'icon' | 'header';
+	filename: string;
+	content_type: string;
+	size_bytes: number;
+	url: string;
+	created_at: string;
 }
 
 export interface CreateDataProductInput {

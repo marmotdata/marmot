@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { Users, User } from 'lucide-svelte';
 	import Avatar from '$components/user/Avatar.svelte';
+	import { createKeyboardNavigationState } from '$lib/keyboard';
 
 	export let selectedOwners: Owner[] | null = [];
 	export let onChange: (owners: Owner[]) => void = () => {};
@@ -17,6 +18,9 @@
 
 	$: safeSelectedOwners = selectedOwners || [];
 	$: searchPlaceholder = userOnly ? 'Search users...' : placeholder;
+	$: availableResults = searchResults.filter(
+		(o) => !safeSelectedOwners.some((so) => so.id === o.id && so.type === o.type)
+	);
 
 	export interface Owner {
 		id: string;
@@ -67,25 +71,15 @@
 		}, 300);
 	}
 
-	function handleKeyDown(e: KeyboardEvent) {
-		const availableResults = searchResults.filter(
-			(o) => !safeSelectedOwners.some((so) => so.id === o.id && so.type === o.type)
-		);
-
-		if (e.key === 'ArrowDown') {
-			e.preventDefault();
-			focusedIndex = Math.min(focusedIndex + 1, availableResults.length - 1);
-		} else if (e.key === 'ArrowUp') {
-			e.preventDefault();
-			focusedIndex = Math.max(focusedIndex - 1, -1);
-		} else if (e.key === 'Enter' && focusedIndex >= 0 && focusedIndex < availableResults.length) {
-			e.preventDefault();
-			addOwner(availableResults[focusedIndex]);
-		} else if (e.key === 'Escape') {
-			e.preventDefault();
-			closeDropdown();
+	const { handleKeydown: handleKeyDown } = createKeyboardNavigationState(
+		() => availableResults,
+		() => focusedIndex,
+		(i) => (focusedIndex = i),
+		{
+			onSelect: addOwner,
+			onEscape: closeDropdown
 		}
-	}
+	);
 
 	async function performSearch() {
 		isLoading = true;

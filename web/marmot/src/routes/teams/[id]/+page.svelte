@@ -308,7 +308,7 @@
 						</h3>
 					</div>
 					<Tags
-						bind:tags={team.tags}
+						tags={team.tags ?? []}
 						endpoint="/teams"
 						id={team.id}
 						canEdit={canEditTeam && !team.created_via_sso}

@@ -3,9 +3,27 @@
 	import { fetchApi } from '$lib/api';
 	import ThemeToggle from '$components/ui/ThemeToggle.svelte';
 
+	interface Permission {
+		name: string;
+		description: string;
+		action: string;
+		resource_type: string;
+	}
+
+	interface Role {
+		name: string;
+		permissions: Permission[];
+	}
+
+	interface User {
+		name: string;
+		email: string;
+		roles: Role[];
+	}
+
 	let loading = true;
 	let error: string | null = null;
-	let user = {
+	let user: User = {
 		name: '',
 		email: '',
 		roles: []
@@ -24,7 +42,7 @@
 			user = await response.json();
 		} catch (err) {
 			console.error('Profile fetch error:', err);
-			error = err.message || 'Failed to load profile';
+			error = err instanceof Error ? err.message : 'Failed to load profile';
 		} finally {
 			loading = false;
 		}

@@ -130,8 +130,9 @@
 		g.setDefaultEdgeLabel(() => ({}));
 
 		nodeArray.forEach((node) => {
+			const nodeName = (node.data as { name?: string })?.name || '';
 			const dimensions = {
-				width: node.type === 'cycleReturn' ? 120 : Math.max(180, node.data.name.length * 10 + 60),
+				width: node.type === 'cycleReturn' ? 120 : Math.max(180, nodeName.length * 10 + 60),
 				height: node.type === 'cycleReturn' ? 60 : 80
 			};
 			g.setNode(node.id, dimensions);

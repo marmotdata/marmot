@@ -14,6 +14,7 @@
 	import QueryBuilder from '$components/query/QueryBuilder.svelte';
 	import CreateAssetModal from '$components/shared/CreateAssetModal.svelte';
 	import { auth } from '$lib/stores/auth';
+	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 
 	interface SearchResult {
 		type: 'asset' | 'glossary' | 'team' | 'data_product';
@@ -874,12 +875,20 @@
 											<div class="flex items-center gap-2 flex-1 min-w-0">
 												<div class="flex-shrink-0">
 													<div
-														class="w-8 h-8 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center"
+														class="w-8 h-8 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center overflow-hidden"
 													>
-														<IconifyIcon
-															icon="mdi:package-variant-closed"
-															class="w-4 h-4 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-														/>
+														{#if result.metadata?.icon_url}
+															<AuthenticatedImage
+																src={result.metadata.icon_url}
+																alt="{result.name} icon"
+																class="w-full h-full object-cover"
+															/>
+														{:else}
+															<IconifyIcon
+																icon="mdi:package-variant-closed"
+																class="w-4 h-4 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+															/>
+														{/if}
 													</div>
 												</div>
 												<div class="min-w-0 flex-1">

@@ -544,23 +544,25 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 			} else {
 				baseQuery := `SELECT
 					'data_product' as type,
-					id::text,
-					name,
-					description,
+					dp.id::text,
+					dp.name,
+					dp.description,
 					jsonb_build_object(
-						'id', id,
-						'name', name,
-						'description', description,
-						'metadata', metadata,
-						'tags', tags,
-						'created_by', created_by,
-						'created_at', created_at,
-						'updated_at', updated_at
+						'id', dp.id,
+						'name', dp.name,
+						'description', dp.description,
+						'icon_url', CASE WHEN pi.id IS NOT NULL THEN '/api/v1/products/images/' || dp.id::text || '/icon' ELSE NULL END,
+						'metadata', dp.metadata,
+						'tags', dp.tags,
+						'created_by', dp.created_by,
+						'created_at', dp.created_at,
+						'updated_at', dp.updated_at
 					) as metadata,
-					'/products/' || id::text as url,
+					'/products/' || dp.id::text as url,
 					1.0 as rank,
-					updated_at
-				FROM data_products`
+					dp.updated_at
+				FROM data_products dp
+				LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'`
 
 				builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
 				if err == nil {
@@ -586,8 +588,8 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 		if !hasStructuredQuery {
 			var rankExpr, whereClause string
 			if searchQuery != "" {
-				rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-				whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1)"
+				rankExpr = "ts_rank_cd(dp.search_text, websearch_to_tsquery('english', $1), 32)"
+				whereClause = "WHERE dp.search_text @@ websearch_to_tsquery('english', $1)"
 			} else {
 				rankExpr = "0"
 				whereClause = ""
@@ -596,23 +598,25 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 			dataProductQuery = fmt.Sprintf(`
 				SELECT
 					'data_product' as type,
-					id::text,
-					name,
-					description,
+					dp.id::text,
+					dp.name,
+					dp.description,
 					jsonb_build_object(
-						'id', id,
-						'name', name,
-						'description', description,
-						'metadata', metadata,
-						'tags', tags,
-						'created_by', created_by,
-						'created_at', created_at,
-						'updated_at', updated_at
+						'id', dp.id,
+						'name', dp.name,
+						'description', dp.description,
+						'icon_url', CASE WHEN pi.id IS NOT NULL THEN '/api/v1/products/images/' || dp.id::text || '/icon' ELSE NULL END,
+						'metadata', dp.metadata,
+						'tags', dp.tags,
+						'created_by', dp.created_by,
+						'created_at', dp.created_at,
+						'updated_at', dp.updated_at
 					) as metadata,
-					'/products/' || id::text as url,
+					'/products/' || dp.id::text as url,
 					%s as rank,
-					updated_at
-				FROM data_products
+					dp.updated_at
+				FROM data_products dp
+				LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
 				%s
 			`, rankExpr, whereClause)
 		}
@@ -990,28 +994,30 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 		unions = append(unions, `
 			SELECT
 				'data_product' as type,
-				id::text,
-				name,
-				description,
+				dp.id::text,
+				dp.name,
+				dp.description,
 				jsonb_build_object(
-					'id', id,
-					'name', name,
-					'description', description,
-					'metadata', metadata,
-					'tags', tags,
-					'created_by', created_by,
-					'created_at', created_at,
-					'updated_at', updated_at
+					'id', dp.id,
+					'name', dp.name,
+					'description', dp.description,
+					'icon_url', CASE WHEN pi.id IS NOT NULL THEN '/api/v1/products/images/' || dp.id::text || '/icon' ELSE NULL END,
+					'metadata', dp.metadata,
+					'tags', dp.tags,
+					'created_by', dp.created_by,
+					'created_at', dp.created_at,
+					'updated_at', dp.updated_at
 				) as metadata,
-				'/products/' || id::text as url,
+				'/products/' || dp.id::text as url,
 				CASE
-					WHEN LOWER(name) = $1 THEN 100
-					WHEN LOWER(name) LIKE $2 THEN 50
+					WHEN LOWER(dp.name) = $1 THEN 100
+					WHEN LOWER(dp.name) LIKE $2 THEN 50
 					ELSE 25
 				END as rank,
-				updated_at
-			FROM data_products
-			WHERE (LOWER(name) = $1 OR LOWER(name) LIKE $2)
+				dp.updated_at
+			FROM data_products dp
+			LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
+			WHERE (LOWER(dp.name) = $1 OR LOWER(dp.name) LIKE $2)
 		`)
 	}
 
@@ -1239,24 +1245,26 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 		unions = append(unions, `
 			SELECT
 				'data_product' as type,
-				id::text,
-				name,
-				description,
+				dp.id::text,
+				dp.name,
+				dp.description,
 				jsonb_build_object(
-					'id', id,
-					'name', name,
-					'description', description,
-					'metadata', metadata,
-					'tags', tags,
-					'created_by', created_by,
-					'created_at', created_at,
-					'updated_at', updated_at
+					'id', dp.id,
+					'name', dp.name,
+					'description', dp.description,
+					'icon_url', CASE WHEN pi.id IS NOT NULL THEN '/api/v1/products/images/' || dp.id::text || '/icon' ELSE NULL END,
+					'metadata', dp.metadata,
+					'tags', dp.tags,
+					'created_by', dp.created_by,
+					'created_at', dp.created_at,
+					'updated_at', dp.updated_at
 				) as metadata,
-				'/products/' || id::text as url,
-				(word_similarity($1, name) * 30) as rank,
-				updated_at
-			FROM data_products
-			WHERE word_similarity($1, name) > 0.3
+				'/products/' || dp.id::text as url,
+				(word_similarity($1, dp.name) * 30) as rank,
+				dp.updated_at
+			FROM data_products dp
+			LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
+			WHERE word_similarity($1, dp.name) > 0.3
 		`)
 	}
 

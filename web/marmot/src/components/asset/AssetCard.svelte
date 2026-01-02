@@ -27,7 +27,7 @@
 >
 	<div class="flex items-start space-x-4">
 		<div class="flex-shrink-0">
-			<Icon name={iconName} iconSize={compact ? 'sm' : 'lg'} showLabel={false} />
+			<Icon name={iconName} size={compact ? 'sm' : 'lg'} showLabel={false} />
 		</div>
 		<div class="flex-1 min-w-0">
 			<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 truncate">

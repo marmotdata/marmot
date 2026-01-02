@@ -32,7 +32,7 @@
 					href="/discover?{filterType}={key}"
 					class="w-full bg-earthy-brown-50 dark:bg-gray-900 shadow-md dark:shadow-gray-700 rounded-lg p-4 flex flex-col items-center cursor-pointer transition-all duration-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 				>
-					<Icon name={key} iconSize="lg" />
+					<Icon name={key} size="lg" />
 					<p class="text-gray-600 dark:text-gray-400 mt-2">
 						{getCount(value)}
 						{getCount(value) === 1 ? 'asset' : 'assets'}

@@ -228,6 +228,33 @@ definitions:
           type: string
         type: array
     type: object
+  dataproduct.ImagePurpose:
+    enum:
+    - icon
+    - header
+    type: string
+    x-enum-varnames:
+    - ImagePurposeIcon
+    - ImagePurposeHeader
+  dataproduct.ProductImageMeta:
+    properties:
+      content_type:
+        type: string
+      created_at:
+        type: string
+      data_product_id:
+        type: string
+      filename:
+        type: string
+      id:
+        type: string
+      purpose:
+        $ref: '#/definitions/dataproduct.ImagePurpose'
+      size_bytes:
+        type: integer
+      url:
+        type: string
+    type: object
   github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse:
     properties:
       error:
@@ -639,8 +666,6 @@ definitions:
     - 1000000000
     - 60000000000
     - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
     - 1
     - 1000
     - 1000000
@@ -673,8 +698,6 @@ definitions:
     - Second
     - Minute
     - Hour
-    - minDuration
-    - maxDuration
     - Nanosecond
     - Microsecond
     - Millisecond
@@ -3143,6 +3166,144 @@ paths:
       summary: Destroy pipeline
       tags:
       - pipelines
+  /products/images/{id}:
+    get:
+      description: List all images for a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List product images
+      tags:
+      - products
+  /products/images/{id}/{purpose}:
+    delete:
+      description: Delete an icon or header image for a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image purpose (icon or header)
+        in: path
+        name: purpose
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Delete product image
+      tags:
+      - products
+    get:
+      description: Get an icon or header image for a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image purpose (icon or header)
+        in: path
+        name: purpose
+        required: true
+        type: string
+      produces:
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: file
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get product image
+      tags:
+      - products
+    post:
+      consumes:
+      - multipart/form-data
+      description: Upload an icon or header image for a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image purpose (icon or header)
+        in: path
+        name: purpose
+        required: true
+        type: string
+      - description: Image file
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.ProductImageMeta'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Upload product image
+      tags:
+      - products
   /runs:
     get:
       description: Get paginated list of runs with filtering

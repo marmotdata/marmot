@@ -65,6 +65,8 @@ type DataProduct struct {
 	AssetCount       int `json:"asset_count,omitempty"`
 	ManualAssetCount int `json:"manual_asset_count,omitempty"`
 	RuleAssetCount   int `json:"rule_asset_count,omitempty"`
+
+	IconURL *string `json:"icon_url,omitempty"`
 }
 
 type Owner struct {
@@ -166,6 +168,13 @@ type Repository interface {
 	PreviewRule(ctx context.Context, rule *RuleInput, limit int) (*RulePreview, error)
 
 	GetDataProductsForAsset(ctx context.Context, assetID string) ([]*DataProduct, error)
+
+	UploadProductImage(ctx context.Context, dataProductID string, purpose ImagePurpose, input UploadImageInput, createdBy *string) (*ProductImage, error)
+	GetProductImage(ctx context.Context, imageID string) (*ProductImage, error)
+	GetProductImageByPurpose(ctx context.Context, dataProductID string, purpose ImagePurpose) (*ProductImage, error)
+	GetProductImageMeta(ctx context.Context, dataProductID string, purpose ImagePurpose) (*ProductImageMeta, error)
+	DeleteProductImage(ctx context.Context, dataProductID string, purpose ImagePurpose) error
+	ListProductImages(ctx context.Context, dataProductID string) ([]*ProductImageMeta, error)
 }
 
 type PostgresRepository struct {
@@ -388,6 +397,10 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*DataProduct, 
 	dp.ManualAssetCount, dp.RuleAssetCount, _ = r.getAssetCounts(ctx, id)
 	dp.AssetCount = dp.ManualAssetCount + dp.RuleAssetCount
 
+	if iconMeta, err := r.GetProductImageMeta(ctx, id, ImagePurposeIcon); err == nil {
+		dp.IconURL = &iconMeta.URL
+	}
+
 	r.recorder.RecordDBQuery(ctx, "dataproduct_get", duration, true)
 	return &dp, nil
 }
@@ -521,6 +534,10 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 		dp.ManualAssetCount, dp.RuleAssetCount, _ = r.getAssetCounts(ctx, dp.ID)
 		dp.AssetCount = dp.ManualAssetCount + dp.RuleAssetCount
 
+		if iconMeta, err := r.GetProductImageMeta(ctx, dp.ID, ImagePurposeIcon); err == nil {
+			dp.IconURL = &iconMeta.URL
+		}
+
 		products = append(products, &dp)
 	}
 
@@ -615,6 +632,10 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 
 		dp.ManualAssetCount, dp.RuleAssetCount, _ = r.getAssetCounts(ctx, dp.ID)
 		dp.AssetCount = dp.ManualAssetCount + dp.RuleAssetCount
+
+		if iconMeta, err := r.GetProductImageMeta(ctx, dp.ID, ImagePurposeIcon); err == nil {
+			dp.IconURL = &iconMeta.URL
+		}
 
 		products = append(products, &dp)
 	}
@@ -1186,4 +1207,232 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 
 	r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), true)
 	return products, nil
+}
+
+type ImagePurpose string
+
+const (
+	ImagePurposeIcon   ImagePurpose = "icon"
+	ImagePurposeHeader ImagePurpose = "header"
+)
+
+const (
+	MaxImageSizeBytes = 5 * 1024 * 1024 // 5MB per image
+)
+
+var ValidImageTypes = map[string]bool{
+	"image/jpeg": true,
+	"image/png":  true,
+	"image/gif":  true,
+	"image/webp": true,
+}
+
+var ErrImageNotFound = errors.New("image not found")
+var ErrImageTooLarge = errors.New("image exceeds maximum size")
+var ErrInvalidImageType = errors.New("invalid image type")
+
+type ProductImage struct {
+	ID            string       `json:"id"`
+	DataProductID string       `json:"data_product_id"`
+	Purpose       ImagePurpose `json:"purpose"`
+	Filename      string       `json:"filename"`
+	ContentType   string       `json:"content_type"`
+	SizeBytes     int          `json:"size_bytes"`
+	Data          []byte       `json:"-"`
+	CreatedAt     time.Time    `json:"created_at"`
+	CreatedBy     *string      `json:"created_by,omitempty"`
+}
+
+type ProductImageMeta struct {
+	ID            string       `json:"id"`
+	DataProductID string       `json:"data_product_id"`
+	Purpose       ImagePurpose `json:"purpose"`
+	Filename      string       `json:"filename"`
+	ContentType   string       `json:"content_type"`
+	SizeBytes     int          `json:"size_bytes"`
+	URL           string       `json:"url"`
+	CreatedAt     time.Time    `json:"created_at"`
+}
+
+type UploadImageInput struct {
+	Filename    string
+	ContentType string
+	Data        []byte
+}
+
+func (r *PostgresRepository) UploadProductImage(ctx context.Context, dataProductID string, purpose ImagePurpose, input UploadImageInput, createdBy *string) (*ProductImage, error) {
+	start := time.Now()
+
+	query := `
+		INSERT INTO product_images (data_product_id, purpose, filename, content_type, size_bytes, data, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		ON CONFLICT (data_product_id, purpose)
+		DO UPDATE SET filename = EXCLUDED.filename, content_type = EXCLUDED.content_type,
+		              size_bytes = EXCLUDED.size_bytes, data = EXCLUDED.data,
+		              created_at = NOW(), created_by = EXCLUDED.created_by
+		RETURNING id, data_product_id, purpose, filename, content_type, size_bytes, created_at, created_by`
+
+	var image ProductImage
+	err := r.db.QueryRow(ctx, query,
+		dataProductID, purpose, input.Filename, input.ContentType, len(input.Data), input.Data, createdBy,
+	).Scan(
+		&image.ID, &image.DataProductID, &image.Purpose,
+		&image.Filename, &image.ContentType, &image.SizeBytes, &image.CreatedAt, &image.CreatedBy,
+	)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_upload_image", duration, false)
+		return nil, fmt.Errorf("uploading image: %w", err)
+	}
+
+	image.Data = input.Data
+	r.recorder.RecordDBQuery(ctx, "dataproduct_upload_image", duration, true)
+	return &image, nil
+}
+
+func (r *PostgresRepository) GetProductImage(ctx context.Context, imageID string) (*ProductImage, error) {
+	start := time.Now()
+
+	query := `
+		SELECT id, data_product_id, purpose, filename, content_type, size_bytes, data, created_at, created_by
+		FROM product_images
+		WHERE id = $1`
+
+	var image ProductImage
+	err := r.db.QueryRow(ctx, query, imageID).Scan(
+		&image.ID, &image.DataProductID, &image.Purpose,
+		&image.Filename, &image.ContentType, &image.SizeBytes, &image.Data, &image.CreatedAt, &image.CreatedBy,
+	)
+
+	duration := time.Since(start)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_image", duration, true)
+		return nil, ErrImageNotFound
+	}
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_image", duration, false)
+		return nil, fmt.Errorf("getting image: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_get_image", duration, true)
+	return &image, nil
+}
+
+func (r *PostgresRepository) GetProductImageByPurpose(ctx context.Context, dataProductID string, purpose ImagePurpose) (*ProductImage, error) {
+	start := time.Now()
+
+	query := `
+		SELECT id, data_product_id, purpose, filename, content_type, size_bytes, data, created_at, created_by
+		FROM product_images
+		WHERE data_product_id = $1 AND purpose = $2`
+
+	var image ProductImage
+	err := r.db.QueryRow(ctx, query, dataProductID, purpose).Scan(
+		&image.ID, &image.DataProductID, &image.Purpose,
+		&image.Filename, &image.ContentType, &image.SizeBytes, &image.Data, &image.CreatedAt, &image.CreatedBy,
+	)
+
+	duration := time.Since(start)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_image_by_purpose", duration, true)
+		return nil, ErrImageNotFound
+	}
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_image_by_purpose", duration, false)
+		return nil, fmt.Errorf("getting image by purpose: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_get_image_by_purpose", duration, true)
+	return &image, nil
+}
+
+func (r *PostgresRepository) GetProductImageMeta(ctx context.Context, dataProductID string, purpose ImagePurpose) (*ProductImageMeta, error) {
+	start := time.Now()
+
+	query := `
+		SELECT id, data_product_id, purpose, filename, content_type, size_bytes, created_at
+		FROM product_images
+		WHERE data_product_id = $1 AND purpose = $2`
+
+	var meta ProductImageMeta
+	err := r.db.QueryRow(ctx, query, dataProductID, purpose).Scan(
+		&meta.ID, &meta.DataProductID, &meta.Purpose,
+		&meta.Filename, &meta.ContentType, &meta.SizeBytes, &meta.CreatedAt,
+	)
+
+	duration := time.Since(start)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_image_meta", duration, true)
+		return nil, ErrImageNotFound
+	}
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get_image_meta", duration, false)
+		return nil, fmt.Errorf("getting image metadata: %w", err)
+	}
+
+	meta.URL = fmt.Sprintf("/api/v1/products/images/%s/%s", meta.DataProductID, meta.Purpose)
+	r.recorder.RecordDBQuery(ctx, "dataproduct_get_image_meta", duration, true)
+	return &meta, nil
+}
+
+func (r *PostgresRepository) DeleteProductImage(ctx context.Context, dataProductID string, purpose ImagePurpose) error {
+	start := time.Now()
+
+	result, err := r.db.Exec(ctx,
+		"DELETE FROM product_images WHERE data_product_id = $1 AND purpose = $2",
+		dataProductID, purpose)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_delete_image", duration, false)
+		return fmt.Errorf("deleting image: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_delete_image", duration, true)
+		return ErrImageNotFound
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_delete_image", duration, true)
+	return nil
+}
+
+func (r *PostgresRepository) ListProductImages(ctx context.Context, dataProductID string) ([]*ProductImageMeta, error) {
+	start := time.Now()
+
+	query := `
+		SELECT id, data_product_id, purpose, filename, content_type, size_bytes, created_at
+		FROM product_images
+		WHERE data_product_id = $1
+		ORDER BY purpose, created_at`
+
+	rows, err := r.db.Query(ctx, query, dataProductID)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_list_images", time.Since(start), false)
+		return nil, fmt.Errorf("listing product images: %w", err)
+	}
+	defer rows.Close()
+
+	var images []*ProductImageMeta
+	for rows.Next() {
+		var meta ProductImageMeta
+		err := rows.Scan(
+			&meta.ID, &meta.DataProductID, &meta.Purpose,
+			&meta.Filename, &meta.ContentType, &meta.SizeBytes, &meta.CreatedAt,
+		)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_list_images", time.Since(start), false)
+			return nil, fmt.Errorf("scanning image: %w", err)
+		}
+		meta.URL = fmt.Sprintf("/api/v1/products/images/%s/%s", meta.DataProductID, meta.Purpose)
+		images = append(images, &meta)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "dataproduct_list_images", time.Since(start), true)
+	return images, rows.Err()
 }

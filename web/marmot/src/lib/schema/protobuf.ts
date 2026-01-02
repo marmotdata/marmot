@@ -196,7 +196,7 @@ export function processProtobufSchema(schema: any): Field[] {
 			{
 				name: 'Error',
 				type: 'error',
-				description: `Failed to process Protobuf schema: ${error.message}`
+				description: `Failed to process Protobuf schema: ${error instanceof Error ? error.message : String(error)}`
 			}
 		];
 	}
@@ -241,7 +241,7 @@ export function validateProtobufSchema(schema: any): any[] {
 		protobufjs.parse(schemaStr);
 		return [];
 	} catch (error) {
-		return [{ message: error.message }];
+		return [{ message: error instanceof Error ? error.message : String(error) }];
 	}
 }
 

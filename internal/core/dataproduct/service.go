@@ -56,6 +56,14 @@ type Service interface {
 	GetResolvedAssets(ctx context.Context, dataProductID string, limit, offset int) (*ResolvedAssets, error)
 	GetDataProductsForAsset(ctx context.Context, assetID string) ([]*DataProduct, error)
 
+	// Image methods
+	UploadImage(ctx context.Context, dataProductID string, purpose ImagePurpose, input UploadImageInput, createdBy *string) (*ProductImageMeta, error)
+	GetImage(ctx context.Context, imageID string) (*ProductImage, error)
+	GetImageByPurpose(ctx context.Context, dataProductID string, purpose ImagePurpose) (*ProductImage, error)
+	GetImageMeta(ctx context.Context, dataProductID string, purpose ImagePurpose) (*ProductImageMeta, error)
+	DeleteImage(ctx context.Context, dataProductID string, purpose ImagePurpose) error
+	ListImages(ctx context.Context, dataProductID string) ([]*ProductImageMeta, error)
+
 	SetRuleObserver(observer RuleObserver)
 }
 
@@ -344,6 +352,79 @@ func (s *service) GetResolvedAssets(ctx context.Context, dataProductID string, l
 
 func (s *service) GetDataProductsForAsset(ctx context.Context, assetID string) ([]*DataProduct, error) {
 	return s.repo.GetDataProductsForAsset(ctx, assetID)
+}
+
+// Image methods
+
+func (s *service) UploadImage(ctx context.Context, dataProductID string, purpose ImagePurpose, input UploadImageInput, createdBy *string) (*ProductImageMeta, error) {
+	// Validate image type
+	if !ValidImageTypes[input.ContentType] {
+		return nil, fmt.Errorf("%w: allowed types are JPEG, PNG, GIF, WebP", ErrInvalidImageType)
+	}
+
+	// Validate image size
+	if len(input.Data) > MaxImageSizeBytes {
+		return nil, fmt.Errorf("%w: maximum size is 5MB", ErrImageTooLarge)
+	}
+
+	// Validate purpose
+	switch purpose {
+	case ImagePurposeIcon, ImagePurposeHeader:
+		// Valid
+	default:
+		return nil, fmt.Errorf("%w: invalid purpose %s", ErrInvalidInput, purpose)
+	}
+
+	// Verify data product exists
+	if _, err := s.repo.Get(ctx, dataProductID); err != nil {
+		return nil, err
+	}
+
+	image, err := s.repo.UploadProductImage(ctx, dataProductID, purpose, input, createdBy)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ProductImageMeta{
+		ID:            image.ID,
+		DataProductID: image.DataProductID,
+		Purpose:       image.Purpose,
+		Filename:      image.Filename,
+		ContentType:   image.ContentType,
+		SizeBytes:     image.SizeBytes,
+		URL:           fmt.Sprintf("/api/v1/products/images/%s/%s", image.DataProductID, image.Purpose),
+		CreatedAt:     image.CreatedAt,
+	}, nil
+}
+
+func (s *service) GetImage(ctx context.Context, imageID string) (*ProductImage, error) {
+	return s.repo.GetProductImage(ctx, imageID)
+}
+
+func (s *service) GetImageByPurpose(ctx context.Context, dataProductID string, purpose ImagePurpose) (*ProductImage, error) {
+	return s.repo.GetProductImageByPurpose(ctx, dataProductID, purpose)
+}
+
+func (s *service) GetImageMeta(ctx context.Context, dataProductID string, purpose ImagePurpose) (*ProductImageMeta, error) {
+	return s.repo.GetProductImageMeta(ctx, dataProductID, purpose)
+}
+
+func (s *service) DeleteImage(ctx context.Context, dataProductID string, purpose ImagePurpose) error {
+	// Verify data product exists
+	if _, err := s.repo.Get(ctx, dataProductID); err != nil {
+		return err
+	}
+
+	return s.repo.DeleteProductImage(ctx, dataProductID, purpose)
+}
+
+func (s *service) ListImages(ctx context.Context, dataProductID string) ([]*ProductImageMeta, error) {
+	// Verify data product exists
+	if _, err := s.repo.Get(ctx, dataProductID); err != nil {
+		return nil, err
+	}
+
+	return s.repo.ListProductImages(ctx, dataProductID)
 }
 
 func (s *service) validateRule(input RuleInput) error {

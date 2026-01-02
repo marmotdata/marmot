@@ -226,7 +226,7 @@
 									<Icon
 										name={asset.providers?.length === 1 ? asset.providers[0] : asset.type}
 										showLabel={false}
-										iconSize="sm"
+										size="sm"
 									/>
 								</div>
 								<div class="flex-1 min-w-0">

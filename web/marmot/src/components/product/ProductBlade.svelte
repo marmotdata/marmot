@@ -10,6 +10,7 @@
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import AssetIcon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	export let product: DataProduct | null = null;
@@ -29,13 +30,7 @@
 	let assetDetails = new Map<string, Asset>();
 	let loadingAssets = false;
 
-	// Description editing state
-	let editedDescription = '';
-	let isEditingDescription = false;
-	let savingDescription = false;
-
 	$: canManage = auth.hasPermission('assets', 'manage');
-	$: canEditDescription = staticPlacement && canManage;
 	$: isVisible = product != null;
 	$: fullViewUrl = product ? `/products/${product.id}` : '';
 
@@ -105,26 +100,6 @@
 		return asset.type || 'unknown';
 	}
 
-	async function handleOwnersChange(newOwners: Owner[]) {
-		if (!product || !canManage) return;
-
-		try {
-			const response = await fetchApi(`/products/${product.id}`, {
-				method: 'PUT',
-				body: JSON.stringify({
-					owners: newOwners.map((o) => ({ id: o.id, type: o.type }))
-				})
-			});
-
-			if (response.ok) {
-				const updated = await response.json();
-				product = updated;
-			}
-		} catch (err) {
-			console.error('Failed to update owners:', err);
-		}
-	}
-
 	onMount(() => {
 		mounted = true;
 		if (product?.id) {
@@ -137,45 +112,6 @@
 			fetchResolvedAssets();
 		}
 	});
-
-	function startEditingDescription() {
-		editedDescription = product?.description || '';
-		isEditingDescription = true;
-	}
-
-	function cancelEditingDescription() {
-		editedDescription = product?.description || '';
-		isEditingDescription = false;
-	}
-
-	async function saveDescription(valueToSave?: string) {
-		if (!product?.id) return;
-
-		const finalValue = valueToSave !== undefined ? valueToSave : editedDescription;
-
-		savingDescription = true;
-		try {
-			const response = await fetchApi(`/products/${product.id}`, {
-				method: 'PUT',
-				body: JSON.stringify({
-					description: finalValue.trim() || null
-				})
-			});
-
-			if (response.ok) {
-				const updated = await response.json();
-				product = updated;
-				editedDescription = updated.description || '';
-				isEditingDescription = false;
-			} else {
-				console.error('Failed to save description');
-			}
-		} catch (error) {
-			console.error('Error saving description:', error);
-		} finally {
-			savingDescription = false;
-		}
-	}
 
 	async function handleDelete() {
 		if (!product?.id) return;
@@ -275,68 +211,7 @@
 				<div class="flex-1 overflow-y-auto min-h-0 {staticPlacement ? 'pr-6 py-6' : 'p-6'}">
 					<div class="space-y-4">
 						<!-- Product Header -->
-						{#if staticPlacement}
-							<div
-								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
-							>
-								<div class="flex items-start gap-3 mb-3">
-									<div class="flex-shrink-0">
-										<div
-											class="w-10 h-10 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center"
-										>
-											<IconifyIcon
-												icon="mdi:package-variant-closed"
-												class="w-5 h-5 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-											/>
-										</div>
-									</div>
-									<div class="flex-1 min-w-0">
-										<h3 class="font-semibold text-base text-gray-900 dark:text-gray-100 truncate">
-											{product.name || ''}
-										</h3>
-									</div>
-								</div>
-								<div class="space-y-4">
-									<div>
-										<div class="flex items-center gap-2 mb-2">
-											<IconifyIcon
-												icon="material-symbols:label-outline"
-												class="w-4 h-4 text-gray-500 dark:text-gray-400"
-											/>
-											<h4
-												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-											>
-												Tags
-											</h4>
-										</div>
-										<Tags
-											bind:tags={product.tags}
-											endpoint="/products"
-											id={product.id}
-											canEdit={canManage}
-										/>
-									</div>
-									<div>
-										<div class="flex items-center gap-2 mb-2">
-											<IconifyIcon
-												icon="material-symbols:person-outline"
-												class="w-4 h-4 text-gray-500 dark:text-gray-400"
-											/>
-											<h4
-												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-											>
-												Owners
-											</h4>
-										</div>
-										<OwnerSelector
-											selectedOwners={product.owners || []}
-											onChange={handleOwnersChange}
-											disabled={!canManage}
-										/>
-									</div>
-								</div>
-							</div>
-						{:else}
+						{#if !staticPlacement}
 							<a
 								href={fullViewUrl}
 								class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all"
@@ -344,12 +219,20 @@
 								<div class="flex items-start gap-3 mb-3">
 									<div class="flex-shrink-0">
 										<div
-											class="w-10 h-10 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center"
+											class="w-10 h-10 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center overflow-hidden"
 										>
-											<IconifyIcon
-												icon="mdi:package-variant-closed"
-												class="w-5 h-5 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-											/>
+											{#if product.icon_url}
+												<AuthenticatedImage
+													src={product.icon_url}
+													alt="{product.name} icon"
+													class="w-full h-full object-cover"
+												/>
+											{:else}
+												<IconifyIcon
+													icon="mdi:package-variant-closed"
+													class="w-5 h-5 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+												/>
+											{/if}
 										</div>
 									</div>
 									<div class="flex-1 min-w-0">
@@ -415,8 +298,8 @@
 							</a>
 						{/if}
 
-						<!-- Description Section -->
-						{#if product.description || canEditDescription}
+						<!-- Description Section - only show in non-static mode -->
+						{#if !staticPlacement && product.description}
 							<div
 								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
 							>
@@ -426,68 +309,12 @@
 											Description
 										</h3>
 									</div>
-									{#if canEditDescription && !isEditingDescription}
-										<button
-											onclick={startEditingDescription}
-											class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-300 font-medium"
-										>
-											{product.description ? 'Edit' : '+ Add'}
-										</button>
-									{/if}
 								</div>
-
-								{#if isEditingDescription}
-									<div class="space-y-2.5">
-										<textarea
-											bind:value={editedDescription}
-											placeholder="Add a description..."
-											rows="4"
-											class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent resize-y"
-										></textarea>
-										<div class="flex justify-between gap-2">
-											<div>
-												{#if product.description}
-													<button
-														onclick={() => saveDescription('')}
-														disabled={savingDescription}
-														class="px-3 py-1.5 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
-													>
-														Delete
-													</button>
-												{/if}
-											</div>
-											<div class="flex gap-2">
-												<button
-													onclick={cancelEditingDescription}
-													disabled={savingDescription}
-													class="px-3 py-1.5 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded disabled:opacity-50"
-												>
-													Cancel
-												</button>
-												<button
-													onclick={() => saveDescription()}
-													disabled={savingDescription}
-													class="px-3 py-1.5 text-sm bg-earthy-terracotta-700 text-white rounded hover:bg-earthy-terracotta-800 disabled:opacity-50 flex items-center gap-1.5"
-												>
-													{#if savingDescription}
-														<div
-															class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
-														></div>
-													{/if}
-													Save
-												</button>
-											</div>
-										</div>
-									</div>
-								{:else if product.description}
-									<p
-										class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed"
-									>
-										{product.description}
-									</p>
-								{:else}
-									<p class="text-sm text-gray-500 dark:text-gray-400 italic">No description yet</p>
-								{/if}
+								<p
+									class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed"
+								>
+									{product.description}
+								</p>
 							</div>
 						{/if}
 

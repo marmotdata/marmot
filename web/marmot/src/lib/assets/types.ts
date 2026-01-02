@@ -11,6 +11,12 @@ export interface Environment {
 	metadata: Record<string, any>;
 }
 
+export interface ExternalLink {
+	name: string;
+	url: string;
+	icon?: string;
+}
+
 export interface Asset {
 	id: string;
 	name: string;
@@ -32,6 +38,7 @@ export interface Asset {
 	sources: AssetSource[];
 	query?: string;
 	query_language?: string;
+	external_links?: ExternalLink[];
 }
 
 export interface GlossaryTerm {

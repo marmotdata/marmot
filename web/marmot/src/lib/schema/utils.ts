@@ -203,7 +203,7 @@ export function processSchema(schemaSection: any): SchemaProcessingResult {
 			{
 				name: 'Error',
 				type: 'error',
-				description: `Failed to process schema: ${error.message}`
+				description: `Failed to process schema: ${error instanceof Error ? error.message : String(error)}`
 			}
 		];
 	}
@@ -230,7 +230,9 @@ export function validateSchema(schema: any): any[] {
 					// Return empty array (no errors) for now
 					return [];
 				}
-				return [{ message: `Invalid schema format: ${e.message}` }];
+				return [
+					{ message: `Invalid schema format: ${e instanceof Error ? e.message : String(e)}` }
+				];
 			}
 		}
 
@@ -279,7 +281,11 @@ export function validateSchema(schema: any): any[] {
 				return [];
 		}
 	} catch (error) {
-		return [{ message: `Schema validation error: ${error.message}` }];
+		return [
+			{
+				message: `Schema validation error: ${error instanceof Error ? error.message : String(error)}`
+			}
+		];
 	}
 }
 

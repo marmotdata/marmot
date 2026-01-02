@@ -31,7 +31,7 @@
 			<Icon
 				name={node.asset.providers?.length === 1 ? node.asset.providers[0] : node.type}
 				showLabel={false}
-				iconSize="xs"
+				size="xs"
 			/>
 			<div class="flex-1 min-w-0">
 				<p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
@@ -64,7 +64,7 @@
 				<Icon
 					name={node.asset.providers?.length === 1 ? node.asset.providers[0] : node.type}
 					showLabel={false}
-					iconSize="sm"
+					size="sm"
 				/>
 				<div class="flex-1 min-w-0">
 					<h3 class="font-medium text-gray-900 dark:text-gray-100 truncate">

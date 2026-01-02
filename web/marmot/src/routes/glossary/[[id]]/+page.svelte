@@ -466,7 +466,7 @@
 										</h3>
 									</div>
 									<Tags
-										bind:tags={selectedTerm.tags}
+										tags={selectedTerm.tags ?? []}
 										endpoint="/glossary"
 										id={selectedTerm.id}
 										canEdit={canManageGlossary && isEditing}

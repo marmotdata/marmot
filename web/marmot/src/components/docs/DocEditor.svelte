@@ -432,7 +432,8 @@
 	let isInTable = $derived(
 		(() => {
 			void selectionVersion;
-			return (editor?.isActive('tableCell') || editor?.isActive('tableHeader')) ?? false;
+			const e = editor;
+			return (e?.isActive('tableCell') || e?.isActive('tableHeader')) ?? false;
 		})()
 	);
 

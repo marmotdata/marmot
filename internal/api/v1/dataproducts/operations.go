@@ -3,6 +3,8 @@ package dataproducts
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"io"
 	"net/http"
 	"strconv"
 	"strings"
@@ -323,14 +325,16 @@ func (h *Handler) addAssets(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) removeAsset(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/"), "/")
-	if len(parts) < 3 {
+	// URL format: /api/v1/products/assets/{productId}/{assetId}
+	// After trimming prefix: assets/{productId}/{assetId}
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/assets/"), "/")
+	if len(parts) < 2 {
 		common.RespondError(w, http.StatusBadRequest, "Data product ID and asset ID required")
 		return
 	}
 
 	dataProductID := parts[0]
-	assetID := parts[2]
+	assetID := parts[1]
 
 	err := h.dataProductService.RemoveAsset(r.Context(), dataProductID, assetID)
 	if err != nil {
@@ -542,4 +546,220 @@ func extractIDFromPath(path, prefix string) string {
 	id := strings.TrimPrefix(path, prefix)
 	id = strings.TrimSuffix(id, "/")
 	return id
+}
+
+// Image handlers
+
+// @Summary Upload product image
+// @Description Upload an icon or header image for a data product
+// @Tags products
+// @Accept multipart/form-data
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param purpose path string true "Image purpose (icon or header)"
+// @Param file formData file true "Image file"
+// @Success 200 {object} dataproduct.ProductImageMeta
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/images/{id}/{purpose} [post]
+func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
+	// Parse URL: /api/v1/products/images/{id}/{purpose}
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/images/"), "/")
+	if len(parts) < 2 {
+		common.RespondError(w, http.StatusBadRequest, "Data product ID and purpose required")
+		return
+	}
+
+	productID := parts[0]
+	purpose := dataproduct.ImagePurpose(parts[1])
+
+	// Validate purpose
+	if purpose != dataproduct.ImagePurposeIcon && purpose != dataproduct.ImagePurposeHeader {
+		common.RespondError(w, http.StatusBadRequest, "Invalid purpose: must be 'icon' or 'header'")
+		return
+	}
+
+	// Parse multipart form (max 10MB)
+	if err := r.ParseMultipartForm(10 << 20); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Failed to parse form: "+err.Error())
+		return
+	}
+
+	file, header, err := r.FormFile("file")
+	if err != nil {
+		common.RespondError(w, http.StatusBadRequest, "No file provided")
+		return
+	}
+	defer file.Close()
+
+	// Read file content
+	data, err := io.ReadAll(file)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to read uploaded file")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to read file")
+		return
+	}
+
+	// Get content type
+	contentType := header.Header.Get("Content-Type")
+	if contentType == "" {
+		contentType = http.DetectContentType(data)
+	}
+
+	// Get user for created_by
+	var createdBy *string
+	if usr, ok := r.Context().Value(common.UserContextKey).(*user.User); ok {
+		createdBy = &usr.ID
+	}
+
+	input := dataproduct.UploadImageInput{
+		Filename:    header.Filename,
+		ContentType: contentType,
+		Data:        data,
+	}
+
+	meta, err := h.dataProductService.UploadImage(r.Context(), productID, purpose, input, createdBy)
+	if err != nil {
+		switch {
+		case errors.Is(err, dataproduct.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Data product not found")
+		case errors.Is(err, dataproduct.ErrInvalidImageType):
+			common.RespondError(w, http.StatusBadRequest, err.Error())
+		case errors.Is(err, dataproduct.ErrImageTooLarge):
+			common.RespondError(w, http.StatusBadRequest, err.Error())
+		case errors.Is(err, dataproduct.ErrInvalidInput):
+			common.RespondError(w, http.StatusBadRequest, err.Error())
+		default:
+			log.Error().Err(err).Str("productId", productID).Str("purpose", string(purpose)).Msg("Failed to upload image")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	common.RespondJSON(w, http.StatusOK, meta)
+}
+
+// @Summary Get product image
+// @Description Get an icon or header image for a data product
+// @Tags products
+// @Produce image/jpeg,image/png,image/gif,image/webp
+// @Param id path string true "Data Product ID"
+// @Param purpose path string true "Image purpose (icon or header)"
+// @Success 200 {file} binary
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/images/{id}/{purpose} [get]
+func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
+	// Parse URL: /api/v1/products/images/{id}/{purpose}
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/images/"), "/")
+	if len(parts) < 2 {
+		common.RespondError(w, http.StatusBadRequest, "Data product ID and purpose required")
+		return
+	}
+
+	productID := parts[0]
+	purpose := dataproduct.ImagePurpose(parts[1])
+
+	image, err := h.dataProductService.GetImageByPurpose(r.Context(), productID, purpose)
+	if err != nil {
+		switch {
+		case errors.Is(err, dataproduct.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Data product not found")
+		case errors.Is(err, dataproduct.ErrImageNotFound):
+			common.RespondError(w, http.StatusNotFound, "Image not found")
+		default:
+			log.Error().Err(err).Str("productId", productID).Str("purpose", string(purpose)).Msg("Failed to get image")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	// Generate ETag based on image ID (which changes on each upload due to upsert)
+	etag := fmt.Sprintf(`"%s"`, image.ID)
+
+	// Check If-None-Match header for cache validation
+	if r.Header.Get("If-None-Match") == etag {
+		w.WriteHeader(http.StatusNotModified)
+		return
+	}
+
+	w.Header().Set("Content-Type", image.ContentType)
+	w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
+	w.Header().Set("ETag", etag)
+	_, _ = w.Write(image.Data)
+}
+
+// @Summary Delete product image
+// @Description Delete an icon or header image for a data product
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param purpose path string true "Image purpose (icon or header)"
+// @Success 200 {object} map[string]string
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/images/{id}/{purpose} [delete]
+func (h *Handler) deleteImage(w http.ResponseWriter, r *http.Request) {
+	// Parse URL: /api/v1/products/images/{id}/{purpose}
+	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/images/"), "/")
+	if len(parts) < 2 {
+		common.RespondError(w, http.StatusBadRequest, "Data product ID and purpose required")
+		return
+	}
+
+	productID := parts[0]
+	purpose := dataproduct.ImagePurpose(parts[1])
+
+	err := h.dataProductService.DeleteImage(r.Context(), productID, purpose)
+	if err != nil {
+		switch {
+		case errors.Is(err, dataproduct.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Data product not found")
+		case errors.Is(err, dataproduct.ErrImageNotFound):
+			common.RespondError(w, http.StatusNotFound, "Image not found")
+		default:
+			log.Error().Err(err).Str("productId", productID).Str("purpose", string(purpose)).Msg("Failed to delete image")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Image deleted successfully"})
+}
+
+// @Summary List product images
+// @Description List all images for a data product
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/images/{id} [get]
+func (h *Handler) listImages(w http.ResponseWriter, r *http.Request) {
+	// Parse URL: /api/v1/products/images/{id}
+	productID := strings.TrimPrefix(r.URL.Path, "/api/v1/products/images/")
+	productID = strings.TrimSuffix(productID, "/")
+	if productID == "" {
+		common.RespondError(w, http.StatusBadRequest, "Data product ID required")
+		return
+	}
+
+	images, err := h.dataProductService.ListImages(r.Context(), productID)
+	if err != nil {
+		switch {
+		case errors.Is(err, dataproduct.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Data product not found")
+		default:
+			log.Error().Err(err).Str("productId", productID).Msg("Failed to list images")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	common.RespondJSON(w, http.StatusOK, map[string]interface{}{
+		"images": images,
+		"total":  len(images),
+	})
 }

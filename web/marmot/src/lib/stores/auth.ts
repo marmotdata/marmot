@@ -17,7 +17,10 @@ function createAuthStore() {
 
 				const payload = parseJwt(token);
 				if (payload && payload.preferences && payload.preferences.theme) {
-					theme.set(payload.preferences.theme);
+					const userTheme = payload.preferences.theme;
+					if (userTheme === 'light' || userTheme === 'dark' || userTheme === 'auto') {
+						theme.set(userTheme);
+					}
 				}
 
 				isAnonymousMode.set(false);

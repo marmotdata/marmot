@@ -20,7 +20,11 @@
 	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
 	import QueryBuilder from '$components/query/QueryBuilder.svelte';
 	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
+	import IconUploader from '$components/product/IconUploader.svelte';
 	import { auth } from '$lib/stores/auth';
+	import { createKeyboardNavigationState } from '$lib/keyboard';
+	import Tags from '$components/shared/Tags.svelte';
+	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 
 	let productId = $derived($page.params.id);
 	let activeTab = $derived($page.url.searchParams.get('tab') || 'documentation');
@@ -58,13 +62,33 @@
 	let isSearchingAssets = $state(false);
 	let isAddingAsset = $state(false);
 	let removingAssetId = $state<string | null>(null);
+	let selectedAssetIndex = $state(-1);
+
+	// Assets pagination
+	const ASSETS_PER_PAGE = 12;
+	let currentAssetPage = $state(1);
 
 	let canManage = $derived(auth.hasPermission('assets', 'manage'));
 
+	// Description editing state
+	let editedDescription = $state('');
+	let isEditingDescription = $state(false);
+	let savingDescription = $state(false);
+
+	// Derived pagination state
+	let paginatedAssetIds = $derived.by(() => {
+		if (!resolvedAssets) return [];
+		const start = (currentAssetPage - 1) * ASSETS_PER_PAGE;
+		return resolvedAssets.all_assets.slice(start, start + ASSETS_PER_PAGE);
+	});
+	let totalAssetPages = $derived(
+		resolvedAssets ? Math.ceil(resolvedAssets.all_assets.length / ASSETS_PER_PAGE) : 0
+	);
+
 	const tabs: Tab[] = [
 		{ id: 'documentation', label: 'Documentation', icon: 'material-symbols:description' },
-		{ id: 'metadata', label: 'Metadata', icon: 'material-symbols:data-object' },
 		{ id: 'assets', label: 'Assets', icon: 'material-symbols:database' },
+		{ id: 'metadata', label: 'Metadata', icon: 'material-symbols:data-object' },
 		{ id: 'rules', label: 'Rules', icon: 'material-symbols:filter-list' }
 	];
 
@@ -114,14 +138,15 @@
 
 	async function loadResolvedAssets() {
 		isLoadingAssets = true;
+		currentAssetPage = 1;
 		try {
-			const response = await fetchApi(`/products/resolved-assets/${productId}?limit=100`);
+			const response = await fetchApi(`/products/resolved-assets/${productId}?limit=1000`);
 			if (response.ok) {
 				resolvedAssets = await response.json();
 
-				// Load asset details for display
+				// Load asset details for first page only
 				if (resolvedAssets && resolvedAssets.all_assets.length > 0) {
-					await loadAssetDetails(resolvedAssets.all_assets.slice(0, 50));
+					await loadAssetDetails(resolvedAssets.all_assets.slice(0, ASSETS_PER_PAGE));
 				}
 			}
 		} catch (err) {
@@ -132,8 +157,9 @@
 	}
 
 	async function loadAssetDetails(assetIds: string[]) {
-		const newDetails = new Map<string, Asset>();
+		const newDetails = new Map(assetDetails);
 		for (const assetId of assetIds) {
+			if (newDetails.has(assetId)) continue; // Skip already loaded
 			try {
 				const response = await fetchApi(`/assets/${assetId}`);
 				if (response.ok) {
@@ -145,6 +171,21 @@
 			}
 		}
 		assetDetails = newDetails;
+	}
+
+	async function handleAssetPageChange(page: number) {
+		currentAssetPage = page;
+		// Load details for new page's assets if not already cached
+		if (resolvedAssets) {
+			const start = (page - 1) * ASSETS_PER_PAGE;
+			const pageAssets = resolvedAssets.all_assets.slice(start, start + ASSETS_PER_PAGE);
+			const missingAssets = pageAssets.filter((id) => !assetDetails.has(id));
+			if (missingAssets.length > 0) {
+				isLoadingAssets = true;
+				await loadAssetDetails(missingAssets);
+				isLoadingAssets = false;
+			}
+		}
 	}
 
 	function getAssetUrl(asset: Asset): string {
@@ -375,6 +416,7 @@
 
 	function handleAssetSearch(query: string) {
 		assetSearchQuery = query;
+		selectedAssetIndex = -1;
 		if (searchTimeout) clearTimeout(searchTimeout);
 
 		if (!query.trim()) {
@@ -412,12 +454,26 @@
 		}, 300);
 	}
 
+	const { handleKeydown: handleAssetSearchKeydown } = createKeyboardNavigationState(
+		() => assetSearchResults,
+		() => selectedAssetIndex,
+		(i) => (selectedAssetIndex = i),
+		{
+			onSelect: (asset) => addAssetToProduct(asset.id),
+			onEscape: () => {
+				assetSearchQuery = '';
+				assetSearchResults = [];
+				selectedAssetIndex = -1;
+			}
+		}
+	);
+
 	async function addAssetToProduct(assetId: string) {
 		isAddingAsset = true;
 		try {
 			const response = await fetchApi(`/products/assets/${productId}`, {
 				method: 'POST',
-				body: JSON.stringify({ asset_id: assetId })
+				body: JSON.stringify({ asset_ids: [assetId] })
 			});
 
 			if (!response.ok) {
@@ -428,6 +484,7 @@
 			// Clear search and reload
 			assetSearchQuery = '';
 			assetSearchResults = [];
+			selectedAssetIndex = -1;
 			await loadDataProduct();
 		} catch (err) {
 			console.error('Failed to add asset:', err);
@@ -453,6 +510,70 @@
 			console.error('Failed to remove asset:', err);
 		} finally {
 			removingAssetId = null;
+		}
+	}
+
+	// Description editing functions
+	function startEditingDescription() {
+		editedDescription = product?.description || '';
+		isEditingDescription = true;
+	}
+
+	function cancelEditingDescription() {
+		editedDescription = product?.description || '';
+		isEditingDescription = false;
+	}
+
+	async function saveDescription(valueToSave?: string) {
+		if (!product?.id) return;
+
+		const finalValue = valueToSave !== undefined ? valueToSave : editedDescription;
+
+		savingDescription = true;
+		try {
+			const response = await fetchApi(`/products/${product.id}`, {
+				method: 'PUT',
+				body: JSON.stringify({
+					description: finalValue.trim() || null
+				})
+			});
+
+			if (response.ok) {
+				const updated = await response.json();
+				updated.tags = updated.tags || [];
+				updated.owners = updated.owners || [];
+				updated.rules = updated.rules || [];
+				product = updated;
+				editedDescription = updated.description || '';
+				isEditingDescription = false;
+			}
+		} catch (error) {
+			console.error('Error saving description:', error);
+		} finally {
+			savingDescription = false;
+		}
+	}
+
+	async function handleOwnersChange(newOwners: Owner[]) {
+		if (!product || !canManage) return;
+
+		try {
+			const response = await fetchApi(`/products/${product.id}`, {
+				method: 'PUT',
+				body: JSON.stringify({
+					owners: newOwners.map((o) => ({ id: o.id, type: o.type }))
+				})
+			});
+
+			if (response.ok) {
+				const updated = await response.json();
+				updated.tags = updated.tags || [];
+				updated.owners = updated.owners || [];
+				updated.rules = updated.rules || [];
+				product = updated;
+			}
+		} catch (err) {
+			console.error('Failed to update owners:', err);
 		}
 	}
 
@@ -497,29 +618,128 @@
 					</button>
 				</div>
 
-				<div class="mb-6">
-					<div class="flex flex-col gap-4">
-						<div>
+				<div class="mb-4 flex items-start gap-4">
+					<!-- Product Icon -->
+					<IconUploader
+						productId={product.id}
+						currentIconUrl={product.icon_url}
+						onIconChange={(url) => {
+							if (product) product.icon_url = url ?? undefined;
+						}}
+						disabled={!canManage}
+						size="lg"
+					/>
+
+					<!-- Title, description, and metadata -->
+					<div class="flex-1 min-w-0 space-y-1">
+						<div class="flex items-center gap-3">
 							<h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
 								{product.name}
 							</h1>
-							{#if product.description}
-								<p class="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-2xl">
-									{product.description}
-								</p>
-							{/if}
-						</div>
-						<div class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
-							<span class="flex items-center gap-1.5">
-								<IconifyIcon icon="material-symbols:database" class="h-4 w-4" />
-								{product.asset_count || 0} assets
+							<span class="text-sm text-gray-400 dark:text-gray-500">
+								{product.asset_count || 0} assets{#if product.rules && product.rules.length > 0}, {product
+										.rules.length} rule{product.rules.length === 1 ? '' : 's'}{/if}
 							</span>
-							{#if product.rules && product.rules.length > 0}
-								<span class="flex items-center gap-1.5">
-									<IconifyIcon icon="material-symbols:filter-list" class="h-4 w-4" />
-									{product.rules.length} rule{product.rules.length === 1 ? '' : 's'}
-								</span>
-							{/if}
+						</div>
+
+						<!-- Description -->
+						{#if isEditingDescription}
+							<div class="space-y-2 max-w-2xl">
+								<textarea
+									bind:value={editedDescription}
+									placeholder="Add a description..."
+									rows="2"
+									class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent resize-y"
+								></textarea>
+								<div class="flex justify-between gap-2">
+									<div>
+										{#if product.description}
+											<button
+												onclick={() => saveDescription('')}
+												disabled={savingDescription}
+												class="px-2 py-1 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded disabled:opacity-50"
+											>
+												Delete
+											</button>
+										{/if}
+									</div>
+									<div class="flex gap-2">
+										<button
+											onclick={cancelEditingDescription}
+											disabled={savingDescription}
+											class="px-2 py-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded disabled:opacity-50"
+										>
+											Cancel
+										</button>
+										<button
+											onclick={() => saveDescription()}
+											disabled={savingDescription}
+											class="px-2 py-1 text-sm bg-earthy-terracotta-700 text-white rounded hover:bg-earthy-terracotta-800 disabled:opacity-50 flex items-center gap-1"
+										>
+											{#if savingDescription}
+												<div
+													class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"
+												></div>
+											{/if}
+											Save
+										</button>
+									</div>
+								</div>
+							</div>
+						{:else}
+							<div class="flex items-start gap-2 max-w-2xl group">
+								{#if product.description}
+									<p class="text-sm text-gray-500 dark:text-gray-400">{product.description}</p>
+								{:else if canManage}
+									<span class="text-sm text-gray-400 dark:text-gray-500 italic">No description</span
+									>
+								{/if}
+								{#if canManage}
+									<button
+										onclick={startEditingDescription}
+										class="flex-shrink-0 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+										title="Edit description"
+									>
+										<IconifyIcon icon="material-symbols:edit" class="w-3.5 h-3.5" />
+									</button>
+								{/if}
+							</div>
+						{/if}
+
+						<!-- Tags and Owners -->
+						<div class="flex items-start gap-6 pt-2">
+							<div>
+								<div class="flex items-center gap-1.5 mb-1">
+									<IconifyIcon
+										icon="material-symbols:label-outline"
+										class="w-3.5 h-3.5 text-gray-400"
+									/>
+									<span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Tags</span
+									>
+								</div>
+								<Tags
+									tags={product.tags ?? []}
+									endpoint="/products"
+									id={product.id}
+									canEdit={canManage}
+								/>
+							</div>
+							<div>
+								<div class="flex items-center gap-1.5 mb-1">
+									<IconifyIcon
+										icon="material-symbols:person-outline"
+										class="w-3.5 h-3.5 text-gray-400"
+									/>
+									<span class="text-xs font-medium text-gray-400 uppercase tracking-wide"
+										>Owners</span
+									>
+								</div>
+								<OwnerSelector
+									selectedOwners={product.owners || []}
+									onChange={handleOwnersChange}
+									disabled={!canManage}
+								/>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -553,152 +773,192 @@
 
 						<!-- Assets Tab -->
 						{#if activeTab === 'assets'}
-							<div class="mt-6">
-								<div
-									class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-								>
-									<div class="flex items-center justify-between mb-4">
-										<h3
-											class="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2"
-										>
-											<IconifyIcon icon="material-symbols:database" class="h-5 w-5" />
-											Assets
-											{#if resolvedAssets}
-												<span class="text-sm font-normal text-gray-500">
-													({resolvedAssets.total} total)
-												</span>
+							<div class="mt-6 space-y-6">
+								<!-- Manual Asset Search -->
+								{#if canManage}
+									<div class="mb-6">
+										<div class="flex items-center gap-2 mb-3">
+											<span
+												class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-xs font-medium"
+											>
+												<IconifyIcon icon="material-symbols:person" class="w-3.5 h-3.5" />
+												Manual
+											</span>
+											<span class="text-sm text-gray-600 dark:text-gray-400">
+												Search and add assets directly to this product
+											</span>
+										</div>
+										<div class="relative">
+											<IconifyIcon
+												icon="material-symbols:search"
+												class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400"
+											/>
+											<input
+												type="text"
+												value={assetSearchQuery}
+												oninput={(e) => handleAssetSearch(e.currentTarget.value)}
+												onkeydown={handleAssetSearchKeydown}
+												placeholder="Search for assets to add manually..."
+												class="w-full pl-10 pr-10 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-earthy-terracotta-500"
+											/>
+											{#if isSearchingAssets}
+												<div class="absolute right-3 top-1/2 -translate-y-1/2">
+													<div
+														class="h-4 w-4 border-2 border-earthy-terracotta-500 border-t-transparent rounded-full animate-spin"
+													></div>
+												</div>
 											{/if}
-										</h3>
+										</div>
+
+										<!-- Search Results -->
+										{#if assetSearchResults.length > 0}
+											<div
+												class="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm"
+												role="listbox"
+											>
+												{#each assetSearchResults as asset, index}
+													<div
+														class="flex items-center gap-3 p-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors cursor-pointer {index ===
+														selectedAssetIndex
+															? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20'
+															: 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}"
+														role="option"
+														aria-selected={index === selectedAssetIndex}
+														onclick={() => addAssetToProduct(asset.id)}
+													>
+														<div
+															class="p-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg flex-shrink-0"
+														>
+															<AssetIcon name={getIconType(asset)} size="sm" showLabel={false} />
+														</div>
+														<div class="flex-1 min-w-0">
+															<div
+																class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate"
+															>
+																{asset.name}
+															</div>
+															<div
+																class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono"
+															>
+																{asset.mrn}
+															</div>
+														</div>
+														<button
+															onclick={(e) => {
+																e.stopPropagation();
+																addAssetToProduct(asset.id);
+															}}
+															disabled={isAddingAsset}
+															class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-earthy-terracotta-600 hover:bg-earthy-terracotta-700 rounded-lg disabled:opacity-50 transition-colors"
+														>
+															<IconifyIcon icon="material-symbols:add" class="w-3.5 h-3.5" />
+															{isAddingAsset ? 'Adding...' : 'Add'}
+														</button>
+													</div>
+												{/each}
+											</div>
+										{:else if assetSearchQuery && !isSearchingAssets}
+											<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+												No assets found matching "{assetSearchQuery}"
+											</p>
+										{/if}
+									</div>
+								{/if}
+
+								{#if isLoadingAssets && !resolvedAssets}
+									<!-- Skeleton loading grid -->
+									<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+										{#each Array(6) as _}
+											<div
+												class="bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 p-4 animate-pulse"
+											>
+												<div class="flex items-start gap-3 mb-3">
+													<div class="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
+													<div class="flex-1 space-y-2">
+														<div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
+														<div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-full"></div>
+													</div>
+												</div>
+												<div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-2/3 mb-3"></div>
+												<div class="flex gap-2">
+													<div class="h-5 bg-gray-200 dark:bg-gray-600 rounded w-12"></div>
+													<div class="h-5 bg-gray-200 dark:bg-gray-600 rounded w-16"></div>
+												</div>
+											</div>
+										{/each}
+									</div>
+								{:else if resolvedAssets && resolvedAssets.all_assets.length > 0}
+									<!-- Asset counts by type -->
+									<div class="flex flex-wrap gap-3 mb-4">
+										{#if resolvedAssets.manual_assets.length > 0}
+											<span
+												class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 text-sm font-medium"
+											>
+												<IconifyIcon icon="material-symbols:person" class="w-4 h-4" />
+												{resolvedAssets.manual_assets.length} manual
+											</span>
+										{/if}
+										{#if resolvedAssets.dynamic_assets.length > 0}
+											<span
+												class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-300 text-sm font-medium"
+											>
+												<IconifyIcon icon="material-symbols:filter-list" class="w-4 h-4" />
+												{resolvedAssets.dynamic_assets.length} from rules
+											</span>
+										{/if}
 									</div>
 
-									<!-- Add Asset Search -->
-									{#if canManage}
-										<div class="mb-4">
-											<label
-												class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
-											>
-												Add Assets
-											</label>
-											<div class="relative">
-												<input
-													type="text"
-													value={assetSearchQuery}
-													oninput={(e) => handleAssetSearch(e.currentTarget.value)}
-													placeholder="Search for assets to add..."
-													class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 focus:border-earthy-terracotta-500"
-												/>
-												{#if isSearchingAssets}
-													<div class="absolute right-3 top-1/2 -translate-y-1/2">
-														<div
-															class="h-4 w-4 border-2 border-earthy-terracotta-500 border-t-transparent rounded-full animate-spin"
-														></div>
-													</div>
-												{/if}
-											</div>
-
-											<!-- Search Results -->
-											{#if assetSearchResults.length > 0}
-												<div
-													class="mt-2 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
-												>
-													{#each assetSearchResults as asset}
-														<div
-															class="flex items-center gap-3 p-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 border-b border-gray-100 dark:border-gray-700 last:border-b-0"
-														>
-															<AssetIcon name={getIconType(asset)} size="sm" showLabel={false} />
-															<div class="flex-1 min-w-0">
-																<div
-																	class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate"
-																>
-																	{asset.name}
-																</div>
-																<div
-																	class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono"
-																>
-																	{asset.mrn}
-																</div>
-															</div>
-															<button
-																onclick={() => addAssetToProduct(asset.id)}
-																disabled={isAddingAsset}
-																class="px-3 py-1 text-xs font-medium text-white bg-earthy-terracotta-600 hover:bg-earthy-terracotta-700 rounded-lg disabled:opacity-50 transition-colors"
-															>
-																{isAddingAsset ? 'Adding...' : 'Add'}
-															</button>
-														</div>
-													{/each}
-												</div>
-											{:else if assetSearchQuery && !isSearchingAssets}
-												<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-													No assets found matching "{assetSearchQuery}"
-												</p>
-											{/if}
-										</div>
-									{/if}
-
-									{#if isLoadingAssets}
-										<div class="flex justify-center py-8">
+									<!-- Assets Grid -->
+									<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+										{#each paginatedAssetIds as assetId}
+											{@const asset = assetDetails.get(assetId)}
+											{@const isManual = resolvedAssets.manual_assets.includes(assetId)}
 											<div
-												class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
-											></div>
-										</div>
-									{:else if resolvedAssets && resolvedAssets.all_assets.length > 0}
-										<!-- Asset counts by type -->
-										<div class="flex gap-4 mb-4 text-sm">
-											{#if resolvedAssets.manual_assets.length > 0}
-												<span
-													class="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-												>
-													{resolvedAssets.manual_assets.length} manual
-												</span>
-											{/if}
-											{#if resolvedAssets.dynamic_assets.length > 0}
-												<span
-													class="px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300"
-												>
-													{resolvedAssets.dynamic_assets.length} from rules
-												</span>
-											{/if}
-										</div>
-
-										<div class="space-y-2">
-											{#each resolvedAssets.all_assets as assetId}
-												{@const asset = assetDetails.get(assetId)}
-												{@const isManual = resolvedAssets.manual_assets.includes(assetId)}
-												<div
-													class="flex items-center gap-3 p-3 rounded-lg border border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-all group"
-												>
-													{#if asset}
-														<a
-															href={getAssetUrl(asset)}
-															class="flex items-center gap-3 flex-1 min-w-0"
-														>
-															<AssetIcon name={getIconType(asset)} size="sm" showLabel={false} />
+												class="group flex flex-col bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 hover:shadow-md transition-all overflow-hidden"
+											>
+												{#if asset}
+													<a href={getAssetUrl(asset)} class="flex-1 p-4">
+														<!-- Header with icon and name -->
+														<div class="flex items-start gap-3">
+															<div
+																class="flex-shrink-0 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg group-hover:bg-earthy-terracotta-50 dark:group-hover:bg-earthy-terracotta-900/20 transition-colors"
+															>
+																<AssetIcon name={getIconType(asset)} size="sm" showLabel={false} />
+															</div>
 															<div class="flex-1 min-w-0">
-																<div
-																	class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700"
+																<h4
+																	class="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-400 transition-colors"
 																>
 																	{asset.name}
-																</div>
-																<div
-																	class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono"
+																</h4>
+																<p
+																	class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5"
 																>
 																	{asset.mrn}
-																</div>
+																</p>
 															</div>
-														</a>
+														</div>
+													</a>
+
+													<!-- Footer with badge and actions -->
+													<div
+														class="flex items-center justify-between px-4 py-2 bg-gray-50 dark:bg-gray-900/50 border-t border-gray-100 dark:border-gray-700 mt-auto"
+													>
 														<span
-															class="text-xs px-2 py-0.5 rounded-full {isManual
+															class="text-xs px-2 py-1 rounded-md font-medium {isManual
 																? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
 																: 'bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400'}"
 														>
-															{isManual ? 'manual' : 'rule'}
+															{isManual ? 'Manual' : 'Rule'}
 														</span>
 														{#if canManage && isManual}
 															<button
-																onclick={() => removeAssetFromProduct(assetId)}
+																onclick={(e) => {
+																	e.preventDefault();
+																	removeAssetFromProduct(assetId);
+																}}
 																disabled={removingAssetId === assetId}
-																class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
+																class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-md transition-colors disabled:opacity-50"
 																title="Remove from product"
 															>
 																{#if removingAssetId === assetId}
@@ -710,30 +970,69 @@
 																{/if}
 															</button>
 														{/if}
-													{:else}
-														<div class="text-sm text-gray-500">{assetId}</div>
-													{/if}
-												</div>
-											{/each}
-										</div>
-									{:else}
-										<div class="text-center py-8 text-gray-500 dark:text-gray-400">
-											<IconifyIcon
-												icon="material-symbols:database"
-												class="h-12 w-12 mx-auto mb-3 opacity-50"
-											/>
-											<p>No assets in this data product</p>
-											<p class="text-sm mt-1">
-												{#if canManage}
-													Search above to add assets manually, or create rules to include assets
-													dynamically
+													</div>
 												{:else}
-													Assets can be added manually or matched by rules
+													<!-- Loading placeholder for individual asset -->
+													<div class="p-4 animate-pulse">
+														<div class="flex items-start gap-3 mb-3">
+															<div class="w-10 h-10 bg-gray-200 dark:bg-gray-600 rounded-lg"></div>
+															<div class="flex-1 space-y-2">
+																<div class="h-4 bg-gray-200 dark:bg-gray-600 rounded w-3/4"></div>
+																<div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-full"></div>
+															</div>
+														</div>
+													</div>
 												{/if}
+											</div>
+										{/each}
+									</div>
+
+									<!-- Pagination Controls -->
+									{#if totalAssetPages > 1}
+										<div
+											class="flex justify-between items-center mt-6 pt-4 border-t border-gray-200 dark:border-gray-700"
+										>
+											<p class="text-sm text-gray-600 dark:text-gray-400">
+												Showing {(currentAssetPage - 1) * ASSETS_PER_PAGE + 1}-{Math.min(
+													currentAssetPage * ASSETS_PER_PAGE,
+													resolvedAssets.all_assets.length
+												)} of {resolvedAssets.all_assets.length} assets
 											</p>
+											<div class="flex gap-2">
+												<button
+													onclick={() => handleAssetPageChange(currentAssetPage - 1)}
+													disabled={currentAssetPage === 1 || isLoadingAssets}
+													class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+												>
+													Previous
+												</button>
+												<button
+													onclick={() => handleAssetPageChange(currentAssetPage + 1)}
+													disabled={currentAssetPage >= totalAssetPages || isLoadingAssets}
+													class="px-4 py-2 text-sm font-medium rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+												>
+													Next
+												</button>
+											</div>
 										</div>
 									{/if}
-								</div>
+								{:else}
+									<div class="text-center py-12 text-gray-500 dark:text-gray-400">
+										<IconifyIcon
+											icon="material-symbols:database"
+											class="h-12 w-12 mx-auto mb-3 opacity-50"
+										/>
+										<p>No assets in this data product</p>
+										<p class="text-sm mt-1">
+											{#if canManage}
+												Search above to add assets manually, or create rules to include assets
+												dynamically
+											{:else}
+												Assets can be added manually or matched by rules
+											{/if}
+										</p>
+									</div>
+								{/if}
 							</div>
 						{/if}
 

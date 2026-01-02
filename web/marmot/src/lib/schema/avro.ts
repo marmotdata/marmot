@@ -164,10 +164,11 @@ export function processAvroSchema(schema: any): Field[] {
 					const name = nameMatch ? nameMatch[1] : 'root';
 					const namespace = namespaceMatch ? namespaceMatch[1] : '';
 
+					const docMatch = schema.match(/doc:\s*(.+)/);
 					fields.push({
 						name,
 						type: 'record',
-						description: schema.match(/doc:\s*(.+)/) ? schema.match(/doc:\s*(.+)/)[1] : undefined,
+						description: docMatch ? docMatch[1] : undefined,
 						required: true,
 						indentLevel: 0
 					});
@@ -179,7 +180,8 @@ export function processAvroSchema(schema: any): Field[] {
 						const line = lines[i];
 
 						if (line.trim().startsWith('- name:')) {
-							const fieldName = line.match(/name:\s*(\w+)/)[1];
+							const fieldNameMatch = line.match(/name:\s*(\w+)/);
+							const fieldName = fieldNameMatch ? fieldNameMatch[1] : 'unknown';
 							const typeMatch = lines[i + 1]?.match(/type:\s*(\w+|\[.*\])/);
 							const docMatch = lines
 								.slice(i, i + 3)
@@ -245,7 +247,7 @@ export function processAvroSchema(schema: any): Field[] {
 			{
 				name: 'Error',
 				type: 'error',
-				description: `Failed to process Avro schema: ${error.message}`
+				description: `Failed to process Avro schema: ${error instanceof Error ? error.message : String(error)}`
 			}
 		];
 	}
@@ -286,7 +288,7 @@ export function validateAvroSchema(schema: any): any[] {
 		avsc.Type.forSchema(schema);
 		return [];
 	} catch (error) {
-		return [{ message: error.message }];
+		return [{ message: error instanceof Error ? error.message : String(error) }];
 	}
 }
 

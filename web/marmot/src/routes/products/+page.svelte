@@ -6,6 +6,7 @@
 	import type { DataProduct } from '$lib/dataproducts/types';
 	import ProductBlade from '$components/product/ProductBlade.svelte';
 	import IconifyIcon from '@iconify/svelte';
+	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 	import Button from '$components/ui/Button.svelte';
 	import { auth } from '$lib/stores/auth';
 
@@ -119,7 +120,7 @@
 			<div>
 				<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Data Products</h1>
 				<p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-					Curated collections of data assets for your organization
+					Logical groupings of related data assets
 				</p>
 			</div>
 			{#if canManageProducts}
@@ -233,12 +234,20 @@
 							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-lg hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all group"
 						>
 							<div
-								class="w-10 h-10 rounded-lg bg-gradient-to-br from-earthy-terracotta-100 to-earthy-terracotta-200 dark:from-earthy-terracotta-900/50 dark:to-earthy-terracotta-800/30 flex items-center justify-center mb-3"
+								class="w-10 h-10 rounded-lg bg-gradient-to-br from-earthy-terracotta-100 to-earthy-terracotta-200 dark:from-earthy-terracotta-900/50 dark:to-earthy-terracotta-800/30 flex items-center justify-center mb-3 overflow-hidden"
 							>
-								<IconifyIcon
-									icon="mdi:package-variant-closed"
-									class="text-xl text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-								/>
+								{#if product.icon_url}
+									<AuthenticatedImage
+										src={product.icon_url}
+										alt="{product.name} icon"
+										class="w-full h-full object-cover"
+									/>
+								{:else}
+									<IconifyIcon
+										icon="mdi:package-variant-closed"
+										class="text-xl text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+									/>
+								{/if}
 							</div>
 							<h3
 								class="font-semibold text-gray-900 dark:text-gray-100 truncate group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-400 transition-colors mb-1"
@@ -298,12 +307,20 @@
 								: ''}"
 						>
 							<div
-								class="w-8 h-8 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center flex-shrink-0"
+								class="w-8 h-8 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center flex-shrink-0 overflow-hidden"
 							>
-								<IconifyIcon
-									icon="mdi:package-variant-closed"
-									class="text-sm text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-								/>
+								{#if product.icon_url}
+									<AuthenticatedImage
+										src={product.icon_url}
+										alt="{product.name} icon"
+										class="w-full h-full object-cover"
+									/>
+								{:else}
+									<IconifyIcon
+										icon="mdi:package-variant-closed"
+										class="text-sm text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+									/>
+								{/if}
 							</div>
 							<div class="flex-1 min-w-0">
 								<h3

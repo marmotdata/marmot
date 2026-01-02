@@ -10,9 +10,9 @@ export async function fetchApi(endpoint: string, options: FetchApiOptions = {}) 
 	const { skipAuth = false, prefix = '/api/v1', ...fetchOptions } = options;
 	const token = auth.getToken();
 
-	const headers = {
+	const headers: Record<string, string> = {
 		'Content-Type': 'application/json',
-		...fetchOptions.headers
+		...(fetchOptions.headers as Record<string, string>)
 	};
 
 	// Only add Authorization header if we have a token and skipAuth is false

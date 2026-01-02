@@ -83,7 +83,8 @@ export function processPatternProperties(
 		return fields;
 	}
 
-	Object.entries(patternProperties).forEach(([pattern, schema]) => {
+	Object.entries(patternProperties).forEach(([pattern, schemaValue]) => {
+		const schema = schemaValue as any;
 		const fullPath = parentPath ? `${parentPath}.{pattern: ${pattern}}` : `{pattern: ${pattern}}`;
 		fields.push({
 			name: fullPath,
@@ -186,7 +187,11 @@ export function processComposition(
 	}
 
 	if (fieldSchema.allOf) {
-		const mergedSchema = { type: 'object', properties: {}, required: [] };
+		const mergedSchema: { type: string; properties: Record<string, any>; required: string[] } = {
+			type: 'object',
+			properties: {},
+			required: []
+		};
 
 		fieldSchema.allOf.forEach((schema: any) => {
 			if (schema.$ref) {
@@ -396,7 +401,7 @@ export function processField(
 			{
 				name: fieldName,
 				type: 'error',
-				description: `Error processing field: ${err.message}`,
+				description: `Error processing field: ${err instanceof Error ? err.message : String(err)}`,
 				required: false,
 				indentLevel: depth
 			}
@@ -549,7 +554,7 @@ export function processJsonSchema(schemaSection: any): Field[] {
 			{
 				name: 'Error',
 				type: 'error',
-				description: `Failed to process JSON schema: ${error.message}`
+				description: `Failed to process JSON schema: ${error instanceof Error ? error.message : String(error)}`
 			}
 		];
 	}
@@ -564,7 +569,7 @@ export function validateJsonSchema(schema: any): any[] {
 			try {
 				schemaObj = JSON.parse(schema);
 			} catch (e) {
-				return [{ message: e.message }];
+				return [{ message: e instanceof Error ? e.message : String(e) }];
 			}
 		}
 
@@ -578,13 +583,13 @@ export function validateJsonSchema(schema: any): any[] {
 				ajv.compile(schemaCopy);
 				return [];
 			} catch (error) {
-				return [{ message: error.message }];
+				return [{ message: error instanceof Error ? error.message : String(error) }];
 			}
 		}
 
 		return [];
 	} catch (error) {
-		return [{ message: error.message }];
+		return [{ message: error instanceof Error ? error.message : String(error) }];
 	}
 }
 

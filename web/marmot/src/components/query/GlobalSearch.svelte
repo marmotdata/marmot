@@ -3,13 +3,15 @@
 	import { fetchApi } from '$lib/api';
 	import Icon from '@iconify/svelte';
 	import AssetIcon from '$lib/components/AssetIcon.svelte';
+	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
+	import { createKeyboardNavigationState } from '$lib/keyboard';
 
 	export let initialQuery = '';
 	export let autofocus = false;
 	export let onNavigate: (() => void) | undefined = undefined;
 
 	interface SearchResult {
-		type: 'asset' | 'glossary' | 'team';
+		type: 'asset' | 'glossary' | 'team' | 'data_product';
 		id: string;
 		name: string;
 		description?: string;
@@ -80,36 +82,35 @@
 		}
 	}
 
-	function handleKeydown(event: KeyboardEvent) {
-		if (event.key === 'Escape') {
-			if (showResults) {
-				showResults = false;
-				selectedIndex = -1;
-			} else {
-				searchQuery = '';
-				if (onNavigate) {
-					onNavigate();
+	const { handleKeydown: navKeydown } = createKeyboardNavigationState(
+		() => searchResults,
+		() => selectedIndex,
+		(i) => (selectedIndex = i),
+		{
+			onSelect: navigateToResult,
+			onEscape: () => {
+				if (showResults) {
+					showResults = false;
+					selectedIndex = -1;
+				} else {
+					searchQuery = '';
+					if (onNavigate) {
+						onNavigate();
+					}
 				}
 			}
+		}
+	);
+
+	function handleKeydown(event: KeyboardEvent) {
+		// Only handle navigation keys when results are showing
+		if (showResults && ['ArrowDown', 'ArrowUp', 'Enter'].includes(event.key)) {
+			navKeydown(event);
 			return;
 		}
-
-		if (event.key === 'ArrowDown' && showResults && searchResults.length > 0) {
-			event.preventDefault();
-			selectedIndex = Math.min(selectedIndex + 1, searchResults.length - 1);
-			return;
-		}
-
-		if (event.key === 'ArrowUp' && showResults && searchResults.length > 0) {
-			event.preventDefault();
-			selectedIndex = Math.max(selectedIndex - 1, -1);
-			return;
-		}
-
-		if (event.key === 'Enter' && showResults && searchResults.length > 0 && selectedIndex >= 0) {
-			event.preventDefault();
-			navigateToResult(searchResults[selectedIndex]);
-			return;
+		// Always handle Escape
+		if (event.key === 'Escape') {
+			navKeydown(event);
 		}
 	}
 
@@ -124,7 +125,8 @@
 		const iconMap: Record<string, string> = {
 			asset: 'mdi:database',
 			glossary: 'mdi:book-open-variant',
-			team: 'mdi:account-group'
+			team: 'mdi:account-group',
+			data_product: 'mdi:package-variant-closed'
 		};
 		return iconMap[type] || 'mdi:file-document';
 	}
@@ -133,9 +135,16 @@
 		const colorMap: Record<string, string> = {
 			asset: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
 			glossary: 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300',
-			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+			team: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+			data_product:
+				'bg-earthy-terracotta-100 text-earthy-terracotta-800 dark:bg-earthy-terracotta-900 dark:text-earthy-terracotta-300'
 		};
 		return colorMap[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+	}
+
+	function getTypeLabel(type: string): string {
+		if (type === 'data_product') return 'product';
+		return type;
 	}
 
 	function getResultSubtitle(result: SearchResult): string {
@@ -192,6 +201,23 @@
 										size="md"
 									/>
 								</div>
+							{:else if result.type === 'data_product'}
+								<div
+									class="flex-shrink-0 w-8 h-8 rounded-lg bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 flex items-center justify-center overflow-hidden"
+								>
+									{#if result.metadata?.icon_url}
+										<AuthenticatedImage
+											src={result.metadata.icon_url}
+											alt="{result.name} icon"
+											class="w-full h-full object-cover"
+										/>
+									{:else}
+										<Icon
+											icon="mdi:package-variant-closed"
+											class="text-sm text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+										/>
+									{/if}
+								</div>
 							{:else}
 								<Icon
 									icon={getTypeIcon(result.type)}
@@ -208,7 +234,7 @@
 											result.type
 										)}"
 									>
-										{result.type}
+										{getTypeLabel(result.type)}
 									</span>
 								</div>
 								{#if getResultSubtitle(result)}

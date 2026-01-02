@@ -9,7 +9,7 @@
 	import LineageViewNode from '$components/lineage/LineageViewNode.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import RunHistory from '$components/runs/RunHistory.svelte';
-	import AssetTags from './AssetTags.svelte';
+	import Tags from '$components/shared/Tags.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import AssetDescriptions from './AssetDescriptions.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
@@ -127,45 +127,6 @@
 		}
 	}
 
-	async function handleOwnersChange(newOwners: Owner[]) {
-		if (!asset?.id || !canManageAssets) return;
-
-		const currentOwnerKeys = new Set(owners.map((o) => `${o.type}-${o.id}`));
-		const newOwnerKeys = new Set(newOwners.map((o) => `${o.type}-${o.id}`));
-
-		// Find added and removed owners
-		const added = newOwners.filter((o) => !currentOwnerKeys.has(`${o.type}-${o.id}`));
-		const removed = owners.filter((o) => !newOwnerKeys.has(`${o.type}-${o.id}`));
-
-		try {
-			// Add new owners
-			for (const owner of added) {
-				const response = await fetchApi(`/assets/owners/?asset_id=${asset.id}`, {
-					method: 'POST',
-					body: JSON.stringify({
-						owner_type: owner.type,
-						owner_id: owner.id
-					})
-				});
-				if (!response.ok) throw new Error('Failed to add owner');
-			}
-
-			// Remove old owners
-			for (const owner of removed) {
-				const response = await fetchApi(
-					`/assets/owners/?asset_id=${asset.id}&owner_type=${owner.type}&owner_id=${owner.id}`,
-					{ method: 'DELETE' }
-				);
-				if (!response.ok) throw new Error('Failed to remove owner');
-			}
-
-			owners = newOwners;
-		} catch (error) {
-			console.error('Failed to update owners:', error);
-			// Revert to previous state on error
-			await fetchOwners();
-		}
-	}
 	$: filteredLineage = lineage
 		? {
 				...lineage,
@@ -291,75 +252,15 @@
 
 				<div class="flex-1 overflow-y-auto min-h-0 {staticPlacement ? 'pr-6 py-6' : 'p-6'}">
 					<div class="space-y-4">
-						<!-- Asset Header -->
-						{#if staticPlacement}
-							<div
-								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
-							>
-								<div class="flex items-start gap-3 mb-3">
-									<div class="flex-shrink-0">
-										<Icon name={currentIconName} iconSize="md" />
-									</div>
-									<div class="flex-1 min-w-0">
-										<h3 class="font-semibold text-base text-gray-900 dark:text-gray-100 truncate">
-											{asset.name || ''}
-										</h3>
-										<p class="text-xs text-gray-500 dark:text-gray-400 truncate font-mono mt-0.5">
-											{asset.mrn || ''}
-										</p>
-									</div>
-								</div>
-								<div class="space-y-4">
-									<div>
-										<div class="flex items-center gap-2 mb-2">
-											<IconifyIcon
-												icon="material-symbols:label-outline"
-												class="w-4 h-4 text-gray-500 dark:text-gray-400"
-											/>
-											<h4
-												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-											>
-												Tags
-											</h4>
-										</div>
-										<AssetTags {asset} editable={staticPlacement} />
-									</div>
-									<div>
-										<div class="flex items-center gap-2 mb-2">
-											<IconifyIcon
-												icon="material-symbols:person-outline"
-												class="w-4 h-4 text-gray-500 dark:text-gray-400"
-											/>
-											<h4
-												class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-											>
-												Owners
-											</h4>
-										</div>
-										{#if loadingOwners}
-											<div class="flex items-center justify-center py-4">
-												<div
-													class="animate-spin h-5 w-5 border-b-2 border-earthy-terracotta-700 rounded-full"
-												></div>
-											</div>
-										{:else}
-											<OwnerSelector
-												selectedOwners={owners}
-												onChange={handleOwnersChange}
-												disabled={!canManageAssets}
-											/>
-										{/if}
-									</div>
-								</div>
-							</div>
-						{:else}
+						<!-- Asset Header - only show in non-static mode -->
+						{#if !staticPlacement}
 							<a
 								href={`${fullViewUrl}`}
 								class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all"
 							>
 								<div class="flex items-start gap-3 mb-3">
 									<div class="flex-shrink-0">
-										<Icon name={currentIconName} iconSize="md" />
+										<Icon name={currentIconName} size="md" />
 									</div>
 									<div class="flex-1 min-w-0">
 										<h3 class="font-semibold text-base text-gray-900 dark:text-gray-100 truncate">
@@ -383,7 +284,7 @@
 												Tags
 											</h4>
 										</div>
-										<AssetTags {asset} editable={false} />
+										<Tags tags={asset.tags ?? []} endpoint="/assets" id={asset.id} canEdit={false} />
 									</div>
 									<div>
 										<div class="flex items-center gap-2 mb-2">
@@ -411,16 +312,51 @@
 							</a>
 						{/if}
 
-						<!-- Descriptions and Glossary Terms -->
-						{#if hasDescriptionsOrTerms}
+						<!-- Descriptions and Glossary Terms - hide user description editing in static mode (now in page header) -->
+						{#if !staticPlacement && hasDescriptionsOrTerms}
 							<div
 								class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
 							>
 								<div class="space-y-5">
-									<AssetDescriptions {asset} editable={staticPlacement} />
-									<AssetGlossaryTerms {asset} editable={staticPlacement} />
+									<AssetDescriptions {asset} editable={false} />
+									<AssetGlossaryTerms {asset} editable={false} />
 								</div>
 							</div>
+						{:else if staticPlacement}
+							<!-- In static mode, only show technical description and glossary if present -->
+							{#if asset.description}
+								<div
+									class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5"
+								>
+									<div class="flex items-center gap-2 mb-2">
+										<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100">
+											Technical Description
+										</h3>
+										<div
+											class="flex items-center justify-center w-5 h-5 rounded-full bg-purple-100 dark:bg-purple-900/30"
+											title="Generated by plugin"
+										>
+											<svg
+												class="w-3 h-3 text-purple-700 dark:text-purple-300"
+												fill="currentColor"
+												viewBox="0 0 20 20"
+											>
+												<path
+													fill-rule="evenodd"
+													d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"
+													clip-rule="evenodd"
+												/>
+											</svg>
+										</div>
+									</div>
+									<p
+										class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap leading-relaxed"
+									>
+										{asset.description}
+									</p>
+								</div>
+							{/if}
+							<AssetGlossaryTerms {asset} editable={true} />
 						{/if}
 
 						<!-- Run History -->
