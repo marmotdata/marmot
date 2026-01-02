@@ -30,6 +30,7 @@ jobs:
         with:
           node-version: "22"
           cache: "pnpm"
+          cache-dependency-path: "web/marmot/pnpm-lock.yaml"
 
       - name: Install dev dependencies
         run: make dev-deps
