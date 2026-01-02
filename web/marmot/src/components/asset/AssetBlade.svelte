@@ -284,7 +284,12 @@
 												Tags
 											</h4>
 										</div>
-										<Tags tags={asset.tags ?? []} endpoint="/assets" id={asset.id} canEdit={false} />
+										<Tags
+											tags={asset.tags ?? []}
+											endpoint="/assets"
+											id={asset.id}
+											canEdit={false}
+										/>
 									</div>
 									<div>
 										<div class="flex items-center gap-2 mb-2">
