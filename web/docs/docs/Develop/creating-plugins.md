@@ -2,6 +2,8 @@
 
 This guide walks you through creating a simple HelloWorld plugin for Marmot that demonstrates the core concepts of plugin development.
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
 > **Documentation Comments**: The `+marmot:` comments throughout the code are used by Marmot's documentation generator. Always include these comments - they provide metadata for the plugin registry and generate user-facing documentation.
 
 ## 1. Create the Plugin Package
@@ -283,3 +285,12 @@ type Source interface {
 
 **Validate**: Unmarshals and validates configuration before discovery runs
 **Discover**: Performs the actual asset discovery and returns assets + lineage
+
+<CalloutCard
+  title="Need Help Building a Plugin?"
+  description="Join our Discord community to get help, share your plugins, and connect with other contributors."
+  href="https://discord.gg/tMgc9ayB"
+  buttonText="Join Discord"
+  variant="secondary"
+  icon="mdi:account-group"
+/>

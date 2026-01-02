@@ -1,6 +1,11 @@
 ---
 sidebar_position: 2
+title: Helm / Kubernetes
 ---
+
+# Helm / Kubernetes
+
+Deploy Marmot to your Kubernetes cluster using our official Helm chart.
 
 ## Simple Deployment
 

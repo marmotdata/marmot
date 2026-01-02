@@ -2,6 +2,8 @@
 sidebar_position: 5
 ---
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
 # Query Language
 
 Marmot provides a query language for searching and filtering assets in your catalog. The language supports free-text search, field-specific filters, comparison operators, and boolean logic.
@@ -202,3 +204,12 @@ kafka
 ```
 payment @type: "topic" AND @metadata.team: "payments"
 ```
+
+<CalloutCard
+  title="Need Help with Queries?"
+  description="Join our Discord community to ask questions and share tips with other Marmot users."
+  href="https://discord.gg/tMgc9ayB"
+  buttonText="Join Discord"
+  variant="secondary"
+  icon="mdi:account-group"
+/>

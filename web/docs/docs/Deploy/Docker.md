@@ -1,6 +1,11 @@
 ---
 sidebar_position: 1
+title: Docker
 ---
+
+# Docker
+
+Deploy Marmot using Docker containers - recommended for most users.
 
 ## Generate Encryption Key
 

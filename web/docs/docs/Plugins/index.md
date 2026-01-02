@@ -17,13 +17,16 @@ The [Marmot API](/docs/populating/api) lets you programmatically create, update,
 
 ## Available Plugins
 
-- [AsyncAPI](plugins/asyncapi) - Discover services, topics, and queues from AsyncAPI specifications
-- [BigQuery](plugins/bigquery) - Catalog datasets, tables, and views from Google BigQuery projects
-- [Kafka](plugins/kafka) - Catalog topics from Apache Kafka clusters with Schema Registry integration
-- [MongoDB](plugins/mongodb) - Discover databases and collections from MongoDB instances
-- [MySQL](plugins/mysql) - Discover databases and tables from MySQL instances
-- [PostgreSQL](plugins/postgresql) - Discover tables, views, and relationships from PostgreSQL databases
-- [SNS](plugins/sns) - Catalog topics from Amazon SNS
-- [SQS](plugins/sqs) - Discover queues from Amazon SQS
+import PluginCards from '@site/src/components/PluginCards';
+import { CalloutCard } from '@site/src/components/DocCard';
 
-Don't see your data source? Learn how to [create your own plugin](/docs/Develop/Creating%20a%20CLI%20Plugin).
+<PluginCards />
+
+<CalloutCard
+  title="Don't see your data source?"
+  description="Learn how to build a custom plugin to connect Marmot to any data source."
+  href="/docs/Develop/Creating%20a%20CLI%20Plugin"
+  buttonText="Create a Plugin"
+  variant="secondary"
+  icon="mdi:puzzle-plus"
+/>

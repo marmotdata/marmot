@@ -6,6 +6,8 @@ sidebar_position: 2
 
 This guide will help you quickly spin up Marmot and populate it with sample assets and lineage relationships.
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
 ## Requirements
 
 - Docker and Docker Compose
@@ -35,6 +37,11 @@ docker compose up
 
 > **The default username and password is admin:admin**
 
-## Getting Help
-
-Join our [Discord community](https://discord.gg/tMgc9ayB) to ask questions and connect with other Marmot users.
+<CalloutCard
+  title="Need Help?"
+  description="Join our Discord community to ask questions and connect with other Marmot users."
+  href="https://discord.gg/tMgc9ayB"
+  buttonText="Join Discord"
+  variant="secondary"
+  icon="mdi:account-group"
+/>

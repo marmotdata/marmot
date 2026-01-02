@@ -1,23 +1,55 @@
 # Deploy
 
-There's multiple ways of deploying Marmot, choose whichever method works best with your existing infrastructure and workflows. Populating Marmot is indepdenent from the deploying the instance, you can [read more about adding data to Marmot here.](/docs/populating)
+There are multiple ways to deploy Marmot - choose whichever method works best with your existing infrastructure and workflows.
 
----
+import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
 
-## Docker
+<CalloutCard
+  title="Try Before You Deploy"
+  description="Explore Marmot's features with our live demo - no installation required."
+  href="https://demo.marmotdata.io"
+  buttonText="View Live Demo"
+  icon="mdi:rocket-launch"
+/>
 
-Deploy Marmot using containers, this is the recommended approach for most users.
+## Deployment Options
 
-[Learn more about Docker deployment](docker.md)
+<DocCardGrid>
+  <DocCard
+    title="Docker"
+    description="Deploy using containers - recommended for most users"
+    href="/docs/Deploy/Docker"
+    icon="mdi:docker"
+  />
+  <DocCard
+    title="Helm / Kubernetes"
+    description="Deploy to Kubernetes clusters with our official Helm chart"
+    href="/docs/Deploy/Helm"
+    icon="mdi:kubernetes"
+  />
+  <DocCard
+    title="CLI / Binary"
+    description="Run directly on your system with the single binary"
+    href="/docs/Deploy/CLI"
+    icon="mdi:console"
+  />
+</DocCardGrid>
 
-## CLI
+## Next Steps
 
-Run Marmot directly on your system using the command-line interface. This provides more control over the runtime environment and configuration.
+Once deployed, you'll want to populate your catalog with data assets:
 
-[Learn more about CLI deployment](cli.md)
-
----
-
-All deployment methods require a **PostgreSQL database**.
-
-For detailed configuration options, see the [Configuration Guide](configuration.md).
+<DocCardGrid>
+  <DocCard
+    title="Add Data with Plugins"
+    description="Automatically discover assets from your data sources"
+    href="/docs/Plugins"
+    icon="mdi:puzzle"
+  />
+  <DocCard
+    title="Configure Marmot"
+    description="Customize authentication, settings, and more"
+    href="/docs/Configure"
+    icon="mdi:cog"
+  />
+</DocCardGrid>

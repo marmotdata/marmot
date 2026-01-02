@@ -6,9 +6,17 @@ sidebar_position: 6
 
 Marmot includes a built-in **Model Context Protocol (MCP)** server that enables AI assistants like Claude, ChatGPT and other LLM-powered tools to interact with your data catalog using natural language.
 
-## What is MCP?
+import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
-The Model Context Protocol is a standardised way for AI assistants to connect with external data sources and systems. Think of it as a universal translator between AI models and your data. It exposes your catalog's capabilities, metadata and functions through machine-readable schemas that AI assistants can understand and use.
+<CalloutCard
+  title="What is MCP?"
+  description="The Model Context Protocol is a standardised way for AI assistants to connect with external data sources - like a universal translator between AI models and your data."
+  href="https://modelcontextprotocol.io"
+  buttonText="Learn More"
+  icon="mdi:robot"
+/>
+
+## What Can You Do?
 
 With MCP, you can ask questions like:
 
@@ -17,14 +25,63 @@ With MCP, you can ask questions like:
 - "Find the upstream dependencies for the user_events table"
 - "Who owns the payment processing API?"
 
-## How It Works
+<FeatureGrid>
+  <FeatureCard
+    title="Search Assets"
+    description="Query your catalog using natural language"
+    icon="mdi:magnify"
+  />
+  <FeatureCard
+    title="View Lineage"
+    description="Explore upstream and downstream dependencies"
+    icon="mdi:source-branch"
+  />
+  <FeatureCard
+    title="Read Metadata"
+    description="Access descriptions, owners, tags and custom metadata"
+    icon="mdi:tag-multiple"
+  />
+  <FeatureCard
+    title="Discover Context"
+    description="Understand relationships between assets"
+    icon="mdi:graph"
+  />
+</FeatureGrid>
 
-Marmot's MCP server exposes your data catalog's metadata in real-time, enabling AI assistants to:
+## Choose Your AI Assistant
 
-1. **Search Assets** - Query your catalog using natural language
-2. **View Lineage** - Explore upstream and downstream dependencies
-3. **Read Metadata** - Access descriptions, owners, tags and custom metadata
-4. **Discover Context** - Understand relationships between assets
+<DocCardGrid>
+  <DocCard
+    title="Claude Desktop"
+    description="Anthropic's official desktop application"
+    href="/docs/MCP/claude-desktop"
+    icon="simple-icons:anthropic"
+  />
+  <DocCard
+    title="Claude Code"
+    description="Claude's command-line interface"
+    href="/docs/MCP/claude-code"
+    icon="mdi:console"
+  />
+  <DocCard
+    title="Cursor"
+    description="The AI-first code editor"
+    href="/docs/MCP/cursor"
+    icon="mdi:cursor-default"
+  />
+  <DocCard
+    title="Cline"
+    description="VS Code extension for AI-powered coding"
+    href="/docs/MCP/cline"
+    icon="mdi:microsoft-visual-studio-code"
+  />
+  <DocCard
+    title="LibreChat"
+    description="Universal AI chat interface supporting multiple providers"
+    href="/docs/MCP/librechat"
+    icon="mdi:chat"
+  />
+</DocCardGrid>
 
 ## Authentication
 
@@ -37,42 +94,27 @@ MCP uses the same authentication as Marmot's REST API. You'll need an API key to
 
 The AI assistant will have the same permissions as your user account, respecting all role-based access controls.
 
-## Getting Started
-
-Choose your AI assistant to see configuration examples:
-
-- **[Claude Desktop](./claude-desktop.md)** - Anthropic's official desktop application
-- **[Claude Code](./claude-code.md)** - Claude's command-line interface
-- **[Cursor](./cursor.md)** - The AI-first code editor
-- **[Cline](./cline.md)** - VS Code extension for AI-powered coding
-- **[LibreChat](./librechat.md)** - Universal AI chat interface supporting multiple providers
-
 ## Available Tools
 
-Marmot's MCP server provides the following tools to AI assistants:
+Marmot's MCP server provides these tools to AI assistants:
 
 ### discover_data
 
 Unified data discovery for finding any asset in the catalog. Supports natural language queries, specific lookups by ID or MRN (qualified identifiers like `postgres://db/schema/table`), filtering by type/provider/tags and metadata-based queries.
 
-Returns asset details including ownership, schema and lineage information.
-
 ### find_ownership
 
-Bidirectional ownership queries to answer "Who owns this asset?", "What does this user own?" and "Show me all data owned by the data-eng team". Works for both data assets and glossary terms. Can query by asset ID, user ID/username or team ID/team name.
+Bidirectional ownership queries to answer "Who owns this asset?", "What does this user own?" and "Show me all data owned by the data-eng team". Works for both data assets and glossary terms.
 
 ### lookup_term
 
-Business glossary lookups for understanding terminology and definitions. Search for glossary terms by name or retrieve specific term definitions. Returns term details, ownership, related terms and parent/child relationships in the glossary hierarchy.
+Business glossary lookups for understanding terminology and definitions. Search for glossary terms by name or retrieve specific term definitions.
 
-## Example Queries
-
-Once configured, you can interact with Marmot through natural language:
-
-- "Find all Kafka topics owned by the data-platform team"
-- "What are the upstream dependencies for the analytics.user_events table?"
-- "What does 'Monthly Active Users' mean in our glossary?"
-- "Show me all BigQuery datasets tagged as production"
-- "Who owns the customer_data table?"
-
-For more help, join our [Discord community](https://discord.gg/tMgc9ayB).
+<CalloutCard
+  title="Need Help?"
+  description="Join our Discord community to get help, share feedback, and connect with other Marmot users."
+  href="https://discord.gg/tMgc9ayB"
+  buttonText="Join Discord"
+  variant="secondary"
+  icon="mdi:account-group"
+/>

@@ -1,21 +1,51 @@
-# Populating
+# Populating Your Catalog
 
-There are many ways of populating Marmot with assets and lineage. You can use all of the methods, or just one, it's entirely up to you and what works best with your existing pipelines and workflows.
+There are many ways to populate Marmot with assets and lineage. Use all of these methods together, or just the ones that fit your existing workflows.
 
----
+import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
 
-## CLI
+<CalloutCard
+  title="Auto-Discover with Plugins"
+  description="The easiest way to get started - automatically discover and catalog assets from your data sources."
+  href="/docs/Plugins"
+  buttonText="Browse Plugins"
+  icon="mdi:puzzle"
+/>
 
-The CLI is the easiest way to get started with Marmot, it provides a simple YAML configuration for fetching asset from various data sources. The supported plugins for the CLI is constantly being updated.
+## Methods
 
-## Terraform
+<DocCardGrid>
+  <DocCard
+    title="CLI"
+    description="Simple YAML configuration for fetching assets from various data sources"
+    href="/docs/Populating/CLI"
+    icon="mdi:console"
+  />
+  <DocCard
+    title="Terraform"
+    description="Integrate with your existing IaC pipelines using the Marmot provider"
+    href="/docs/Populating/Terraform"
+    icon="mdi:terraform"
+  />
+  <DocCard
+    title="Pulumi"
+    description="Build your catalog with your favourite programming language"
+    href="/docs/Populating/Pulumi"
+    icon="mdi:code-braces"
+  />
+  <DocCard
+    title="REST API"
+    description="Custom integrations with your existing tooling or software"
+    href="/docs/Populating/API"
+    icon="mdi:api"
+  />
+</DocCardGrid>
 
-If you're looking for a more powerful option, or, want to integrate with your existing IaC pipelines, you can use the Marmot Terraform provider.
-
-## Pulumi
-
-You can also utilise the Terraform provider with Pulumi to build your IaC with your favourite programming language.
-
-## API
-
-The API can be used for custom integrations with your existing tooling or software. You can find the [API documentation here](/api).
+<CalloutCard
+  title="Explore the API"
+  description="View the full API documentation with interactive examples."
+  href="/api"
+  buttonText="View API Docs"
+  variant="secondary"
+  icon="mdi:book-open-variant"
+/>

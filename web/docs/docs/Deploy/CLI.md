@@ -1,6 +1,11 @@
 ---
-sidebar_position: 4
+sidebar_position: 3
+title: CLI / Binary
 ---
+
+# CLI / Binary
+
+Run Marmot directly on your system using the single binary.
 
 ## Installation
 
