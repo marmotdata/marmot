@@ -29,8 +29,8 @@ type GetMetricsResponse struct {
 // @Tags metrics
 // @Accept json
 // @Produce json
-// @Param start query string true "Start time (ISO 8601)" example(2024-01-01T00:00:00Z)
-// @Param end query string true "End time (ISO 8601)" example(2024-01-02T00:00:00Z)
+// @Param start query string true "Start time (ISO 8601)"
+// @Param end query string true "End time (ISO 8601)"
 // @Param metric_names query []string false "Filter by metric names"
 // @Param aggregation query string false "Aggregation type" Enums(avg,sum,max,min) default(avg)
 // @Param bucket_size query string false "Time bucket size" Enums(1m,5m,1h,1d)

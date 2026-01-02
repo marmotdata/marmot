@@ -614,7 +614,6 @@ const docTemplate = `{
                 "parameters": [
                     {
                         "type": "string",
-                        "example": "2024-01-01T00:00:00Z",
                         "description": "Start time (ISO 8601)",
                         "name": "start",
                         "in": "query",
@@ -622,7 +621,6 @@ const docTemplate = `{
                     },
                     {
                         "type": "string",
-                        "example": "2024-01-02T00:00:00Z",
                         "description": "End time (ISO 8601)",
                         "name": "end",
                         "in": "query",
@@ -4267,7 +4265,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "bucket_size": {
-                    "$ref": "#/definitions/time.Duration"
+                    "type": "integer"
                 },
                 "bucket_start": {
                     "type": "string"
@@ -4675,73 +4673,6 @@ const docTemplate = `{
                 "ResultTypeGlossary",
                 "ResultTypeTeam",
                 "ResultTypeDataProduct"
-            ]
-        },
-        "time.Duration": {
-            "type": "integer",
-            "enum": [
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000,
-                -9223372036854775808,
-                9223372036854775807,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000,
-                1,
-                1000,
-                1000000,
-                1000000000,
-                60000000000,
-                3600000000000
-            ],
-            "x-enum-varnames": [
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
-                "minDuration",
-                "maxDuration",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour",
-                "Nanosecond",
-                "Microsecond",
-                "Millisecond",
-                "Second",
-                "Minute",
-                "Hour"
             ]
         },
         "user.APIKey": {

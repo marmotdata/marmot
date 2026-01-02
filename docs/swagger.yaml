@@ -366,7 +366,7 @@ definitions:
       bucket_end:
         type: string
       bucket_size:
-        $ref: '#/definitions/time.Duration'
+        type: integer
       bucket_start:
         type: string
       labels:
@@ -640,70 +640,6 @@ definitions:
     - ResultTypeGlossary
     - ResultTypeTeam
     - ResultTypeDataProduct
-  time.Duration:
-    enum:
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
-    - -9223372036854775808
-    - 9223372036854775807
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
-    - 1
-    - 1000
-    - 1000000
-    - 1000000000
-    - 60000000000
-    - 3600000000000
-    type: integer
-    x-enum-varnames:
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
-    - minDuration
-    - maxDuration
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
-    - Nanosecond
-    - Microsecond
-    - Millisecond
-    - Second
-    - Minute
-    - Hour
   user.APIKey:
     properties:
       created_at:
@@ -1874,13 +1810,11 @@ paths:
       description: Get aggregated metrics for dashboard display
       parameters:
       - description: Start time (ISO 8601)
-        example: "2024-01-01T00:00:00Z"
         in: query
         name: start
         required: true
         type: string
       - description: End time (ISO 8601)
-        example: "2024-01-02T00:00:00Z"
         in: query
         name: end
         required: true

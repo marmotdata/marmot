@@ -7,8 +7,12 @@ import (
 	"time"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
+
+// swagger type alias
+var _ = user.APIKey{}
 
 type CreateAPIKeyRequest struct {
 	Name          string `json:"name" validate:"required"`

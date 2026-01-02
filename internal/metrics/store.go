@@ -35,7 +35,7 @@ type AggregatedMetric struct {
 	Labels          map[string]string `json:"labels"`
 	BucketStart     time.Time         `json:"bucket_start"`
 	BucketEnd       time.Time         `json:"bucket_end"`
-	BucketSize      time.Duration     `json:"bucket_size"`
+	BucketSize      time.Duration     `json:"bucket_size" swaggertype:"integer"`
 }
 
 type TimeRange struct {
@@ -48,7 +48,7 @@ type QueryOptions struct {
 	MetricNames     []string          `json:"metric_names"`
 	Labels          map[string]string `json:"labels"`
 	AggregationType string            `json:"aggregation_type"`
-	BucketSize      time.Duration     `json:"bucket_size"`
+	BucketSize      time.Duration     `json:"bucket_size" swaggertype:"integer"`
 }
 
 type QueryCount struct {

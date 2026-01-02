@@ -5,8 +5,12 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
+
+// swagger type alias
+var _ = user.User{}
 
 // @Summary Get current user profile
 // @Description Get detailed information about the currently authenticated user

@@ -197,7 +197,7 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 // @Tags lineage
 // @Accept json
 // @Produce json
-// @Param event body RunEvent true "OpenLineage run event"
+// @Param event body lineage.RunEvent true "OpenLineage run event"
 // @Success 200 "Event processed successfully"
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
