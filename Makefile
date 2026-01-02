@@ -44,10 +44,10 @@ lint: frontend-lint
 	golangci-lint run --config=./.github/.golangci.yaml ./... -v
 
 frontend-lint:
-	cd web/marmot && pnpm run lint
+	cd web/marmot && pnpm install && pnpm run lint
 
 frontend-typecheck:
-	cd web/marmot && pnpm run check
+	cd web/marmot && pnpm install && pnpm run check
 
 actionlint:
 	actionlint
