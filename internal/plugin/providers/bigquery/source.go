@@ -1,6 +1,7 @@
 // +marmot:name=BigQuery
 // +marmot:description=This plugin discovers datasets and tables from Google BigQuery projects.
 // +marmot:status=experimental
+// +marmot:features=Assets, Lineage
 package bigquery
 
 //go:generate go run ../../../docgen/cmd/main.go

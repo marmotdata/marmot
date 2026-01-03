@@ -1,6 +1,7 @@
 // +marmot:name=OpenAPI
 // +marmot:description=This plugin discovers OpenAPI v3 specifications.
 // +marmot:status=experimental
+// +marmot:features=Assets
 package openapi
 
 import (

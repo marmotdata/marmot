@@ -1,41 +1,34 @@
-The SQS plugin discovers and catalogs Amazon SQS queues across your AWS accounts. It captures queue configurations, attributes, and can optionally discover Dead Letter Queue relationships between queues.
+The SQS plugin discovers and catalogs Amazon SQS queues across your AWS accounts. It captures queue configurations and can discover Dead Letter Queue relationships.
 
-## Prerequisites
+## Required Permissions
 
-### AWS Permissions
+import { Collapsible } from "@site/src/components/Collapsible";
 
-The plugin requires the following IAM permissions:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:ListQueues",
-        "sqs:GetQueueAttributes",
-        "sqs:ListQueueTags"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-### Minimal Permissions
-
-For basic queue discovery without tags:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": ["sqs:ListQueues", "sqs:GetQueueAttributes"],
-      "Resource": "*"
-    }
-  ]
-}
-```
+<Collapsible
+  title="IAM Policy"
+  icon="mdi:shield-check"
+  policyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "sqs:ListQueues",
+          "sqs:GetQueueAttributes",
+          "sqs:ListQueueTags"
+        ],
+        Resource: "*"
+      }
+    ]
+  }}
+  minimalPolicyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: ["sqs:ListQueues", "sqs:GetQueueAttributes"],
+        Resource: "*"
+      }
+    ]
+  }}
+/>

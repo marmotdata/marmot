@@ -23,7 +23,7 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
   />
   <DocCard
     title="Helm / Kubernetes"
-    description="Deploy to Kubernetes clusters with our official Helm chart"
+    description="Deploy to Kubernetes clusters with the official Helm chart"
     href="/docs/Deploy/Helm"
     icon="mdi:kubernetes"
   />
@@ -48,7 +48,7 @@ Once deployed, you'll want to populate your catalog with data assets:
   />
   <DocCard
     title="Configure Marmot"
-    description="Customize authentication, settings, and more"
+    description="Customise authentication, settings, and more"
     href="/docs/Configure"
     icon="mdi:cog"
   />

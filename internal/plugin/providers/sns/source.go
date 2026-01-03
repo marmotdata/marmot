@@ -1,6 +1,7 @@
 // +marmot:name=SNS
 // +marmot:description=This plugin discovers SNS topics from AWS accounts.
 // +marmot:status=experimental
+// +marmot:features=Assets
 package sns
 
 //go:generate go run ../../../docgen/cmd/main.go

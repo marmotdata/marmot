@@ -6,49 +6,51 @@ status: experimental
 
 # SQS
 
-**Status:** experimental
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Lineage</span></div>
+</div>
+</div>
 
-The SQS plugin discovers and catalogs Amazon SQS queues across your AWS accounts. It captures queue configurations, attributes, and can optionally discover Dead Letter Queue relationships between queues.
 
-## Prerequisites
+The SQS plugin discovers and catalogs Amazon SQS queues across your AWS accounts. It captures queue configurations and can discover Dead Letter Queue relationships.
 
-### AWS Permissions
+## Required Permissions
 
-The plugin requires the following IAM permissions:
+import { Collapsible } from "@site/src/components/Collapsible";
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "sqs:ListQueues",
-        "sqs:GetQueueAttributes",
-        "sqs:ListQueueTags"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-```
-
-### Minimal Permissions
-
-For basic queue discovery without tags:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": ["sqs:ListQueues", "sqs:GetQueueAttributes"],
-      "Resource": "*"
-    }
-  ]
-}
-```
+<Collapsible
+  title="IAM Policy"
+  icon="mdi:shield-check"
+  policyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "sqs:ListQueues",
+          "sqs:GetQueueAttributes",
+          "sqs:ListQueueTags"
+        ],
+        Resource: "*"
+      }
+    ]
+  }}
+  minimalPolicyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: ["sqs:ListQueues", "sqs:GetQueueAttributes"],
+        Resource: "*"
+      }
+    ]
+  }}
+/>
 
 
 ## Example Configuration

@@ -709,3 +709,30 @@ html[data-theme="dark"] code:not([class*="language-"]) {
   background: #374151 !important;
   color: #f9fafb !important;
 }
+
+/* Plugin Badge Dark Mode Overrides */
+html[data-theme="dark"] .bg-earthy-green-100 {
+  background-color: #1a2e1c !important;
+}
+html[data-theme="dark"] .bg-earthy-green-300 {
+  background-color: #35593b !important;
+}
+html[data-theme="dark"] .text-earthy-green-800,
+html[data-theme="dark"] .text-earthy-green-900 {
+  color: #d1dfd1 !important;
+}
+html[data-theme="dark"] .border-earthy-green-300 {
+  border-color: #4a674a !important;
+}
+html[data-theme="dark"] .bg-earthy-blue-300 {
+  background-color: #355159 !important;
+}
+html[data-theme="dark"] .text-earthy-blue-900 {
+  color: #d1dbe2 !important;
+}
+html[data-theme="dark"] .bg-earthy-yellow-300 {
+  background-color: #7b5935 !important;
+}
+html[data-theme="dark"] .text-earthy-yellow-900 {
+  color: #f6e6c9 !important;
+}

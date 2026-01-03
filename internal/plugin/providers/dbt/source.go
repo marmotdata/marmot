@@ -1,6 +1,7 @@
 // +marmot:name=DBT
 // +marmot:description=This plugin ingests metadata from DBT (Data Build Tool) projects, including models, tests, and lineage.
 // +marmot:status=experimental
+// +marmot:features=Assets, Lineage
 package dbt
 
 //go:generate go run ../../../docgen/cmd/main.go

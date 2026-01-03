@@ -13,7 +13,7 @@ export default function GetStarted(): JSX.Element {
                   Ready to discover your data landscape?
                 </h2>
                 <p className="mt-4 text-lg text-white text-opacity-90">
-                  Get started with Marmot in minutes. Our documentation covers
+                  Get started with Marmot in minutes. The documentation covers
                   everything from quick installation to advanced integration
                   patterns.
                 </p>

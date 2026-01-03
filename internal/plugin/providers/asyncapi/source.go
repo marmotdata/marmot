@@ -1,6 +1,7 @@
 // +marmot:name=AsyncAPI
 // +marmot:description=This plugin enables fetching data from AsyncAPI specifications.
 // +marmot:status=experimental
+// +marmot:features=Assets, Lineage
 package asyncapi
 
 //go:generate go run ../../../docgen/cmd/main.go

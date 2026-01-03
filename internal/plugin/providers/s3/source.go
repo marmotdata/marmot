@@ -1,6 +1,7 @@
 // +marmot:name=S3
 // +marmot:description=This plugin discovers S3 buckets from AWS accounts.
 // +marmot:status=experimental
+// +marmot:features=Assets
 package s3
 
 //go:generate go run ../../../docgen/cmd/main.go

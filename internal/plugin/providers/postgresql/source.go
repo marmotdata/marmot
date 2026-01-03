@@ -1,6 +1,7 @@
 // +marmot:name=PostgreSQL
 // +marmot:description=This plugin discovers databases and tables from PostgreSQL instances.
 // +marmot:status=experimental
+// +marmot:features=Assets, Lineage
 package postgresql
 
 //go:generate go run ../../../docgen/cmd/main.go

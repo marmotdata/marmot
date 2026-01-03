@@ -1,6 +1,7 @@
 // +marmot:name=SQS
 // +marmot:description=This plugin discovers SQS queues from AWS accounts.
 // +marmot:status=experimental
+// +marmot:features=Assets, Lineage
 package sqs
 
 //go:generate go run ../../../docgen/cmd/main.go

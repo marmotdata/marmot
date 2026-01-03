@@ -1,6 +1,7 @@
 // +marmot:name=MySQL
 // +marmot:description=This plugin discovers databases and tables from MySQL instances.
 // +marmot:status=experimental
+// +marmot:features=Assets, Lineage
 package mysql
 
 //go:generate go run ../../../docgen/cmd/main.go

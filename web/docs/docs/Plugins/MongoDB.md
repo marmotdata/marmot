@@ -6,7 +6,33 @@ status: experimental
 
 # MongoDB
 
-**Status:** experimental
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Lineage</span></div>
+</div>
+</div>
+
+
+The MongoDB plugin discovers databases and collections from MongoDB instances. It samples documents to infer schema and captures index information.
+
+## Required Permissions
+
+The user needs read access to discover collections:
+
+```javascript
+db.createUser({
+  user: "marmot_reader",
+  pwd: "your-password",
+  roles: [{ role: "read", db: "your_database" }]
+})
+```
+
+For discovering all databases, use the `readAnyDatabase` role.
+
 
 ## Example Configuration
 

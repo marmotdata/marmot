@@ -1,6 +1,7 @@
 // +marmot:name=MongoDB
 // +marmot:description=This plugin discovers databases and collections from MongoDB instances.
 // +marmot:status=experimental
+// +marmot:features=Assets, Lineage
 package mongodb
 
 //go:generate go run ../../../docgen/cmd/main.go

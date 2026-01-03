@@ -23,7 +23,16 @@ status: {{ .Status }}
 
 # {{ .Name }}
 
-**Status:** {{ .Status }}{{if .AdditionalContent}}
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+{{ if eq .Status "stable" }}<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-green-300 text-earthy-green-900">Stable</span>{{ else if eq .Status "beta" }}<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-blue-300 text-earthy-blue-900">Beta</span>{{ else }}<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>{{ end }}
+</div>
+{{if .Features}}<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2">{{range .Features}}<span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">{{ . }}</span>{{end}}</div>
+</div>{{end}}
+</div>
+{{if .AdditionalContent}}
 
 {{ .AdditionalContent }}{{end}}{{if .SupportedServices}}
 ## Supported Services{{range .SupportedServices}}
@@ -66,6 +75,7 @@ type PluginDoc struct {
 	SupportedServices  []string
 	ExampleConfig      string
 	Status             string
+	Features           []string
 	AdditionalContent  string
 	AdditionalSections []AdditionalSection
 }
@@ -318,6 +328,14 @@ func processFile(pluginDoc *PluginDoc, file *ast.File, registry *TypeRegistry) {
 		}
 		if status, ok := markers["status"]; ok {
 			pluginDoc.Status = status
+		}
+		if features, ok := markers["features"]; ok {
+			for _, f := range strings.Split(features, ",") {
+				f = strings.TrimSpace(f)
+				if f != "" {
+					pluginDoc.Features = append(pluginDoc.Features, f)
+				}
+			}
 		}
 	}
 

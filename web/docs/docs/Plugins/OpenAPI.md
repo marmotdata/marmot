@@ -6,7 +6,21 @@ status: experimental
 
 # OpenAPI
 
-**Status:** experimental
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span></div>
+</div>
+</div>
+
+
+The OpenAPI plugin discovers API specifications from OpenAPI v3 files. It creates assets for services and their endpoints.
+
+The plugin scans for `.json` and `.yaml` files and parses them as OpenAPI v3 specifications.
+
 
 ## Example Configuration
 

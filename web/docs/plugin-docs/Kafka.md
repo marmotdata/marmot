@@ -1,8 +1,10 @@
-The Kafka plugin discovers and catalogs Kafka topics from Kafka clusters. It captures topic configurations, partition details, schema information from Schema Registry, and supports various authentication methods including SASL and TLS.
+The Kafka plugin discovers topics from Kafka clusters. It captures topic configurations, partition details, and schema information from Schema Registry.
 
 ## Connection Examples
 
-### Confluent Cloud
+import { Collapsible } from "@site/src/components/Collapsible";
+
+<Collapsible title="Confluent Cloud" icon="simple-icons:confluent">
 
 ```yaml
 bootstrap_servers: "pkc-xxxxx.us-west-2.aws.confluent.cloud:9092"
@@ -19,11 +21,11 @@ schema_registry:
   enabled: true
   config:
     basic.auth.user.info: "sr-key:sr-secret"
-tags:
-  - "confluent"
 ```
 
-### Redpanda Cloud
+</Collapsible>
+
+<Collapsible title="Redpanda Cloud" icon="simple-icons:redpanda">
 
 ```yaml
 bootstrap_servers: "seed-xxxxx.cloud.redpanda.com:9092"
@@ -35,11 +37,11 @@ authentication:
   mechanism: "SCRAM-SHA-256"
 tls:
   enabled: true
-tags:
-  - "redpanda"
 ```
 
-### Self-Hosted with SASL
+</Collapsible>
+
+<Collapsible title="Self-Hosted with SASL" icon="mdi:server">
 
 ```yaml
 bootstrap_servers: "kafka-1.prod.com:9092,kafka-2.prod.com:9092"
@@ -55,3 +57,5 @@ tls:
   cert_path: "/path/to/client.pem"
   key_path: "/path/to/client-key.pem"
 ```
+
+</Collapsible>

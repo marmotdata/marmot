@@ -1,6 +1,7 @@
 // +marmot:name=Kafka
 // +marmot:description=This plugin discovers Kafka topics from Kafka clusters.
 // +marmot:status=experimental
+// +marmot:features=Assets
 package kafka
 
 //go:generate go run ../../../docgen/cmd/main.go

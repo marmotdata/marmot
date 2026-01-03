@@ -10,7 +10,7 @@ import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@si
 
 <CalloutCard
   title="See Marmot in Action"
-  description="Explore the interface and features with our interactive demo - no installation required."
+  description="Explore the interface and features with the interactive demo - no installation required."
   href="https://demo.marmotdata.io"
   buttonText="Try Live Demo"
   icon="mdi:rocket-launch"
@@ -68,7 +68,7 @@ Ready to dive in? Here's where to go next:
 <DocCardGrid>
   <DocCard
     title="Quick Start Guide"
-    description="Get Marmot running in minutes with our step-by-step guide"
+    description="Get Marmot running in minutes with the quick start guide"
     href="/docs/quick-start"
     icon="mdi:play-circle"
   />
@@ -80,7 +80,7 @@ Ready to dive in? Here's where to go next:
   />
   <DocCard
     title="Query Language"
-    description="Master Marmot's powerful search capabilities"
+    description="Use Marmot's powerful search capabilities"
     href="/docs/queries"
     icon="mdi:code-tags"
   />
