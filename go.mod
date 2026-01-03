@@ -6,6 +6,7 @@ toolchain go1.24.2
 
 require (
 	cloud.google.com/go/bigquery v1.69.0
+	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.3
 	github.com/ClickHouse/clickhouse-go/v2 v2.42.0
 	github.com/aws/aws-sdk-go-v2 v1.36.6
 	github.com/aws/aws-sdk-go-v2/config v1.29.14
@@ -20,7 +21,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.12.0
 	github.com/go-playground/validator/v10 v10.28.0
 	github.com/go-sql-driver/mysql v1.5.0
-	github.com/golang-jwt/jwt/v5 v5.2.2
+	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/golang-migrate/migrate/v4 v4.18.3
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgtype v1.14.4
@@ -53,6 +54,8 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.8 // indirect
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
 	cloud.google.com/go/iam v1.5.2 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.19.1 // indirect
+	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
 	github.com/ClickHouse/ch-go v0.69.0 // indirect
 	github.com/FZambia/eagle v0.2.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect

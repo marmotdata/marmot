@@ -59,7 +59,7 @@ export default function DataSources(): JSX.Element {
               <div className="flex justify-center mb-3 transform group-hover:scale-110 transition-transform">
                 <Icon
                   icon={source.icon}
-                  className={`w-12 h-12 ${source.name === 'Kafka' ? 'kafka-icon' : ''}`}
+                  className={`w-12 h-12 ${source.name === "Kafka" ? "kafka-icon" : ""}`}
                 />
               </div>
               <h3 className="text-base font-bold text-gray-900 dark:text-white">

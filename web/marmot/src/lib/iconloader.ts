@@ -112,6 +112,8 @@ export const providerIconMap: Record<
 	singlestore: { default: SingleStoreIcon, displayName: 'SingleStore' },
 	alloydb: { default: PostgresqlIcon, displayName: 'AlloyDB' },
 	postgres: { default: PostgresqlIcon, displayName: 'Postgres' },
+	azureblob: { default: AzureIcon, displayName: 'Azure Blob Storage' },
+	'azure-blob': { default: AzureIcon, displayName: 'Azure Blob Storage' },
 	materialize: {
 		default: DatabaseOutlineIcon,
 		class: 'text-gray-900 dark:text-gray-100',
@@ -168,6 +170,11 @@ export const typeIconMap: Record<
 		default: HomeStorageOutlineIcon,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'Bucket'
+	},
+	container: {
+		default: HomeStorageOutlineIcon,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Container'
 	},
 	view: {
 		default: ViewOutlineIcon,

@@ -25,6 +25,12 @@ const plugins: Plugin[] = [
     useLocalIcon: true,
   },
   {
+    name: "Azure Blob Storage",
+    description: "Discover containers from Azure Blob Storage accounts",
+    href: "/docs/Plugins/Azure%20Blob%20Storage",
+    icon: "logos:azure-icon",
+  },
+  {
     name: "BigQuery",
     description: "Catalog datasets, tables, and views from Google BigQuery projects",
     href: "/docs/Plugins/BigQuery",
