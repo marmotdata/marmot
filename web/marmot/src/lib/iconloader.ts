@@ -114,6 +114,8 @@ export const providerIconMap: Record<
 	postgres: { default: PostgresqlIcon, displayName: 'Postgres' },
 	azureblob: { default: AzureIcon, displayName: 'Azure Blob Storage' },
 	'azure-blob': { default: AzureIcon, displayName: 'Azure Blob Storage' },
+	gcs: { default: BigQueryIcon, displayName: 'Google Cloud Storage' },
+	'google-cloud-storage': { default: BigQueryIcon, displayName: 'Google Cloud Storage' },
 	materialize: {
 		default: DatabaseOutlineIcon,
 		class: 'text-gray-900 dark:text-gray-100',

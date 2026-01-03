@@ -49,6 +49,12 @@ const plugins: Plugin[] = [
     icon: "simple-icons:dbt",
   },
   {
+    name: "Google Cloud Storage",
+    description: "Discover buckets from Google Cloud Storage",
+    href: "/docs/Plugins/Google%20Cloud%20Storage",
+    icon: "logos:google-cloud",
+  },
+  {
     name: "Kafka",
     description: "Catalog topics from Apache Kafka clusters with Schema Registry integration",
     href: "/docs/Plugins/Kafka",

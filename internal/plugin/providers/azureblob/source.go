@@ -32,7 +32,7 @@ type Config struct {
 	Endpoint         string `json:"endpoint,omitempty" description:"Custom endpoint URL (for Azurite or other emulators)"`
 
 	// Discovery options
-	IncludeMetadata bool `json:"include_metadata" description:"Include container metadata" default:"true"`
+	IncludeMetadata  bool `json:"include_metadata" description:"Include container metadata" default:"true"`
 	IncludeBlobCount bool `json:"include_blob_count" description:"Count blobs in each container (can be slow for large containers)" default:"false"`
 
 	// Filtering
@@ -222,11 +222,6 @@ func (s *Source) createContainerAsset(ctx context.Context, containerItem *servic
 		} else {
 			metadata["blob_count"] = count
 		}
-	}
-
-	accountName := s.config.AccountName
-	if accountName == "" {
-		accountName = "storage"
 	}
 
 	mrnValue := mrn.New("Container", "AzureBlob", containerName)

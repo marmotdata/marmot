@@ -22,6 +22,7 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/bigquery"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/clickhouse"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dbt"
+	_ "github.com/marmotdata/marmot/internal/plugin/providers/gcs"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/kafka"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mongodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mysql"
