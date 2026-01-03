@@ -31,6 +31,12 @@ const plugins: Plugin[] = [
     icon: "devicon:googlecloud",
   },
   {
+    name: "ClickHouse",
+    description: "Discover databases, tables, and views from ClickHouse instances",
+    href: "/docs/Plugins/ClickHouse",
+    icon: "simple-icons:clickhouse",
+  },
+  {
     name: "DBT",
     description: "Ingest models, sources, seeds, and lineage from dbt projects",
     href: "/docs/Plugins/DBT",

@@ -24,29 +24,22 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	// Connection settings
 	Host     string `json:"host" description:"Airflow webserver URL (e.g., http://localhost:8080)" validate:"required,url"`
 	Username string `json:"username,omitempty" description:"Username for basic authentication"`
 	Password string `json:"password,omitempty" description:"Password for basic authentication" sensitive:"true"`
 	APIToken string `json:"api_token,omitempty" description:"API token for authentication (alternative to basic auth)" sensitive:"true"`
 
-	// Discovery options
 	DiscoverDAGs     bool `json:"discover_dags" description:"Discover Airflow DAGs as Pipeline assets" default:"true"`
 	DiscoverTasks    bool `json:"discover_tasks" description:"Discover tasks within DAGs" default:"true"`
 	DiscoverDatasets bool `json:"discover_datasets" description:"Discover Airflow Datasets for lineage (requires Airflow 2.4+)" default:"true"`
 
-	// Execution history
 	IncludeRunHistory bool `json:"include_run_history" description:"Include DAG run history in metadata" default:"true"`
 	RunHistoryDays    int  `json:"run_history_days" description:"Number of days of run history to fetch" default:"7"`
 
-	// Filtering
-	DAGFilter *plugin.Filter `json:"dag_filter,omitempty" description:"Filter DAGs by ID pattern (include/exclude regex)"`
-
-	// Behavior
-	OnlyActive bool `json:"only_active" description:"Only discover active (unpaused) DAGs" default:"true"`
+	DAGFilter  *plugin.Filter `json:"dag_filter,omitempty" description:"Filter DAGs by ID pattern (include/exclude regex)"`
+	OnlyActive bool           `json:"only_active" description:"Only discover active (unpaused) DAGs" default:"true"`
 }
 
-// Example configuration for the plugin
 // +marmot:example-config
 var _ = `
 host: "http://localhost:8080"
@@ -68,28 +61,25 @@ tags:
   - "orchestration"
 `
 
-// Source implements the Airflow plugin
+// Source implements the Airflow plugin.
 type Source struct {
 	config *Config
 	client *Client
 }
 
-// Validate validates and normalizes the plugin configuration
+// Validate validates and normalizes the plugin configuration.
 func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	// Normalize host URL (remove trailing slash)
 	config.Host = strings.TrimSuffix(config.Host, "/")
 
-	// Set defaults
 	if config.RunHistoryDays <= 0 {
 		config.RunHistoryDays = 7
 	}
 
-	// Validate authentication - require either basic auth or API token
 	if config.Username == "" && config.APIToken == "" {
 		return nil, fmt.Errorf("authentication required: provide either username/password or api_token")
 	}
@@ -102,18 +92,15 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-// Discover discovers Airflow DAGs, tasks, and datasets
+// Discover discovers Airflow DAGs, tasks, and datasets.
 func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
 	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 	s.config = config
-
-	// Normalize host URL
 	s.config.Host = strings.TrimSuffix(s.config.Host, "/")
 
-	// Initialize API client
 	s.client = NewClient(ClientConfig{
 		BaseURL:  s.config.Host,
 		Username: s.config.Username,
@@ -125,7 +112,6 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 	var lineages []lineage.LineageEdge
 	var runHistory []plugin.AssetRunHistory
 
-	// Discover DAGs
 	if s.config.DiscoverDAGs {
 		dagAssets, dagLineages, dagRunHistory, err := s.discoverDAGs(ctx)
 		if err != nil {
@@ -136,11 +122,9 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 		runHistory = append(runHistory, dagRunHistory...)
 	}
 
-	// Discover Datasets and create lineage
 	if s.config.DiscoverDatasets {
 		datasetAssets, datasetLineages, err := s.discoverDatasets(ctx)
 		if err != nil {
-			// Log warning but continue - datasets require Airflow 2.4+
 			log.Warn().Err(err).Msg("Failed to discover datasets (requires Airflow 2.4+)")
 		} else {
 			assets = append(assets, datasetAssets...)
@@ -161,13 +145,12 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 	}, nil
 }
 
-// discoverDAGs discovers all DAGs and their tasks
+// discoverDAGs discovers all DAGs and their tasks.
 func (s *Source) discoverDAGs(ctx context.Context) ([]asset.Asset, []lineage.LineageEdge, []plugin.AssetRunHistory, error) {
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
 	var allRunHistory []plugin.AssetRunHistory
 
-	// Fetch all DAGs
 	dags, err := s.client.ListDAGs(ctx, s.config.OnlyActive)
 	if err != nil {
 		return nil, nil, nil, fmt.Errorf("listing DAGs: %w", err)
@@ -176,7 +159,6 @@ func (s *Source) discoverDAGs(ctx context.Context) ([]asset.Asset, []lineage.Lin
 	log.Debug().Int("count", len(dags)).Msg("Found DAGs")
 
 	for _, dag := range dags {
-		// Apply DAG filter
 		if s.config.DAGFilter != nil {
 			if !plugin.ShouldIncludeResource(dag.DagID, *s.config.DAGFilter) {
 				log.Debug().Str("dag_id", dag.DagID).Msg("Skipping DAG due to filter")
@@ -184,13 +166,10 @@ func (s *Source) discoverDAGs(ctx context.Context) ([]asset.Asset, []lineage.Lin
 			}
 		}
 
-		// Create Pipeline asset for DAG
 		dagAsset := s.createDAGAsset(dag)
 		assets = append(assets, dagAsset)
-
 		dagMRN := mrn.New("Pipeline", "Airflow", dag.DagID)
 
-		// Fetch run history if enabled
 		var runHistory []DAGRun
 		if s.config.IncludeRunHistory {
 			runs, err := s.client.ListDAGRuns(ctx, dag.DagID, s.config.RunHistoryDays)
@@ -201,18 +180,14 @@ func (s *Source) discoverDAGs(ctx context.Context) ([]asset.Asset, []lineage.Lin
 			}
 		}
 
-		// Update DAG asset with run history metadata
 		if len(runHistory) > 0 {
 			s.enrichDAGAssetWithRunHistory(&assets[len(assets)-1], runHistory)
-
-			// Convert DAG runs to RunHistory events
 			assetRunHistory := s.convertDAGRunsToRunHistory(dagMRN, dag.DagID, runHistory)
 			if len(assetRunHistory.Runs) > 0 {
 				allRunHistory = append(allRunHistory, assetRunHistory)
 			}
 		}
 
-		// Discover tasks if enabled
 		if s.config.DiscoverTasks {
 			taskAssets, taskLineages, err := s.discoverTasks(ctx, dag.DagID)
 			if err != nil {
@@ -227,7 +202,7 @@ func (s *Source) discoverDAGs(ctx context.Context) ([]asset.Asset, []lineage.Lin
 	return assets, lineages, allRunHistory, nil
 }
 
-// discoverTasks discovers tasks within a DAG
+// discoverTasks discovers tasks within a DAG.
 func (s *Source) discoverTasks(ctx context.Context, dagID string) ([]asset.Asset, []lineage.LineageEdge, error) {
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
@@ -237,29 +212,24 @@ func (s *Source) discoverTasks(ctx context.Context, dagID string) ([]asset.Asset
 		return nil, nil, fmt.Errorf("listing tasks for DAG %s: %w", dagID, err)
 	}
 
-	// Build a map of task IDs to MRNs for lineage creation
 	taskMRNs := make(map[string]string)
 	for _, task := range tasks {
 		taskMRN := mrn.New("Task", "Airflow", fmt.Sprintf("%s.%s", dagID, task.TaskID))
 		taskMRNs[task.TaskID] = taskMRN
 	}
 
-	// Create DAG -> Task lineage (DAG contains tasks)
 	dagMRN := mrn.New("Pipeline", "Airflow", dagID)
 
 	for _, task := range tasks {
-		// Create Task asset
 		taskAsset := s.createTaskAsset(dagID, task)
 		assets = append(assets, taskAsset)
 
-		// Create lineage: DAG -> Task (CONTAINS)
 		lineages = append(lineages, lineage.LineageEdge{
 			Source: dagMRN,
 			Target: taskMRNs[task.TaskID],
 			Type:   "CONTAINS",
 		})
 
-		// Create lineage edges for task dependencies
 		for _, downstreamID := range task.DownstreamTaskIDs {
 			if downstreamMRN, exists := taskMRNs[downstreamID]; exists {
 				lineages = append(lineages, lineage.LineageEdge{
@@ -274,7 +244,7 @@ func (s *Source) discoverTasks(ctx context.Context, dagID string) ([]asset.Asset
 	return assets, lineages, nil
 }
 
-// discoverDatasets discovers Airflow Datasets and creates lineage
+// discoverDatasets discovers Airflow Datasets and creates lineage.
 func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, []lineage.LineageEdge, error) {
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
@@ -396,7 +366,7 @@ func (s *Source) enrichDAGAssetWithRunHistory(a *asset.Asset, runs []DAGRun) {
 	}
 }
 
-// convertDAGRunsToRunHistory converts Airflow DAG runs to plugin RunHistory events
+// convertDAGRunsToRunHistory converts Airflow DAG runs to plugin RunHistory events.
 func (s *Source) convertDAGRunsToRunHistory(dagMRN, dagID string, runs []DAGRun) plugin.AssetRunHistory {
 	var events []plugin.RunHistoryEvent
 
@@ -466,7 +436,7 @@ func (s *Source) convertDAGRunsToRunHistory(dagMRN, dagID string, runs []DAGRun)
 	}
 }
 
-// mapAirflowStateToEventType maps Airflow DAG run states to OpenLineage event types
+// mapAirflowStateToEventType maps Airflow DAG run states to OpenLineage event types.
 func mapAirflowStateToEventType(state string) string {
 	switch state {
 	case "success":
@@ -482,7 +452,7 @@ func mapAirflowStateToEventType(state string) string {
 	}
 }
 
-// createTaskAsset creates a Task asset from an Airflow task
+// createTaskAsset creates a Task asset from an Airflow task.
 func (s *Source) createTaskAsset(dagID string, task Task) asset.Asset {
 	taskName := fmt.Sprintf("%s.%s", dagID, task.TaskID)
 	mrnValue := mrn.New("Task", "Airflow", taskName)

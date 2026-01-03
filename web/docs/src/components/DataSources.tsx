@@ -11,14 +11,30 @@ export default function DataSources(): JSX.Element {
     { name: "MySQL", href: "/docs/Plugins/MySQL", icon: "devicon:mysql" },
     { name: "MongoDB", href: "/docs/Plugins/MongoDB", icon: "devicon:mongodb" },
     {
+      name: "ClickHouse",
+      href: "/docs/Plugins/ClickHouse",
+      icon: "simple-icons:clickhouse",
+    },
+    {
       name: "BigQuery",
       href: "/docs/Plugins/BigQuery",
       icon: "devicon:googlecloud",
     },
-    { name: "S3", href: "/docs/Plugins/S3", icon: "logos:aws-s3" },
     { name: "Kafka", href: "/docs/Plugins/Kafka", icon: "devicon:apachekafka" },
+    {
+      name: "Airflow",
+      href: "/docs/Plugins/Airflow",
+      icon: "logos:airflow-icon",
+    },
+    { name: "dbt", href: "/docs/Plugins/DBT", icon: "simple-icons:dbt" },
+    { name: "S3", href: "/docs/Plugins/S3", icon: "logos:aws-s3" },
     { name: "SNS", href: "/docs/Plugins/SNS", icon: "logos:aws-sns" },
     { name: "SQS", href: "/docs/Plugins/SQS", icon: "logos:aws-sqs" },
+    {
+      name: "OpenAPI",
+      href: "/docs/Plugins/OpenAPI",
+      icon: "simple-icons:openapiinitiative",
+    },
   ];
 
   return (

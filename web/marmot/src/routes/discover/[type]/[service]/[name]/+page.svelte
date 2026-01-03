@@ -356,7 +356,7 @@
 										canEdit={canManageAssets}
 									/>
 								</div>
-								<div>
+								<div class="overflow-visible">
 									<div class="flex items-center gap-1.5 mb-1">
 										<IconifyIcon
 											icon="material-symbols:person-outline"

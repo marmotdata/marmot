@@ -157,7 +157,7 @@
 	}
 </script>
 
-<div bind:this={dropdownRef} class="relative {className}">
+<div bind:this={dropdownRef} class="relative overflow-visible {className}">
 	{#if !hideSelectedOwners}
 		<div class="flex flex-wrap items-center gap-2">
 			{#each safeSelectedOwners as owner (owner.id + '-' + owner.type)}
@@ -216,7 +216,7 @@
 
 	{#if isOpen}
 		<div
-			class="absolute z-50 mt-2 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
+			class="absolute z-50 mt-2 min-w-64 w-max bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg"
 		>
 			<div class="p-3 border-b border-gray-200 dark:border-gray-700">
 				<input
