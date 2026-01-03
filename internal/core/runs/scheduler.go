@@ -466,6 +466,31 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		}
 	}
 
+	runHistoryStored := 0
+	if len(result.RunHistory) > 0 {
+		var runHistoryInputs []RunHistoryInput
+		for _, arh := range result.RunHistory {
+			for _, run := range arh.Runs {
+				runHistoryInputs = append(runHistoryInputs, RunHistoryInput{
+					AssetMRN:     arh.AssetMRN,
+					RunID:        run.RunID,
+					JobNamespace: run.JobNamespace,
+					JobName:      run.JobName,
+					EventType:    run.EventType,
+					EventTime:    run.EventTime,
+					RunFacets:    run.RunFacets,
+					JobFacets:    run.JobFacets,
+				})
+			}
+		}
+		stored, err := w.runsService.ProcessRunHistory(ctx, runHistoryInputs)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to process some run history entries")
+		}
+		runHistoryStored = stored
+		log.Debug().Int("run_history_stored", runHistoryStored).Msg("Processed run history")
+	}
+
 	summary := &plugin.RunSummary{
 		AssetsCreated:      assetsCreated,
 		AssetsUpdated:      assetsUpdated,

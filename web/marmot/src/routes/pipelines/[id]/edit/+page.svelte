@@ -93,14 +93,16 @@
 	);
 
 	let filteredPlugins = $derived(
-		plugins.filter((plugin) => {
-			const searchLower = pluginSearchQuery.toLowerCase();
-			return (
-				plugin.name.toLowerCase().includes(searchLower) ||
-				plugin.description?.toLowerCase().includes(searchLower) ||
-				plugin.id.toLowerCase().includes(searchLower)
-			);
-		})
+		plugins
+			.filter((plugin) => {
+				const searchLower = pluginSearchQuery.toLowerCase();
+				return (
+					plugin.name.toLowerCase().includes(searchLower) ||
+					plugin.description?.toLowerCase().includes(searchLower) ||
+					plugin.id.toLowerCase().includes(searchLower)
+				);
+			})
+			.sort((a, b) => a.name.localeCompare(b.name))
 	);
 
 	let displayedPlugins = $derived(

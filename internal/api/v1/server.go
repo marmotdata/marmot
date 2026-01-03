@@ -16,6 +16,7 @@ import (
 	"github.com/marmotdata/marmot/internal/crypto"
 
 	// Plugin imports
+	_ "github.com/marmotdata/marmot/internal/plugin/providers/airflow"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/asyncapi"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/bigquery"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dbt"

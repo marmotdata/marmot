@@ -205,14 +205,14 @@
 						<button
 							onclick={() => goToPage(currentPage - 1)}
 							disabled={currentPage === 1}
-							class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50 text-gray-700 dark:text-gray-300"
+							class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
 						>
 							Previous
 						</button>
 						<button
 							onclick={() => goToPage(currentPage + 1)}
 							disabled={currentPage === totalPages}
-							class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50 text-gray-700 dark:text-gray-300"
+							class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
 						>
 							Next
 						</button>
@@ -220,24 +220,24 @@
 				{/if}
 			{/if}
 
-			<div class="rounded-lg shadow dark:shadow-white/20 overflow-hidden">
+			<div class="space-y-3">
 				{#each runHistory as run}
 					<div
-						class="p-{minimal
-							? '2'
-							: '4'} border-b border-gray-200 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600"
+						class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 {minimal
+							? 'p-3'
+							: 'p-4'}"
 					>
 						<div class="flex items-center justify-between {minimal ? 'mb-1' : 'mb-3'}">
-							<div class="flex items-center space-x-2">
+							<div class="flex items-center space-x-3">
 								<h4
 									class="font-medium text-gray-900 dark:text-gray-100 {minimal
 										? 'text-sm'
-										: 'text-lg'}"
+										: 'text-base'}"
 								>
 									{run.job_name}
 								</h4>
 								<span
-									class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {getEventTypeColor(
+									class="inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full {getEventTypeColor(
 										run.status
 									)}"
 								>
@@ -256,24 +256,18 @@
 						{:else}
 							<div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
 								<div>
-									<div
-										class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-									>
+									<div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
 										Namespace
 									</div>
-									<div class="mt-1 text-gray-900 dark:text-gray-100">
+									<div class="text-gray-900 dark:text-gray-100">
 										{run.job_namespace}
 									</div>
 								</div>
 								<div>
-									<div
-										class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-									>
-										Type
-									</div>
-									<div class="mt-1">
+									<div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Type</div>
+									<div>
 										<span
-											class="inline-flex px-2 py-1 text-xs font-semibold rounded-full {getTypeColor(
+											class="inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full {getTypeColor(
 												run.type
 											)}"
 										>
@@ -282,22 +276,18 @@
 									</div>
 								</div>
 								<div>
-									<div
-										class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-									>
+									<div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
 										Start Time
 									</div>
-									<div class="mt-1 text-gray-900 dark:text-gray-100">
+									<div class="text-gray-900 dark:text-gray-100">
 										{run.start_time ? formatDateTime(run.start_time) : '-'}
 									</div>
 								</div>
 								<div>
-									<div
-										class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider"
-									>
+									<div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
 										End Time
 									</div>
-									<div class="mt-1 text-gray-900 dark:text-gray-100">
+									<div class="text-gray-900 dark:text-gray-100">
 										{run.end_time ? formatDateTime(run.end_time) : '-'}
 									</div>
 								</div>
@@ -312,14 +302,14 @@
 					<button
 						onclick={() => goToPage(currentPage - 1)}
 						disabled={currentPage === 1}
-						class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50 text-gray-700 dark:text-gray-300"
+						class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
 					>
 						Previous
 					</button>
 					<button
 						onclick={() => goToPage(currentPage + 1)}
 						disabled={currentPage === totalPages}
-						class="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 disabled:opacity-50 text-gray-700 dark:text-gray-300"
+						class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
 					>
 						Next
 					</button>

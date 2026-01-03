@@ -15,6 +15,7 @@ type Service interface {
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
 	GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error)
 	ProcessOpenLineageEvent(ctx context.Context, event *RunEvent, createdBy string) error
+	StoreRunHistory(ctx context.Context, entry *RunHistoryEntry) error
 }
 
 type Logger interface {
@@ -74,4 +75,8 @@ func (s *service) DeleteDirectLineage(ctx context.Context, edgeID string) error 
 
 func (s *service) EdgeExists(ctx context.Context, source, target string) (bool, error) {
 	return s.repo.EdgeExists(ctx, source, target)
+}
+
+func (s *service) StoreRunHistory(ctx context.Context, entry *RunHistoryEntry) error {
+	return s.repo.StoreRunHistory(ctx, entry)
 }

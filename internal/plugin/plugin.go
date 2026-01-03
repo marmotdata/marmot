@@ -48,6 +48,24 @@ type DiscoveryResult struct {
 	Lineage       []lineage.LineageEdge     `json:"lineage"`
 	Documentation []assetdocs.Documentation `json:"documentation"`
 	Statistics    []Statistic               `json:"statistics"`
+	RunHistory    []AssetRunHistory         `json:"run_history,omitempty"`
+}
+
+// AssetRunHistory contains run history events for an asset
+type AssetRunHistory struct {
+	AssetMRN string            `json:"asset_mrn"`
+	Runs     []RunHistoryEvent `json:"runs"`
+}
+
+// RunHistoryEvent represents a single run event (START, COMPLETE, FAIL, etc.)
+type RunHistoryEvent struct {
+	RunID        string                 `json:"run_id"`
+	JobNamespace string                 `json:"job_namespace"`
+	JobName      string                 `json:"job_name"`
+	EventType    string                 `json:"event_type"` // START, RUNNING, COMPLETE, FAIL, ABORT
+	EventTime    time.Time              `json:"event_time"`
+	RunFacets    map[string]interface{} `json:"run_facets,omitempty"`
+	JobFacets    map[string]interface{} `json:"job_facets,omitempty"`
 }
 
 type Statistic struct {

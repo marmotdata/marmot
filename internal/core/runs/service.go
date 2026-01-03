@@ -98,6 +98,17 @@ type StatisticInput struct {
 	Value      float64 `json:"value"`
 }
 
+type RunHistoryInput struct {
+	AssetMRN     string                 `json:"asset_mrn"`
+	RunID        string                 `json:"run_id"`
+	JobNamespace string                 `json:"job_namespace"`
+	JobName      string                 `json:"job_name"`
+	EventType    string                 `json:"event_type"`
+	EventTime    time.Time              `json:"event_time"`
+	RunFacets    map[string]interface{} `json:"run_facets,omitempty"`
+	JobFacets    map[string]interface{} `json:"job_facets,omitempty"`
+}
+
 type DestroyRunResponse struct {
 	AssetsDeleted        int      `json:"assets_deleted"`
 	LineageDeleted       int      `json:"lineage_deleted"`
@@ -110,6 +121,7 @@ type Service interface {
 	CompleteRun(ctx context.Context, runID string, status plugin.RunStatus, summary *plugin.RunSummary, errorMessage string) error
 	ProcessAssets(ctx context.Context, runID string, assets []CreateAssetInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
 	ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, stats []StatisticInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
+	ProcessRunHistory(ctx context.Context, runHistory []RunHistoryInput) (int, error)
 	AddCheckpoint(ctx context.Context, runID, entityType, entityMRN, operation string, sourceFields []string) error
 	GetLastRunCheckpoints(ctx context.Context, pipelineName, sourceName string) (map[string]*plugin.RunCheckpoint, error)
 	GetStaleEntities(ctx context.Context, lastCheckpoints map[string]*plugin.RunCheckpoint, currentEntityMRNs []string) []string
@@ -782,5 +794,39 @@ func (s *service) hashAsset(asset CreateAssetInput) string {
 	data, _ := json.Marshal(normalized)
 	hash := sha256.Sum256(data)
 	return fmt.Sprintf("%x", hash)
+}
+
+func (s *service) ProcessRunHistory(ctx context.Context, runHistory []RunHistoryInput) (int, error) {
+	stored := 0
+	for _, rh := range runHistory {
+		// Get the asset by MRN to get its ID
+		existingAsset, err := s.assetService.GetByMRN(ctx, rh.AssetMRN)
+		if err != nil {
+			log.Warn().Err(err).Str("asset_mrn", rh.AssetMRN).Msg("Failed to get asset for run history, skipping")
+			continue
+		}
+
+		entry := &lineage.RunHistoryEntry{
+			ID:           uuid.New().String(),
+			AssetID:      existingAsset.ID,
+			RunID:        rh.RunID,
+			JobNamespace: rh.JobNamespace,
+			JobName:      rh.JobName,
+			EventType:    rh.EventType,
+			EventTime:    rh.EventTime,
+			Producer:     "marmot-plugin",
+			RunFacets:    rh.RunFacets,
+			JobFacets:    rh.JobFacets,
+			CreatedAt:    time.Now(),
+		}
+
+		if err := s.lineageService.StoreRunHistory(ctx, entry); err != nil {
+			log.Error().Err(err).Str("asset_mrn", rh.AssetMRN).Str("run_id", rh.RunID).Msg("Failed to store run history")
+			continue
+		}
+		stored++
+	}
+
+	return stored, nil
 }
 

@@ -12,6 +12,12 @@ interface Plugin {
 
 const plugins: Plugin[] = [
   {
+    name: "Airflow",
+    description: "Ingest DAGs, tasks, and dataset lineage from Apache Airflow",
+    href: "/docs/Plugins/Airflow",
+    icon: "logos:airflow-icon",
+  },
+  {
     name: "AsyncAPI",
     description: "Discover services, topics, and queues from AsyncAPI specifications",
     href: "/docs/Plugins/AsyncAPI",

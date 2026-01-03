@@ -114,14 +114,16 @@
 	});
 
 	let filteredPlugins = $derived(
-		plugins.filter((plugin) => {
-			const searchLower = pluginSearchQuery.toLowerCase();
-			return (
-				plugin.name.toLowerCase().includes(searchLower) ||
-				plugin.description?.toLowerCase().includes(searchLower) ||
-				plugin.id.toLowerCase().includes(searchLower)
-			);
-		})
+		plugins
+			.filter((plugin) => {
+				const searchLower = pluginSearchQuery.toLowerCase();
+				return (
+					plugin.name.toLowerCase().includes(searchLower) ||
+					plugin.description?.toLowerCase().includes(searchLower) ||
+					plugin.id.toLowerCase().includes(searchLower)
+				);
+			})
+			.sort((a, b) => a.name.localeCompare(b.name))
 	);
 
 	let displayedPlugins = $derived(filteredPlugins);
@@ -508,6 +510,12 @@
 						type="text"
 						bind:value={name}
 						placeholder="e.g., daily-postgres-sync"
+						onkeydown={(e) => {
+							if (e.key === 'Enter' && canProceedToStep2) {
+								e.preventDefault();
+								handleNextStep();
+							}
+						}}
 						class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 						required
 					/>
@@ -547,6 +555,12 @@
 								type="text"
 								bind:value={pluginSearchQuery}
 								placeholder="Search plugins..."
+								onkeydown={(e) => {
+									if (e.key === 'Enter' && displayedPlugins.length === 1) {
+										e.preventDefault();
+										handlePluginChange(displayedPlugins[0].id);
+									}
+								}}
 								class="w-full pl-12 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 							/>
 						</div>
@@ -558,12 +572,24 @@
 					</div>
 
 					<!-- Plugin Grid -->
-					<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+					<div
+						class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+						role="listbox"
+						aria-label="Available plugins"
+					>
 						{#each displayedPlugins as plugin}
 							<button
 								type="button"
 								onclick={() => handlePluginChange(plugin.id)}
-								class="relative flex flex-col p-5 border-2 rounded-lg transition-all text-left {selectedPluginId ===
+								onkeydown={(e) => {
+									if (e.key === 'Enter' || e.key === ' ') {
+										e.preventDefault();
+										handlePluginChange(plugin.id);
+									}
+								}}
+								role="option"
+								aria-selected={selectedPluginId === plugin.id}
+								class="relative flex flex-col p-5 border-2 rounded-lg transition-all text-left focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 focus:ring-offset-2 {selectedPluginId ===
 								plugin.id
 									? 'border-earthy-terracotta-500 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 shadow-md'
 									: 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 bg-white dark:bg-gray-800 hover:shadow-sm'}"
@@ -1104,6 +1130,12 @@
 							type="text"
 							bind:value={cronExpression}
 							placeholder="0 2 * * *"
+							onkeydown={(e) => {
+								if (e.key === 'Enter' && !saving && name && selectedPluginId) {
+									e.preventDefault();
+									handleSave();
+								}
+							}}
 							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent font-mono text-sm transition-all"
 						/>
 						<div class="mt-2 flex items-start">
