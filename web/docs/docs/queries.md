@@ -208,7 +208,7 @@ payment @type: "topic" AND @metadata.team: "payments"
 <CalloutCard
   title="Need Help with Queries?"
   description="Join our Discord community to ask questions and share tips with other Marmot users."
-  href="https://discord.gg/tMgc9ayB"
+  href="https://discord.gg/TWCk7hVFN4"
   buttonText="Join Discord"
   variant="secondary"
   icon="mdi:account-group"

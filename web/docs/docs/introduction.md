@@ -89,7 +89,7 @@ Ready to dive in? Here's where to go next:
 <CalloutCard
   title="Join the Community"
   description="Get help, share feedback, and connect with other Marmot users on Discord."
-  href="https://discord.gg/tMgc9ayB"
+  href="https://discord.gg/TWCk7hVFN4"
   buttonText="Join Discord"
   variant="secondary"
   icon="mdi:account-group"

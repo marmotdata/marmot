@@ -289,7 +289,7 @@ type Source interface {
 <CalloutCard
   title="Need Help Building a Plugin?"
   description="Join our Discord community to get help, share your plugins, and connect with other contributors."
-  href="https://discord.gg/tMgc9ayB"
+  href="https://discord.gg/TWCk7hVFN4"
   buttonText="Join Discord"
   variant="secondary"
   icon="mdi:account-group"

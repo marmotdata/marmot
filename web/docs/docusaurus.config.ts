@@ -110,7 +110,7 @@ const config: Config = {
         { to: "/api", label: "API", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
         {
-          href: "https://discord.gg/tMgc9ayB",
+          href: "https://discord.gg/TWCk7hVFN4",
           label: "Community",
           position: "left",
         },
@@ -146,7 +146,7 @@ const config: Config = {
           items: [
             {
               label: "Discord",
-              href: "https://discord.gg/tMgc9ayB",
+              href: "https://discord.gg/TWCk7hVFN4",
             },
           ],
         },

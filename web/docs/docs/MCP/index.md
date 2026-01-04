@@ -113,7 +113,7 @@ Business glossary lookups for understanding terminology and definitions. Search 
 <CalloutCard
   title="Need Help?"
   description="Join our Discord community to get help, share feedback, and connect with other Marmot users."
-  href="https://discord.gg/tMgc9ayB"
+  href="https://discord.gg/TWCk7hVFN4"
   buttonText="Join Discord"
   variant="secondary"
   icon="mdi:account-group"
