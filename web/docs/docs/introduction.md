@@ -67,12 +67,6 @@ Ready to dive in? Here's where to go next:
 
 <DocCardGrid>
   <DocCard
-    title="Quick Start Guide"
-    description="Get Marmot running in minutes with the quick start guide"
-    href="/docs/quick-start"
-    icon="mdi:play-circle"
-  />
-  <DocCard
     title="Populating Your Catalog"
     description="Learn how to add assets using plugins, CLI, or API"
     href="/docs/Populating"

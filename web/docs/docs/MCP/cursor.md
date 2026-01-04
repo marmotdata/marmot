@@ -40,9 +40,3 @@ Create `.cursor/mcp.json` in your project root:
 
 You can use environment variables with `${env:VAR_NAME}` syntax for sensitive credentials.
 
-## Activation
-
-1. Save the configuration file
-2. Restart Cursor
-3. Open the Cursor AI chat panel (Cmd/Ctrl+L)
-4. Marmot tools will be available

@@ -236,9 +236,9 @@
 					<div class="hidden sm:flex flex-1 justify-center max-w-3xl mx-auto">
 						<button
 							onclick={openSearchModal}
-							class="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg hover:border-gray-400 dark:hover:border-gray-500 transition-colors w-full"
+							class="flex items-center gap-2 px-4 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg hover:border-gray-300 dark:hover:border-gray-500 transition-colors w-full shadow-sm"
 						>
-							<Icon icon="material-symbols:search" class="w-4 h-4" />
+							<Icon icon="material-symbols:search" class="w-4 h-4 text-gray-500 dark:text-white" />
 							<span class="flex-1 text-left truncate font-mono">
 								{#if currentSearchQuery}
 									{#each getHighlightedText(currentSearchQuery) as part}

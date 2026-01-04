@@ -32,9 +32,21 @@ status: {{ .Status }}
 <div class="flex flex-wrap gap-2">{{range .Features}}<span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">{{ . }}</span>{{end}}</div>
 </div>{{end}}
 </div>
+
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
 {{if .AdditionalContent}}
 
-{{ .AdditionalContent }}{{end}}{{if .SupportedServices}}
+{{ .AdditionalContent }}{{end}}
+{{if .SupportedServices}}
 ## Supported Services{{range .SupportedServices}}
 - {{ . }}{{end}}{{end}}{{if .ExampleConfig}}
 

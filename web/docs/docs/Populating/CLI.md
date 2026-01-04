@@ -1,5 +1,5 @@
 ---
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 The Marmot CLI provides an easy way to populate your data catalog by ingesting metadata from various data sources. This document explains how to use the `ingest` command to bring your data assets into Marmot.

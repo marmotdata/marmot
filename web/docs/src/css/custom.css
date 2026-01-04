@@ -646,36 +646,76 @@ div[class*="toggle_"] {
   padding-right: 0 !important;
 }
 
-/* Code block styling to match main UI */
-div[class^="codeBlockContainer"] {
-  background: #f9fafb !important;
+/* Code block styling to match main UI - using CSS variables for reactive theme switching */
+:root {
+  --prism-background-color: #f9fafb !important;
+  --ifm-pre-background: #f9fafb;
+  --code-block-bg: #f9fafb;
+}
+
+[data-theme="dark"] {
+  --prism-background-color: #1f2937 !important;
+  --ifm-pre-background: #1f2937;
+  --code-block-bg: #1f2937;
+}
+
+/*
+ * Force code block backgrounds to use CSS variable.
+ * The key is that prism-react-renderer sets inline styles,
+ * but we can override with !important on the CSS variable reference.
+ */
+.prism-code,
+pre[class*="language-"],
+div[class*="codeBlockContainer"] pre,
+div[class*="codeBlockContent"] pre {
+  background: var(--code-block-bg) !important;
+  background-color: var(--code-block-bg) !important;
+}
+
+/* Target the container */
+div[class*="codeBlockContainer"] {
+  background-color: var(--code-block-bg) !important;
   border-radius: 0.5rem !important;
   margin: 1rem 0 !important;
 }
 
-html[data-theme="dark"] div[class^="codeBlockContainer"] {
-  background: #1f2937 !important;
-}
-
-div[class^="codeBlockContent"] {
+/* Ensure content area is transparent */
+div[class*="codeBlockContent"] {
   background: transparent !important;
 }
 
-div[class^="codeBlockContainer"] pre {
-  background: transparent !important;
+/* Style the pre element */
+div[class*="codeBlockContainer"] pre {
   margin: 0 !important;
   padding: 1.5rem !important;
 }
 
-div[class^="codeBlockContainer"] code {
+/* Code inside blocks */
+div[class*="codeBlockContainer"] code {
   background: transparent !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace !important;
 }
 
 /* Copy button styling to match main UI */
+:root {
+  --copy-button-bg: #f3f4f6;
+  --copy-button-bg-hover: #e5e7eb;
+  --copy-button-color: #4b5563;
+  --inline-code-bg: #f3f4f6;
+  --inline-code-color: #1f2937;
+}
+
+[data-theme="dark"] {
+  --copy-button-bg: #374151;
+  --copy-button-bg-hover: #4b5563;
+  --copy-button-color: #d1d5db;
+  --inline-code-bg: #374151;
+  --inline-code-color: #f9fafb;
+}
+
 button[class*="copyButton"] {
-  background: #f3f4f6 !important;
-  color: #4b5563 !important;
+  background: var(--copy-button-bg) !important;
+  color: var(--copy-button-color) !important;
   border-radius: 0.375rem !important;
   padding: 0.25rem 0.5rem !important;
   font-size: 0.75rem !important;
@@ -683,31 +723,17 @@ button[class*="copyButton"] {
 }
 
 button[class*="copyButton"]:hover {
-  background: #e5e7eb !important;
-}
-
-html[data-theme="dark"] button[class*="copyButton"] {
-  background: #374151 !important;
-  color: #d1d5db !important;
-}
-
-html[data-theme="dark"] button[class*="copyButton"]:hover {
-  background: #4b5563 !important;
+  background: var(--copy-button-bg-hover) !important;
 }
 
 /* Inline code styling */
 code:not([class*="language-"]) {
-  background: #f3f4f6 !important;
-  color: #1f2937 !important;
+  background: var(--inline-code-bg) !important;
+  color: var(--inline-code-color) !important;
   padding: 0.125rem 0.375rem !important;
   border-radius: 0.25rem !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace !important;
   border: none !important;
-}
-
-html[data-theme="dark"] code:not([class*="language-"]) {
-  background: #374151 !important;
-  color: #f9fafb !important;
 }
 
 /* Plugin Badge Dark Mode Overrides */
@@ -735,4 +761,121 @@ html[data-theme="dark"] .bg-earthy-yellow-300 {
 }
 html[data-theme="dark"] .text-earthy-yellow-900 {
   color: #f6e6c9 !important;
+}
+
+/*
+ * Prism syntax highlighting - CSS-based theme switching
+ * These override inline styles from prism-react-renderer
+ * to enable reactive theme changes without page refresh.
+ */
+
+/* Light mode token colors */
+:root {
+  --prism-plain-color: #1f2937;
+  --prism-comment-color: #4a674a;
+  --prism-string-color: #35593b;
+  --prism-punctuation-color: #4a674a;
+  --prism-number-color: #7b5935;
+  --prism-keyword-color: #8d3718;
+  --prism-function-color: #b34822;
+}
+
+/* Dark mode token colors */
+[data-theme="dark"] {
+  --prism-plain-color: #f3f4f6;
+  --prism-comment-color: #a8c5a8;
+  --prism-string-color: #b9d9b9;
+  --prism-punctuation-color: #d1e5d1;
+  --prism-number-color: #f0d97e;
+  --prism-keyword-color: #ffa77d;
+  --prism-function-color: #ffb899;
+}
+
+/* Apply colors to Prism tokens via CSS */
+.prism-code .token.plain,
+pre[class*="language-"] .token.plain {
+  color: var(--prism-plain-color) !important;
+}
+
+.prism-code .token.comment,
+.prism-code .token.prolog,
+.prism-code .token.doctype,
+.prism-code .token.cdata,
+pre[class*="language-"] .token.comment,
+pre[class*="language-"] .token.prolog,
+pre[class*="language-"] .token.doctype,
+pre[class*="language-"] .token.cdata {
+  color: var(--prism-comment-color) !important;
+  font-style: italic;
+}
+
+.prism-code .token.string,
+.prism-code .token.attr-value,
+pre[class*="language-"] .token.string,
+pre[class*="language-"] .token.attr-value {
+  color: var(--prism-string-color) !important;
+}
+
+.prism-code .token.punctuation,
+.prism-code .token.operator,
+pre[class*="language-"] .token.punctuation,
+pre[class*="language-"] .token.operator {
+  color: var(--prism-punctuation-color) !important;
+}
+
+.prism-code .token.entity,
+.prism-code .token.url,
+.prism-code .token.symbol,
+.prism-code .token.number,
+.prism-code .token.boolean,
+.prism-code .token.variable,
+.prism-code .token.constant,
+.prism-code .token.property,
+.prism-code .token.regex,
+.prism-code .token.inserted,
+pre[class*="language-"] .token.entity,
+pre[class*="language-"] .token.url,
+pre[class*="language-"] .token.symbol,
+pre[class*="language-"] .token.number,
+pre[class*="language-"] .token.boolean,
+pre[class*="language-"] .token.variable,
+pre[class*="language-"] .token.constant,
+pre[class*="language-"] .token.property,
+pre[class*="language-"] .token.regex,
+pre[class*="language-"] .token.inserted {
+  color: var(--prism-number-color) !important;
+}
+
+.prism-code .token.atrule,
+.prism-code .token.keyword,
+.prism-code .token.attr-name,
+.prism-code .token.selector,
+.prism-code .token.tag,
+.prism-code .token.builtin,
+pre[class*="language-"] .token.atrule,
+pre[class*="language-"] .token.keyword,
+pre[class*="language-"] .token.attr-name,
+pre[class*="language-"] .token.selector,
+pre[class*="language-"] .token.tag,
+pre[class*="language-"] .token.builtin {
+  color: var(--prism-keyword-color) !important;
+}
+
+.prism-code .token.function,
+.prism-code .token.deleted,
+.prism-code .token.function-variable,
+.prism-code .token.class-name,
+pre[class*="language-"] .token.function,
+pre[class*="language-"] .token.deleted,
+pre[class*="language-"] .token.function-variable,
+pre[class*="language-"] .token.class-name {
+  color: var(--prism-function-color) !important;
+}
+
+/* Plain text in code blocks */
+.prism-code,
+.prism-code code,
+pre[class*="language-"],
+pre[class*="language-"] code {
+  color: var(--prism-plain-color) !important;
 }

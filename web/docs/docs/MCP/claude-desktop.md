@@ -31,7 +31,3 @@ Add the Marmot MCP server:
 
 For HTTP connections (development), add `--allow-http` to the args array.
 
-## Activation
-
-1. Save the configuration file
-2. Restart Claude Desktop

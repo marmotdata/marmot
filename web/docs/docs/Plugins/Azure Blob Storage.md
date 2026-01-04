@@ -16,6 +16,17 @@ status: experimental
 </div>
 </div>
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
 
 The Azure Blob Storage plugin discovers containers from Azure Storage accounts. It captures container metadata including access levels, lease status, and custom metadata.
 
@@ -63,6 +74,7 @@ Or use a custom role with these permissions:
 
 - `Microsoft.Storage/storageAccounts/blobServices/containers/read`
 - `Microsoft.Storage/storageAccounts/blobServices/containers/blobs/read`
+
 
 
 ## Example Configuration

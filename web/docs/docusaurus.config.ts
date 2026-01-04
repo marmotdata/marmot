@@ -132,10 +132,6 @@ const config: Config = {
               to: "/docs/introduction",
             },
             {
-              label: "Quick Start",
-              to: "/docs/quick-start",
-            },
-            {
               label: "Queries",
               to: "/docs/queries",
             },

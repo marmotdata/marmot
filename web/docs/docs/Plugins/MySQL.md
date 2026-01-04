@@ -16,6 +16,17 @@ status: experimental
 </div>
 </div>
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
 
 The MySQL plugin discovers databases and tables from MySQL instances. It captures column information, row counts, and foreign key relationships for lineage.
 
@@ -28,6 +39,7 @@ CREATE USER 'marmot_reader'@'%' IDENTIFIED BY 'your-password';
 GRANT SELECT ON your_database.* TO 'marmot_reader'@'%';
 GRANT SELECT ON information_schema.* TO 'marmot_reader'@'%';
 ```
+
 
 
 ## Example Configuration

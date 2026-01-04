@@ -16,6 +16,17 @@ status: experimental
 </div>
 </div>
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
 
 The SNS plugin discovers and catalogs Amazon SNS topics across your AWS accounts. It captures topic configurations, subscription details, and tags.
 
@@ -51,6 +62,7 @@ import { Collapsible } from "@site/src/components/Collapsible";
     ]
   }}
 />
+
 
 
 ## Example Configuration

@@ -24,8 +24,3 @@ Add the Marmot server to `cline_mcp_settings.json`:
 }
 ```
 
-## Activation
-
-1. Save the configuration file
-2. Click the restart button next to the Marmot server entry
-3. Marmot tools will appear in the available tools list

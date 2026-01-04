@@ -16,6 +16,17 @@ status: experimental
 </div>
 </div>
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
 
 The Google Cloud Storage plugin discovers buckets from GCP projects. It captures bucket metadata including location, storage class, encryption settings, and lifecycle rules.
 
@@ -64,6 +75,7 @@ Or use a custom role with these permissions:
 - `storage.buckets.list`
 - `storage.buckets.get`
 - `storage.objects.list` (if using object count)
+
 
 
 ## Example Configuration

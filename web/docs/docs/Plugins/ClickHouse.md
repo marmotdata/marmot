@@ -16,6 +16,17 @@ status: experimental
 </div>
 </div>
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
 
 The ClickHouse plugin discovers databases, tables, and views from ClickHouse instances. It extracts schema information, column details, and table metrics like row counts and storage sizes.
 
@@ -81,6 +92,7 @@ GRANT SHOW DATABASES ON *.* TO marmot_user;
 GRANT SHOW TABLES ON *.* TO marmot_user;
 GRANT SHOW COLUMNS ON *.* TO marmot_user;
 ```
+
 
 
 ## Example Configuration

@@ -60,7 +60,7 @@
 </script>
 
 <tr
-	class="group hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-0"
+	class="group hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border-b border-gray-200 dark:border-gray-700 last:border-0"
 >
 	<!-- Play Button -->
 	<td class="px-4 py-4 w-16">

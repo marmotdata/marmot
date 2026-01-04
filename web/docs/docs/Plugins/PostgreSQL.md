@@ -16,6 +16,17 @@ status: experimental
 </div>
 </div>
 
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
 
 The PostgreSQL plugin discovers databases, schemas, and tables from PostgreSQL instances. It captures column information, table metrics, and foreign key relationships for lineage.
 
@@ -28,6 +39,7 @@ GRANT CONNECT ON DATABASE your_db TO marmot_reader;
 GRANT USAGE ON SCHEMA public TO marmot_reader;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO marmot_reader;
 ```
+
 
 
 ## Example Configuration

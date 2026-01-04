@@ -16,6 +16,12 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
 
 <DocCardGrid>
   <DocCard
+    title="UI"
+    description="Manually add and manage assets directly in the Marmot web interface"
+    href="/docs/Populating/UI"
+    icon="mdi:cursor-default-click"
+  />
+  <DocCard
     title="CLI"
     description="Simple YAML configuration for fetching assets from various data sources"
     href="/docs/Populating/CLI"

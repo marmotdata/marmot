@@ -4,7 +4,7 @@ import type { PrismTheme } from 'prism-react-renderer';
 export const lightTheme: PrismTheme = {
   plain: {
     color: '#1f2937',
-    backgroundColor: 'transparent',
+    backgroundColor: 'var(--code-block-bg)',
   },
   styles: [
     {
@@ -69,7 +69,7 @@ export const lightTheme: PrismTheme = {
 export const darkTheme: PrismTheme = {
   plain: {
     color: '#f3f4f6',
-    backgroundColor: 'transparent',
+    backgroundColor: 'var(--code-block-bg)',
   },
   styles: [
     {
