@@ -12,7 +12,6 @@
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import QueryBuilder from '$components/query/QueryBuilder.svelte';
-	import CreateAssetModal from '$components/shared/CreateAssetModal.svelte';
 	import { auth } from '$lib/stores/auth';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 
@@ -68,7 +67,6 @@
 	let selectedTypes = $state<string[]>([]);
 	let selectedProviders = $state<string[]>([]);
 	let selectedTags = $state<string[]>([]);
-	let showCreateModal = $state(false);
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 	let filtersExpanded = $state(true);
 	let queryBuilderExpanded = $state(false);
@@ -556,7 +554,7 @@
 						<div class="flex items-center gap-3">
 							{#if canManageAssets}
 								<Button
-									click={() => (showCreateModal = true)}
+									href="/assets/new"
 									icon="material-symbols:add"
 									text="New Asset"
 									variant="filled"
@@ -1001,8 +999,6 @@
 		</div>
 	</div>
 </div>
-
-<CreateAssetModal bind:show={showCreateModal} onSuccess={fetchResults} />
 
 {#if selectedAsset}
 	<AssetBlade bind:asset={selectedAsset} onClose={() => (selectedAsset = null)} />
