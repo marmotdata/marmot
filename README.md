@@ -7,7 +7,7 @@
 
 _Open-source catalog for all your data assets. Search everything - tables, topics, queues, buckets, and more._
 
-[Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Quickstart](https://marmotdata.io/docs/quick-start) • [Community](https://discord.gg/tMgc9ayB)
+[Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Quickstart](https://marmotdata.io/docs/quick-start) • [Community](https://discord.gg/TWCk7hVFN4)
 
 </div>
 
@@ -93,7 +93,7 @@ See [Local Development](https://marmotdata.io/docs/Develop/local-development) fo
 
 ## Community
 
-Join our [Discord community](https://discord.gg/tMgc9ayB) to:
+Join our [Discord community](https://discord.gg/TWCk7hVFN4) to:
 
 - Get help and support
 - Share feedback and ideas
