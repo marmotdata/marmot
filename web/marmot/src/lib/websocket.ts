@@ -43,8 +43,6 @@ class WebSocketService {
 			wsUrl = `${protocol}//${window.location.host}/api/v1/ingestion/ws`;
 		}
 
-		console.log('[WebSocket] Connecting to:', wsUrl, '(dev mode:', isDev, ')');
-
 		this.centrifuge = new Centrifuge(wsUrl, {
 			// Retry configuration for better resilience during startup
 			minReconnectDelay: 100,
@@ -53,23 +51,13 @@ class WebSocketService {
 			timeout: 5000
 		});
 
-		this.centrifuge.on('connecting', (ctx) => {
-			console.log('[WebSocket] Connecting...', ctx);
-		});
-
-		this.centrifuge.on('connected', (ctx) => {
-			console.log('[WebSocket] Connected', ctx);
+		this.centrifuge.on('connected', () => {
 			this.isConnected = true;
 			this.subscribeToJobRuns();
 		});
 
-		this.centrifuge.on('disconnected', (ctx) => {
-			console.log('[WebSocket] Disconnected', ctx);
+		this.centrifuge.on('disconnected', () => {
 			this.isConnected = false;
-		});
-
-		this.centrifuge.on('error', (ctx) => {
-			console.error('[WebSocket] Error', ctx);
 		});
 
 		this.centrifuge.connect();
@@ -83,34 +71,16 @@ class WebSocketService {
 		this.jobRunsSubscription.on('publication', (ctx) => {
 			try {
 				const event = ctx.data as JobRunEvent;
-				console.log('[WebSocket] Job run event received:', event.type, event.payload);
-				// Notify all callbacks with individual error handling
 				this.callbacks.forEach((callback) => {
 					try {
 						callback(event);
-					} catch (callbackError) {
-						console.error('[WebSocket] Error in event callback:', callbackError);
+					} catch {
+						// Silently ignore callback errors
 					}
 				});
-			} catch (error) {
-				console.error('[WebSocket] Error processing event:', error);
+			} catch {
+				// Silently ignore processing errors
 			}
-		});
-
-		this.jobRunsSubscription.on('subscribing', (ctx) => {
-			console.log('[WebSocket] Subscribing to job_runs...', ctx);
-		});
-
-		this.jobRunsSubscription.on('subscribed', (ctx) => {
-			console.log('[WebSocket] Subscribed to job_runs', ctx);
-		});
-
-		this.jobRunsSubscription.on('unsubscribed', (ctx) => {
-			console.log('[WebSocket] Unsubscribed from job_runs', ctx);
-		});
-
-		this.jobRunsSubscription.on('error', (ctx) => {
-			console.error('[WebSocket] Subscription error:', ctx);
 		});
 
 		this.jobRunsSubscription.subscribe();

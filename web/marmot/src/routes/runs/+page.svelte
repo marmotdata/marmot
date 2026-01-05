@@ -530,19 +530,16 @@
 		}
 
 		// Subscribe to websocket events
-		console.log('[Runs Page] Subscribing to websocket events');
 		unsubscribe = websocketService.subscribe(handleJobRunEvent);
 
 		// Check websocket connection status
 		wsConnected = websocketService.connected();
-		console.log('[Runs Page] Websocket connected:', wsConnected);
 
 		// Poll for connection status
 		wsCheckInterval = setInterval(() => {
 			const newStatus = websocketService.connected();
 			if (newStatus !== wsConnected) {
 				wsConnected = newStatus;
-				console.log('[Runs Page] Websocket status changed:', wsConnected);
 			}
 		}, 2000);
 	});

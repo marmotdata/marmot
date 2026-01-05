@@ -49,14 +49,20 @@ func NewHandler(hub *Hub, userSvc user.Service, authSvc auth.Service, config *co
 			}
 
 			if isProduction() {
-				expectedOrigin := "http://" + r.Host
-				if r.TLS != nil {
-					expectedOrigin = "https://" + r.Host
+				proto := r.Header.Get("X-Forwarded-Proto")
+				if proto == "" {
+					if r.TLS != nil {
+						proto = "https"
+					} else {
+						proto = "http"
+					}
 				}
+				expectedOrigin := proto + "://" + r.Host
 				allowed := origin == expectedOrigin
 				log.Debug().
 					Str("origin", origin).
 					Str("expected", expectedOrigin).
+					Str("x_forwarded_proto", r.Header.Get("X-Forwarded-Proto")).
 					Bool("allowed", allowed).
 					Msg("Websocket origin check (production, using request host)")
 				return allowed
