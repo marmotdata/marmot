@@ -7,7 +7,7 @@
 
 _Open-source catalog for all your data assets. Search everything - tables, topics, queues, buckets, and more._
 
-[Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Quickstart](https://marmotdata.io/docs/quick-start) • [Community](https://discord.gg/TWCk7hVFN4)
+[Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Deploy](https://marmotdata.io/docs/Deploy) • [Community](https://discord.gg/TWCk7hVFN4)
 
 </div>
 
@@ -81,9 +81,9 @@ Assign ownership, document business context, and create glossaries. Keep your en
   </picture>
 </div>
 
-## Quick Start
+## Deploy
 
-**New to Marmot?** Follow the [Quickstart Guide](https://marmotdata.io/docs/quick-start) for a guided setup.
+**New to Marmot?** Follow the [Deploy](https://marmotdata.io/docs/Deploy) documentation for a guided setup.
 
 > **Interested in exploring Marmot?** Check out the [live demo](https://demo.marmotdata.io)
 
