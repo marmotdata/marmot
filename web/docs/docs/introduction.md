@@ -61,6 +61,10 @@ Store rich metadata for any asset type. From tables and topics to APIs and dashb
 
 Assign ownership, document business context, and create glossaries. Keep your entire team aligned with centralised knowledge about your data assets.
 
+### Data Products
+
+Group related assets into logical collections. Use manual assignment for curated bundles or dynamic rules that use the query language to automatically include matching assets as your catalog grows.
+
 ## Getting Started
 
 Ready to dive in? Here's where to go next:
@@ -71,6 +75,18 @@ Ready to dive in? Here's where to go next:
     description="Learn how to add assets using plugins, CLI, or API"
     href="/docs/Populating"
     icon="mdi:database-plus"
+  />
+  <DocCard
+    title="Data Products"
+    description="Group assets into logical collections with manual or dynamic rules"
+    href="/docs/data-products"
+    icon="mdi:package-variant-closed"
+  />
+  <DocCard
+    title="Glossary"
+    description="Define business terms and create a shared vocabulary"
+    href="/docs/glossary"
+    icon="mdi:book-alphabet"
   />
   <DocCard
     title="Query Language"
