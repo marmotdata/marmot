@@ -71,6 +71,7 @@
 	let filtersExpanded = $state(true);
 	let queryBuilderExpanded = $state(false);
 	let previousUrl = $state<string | null>(null);
+	let skipNextUrlEffect = false;
 
 	// Initialize filters from URL
 	$effect(() => {
@@ -82,6 +83,11 @@
 		}
 
 		previousUrl = currentUrl;
+
+		if (skipNextUrlEffect) {
+			skipNextUrlEffect = false;
+			return;
+		}
 
 		const searchParams = new URLSearchParams(currentUrl);
 		searchQuery = searchParams.get('q') || '';
@@ -148,7 +154,12 @@
 
 			$results = data.results || [];
 			$totalResults = data.total || 0;
-			$facets = data.facets || { types: {}, asset_types: [], providers: [], tags: [] };
+			$facets = {
+				types: data.facets?.types || {},
+				asset_types: data.facets?.asset_types || [],
+				providers: data.facets?.providers || [],
+				tags: data.facets?.tags || []
+			};
 		} catch (e: any) {
 			const errorStatus = e.status || 500;
 			$error = { status: errorStatus, message: e.message };
@@ -168,6 +179,7 @@
 		searchTimeout = setTimeout(() => {
 			currentPage = 1;
 			updateURL();
+			fetchResults();
 		}, 300);
 	}
 
@@ -178,6 +190,18 @@
 
 		currentPage = 1;
 		updateURL();
+		fetchResults();
+	}
+
+	function handleRunQuery(query: string) {
+		if (searchTimeout) {
+			clearTimeout(searchTimeout);
+		}
+
+		searchQuery = query;
+		currentPage = 1;
+		updateURL();
+		fetchResults();
 	}
 
 	function updateURL() {
@@ -190,17 +214,20 @@
 		if (selectedTags.length) params.append('tags', selectedTags.join(','));
 		if (currentPage > 1) params.append('page', currentPage.toString());
 
+		skipNextUrlEffect = true;
 		goto(`?${params.toString()}`, { replaceState: true, noScroll: true, keepFocus: true });
 	}
 
 	function handleFilterChange() {
 		currentPage = 1;
 		updateURL();
+		fetchResults();
 	}
 
 	function handlePageChange(newPage: number) {
 		currentPage = newPage;
 		updateURL();
+		fetchResults();
 	}
 
 	function handleTagClick(tag: string, event: MouseEvent) {
@@ -572,6 +599,7 @@
 						<QueryBuilder
 							query={searchQuery}
 							onQueryChange={handleSearch}
+							onRunClick={handleRunQuery}
 							initiallyExpanded={queryBuilderExpanded}
 						/>
 					</div>

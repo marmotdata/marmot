@@ -205,11 +205,11 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int, includ
 	defer tx.Rollback(ctx)
 
 	countQuery := "SELECT COUNT(*) FROM assets"
-	listQuery := baseSelectAsset + " ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+	listQuery := baseSelectAsset + " ORDER BY updated_at DESC LIMIT $1 OFFSET $2"
 
 	if !includeStubs {
 		countQuery += " WHERE is_stub = FALSE"
-		listQuery = baseSelectAsset + " WHERE is_stub = FALSE ORDER BY created_at DESC LIMIT $1 OFFSET $2"
+		listQuery = baseSelectAsset + " WHERE is_stub = FALSE ORDER BY updated_at DESC LIMIT $1 OFFSET $2"
 	}
 
 	var total int
@@ -448,145 +448,129 @@ func (r *PostgresRepository) scanMultipleAssets(ctx context.Context, query strin
 
 func (r *PostgresRepository) GetMetadataFields(ctx context.Context) ([]MetadataFieldSuggestion, error) {
 	query := `
-   	WITH RECURSIVE all_metadata_keys AS (
-   		SELECT
-   			key as path,
-   			key as field,
-   			value,
-   			jsonb_typeof(value) as type,
-   			1 as depth,
-   			ARRAY[key] as path_parts,
-   			ARRAY[jsonb_typeof(value)] as types
-   		FROM assets,
-   			jsonb_each(metadata)
-   		WHERE metadata IS NOT NULL
-   			AND metadata != '{}'::jsonb
-   			AND jsonb_typeof(metadata) = 'object'
-   			AND is_stub = FALSE
+	WITH metadata_keys AS (
+		-- Get top-level keys from assets (sampled for performance at scale)
+		SELECT
+			key as field,
+			jsonb_typeof(value) as type,
+			value
+		FROM (
+			SELECT metadata FROM assets
+			WHERE is_stub = FALSE
+			AND metadata IS NOT NULL
+			AND metadata != '{}'::jsonb
+			AND jsonb_typeof(metadata) = 'object'
+			LIMIT 10000
+		) sampled,
+		jsonb_each(sampled.metadata)
 
-   		UNION ALL
+		UNION ALL
 
-   		SELECT
-   			key as path,
-   			key as field,
-   			value,
-   			jsonb_typeof(value) as type,
-   			1 as depth,
-   			ARRAY[key] as path_parts,
-   			ARRAY[jsonb_typeof(value)] as types
-   		FROM glossary_terms,
-   			jsonb_each(metadata)
-   		WHERE metadata IS NOT NULL
-   			AND metadata != '{}'::jsonb
-   			AND jsonb_typeof(metadata) = 'object'
-   			AND deleted_at IS NULL
+		-- Get top-level keys from glossary_terms
+		SELECT
+			key as field,
+			jsonb_typeof(value) as type,
+			value
+		FROM glossary_terms,
+			jsonb_each(metadata)
+		WHERE metadata IS NOT NULL
+			AND metadata != '{}'::jsonb
+			AND jsonb_typeof(metadata) = 'object'
+			AND deleted_at IS NULL
 
-   		UNION ALL
+		UNION ALL
 
-   		SELECT
-   			key as path,
-   			key as field,
-   			value,
-   			jsonb_typeof(value) as type,
-   			1 as depth,
-   			ARRAY[key] as path_parts,
-   			ARRAY[jsonb_typeof(value)] as types
-   		FROM teams,
-   			jsonb_each(metadata)
-   		WHERE metadata IS NOT NULL
-   			AND metadata != '{}'::jsonb
-   			AND jsonb_typeof(metadata) = 'object'
-
-   		UNION ALL
-
-   		SELECT
-   			mk.path || '.' || e.key,
-   			e.key,
-   			e.value,
-   			jsonb_typeof(e.value),
-   			mk.depth + 1,
-   			mk.path_parts || e.key,
-   			mk.types || jsonb_typeof(e.value)
-   		FROM all_metadata_keys mk,
-   			jsonb_each(mk.value) e
-   		WHERE mk.type = 'object'
-   	)
-   	SELECT DISTINCT ON (path)
-   		path as field,
-   		type,
-   		count(*) as count,
-   		CASE WHEN type != 'object' THEN MIN(value::text) ELSE NULL END as example,
-   		array_agg(DISTINCT path_parts[1]) as path_parts,
-   		array_agg(DISTINCT types[1]) as types
-   	FROM all_metadata_keys
-   	GROUP BY path, type
-   	ORDER BY path, count DESC;`
+		-- Get top-level keys from teams
+		SELECT
+			key as field,
+			jsonb_typeof(value) as type,
+			value
+		FROM teams,
+			jsonb_each(metadata)
+		WHERE metadata IS NOT NULL
+			AND metadata != '{}'::jsonb
+			AND jsonb_typeof(metadata) = 'object'
+	)
+	SELECT
+		field,
+		type,
+		COUNT(*)::bigint as count,
+		CASE WHEN type NOT IN ('object', 'array')
+			THEN (array_agg(value::text ORDER BY value::text))[1]
+			ELSE NULL
+		END as example,
+		ARRAY[field] as path_parts,
+		ARRAY[type] as types
+	FROM metadata_keys
+	GROUP BY field, type
+	ORDER BY count DESC, field ASC
+	LIMIT 100;`
 
 	return r.scanMetadataFields(ctx, query)
 }
 
 func (r *PostgresRepository) GetMetadataFieldsWithContext(ctx context.Context, queryContext *MetadataContext) ([]MetadataFieldSuggestion, error) {
 	query := `
-   	WITH matching_assets AS (
-   		SELECT id FROM assets
-   		WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE
-   	),
-   	matching_glossary AS (
-   		SELECT id FROM glossary_terms
-   		WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL
-   	),
-   	matching_teams AS (
-   		SELECT id FROM teams
-   		WHERE search_text @@ websearch_to_tsquery('english', $1)
-   	),
-   	metadata_stats AS (
-   		SELECT
-   			key as field,
-   			jsonb_typeof(value) as type,
-   			COUNT(*) as count,
-   			MODE() WITHIN GROUP (ORDER BY value) as example
-   		FROM assets a
-   		JOIN matching_assets ma ON a.id = ma.id,
-   			jsonb_each(metadata)
-   		WHERE metadata != '{}'::jsonb
-   		GROUP BY key, jsonb_typeof(value)
+	WITH metadata_keys AS (
+		-- Get metadata keys from matching assets (limited for performance)
+		SELECT
+			key as field,
+			jsonb_typeof(value) as type,
+			value
+		FROM (
+			SELECT metadata FROM assets
+			WHERE search_text @@ websearch_to_tsquery('english', $1)
+			AND is_stub = FALSE
+			AND metadata IS NOT NULL
+			AND metadata != '{}'::jsonb
+			AND jsonb_typeof(metadata) = 'object'
+			LIMIT 5000
+		) matched,
+		jsonb_each(matched.metadata)
 
-   		UNION ALL
+		UNION ALL
 
-   		SELECT
-   			key as field,
-   			jsonb_typeof(value) as type,
-   			COUNT(*) as count,
-   			MODE() WITHIN GROUP (ORDER BY value) as example
-   		FROM glossary_terms g
-   		JOIN matching_glossary mg ON g.id = mg.id,
-   			jsonb_each(metadata)
-   		WHERE metadata != '{}'::jsonb
-   		GROUP BY key, jsonb_typeof(value)
+		-- Get metadata keys from matching glossary terms
+		SELECT
+			key as field,
+			jsonb_typeof(value) as type,
+			value
+		FROM glossary_terms,
+			jsonb_each(metadata)
+		WHERE search_text @@ websearch_to_tsquery('english', $1)
+			AND metadata IS NOT NULL
+			AND metadata != '{}'::jsonb
+			AND jsonb_typeof(metadata) = 'object'
+			AND deleted_at IS NULL
 
-   		UNION ALL
+		UNION ALL
 
-   		SELECT
-   			key as field,
-   			jsonb_typeof(value) as type,
-   			COUNT(*) as count,
-   			MODE() WITHIN GROUP (ORDER BY value) as example
-   		FROM teams t
-   		JOIN matching_teams mt ON t.id = mt.id,
-   			jsonb_each(metadata)
-   		WHERE metadata != '{}'::jsonb
-   		GROUP BY key, jsonb_typeof(value)
-   	)
-   	SELECT
-   		field,
-   		type,
-   		SUM(count)::bigint as count,
-   		(array_agg(example ORDER BY count DESC))[1] as example,
-   		ARRAY[field] as path_parts,
-   		ARRAY[type] as types
-   	FROM metadata_stats
-   	GROUP BY field, type
-   	ORDER BY count DESC, field ASC`
+		-- Get metadata keys from matching teams
+		SELECT
+			key as field,
+			jsonb_typeof(value) as type,
+			value
+		FROM teams,
+			jsonb_each(metadata)
+		WHERE search_text @@ websearch_to_tsquery('english', $1)
+			AND metadata IS NOT NULL
+			AND metadata != '{}'::jsonb
+			AND jsonb_typeof(metadata) = 'object'
+	)
+	SELECT
+		field,
+		type,
+		COUNT(*)::bigint as count,
+		CASE WHEN type NOT IN ('object', 'array')
+			THEN (array_agg(value::text ORDER BY value::text))[1]
+			ELSE NULL
+		END as example,
+		ARRAY[field] as path_parts,
+		ARRAY[type] as types
+	FROM metadata_keys
+	GROUP BY field, type
+	ORDER BY count DESC, field ASC
+	LIMIT 100;`
 
 	return r.scanMetadataFields(ctx, query, queryContext.Query)
 }
@@ -685,29 +669,47 @@ func (r *PostgresRepository) GetMetadataValues(ctx context.Context, field string
 
 	default:
 		pathArray := strings.Split(field, ".")
-		query := `
+		sampleSize := limit * 100
+		if sampleSize > 10000 {
+			sampleSize = 10000
+		}
+		query := fmt.Sprintf(`
 			WITH MetadataValues AS (
-				SELECT
-					a.id::text,
-					jsonb_extract_path(a.metadata, VARIADIC $1::text[]) as value
-				FROM assets a
-				WHERE jsonb_typeof(jsonb_extract_path(a.metadata, VARIADIC $1::text[])) != 'null' AND is_stub = FALSE
+				SELECT id::text, value FROM (
+					SELECT
+						a.id,
+						jsonb_extract_path(a.metadata, VARIADIC $1::text[]) as value
+					FROM assets a
+					WHERE jsonb_typeof(jsonb_extract_path(a.metadata, VARIADIC $1::text[])) != 'null'
+					AND is_stub = FALSE
+					AND jsonb_typeof(a.metadata) = 'object'
+					LIMIT %d
+				) assets_sample
 
 				UNION ALL
 
-				SELECT
-					g.id::text,
-					jsonb_extract_path(g.metadata, VARIADIC $1::text[]) as value
-				FROM glossary_terms g
-				WHERE jsonb_typeof(jsonb_extract_path(g.metadata, VARIADIC $1::text[])) != 'null' AND deleted_at IS NULL
+				SELECT id::text, value FROM (
+					SELECT
+						g.id,
+						jsonb_extract_path(g.metadata, VARIADIC $1::text[]) as value
+					FROM glossary_terms g
+					WHERE jsonb_typeof(jsonb_extract_path(g.metadata, VARIADIC $1::text[])) != 'null'
+					AND deleted_at IS NULL
+					AND jsonb_typeof(g.metadata) = 'object'
+					LIMIT 1000
+				) glossary_sample
 
 				UNION ALL
 
-				SELECT
-					t.id::text,
-					jsonb_extract_path(t.metadata, VARIADIC $1::text[]) as value
-				FROM teams t
-				WHERE jsonb_typeof(jsonb_extract_path(t.metadata, VARIADIC $1::text[])) != 'null'
+				SELECT id::text, value FROM (
+					SELECT
+						t.id,
+						jsonb_extract_path(t.metadata, VARIADIC $1::text[]) as value
+					FROM teams t
+					WHERE jsonb_typeof(jsonb_extract_path(t.metadata, VARIADIC $1::text[])) != 'null'
+					AND jsonb_typeof(t.metadata) = 'object'
+					LIMIT 1000
+				) teams_sample
 			)
 			SELECT
 				value::text,
@@ -716,15 +718,15 @@ func (r *PostgresRepository) GetMetadataValues(ctx context.Context, field string
 			WHERE (
 				$2 = '' OR
 				CASE
-					WHEN jsonb_typeof(value) = 'string' THEN value::text ILIKE $2 || '%'
-					WHEN jsonb_typeof(value) IN ('number', 'boolean') THEN value::text ILIKE $2 || '%'
+					WHEN jsonb_typeof(value) = 'string' THEN value::text ILIKE $2 || '%%'
+					WHEN jsonb_typeof(value) IN ('number', 'boolean') THEN value::text ILIKE $2 || '%%'
 					ELSE FALSE
 				END
 			)
 			AND jsonb_typeof(value) != 'null'
 			GROUP BY value
 			ORDER BY COUNT(DISTINCT id) DESC, value ASC
-			LIMIT $3`
+			LIMIT $3`, sampleSize)
 
 		return r.scanMetadataValues(ctx, query, pathArray, prefix, limit)
 	}
@@ -895,90 +897,78 @@ func (r *PostgresRepository) scanMetadataValues(ctx context.Context, query strin
 }
 
 func (r *PostgresRepository) Summary(ctx context.Context) (*AssetSummary, error) {
-	tx, err := r.db.Begin(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("beginning transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
 	summary := &AssetSummary{
 		Types:     make(map[string]AssetTypeSummary),
 		Providers: make(map[string]int),
 		Tags:      make(map[string]int),
 	}
 
-	typeRows, err := tx.Query(ctx, `
-   	WITH TypeCounts AS (
-   		SELECT 
-   			type,
-   			COUNT(*) as count,
-   			array_agg(DISTINCT s.service) as providers
-   		FROM assets
-   		CROSS JOIN LATERAL unnest(providers) as s(service)
-   		WHERE is_stub = FALSE
-   		GROUP BY type
-   	)
-   	SELECT type, count, providers[1] as primary_service
-   	FROM TypeCounts`)
+	rows, err := r.db.Query(ctx, `
+		WITH base_counts AS (
+			SELECT
+				type,
+				providers[1] as primary_provider,
+				tags
+			FROM assets
+			WHERE is_stub = FALSE
+		),
+		type_summary AS (
+			SELECT
+				type,
+				COUNT(*) as count,
+				(array_agg(primary_provider))[1] as service
+			FROM base_counts
+			GROUP BY type
+		),
+		provider_summary AS (
+			SELECT
+				unnest(providers) as provider,
+				COUNT(*) as count
+			FROM assets
+			WHERE is_stub = FALSE
+			GROUP BY unnest(providers)
+		),
+		tag_summary AS (
+			SELECT
+				unnest(tags) as tag,
+				COUNT(*) as count
+			FROM assets
+			WHERE is_stub = FALSE AND tags IS NOT NULL AND array_length(tags, 1) > 0
+			GROUP BY unnest(tags)
+			ORDER BY count DESC
+			LIMIT 100
+		)
+		SELECT 'type' as category, type as name, count, service FROM type_summary
+		UNION ALL
+		SELECT 'provider' as category, provider as name, count, NULL FROM provider_summary
+		UNION ALL
+		SELECT 'tag' as category, tag as name, count, NULL FROM tag_summary
+	`)
 	if err != nil {
-		return nil, fmt.Errorf("querying types summary: %w", err)
+		return nil, fmt.Errorf("querying summary: %w", err)
 	}
-	defer typeRows.Close()
+	defer rows.Close()
 
-	for typeRows.Next() {
-		var t string
+	for rows.Next() {
+		var category, name string
 		var count int
-		var service string
-		if err := typeRows.Scan(&t, &count, &service); err != nil {
-			return nil, fmt.Errorf("scanning type summary: %w", err)
+		var service *string
+		if err := rows.Scan(&category, &name, &count, &service); err != nil {
+			return nil, fmt.Errorf("scanning summary row: %w", err)
 		}
-		summary.Types[t] = AssetTypeSummary{Count: count, Service: service}
-	}
 
-	serviceRows, err := tx.Query(ctx, `
-   	SELECT s.service, COUNT(*) as count
-   	FROM assets
-   	CROSS JOIN LATERAL unnest(providers) as s(service)
-   	WHERE is_stub = FALSE
-   	GROUP BY s.service`)
-	if err != nil {
-		return nil, fmt.Errorf("querying providers summary: %w", err)
-	}
-	defer serviceRows.Close()
-
-	for serviceRows.Next() {
-		var service string
-		var count int
-		if err := serviceRows.Scan(&service, &count); err != nil {
-			return nil, fmt.Errorf("scanning service summary: %w", err)
+		switch category {
+		case "type":
+			svc := ""
+			if service != nil {
+				svc = *service
+			}
+			summary.Types[name] = AssetTypeSummary{Count: count, Service: svc}
+		case "provider":
+			summary.Providers[name] = count
+		case "tag":
+			summary.Tags[name] = count
 		}
-		summary.Providers[service] = count
-	}
-
-	tagRows, err := tx.Query(ctx, `
-   	SELECT tag, COUNT(*) as count
-   	FROM (
-   		SELECT DISTINCT id, unnest(tags) as tag
-   		FROM assets
-   		WHERE tags IS NOT NULL AND array_length(tags, 1) > 0 AND is_stub = FALSE
-   	) t
-   	GROUP BY tag`)
-	if err != nil {
-		return nil, fmt.Errorf("querying tags summary: %w", err)
-	}
-	defer tagRows.Close()
-
-	for tagRows.Next() {
-		var tag string
-		var count int
-		if err := tagRows.Scan(&tag, &count); err != nil {
-			return nil, fmt.Errorf("scanning tag summary: %w", err)
-		}
-		summary.Tags[tag] = count
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("committing transaction: %w", err)
 	}
 
 	return summary, nil

@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/query"
@@ -80,31 +80,12 @@ func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Resu
 	}
 
 	r.recorder.RecordDBQuery(ctx, "search_"+searchMethod, time.Since(start), true)
-	return results, facets.Types[ResultTypeAsset] + facets.Types[ResultTypeGlossary] + facets.Types[ResultTypeTeam] + facets.Types[ResultTypeDataProduct], facets, nil
+	total := facets.Types[ResultTypeAsset] + facets.Types[ResultTypeGlossary] + facets.Types[ResultTypeTeam] + facets.Types[ResultTypeDataProduct]
+	return results, total, facets, nil
 }
 
-// searchTypeIncluded checks if a type should be included in search
-func searchTypeIncluded(types []ResultType, target ResultType) bool {
-	if len(types) == 0 {
-		return true // Include all if no filter
-	}
-	for _, t := range types {
-		if t == target {
-			return true
-		}
-	}
-	return false
-}
-
-func (r *PostgresRepository) searchFullText(ctx context.Context, filter Filter) ([]*Result, error) {
-	query, params := r.buildFullTextQuery(filter)
-
-	rows, err := r.db.Query(ctx, query, params...)
-	if err != nil {
-		return nil, fmt.Errorf("executing full-text search: %w", err)
-	}
-	defer rows.Close()
-
+// scanResults scans search result rows into Result structs.
+func scanResults(rows pgx.Rows) ([]*Result, error) {
 	var results []*Result
 	for rows.Next() {
 		var result Result
@@ -123,7 +104,7 @@ func (r *PostgresRepository) searchFullText(ctx context.Context, filter Filter) 
 			&updatedAt,
 		)
 		if err != nil {
-			return nil, fmt.Errorf("scanning full-text search result: %w", err)
+			return nil, err
 		}
 
 		result.Description = description
@@ -140,19 +121,39 @@ func (r *PostgresRepository) searchFullText(ctx context.Context, filter Filter) 
 	}
 
 	if rows.Err() != nil {
-		return nil, fmt.Errorf("iterating full-text search results: %w", rows.Err())
+		return nil, rows.Err()
 	}
 
 	return results, nil
 }
 
+func (r *PostgresRepository) searchFullText(ctx context.Context, filter Filter) ([]*Result, error) {
+	q, params := r.buildFullTextQuery(filter)
+
+	rows, err := r.db.Query(ctx, q, params...)
+	if err != nil {
+		return nil, fmt.Errorf("executing full-text search: %w", err)
+	}
+	defer rows.Close()
+
+	results, err := scanResults(rows)
+	if err != nil {
+		return nil, fmt.Errorf("scanning full-text search results: %w", err)
+	}
+	return results, nil
+}
+
 // renumberParameters renumbers SQL parameters from $2, $3, ... to $1, $2, ...
-// Processes from highest to lowest to avoid conflicts during replacement.
 func renumberParameters(sql string) string {
-	for i := 20; i >= 2; i-- {
+	for i := 2; i <= 20; i++ {
 		old := fmt.Sprintf("$%d", i)
-		new := fmt.Sprintf("$%d", i-1)
-		sql = strings.ReplaceAll(sql, old, new)
+		placeholder := fmt.Sprintf("__PARAM_%d__", i-1)
+		sql = strings.ReplaceAll(sql, old, placeholder)
+	}
+	for i := 1; i <= 19; i++ {
+		placeholder := fmt.Sprintf("__PARAM_%d__", i)
+		newParam := fmt.Sprintf("$%d", i)
+		sql = strings.ReplaceAll(sql, placeholder, newParam)
 	}
 	return sql
 }
@@ -160,7 +161,6 @@ func renumberParameters(sql string) string {
 func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interface{}) {
 	kindFilters := extractKindFilters(filter.Query)
 	if len(kindFilters) > 0 {
-		// Check for contradictory @kind filters
 		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
 			return "SELECT NULL as type, NULL as id, NULL as name, NULL as description, NULL as metadata, NULL as url, 0 as rank, NULL as updated_at WHERE FALSE", []interface{}{}
 		}
@@ -178,464 +178,43 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 	var params []interface{}
 	paramCount := 0
 
-	// Only add query parameter if it's being used
 	if searchQuery != "" {
 		params = append(params, searchQuery)
 		paramCount = 1
 	}
 
 	if includeAssets {
-		var assetQuery string
-
-		hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
-			strings.Contains(searchQuery, "@type") ||
-			strings.Contains(searchQuery, "@provider") ||
-			strings.Contains(searchQuery, "@name"))
-
-		if hasStructuredQuery {
-			parser := query.NewParser()
-			builder := query.NewBuilder()
-
-			parsedQuery, err := parser.Parse(searchQuery)
-			if err != nil {
-				hasStructuredQuery = false
-			} else {
-				baseQuery := `SELECT
-					'asset' as type,
-					id,
-					name,
-					description,
-					jsonb_build_object(
-						'id', id,
-						'name', name,
-						'mrn', mrn,
-						'type', type,
-						'providers', providers,
-						'environments', environments,
-						'external_links', external_links,
-						'description', description,
-						'user_description', user_description,
-						'metadata', metadata,
-						'schema', schema,
-						'sources', sources,
-						'tags', tags,
-						'created_at', created_at,
-						'created_by', created_by,
-						'updated_at', updated_at,
-						'last_sync_at', last_sync_at,
-						'query', query,
-						'query_language', query_language,
-						'is_stub', is_stub
-					) as metadata,
-					'/discover/' || type || '/' || providers[1] || '/' || SUBSTRING(mrn FROM 'mrn://[^/]+/[^/]+/(.+)') as url,
-					1.0 as rank,
-					updated_at
-				FROM assets`
-
-				builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
-				if err == nil {
-					builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
-					builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
-
-					if strings.Contains(builtQuery, "WHERE") {
-						builtQuery += " AND is_stub = FALSE"
-					} else {
-						builtQuery += " WHERE is_stub = FALSE"
-					}
-
-					// Query builder uses $2, $3, ... with empty $1 placeholder - renumber to $1, $2, ...
-					builtQuery = renumberParameters(builtQuery)
-					assetQuery = builtQuery
-
-					// Skip first element (empty placeholder) from builder params
-					if len(queryParams) > 1 {
-						params = queryParams[1:]
-						paramCount = len(params)
-					} else {
-						params = []interface{}{}
-						paramCount = 0
-					}
-				} else {
-					hasStructuredQuery = false
-				}
-			}
-		}
-
-		if !hasStructuredQuery {
-			var rankExpr string
-			var whereClause string
-
-			if searchQuery != "" {
-				rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-				whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE"
-			} else {
-				rankExpr = "0"
-				whereClause = "WHERE is_stub = FALSE"
-			}
-
-			assetQuery = fmt.Sprintf(`
-				SELECT
-					'asset' as type,
-					id,
-					name,
-					description,
-					jsonb_build_object(
-						'id', id,
-						'name', name,
-						'mrn', mrn,
-						'type', type,
-						'providers', providers,
-						'environments', environments,
-						'external_links', external_links,
-						'description', description,
-						'user_description', user_description,
-						'metadata', metadata,
-						'schema', schema,
-						'sources', sources,
-						'tags', tags,
-						'created_at', created_at,
-						'created_by', created_by,
-						'updated_at', updated_at,
-						'last_sync_at', last_sync_at,
-						'query', query,
-						'query_language', query_language,
-						'is_stub', is_stub
-					) as metadata,
-					'/discover/' || type || '/' || providers[1] || '/' || SUBSTRING(mrn FROM 'mrn://[^/]+/[^/]+/(.+)') as url,
-					%s as rank,
-					updated_at
-				FROM assets
-				%s`, rankExpr, whereClause)
-		}
-
-		// Add asset type filter
-		if len(filter.AssetTypes) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
-			params = append(params, filter.AssetTypes)
-		}
-
-		// Add provider filter
-		if len(filter.Providers) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND providers && $%d", paramCount)
-			params = append(params, filter.Providers)
-		}
-
-		// Add tags filter
-		if len(filter.Tags) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND tags && $%d", paramCount)
-			params = append(params, filter.Tags)
-		}
-
+		assetQuery, newParams, newCount := r.buildAssetFullTextQuery(searchQuery, filter, params, paramCount)
+		params = newParams
+		paramCount = newCount
 		unions = append(unions, assetQuery)
 	}
 
 	if includeGlossary {
-		var glossaryQuery string
-
-		hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
-			strings.Contains(searchQuery, "@name"))
-
-		if hasStructuredQuery {
-			parser := query.NewParser()
-			builder := query.NewBuilder()
-
-			parsedQuery, err := parser.Parse(searchQuery)
-			if err != nil {
-				hasStructuredQuery = false
-			} else {
-				baseQuery := `SELECT
-					'glossary' as type,
-					id::text,
-					name,
-					definition as description,
-					jsonb_build_object(
-						'id', id,
-						'name', name,
-						'definition', definition,
-						'description', description,
-						'parent_term_id', parent_term_id,
-						'metadata', metadata,
-						'tags', tags,
-						'created_at', created_at,
-						'updated_at', updated_at
-					) as metadata,
-					'/glossary/' || id::text as url,
-					1.0 as rank,
-					updated_at
-				FROM glossary_terms`
-
-				builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
-				if err == nil {
-					builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
-					builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
-
-					if strings.Contains(builtQuery, "WHERE") {
-						builtQuery += " AND deleted_at IS NULL"
-					} else {
-						builtQuery += " WHERE deleted_at IS NULL"
-					}
-
-					builtQuery = renumberParameters(builtQuery)
-					glossaryQuery = builtQuery
-
-					if paramCount == 0 && len(queryParams) > 1 {
-						params = queryParams[1:]
-						paramCount = len(params)
-					} else if paramCount == 0 {
-						params = []interface{}{}
-						paramCount = 0
-					}
-				} else {
-					hasStructuredQuery = false
-				}
-			}
-		}
-
-		if !hasStructuredQuery {
-			var rankExpr, whereClause string
-			if searchQuery != "" {
-				rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-				whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL"
-			} else {
-				rankExpr = "0"
-				whereClause = "WHERE deleted_at IS NULL"
-			}
-
-			glossaryQuery = fmt.Sprintf(`
-				SELECT
-					'glossary' as type,
-					id::text,
-					name,
-					definition as description,
-					jsonb_build_object(
-						'id', id,
-						'name', name,
-						'definition', definition,
-						'description', description,
-						'parent_term_id', parent_term_id,
-						'metadata', metadata,
-						'tags', tags,
-						'created_at', created_at,
-						'updated_at', updated_at
-					) as metadata,
-					'/glossary/' || id::text as url,
-					%s as rank,
-					updated_at
-				FROM glossary_terms
-				%s
-			`, rankExpr, whereClause)
-		}
-
-		unions = append(unions, glossaryQuery)
+		q := r.buildGlossaryFullTextQuery(searchQuery, filter, paramCount)
+		unions = append(unions, q)
 	}
 
 	if includeTeams {
-		var teamQuery string
-
-		hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
-			strings.Contains(searchQuery, "@name"))
-
-		if hasStructuredQuery {
-			parser := query.NewParser()
-			builder := query.NewBuilder()
-
-			parsedQuery, err := parser.Parse(searchQuery)
-			if err != nil {
-				hasStructuredQuery = false
-			} else {
-				baseQuery := `SELECT
-					'team' as type,
-					id::text,
-					name,
-					description,
-					jsonb_build_object(
-						'id', id,
-						'name', name,
-						'description', description,
-						'metadata', metadata,
-						'tags', tags,
-						'created_via_sso', created_via_sso,
-						'sso_provider', sso_provider,
-						'created_by', created_by,
-						'created_at', created_at,
-						'updated_at', updated_at
-					) as metadata,
-					'/teams/' || id as url,
-					1.0 as rank,
-					updated_at
-				FROM teams`
-
-				builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
-				if err == nil {
-					builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
-					builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
-
-					builtQuery = renumberParameters(builtQuery)
-					teamQuery = builtQuery
-
-					if paramCount == 0 && len(queryParams) > 1 {
-						params = queryParams[1:]
-						paramCount = len(params)
-					} else if paramCount == 0 {
-						params = []interface{}{}
-						paramCount = 0
-					}
-				} else {
-					hasStructuredQuery = false
-				}
-			}
-		}
-
-		if !hasStructuredQuery {
-			var rankExpr, whereClause string
-			if searchQuery != "" {
-				rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-				whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1)"
-			} else {
-				rankExpr = "0"
-				whereClause = ""
-			}
-
-			teamQuery = fmt.Sprintf(`
-				SELECT
-					'team' as type,
-					id::text,
-					name,
-					description,
-					jsonb_build_object(
-						'id', id,
-						'name', name,
-						'description', description,
-						'metadata', metadata,
-						'tags', tags,
-						'created_via_sso', created_via_sso,
-						'sso_provider', sso_provider,
-						'created_by', created_by,
-						'created_at', created_at,
-						'updated_at', updated_at
-					) as metadata,
-					'/teams/' || id as url,
-					%s as rank,
-					updated_at
-				FROM teams
-				%s
-			`, rankExpr, whereClause)
-		}
-
-		unions = append(unions, teamQuery)
+		q := r.buildTeamFullTextQuery(searchQuery, filter, paramCount)
+		unions = append(unions, q)
 	}
 
 	if includeDataProducts {
-		var dataProductQuery string
-
-		hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
-			strings.Contains(searchQuery, "@name"))
-
-		if hasStructuredQuery {
-			parser := query.NewParser()
-			builder := query.NewBuilder()
-
-			parsedQuery, err := parser.Parse(searchQuery)
-			if err != nil {
-				hasStructuredQuery = false
-			} else {
-				baseQuery := `SELECT
-					'data_product' as type,
-					dp.id::text,
-					dp.name,
-					dp.description,
-					jsonb_build_object(
-						'id', dp.id,
-						'name', dp.name,
-						'description', dp.description,
-						'icon_url', CASE WHEN pi.id IS NOT NULL THEN '/api/v1/products/images/' || dp.id::text || '/icon' ELSE NULL END,
-						'metadata', dp.metadata,
-						'tags', dp.tags,
-						'created_by', dp.created_by,
-						'created_at', dp.created_at,
-						'updated_at', dp.updated_at
-					) as metadata,
-					'/products/' || dp.id::text as url,
-					1.0 as rank,
-					dp.updated_at
-				FROM data_products dp
-				LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'`
-
-				builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
-				if err == nil {
-					builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
-					builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
-
-					builtQuery = renumberParameters(builtQuery)
-					dataProductQuery = builtQuery
-
-					if paramCount == 0 && len(queryParams) > 1 {
-						params = queryParams[1:]
-						paramCount = len(params)
-					} else if paramCount == 0 {
-						params = []interface{}{}
-						paramCount = 0
-					}
-				} else {
-					hasStructuredQuery = false
-				}
-			}
-		}
-
-		if !hasStructuredQuery {
-			var rankExpr, whereClause string
-			if searchQuery != "" {
-				rankExpr = "ts_rank_cd(dp.search_text, websearch_to_tsquery('english', $1), 32)"
-				whereClause = "WHERE dp.search_text @@ websearch_to_tsquery('english', $1)"
-			} else {
-				rankExpr = "0"
-				whereClause = ""
-			}
-
-			dataProductQuery = fmt.Sprintf(`
-				SELECT
-					'data_product' as type,
-					dp.id::text,
-					dp.name,
-					dp.description,
-					jsonb_build_object(
-						'id', dp.id,
-						'name', dp.name,
-						'description', dp.description,
-						'icon_url', CASE WHEN pi.id IS NOT NULL THEN '/api/v1/products/images/' || dp.id::text || '/icon' ELSE NULL END,
-						'metadata', dp.metadata,
-						'tags', dp.tags,
-						'created_by', dp.created_by,
-						'created_at', dp.created_at,
-						'updated_at', dp.updated_at
-					) as metadata,
-					'/products/' || dp.id::text as url,
-					%s as rank,
-					dp.updated_at
-				FROM data_products dp
-				LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
-				%s
-			`, rankExpr, whereClause)
-		}
-
-		unions = append(unions, dataProductQuery)
+		q := r.buildDataProductFullTextQuery(searchQuery, filter, paramCount)
+		unions = append(unions, q)
 	}
 
 	if len(unions) == 0 {
-		// No types selected, return empty query
 		return "SELECT NULL as type, NULL as id, NULL as name, NULL as description, NULL as metadata, NULL as url, 0 as rank, NULL as updated_at WHERE FALSE", []interface{}{}
 	}
 
-	// Add limit and offset parameters
 	paramCount++
 	limitParam := paramCount
 	paramCount++
 	offsetParam := paramCount
 
-	query := fmt.Sprintf(`
+	q := fmt.Sprintf(`
 		WITH search_results AS (
 			%s
 		)
@@ -645,184 +224,271 @@ func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interf
 	`, strings.Join(unions, " UNION ALL "), limitParam, offsetParam)
 
 	params = append(params, filter.Limit, filter.Offset)
-	return query, params
+	return q, params
 }
 
-func (r *PostgresRepository) buildFacets(ctx context.Context, filter Filter) (*Facets, error) {
-	kindFilters := extractKindFilters(filter.Query)
-	if len(kindFilters) > 0 {
-		// Check for contradictory @kind filters
-		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
-			return &Facets{
-				Types:      make(map[ResultType]int),
-				AssetTypes: []FacetValue{},
-				Providers:  []FacetValue{},
-				Tags:       []FacetValue{},
-			}, nil
-		}
-		filter.Types = kindFilters
-	}
+func (r *PostgresRepository) buildAssetFullTextQuery(searchQuery string, filter Filter, params []interface{}, paramCount int) (string, []interface{}, int) {
+	hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
+		strings.Contains(searchQuery, "@type") ||
+		strings.Contains(searchQuery, "@provider") ||
+		strings.Contains(searchQuery, "@name"))
 
-	searchQuery := stripKindFilter(filter.Query)
+	if hasStructuredQuery {
+		parser := query.NewParser()
+		builder := query.NewBuilder()
 
-	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
-	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
-	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
-	includeDataProducts := searchTypeIncluded(filter.Types, ResultTypeDataProduct)
+		parsedQuery, err := parser.Parse(searchQuery)
+		if err == nil {
+			baseQuery := fmt.Sprintf(`SELECT
+				'asset' as type, id, name, description,
+				%s,
+				%s,
+				1.0 as rank, updated_at
+			FROM assets`, assetMetadataColumns, assetURLExpr)
 
-	var unions []string
-	var params []interface{}
-	paramCount := 0
+			builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
+			if err == nil {
+				builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
+				builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
 
-	if searchQuery != "" {
-		params = append(params, searchQuery)
-		paramCount = 1
-	}
+				if strings.Contains(builtQuery, "WHERE") {
+					builtQuery += " AND is_stub = FALSE"
+				} else {
+					builtQuery += " WHERE is_stub = FALSE"
+				}
 
-	if includeAssets {
-		var assetQuery string
-		if searchQuery != "" {
-			assetQuery = `SELECT 'asset' as type, type as asset_type, providers, tags FROM assets WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE`
-		} else {
-			assetQuery = `SELECT 'asset' as type, type as asset_type, providers, tags FROM assets WHERE is_stub = FALSE`
-		}
+				builtQuery = renumberParameters(builtQuery)
 
-		if len(filter.AssetTypes) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
-			params = append(params, filter.AssetTypes)
-		}
+				if len(queryParams) > 1 {
+					params = queryParams[1:]
+					paramCount = len(params)
+				} else {
+					params = []interface{}{}
+					paramCount = 0
+				}
 
-		if len(filter.Providers) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND providers && $%d", paramCount)
-			params = append(params, filter.Providers)
-		}
-
-		if len(filter.Tags) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND tags && $%d", paramCount)
-			params = append(params, filter.Tags)
-		}
-
-		unions = append(unions, assetQuery)
-	}
-
-	if includeGlossary {
-		if searchQuery != "" {
-			unions = append(unions, `SELECT 'glossary' as type, NULL as asset_type, NULL::text[] as providers, tags FROM glossary_terms WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL`)
-		} else {
-			unions = append(unions, `SELECT 'glossary' as type, NULL as asset_type, NULL::text[] as providers, tags FROM glossary_terms WHERE deleted_at IS NULL`)
+				return r.addAssetFilters(builtQuery, filter, params, paramCount)
+			}
 		}
 	}
 
-	if includeTeams {
-		if searchQuery != "" {
-			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, tags FROM teams WHERE search_text @@ websearch_to_tsquery('english', $1)`)
-		} else {
-			unions = append(unions, `SELECT 'team' as type, NULL as asset_type, NULL::text[] as providers, tags FROM teams`)
-		}
+	var rankExpr, whereClause string
+	hasSearchQuery := searchQuery != ""
+
+	if hasSearchQuery {
+		rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
+		whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE"
+	} else {
+		rankExpr = "0"
+		whereClause = "WHERE is_stub = FALSE"
 	}
 
-	if includeDataProducts {
-		if searchQuery != "" {
-			unions = append(unions, `SELECT 'data_product' as type, NULL as asset_type, NULL::text[] as providers, tags FROM data_products WHERE search_text @@ websearch_to_tsquery('english', $1)`)
-		} else {
-			unions = append(unions, `SELECT 'data_product' as type, NULL as asset_type, NULL::text[] as providers, tags FROM data_products`)
-		}
-	}
-
-	if len(unions) == 0 {
-		return &Facets{
-			Types:      map[ResultType]int{},
-			AssetTypes: []FacetValue{},
-			Providers:  []FacetValue{},
-			Tags:       []FacetValue{},
-		}, nil
-	}
-
-	query := fmt.Sprintf(`
-		WITH matching_results AS (
-			%s
-		),
-		type_counts AS (
-			SELECT type, COUNT(*) as count
-			FROM matching_results
-			GROUP BY type
-		),
-		asset_type_counts AS (
-			SELECT asset_type, COUNT(*) as count
-			FROM matching_results
-			WHERE type = 'asset' AND asset_type IS NOT NULL
-			GROUP BY asset_type
-			ORDER BY count DESC
-			LIMIT 50
-		),
-		provider_counts AS (
-			SELECT UNNEST(providers) as provider, COUNT(*) as count
-			FROM matching_results
-			WHERE type = 'asset' AND providers IS NOT NULL
-			GROUP BY provider
-			ORDER BY count DESC
-			LIMIT 50
-		),
-		tag_counts AS (
-			SELECT UNNEST(tags) as tag, COUNT(*) as count
-			FROM matching_results
-			WHERE tags IS NOT NULL
-			GROUP BY tag
-			ORDER BY count DESC
-			LIMIT 50
-		)
+	assetQuery := fmt.Sprintf(`
 		SELECT
-			(SELECT COALESCE(json_object_agg(type, count), '{}'::json) FROM type_counts) as type_facets,
-			(SELECT COALESCE(json_agg(json_build_object('value', asset_type, 'count', count) ORDER BY count DESC), '[]'::json) FROM asset_type_counts) as asset_type_facets,
-			(SELECT COALESCE(json_agg(json_build_object('value', provider, 'count', count) ORDER BY count DESC), '[]'::json) FROM provider_counts) as provider_facets,
-			(SELECT COALESCE(json_agg(json_build_object('value', tag, 'count', count) ORDER BY count DESC), '[]'::json) FROM tag_counts) as tag_facets
-	`, strings.Join(unions, " UNION ALL "))
+			'asset' as type, id, name, description,
+			%s,
+			%s,
+			%s as rank, updated_at
+		FROM assets
+		%s`, assetMetadataColumns, assetURLExpr, rankExpr, whereClause)
 
-	var typeFacetsJSON, assetTypeFacetsJSON, providerFacetsJSON, tagFacetsJSON []byte
-	err := r.db.QueryRow(ctx, query, params...).Scan(&typeFacetsJSON, &assetTypeFacetsJSON, &providerFacetsJSON, &tagFacetsJSON)
-	if err != nil {
-		return nil, fmt.Errorf("querying facets: %w", err)
+	assetQuery, params, paramCount = r.addAssetFilters(assetQuery, filter, params, paramCount)
+
+	if !hasSearchQuery {
+		assetQuery = fmt.Sprintf(`SELECT * FROM (%s ORDER BY updated_at DESC LIMIT %d) sub`, assetQuery, filter.Limit+filter.Offset)
 	}
 
-	facets := &Facets{
-		Types:      make(map[ResultType]int),
-		AssetTypes: []FacetValue{},
-		Providers:  []FacetValue{},
-		Tags:       []FacetValue{},
-	}
+	return assetQuery, params, paramCount
+}
 
-	if len(typeFacetsJSON) > 0 {
-		var typeMap map[string]int
-		if err := json.Unmarshal(typeFacetsJSON, &typeMap); err != nil {
-			return nil, fmt.Errorf("unmarshaling type facets: %w", err)
+func (r *PostgresRepository) addAssetFilters(q string, filter Filter, params []interface{}, paramCount int) (string, []interface{}, int) {
+	if len(filter.AssetTypes) > 0 {
+		paramCount++
+		q += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
+		params = append(params, filter.AssetTypes)
+	}
+	if len(filter.Providers) > 0 {
+		paramCount++
+		q += fmt.Sprintf(" AND providers && $%d", paramCount)
+		params = append(params, filter.Providers)
+	}
+	if len(filter.Tags) > 0 {
+		paramCount++
+		q += fmt.Sprintf(" AND tags && $%d", paramCount)
+		params = append(params, filter.Tags)
+	}
+	return q, params, paramCount
+}
+
+func (r *PostgresRepository) buildGlossaryFullTextQuery(searchQuery string, filter Filter, paramCount int) string {
+	hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
+		strings.Contains(searchQuery, "@name"))
+
+	if hasStructuredQuery {
+		parser := query.NewParser()
+		builder := query.NewBuilder()
+
+		parsedQuery, err := parser.Parse(searchQuery)
+		if err == nil {
+			baseQuery := fmt.Sprintf(`SELECT
+				'glossary' as type, id::text, name, definition as description,
+				%s,
+				%s,
+				1.0 as rank, updated_at
+			FROM glossary_terms`, glossaryMetadataColumns, glossaryURLExpr)
+
+			builtQuery, _, err := builder.BuildSQL(parsedQuery, baseQuery)
+			if err == nil {
+				builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
+				builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
+
+				if strings.Contains(builtQuery, "WHERE") {
+					builtQuery += " AND deleted_at IS NULL"
+				} else {
+					builtQuery += " WHERE deleted_at IS NULL"
+				}
+
+				return renumberParameters(builtQuery)
+			}
 		}
-		for k, v := range typeMap {
-			facets.Types[ResultType(k)] = v
+	}
+
+	var rankExpr, whereClause string
+	hasSearchQuery := searchQuery != ""
+
+	if hasSearchQuery {
+		rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
+		whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL"
+	} else {
+		rankExpr = "0"
+		whereClause = "WHERE deleted_at IS NULL"
+	}
+
+	q := fmt.Sprintf(`
+		SELECT
+			'glossary' as type, id::text, name, definition as description,
+			%s,
+			%s,
+			%s as rank, updated_at
+		FROM glossary_terms
+		%s
+	`, glossaryMetadataColumns, glossaryURLExpr, rankExpr, whereClause)
+
+	if !hasSearchQuery {
+		q = fmt.Sprintf(`SELECT * FROM (%s ORDER BY updated_at DESC LIMIT %d) sub`, q, filter.Limit+filter.Offset)
+	}
+
+	return q
+}
+
+func (r *PostgresRepository) buildTeamFullTextQuery(searchQuery string, filter Filter, paramCount int) string {
+	hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
+		strings.Contains(searchQuery, "@name"))
+
+	if hasStructuredQuery {
+		parser := query.NewParser()
+		builder := query.NewBuilder()
+
+		parsedQuery, err := parser.Parse(searchQuery)
+		if err == nil {
+			baseQuery := fmt.Sprintf(`SELECT
+				'team' as type, id::text, name, description,
+				%s,
+				%s,
+				1.0 as rank, updated_at
+			FROM teams`, teamMetadataColumns, teamURLExpr)
+
+			builtQuery, _, err := builder.BuildSQL(parsedQuery, baseQuery)
+			if err == nil {
+				builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
+				builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
+				return renumberParameters(builtQuery)
+			}
 		}
 	}
 
-	if len(assetTypeFacetsJSON) > 0 {
-		if err := json.Unmarshal(assetTypeFacetsJSON, &facets.AssetTypes); err != nil {
-			return nil, fmt.Errorf("unmarshaling asset type facets: %w", err)
+	var rankExpr, whereClause string
+	hasSearchQuery := searchQuery != ""
+
+	if hasSearchQuery {
+		rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
+		whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1)"
+	} else {
+		rankExpr = "0"
+		whereClause = ""
+	}
+
+	q := fmt.Sprintf(`
+		SELECT
+			'team' as type, id::text, name, description,
+			%s,
+			%s,
+			%s as rank, updated_at
+		FROM teams
+		%s
+	`, teamMetadataColumns, teamURLExpr, rankExpr, whereClause)
+
+	if !hasSearchQuery {
+		q = fmt.Sprintf(`SELECT * FROM (%s ORDER BY updated_at DESC LIMIT %d) sub`, q, filter.Limit+filter.Offset)
+	}
+
+	return q
+}
+
+func (r *PostgresRepository) buildDataProductFullTextQuery(searchQuery string, filter Filter, paramCount int) string {
+	hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
+		strings.Contains(searchQuery, "@name"))
+
+	if hasStructuredQuery {
+		parser := query.NewParser()
+		builder := query.NewBuilder()
+
+		parsedQuery, err := parser.Parse(searchQuery)
+		if err == nil {
+			baseQuery := fmt.Sprintf(`SELECT
+				'data_product' as type, dp.id::text, dp.name, dp.description,
+				%s,
+				%s,
+				1.0 as rank, dp.updated_at
+			FROM data_products dp
+			LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'`, dataProductMetadataColumns, dataProductURLExpr)
+
+			builtQuery, _, err := builder.BuildSQL(parsedQuery, baseQuery)
+			if err == nil {
+				builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
+				builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
+				return renumberParameters(builtQuery)
+			}
 		}
 	}
 
-	if len(providerFacetsJSON) > 0 {
-		if err := json.Unmarshal(providerFacetsJSON, &facets.Providers); err != nil {
-			return nil, fmt.Errorf("unmarshaling provider facets: %w", err)
-		}
+	var rankExpr, whereClause string
+	hasSearchQuery := searchQuery != ""
+
+	if hasSearchQuery {
+		rankExpr = "ts_rank_cd(dp.search_text, websearch_to_tsquery('english', $1), 32)"
+		whereClause = "WHERE dp.search_text @@ websearch_to_tsquery('english', $1)"
+	} else {
+		rankExpr = "0"
+		whereClause = ""
 	}
 
-	if len(tagFacetsJSON) > 0 {
-		if err := json.Unmarshal(tagFacetsJSON, &facets.Tags); err != nil {
-			return nil, fmt.Errorf("unmarshaling tag facets: %w", err)
-		}
+	q := fmt.Sprintf(`
+		SELECT
+			'data_product' as type, dp.id::text, dp.name, dp.description,
+			%s,
+			%s,
+			%s as rank, dp.updated_at
+		FROM data_products dp
+		LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
+		%s
+	`, dataProductMetadataColumns, dataProductURLExpr, rankExpr, whereClause)
+
+	if !hasSearchQuery {
+		q = fmt.Sprintf(`SELECT * FROM (%s ORDER BY updated_at DESC LIMIT %d) sub`, q, filter.Limit+filter.Offset)
 	}
 
-	return facets, nil
+	return q
 }
 
 func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter) ([]*Result, error) {
@@ -832,7 +498,6 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 
 	kindFilters := extractKindFilters(filter.Query)
 	if len(kindFilters) > 0 {
-		// Check for contradictory @kind filters
 		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
 			return nil, nil
 		}
@@ -859,35 +524,11 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 	paramCount = 2
 
 	if includeAssets {
-		assetQuery := `
+		assetQuery := fmt.Sprintf(`
 			SELECT
-				'asset' as type,
-				id,
-				name,
-				description,
-				jsonb_build_object(
-					'id', id,
-					'name', name,
-					'mrn', mrn,
-					'type', type,
-					'providers', providers,
-					'environments', environments,
-					'external_links', external_links,
-					'description', description,
-					'user_description', user_description,
-					'metadata', metadata,
-					'schema', schema,
-					'sources', sources,
-					'tags', tags,
-					'created_at', created_at,
-					'created_by', created_by,
-					'updated_at', updated_at,
-					'last_sync_at', last_sync_at,
-					'query', query,
-					'query_language', query_language,
-					'is_stub', is_stub
-				) as metadata,
-				'/discover/' || type || '/' || providers[1] || '/' || SUBSTRING(mrn FROM 'mrn://[^/]+/[^/]+/(.+)') as url,
+				'asset' as type, id, name, description,
+				%s,
+				%s,
 				CASE
 					WHEN LOWER(name) = $1 THEN 100
 					WHEN LOWER(mrn) = $1 THEN 100
@@ -905,48 +546,18 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 				LOWER(name) LIKE $2 OR
 				LOWER(mrn) LIKE $2 OR
 				LOWER(type) LIKE $2
-			)`
+			)`, assetMetadataColumns, assetURLExpr)
 
-		if len(filter.AssetTypes) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
-			params = append(params, filter.AssetTypes)
-		}
-
-		if len(filter.Providers) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND providers && $%d", paramCount)
-			params = append(params, filter.Providers)
-		}
-
-		if len(filter.Tags) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND tags && $%d", paramCount)
-			params = append(params, filter.Tags)
-		}
-
+		assetQuery, params, paramCount = r.addAssetFilters(assetQuery, filter, params, paramCount)
 		unions = append(unions, assetQuery)
 	}
 
 	if includeGlossary {
-		unions = append(unions, `
+		unions = append(unions, fmt.Sprintf(`
 			SELECT
-				'glossary' as type,
-				id::text,
-				name,
-				definition as description,
-				jsonb_build_object(
-					'id', id,
-					'name', name,
-					'definition', definition,
-					'description', description,
-					'parent_term_id', parent_term_id,
-					'metadata', metadata,
-					'tags', tags,
-					'created_at', created_at,
-					'updated_at', updated_at
-				) as metadata,
-				'/glossary/' || id::text as url,
+				'glossary' as type, id::text, name, definition as description,
+				%s,
+				%s,
 				CASE
 					WHEN LOWER(name) = $1 THEN 100
 					WHEN LOWER(name) LIKE $2 THEN 50
@@ -956,29 +567,15 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 			FROM glossary_terms
 			WHERE deleted_at IS NULL
 			AND (LOWER(name) = $1 OR LOWER(name) LIKE $2)
-		`)
+		`, glossaryMetadataColumns, glossaryURLExpr))
 	}
 
 	if includeTeams {
-		unions = append(unions, `
+		unions = append(unions, fmt.Sprintf(`
 			SELECT
-				'team' as type,
-				id::text,
-				name,
-				description,
-				jsonb_build_object(
-					'id', id,
-					'name', name,
-					'description', description,
-					'metadata', metadata,
-					'tags', tags,
-					'created_via_sso', created_via_sso,
-					'sso_provider', sso_provider,
-					'created_by', created_by,
-					'created_at', created_at,
-					'updated_at', updated_at
-				) as metadata,
-				'/teams/' || id as url,
+				'team' as type, id::text, name, description,
+				%s,
+				%s,
 				CASE
 					WHEN LOWER(name) = $1 THEN 100
 					WHEN LOWER(name) LIKE $2 THEN 50
@@ -987,28 +584,15 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 				updated_at
 			FROM teams
 			WHERE (LOWER(name) = $1 OR LOWER(name) LIKE $2)
-		`)
+		`, teamMetadataColumns, teamURLExpr))
 	}
 
 	if includeDataProducts {
-		unions = append(unions, `
+		unions = append(unions, fmt.Sprintf(`
 			SELECT
-				'data_product' as type,
-				dp.id::text,
-				dp.name,
-				dp.description,
-				jsonb_build_object(
-					'id', dp.id,
-					'name', dp.name,
-					'description', dp.description,
-					'icon_url', CASE WHEN pi.id IS NOT NULL THEN '/api/v1/products/images/' || dp.id::text || '/icon' ELSE NULL END,
-					'metadata', dp.metadata,
-					'tags', dp.tags,
-					'created_by', dp.created_by,
-					'created_at', dp.created_at,
-					'updated_at', dp.updated_at
-				) as metadata,
-				'/products/' || dp.id::text as url,
+				'data_product' as type, dp.id::text, dp.name, dp.description,
+				%s,
+				%s,
 				CASE
 					WHEN LOWER(dp.name) = $1 THEN 100
 					WHEN LOWER(dp.name) LIKE $2 THEN 50
@@ -1018,7 +602,7 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 			FROM data_products dp
 			LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
 			WHERE (LOWER(dp.name) = $1 OR LOWER(dp.name) LIKE $2)
-		`)
+		`, dataProductMetadataColumns, dataProductURLExpr))
 	}
 
 	if len(unions) == 0 {
@@ -1030,7 +614,7 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 	paramCount++
 	offsetParam := paramCount
 
-	query := fmt.Sprintf(`
+	q := fmt.Sprintf(`
 		WITH search_results AS (
 			%s
 		)
@@ -1041,50 +625,16 @@ func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter
 
 	params = append(params, filter.Limit, filter.Offset)
 
-	rows, err := r.db.Query(ctx, query, params...)
+	rows, err := r.db.Query(ctx, q, params...)
 	if err != nil {
 		return nil, fmt.Errorf("executing exact match search: %w", err)
 	}
 	defer rows.Close()
 
-	var results []*Result
-	for rows.Next() {
-		var result Result
-		var metadataJSON []byte
-		var description *string
-		var updatedAt *time.Time
-
-		err := rows.Scan(
-			&result.Type,
-			&result.ID,
-			&result.Name,
-			&description,
-			&metadataJSON,
-			&result.URL,
-			&result.Rank,
-			&updatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scanning exact match result: %w", err)
-		}
-
-		result.Description = description
-		result.UpdatedAt = updatedAt
-
-		if len(metadataJSON) > 0 {
-			result.Metadata = make(map[string]interface{})
-			if err := json.Unmarshal(metadataJSON, &result.Metadata); err != nil {
-				return nil, fmt.Errorf("unmarshaling metadata: %w", err)
-			}
-		}
-
-		results = append(results, &result)
+	results, err := scanResults(rows)
+	if err != nil {
+		return nil, fmt.Errorf("scanning exact match results: %w", err)
 	}
-
-	if rows.Err() != nil {
-		return nil, fmt.Errorf("iterating exact match results: %w", rows.Err())
-	}
-
 	return results, nil
 }
 
@@ -1095,7 +645,6 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 
 	kindFilters := extractKindFilters(filter.Query)
 	if len(kindFilters) > 0 {
-		// Check for contradictory @kind filters
 		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
 			return nil, nil
 		}
@@ -1120,35 +669,11 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 	paramCount = 1
 
 	if includeAssets {
-		assetQuery := `
+		assetQuery := fmt.Sprintf(`
 			SELECT
-				'asset' as type,
-				id,
-				name,
-				description,
-				jsonb_build_object(
-					'id', id,
-					'name', name,
-					'mrn', mrn,
-					'type', type,
-					'providers', providers,
-					'environments', environments,
-					'external_links', external_links,
-					'description', description,
-					'user_description', user_description,
-					'metadata', metadata,
-					'schema', schema,
-					'sources', sources,
-					'tags', tags,
-					'created_at', created_at,
-					'created_by', created_by,
-					'updated_at', updated_at,
-					'last_sync_at', last_sync_at,
-					'query', query,
-					'query_language', query_language,
-					'is_stub', is_stub
-				) as metadata,
-				'/discover/' || type || '/' || providers[1] || '/' || SUBSTRING(mrn FROM 'mrn://[^/]+/[^/]+/(.+)') as url,
+				'asset' as type, id, name, description,
+				%s,
+				%s,
 				(
 					GREATEST(
 						word_similarity($1, name),
@@ -1164,108 +689,51 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 				word_similarity($1, name) > 0.3 OR
 				word_similarity($1, mrn) > 0.3 OR
 				similarity($1, COALESCE(name, '') || ' ' || COALESCE(mrn, '') || ' ' || COALESCE(type, '')) > 0.25
-			)`
+			)`, assetMetadataColumns, assetURLExpr)
 
-		if len(filter.AssetTypes) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
-			params = append(params, filter.AssetTypes)
-		}
-
-		if len(filter.Providers) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND providers && $%d", paramCount)
-			params = append(params, filter.Providers)
-		}
-
-		if len(filter.Tags) > 0 {
-			paramCount++
-			assetQuery += fmt.Sprintf(" AND tags && $%d", paramCount)
-			params = append(params, filter.Tags)
-		}
-
+		assetQuery, params, paramCount = r.addAssetFilters(assetQuery, filter, params, paramCount)
 		unions = append(unions, assetQuery)
 	}
 
 	if includeGlossary {
-		unions = append(unions, `
+		unions = append(unions, fmt.Sprintf(`
 			SELECT
-				'glossary' as type,
-				id::text,
-				name,
-				definition as description,
-				jsonb_build_object(
-					'id', id,
-					'name', name,
-					'definition', definition,
-					'description', description,
-					'parent_term_id', parent_term_id,
-					'metadata', metadata,
-					'tags', tags,
-					'created_at', created_at,
-					'updated_at', updated_at
-				) as metadata,
-				'/glossary/' || id::text as url,
+				'glossary' as type, id::text, name, definition as description,
+				%s,
+				%s,
 				(word_similarity($1, name) * 30) as rank,
 				updated_at
 			FROM glossary_terms
 			WHERE deleted_at IS NULL
 			AND word_similarity($1, name) > 0.3
-		`)
+		`, glossaryMetadataColumns, glossaryURLExpr))
 	}
 
 	if includeTeams {
-		unions = append(unions, `
+		unions = append(unions, fmt.Sprintf(`
 			SELECT
-				'team' as type,
-				id::text,
-				name,
-				description,
-				jsonb_build_object(
-					'id', id,
-					'name', name,
-					'description', description,
-					'metadata', metadata,
-					'tags', tags,
-					'created_via_sso', created_via_sso,
-					'sso_provider', sso_provider,
-					'created_by', created_by,
-					'created_at', created_at,
-					'updated_at', updated_at
-				) as metadata,
-				'/teams/' || id as url,
+				'team' as type, id::text, name, description,
+				%s,
+				%s,
 				(word_similarity($1, name) * 30) as rank,
 				updated_at
 			FROM teams
 			WHERE word_similarity($1, name) > 0.3
-		`)
+		`, teamMetadataColumns, teamURLExpr))
 	}
 
 	if includeDataProducts {
-		unions = append(unions, `
+		unions = append(unions, fmt.Sprintf(`
 			SELECT
-				'data_product' as type,
-				dp.id::text,
-				dp.name,
-				dp.description,
-				jsonb_build_object(
-					'id', dp.id,
-					'name', dp.name,
-					'description', dp.description,
-					'icon_url', CASE WHEN pi.id IS NOT NULL THEN '/api/v1/products/images/' || dp.id::text || '/icon' ELSE NULL END,
-					'metadata', dp.metadata,
-					'tags', dp.tags,
-					'created_by', dp.created_by,
-					'created_at', dp.created_at,
-					'updated_at', dp.updated_at
-				) as metadata,
-				'/products/' || dp.id::text as url,
+				'data_product' as type, dp.id::text, dp.name, dp.description,
+				%s,
+				%s,
 				(word_similarity($1, dp.name) * 30) as rank,
 				dp.updated_at
 			FROM data_products dp
 			LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
 			WHERE word_similarity($1, dp.name) > 0.3
-		`)
+		`, dataProductMetadataColumns, dataProductURLExpr))
 	}
 
 	if len(unions) == 0 {
@@ -1277,7 +745,7 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 	paramCount++
 	offsetParam := paramCount
 
-	query := fmt.Sprintf(`
+	q := fmt.Sprintf(`
 		WITH search_results AS (
 			%s
 		)
@@ -1288,107 +756,15 @@ func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filt
 
 	params = append(params, filter.Limit, filter.Offset)
 
-	rows, err := r.db.Query(ctx, query, params...)
+	rows, err := r.db.Query(ctx, q, params...)
 	if err != nil {
 		return nil, fmt.Errorf("executing trigram fuzzy search: %w", err)
 	}
 	defer rows.Close()
 
-	var results []*Result
-	for rows.Next() {
-		var result Result
-		var metadataJSON []byte
-		var description *string
-		var updatedAt *time.Time
-
-		err := rows.Scan(
-			&result.Type,
-			&result.ID,
-			&result.Name,
-			&description,
-			&metadataJSON,
-			&result.URL,
-			&result.Rank,
-			&updatedAt,
-		)
-		if err != nil {
-			return nil, fmt.Errorf("scanning trigram fuzzy result: %w", err)
-		}
-
-		result.Description = description
-		result.UpdatedAt = updatedAt
-
-		if len(metadataJSON) > 0 {
-			result.Metadata = make(map[string]interface{})
-			if err := json.Unmarshal(metadataJSON, &result.Metadata); err != nil {
-				return nil, fmt.Errorf("unmarshaling metadata: %w", err)
-			}
-		}
-
-		results = append(results, &result)
+	results, err := scanResults(rows)
+	if err != nil {
+		return nil, fmt.Errorf("scanning trigram fuzzy results: %w", err)
 	}
-
-	if rows.Err() != nil {
-		return nil, fmt.Errorf("iterating trigram fuzzy results: %w", rows.Err())
-	}
-
 	return results, nil
-}
-
-var (
-	kindGlossaryRegex    = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?glossary"?`)
-	kindAssetRegex       = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?asset"?`)
-	kindTeamRegex        = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?team"?`)
-	kindDataProductRegex = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?data_product"?`)
-	kindStripRegex       = regexp.MustCompile(`(?i)@kind\s*[:=]\s*"?(glossary|asset|team|data_product)"?`)
-)
-
-func extractKindFilters(queryStr string) []ResultType {
-	if queryStr == "" || !strings.Contains(queryStr, "@kind") {
-		return nil
-	}
-
-	var kinds []ResultType
-
-	if kindGlossaryRegex.MatchString(queryStr) {
-		kinds = append(kinds, ResultTypeGlossary)
-	}
-
-	if kindAssetRegex.MatchString(queryStr) {
-		kinds = append(kinds, ResultTypeAsset)
-	}
-
-	if kindTeamRegex.MatchString(queryStr) {
-		kinds = append(kinds, ResultTypeTeam)
-	}
-
-	if kindDataProductRegex.MatchString(queryStr) {
-		kinds = append(kinds, ResultTypeDataProduct)
-	}
-
-	// Multiple @kind filters is a contradiction - nothing can be multiple types simultaneously
-	// The query builder returns TRUE for @kind, so we need to detect this at extraction time
-	if len(kinds) > 1 {
-		return []ResultType{"__CONTRADICTION__"}
-	}
-
-	return kinds
-}
-
-func stripKindFilter(queryStr string) string {
-	if !strings.Contains(queryStr, "@kind") {
-		return queryStr
-	}
-
-	result := kindStripRegex.ReplaceAllString(queryStr, "")
-	result = strings.TrimSpace(result)
-
-	result = strings.ReplaceAll(result, "AND AND", "AND")
-	result = strings.ReplaceAll(result, "OR OR", "OR")
-	result = strings.TrimPrefix(result, "AND ")
-	result = strings.TrimPrefix(result, "OR ")
-	result = strings.TrimSuffix(result, " AND")
-	result = strings.TrimSuffix(result, " OR")
-
-	return strings.TrimSpace(result)
 }
