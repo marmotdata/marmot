@@ -2,208 +2,155 @@
 sidebar_position: 5
 ---
 
-import { CalloutCard } from '@site/src/components/DocCard';
+import { CalloutCard, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
 # Query Language
 
-Marmot provides a query language for searching and filtering assets in your catalog. The language supports free-text search, field-specific filters, comparison operators, and boolean logic.
+Marmot provides a query language for searching and filtering assets in your catalog. The language supports free-text search, field-specific filters, comparison operators and boolean logic.
 
-## Free-Text Search
+:::tip Optional but Powerful
+The query language is entirely optional. Simple free-text searches work well for everyday discovery. When you need precision, such as finding all Kafka topics owned by a specific team or tables with more than a million rows, the query language gives you that control. Queries are also repeatable and shareable, making it easy to bookmark common searches or share them with your team.
+:::
 
-Free-text queries search across asset names, descriptions, and metadata:
+## Where It's Used
 
-```
-user orders
-```
+The query language powers several features across Marmot:
 
-For more precise results, use field filters.
+<FeatureGrid>
+  <FeatureCard
+    title="Search"
+    description="Find assets quickly using free-text or precise field filters in the global search bar."
+    icon="mdi:magnify"
+  />
+  <FeatureCard
+    title="Data Products"
+    description="Define dynamic rules that automatically include matching assets in your Data Products."
+    icon="mdi:package-variant-closed"
+  />
+</FeatureGrid>
 
-## Field Filters
+<CalloutCard
+  title="Build Dynamic Data Products"
+  description="Use the query language to create rules that automatically group related assets. As your catalog grows, matching assets are included automatically."
+  href="/docs/data-products"
+  buttonText="Learn About Data Products"
+  icon="mdi:package-variant-closed"
+/>
 
-Field filters allow you to query specific attributes of assets using prefixes:
+## Query Builder
 
-### Asset Type (`@type`)
+The search bar includes a visual query builder that helps you construct queries without memorising the syntax. Click the filter icon to open it, select your field and operator, then enter your value. The builder generates the query syntax automatically.
 
-Filter assets by their type:
+<img src="/img/query-builder-light.png" alt="Query builder in Marmot" />
 
-```
-@type: "table"
-@type: "topic"
-@type: "bucket"
-```
+## Syntax Reference
 
-### Provider (`@provider`)
+### Fields
 
-Filter assets by their provider or platform:
+Filter assets using field prefixes:
 
-```
-@provider: "kafka"
-@provider: "postgres"
-@provider: "s3"
-```
+| Field | Description | Example |
+| ----- | ----------- | ------- |
+| `@type` | Asset type | `@type: "table"` |
+| `@provider` | Provider or platform | `@provider: "kafka"` |
+| `@name` | Asset name | `@name: "users"` |
+| `@kind` | Resource kind in Marmot | `@kind: "asset"` |
+| `@metadata.*` | Custom metadata fields | `@metadata.team: "platform"` |
 
-### Asset Name (`@name`)
+Metadata supports dot notation for nested fields: `@metadata.config.retention: "7d"`
 
-Filter by asset name:
+### Operators
 
-```
-@name: "users"
-@name contains "order"
-@name: "customer*"
-```
+| Operator | Description | Example |
+| -------- | ----------- | ------- |
+| `:` or `=` | Exact match | `@type: "table"` |
+| `!=` | Not equal | `@metadata.environment != "test"` |
+| `contains` | Substring match | `@name contains "customer"` |
+| `>` `<` `>=` `<=` | Numeric comparison | `@metadata.partitions > 10` |
+| `range` | Numeric range | `@metadata.size range [100 TO 500]` |
+| `*` | Wildcard | `@name: "customer*"` |
 
-### Kind (`@kind`)
+### Boolean Logic
 
-Filter by the type of resource in Marmot:
+Combine filters with `AND`, `OR` and `NOT`. Use parentheses to control precedence:
 
-```
-@kind: "asset"
-@kind: "glossary"
-@kind: "team"
-```
+```marmot
+# Multiple conditions
+@type: "topic" AND @provider: "kafka"
 
-### Custom Metadata (`@metadata.*`)
-
-Query any custom metadata field you've added:
-
-```
-@metadata.team: "data-platform"
-@metadata.environment: "production"
-@metadata.owner: "alice@company.com"
-@metadata.region: "eu-west-1"
-```
-
-You can access nested metadata using dot notation:
-
-```
-@metadata.config.retention: "7d"
-@metadata.tags.compliance: "pii"
-```
-
-## Operators
-
-Marmot supports various operators for precise filtering:
-
-| Operator   | Description           | Example                           |
-| ---------- | --------------------- | --------------------------------- |
-| `:` or `=` | Exact match           | `@type: "table"`                  |
-| `contains` | Substring match       | `@name contains "customer"`       |
-| `!=`       | Not equal             | `@metadata.environment != "test"` |
-| `>`        | Greater than          | `@metadata.partitions > 10`       |
-| `<`        | Less than             | `@metadata.rows < 1000000`        |
-| `>=`       | Greater than or equal | `@metadata.replicas >= 3`         |
-| `<=`       | Less than or equal    | `@metadata.retention <= 30`       |
-
-### Wildcards
-
-Use `*` for wildcard matching:
-
-```
-@name: "customer*"           # Starts with "customer"
-@name: "*-prod"              # Ends with "-prod"
-@metadata.team: "*platform*" # Contains "platform"
-```
-
-### Range Queries
-
-Query numeric ranges efficiently:
-
-```
-@metadata.partitions range [5 TO 20]
-@metadata.size range [1000 TO 50000]
-```
-
-## Boolean Logic
-
-Combine filters with `AND`, `OR`, and `NOT` for complex queries:
-
-```
-# All Kafka topics in production
-@type: "topic" AND @provider: "kafka" AND @metadata.environment: "production"
-
-# High-priority or critical assets
+# Either condition
 @metadata.priority: "high" OR @metadata.criticality: "critical"
 
-# Production assets excluding test data
+# Exclusion
 @metadata.environment: "production" AND NOT @name contains "test"
-```
 
-### Complex Queries with Parentheses
-
-Use parentheses to control query logic:
-
-```
+# Grouped logic
 (@type: "table" OR @type: "view") AND @provider: "postgres"
-
-@metadata.team: "platform" AND (@metadata.status: "active" OR @metadata.priority: "high")
-
-(@provider: "kafka" OR @provider: "sqs") AND NOT @metadata.environment: "*test*"
 ```
 
 ## Examples
 
-Find all Kafka topics:
+import { Collapsible } from '@site/src/components/Collapsible';
 
+<Collapsible title="Free-text search" icon="mdi:text-search" defaultOpen>
+
+Search across asset names, descriptions and metadata without any special syntax.
+
+```marmot
+user orders
 ```
+
+</Collapsible>
+
+<Collapsible title="Filter by type and provider" icon="mdi:filter-variant" defaultOpen>
+
+Find all Kafka topics by combining type and provider filters.
+
+```marmot
 @type: "topic" AND @provider: "kafka"
 ```
 
-Find assets owned by a specific team:
+</Collapsible>
 
-```
+<Collapsible title="Team ownership" icon="mdi:account-group" defaultOpen>
+
+Find all assets owned by a specific team using custom metadata.
+
+```marmot
 @metadata.team: "data-platform"
 ```
 
-Find Kafka topics with more than 10 partitions:
+</Collapsible>
 
-```
-@type: "topic" AND @provider: "kafka" AND @metadata.partitions > 10
-```
+<Collapsible title="Numeric comparison" icon="mdi:numeric" defaultOpen>
 
-Find non-production tables:
+Filter assets based on numeric metadata values.
 
-```
-@type: "table" AND @metadata.environment != "production"
+```marmot
+@type: "topic" AND @metadata.partitions > 10
 ```
 
-Combine free-text with filters:
+</Collapsible>
 
-```
-order @type: "table" OR @name contains "order"
-```
+<Collapsible title="Wildcard matching" icon="mdi:asterisk" defaultOpen>
 
-Complex boolean query:
+Use wildcards when you don't know the exact name.
 
-```
-@metadata.criticality: "high" AND (@metadata.status: "degraded" OR @metadata.alerts > 0)
-```
-
-## Query Patterns
-
-**Iterative refinement**: Start with broad queries and add filters to narrow results:
-
-```
-# Start with
-kafka
-
-# Refine to
-@provider: "kafka" AND @metadata.environment: "production"
-
-# Further refine
-@provider: "kafka" AND @metadata.environment: "production" AND @metadata.partitions > 5
-```
-
-**Wildcard exploration**: Use wildcards when exact names are unknown:
-
-```
+```marmot
 @name: "*customer*" AND @type: "table"
 ```
 
-**Hybrid queries**: Combine free-text with field filters:
+</Collapsible>
 
+<Collapsible title="Grouped logic" icon="mdi:code-parentheses" defaultOpen>
+
+Use parentheses to control how conditions are combined.
+
+```marmot
+(@type: "table" OR @type: "view") AND @provider: "postgres"
 ```
-payment @type: "topic" AND @metadata.team: "payments"
-```
+
+</Collapsible>
 
 <CalloutCard
   title="Need Help with Queries?"

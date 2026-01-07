@@ -1,53 +1,65 @@
 ---
-sidebar_position: 3
+sidebar_position: 7
 ---
 
-# Open Lineage
+import { CalloutCard, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
-## Overview
+# OpenLineage
 
-[OpenLineage](https://openlineage.io/) is an open standard for data lineage collection and analysis. It provides a unified way to track data flows across different tools and platforms by emitting standardized events during job execution.
+[OpenLineage](https://openlineage.io/) is an open standard for data lineage collection and analysis. It provides a unified way to track data flows across different tools and platforms by emitting standardised events during job execution.
 
 Marmot integrates with OpenLineage to automatically discover assets and lineage relationships from your data pipelines, eliminating manual catalog maintenance.
 
-## How Marmot Uses OpenLineage
+<CalloutCard
+  title="What is OpenLineage?"
+  description="OpenLineage is a vendor-neutral, open standard for lineage metadata collection. It captures how data flows through your systems without locking you into a specific tool."
+  href="https://openlineage.io"
+  buttonText="Learn More"
+  icon="mdi:source-branch"
+/>
 
-### Asset Discovery
+## What You Get
 
-OpenLineage events automatically create assets in Marmot's catalog:
+<FeatureGrid>
+  <FeatureCard
+    title="Automatic Asset Discovery"
+    description="Jobs, tables, files and topics are added to your catalog as they run."
+    icon="mdi:magnify-scan"
+  />
+  <FeatureCard
+    title="Lineage Relationships"
+    description="See how data flows between assets with upstream and downstream connections."
+    icon="mdi:source-branch"
+  />
+  <FeatureCard
+    title="Run History"
+    description="Track execution status, timing and data volumes for every pipeline run."
+    icon="mdi:history"
+  />
+  <FeatureCard
+    title="Stub Assets"
+    description="Lineage is captured even for undocumented datasets without polluting your catalog."
+    icon="mdi:file-hidden"
+  />
+</FeatureGrid>
 
-- **Jobs/Tasks**: Airflow DAGs, DBT models, Spark jobs
-- **Datasets**: Tables, files, topics from various data sources
-- **Lineage**: Relationships between jobs and datasets
-
-### Asset Types
+## Supported Asset Types
 
 Marmot maps OpenLineage events to specific asset types:
 
-- `DAG` - Airflow workflows
-- `Task` - Individual Airflow tasks
-- `Model` - DBT models
-- `Project` - DBT projects
-- `Table` - Database tables
-- `File` - Data files
-- `Topic` - Kafka topics
-
-### Stub Assets
-
-Assets discovered for the first time via OpenLineage are marked as "stub assets" until enhanced by other integrations. This allows lineage tracking even for undocumented datasets without polluting the catalog with potential bad data.
-
-### Run History
-
-All OpenLineage events are stored as run history, providing:
-
-- Execution timeline and status
-- Input/output data volumes
-- Error messages and debugging info
-- Performance metrics
+| Asset Type | Description |
+| ---------- | ----------- |
+| `DAG` | Airflow workflows |
+| `Task` | Individual Airflow tasks |
+| `Model` | DBT models |
+| `Project` | DBT projects |
+| `Table` | Database tables |
+| `File` | Data files |
+| `Topic` | Kafka topics |
 
 ## Authentication
 
-By default, the OpenLineage endpoint requires authentication via an API key. However, you can disable authentication for this endpoint if needed.
+By default, the OpenLineage endpoint requires authentication via an API key. You can disable authentication for trusted environments if needed.
 
 ### Generate API Key
 
@@ -63,7 +75,7 @@ POST /api/v1/lineage
 Authorization: X-API-Key <your-api-key>
 ```
 
-## Disable Authentication
+### Disable Authentication
 
 To disable authentication for the OpenLineage endpoint, set the following configuration:
 
@@ -122,4 +134,11 @@ export OPENLINEAGE_URL=https://your-marmot-instance.com/api/v1/lineage
 export OPENLINEAGE_API_KEY=your-api-key
 ```
 
-For detailed OpenLineage configuration, see the [official documentation](https://openlineage.io/docs/).
+<CalloutCard
+  title="OpenLineage Documentation"
+  description="For detailed configuration options and supported integrations, see the official OpenLineage documentation."
+  href="https://openlineage.io/docs/"
+  buttonText="View Docs"
+  variant="secondary"
+  icon="mdi:book-open-variant"
+/>

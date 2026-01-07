@@ -80,7 +80,9 @@ export function Collapsible({
               </CodeBlock>
             </div>
           ) : (
-            children
+            <div className="p-5 space-y-4 text-gray-700 dark:text-gray-300 [&>p]:m-0 [&>pre]:m-0">
+              {children}
+            </div>
           )}
         </div>
       )}
