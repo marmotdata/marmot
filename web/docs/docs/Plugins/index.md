@@ -25,7 +25,7 @@ import { CalloutCard } from '@site/src/components/DocCard';
 <CalloutCard
   title="Don't see your data source?"
   description="Learn how to build a custom plugin to connect Marmot to any data source."
-  href="/docs/Develop/Creating%20a%20CLI%20Plugin"
+  href="/docs/Develop/creating-plugins"
   buttonText="Create a Plugin"
   variant="secondary"
   icon="mdi:puzzle-plus"

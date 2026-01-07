@@ -33,7 +33,7 @@ There are two ways to populate a Data Product with assets.
 
 **Manual assignment** lets you add specific assets directly. Open the product, go to the **Assets** and search for what you want to include. This works well when you have a known set of assets that belong together.
 
-**Dynamic rules** use Marmot's query language to automatically include assets matching certain criteria. Rules continuously evaluate as your catalogue changes, so new assets matching the criteria are added automatically.
+**Dynamic rules** use Marmot's query language to automatically include assets matching certain criteria. Rules continuously evaluate as your catalog changes, so new assets matching the criteria are added automatically.
 
 <ThemedImg
   lightSrc="/img/products-rules-light.png"
