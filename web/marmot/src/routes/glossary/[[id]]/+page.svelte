@@ -519,9 +519,7 @@
 												placeholder="Add a detailed description with examples, context, or usage notes..."
 											/>
 										{:else if selectedTerm.description}
-											<div class="prose prose-sm dark:prose-invert max-w-none">
-												<MarkdownRenderer content={selectedTerm.description} />
-											</div>
+											<MarkdownRenderer content={selectedTerm.description} />
 										{:else}
 											<p class="text-sm text-gray-400 dark:text-gray-500 italic">
 												No description provided

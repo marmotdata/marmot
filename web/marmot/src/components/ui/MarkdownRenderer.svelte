@@ -47,26 +47,43 @@
 
 <style>
 	:global(.prose) {
-		@apply text-gray-700 dark:text-gray-300;
+		color: #4D4D4D;
 	}
-	:global(.prose h1) {
-		@apply text-gray-900 dark:text-gray-100;
+	:global(.dark .prose),
+	:global(.dark .prose p),
+	:global(.dark .prose li),
+	:global(.dark .prose span) {
+		color: #DFDFDF !important;
 	}
-	:global(.prose h2) {
-		@apply text-gray-900 dark:text-gray-100;
-	}
+	:global(.prose h1),
+	:global(.prose h2),
 	:global(.prose h3) {
-		@apply text-gray-900 dark:text-gray-100;
+		@apply text-gray-900;
+	}
+	:global(.dark .prose h1),
+	:global(.dark .prose h2),
+	:global(.dark .prose h3) {
+		color: #F9F9F9 !important;
 	}
 	:global(.prose strong) {
-		@apply text-gray-900 dark:text-gray-100 font-semibold;
+		@apply text-gray-900 font-semibold;
+	}
+	:global(.dark .prose strong) {
+		color: #F9F9F9 !important;
 	}
 	:global(.prose code) {
-		@apply bg-gray-100 dark:bg-gray-800 px-1 py-0.5 rounded text-sm font-mono text-gray-900 dark:text-gray-100;
+		@apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-900;
+	}
+	:global(.dark .prose code) {
+		@apply bg-gray-800;
+		color: #F9F9F9 !important;
 	}
 	:global(.prose pre) {
-		@apply bg-gray-50 dark:bg-gray-800 p-6 rounded-lg overflow-x-auto;
+		@apply bg-gray-50 p-6 rounded-lg overflow-x-auto;
 		margin: 1rem 0 !important;
+	}
+	:global(.dark .prose pre) {
+		@apply bg-gray-800;
 	}
 	:global(.prose pre code) {
 		@apply bg-transparent px-0 py-0;
@@ -81,6 +98,9 @@
 		min-width: 100%;
 	}
 	:global(.prose a) {
-		@apply text-earthy-terracotta-700 dark:text-earthy-terracotta-700 no-underline hover:underline;
+		@apply text-earthy-terracotta-700 no-underline hover:underline;
+	}
+	:global(.dark .prose a) {
+		@apply text-earthy-terracotta-400;
 	}
 </style>
