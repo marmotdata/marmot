@@ -17,7 +17,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.37.15
 	github.com/aws/aws-sdk-go-v2/service/sts v1.33.19
 	github.com/centrifugal/centrifuge v0.38.0
-	github.com/charlie-haley/asyncapi-go v0.0.0-20250325193139-cba51bace9fe
+	github.com/charlie-haley/asyncapi-go v0.0.0-20260108213546-9782889bf371
 	github.com/confluentinc/confluent-kafka-go/v2 v2.8.0
 	github.com/coreos/go-oidc/v3 v3.12.0
 	github.com/go-playground/validator/v10 v10.28.0
@@ -67,7 +67,7 @@ require (
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
-	github.com/asyncapi/spec-json-schemas/v6 v6.8.1 // indirect
+	github.com/asyncapi/spec-json-schemas/v6 v6.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.11 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.30 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.37 // indirect

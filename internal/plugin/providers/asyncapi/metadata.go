@@ -1,18 +1,35 @@
 package asyncapi
 
-// SharedFields represents common metadata fields across all resources
+// SharedFields represents common metadata fields across all AsyncAPI resources
 // +marmot:metadata
 type SharedFields struct {
-	ServiceName    string `json:"service_name" metadata:"service_name" description:"Name of the service that owns the resource"`
-	ServiceVersion string `json:"service_version" metadata:"service_version" description:"Version of the service"`
-	Environment    string `json:"environment" metadata:"environment" description:"Environment the resource belongs to"`
-	Description    string `json:"description" metadata:"description" description:"Description of the resource"`
+	AsyncAPIVersion string `json:"asyncapi_version" metadata:"asyncapi_version" description:"AsyncAPI specification version"`
+	ServiceName     string `json:"service_name" metadata:"service_name" description:"Name of the service that owns the resource"`
+	ServiceVersion  string `json:"service_version" metadata:"service_version" description:"Version of the service"`
+	Environment     string `json:"environment" metadata:"environment" description:"Environment the resource belongs to"`
+	ChannelName     string `json:"channel_name" metadata:"channel_name" description:"Name of the channel in the AsyncAPI spec"`
+	ChannelAddress  string `json:"channel_address" metadata:"channel_address" description:"Address/topic of the channel"`
+	Description     string `json:"description" metadata:"description" description:"Description of the resource"`
+}
+
+// ServiceFields represents AsyncAPI service-specific metadata
+// +marmot:metadata
+type ServiceFields struct {
+	ContactName  string   `json:"contact_name" metadata:"contact_name" description:"Contact person name"`
+	ContactEmail string   `json:"contact_email" metadata:"contact_email" description:"Contact email address"`
+	ContactURL   string   `json:"contact_url" metadata:"contact_url" description:"Contact URL"`
+	License      string   `json:"license" metadata:"license" description:"License name"`
+	LicenseURL   string   `json:"license_url" metadata:"license_url" description:"License URL"`
+	Servers      []string `json:"servers" metadata:"servers" description:"List of server names"`
+	Protocols    []string `json:"protocols" metadata:"protocols" description:"List of protocols used"`
+	ChannelCount int      `json:"channel_count" metadata:"channel_count" description:"Number of channels"`
+	OperationCount int    `json:"operation_count" metadata:"operation_count" description:"Number of operations"`
 }
 
 // KafkaFields represents Kafka-specific metadata fields
 // +marmot:metadata
 type KafkaFields struct {
-	ClusterId         string   `json:"cluster_id" metadata:"cluster_id" description:"Kafka cluster ID"`
+	TopicName         string   `json:"topic_name" metadata:"topic_name" description:"Kafka topic name"`
 	Partitions        int      `json:"partitions" metadata:"partitions" description:"Number of partitions"`
 	Replicas          int      `json:"replicas" metadata:"replicas" description:"Number of replicas"`
 	CleanupPolicies   []string `json:"cleanup_policy" metadata:"cleanup_policy" description:"Topic cleanup policies"`
@@ -25,7 +42,8 @@ type KafkaFields struct {
 // SNSFields represents SNS-specific metadata fields
 // +marmot:metadata
 type SNSFields struct {
-	TopicArn             string `json:"topic_arn" metadata:"topic_arn" description:"SNS Topic Name/ARN"`
+	TopicName            string `json:"topic_name" metadata:"topic_name" description:"SNS Topic Name"`
+	TopicArn             string `json:"topic_arn" metadata:"topic_arn" description:"SNS Topic ARN"`
 	OrderingType         string `json:"ordering_type" metadata:"ordering_type" description:"SNS topic ordering type"`
 	ContentDeduplication bool   `json:"content_deduplication" metadata:"content_deduplication" description:"Whether content-based deduplication is enabled"`
 }
@@ -33,7 +51,7 @@ type SNSFields struct {
 // SQSFields represents SQS-specific metadata fields
 // +marmot:metadata
 type SQSFields struct {
-	Name                   string `json:"name" metadata:"name" description:"Name of the SQS queue"`
+	QueueName              string `json:"queue_name" metadata:"queue_name" description:"Name of the SQS queue"`
 	FifoQueue              bool   `json:"fifo_queue" metadata:"fifo_queue" description:"Whether this is a FIFO queue"`
 	DeduplicationScope     string `json:"deduplication_scope" metadata:"deduplication_scope" description:"Scope of deduplication if enabled"`
 	FifoThroughputLimit    string `json:"fifo_throughput_limit" metadata:"fifo_throughput_limit" description:"FIFO throughput limit type"`
@@ -59,4 +77,14 @@ type AMQPFields struct {
 	QueueDurable       bool   `json:"queue_durable" metadata:"queue_durable" description:"Queue durability flag"`
 	QueueExclusive     bool   `json:"queue_exclusive" metadata:"queue_exclusive" description:"Queue exclusivity flag"`
 	QueueAutoDelete    bool   `json:"queue_auto_delete" metadata:"queue_auto_delete" description:"Queue auto delete flag"`
+}
+
+// GooglePubSubFields represents Google Pub/Sub-specific metadata fields
+// +marmot:metadata
+type GooglePubSubFields struct {
+	TopicName                string   `json:"topic_name" metadata:"topic_name" description:"Google Pub/Sub topic name"`
+	MessageRetentionDuration string   `json:"message_retention_duration" metadata:"message_retention_duration" description:"Message retention duration"`
+	AllowedRegions           []string `json:"allowed_regions" metadata:"allowed_regions" description:"Allowed persistence regions"`
+	SchemaEncoding           string   `json:"schema_encoding" metadata:"schema_encoding" description:"Schema encoding format"`
+	SchemaName               string   `json:"schema_name" metadata:"schema_name" description:"Schema name"`
 }

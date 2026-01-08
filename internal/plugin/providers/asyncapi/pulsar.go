@@ -5,24 +5,24 @@ import (
 	"time"
 
 	"github.com/charlie-haley/asyncapi-go/asyncapi3"
-	"github.com/charlie-haley/asyncapi-go/bindings/kafka"
+	"github.com/charlie-haley/asyncapi-go/bindings/pulsar"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
 )
 
-func (s *Source) createKafkaTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *kafka.ChannelBinding) asset.Asset {
+func (s *Source) createPulsarTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *pulsar.ChannelBinding) asset.Asset {
 	name := channelName
-	if binding.Topic != "" {
-		name = binding.Topic
+	if channel.Address != "" {
+		name = channel.Address
 	}
 
 	description := channel.Description
 	if description == "" {
-		description = fmt.Sprintf("Kafka topic for channel %s", channelName)
+		description = fmt.Sprintf("Pulsar topic for channel %s", channelName)
 	}
 
-	mrnValue := mrn.New("Topic", "Kafka", name)
+	mrnValue := mrn.New("Topic", "Pulsar", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -37,30 +37,37 @@ func (s *Source) createKafkaTopic(doc *asyncapi3.Document, channelName string, c
 		metadata["channel_address"] = channel.Address
 	}
 
-	if binding.Partitions > 0 {
-		metadata["partitions"] = binding.Partitions
-	}
-	if binding.Replicas > 0 {
-		metadata["replicas"] = binding.Replicas
+	if binding.Namespace != "" {
+		metadata["namespace"] = binding.Namespace
 	}
 
-	if binding.TopicConfiguration != nil {
-		tc := binding.TopicConfiguration
-		if len(tc.CleanupPolicy) > 0 {
-			metadata["cleanup_policy"] = tc.CleanupPolicy
+	if binding.Persistence != "" {
+		metadata["persistence"] = binding.Persistence
+	}
+
+	if binding.Compaction > 0 {
+		metadata["compaction"] = binding.Compaction
+	}
+
+	if len(binding.GeoReplication) > 0 {
+		metadata["geo_replication"] = binding.GeoReplication
+	}
+
+	if binding.Retention != nil {
+		if binding.Retention.Time > 0 {
+			metadata["retention_time"] = binding.Retention.Time
 		}
-		if tc.RetentionMs > 0 {
-			metadata["retention_ms"] = tc.RetentionMs
+		if binding.Retention.Size > 0 {
+			metadata["retention_size"] = binding.Retention.Size
 		}
-		if tc.RetentionBytes > 0 {
-			metadata["retention_bytes"] = tc.RetentionBytes
-		}
-		if tc.DeleteRetentionMs > 0 {
-			metadata["delete_retention_ms"] = tc.DeleteRetentionMs
-		}
-		if tc.MaxMessageBytes > 0 {
-			metadata["max_message_bytes"] = tc.MaxMessageBytes
-		}
+	}
+
+	if binding.TTL > 0 {
+		metadata["ttl"] = binding.TTL
+	}
+
+	if binding.Deduplication {
+		metadata["deduplication"] = binding.Deduplication
 	}
 
 	if binding.BindingVersion != "" {
@@ -73,7 +80,7 @@ func (s *Source) createKafkaTopic(doc *asyncapi3.Document, channelName string, c
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Topic",
-		Providers:   []string{"Kafka"},
+		Providers:   []string{"Pulsar"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
@@ -83,7 +90,7 @@ func (s *Source) createKafkaTopic(doc *asyncapi3.Document, channelName string, c
 			Properties: map[string]interface{}{
 				"spec_version": doc.AsyncAPI,
 				"channel":      channelName,
-				"binding":      "kafka",
+				"binding":      "pulsar",
 			},
 			Priority: 1,
 		}},

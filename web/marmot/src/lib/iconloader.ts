@@ -17,7 +17,6 @@ import S3Icon from '~icons/logos/aws-s3';
 import SparkIcon from '~icons/logos/apache-spark';
 import SnowflakeIcon from '~icons/logos/snowflake-icon';
 import KubernetesIcon from '~icons/logos/kubernetes';
-import AMQPIcon from '~icons/logos/rabbitmq-icon';
 import BigQueryIcon from '~icons/logos/google-cloud';
 import DuckDBIcon from '~icons/devicon/duckdb';
 import DatabricksIcon from '~icons/simple-icons/databricks';
@@ -31,6 +30,10 @@ import RedshiftIcon from '~icons/logos/aws-redshift';
 import GlueIcon from '~icons/logos/aws-glue';
 import AzureIcon from '~icons/logos/microsoft-azure';
 import SingleStoreIcon from '~icons/logos/singlestore-icon';
+import KafkaIcon from '~icons/devicon/apachekafka';
+import NatsIcon from '~icons/devicon/nats';
+import PulsarIcon from '~icons/devicon/pulsar';
+import RabbitMQIcon from '~icons/devicon/rabbitmq';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -55,6 +58,13 @@ import OutputOutline from '~icons/material-symbols/output';
 import BookOutline from '~icons/material-symbols/book-2-outline';
 import DnsOutline from '~icons/material-symbols/dns-outline';
 import SyncAltOutline from '~icons/material-symbols/sync-alt';
+import WebhookOutline from '~icons/material-symbols/webhook';
+import WifiOutline from '~icons/material-symbols/wifi';
+import RouterOutline from '~icons/material-symbols/router';
+import CloudSyncOutline from '~icons/material-symbols/cloud-sync-outline';
+import MemoryOutline from '~icons/material-symbols/memory';
+import SendOutline from '~icons/material-symbols/send-outline';
+import LinkOutline from '~icons/material-symbols/link';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
 
@@ -86,8 +96,8 @@ export const providerIconMap: Record<
 	snowflake: { default: SnowflakeIcon, displayName: 'Snowflake' },
 	kubernetes: { default: KubernetesIcon, displayName: 'Kubernetes' },
 	bigquery: { default: BigQueryIcon, displayName: 'BigQuery' },
-	amqp: { default: AMQPIcon, displayName: 'AMQP' },
-	rabbitmq: { default: AMQPIcon, displayName: 'RabbitMQ' },
+	amqp: { default: RabbitMQIcon, displayName: 'AMQP' },
+	rabbitmq: { default: RabbitMQIcon, displayName: 'RabbitMQ' },
 	duckdb: { default: DuckDBIcon, displayName: 'DuckDB' },
 	openlineage: {
 		default: OpenLineage,
@@ -130,7 +140,48 @@ export const providerIconMap: Record<
 		default: DatabaseOutlineIcon,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'Netezza'
-	}
+	},
+	// AsyncAPI binding providers
+	kafka: { default: KafkaIcon, displayName: 'Kafka' },
+	mqtt: {
+		default: WifiOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'MQTT'
+	},
+	nats: { default: NatsIcon, displayName: 'NATS' },
+	pulsar: { default: PulsarIcon, displayName: 'Pulsar' },
+	solace: {
+		default: CloudSyncOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Solace'
+	},
+	ibmmq: {
+		default: MemoryOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'IBM MQ'
+	},
+	jms: {
+		default: MemoryOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'JMS'
+	},
+	websocket: {
+		default: LinkOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'WebSocket'
+	},
+	anypointmq: {
+		default: SendOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Anypoint MQ'
+	},
+	http: {
+		default: WebhookOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'HTTP'
+	},
+	googlepubsub: { default: BigQueryIcon, displayName: 'Google Pub/Sub' },
+	'google-pubsub': { default: BigQueryIcon, displayName: 'Google Pub/Sub' }
 };
 
 // Type icons with display names
@@ -264,6 +315,22 @@ export const typeIconMap: Record<
 		default: DatasetOutlineRounded,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'Data Model Object'
+	},
+	// AsyncAPI specific types
+	subject: {
+		default: RouterOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Subject'
+	},
+	fifoqueue: {
+		default: QueueListIcon,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'FIFO Queue'
+	},
+	channel: {
+		default: StreamOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Channel'
 	}
 };
 
