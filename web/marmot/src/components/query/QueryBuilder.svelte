@@ -658,7 +658,10 @@
 						class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 					>
 						<div class="flex items-center gap-2">
-							<IconifyIcon icon="mdi:text-search" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
+							<IconifyIcon
+								icon="mdi:text-search"
+								class="w-4 h-4 text-gray-600 dark:text-gray-400"
+							/>
 							<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
 								>Full-Text Search</span
 							>
@@ -690,7 +693,10 @@
 						class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 					>
 						<div class="flex items-center gap-2">
-							<IconifyIcon icon="mdi:filter-variant" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
+							<IconifyIcon
+								icon="mdi:filter-variant"
+								class="w-4 h-4 text-gray-600 dark:text-gray-400"
+							/>
 							<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Field Filters</span
 							>
 							<span

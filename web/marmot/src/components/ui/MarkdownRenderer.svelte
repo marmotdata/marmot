@@ -47,13 +47,13 @@
 
 <style>
 	:global(.prose) {
-		color: #4D4D4D;
+		color: #4d4d4d;
 	}
 	:global(.dark .prose),
 	:global(.dark .prose p),
 	:global(.dark .prose li),
 	:global(.dark .prose span) {
-		color: #DFDFDF !important;
+		color: #dfdfdf !important;
 	}
 	:global(.prose h1),
 	:global(.prose h2),
@@ -63,20 +63,20 @@
 	:global(.dark .prose h1),
 	:global(.dark .prose h2),
 	:global(.dark .prose h3) {
-		color: #F9F9F9 !important;
+		color: #f9f9f9 !important;
 	}
 	:global(.prose strong) {
 		@apply text-gray-900 font-semibold;
 	}
 	:global(.dark .prose strong) {
-		color: #F9F9F9 !important;
+		color: #f9f9f9 !important;
 	}
 	:global(.prose code) {
 		@apply bg-gray-100 px-1 py-0.5 rounded text-sm font-mono text-gray-900;
 	}
 	:global(.dark .prose code) {
 		@apply bg-gray-800;
-		color: #F9F9F9 !important;
+		color: #f9f9f9 !important;
 	}
 	:global(.prose pre) {
 		@apply bg-gray-50 p-6 rounded-lg overflow-x-auto;
