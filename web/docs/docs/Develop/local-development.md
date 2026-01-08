@@ -22,6 +22,7 @@ pnpm dev
 3. In another terminal, start the backend:
 
 ```bash
+make dev-deps
 make dev
 ```
 
