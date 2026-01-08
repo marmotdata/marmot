@@ -598,11 +598,11 @@
 </script>
 
 <div
-	class="query-builder bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-850 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden"
+	class="query-builder bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 rounded-xl border border-gray-200 dark:border-gray-700 shadow-lg overflow-hidden"
 >
 	<button
 		onclick={() => (expanded = !expanded)}
-		class="w-full flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+		class="w-full flex items-center justify-between px-4 py-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 	>
 		<div class="flex items-center gap-3">
 			<div
@@ -655,10 +655,10 @@
 				>
 					<button
 						onclick={() => (freeTextExpanded = !freeTextExpanded)}
-						class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+						class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 					>
 						<div class="flex items-center gap-2">
-							<IconifyIcon icon="mdi:text-search" class="w-4 h-4" />
+							<IconifyIcon icon="mdi:text-search" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
 							<span class="text-sm font-medium text-gray-700 dark:text-gray-300"
 								>Full-Text Search</span
 							>
@@ -666,7 +666,7 @@
 						</div>
 						<IconifyIcon
 							icon={freeTextExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
-							class="w-4 h-4"
+							class="w-4 h-4 text-gray-500 dark:text-gray-400"
 						/>
 					</button>
 					{#if freeTextExpanded}
@@ -687,10 +687,10 @@
 				>
 					<button
 						onclick={() => (filtersExpanded = !filtersExpanded)}
-						class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors"
+						class="w-full flex items-center justify-between px-3 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
 					>
 						<div class="flex items-center gap-2">
-							<IconifyIcon icon="mdi:filter-variant" class="w-4 h-4" />
+							<IconifyIcon icon="mdi:filter-variant" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
 							<span class="text-sm font-medium text-gray-700 dark:text-gray-300">Field Filters</span
 							>
 							<span
@@ -701,14 +701,14 @@
 						</div>
 						<IconifyIcon
 							icon={filtersExpanded ? 'mdi:chevron-up' : 'mdi:chevron-down'}
-							class="w-4 h-4"
+							class="w-4 h-4 text-gray-500 dark:text-gray-400"
 						/>
 					</button>
 					{#if filtersExpanded}
 						<div class="px-3 pb-3 space-y-2">
 							{#each filters as filter, index (filter.id)}
 								<div
-									class="flex items-start gap-2 bg-gray-50 dark:bg-gray-750 p-2 rounded-lg border border-gray-200 dark:border-gray-700"
+									class="flex items-start gap-2 bg-gray-50 dark:bg-gray-700 p-2 rounded-lg border border-gray-200 dark:border-gray-600"
 								>
 									{#if index > 0 || freeText.trim()}
 										<select
@@ -817,7 +817,7 @@
 									{:else}
 										{#if simpleFiltered.length > 0}
 											<div
-												class="p-2 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700 sticky top-0"
+												class="p-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0"
 											>
 												<span
 													class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide"
@@ -848,7 +848,7 @@
 
 										{#if metadataFiltered.length > 0}
 											<div
-												class="p-2 bg-gray-50 dark:bg-gray-750 border-b border-gray-200 dark:border-gray-700 sticky top-0"
+												class="p-2 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600 sticky top-0"
 											>
 												<span
 													class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wide"
@@ -942,7 +942,7 @@
 						<label
 							class="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-300"
 						>
-							<IconifyIcon icon="mdi:code-tags" class="w-4 h-4" />
+							<IconifyIcon icon="mdi:code-tags" class="w-4 h-4 text-gray-600 dark:text-gray-400" />
 							Raw Query
 						</label>
 					</div>
@@ -957,7 +957,7 @@
 		{/if}
 
 		<div
-			class="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-850"
+			class="flex items-center justify-between px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900"
 		>
 			<a
 				href="https://marmotdata.io/docs/queries/"
