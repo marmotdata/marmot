@@ -120,7 +120,8 @@
 			icon: item.asset_provider,
 			clickable: true,
 			asset_type: item.asset_type,
-			asset_name: item.asset_name
+			asset_name: item.asset_name,
+			asset_provider: item.asset_provider
 		}));
 	}
 

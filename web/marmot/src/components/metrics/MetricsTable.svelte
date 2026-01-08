@@ -130,25 +130,17 @@
 							? 'hover:bg-earthy-brown-100 dark:hover:bg-gray-600/50 cursor-pointer transition-colors'
 							: ''}"
 						title={item.name}
+						on:click={() => handleItemClick(item)}
+						role={onItemClick && item.clickable !== false ? 'button' : undefined}
+						tabindex={onItemClick && item.clickable !== false ? 0 : undefined}
+						on:keydown={(e) => {
+							if (onItemClick && item.clickable !== false && (e.key === 'Enter' || e.key === ' ')) {
+								e.preventDefault();
+								handleItemClick(item);
+							}
+						}}
 					>
-						<div
-							class="flex items-center gap-2 flex-1 min-w-0 {onItemClick && item.clickable !== false
-								? 'cursor-pointer'
-								: ''}"
-							on:click={() => handleItemClick(item)}
-							role={onItemClick && item.clickable !== false ? 'button' : undefined}
-							tabindex={onItemClick && item.clickable !== false ? 0 : undefined}
-							on:keydown={(e) => {
-								if (
-									onItemClick &&
-									item.clickable !== false &&
-									(e.key === 'Enter' || e.key === ' ')
-								) {
-									e.preventDefault();
-									handleItemClick(item);
-								}
-							}}
-						>
+						<div class="flex items-center gap-2 flex-1 min-w-0">
 							<div
 								class="flex items-center justify-center w-5 h-5 bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-700 rounded-full text-xs font-medium flex-shrink-0"
 							>
