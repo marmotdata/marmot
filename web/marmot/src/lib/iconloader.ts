@@ -34,6 +34,7 @@ import KafkaIcon from '~icons/devicon/apachekafka';
 import NatsIcon from '~icons/devicon/nats';
 import PulsarIcon from '~icons/devicon/pulsar';
 import RabbitMQIcon from '~icons/devicon/rabbitmq';
+import TableauIcon from '~icons/simple-icons/tableau';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -65,6 +66,8 @@ import CloudSyncOutline from '~icons/material-symbols/cloud-sync-outline';
 import MemoryOutline from '~icons/material-symbols/memory';
 import SendOutline from '~icons/material-symbols/send-outline';
 import LinkOutline from '~icons/material-symbols/link';
+import DashboardOutline from '~icons/material-symbols/dashboard-outline';
+import StorageOutline from '~icons/material-symbols/storage';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
 
@@ -181,7 +184,8 @@ export const providerIconMap: Record<
 		displayName: 'HTTP'
 	},
 	googlepubsub: { default: BigQueryIcon, displayName: 'Google Pub/Sub' },
-	'google-pubsub': { default: BigQueryIcon, displayName: 'Google Pub/Sub' }
+	'google-pubsub': { default: BigQueryIcon, displayName: 'Google Pub/Sub' },
+	tableau: { default: TableauIcon, class: 'text-[#E97627]', displayName: 'Tableau' }
 };
 
 // Type icons with display names
@@ -331,6 +335,21 @@ export const typeIconMap: Record<
 		default: StreamOutline,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'Channel'
+	},
+	dashboard: {
+		default: DashboardOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Dashboard'
+	},
+	datasource: {
+		default: StorageOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'DataSource'
+	},
+	pipeline: {
+		default: Graph4,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Pipeline'
 	}
 };
 
