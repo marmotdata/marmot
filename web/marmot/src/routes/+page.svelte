@@ -656,7 +656,13 @@
 					<div class="flex items-center justify-between mb-2">
 						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
 					</div>
-					<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>
+					{#if !isLoading}
+						<div class="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-1">
+							{stat.value.toLocaleString()}
+						</div>
+					{:else}
+						<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>
+					{/if}
 					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
 				</div>
 			{/each}
