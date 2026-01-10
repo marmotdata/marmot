@@ -59,19 +59,20 @@ tags:
 `
 
 // Validate checks if the configuration is valid
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) error {
+func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
     config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
     if err != nil {
-        return fmt.Errorf("unmarshaling config: %w", err)
+        return nil, fmt.Errorf("unmarshaling config: %w", err)
     }
 
     s.config = config
-    return nil
+    return rawConfig, nil
 }
 
 // Discover creates our hello and world assets
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-    if err := s.Validate(pluginConfig); err != nil {
+    _, err := s.Validate(pluginConfig)
+    if err != nil {
         return nil, fmt.Errorf("validating config: %w", err)
     }
 
@@ -85,11 +86,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
     // Create lineage between assets
     lineageEdge := lineage.LineageEdge{
-        Source:      helloMRN,
-        Target:      worldMRN,
-        Type:        "PRODUCES",
-        Description: "Hello produces World",
-        Metadata:    map[string]interface{}{"created_by": "helloworld_plugin"},
+        Source: helloMRN,
+        Target: worldMRN,
+        Type:   "PRODUCES",
     }
 
     log.Info().
@@ -216,6 +215,7 @@ import (
 Create a test configuration file `hello.yaml`:
 
 ```yaml
+name: "helloworld"
 runs:
   - helloworld:
       greeting: "Hello from my first plugin!"
