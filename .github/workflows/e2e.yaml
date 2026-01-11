@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   check-comment:
-    if: false # ${{ github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '/test e2e') }}
+    if: ${{ false && github.event_name == 'issue_comment' && github.event.issue.pull_request && contains(github.event.comment.body, '/test e2e') }}
     runs-on: ubuntu-latest
     outputs:
       should-run: ${{ steps.check-permissions.outputs.result }}
@@ -112,7 +112,7 @@ jobs:
             }
 
   pr-check:
-    if: false # ${{ github.event_name == 'pull_request' }}
+    if: ${{ false && github.event_name == 'pull_request' }}
     runs-on: ubuntu-latest
     steps:
       - name: Create pending check
@@ -137,7 +137,7 @@ jobs:
             return check.id;
 
   e2e-test:
-    if: false # ${{ needs.check-comment.outputs.should-run == 'true' }}
+    if: ${{ false && needs.check-comment.outputs.should-run == 'true' }}
     needs: [check-comment]
     runs-on: ubuntu-latest
     steps:
