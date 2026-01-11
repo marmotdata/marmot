@@ -509,9 +509,10 @@ func (r *SchedulePostgresRepository) GetJobRun(ctx context.Context, id string) (
 			COALESCE(s.name, 'Manual Run') as pipeline_name,
 			COALESCE(s.plugin_id, '') as source_name,
 			COALESCE(s.config, '{}'::jsonb) as config,
-			COALESCE(s.created_by, '') as created_by
+			COALESCE(u.username, '') as created_by
 		FROM ingestion_job_runs jr
 		LEFT JOIN ingestion_schedules s ON jr.schedule_id = s.id
+		LEFT JOIN users u ON s.created_by = u.id::text
 		WHERE jr.id = $1`
 
 	run := &JobRun{}
@@ -642,9 +643,10 @@ func (r *SchedulePostgresRepository) ListJobRuns(ctx context.Context, scheduleID
 			COALESCE(s.name, 'Manual Run') as pipeline_name,
 			COALESCE(s.plugin_id, '') as source_name,
 			COALESCE(s.config, '{}'::jsonb) as config,
-			COALESCE(s.created_by, '') as created_by
+			COALESCE(u.username, '') as created_by
 		FROM ingestion_job_runs jr
 		LEFT JOIN ingestion_schedules s ON jr.schedule_id = s.id
+		LEFT JOIN users u ON s.created_by = u.id::text
 		%s
 		ORDER BY jr.created_at DESC
 		LIMIT $%d OFFSET $%d`, whereClause, argPos, argPos+1)
