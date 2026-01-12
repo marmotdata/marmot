@@ -110,7 +110,6 @@
 	let pipelinesTotalPages = $derived(Math.ceil(pipelinesTotal / pipelinesPageSize));
 	let pipelinesOffset = $derived((pipelinesPage - 1) * pipelinesPageSize);
 
-
 	const availableStatuses = ['pending', 'claimed', 'running', 'succeeded', 'failed', 'cancelled'];
 
 	$effect(() => {

@@ -3,7 +3,10 @@
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
+	import CodeBlock from '$components/editor/CodeBlock.svelte';
+	import Icon from '$components/ui/Icon.svelte';
 	import { fetchApi } from '$lib/api';
+	import yaml from 'js-yaml';
 
 	interface IngestionRunSummary {
 		assets_created: number;
@@ -240,179 +243,236 @@
 
 			<div class="overflow-y-auto max-h-[calc(90vh-140px)]">
 				<div class="p-6 space-y-6">
-					<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-						<div class="lg:col-span-2 space-y-6">
-							<div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-								<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-									Run Information
-								</h3>
-								<div class="grid grid-cols-2 gap-4 text-sm">
-									<div>
-										<dt class="font-medium text-gray-500 dark:text-gray-400">Status</dt>
-										<dd class="mt-1">
-											<span
-												class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium {getStatusColor(
-													run.status
-												)}"
-											>
-												<IconifyIcon
-													icon={getStatusIcon(run.status)}
-													class="w-3 h-3 mr-1 {run.status === 'running' ? 'animate-spin' : ''}"
-												/>
-												{run.status.charAt(0).toUpperCase() + run.status.slice(1)}
-											</span>
-										</dd>
-									</div>
-									<div>
-										<dt class="font-medium text-gray-500 dark:text-gray-400">Source</dt>
-										<dd class="mt-1 text-gray-900 dark:text-gray-100">{run.source_name}</dd>
-									</div>
-									<div>
-										<dt class="font-medium text-gray-500 dark:text-gray-400">Duration</dt>
-										<dd class="mt-1 text-gray-900 dark:text-gray-100">
-											{formatDuration(run.started_at, run.finished_at)}
-										</dd>
-									</div>
-									<div>
-										<dt class="font-medium text-gray-500 dark:text-gray-400">Created By</dt>
-										<dd class="mt-1 text-gray-900 dark:text-gray-100">{run.created_by}</dd>
-									</div>
-								</div>
-							</div>
-
-							{#if run.error_message}
-								<div
-									class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
+					<!-- Run Info Cards -->
+					<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+						<div
+							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+						>
+							<dt
+								class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2"
+							>
+								Status
+							</dt>
+							<dd>
+								<span
+									class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium {getStatusColor(
+										run.status
+									)}"
 								>
-									<h3
-										class="text-lg font-semibold text-red-800 dark:text-red-200 mb-2 flex items-center"
-									>
-										<IconifyIcon icon="material-symbols:error" class="h-5 w-5 mr-2" />
-										Error Details
-									</h3>
-									<pre
-										class="text-sm text-red-700 dark:text-red-300 whitespace-pre-wrap font-mono bg-red-100 dark:bg-red-900/40 p-3 rounded overflow-x-auto">{run.error_message}</pre>
-								</div>
-							{/if}
+									<IconifyIcon
+										icon={getStatusIcon(run.status)}
+										class="w-3.5 h-3.5 mr-1.5 {run.status === 'running' ? 'animate-spin' : ''}"
+									/>
+									{run.status.charAt(0).toUpperCase() + run.status.slice(1)}
+								</span>
+							</dd>
 						</div>
-
-						<div class="space-y-6">
-							{#if run.summary}
-								<div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-									<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-										Summary
-									</h3>
-									<div class="space-y-3">
-										<div class="flex justify-between items-center">
-											<span class="text-sm text-gray-600 dark:text-gray-400">Created</span>
-											<span class="text-lg font-semibold text-green-600 dark:text-green-400"
-												>{run.summary.assets_created}</span
-											>
-										</div>
-										<div class="flex justify-between items-center">
-											<span class="text-sm text-gray-600 dark:text-gray-400">Updated</span>
-											<span class="text-lg font-semibold text-blue-600 dark:text-blue-400"
-												>{run.summary.assets_updated}</span
-											>
-										</div>
-										<div class="flex justify-between items-center">
-											<span class="text-sm text-gray-600 dark:text-gray-400">Deleted</span>
-											<span
-												class="text-lg font-semibold text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
-												>{run.summary.assets_deleted}</span
-											>
-										</div>
-										<div class="flex justify-between items-center">
-											<span class="text-sm text-gray-600 dark:text-gray-400">Errors</span>
-											<span class="text-lg font-semibold text-red-600 dark:text-red-400"
-												>{run.summary.errors}</span
-											>
-										</div>
-									</div>
-								</div>
-							{/if}
+						<div
+							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+						>
+							<dt
+								class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2"
+							>
+								Duration
+							</dt>
+							<dd class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+								{formatDuration(run.started_at, run.finished_at)}
+							</dd>
+						</div>
+						<div
+							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+						>
+							<dt
+								class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2"
+							>
+								Source
+							</dt>
+							<dd class="flex items-center gap-2">
+								<Icon name={run.source_name} size="xs" showLabel={false} />
+								<span class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+									{run.source_name}
+								</span>
+							</dd>
+						</div>
+						<div
+							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4"
+						>
+							<dt
+								class="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2"
+							>
+								Created By
+							</dt>
+							<dd class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+								{run.created_by}
+							</dd>
 						</div>
 					</div>
 
-					{#if run.config && Object.keys(run.config).length > 0}
-						<div class="bg-gray-50 dark:bg-gray-900 rounded-lg p-4">
-							<div class="flex items-center justify-between mb-4">
-								<h3
-									class="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center"
+					<!-- Summary Stats -->
+					{#if run.summary}
+						<div class="grid grid-cols-4 gap-4">
+							<div
+								class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800/50 rounded-xl p-4 text-center"
+							>
+								<div class="text-2xl font-bold text-green-600 dark:text-green-400">
+									{run.summary.assets_created}
+								</div>
+								<div
+									class="text-xs font-medium text-green-700 dark:text-green-300 uppercase tracking-wide mt-1"
 								>
-									<IconifyIcon icon="material-symbols:settings" class="h-5 w-5 mr-2" />
+									Created
+								</div>
+							</div>
+							<div
+								class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800/50 rounded-xl p-4 text-center"
+							>
+								<div class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+									{run.summary.assets_updated}
+								</div>
+								<div
+									class="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wide mt-1"
+								>
+									Updated
+								</div>
+							</div>
+							<div
+								class="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-xl p-4 text-center"
+							>
+								<div class="text-2xl font-bold text-orange-600 dark:text-orange-400">
+									{run.summary.assets_deleted}
+								</div>
+								<div
+									class="text-xs font-medium text-orange-700 dark:text-orange-300 uppercase tracking-wide mt-1"
+								>
+									Deleted
+								</div>
+							</div>
+							<div
+								class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4 text-center"
+							>
+								<div class="text-2xl font-bold text-red-600 dark:text-red-400">
+									{run.summary.errors}
+								</div>
+								<div
+									class="text-xs font-medium text-red-700 dark:text-red-300 uppercase tracking-wide mt-1"
+								>
+									Errors
+								</div>
+							</div>
+						</div>
+					{/if}
+
+					<!-- Error Message -->
+					{#if run.error_message}
+						<div
+							class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-xl p-4"
+						>
+							<h3
+								class="text-sm font-semibold text-red-800 dark:text-red-200 mb-2 flex items-center"
+							>
+								<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-2" />
+								Error Details
+							</h3>
+							<pre
+								class="text-sm text-red-700 dark:text-red-300 whitespace-pre-wrap font-mono bg-red-100 dark:bg-red-900/40 p-3 rounded-lg overflow-x-auto">{run.error_message}</pre>
+						</div>
+					{/if}
+
+					<!-- Configuration -->
+					{#if run.config && Object.keys(run.config).length > 0}
+						<div
+							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+						>
+							<div
+								class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
+							>
+								<h3
+									class="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center"
+								>
+									<IconifyIcon
+										icon="material-symbols:settings"
+										class="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400"
+									/>
 									Configuration
 								</h3>
 								<Button
 									variant="clear"
-									text={showRawConfig ? 'Hide Raw' : 'Show Raw'}
-									icon={showRawConfig ? 'material-symbols:visibility-off' : 'material-symbols:code'}
+									text={showRawConfig ? 'Structured View' : 'Raw YAML'}
+									icon={showRawConfig ? 'material-symbols:view-list' : 'material-symbols:code'}
 									click={() => (showRawConfig = !showRawConfig)}
 								/>
 							</div>
-							<div
-								class="bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 p-4 max-h-64 overflow-y-auto"
-							>
+							<div class="p-4">
 								{#if showRawConfig}
-									<pre
-										class="text-sm text-gray-800 dark:text-gray-200 font-mono whitespace-pre-wrap">{JSON.stringify(
-											run.config,
-											null,
-											2
-										)}</pre>
+									<div class="max-h-72 overflow-y-auto rounded-lg">
+										<CodeBlock
+											code={yaml.dump(run.config, { indent: 2, lineWidth: -1 })}
+											language="yaml"
+										/>
+									</div>
 								{:else}
-									<MetadataView metadata={run.config} readOnly={true} maxDepth={3} />
+									<div class="max-h-64 overflow-y-auto">
+										<MetadataView metadata={run.config} readOnly={true} maxDepth={3} />
+									</div>
 								{/if}
 							</div>
 						</div>
 					{/if}
 
-					<div>
-						<div class="flex items-center justify-between mb-4">
-							<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-								Entities ({entitiesTotal})
-							</h3>
-							<div class="flex items-center space-x-2">
-								<Button
-									variant="clear"
-									click={() => goToEntitiesPage(entitiesPage - 1)}
-									disabled={entitiesPage === 1}
-									icon="chevron-left"
-									text="Previous"
-								/>
-								<span class="text-sm text-gray-600 dark:text-gray-400">
-									{entitiesPage} / {Math.ceil(entitiesTotal / entitiesLimit)}
+					<!-- Entities -->
+					<div
+						class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
+					>
+						<div
+							class="flex items-center justify-between px-4 py-3 bg-gray-50 dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700"
+						>
+							<h3 class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+								Entities
+								<span class="ml-1.5 text-xs font-normal text-gray-500 dark:text-gray-400">
+									({entitiesTotal})
 								</span>
-								<Button
-									variant="clear"
-									click={() => goToEntitiesPage(entitiesPage + 1)}
-									disabled={entitiesPage === Math.ceil(entitiesTotal / entitiesLimit)}
-									text="Next"
-									icon="chevron-right"
-								/>
-							</div>
+							</h3>
+							{#if entitiesTotal > 0}
+								<div class="flex items-center space-x-2">
+									<Button
+										variant="clear"
+										click={() => goToEntitiesPage(entitiesPage - 1)}
+										disabled={entitiesPage === 1}
+										icon="chevron-left"
+										text="Previous"
+									/>
+									<span class="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
+										{entitiesPage} / {Math.max(1, Math.ceil(entitiesTotal / entitiesLimit))}
+									</span>
+									<Button
+										variant="clear"
+										click={() => goToEntitiesPage(entitiesPage + 1)}
+										disabled={entitiesPage >= Math.ceil(entitiesTotal / entitiesLimit)}
+										text="Next"
+										icon="chevron-right"
+									/>
+								</div>
+							{/if}
 						</div>
 
-						{#if entitiesLoading}
-							<div class="flex items-center justify-center py-8">
+						<div class="p-4">
+							{#if entitiesLoading}
+								<div class="flex items-center justify-center py-8">
+									<div
+										class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"
+									></div>
+								</div>
+							{:else if entitiesError}
 								<div
-									class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"
-								></div>
-							</div>
-						{:else if entitiesError}
-							<div
-								class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-							>
-								<p class="text-red-700 dark:text-red-300">{entitiesError}</p>
-							</div>
-						{:else if entities.length === 0}
-							<div class="text-center py-8">
-								<p class="text-gray-500 dark:text-gray-400">No entities found</p>
-							</div>
-						{:else}
-							<div
-								class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden"
-							>
+									class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
+								>
+									<p class="text-red-700 dark:text-red-300">{entitiesError}</p>
+								</div>
+							{:else if entities.length === 0}
+								<div class="text-center py-8">
+									<p class="text-gray-500 dark:text-gray-400">No entities found</p>
+								</div>
+							{:else}
 								<div class="overflow-x-auto">
 									<table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
 										<thead class="bg-gray-50 dark:bg-gray-900">
@@ -495,8 +555,8 @@
 										</tbody>
 									</table>
 								</div>
-							</div>
-						{/if}
+							{/if}
+						</div>
 					</div>
 				</div>
 			</div>

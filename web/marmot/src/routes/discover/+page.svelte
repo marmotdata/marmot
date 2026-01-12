@@ -387,10 +387,7 @@
 	let showAssetFilters = $derived(selectedKinds.includes('asset'));
 
 	let showGettingStarted = $derived(
-		!$isLoading &&
-			$results.length === 0 &&
-			!searchQuery &&
-			!hasActiveFilters
+		!$isLoading && $results.length === 0 && !searchQuery && !hasActiveFilters
 	);
 </script>
 
