@@ -630,11 +630,7 @@
 			<!-- Getting Started - shown in two column layout -->
 			<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
 				<div class="lg:col-span-2">
-					<GettingStarted
-						condensed={false}
-						title="Welcome to Marmot"
-						description="Start building your data catalog by connecting to your data sources and discovering assets."
-					/>
+					<GettingStarted condensed={false} />
 				</div>
 			</div>
 		{/if}
@@ -702,11 +698,7 @@
 		<!-- Getting Started - shown in two column layout -->
 		<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
 			<div class="lg:col-span-2">
-				<GettingStarted
-					condensed={false}
-					title="Welcome to Marmot"
-					description="Start building your data catalog by connecting to your data sources and discovering assets."
-				/>
+				<GettingStarted condensed={false} />
 			</div>
 		</div>
 	{/if}

@@ -11,7 +11,6 @@
 	import IconifyIcon from '@iconify/svelte';
 	import IngestionRunCard from '$components/runs/IngestionRunCard.svelte';
 	import IngestionRunModal from '$components/runs/IngestionRunModal.svelte';
-	import GettingStarted from '$components/ui/GettingStarted.svelte';
 	import ScheduleCard from '$components/runs/ScheduleCard.svelte';
 	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
 
@@ -111,9 +110,6 @@
 	let pipelinesTotalPages = $derived(Math.ceil(pipelinesTotal / pipelinesPageSize));
 	let pipelinesOffset = $derived((pipelinesPage - 1) * pipelinesPageSize);
 
-	let showGettingStarted = $derived(
-		!loading && runs && runs.length === 0 && selectedStatuses.length === 0
-	);
 
 	const availableStatuses = ['pending', 'claimed', 'running', 'succeeded', 'failed', 'cancelled'];
 
@@ -758,8 +754,6 @@
 					</div>
 				</div>
 			</div>
-		{:else if showGettingStarted}
-			<GettingStarted />
 		{:else}
 			<!-- Filters -->
 			<div

@@ -16,17 +16,44 @@
 	}
 
 	let {
-		title = 'Get Started with Marmot',
-		description = 'The quickest way to start populating Marmot is using the CLI. Configure your data sources and run ingestion jobs to populate your data catalog.',
-		primaryButtonText = 'View Documentation',
+		title = 'Start Populating Your Catalog',
+		description = 'Connect to your data sources and discover assets. Pick the method that works best for your workflow.',
+		primaryButtonText = 'Populating Your Catalog',
 		primaryButtonIcon = 'material-symbols:book',
-		primaryButtonUrl = 'https://marmotdata.io/docs/introduction',
+		primaryButtonUrl = 'https://marmotdata.io/docs/Populating/',
 		secondaryButtonText = 'Plugins',
 		secondaryButtonIcon = 'material-symbols:extension',
 		secondaryButtonUrl = 'https://marmotdata.io/docs/Plugins/',
 		showSteps = true,
 		condensed = false
 	}: Props = $props();
+
+	const methods = [
+		{
+			icon: 'material-symbols:web',
+			title: 'UI',
+			description: 'Run discovery jobs directly from the interface',
+			url: 'https://marmotdata.io/docs/Populating/UI'
+		},
+		{
+			icon: 'material-symbols:terminal',
+			title: 'CLI',
+			description: 'YAML config for CI/CD pipelines',
+			url: 'https://marmotdata.io/docs/Populating/CLI'
+		},
+		{
+			icon: 'material-symbols:code',
+			title: 'Terraform / Pulumi',
+			description: 'Infrastructure as code',
+			url: 'https://marmotdata.io/docs/Populating/Terraform'
+		},
+		{
+			icon: 'material-symbols:api',
+			title: 'REST API',
+			description: 'Custom integrations',
+			url: 'https://marmotdata.io/docs/Populating/API'
+		}
+	];
 </script>
 
 <div
@@ -57,7 +84,7 @@
 		</h3>
 
 		<p
-			class="text-gray-600 dark:text-gray-400 {condensed ? 'mb-4 text-sm' : 'mb-6'} {condensed
+			class="text-gray-600 dark:text-gray-400 {condensed ? 'mb-4 text-sm' : 'mb-8'} {condensed
 				? 'max-w-full'
 				: 'max-w-2xl'} mx-auto"
 		>
@@ -65,44 +92,32 @@
 		</p>
 
 		{#if showSteps && !condensed}
-			<div class="grid md:grid-cols-2 gap-6 {condensed ? 'max-w-full' : 'max-w-4xl'} mx-auto mb-8">
-				<div
-					class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
-				>
-					<div class="flex items-center mb-4">
+			<div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
+				{#each methods as method}
+					<a
+						href={method.url}
+						target="_blank"
+						rel="noopener noreferrer"
+						class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:border-earthy-terracotta-500 dark:hover:border-earthy-terracotta-600 hover:shadow-md transition-all group text-center"
+					>
 						<div
-							class="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mr-3"
+							class="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mb-3 mx-auto group-hover:bg-earthy-terracotta-100 dark:group-hover:bg-earthy-terracotta-900/30 transition-colors"
 						>
-							<span class="text-blue-600 dark:text-blue-400 font-semibold text-sm">1</span>
+							<IconifyIcon
+								icon={method.icon}
+								class="h-6 w-6 text-gray-600 dark:text-gray-400 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
+							/>
 						</div>
-						<h4 class="font-semibold text-gray-900 dark:text-gray-100">Install CLI</h4>
-					</div>
-					<div class="bg-gray-900 dark:bg-gray-950 rounded-md p-3 mb-4">
-						<code class="text-green-400 text-sm">curl -fsSL get.marmotdata.io | sh</code>
-					</div>
-					<p class="text-sm text-gray-600 dark:text-gray-400">
-						Download and install the Marmot CLI.
-					</p>
-				</div>
-
-				<div
-					class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
-				>
-					<div class="flex items-center mb-4">
-						<div
-							class="w-8 h-8 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mr-3"
+						<h4
+							class="font-semibold text-gray-900 dark:text-gray-100 text-sm mb-1 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
 						>
-							<span class="text-green-600 dark:text-green-400 font-semibold text-sm">2</span>
-						</div>
-						<h4 class="font-semibold text-gray-900 dark:text-gray-100">Configure Sources</h4>
-					</div>
-					<div class="bg-gray-900 dark:bg-gray-950 rounded-md p-3 mb-4">
-						<code class="text-green-400 text-sm">marmot ingest --config pipeline.yaml</code>
-					</div>
-					<p class="text-sm text-gray-600 dark:text-gray-400">
-						Create configuration files for your data sources and run ingestion jobs.
-					</p>
-				</div>
+							{method.title}
+						</h4>
+						<p class="text-xs text-gray-500 dark:text-gray-400">
+							{method.description}
+						</p>
+					</a>
+				{/each}
 			</div>
 		{/if}
 

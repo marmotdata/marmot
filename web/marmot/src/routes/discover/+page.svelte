@@ -12,6 +12,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import QueryBuilder from '$components/query/QueryBuilder.svelte';
+	import GettingStarted from '$components/ui/GettingStarted.svelte';
 	import { auth } from '$lib/stores/auth';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 
@@ -384,6 +385,13 @@
 	);
 
 	let showAssetFilters = $derived(selectedKinds.includes('asset'));
+
+	let showGettingStarted = $derived(
+		!$isLoading &&
+			$results.length === 0 &&
+			!searchQuery &&
+			!hasActiveFilters
+	);
 </script>
 
 <svelte:head>
@@ -801,17 +809,23 @@
 								</div>
 							{/each}
 						{:else if $results.length === 0}
-							<div class="flex-1 flex items-center justify-center py-12">
-								<div class="text-center">
-									<div class="flex justify-center mb-4">
-										<IconifyIcon icon="mdi:magnify" class="text-6xl text-gray-400" />
-									</div>
-									<p class="text-gray-600 dark:text-gray-400 text-lg">No results found</p>
-									<p class="text-gray-500 dark:text-gray-500 text-sm mt-2">
-										Try adjusting your search or filters
-									</p>
+							{#if showGettingStarted}
+								<div class="py-8">
+									<GettingStarted condensed={false} />
 								</div>
-							</div>
+							{:else}
+								<div class="flex-1 flex items-center justify-center py-12">
+									<div class="text-center">
+										<div class="flex justify-center mb-4">
+											<IconifyIcon icon="mdi:magnify" class="text-6xl text-gray-400" />
+										</div>
+										<p class="text-gray-600 dark:text-gray-400 text-lg">No results found</p>
+										<p class="text-gray-500 dark:text-gray-500 text-sm mt-2">
+											Try adjusting your search or filters
+										</p>
+									</div>
+								</div>
+							{/if}
 						{:else}
 							{#each $results as result}
 								{#if result.type === 'asset'}
