@@ -43,6 +43,14 @@ Unlike traditional catalogs that require extensive infrastructure and configurat
   />
 </FeatureGrid>
 
+## Architecture
+
+Marmot is built entirely in Go with PostgreSQL being the only external dependency, handling search, job scheduling and metadata storage. Unlike traditional catalogs that have opinionated ingestion methods, Marmot lets you populate your catalog however you like.
+
+<div style={{textAlign: 'center', margin: '2rem 0'}}>
+  <img src="/img/marmot-diagram.png" alt="Marmot architecture diagram" style={{maxWidth: '100%', borderRadius: '8px'}} />
+</div>
+
 ## Features
 
 ### Search Everything

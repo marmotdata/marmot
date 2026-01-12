@@ -139,6 +139,10 @@ const config: Config = {
               label: "Plugins",
               to: "/docs/plugins",
             },
+            {
+              label: "MCP",
+              to: "/docs/MCP",
+            },
           ],
         },
         {
@@ -148,11 +152,27 @@ const config: Config = {
               label: "Discord",
               href: "https://discord.gg/TWCk7hVFN4",
             },
+            {
+              label: "GitHub Discussions",
+              href: "https://github.com/marmotdata/marmot/discussions",
+            },
           ],
         },
         {
           title: "More",
           items: [
+            {
+              label: "Blog",
+              to: "/blog",
+            },
+            {
+              label: "Live Demo",
+              href: "https://demo.marmotdata.io",
+            },
+            {
+              label: "API Reference",
+              to: "/api",
+            },
             {
               label: "GitHub",
               href: "https://github.com/marmotdata/marmot/",

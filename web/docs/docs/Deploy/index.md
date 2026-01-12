@@ -16,8 +16,14 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
 
 <DocCardGrid>
   <DocCard
+    title="Docker Compose"
+    description="Deploy Marmot and PostgreSQL together with one command"
+    href="/docs/Deploy/Docker-Compose"
+    icon="mdi:docker"
+  />
+  <DocCard
     title="Docker"
-    description="Deploy using containers - recommended for most users"
+    description="Deploy using containers with your own PostgreSQL"
     href="/docs/Deploy/Docker"
     icon="mdi:docker"
   />
