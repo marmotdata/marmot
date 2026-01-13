@@ -5,9 +5,10 @@ title: Docker Compose
 
 # Docker Compose
 
-Deploy Marmot with Docker Compose for production use.
+Deploy Marmot and PostgreSQL together with Docker Compose.
 
 import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
+import { Steps, Step, TipBox } from '@site/src/components/Steps';
 
 <CalloutCard
   title="Looking for a Quick Test?"
@@ -17,28 +18,28 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
   icon="mdi:rocket-launch"
 />
 
-## Prerequisites
+## Quick Start
 
-- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed
-- The Marmot CLI for generating encryption keys
-
-Install the CLI:
+<Steps>
+<Step title="Install the CLI">
 
 ```bash
 curl -fsSL get.marmotdata.io | sh
 ```
 
-## Generate an Encryption Key
+</Step>
+<Step title="Generate an encryption key">
 
-Marmot encrypts sensitive credentials stored in your catalog. Generate a key before deploying:
+Marmot encrypts sensitive credentials stored in your catalog:
 
 ```bash
 marmot generate-encryption-key
 ```
 
-Save this key somewhere safe.
+Save this key securely. You'll need it in the next step.
 
-## Create Your Docker Compose File
+</Step>
+<Step title="Create your compose file">
 
 Create a `docker-compose.yaml`:
 
@@ -78,6 +79,9 @@ volumes:
   marmot_data:
 ```
 
+</Step>
+<Step title="Create your environment file">
+
 Create a `.env` file in the same directory:
 
 ```bash
@@ -85,31 +89,46 @@ POSTGRES_PASSWORD=your-secure-password
 MARMOT_ENCRYPTION_KEY=your-generated-key
 ```
 
-## Start Marmot
+</Step>
+<Step title="Start Marmot">
 
 ```bash
 docker compose up -d
 ```
 
-Open [http://localhost:8080](http://localhost:8080) and log in with `admin` / `admin`.
+</Step>
+<Step title="Access the UI">
 
-> Change the default password after your first login.
+Open [http://localhost:8080](http://localhost:8080) in your browser.
+
+</Step>
+</Steps>
+
+<TipBox variant="info" title="Default Credentials">
+The default username and password is **admin:admin**. Change this after your first login.
+</TipBox>
+
+---
+
+## Reference
+
+For all configuration options, see the [configuration guide](/docs/Configure).
 
 ## Next Steps
 
 <DocCardGrid>
-  <DocCard
-    title="Add Data with Plugins"
-    description="Automatically discover assets from PostgreSQL, Kafka, S3 and more"
-    href="/docs/Plugins"
-    icon="mdi:puzzle"
-  />
-  <DocCard
-    title="Configure Marmot"
-    description="Set up authentication, SSO and more"
-    href="/docs/Configure"
-    icon="mdi:cog"
-  />
+<DocCard
+  title="Add Data with Plugins"
+  description="Automatically discover assets from PostgreSQL, Kafka, S3 and more"
+  href="/docs/Plugins"
+  icon="mdi:puzzle"
+/>
+<DocCard
+  title="Configure Authentication"
+  description="Set up SSO with GitHub, Google, Okta and more"
+  href="/docs/Configure/Authentication"
+  icon="mdi:shield-account"
+/>
 </DocCardGrid>
 
 <CalloutCard

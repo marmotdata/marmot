@@ -7,47 +7,59 @@ title: Helm / Kubernetes
 
 Deploy Marmot to your Kubernetes cluster using our official Helm chart.
 
-## Simple Deployment
+import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
+import { Steps, Step, Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
 
-Add the Marmot Helm repository and install:
+## Quick Start
+
+<Steps>
+  <Step title="Add the Helm repository">
 
 ```bash
 helm repo add marmotdata https://marmotdata.github.io/charts
 helm repo update
+```
+
+  </Step>
+  <Step title="Install Marmot">
+
+```bash
 helm install marmot marmotdata/marmot
 ```
 
-> **The default username and password is admin:admin**
+  </Step>
+  <Step title="Access the UI">
 
-## With External PostgreSQL
-
-Deploy Marmot with your existing PostgreSQL database:
-
-```bash
-helm install marmot marmotdata/marmot \
-  --set config.database.host=your-postgres-host \
-  --set config.database.user=your-postgres-user \
-  --set config.database.password=your-postgres-password \
-  --set config.database.name=your-postgres-database
-```
-
-## With Embedded PostgreSQL
-
-For testing or development, you can enable the embedded PostgreSQL:
+Port-forward to access the dashboard:
 
 ```bash
-helm install marmot marmotdata/marmot \
-  --set postgresql.enabled=true
+kubectl port-forward svc/marmot 8080:8080
 ```
 
-> ⚠️ **The embedded PostgreSQL is NOT recommended for production use.**
+Open [http://localhost:8080](http://localhost:8080) in your browser.
 
-## Configuration
+  </Step>
+</Steps>
 
-You can configure Marmot using a custom values file:
+<TipBox variant="info" title="Default Credentials">
+The default username and password is **admin:admin**. Change this after your first login.
+</TipBox>
+
+---
+
+## Database Configuration
+
+Marmot requires PostgreSQL. Choose one of the following options:
+
+<Tabs items={[
+{ label: "External PostgreSQL", value: "external", icon: "mdi:database" },
+{ label: "Embedded PostgreSQL", value: "embedded", icon: "mdi:database-cog" }
+]}>
+<TabPanel>
+
+Connect Marmot to your existing PostgreSQL database:
 
 ```yaml
-# custom-values.yaml
 config:
   database:
     host: postgres.example.com
@@ -58,34 +70,35 @@ config:
       key: password
     name: marmot
     sslmode: require
-
-ingress:
-  enabled: true
-  className: nginx
-  hosts:
-    - host: marmot.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-
-resources:
-  limits:
-    cpu: 1000m
-    memory: 1Gi
-  requests:
-    cpu: 200m
-    memory: 256Mi
 ```
 
-Deploy with your custom configuration:
+  </TabPanel>
+  <TabPanel>
+
+For development and testing, enable the embedded PostgreSQL:
 
 ```bash
-helm install marmot marmotdata/marmot -f custom-values.yaml
+helm install marmot marmotdata/marmot \
+  --set postgresql.enabled=true
 ```
+
+  </TabPanel>
+</Tabs>
+
+---
 
 ## Encryption Key
 
-Marmot requires an encryption key to protect sensitive pipeline credentials. The Helm chart auto-generates one by default:
+Marmot encrypts sensitive pipeline credentials at rest. You must configure an encryption key.
+
+<Tabs items={[
+{ label: "Auto-Generated", value: "auto", icon: "mdi:key-plus" },
+{ label: "Bring Your Own", value: "custom", icon: "mdi:key" },
+{ label: "Disable (Dev Only)", value: "disable", icon: "mdi:key-remove" }
+]}>
+<TabPanel>
+
+The Helm chart can auto-generate an encryption key for you (enabled by default):
 
 ```yaml
 config:
@@ -93,16 +106,22 @@ config:
     autoGenerateEncryptionKey: true
 ```
 
-**Back up the auto-generated key:**
+<TipBox variant="warning" title="Back Up Your Key">
+If the generated secret is deleted, you'll lose access to encrypted credentials. Back it up immediately after installation.
+</TipBox>
+
+Retrieve the auto-generated key:
 
 ```bash
 kubectl get secret <release-name>-marmot-encryption-key \
   -o jsonpath='{.data.encryption-key}' | base64 -d
 ```
 
-### Use Your Own Key
+  </TabPanel>
+  <TabPanel>
 
-Generate a key:
+<Steps>
+  <Step title="Generate an encryption key">
 
 ```bash
 marmot generate-encryption-key
@@ -110,14 +129,16 @@ marmot generate-encryption-key
 openssl rand -base64 32
 ```
 
-Create a secret:
+  </Step>
+  <Step title="Create a Kubernetes secret">
 
 ```bash
 kubectl create secret generic marmot-encryption \
   --from-literal=encryption-key="your-generated-key"
 ```
 
-Configure Marmot to use it:
+  </Step>
+  <Step title="Configure the Helm chart">
 
 ```yaml
 config:
@@ -128,9 +149,13 @@ config:
       key: encryption-key
 ```
 
-### Disable Encryption (Not Recommended)
+  </Step>
+</Steps>
 
-For development/testing only:
+  </TabPanel>
+  <TabPanel>
+
+For local development only, you can disable encryption entirely:
 
 ```yaml
 config:
@@ -139,8 +164,38 @@ config:
     allowUnencrypted: true
 ```
 
-For all available configuration options, see the [chart's values.yaml](https://github.com/marmotdata/marmot/blob/main/charts/marmot/values.yaml) or run:
+<TipBox variant="danger" title="Security Risk">
+This stores all credentials in plaintext. Never use this in production.
+</TipBox>
+
+  </TabPanel>
+</Tabs>
+
+---
+
+## Reference
+
+For all available configuration options, view the chart's defaults:
 
 ```bash
 helm show values marmotdata/marmot
 ```
+
+Or browse the [values.yaml on GitHub](https://github.com/marmotdata/marmot/blob/main/charts/marmot/values.yaml).
+
+## Next Steps
+
+<DocCardGrid>
+  <DocCard
+    title="Add Data with Plugins"
+    description="Automatically discover assets from your data sources"
+    href="/docs/Plugins"
+    icon="mdi:puzzle"
+  />
+  <DocCard
+    title="Configure Authentication"
+    description="Set up SSO with GitHub, Google, Okta and more"
+    href="/docs/Configure/Authentication"
+    icon="mdi:shield-account"
+  />
+</DocCardGrid>
