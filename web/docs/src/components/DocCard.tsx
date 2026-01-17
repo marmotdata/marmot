@@ -52,7 +52,7 @@ interface CalloutCardProps {
   description: string;
   href: string;
   buttonText: string;
-  variant?: "primary" | "secondary";
+  variant?: "primary" | "secondary" | "external";
   icon?: string;
 }
 
@@ -65,48 +65,59 @@ export function CalloutCard({
   icon,
 }: CalloutCardProps): JSX.Element {
   const isPrimary = variant === "primary";
+  const isExternal = variant === "external";
+
+  const containerClasses = isPrimary
+    ? "bg-gradient-to-br from-[var(--ifm-color-primary)] to-[#b34822] text-white"
+    : isExternal
+      ? "bg-gradient-to-br from-[var(--ifm-color-primary)]/10 to-[#b34822]/10 border border-[var(--ifm-color-primary)]/20 dark:from-[var(--ifm-color-primary)]/20 dark:to-[#b34822]/20 dark:border-[var(--ifm-color-primary)]/30"
+      : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700";
+
+  const iconClasses = isPrimary
+    ? "text-white/90"
+    : "text-[var(--ifm-color-primary)]";
+
+  const titleClasses = isPrimary
+    ? "text-white"
+    : "text-gray-900 dark:text-white";
+
+  const descriptionClasses = isPrimary
+    ? "text-white/90"
+    : "text-gray-600 dark:text-gray-400";
+
+  const buttonClasses = isPrimary
+    ? "bg-white text-[var(--ifm-color-primary)] hover:bg-gray-100"
+    : "bg-[var(--ifm-color-primary)] text-white hover:text-white";
 
   return (
     <div
-      className={`relative overflow-hidden rounded-xl p-6 mt-6 mb-6 ${
-        isPrimary
-          ? "bg-gradient-to-br from-[var(--ifm-color-primary)] to-[#b34822] text-white"
-          : "bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
-      }`}
+      className={`relative overflow-hidden rounded-xl p-6 mt-6 mb-6 ${containerClasses}`}
     >
       <div className="relative z-10">
         <div className="flex items-start gap-3">
           {icon && (
             <Icon
               icon={icon}
-              className={`w-8 h-8 flex-shrink-0 ${isPrimary ? "text-white/90" : "text-[var(--ifm-color-primary)]"}`}
+              className={`w-8 h-8 flex-shrink-0 ${iconClasses}`}
             />
           )}
           <div>
             <h3
-              className={`text-lg font-bold m-0 ${
-                isPrimary ? "text-white" : "text-gray-900 dark:text-white"
-              }`}
+              className={`text-lg font-bold m-0 ${titleClasses}`}
             >
               {title}
             </h3>
             <p
-              className={`mt-2 mb-4 text-sm ${
-                isPrimary ? "text-white/90" : "text-gray-600 dark:text-gray-400"
-              }`}
+              className={`mt-2 mb-4 text-sm ${descriptionClasses}`}
             >
               {description}
             </p>
             <a
               href={href}
-              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all no-underline ${
-                isPrimary
-                  ? "bg-white text-[var(--ifm-color-primary)] hover:bg-gray-100"
-                  : "bg-[var(--ifm-color-primary)] text-white hover:opacity-90"
-              }`}
+              className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all no-underline ${buttonClasses}`}
             >
               {buttonText}
-              <Icon icon="mdi:arrow-right" className="w-4 h-4" />
+              <Icon icon={isExternal ? "mdi:open-in-new" : "mdi:arrow-right"} className="w-4 h-4" />
             </a>
           </div>
         </div>

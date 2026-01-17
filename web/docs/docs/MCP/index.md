@@ -14,6 +14,7 @@ import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@si
   href="https://modelcontextprotocol.io"
   buttonText="Learn More"
   icon="mdi:robot"
+  variant="external"
 />
 
 ## What Can You Do?

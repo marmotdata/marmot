@@ -16,7 +16,12 @@ Marmot integrates with OpenLineage to automatically discover assets and lineage 
   href="https://openlineage.io"
   buttonText="Learn More"
   icon="mdi:source-branch"
+  variant="external"
 />
+
+:::note[Compatibility]
+OpenLineage support in Marmot is still experimental and has not been tested with all sources. Please report any issues you encounter on GitHub.
+:::
 
 ## What You Get
 
@@ -47,15 +52,15 @@ Marmot integrates with OpenLineage to automatically discover assets and lineage 
 
 Marmot maps OpenLineage events to specific asset types:
 
-| Asset Type | Description |
-| ---------- | ----------- |
-| `DAG` | Airflow workflows |
-| `Task` | Individual Airflow tasks |
-| `Model` | DBT models |
-| `Project` | DBT projects |
-| `Table` | Database tables |
-| `File` | Data files |
-| `Topic` | Kafka topics |
+| Asset Type | Description              |
+| ---------- | ------------------------ |
+| `DAG`      | Airflow workflows        |
+| `Task`     | Individual Airflow tasks |
+| `Model`    | DBT models               |
+| `Project`  | DBT projects             |
+| `Table`    | Database tables          |
+| `File`     | Data files               |
+| `Topic`    | Kafka topics             |
 
 ## Authentication
 
@@ -139,6 +144,6 @@ export OPENLINEAGE_API_KEY=your-api-key
   description="For detailed configuration options and supported integrations, see the official OpenLineage documentation."
   href="https://openlineage.io/docs/"
   buttonText="View Docs"
-  variant="secondary"
+  variant="external"
   icon="mdi:book-open-variant"
 />

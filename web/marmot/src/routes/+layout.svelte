@@ -13,6 +13,7 @@
 	import GlobalSearch from '$components/query/GlobalSearch.svelte';
 	import Avatar from '$components/user/Avatar.svelte';
 	import ToastContainer from '$components/ui/ToastContainer.svelte';
+	import NotificationBell from '$components/notifications/NotificationBell.svelte';
 
 	interface BannerConfig {
 		enabled: boolean;
@@ -31,6 +32,7 @@
 
 	let bannerConfig: BannerConfig | null = null;
 	let isDropdownOpen = false;
+	let isGovernanceOpen = false;
 	let isAdmin = false;
 	let checkingAnonymousMode = true;
 	let manualNavigation = false;
@@ -172,10 +174,17 @@
 
 	function toggleDropdown() {
 		isDropdownOpen = !isDropdownOpen;
+		isGovernanceOpen = false;
+	}
+
+	function toggleGovernance() {
+		isGovernanceOpen = !isGovernanceOpen;
+		isDropdownOpen = false;
 	}
 
 	function closeDropdown() {
 		isDropdownOpen = false;
+		isGovernanceOpen = false;
 	}
 
 	function handleLogout() {
@@ -283,49 +292,23 @@
 
 						<a
 							href="/runs"
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
-								.url.pathname === '/runs'
+							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+								'/runs'
+							)
 								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
 						>
 							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:inventory" />
+								<Icon icon="material-symbols:play-circle-outline" />
 							</span>
 							<span>Runs</span>
 						</a>
 
 						<a
-							href="/glossary"
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-								'/glossary'
-							)
-								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-						>
-							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:book" />
-							</span>
-							<span>Glossary</span>
-						</a>
-
-						<a
-							href="/products"
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
-								'/products'
-							)
-								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
-								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
-						>
-							<span class="w-4 h-4 mr-1.5">
-								<Icon icon="material-symbols:inventory-2" />
-							</span>
-							<span>Products</span>
-						</a>
-
-						<a
 							href="/metrics"
-							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page
-								.url.pathname === '/metrics'
+							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+								'/metrics'
+							)
 								? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 								: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
 						>
@@ -334,6 +317,66 @@
 							</span>
 							<span>Metrics</span>
 						</a>
+
+						<div class="relative">
+							<button
+								type="button"
+								onclick={(e) => {
+									e.stopPropagation();
+									toggleGovernance();
+								}}
+								class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
+									'/glossary'
+								) || $page.url.pathname.startsWith('/products')
+									? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+									: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
+							>
+								<span class="w-4 h-4 mr-1.5">
+									<Icon icon="material-symbols:shield-outline" />
+								</span>
+								<span>Governance</span>
+								<Icon
+									icon="material-symbols:keyboard-arrow-down"
+									class="w-4 h-4 ml-1 transition-transform {isGovernanceOpen ? 'rotate-180' : ''}"
+								/>
+							</button>
+							{#if isGovernanceOpen}
+								<div
+									class="origin-top-left absolute left-0 mt-2 w-48 rounded-md shadow dark:shadow-white/10 bg-earthy-brown-50 dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50"
+									role="menu"
+								>
+									<a
+										href="/glossary"
+										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
+											'/glossary'
+										)
+											? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+											: ''}"
+										role="menuitem"
+									>
+										<Icon icon="material-symbols:book" class="w-4 h-4" />
+										Glossary
+									</a>
+									<a
+										href="/products"
+										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
+											'/products'
+										)
+											? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+											: ''}"
+										role="menuitem"
+									>
+										<Icon icon="material-symbols:inventory-2" class="w-4 h-4" />
+										Data Products
+									</a>
+								</div>
+							{/if}
+						</div>
+
+						{#if $auth}
+							<NotificationBell />
+						{/if}
+
 						<div class="relative">
 							<div>
 								<button
