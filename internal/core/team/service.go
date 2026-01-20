@@ -79,12 +79,23 @@ const (
 	OwnerTypeTeam = "team"
 )
 
+// MembershipNotifier is notified when team membership changes.
+type MembershipNotifier interface {
+	OnMemberAdded(ctx context.Context, teamID, teamName, userID, role string)
+}
+
 type Service struct {
-	repo Repository
+	repo                 Repository
+	membershipNotifier   MembershipNotifier
 }
 
 func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
+}
+
+// SetMembershipNotifier sets the notifier for membership changes.
+func (s *Service) SetMembershipNotifier(notifier MembershipNotifier) {
+	s.membershipNotifier = notifier
 }
 
 func (s *Service) CreateTeam(ctx context.Context, name, description, createdBy string) (*Team, error) {
@@ -140,12 +151,20 @@ func (s *Service) AddMember(ctx context.Context, teamID, userID, role string) er
 		return ErrCannotEditSSOTeam
 	}
 
-	return s.repo.AddMember(ctx, &TeamMember{
+	if err := s.repo.AddMember(ctx, &TeamMember{
 		TeamID: teamID,
 		UserID: userID,
 		Role:   role,
 		Source: SourceManual,
-	})
+	}); err != nil {
+		return err
+	}
+
+	if s.membershipNotifier != nil {
+		s.membershipNotifier.OnMemberAdded(ctx, teamID, team.Name, userID, role)
+	}
+
+	return nil
 }
 
 func (s *Service) RemoveMember(ctx context.Context, teamID, userID string) error {

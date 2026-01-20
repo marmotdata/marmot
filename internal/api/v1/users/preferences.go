@@ -2,9 +2,11 @@ package users
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/notification"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
@@ -66,6 +68,26 @@ func (h *Handler) updatePreferences(w http.ResponseWriter, r *http.Request) {
 		if theme != "light" && theme != "dark" && theme != "auto" {
 			common.RespondError(w, http.StatusBadRequest, "Invalid theme value")
 			return
+		}
+	}
+
+	if notifPrefs, ok := input.Preferences["notifications"].(map[string]interface{}); ok {
+		validTypes := map[string]bool{
+			notification.TypeSystem:      true,
+			notification.TypeAssetChange: true,
+			notification.TypeTeamInvite:  true,
+			notification.TypeMention:     true,
+			notification.TypeJobComplete: true,
+		}
+		for key, val := range notifPrefs {
+			if !validTypes[key] {
+				common.RespondError(w, http.StatusBadRequest, fmt.Sprintf("Invalid notification type: %s", key))
+				return
+			}
+			if _, ok := val.(bool); !ok {
+				common.RespondError(w, http.StatusBadRequest, fmt.Sprintf("Notification preference '%s' must be a boolean", key))
+				return
+			}
 		}
 	}
 

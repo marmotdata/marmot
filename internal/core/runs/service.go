@@ -131,14 +131,21 @@ type Service interface {
 	ListRunsWithFilters(ctx context.Context, pipelines, statuses []string, limit, offset int) ([]*plugin.Run, int, []string, error)
 	GetRun(ctx context.Context, id string) (*plugin.Run, error)
 	ListRunEntities(ctx context.Context, runID, entityType, status string, limit, offset int) ([]*RunEntity, int, error)
+	SetCompletionObserver(observer RunCompletionObserver)
+}
+
+// RunCompletionObserver is notified when runs complete.
+type RunCompletionObserver interface {
+	OnRunCompleted(ctx context.Context, run *plugin.Run)
 }
 
 type service struct {
-	repo            Repository
-	assetService    asset.Service
-	lineageService  lineage.Service
-	metricsRecorder metrics.Recorder
-	validator       *validator.Validate
+	repo               Repository
+	assetService       asset.Service
+	lineageService     lineage.Service
+	metricsRecorder    metrics.Recorder
+	validator          *validator.Validate
+	completionObserver RunCompletionObserver
 }
 
 func NewService(repo Repository, assetService asset.Service, lineageService lineage.Service, metricsRecorder metrics.Recorder) Service {
@@ -149,6 +156,10 @@ func NewService(repo Repository, assetService asset.Service, lineageService line
 		metricsRecorder: metricsRecorder,
 		validator:       validator.New(),
 	}
+}
+
+func (s *service) SetCompletionObserver(observer RunCompletionObserver) {
+	s.completionObserver = observer
 }
 
 func (s *service) ListRunsWithFilters(ctx context.Context, pipelines, statuses []string, limit, offset int) ([]*plugin.Run, int, []string, error) {
@@ -219,6 +230,10 @@ func (s *service) CompleteRun(ctx context.Context, runID string, status plugin.R
 		return fmt.Errorf("updating run: %w", err)
 	}
 
+	if s.completionObserver != nil {
+		s.completionObserver.OnRunCompleted(ctx, run)
+	}
+
 	return nil
 }
 
@@ -278,16 +293,17 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			}
 		} else if status == StatusUpdated {
 			updateInput := asset.UpdateInput{
-				Name:          &ast.Name,
-				Type:          ast.Type,
-				Providers:     ast.Providers,
-				Description:   ast.Description,
-				Metadata:      ast.Metadata,
-				Schema:        convertSchemaToStringMap(ast.Schema),
-				Tags:          ast.Tags,
-				ExternalLinks: convertToAssetExternalLinks(ast.ExternalLinks),
-				Query:         ast.Query,
-				QueryLanguage: ast.QueryLanguage,
+				Name:             &ast.Name,
+				Type:             ast.Type,
+				Providers:        ast.Providers,
+				Description:      ast.Description,
+				Metadata:         ast.Metadata,
+				Schema:           convertSchemaToStringMap(ast.Schema),
+				Tags:             ast.Tags,
+				ExternalLinks:    convertToAssetExternalLinks(ast.ExternalLinks),
+				Query:            ast.Query,
+				QueryLanguage:    ast.QueryLanguage,
+				SkipNotification: true,
 			}
 			existingAsset, err := s.assetService.GetByMRN(ctx, assetMRN)
 			if err != nil {
@@ -829,4 +845,3 @@ func (s *service) ProcessRunHistory(ctx context.Context, runHistory []RunHistory
 
 	return stored, nil
 }
-

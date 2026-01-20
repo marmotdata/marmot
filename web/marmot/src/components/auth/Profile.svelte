@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import ThemeToggle from '$components/ui/ThemeToggle.svelte';
+	import NotificationPreferencesToggle from '$components/ui/NotificationPreferencesToggle.svelte';
 
 	interface Permission {
 		name: string;
@@ -92,6 +93,10 @@
 			<div>
 				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">Theme</h4>
 				<ThemeToggle />
+			</div>
+			<div>
+				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">Notifications</h4>
+				<NotificationPreferencesToggle />
 			</div>
 		</div>
 	</div>

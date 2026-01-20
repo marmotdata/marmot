@@ -110,10 +110,11 @@ func (s *ScheduleService) UpdateScheduleLastRun(ctx context.Context, id string, 
 
 // Job run operations
 
-func (s *ScheduleService) CreateJobRun(ctx context.Context, scheduleID *string) (*JobRun, error) {
+func (s *ScheduleService) CreateJobRun(ctx context.Context, scheduleID *string, triggeredBy string) (*JobRun, error) {
 	run := &JobRun{
 		ScheduleID: scheduleID,
 		Status:     JobStatusPending,
+		CreatedBy:  triggeredBy,
 	}
 
 	if err := s.repo.CreateJobRun(ctx, run); err != nil {

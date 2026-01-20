@@ -569,6 +569,12 @@ func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	usr, ok := common.GetAuthenticatedUser(r.Context())
+	if !ok {
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
 	_, err := h.service.GetSchedule(r.Context(), id)
 	if err != nil {
 		if err == runs.ErrScheduleNotFound {
@@ -580,7 +586,7 @@ func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	run, err := h.service.CreateJobRun(r.Context(), &id)
+	run, err := h.service.CreateJobRun(r.Context(), &id, usr.Username)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to create job run")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to create job run")

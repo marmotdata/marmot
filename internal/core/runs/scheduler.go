@@ -198,7 +198,7 @@ func (s *Scheduler) processSchedules() error {
 	}
 
 	for _, schedule := range schedules {
-		run, err := s.service.CreateJobRun(ctx, &schedule.ID)
+		run, err := s.service.CreateJobRun(ctx, &schedule.ID, "scheduler")
 		if err != nil {
 			log.Error().
 				Err(err).
@@ -344,7 +344,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		return fmt.Errorf("validating plugin config: %w", err)
 	}
 
-	pluginRun, err := w.runsService.StartRun(ctx, schedule.Name, schedule.PluginID, "scheduler", validatedConfig)
+	pluginRun, err := w.runsService.StartRun(ctx, schedule.Name, schedule.PluginID, run.CreatedBy, validatedConfig)
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to start run: %v", err)
 		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)

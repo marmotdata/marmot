@@ -483,11 +483,11 @@ func (r *SchedulePostgresRepository) CreateJobRun(ctx context.Context, run *JobR
 	}
 
 	query := `
-		INSERT INTO ingestion_job_runs (schedule_id, status)
-		VALUES ($1, $2)
+		INSERT INTO ingestion_job_runs (schedule_id, status, created_by)
+		VALUES ($1, $2, $3)
 		RETURNING id, created_at, updated_at`
 
-	err := r.db.QueryRow(ctx, query, run.ScheduleID, run.Status).Scan(
+	err := r.db.QueryRow(ctx, query, run.ScheduleID, run.Status, run.CreatedBy).Scan(
 		&run.ID,
 		&run.CreatedAt,
 		&run.UpdatedAt,

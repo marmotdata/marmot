@@ -75,19 +75,20 @@ type CreateInput struct {
 }
 
 type UpdateInput struct {
-	Name            *string                `json:"name"`
-	Description     *string                `json:"description"`      // Technical description
-	UserDescription *string                `json:"user_description"` // User notes
-	Metadata        map[string]interface{} `json:"metadata"`
-	Type            string                 `json:"type"`
-	Providers       []string               `json:"providers"`
-	Schema          map[string]string      `json:"schema"`
-	Tags            []string               `json:"tags"`
-	Sources         []AssetSource          `json:"sources"`
-	Environments    map[string]Environment `json:"environments"`
-	ExternalLinks   []ExternalLink         `json:"external_links"`
-	Query           *string                `json:"query,omitempty"`
-	QueryLanguage   *string                `json:"query_language,omitempty"`
+	Name             *string                `json:"name"`
+	Description      *string                `json:"description"`
+	UserDescription  *string                `json:"user_description"`
+	Metadata         map[string]interface{} `json:"metadata"`
+	Type             string                 `json:"type"`
+	Providers        []string               `json:"providers"`
+	Schema           map[string]string      `json:"schema"`
+	Tags             []string               `json:"tags"`
+	Sources          []AssetSource          `json:"sources"`
+	Environments     map[string]Environment `json:"environments"`
+	ExternalLinks    []ExternalLink         `json:"external_links"`
+	Query            *string                `json:"query,omitempty"`
+	QueryLanguage    *string                `json:"query_language,omitempty"`
+	SkipNotification bool                   `json:"-"`
 }
 
 type Filter struct {
@@ -206,6 +207,8 @@ type Service interface {
 
 	// SetMembershipObserver registers an observer for asset create/delete events.
 	SetMembershipObserver(observer MembershipObserver)
+	// SetNotificationObserver registers an observer for asset update notifications.
+	SetNotificationObserver(observer NotificationObserver)
 }
 
 // MembershipObserver is notified when assets are created or deleted.
@@ -215,11 +218,17 @@ type MembershipObserver interface {
 	OnAssetDeleted(ctx context.Context, assetID string) error
 }
 
+// NotificationObserver is notified when assets are modified.
+type NotificationObserver interface {
+	OnAssetUpdated(ctx context.Context, asset *Asset)
+}
+
 type service struct {
-	repo               Repository
-	validator          *validator.Validate
-	metrics            MetricsClient
-	membershipObserver MembershipObserver
+	repo                 Repository
+	validator            *validator.Validate
+	metrics              MetricsClient
+	membershipObserver   MembershipObserver
+	notificationObserver NotificationObserver
 }
 
 type Logger interface {
@@ -255,6 +264,10 @@ func WithMetrics(metrics MetricsClient) ServiceOption {
 
 func (s *service) SetMembershipObserver(observer MembershipObserver) {
 	s.membershipObserver = observer
+}
+
+func (s *service) SetNotificationObserver(observer NotificationObserver) {
+	s.notificationObserver = observer
 }
 
 func (s *service) GetRunHistoryHistogram(ctx context.Context, assetID string, days int) ([]HistogramBucket, error) {
@@ -555,6 +568,10 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 
 	if err := s.repo.Update(ctx, asset); err != nil {
 		return nil, fmt.Errorf("failed to update asset: %w", err)
+	}
+
+	if s.notificationObserver != nil && !input.SkipNotification {
+		s.notificationObserver.OnAssetUpdated(ctx, asset)
 	}
 
 	return asset, nil

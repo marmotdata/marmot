@@ -40,6 +40,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
 	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
+	notificationsAPI "github.com/marmotdata/marmot/internal/api/v1/notifications"
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
@@ -55,6 +56,7 @@ import (
 	docsService "github.com/marmotdata/marmot/internal/core/docs"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
+	notificationService "github.com/marmotdata/marmot/internal/core/notification"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
 	searchService "github.com/marmotdata/marmot/internal/core/search"
 	teamService "github.com/marmotdata/marmot/internal/core/team"
@@ -81,6 +83,9 @@ type Server struct {
 	// Data product membership evaluation
 	membershipService    *dataproductService.MembershipService
 	membershipReconciler *dataproductService.Reconciler
+
+	// Notification service
+	notificationService *notificationService.Service
 
 	handlers []interface{ Routes() []common.Route }
 }
@@ -114,6 +119,13 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	dataProductSvc := dataproductService.NewService(dataProductRepo)
 	docsRepo := docsService.NewPostgresRepository(db)
 	docsSvc := docsService.NewService(docsRepo)
+	notificationRepo := notificationService.NewPostgresRepository(db)
+	notificationSvc := notificationService.NewService(
+		notificationRepo,
+		&teamMembershipAdapter{teamSvc: teamSvc},
+		notificationService.WithUserPreferencesProvider(&userPreferencesAdapter{userSvc: userSvc}),
+	)
+	notificationSvc.Start(context.Background())
 	membershipRepo := dataproductService.NewPostgresMembershipRepository(db, recorder)
 	membershipSvc := dataproductService.NewMembershipService(
 		dataProductRepo,
@@ -138,6 +150,19 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	// Register membership service with data product service for rule event hooks
 	dataProductSvc.SetRuleObserver(membershipSvc)
+
+	// Register notification observers
+	runsSvc.SetCompletionObserver(&runCompletionNotifier{
+		notificationSvc: notificationSvc,
+		userSvc:         userSvc,
+	})
+	assetSvc.SetNotificationObserver(&assetChangeNotifier{
+		notificationSvc: notificationSvc,
+		teamSvc:         teamSvc,
+	})
+	teamSvc.SetMembershipNotifier(&teamMembershipNotifier{
+		notificationSvc: notificationSvc,
+	})
 
 	scheduleRepo := runService.NewSchedulePostgresRepository(db)
 	scheduleSvc := runService.NewScheduleService(scheduleRepo)
@@ -266,6 +291,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		scheduler:            scheduler,
 		membershipService:    membershipSvc,
 		membershipReconciler: membershipReconciler,
+		notificationService:  notificationSvc,
 	}
 
 	server.handlers = []interface{ Routes() []common.Route }{
@@ -280,6 +306,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
 		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config),
 		docsAPI.NewHandler(docsSvc, userSvc, authSvc, config),
+		notificationsAPI.NewHandler(notificationSvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
 		searchAPI.NewHandler(searchSvc, userSvc, authSvc, metricsService, config),
 		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config),
@@ -297,6 +324,9 @@ func (s *Server) Stop() {
 	}
 	if s.membershipService != nil {
 		s.membershipService.Stop()
+	}
+	if s.notificationService != nil {
+		s.notificationService.Stop()
 	}
 	if s.scheduler != nil {
 		s.scheduler.Stop()
@@ -376,6 +406,195 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 	mux.Handle("/swagger/", httpSwagger.Handler(
 		httpSwagger.URL("/swagger/doc.json"),
 	))
+}
+
+// teamMembershipAdapter adapts teamService to notification.TeamMembershipProvider
+type teamMembershipAdapter struct {
+	teamSvc *teamService.Service
+}
+
+func (a *teamMembershipAdapter) GetTeamMemberUserIDs(ctx context.Context, teamID string) ([]string, error) {
+	members, err := a.teamSvc.ListMembers(ctx, teamID)
+	if err != nil {
+		return nil, err
+	}
+	userIDs := make([]string, len(members))
+	for i, m := range members {
+		userIDs[i] = m.UserID
+	}
+	return userIDs, nil
+}
+
+type userPreferencesAdapter struct {
+	userSvc userService.Service
+}
+
+func (a *userPreferencesAdapter) GetNotificationPreferences(ctx context.Context, userID string) (map[string]bool, error) {
+	user, err := a.userSvc.Get(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return a.extractNotificationPrefs(user), nil
+}
+
+func (a *userPreferencesAdapter) GetNotificationPreferencesBatch(ctx context.Context, userIDs []string) (map[string]map[string]bool, error) {
+	result := make(map[string]map[string]bool, len(userIDs))
+
+	users, _, err := a.userSvc.List(ctx, userService.Filter{Limit: len(userIDs)})
+	if err != nil {
+		return nil, err
+	}
+
+	userMap := make(map[string]*userService.User, len(users))
+	for _, u := range users {
+		userMap[u.ID] = u
+	}
+
+	for _, id := range userIDs {
+		if user, exists := userMap[id]; exists {
+			result[id] = a.extractNotificationPrefs(user)
+		}
+	}
+
+	return result, nil
+}
+
+func (a *userPreferencesAdapter) extractNotificationPrefs(user *userService.User) map[string]bool {
+	result := make(map[string]bool)
+	if user == nil || user.Preferences == nil {
+		return result
+	}
+
+	notifPrefs, ok := user.Preferences["notifications"].(map[string]interface{})
+	if !ok {
+		return result
+	}
+
+	for key, val := range notifPrefs {
+		if boolVal, ok := val.(bool); ok {
+			result[key] = boolVal
+		}
+	}
+	return result
+}
+
+// runCompletionNotifier sends notifications when manual runs complete
+type runCompletionNotifier struct {
+	notificationSvc *notificationService.Service
+	userSvc         userService.Service
+}
+
+func (n *runCompletionNotifier) OnRunCompleted(ctx context.Context, run *plugin.Run) {
+	// Only send notifications for manual runs (not scheduled)
+	if run.CreatedBy == "scheduler" || run.CreatedBy == "system" {
+		return
+	}
+
+	// Look up the user who triggered the run
+	user, err := n.userSvc.GetUserByUsername(ctx, run.CreatedBy)
+	if err != nil {
+		log.Warn().Err(err).Str("username", run.CreatedBy).Msg("Failed to find user for run completion notification")
+		return
+	}
+
+	// Build notification title and message based on status
+	var title, message string
+	switch run.Status {
+	case plugin.StatusCompleted:
+		title = "Pipeline Completed"
+		message = fmt.Sprintf("Pipeline \"%s\" completed successfully.", run.PipelineName)
+		if run.Summary != nil && run.Summary.TotalEntities > 0 {
+			message = fmt.Sprintf("Pipeline \"%s\" completed successfully. %d entities processed.", run.PipelineName, run.Summary.TotalEntities)
+		}
+	case plugin.StatusFailed:
+		title = "Pipeline Failed"
+		message = fmt.Sprintf("Pipeline \"%s\" failed.", run.PipelineName)
+		if run.ErrorMessage != "" {
+			message = fmt.Sprintf("Pipeline \"%s\" failed: %s", run.PipelineName, run.ErrorMessage)
+		}
+	case plugin.StatusCancelled:
+		title = "Pipeline Cancelled"
+		message = fmt.Sprintf("Pipeline \"%s\" was cancelled.", run.PipelineName)
+	default:
+		return
+	}
+
+	input := notificationService.CreateNotificationInput{
+		Recipients: []notificationService.Recipient{{Type: notificationService.RecipientTypeUser, ID: user.ID}},
+		Type:       notificationService.TypeJobComplete,
+		Title:      title,
+		Message:    message,
+		Data: map[string]interface{}{
+			"run_id":        run.ID,
+			"pipeline_name": run.PipelineName,
+			"status":        string(run.Status),
+			"link":          fmt.Sprintf("/runs?tab=history&run=%s", run.ID),
+		},
+	}
+
+	if err := n.notificationSvc.Create(ctx, input); err != nil {
+		log.Warn().Err(err).Str("user_id", user.ID).Msg("Failed to send run completion notification")
+	}
+}
+
+type assetChangeNotifier struct {
+	notificationSvc *notificationService.Service
+	teamSvc         *teamService.Service
+}
+
+func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, asset *asset.Asset) {
+	owners, err := n.teamSvc.ListAssetOwners(ctx, asset.ID)
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", asset.ID).Msg("Failed to get asset owners for notification")
+		return
+	}
+
+	if len(owners) == 0 {
+		return
+	}
+
+	recipients := make([]notificationService.Recipient, 0, len(owners))
+	for _, owner := range owners {
+		recipients = append(recipients, notificationService.Recipient{
+			Type: owner.Type,
+			ID:   owner.ID,
+		})
+	}
+
+	assetName := ""
+	if asset.Name != nil {
+		assetName = *asset.Name
+	}
+
+	assetMRN := ""
+	if asset.MRN != nil {
+		assetMRN = *asset.MRN
+	}
+
+	n.notificationSvc.QueueAssetChange(asset.ID, assetMRN, assetName, recipients)
+}
+
+type teamMembershipNotifier struct {
+	notificationSvc *notificationService.Service
+}
+
+func (n *teamMembershipNotifier) OnMemberAdded(ctx context.Context, teamID, teamName, userID, role string) {
+	input := notificationService.CreateNotificationInput{
+		Recipients: []notificationService.Recipient{{Type: notificationService.RecipientTypeUser, ID: userID}},
+		Type:       notificationService.TypeTeamInvite,
+		Title:      "Added to Team",
+		Message:    fmt.Sprintf("You have been added to team \"%s\" as %s.", teamName, role),
+		Data: map[string]interface{}{
+			"team_id":   teamID,
+			"team_name": teamName,
+			"role":      role,
+			"link":      fmt.Sprintf("/teams/%s", teamID),
+		},
+	}
+
+	if err := n.notificationSvc.Create(ctx, input); err != nil {
+		log.Warn().Err(err).Str("user_id", userID).Str("team_id", teamID).Msg("Failed to send team membership notification")
+	}
 }
 
 type responseWriter struct {
