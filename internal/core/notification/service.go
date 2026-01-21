@@ -17,11 +17,12 @@ const (
 )
 
 const (
-	TypeSystem      = "system"
-	TypeAssetChange = "asset_change"
-	TypeTeamInvite  = "team_invite"
-	TypeMention     = "mention"
-	TypeJobComplete = "job_complete"
+	TypeSystem       = "system"
+	TypeSchemaChange = "schema_change"
+	TypeAssetChange  = "asset_change"
+	TypeTeamInvite   = "team_invite"
+	TypeMention      = "mention"
+	TypeJobComplete  = "job_complete"
 )
 
 const (
@@ -294,11 +295,12 @@ func (s *Service) CreateSync(ctx context.Context, input CreateNotificationInput)
 }
 
 // QueueAssetChange queues an asset change for aggregated notification.
-func (s *Service) QueueAssetChange(assetID, assetMRN, assetName string, owners []Recipient) {
+// changeType should be TypeAssetChange or TypeSchemaChange.
+func (s *Service) QueueAssetChange(assetID, assetMRN, assetName, changeType string, owners []Recipient) {
 	if s.aggregator == nil {
 		return
 	}
-	s.aggregator.queue(assetID, assetMRN, assetName, owners)
+	s.aggregator.queue(assetID, assetMRN, assetName, changeType, owners)
 }
 
 func (s *Service) doFanout(ctx context.Context, input CreateNotificationInput) (int, error) {

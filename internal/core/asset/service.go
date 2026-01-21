@@ -220,7 +220,7 @@ type MembershipObserver interface {
 
 // NotificationObserver is notified when assets are modified.
 type NotificationObserver interface {
-	OnAssetUpdated(ctx context.Context, asset *Asset)
+	OnAssetUpdated(ctx context.Context, asset *Asset, changeType string)
 }
 
 type service struct {
@@ -502,6 +502,7 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 	}
 
 	updated := false
+	schemaUpdated := false
 
 	if input.Name != nil {
 		asset.Name = input.Name
@@ -529,6 +530,7 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		}
 		asset.Schema = input.Schema
 		updated = true
+		schemaUpdated = true
 	}
 	if input.Tags != nil {
 		asset.Tags = input.Tags
@@ -571,7 +573,11 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 	}
 
 	if s.notificationObserver != nil && !input.SkipNotification {
-		s.notificationObserver.OnAssetUpdated(ctx, asset)
+		changeType := "asset_change"
+		if schemaUpdated {
+			changeType = "schema_change"
+		}
+		s.notificationObserver.OnAssetUpdated(ctx, asset, changeType)
 	}
 
 	return asset, nil

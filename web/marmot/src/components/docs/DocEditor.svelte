@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, mount, unmount } from 'svelte';
 	import { Editor, textblockTypeInputRule } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
 	import Placeholder from '@tiptap/extension-placeholder';
@@ -12,12 +12,26 @@
 	import { TableCell } from '@tiptap/extension-table-cell';
 	import { TableHeader } from '@tiptap/extension-table-header';
 	import { CodeBlockLowlight } from '@tiptap/extension-code-block-lowlight';
+	import Mention from '@tiptap/extension-mention';
 	import { common, createLowlight } from 'lowlight';
 	import { marked } from 'marked';
 	import TurndownService from 'turndown';
 	import { gfm } from '@truto/turndown-plugin-gfm';
 	import Icon from '@iconify/svelte';
 	import { fetchApi } from '$lib/api';
+	import MentionList from '$components/editor/MentionList.svelte';
+
+	// Debounce helper
+	function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
+		fn: T,
+		delay: number
+	): (...args: Parameters<T>) => void {
+		let timeoutId: ReturnType<typeof setTimeout>;
+		return (...args: Parameters<T>) => {
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => fn(...args), delay);
+		};
+	}
 
 	// Regex to match ```language at start of line
 	const backtickInputRegex = /^```([a-z]+)?[\s\n]$/;
@@ -36,6 +50,136 @@
 			];
 		}
 	});
+
+	interface MentionItem {
+		type: string;
+		id: string;
+		name: string;
+		username?: string;
+		profile_picture?: string;
+	}
+
+	function createMentionSuggestion() {
+		// Cache for debounced search results
+		let searchCache: Map<string, Array<MentionItem>> = new Map();
+
+		// Debounced search function - searches both users and teams
+		const searchOwners = async (query: string) => {
+			if (searchCache.has(query)) {
+				return searchCache.get(query)!;
+			}
+			try {
+				const response = await fetchApi(`/owners/search?q=${encodeURIComponent(query)}&limit=10`);
+				if (!response.ok) return [];
+				const data = await response.json();
+				const owners = data.owners || [];
+				searchCache.set(query, owners);
+				return owners;
+			} catch {
+				return [];
+			}
+		};
+
+		return {
+			items: async ({ query }: { query: string }) => {
+				if (!query || query.length < 1) return [];
+				// Return a promise that resolves after debounce
+				return new Promise((resolve) => {
+					const debouncedSearch = debounce(async (q: string) => {
+						const results = await searchOwners(q);
+						resolve(results);
+					}, 200);
+					debouncedSearch(query);
+				});
+			},
+			render: () => {
+				let component: ReturnType<typeof mount> | null = null;
+				let popup: HTMLElement | null = null;
+
+				const mountComponent = (
+					items: Array<MentionItem>,
+					command: (item: { id: string; label: string; type: string }) => void
+				) => {
+					if (!popup) return;
+
+					// Unmount existing component if any
+					if (component) {
+						unmount(component);
+						component = null;
+					}
+
+					component = mount(MentionList, {
+						target: popup,
+						props: { items, command }
+					});
+				};
+
+				return {
+					onStart: (props: {
+						items: Array<MentionItem>;
+						command: (item: { id: string; label: string; type: string }) => void;
+						clientRect: () => DOMRect | null;
+					}) => {
+						popup = document.createElement('div');
+						popup.className = 'mention-popup';
+
+						const rect = props.clientRect?.();
+						if (rect) {
+							popup.style.position = 'fixed';
+							popup.style.left = `${rect.left}px`;
+							popup.style.top = `${rect.bottom + 4}px`;
+							popup.style.zIndex = '9999';
+						}
+
+						document.body.appendChild(popup);
+						mountComponent(props.items, props.command);
+					},
+					onUpdate: (props: {
+						items: Array<MentionItem>;
+						command: (item: { id: string; label: string; type: string }) => void;
+						clientRect: () => DOMRect | null;
+					}) => {
+						if (popup) {
+							const rect = props.clientRect?.();
+							if (rect) {
+								popup.style.left = `${rect.left}px`;
+								popup.style.top = `${rect.bottom + 4}px`;
+							}
+							// Remount with new props
+							mountComponent(props.items, props.command);
+						}
+					},
+					onKeyDown: (props: { event: KeyboardEvent }) => {
+						if (props.event.key === 'Escape') {
+							if (popup) {
+								popup.remove();
+								popup = null;
+							}
+							return true;
+						}
+						// Call onKeyDown on the component instance
+						const comp = component as { onKeyDown?: (e: KeyboardEvent) => boolean } | null;
+						if (comp && typeof comp.onKeyDown === 'function') {
+							return comp.onKeyDown(props.event);
+						}
+						return false;
+					},
+					onExit: () => {
+						if (component) {
+							unmount(component);
+							component = null;
+						}
+						if (popup) {
+							popup.remove();
+							popup = null;
+						}
+						// Clear cache on exit
+						searchCache.clear();
+					}
+				};
+			}
+		};
+	}
 
 	interface Props {
 		value?: string;
@@ -67,6 +211,20 @@
 
 	// Create lowlight instance with common languages
 	const lowlight = createLowlight(common);
+
+	// Convert @mentions in markdown to proper mention spans before parsing
+	// Format: [@Label](mention:type:id)
+	function preprocessMentions(markdown: string): string {
+		// Match markdown link format: [@Label](mention:type:id)
+		return markdown.replace(
+			/\[@([^\]]+)\]\(mention:(user|team):([^)]+)\)/g,
+			(_match, label, mentionType, id) => {
+				const mentionClass =
+					mentionType === 'team' ? 'mention mention-team' : 'mention mention-user';
+				return `<span data-type="mention" data-id="${id}" data-label="${label}" data-mention-type="${mentionType}" class="${mentionClass}">@${label}</span>`;
+			}
+		);
+	}
 
 	onMount(() => {
 		turndownService = new TurndownService({
@@ -123,7 +281,23 @@
 			}
 		});
 
-		const initialHtml = value ? (marked(value) as string) : '';
+		// Custom rule for mentions - serialize to markdown link format
+		// Format: [@Label](mention:type:id)
+		turndownService.addRule('mention', {
+			filter: function (node) {
+				return node.nodeName === 'SPAN' && node.getAttribute('data-type') === 'mention';
+			},
+			replacement: function (_content, node) {
+				const el = node as HTMLElement;
+				const label = el.getAttribute('data-label') || el.getAttribute('data-id') || '';
+				const mentionType = el.getAttribute('data-mention-type') || 'user';
+				const id = el.getAttribute('data-id') || '';
+				// Use markdown link format: [@Label](mention:type:id)
+				return `[@${label}](mention:${mentionType}:${id})`;
+			}
+		});
+
+		const initialHtml = value ? (marked(preprocessMentions(value)) as string) : '';
 
 		editor = new Editor({
 			element: element,
@@ -172,7 +346,50 @@
 				}),
 				TableRow,
 				TableHeader,
-				TableCell
+				TableCell,
+				Mention.extend({
+					addAttributes() {
+						return {
+							id: {
+								default: null,
+								parseHTML: (element) => element.getAttribute('data-id'),
+								renderHTML: (attributes) => ({
+									'data-id': attributes.id
+								})
+							},
+							label: {
+								default: null,
+								parseHTML: (element) => element.getAttribute('data-label'),
+								renderHTML: (attributes) => ({
+									'data-label': attributes.label
+								})
+							},
+							type: {
+								default: 'user',
+								parseHTML: (element) => element.getAttribute('data-mention-type') || 'user',
+								renderHTML: (attributes) => ({
+									'data-mention-type': attributes.type || 'user'
+								})
+							}
+						};
+					},
+					renderHTML({ node, HTMLAttributes }) {
+						const mentionType = node.attrs.type || 'user';
+						const classes =
+							mentionType === 'team' ? 'mention mention-team' : 'mention mention-user';
+						return [
+							'span',
+							{
+								...HTMLAttributes,
+								'data-type': 'mention',
+								class: classes
+							},
+							`@${node.attrs.label || node.attrs.id}`
+						];
+					}
+				}).configure({
+					suggestion: createMentionSuggestion()
+				})
 			],
 			content: initialHtml,
 			editable: !disabled,
@@ -249,7 +466,7 @@
 		) {
 			isUpdating = true;
 			lastExternalValue = value;
-			const html = value ? (marked(value) as string) : '';
+			const html = value ? (marked(preprocessMentions(value)) as string) : '';
 			editor.commands.setContent(html);
 			isUpdating = false;
 		}
@@ -1118,5 +1335,20 @@
 	:global(.dark .ProseMirror .hljs-punctuation),
 	:global(.dark .ProseMirror .hljs-operator) {
 		color: #d1e5d1;
+	}
+
+	/* Mention styles - shared */
+	:global(.ProseMirror .mention) {
+		@apply px-1.5 py-0.5 rounded font-medium;
+	}
+
+	/* User mentions - terracotta/orange */
+	:global(.ProseMirror .mention-user) {
+		@apply bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-400;
+	}
+
+	/* Team mentions - blue */
+	:global(.ProseMirror .mention-team) {
+		@apply bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400;
 	}
 </style>

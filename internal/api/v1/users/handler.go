@@ -127,6 +127,14 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/users/search",
+			Method:  http.MethodGet,
+			Handler: h.searchUsers,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+			},
+		},
+		{
 			Path:    "/api/v1/users/preferences",
 			Method:  http.MethodPut,
 			Handler: h.updatePreferences,

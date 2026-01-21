@@ -2,10 +2,16 @@ import { writable, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { fetchApi } from '$lib/api';
 
-export type NotificationType = 'system' | 'asset_change' | 'mention' | 'job_complete';
+export type NotificationType =
+	| 'system'
+	| 'schema_change'
+	| 'asset_change'
+	| 'mention'
+	| 'job_complete';
 
 export interface NotificationPreferences {
 	system: boolean;
+	schema_change: boolean;
 	asset_change: boolean;
 	mention: boolean;
 	job_complete: boolean;
@@ -13,6 +19,7 @@ export interface NotificationPreferences {
 
 const defaultPreferences: NotificationPreferences = {
 	system: true,
+	schema_change: true,
 	asset_change: true,
 	mention: true,
 	job_complete: true

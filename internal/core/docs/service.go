@@ -6,14 +6,27 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
+// MentionNotifier sends notifications when users or teams are mentioned in docs.
+type MentionNotifier interface {
+	OnMention(ctx context.Context, mention Mention, pageID, pageTitle, entityType, entityID, mentionerID, mentionerName string)
+}
+
 type Service struct {
-	repo Repository
+	repo            Repository
+	mentionNotifier MentionNotifier
 }
 
 func NewService(repo Repository) *Service {
 	return &Service{repo: repo}
+}
+
+// SetMentionNotifier sets the notifier for user mentions.
+func (s *Service) SetMentionNotifier(notifier MentionNotifier) {
+	s.mentionNotifier = notifier
 }
 
 func (s *Service) CreatePage(ctx context.Context, entityType EntityType, entityID string, input CreatePageInput, createdBy *string) (*Page, error) {
@@ -44,7 +57,58 @@ func (s *Service) UpdatePage(ctx context.Context, pageID string, input UpdatePag
 	if input.Title != nil && strings.TrimSpace(*input.Title) == "" {
 		return nil, fmt.Errorf("%w: title cannot be empty", ErrInvalidInput)
 	}
-	return s.repo.UpdatePage(ctx, pageID, input)
+
+	// Get old page content to detect NEW mentions only
+	// Key format: "label:type" to track both user and team mentions separately
+	var oldMentionKeys map[string]bool
+	if s.mentionNotifier != nil && input.Content != nil && input.UpdatedByID != "" {
+		if oldPage, err := s.repo.GetPage(ctx, pageID); err == nil && oldPage.Content != nil && *oldPage.Content != "" {
+			oldMentionsList := ExtractMentions(*oldPage.Content)
+			oldMentionKeys = make(map[string]bool, len(oldMentionsList))
+			for _, m := range oldMentionsList {
+				oldMentionKeys[m.Label+":"+m.Type] = true
+			}
+		} else {
+			oldMentionKeys = make(map[string]bool)
+		}
+	}
+
+	page, err := s.repo.UpdatePage(ctx, pageID, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Only notify for NEW mentions (not existing ones)
+	if s.mentionNotifier != nil && input.Content != nil && input.UpdatedByID != "" {
+		newMentions := ExtractMentions(*input.Content)
+		log.Debug().
+			Int("old_mentions_count", len(oldMentionKeys)).
+			Int("new_mentions_count", len(newMentions)).
+			Str("page_id", pageID).
+			Msg("Processing mentions for page update")
+
+		for _, mention := range newMentions {
+			// Skip if this mention already existed in the old content
+			key := mention.Label + ":" + mention.Type
+			if oldMentionKeys[key] {
+				log.Debug().Str("mention", mention.Label).Str("type", mention.Type).Msg("Skipping existing mention")
+				continue
+			}
+			log.Debug().Str("mention", mention.Label).Str("type", mention.Type).Msg("Notifying for new mention")
+			s.mentionNotifier.OnMention(
+				ctx,
+				mention,
+				page.ID,
+				page.Title,
+				string(page.EntityType),
+				page.EntityID,
+				input.UpdatedByID,
+				input.UpdatedByName,
+			)
+		}
+	}
+
+	return page, nil
 }
 
 func (s *Service) DeletePage(ctx context.Context, pageID string) error {
@@ -174,4 +238,44 @@ func ExtractImageIDs(content string) []string {
 	}
 
 	return ids
+}
+
+// Mention represents a parsed @mention from content.
+type Mention struct {
+	Label string // Display name
+	ID    string // UUID if available
+	Type  string // "user" or "team"
+}
+
+// mentionRegex matches markdown link format: [@Label](mention:type:id)
+var mentionRegex = regexp.MustCompile(`\[@([^\]]+)\]\(mention:(user|team):([^)]+)\)`)
+
+// ExtractMentions extracts unique mentions from content.
+func ExtractMentions(content string) []Mention {
+	matches := mentionRegex.FindAllStringSubmatch(content, -1)
+
+	mentions := make([]Mention, 0, len(matches))
+	seen := make(map[string]bool)
+
+	for _, match := range matches {
+		if len(match) < 4 {
+			continue
+		}
+		label := match[1]       // Label from [@Label]
+		mentionType := match[2] // "user" or "team" from (mention:type:id)
+		id := match[3]          // ID from (mention:type:id)
+
+		// Use label+type as key to allow same name as user and team
+		key := label + ":" + mentionType
+		if label != "" && !seen[key] {
+			mentions = append(mentions, Mention{
+				Label: label,
+				ID:    id,
+				Type:  mentionType,
+			})
+			seen[key] = true
+		}
+	}
+
+	return mentions
 }

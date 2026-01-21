@@ -178,12 +178,12 @@
 	>
 		{#if state.loading && state.notifications.length === 0}
 			<div class="flex items-center justify-center py-16">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
+				<div
+					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
+				></div>
 			</div>
 		{:else if filteredNotifications.length === 0}
-			<div
-				class="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500"
-			>
+			<div class="flex flex-col items-center justify-center py-16 text-gray-400 dark:text-gray-500">
 				<svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						stroke-linecap="round"
@@ -219,10 +219,7 @@
 						<div
 							class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center {colors.bg}"
 						>
-							<Icon
-								icon={getNotificationIcon(notification.type)}
-								class="w-5 h-5 {colors.icon}"
-							/>
+							<Icon icon={getNotificationIcon(notification.type)} class="w-5 h-5 {colors.icon}" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-start justify-between gap-4">

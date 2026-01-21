@@ -22,9 +22,15 @@
 			icon: 'material-symbols:info-outline'
 		},
 		{
+			type: 'schema_change',
+			label: 'Schema Changes',
+			description: 'Schema changes to assets you own',
+			icon: 'material-symbols:schema-outline'
+		},
+		{
 			type: 'asset_change',
 			label: 'Asset Changes',
-			description: 'Changes to assets you follow',
+			description: 'Metadata changes to assets you own',
 			icon: 'material-symbols:database-outline'
 		},
 		{

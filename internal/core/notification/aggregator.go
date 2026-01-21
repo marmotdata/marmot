@@ -3,6 +3,7 @@ package notification
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
@@ -11,11 +12,12 @@ import (
 
 // assetChangeEvent represents a pending asset change notification.
 type assetChangeEvent struct {
-	assetID   string
-	assetMRN  string
-	assetName string
-	owners    []Recipient
-	queuedAt  time.Time
+	assetID    string
+	assetMRN   string
+	assetName  string
+	changeType string
+	owners     []Recipient
+	queuedAt   time.Time
 }
 
 // assetChangeAggregator batches asset change notifications to reduce spam.
@@ -61,7 +63,7 @@ func (a *assetChangeAggregator) stop() {
 	})
 }
 
-func (a *assetChangeAggregator) queue(assetID, assetMRN, assetName string, owners []Recipient) {
+func (a *assetChangeAggregator) queue(assetID, assetMRN, assetName, changeType string, owners []Recipient) {
 	a.mu.Lock()
 	defer a.mu.Unlock()
 
@@ -73,13 +75,16 @@ func (a *assetChangeAggregator) queue(assetID, assetMRN, assetName string, owner
 
 	now := time.Now()
 
-	if _, exists := a.events[assetID]; !exists {
-		a.events[assetID] = &assetChangeEvent{
-			assetID:   assetID,
-			assetMRN:  assetMRN,
-			assetName: assetName,
-			owners:    owners,
-			queuedAt:  now,
+	// Key includes change type to keep schema and asset changes separate
+	eventKey := assetID + ":" + changeType
+	if _, exists := a.events[eventKey]; !exists {
+		a.events[eventKey] = &assetChangeEvent{
+			assetID:    assetID,
+			assetMRN:   assetMRN,
+			assetName:  assetName,
+			changeType: changeType,
+			owners:     owners,
+			queuedAt:   now,
 		}
 	}
 
@@ -118,15 +123,16 @@ func (a *assetChangeAggregator) flush() {
 		return
 	}
 
-	ownerAssets := make(map[string][]assetChangeEvent)
+	// Group by owner and change type
+	ownerTypeAssets := make(map[string][]assetChangeEvent)
 	for _, event := range events {
 		for _, owner := range event.owners {
-			key := fmt.Sprintf("%s:%s", owner.Type, owner.ID)
-			ownerAssets[key] = append(ownerAssets[key], *event)
+			key := fmt.Sprintf("%s:%s:%s", owner.Type, owner.ID, event.changeType)
+			ownerTypeAssets[key] = append(ownerTypeAssets[key], *event)
 		}
 	}
 
-	for ownerKey, assets := range ownerAssets {
+	for ownerKey, assets := range ownerTypeAssets {
 		a.sendAggregatedNotification(ownerKey, assets)
 	}
 }
@@ -136,29 +142,41 @@ func (a *assetChangeAggregator) sendAggregatedNotification(ownerKey string, asse
 		return
 	}
 
-	var ownerType, ownerID string
-	fmt.Sscanf(ownerKey, "%s:%s", &ownerType, &ownerID)
-
-	for i, c := range ownerKey {
-		if c == ':' {
-			ownerType = ownerKey[:i]
-			ownerID = ownerKey[i+1:]
-			break
-		}
+	// Parse ownerKey: "type:id:changeType"
+	parts := strings.SplitN(ownerKey, ":", 3)
+	if len(parts) < 3 {
+		log.Warn().Str("owner_key", ownerKey).Msg("Invalid owner key format")
+		return
 	}
+	ownerType, ownerID, changeType := parts[0], parts[1], parts[2]
 
 	var title, message string
 	data := make(map[string]interface{})
 
+	isSchemaChange := changeType == TypeSchemaChange
 	if len(assets) == 1 {
 		asset := assets[0]
-		title = "Asset Updated"
-		message = fmt.Sprintf("Asset \"%s\" has been modified.", asset.assetName)
+		if isSchemaChange {
+			title = "Schema Updated"
+			message = fmt.Sprintf("Schema for \"%s\" has been modified.", asset.assetName)
+		} else {
+			title = "Asset Updated"
+			message = fmt.Sprintf("Asset \"%s\" has been modified.", asset.assetName)
+		}
 		data["asset_mrn"] = asset.assetMRN
-		data["link"] = fmt.Sprintf("/discover/%s", asset.assetMRN)
+		link := fmt.Sprintf("/discover/%s", strings.TrimPrefix(asset.assetMRN, "mrn://"))
+		if isSchemaChange {
+			link += "?tab=schema"
+		}
+		data["link"] = link
 	} else {
-		title = "Assets Updated"
-		message = fmt.Sprintf("%d assets you own have been modified.", len(assets))
+		if isSchemaChange {
+			title = "Schemas Updated"
+			message = fmt.Sprintf("Schemas for %d assets you own have been modified.", len(assets))
+		} else {
+			title = "Assets Updated"
+			message = fmt.Sprintf("%d assets you own have been modified.", len(assets))
+		}
 
 		mrns := make([]string, 0, len(assets))
 		for _, asset := range assets {
@@ -170,7 +188,7 @@ func (a *assetChangeAggregator) sendAggregatedNotification(ownerKey string, asse
 
 	input := CreateNotificationInput{
 		Recipients: []Recipient{{Type: ownerType, ID: ownerID}},
-		Type:       TypeAssetChange,
+		Type:       changeType,
 		Title:      title,
 		Message:    message,
 		Data:       data,

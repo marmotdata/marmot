@@ -144,6 +144,11 @@ func (h *Handler) updatePage(w http.ResponseWriter, r *http.Request) {
 		Content: req.Content,
 	}
 
+	if usr, ok := r.Context().Value(common.UserContextKey).(*user.User); ok && usr != nil {
+		input.UpdatedByID = usr.ID
+		input.UpdatedByName = usr.Name
+	}
+
 	page, err := h.docsService.UpdatePage(r.Context(), pageID, input)
 	if err != nil {
 		if errors.Is(err, docs.ErrPageNotFound) {

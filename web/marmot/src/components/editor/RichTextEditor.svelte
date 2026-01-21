@@ -1,22 +1,176 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, mount, unmount } from 'svelte';
 	import { Editor } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
 	import Placeholder from '@tiptap/extension-placeholder';
 	import Link from '@tiptap/extension-link';
 	import Typography from '@tiptap/extension-typography';
+	import Mention from '@tiptap/extension-mention';
 	import { marked } from 'marked';
 	import TurndownService from 'turndown';
 	import Icon from '@iconify/svelte';
+	import { fetchApi } from '$lib/api';
+	import MentionList from './MentionList.svelte';
 
 	export let value: string = '';
 	export let placeholder: string = 'Start typing...';
 	export let disabled: boolean = false;
+	export let enableMentions: boolean = false;
 
 	let editor: Editor | null = null;
 	let element: HTMLElement;
 	let turndownService: TurndownService;
 	let isUpdating = false;
+
+	// Debounce helper
+	function debounce<T extends (...args: Parameters<T>) => ReturnType<T>>(
+		fn: T,
+		delay: number
+	): (...args: Parameters<T>) => void {
+		let timeoutId: ReturnType<typeof setTimeout>;
+		return (...args: Parameters<T>) => {
+			clearTimeout(timeoutId);
+			timeoutId = setTimeout(() => fn(...args), delay);
+		};
+	}
+
+	interface MentionItem {
+		type: string;
+		id: string;
+		name: string;
+		username?: string;
+		profile_picture?: string;
+	}
+
+	function createMentionSuggestion() {
+		let searchCache: Map<string, Array<MentionItem>> = new Map();
+
+		const searchOwners = async (query: string) => {
+			if (searchCache.has(query)) {
+				return searchCache.get(query)!;
+			}
+			try {
+				const response = await fetchApi(`/owners/search?q=${encodeURIComponent(query)}&limit=8`);
+				if (response.ok) {
+					const data = await response.json();
+					const owners = data.owners || [];
+					searchCache.set(query, owners);
+					return owners;
+				}
+			} catch (err) {
+				console.error('Failed to search owners:', err);
+			}
+			return [];
+		};
+
+		return {
+			items: async ({ query }: { query: string }) => {
+				if (!query || query.length < 1) return [];
+				return new Promise((resolve) => {
+					const debouncedSearch = debounce(async (q: string) => {
+						const results = await searchOwners(q);
+						resolve(results);
+					}, 200);
+					debouncedSearch(query);
+				});
+			},
+			render: () => {
+				let component: ReturnType<typeof mount> | null = null;
+				let popup: HTMLElement | null = null;
+
+				const mountComponent = (
+					items: Array<MentionItem>,
+					command: (item: { id: string; label: string; type: string }) => void
+				) => {
+					if (!popup) return;
+
+					if (component) {
+						unmount(component);
+						component = null;
+					}
+
+					component = mount(MentionList, {
+						target: popup,
+						props: { items, command }
+					});
+				};
+
+				return {
+					onStart: (props: {
+						items: Array<MentionItem>;
+						command: (item: { id: string; label: string; type: string }) => void;
+						clientRect: () => DOMRect | null;
+					}) => {
+						popup = document.createElement('div');
+						popup.style.position = 'fixed';
+						popup.style.zIndex = '9999';
+						document.body.appendChild(popup);
+
+						const rect = props.clientRect?.();
+						if (rect) {
+							popup.style.left = `${rect.left}px`;
+							popup.style.top = `${rect.bottom + 4}px`;
+						}
+
+						mountComponent(props.items, props.command);
+					},
+					onUpdate: (props: {
+						items: Array<MentionItem>;
+						command: (item: { id: string; label: string; type: string }) => void;
+						clientRect: () => DOMRect | null;
+					}) => {
+						if (popup) {
+							const rect = props.clientRect?.();
+							if (rect) {
+								popup.style.left = `${rect.left}px`;
+								popup.style.top = `${rect.bottom + 4}px`;
+							}
+							mountComponent(props.items, props.command);
+						}
+					},
+					onKeyDown: (props: { event: KeyboardEvent }) => {
+						if (props.event.key === 'Escape') {
+							if (popup) {
+								popup.remove();
+								popup = null;
+							}
+							return true;
+						}
+						const comp = component as { onKeyDown?: (e: KeyboardEvent) => boolean } | null;
+						if (comp && typeof comp.onKeyDown === 'function') {
+							return comp.onKeyDown(props.event);
+						}
+						return false;
+					},
+					onExit: () => {
+						if (component) {
+							unmount(component);
+							component = null;
+						}
+						if (popup) {
+							popup.remove();
+							popup = null;
+						}
+						searchCache.clear();
+					}
+				};
+			}
+		};
+	}
+
+	// Convert @mentions in markdown to proper mention spans before parsing
+	// Format: [@Label](mention:type:id)
+	function preprocessMentions(markdown: string): string {
+		// Match markdown link format: [@Label](mention:type:id)
+		return markdown.replace(
+			/\[@([^\]]+)\]\(mention:(user|team):([^)]+)\)/g,
+			(_match, label, mentionType, id) => {
+				const mentionClass =
+					mentionType === 'team' ? 'mention mention-team' : 'mention mention-user';
+				return `<span data-type="mention" data-id="${id}" data-label="${label}" data-mention-type="${mentionType}" class="${mentionClass}">@${label}</span>`;
+			}
+		);
+	}
 
 	onMount(() => {
 		turndownService = new TurndownService({
@@ -26,27 +180,93 @@
 			strongDelimiter: '**'
 		});
 
-		const initialHtml = value ? (marked(value) as string) : '';
+		// Custom rule for mentions - serialize to markdown link format
+		// Format: [@Label](mention:type:id)
+		turndownService.addRule('mention', {
+			filter: (node) => {
+				return node.nodeName === 'SPAN' && node.getAttribute('data-type') === 'mention';
+			},
+			replacement: (_content, node) => {
+				const el = node as HTMLElement;
+				const label = el.getAttribute('data-label') || el.getAttribute('data-id') || '';
+				const mentionType = el.getAttribute('data-mention-type') || 'user';
+				const id = el.getAttribute('data-id') || '';
+				// Use markdown link format: [@Label](mention:type:id)
+				return `[@${label}](mention:${mentionType}:${id})`;
+			}
+		});
+
+		const initialHtml = value ? (marked(preprocessMentions(value)) as string) : '';
+
+		const extensions: any[] = [
+			StarterKit.configure({
+				heading: {
+					levels: [1, 2, 3]
+				}
+			}),
+			Placeholder.configure({
+				placeholder: placeholder
+			}),
+			Link.configure({
+				openOnClick: false,
+				HTMLAttributes: {
+					class: 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700 underline'
+				}
+			}),
+			Typography
+		];
+
+		if (enableMentions) {
+			extensions.push(
+				Mention.extend({
+					addAttributes() {
+						return {
+							id: {
+								default: null,
+								parseHTML: (element) => element.getAttribute('data-id'),
+								renderHTML: (attributes) => ({
+									'data-id': attributes.id
+								})
+							},
+							label: {
+								default: null,
+								parseHTML: (element) => element.getAttribute('data-label'),
+								renderHTML: (attributes) => ({
+									'data-label': attributes.label
+								})
+							},
+							type: {
+								default: 'user',
+								parseHTML: (element) => element.getAttribute('data-mention-type') || 'user',
+								renderHTML: (attributes) => ({
+									'data-mention-type': attributes.type || 'user'
+								})
+							}
+						};
+					},
+					renderHTML({ node, HTMLAttributes }) {
+						const mentionType = node.attrs.type || 'user';
+						const classes =
+							mentionType === 'team' ? 'mention mention-team' : 'mention mention-user';
+						return [
+							'span',
+							{
+								...HTMLAttributes,
+								'data-type': 'mention',
+								class: classes
+							},
+							`@${node.attrs.label || node.attrs.id}`
+						];
+					}
+				}).configure({
+					suggestion: createMentionSuggestion()
+				})
+			);
+		}
 
 		editor = new Editor({
 			element: element,
-			extensions: [
-				StarterKit.configure({
-					heading: {
-						levels: [1, 2, 3]
-					}
-				}),
-				Placeholder.configure({
-					placeholder: placeholder
-				}),
-				Link.configure({
-					openOnClick: false,
-					HTMLAttributes: {
-						class: 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700 underline'
-					}
-				}),
-				Typography
-			],
+			extensions,
 			content: initialHtml,
 			editable: !disabled,
 			onUpdate: ({ editor }) => {
@@ -80,7 +300,7 @@
 			const currentMarkdown = turndownService?.turndown(editor.getHTML()) || '';
 			if (currentMarkdown !== value && !isUpdating) {
 				isUpdating = true;
-				const html = value ? (marked(value) as string) : '';
+				const html = value ? (marked(preprocessMentions(value)) as string) : '';
 				editor.commands.setContent(html);
 				isUpdating = false;
 			}
@@ -287,6 +507,11 @@
 				<Icon icon="material-symbols:link" class="h-4 w-4" />
 			</button>
 		{/if}
+
+		{#if enableMentions}
+			<div class="w-px h-6 bg-gray-300 dark:bg-gray-600 mx-1"></div>
+			<span class="px-2 py-1 text-xs text-gray-500 dark:text-gray-400">Type @ to mention</span>
+		{/if}
 	</div>
 
 	<!-- Editor -->
@@ -351,5 +576,20 @@
 
 	:global(.ProseMirror em) {
 		@apply italic;
+	}
+
+	/* Mention styles - shared */
+	:global(.ProseMirror .mention) {
+		@apply px-1 py-0.5 rounded font-medium;
+	}
+
+	/* User mentions - terracotta/orange */
+	:global(.ProseMirror .mention-user) {
+		@apply bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-400;
+	}
+
+	/* Team mentions - blue */
+	:global(.ProseMirror .mention-team) {
+		@apply bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400;
 	}
 </style>

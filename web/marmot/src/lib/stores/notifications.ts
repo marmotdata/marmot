@@ -232,4 +232,7 @@ function createNotificationsStore() {
 export const notifications = createNotificationsStore();
 
 // Derived store for unread count (useful for badge)
-export const unreadCount = derived(notifications, ($notifications) => $notifications.summary.unread_count);
+export const unreadCount = derived(
+	notifications,
+	($notifications) => $notifications.summary.unread_count
+);

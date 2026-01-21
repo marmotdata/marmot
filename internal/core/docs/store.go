@@ -105,6 +105,9 @@ type UpdatePageInput struct {
 	Title   *string `json:"title,omitempty"`
 	Emoji   *string `json:"emoji,omitempty"`
 	Content *string `json:"content,omitempty"`
+
+	UpdatedByID   string `json:"-"`
+	UpdatedByName string `json:"-"`
 }
 
 type MovePageInput struct {

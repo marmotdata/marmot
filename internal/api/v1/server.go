@@ -163,6 +163,11 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	teamSvc.SetMembershipNotifier(&teamMembershipNotifier{
 		notificationSvc: notificationSvc,
 	})
+	docsSvc.SetMentionNotifier(&docsMentionNotifier{
+		notificationSvc: notificationSvc,
+		userSvc:         userSvc,
+		teamSvc:         teamSvc,
+	})
 
 	scheduleRepo := runService.NewSchedulePostgresRepository(db)
 	scheduleSvc := runService.NewScheduleService(scheduleRepo)
@@ -542,7 +547,7 @@ type assetChangeNotifier struct {
 	teamSvc         *teamService.Service
 }
 
-func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, asset *asset.Asset) {
+func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, asset *asset.Asset, changeType string) {
 	owners, err := n.teamSvc.ListAssetOwners(ctx, asset.ID)
 	if err != nil {
 		log.Warn().Err(err).Str("asset_id", asset.ID).Msg("Failed to get asset owners for notification")
@@ -571,7 +576,7 @@ func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, asset *asset.A
 		assetMRN = *asset.MRN
 	}
 
-	n.notificationSvc.QueueAssetChange(asset.ID, assetMRN, assetName, recipients)
+	n.notificationSvc.QueueAssetChange(asset.ID, assetMRN, assetName, changeType, recipients)
 }
 
 type teamMembershipNotifier struct {
@@ -594,6 +599,155 @@ func (n *teamMembershipNotifier) OnMemberAdded(ctx context.Context, teamID, team
 
 	if err := n.notificationSvc.Create(ctx, input); err != nil {
 		log.Warn().Err(err).Str("user_id", userID).Str("team_id", teamID).Msg("Failed to send team membership notification")
+	}
+}
+
+type docsMentionNotifier struct {
+	notificationSvc *notificationService.Service
+	userSvc         userService.Service
+	teamSvc         *teamService.Service
+}
+
+func (n *docsMentionNotifier) OnMention(ctx context.Context, mention docsService.Mention, pageID, pageTitle, entityType, entityID, mentionerID, mentionerName string) {
+	log.Debug().
+		Str("mention_label", mention.Label).
+		Str("mention_type", mention.Type).
+		Str("mention_id", mention.ID).
+		Str("page_id", pageID).
+		Str("mentioner_id", mentionerID).
+		Msg("Processing mention notification")
+
+	var link string
+	switch entityType {
+	case "asset":
+		// Strip mrn:// prefix and add tab=documentation
+		assetPath := strings.TrimPrefix(entityID, "mrn://")
+		link = fmt.Sprintf("/discover/%s?page=%s&tab=documentation", assetPath, pageID)
+	case "data_product":
+		link = fmt.Sprintf("/products/%s?page=%s&tab=documentation", entityID, pageID)
+	default:
+		link = fmt.Sprintf("/docs/pages/%s", pageID)
+	}
+
+	// Handle based on mention type
+	if mention.Type == "team" {
+		n.handleTeamMention(ctx, mention, pageID, pageTitle, entityType, entityID, mentionerName, link)
+	} else {
+		n.handleUserMention(ctx, mention, pageID, pageTitle, entityType, entityID, mentionerID, mentionerName, link)
+	}
+}
+
+func (n *docsMentionNotifier) handleUserMention(ctx context.Context, mention docsService.Mention, pageID, pageTitle, entityType, entityID, mentionerID, mentionerName, link string) {
+	var mentionedUser *userService.User
+
+	// If we have an ID, try to get user directly
+	if mention.ID != "" {
+		if user, err := n.userSvc.Get(ctx, mention.ID); err == nil {
+			mentionedUser = user
+			log.Debug().Str("mention_label", mention.Label).Str("user_id", user.ID).Msg("Found user by ID")
+		}
+	}
+
+	// Fall back to searching by username/name
+	if mentionedUser == nil {
+		if user, err := n.userSvc.GetUserByUsername(ctx, mention.Label); err == nil {
+			mentionedUser = user
+			log.Debug().Str("mention_label", mention.Label).Str("user_id", user.ID).Msg("Found user by username")
+		} else {
+			// Search by name
+			active := true
+			users, _, err := n.userSvc.List(ctx, userService.Filter{
+				Query:  mention.Label,
+				Active: &active,
+				Limit:  10,
+			})
+			if err == nil {
+				for _, u := range users {
+					if u.Name == mention.Label {
+						mentionedUser = u
+						log.Debug().Str("mention_label", mention.Label).Str("user_id", u.ID).Msg("Found user by name")
+						break
+					}
+				}
+			}
+		}
+	}
+
+	if mentionedUser == nil {
+		log.Debug().Str("mention_label", mention.Label).Msg("No user found for mention")
+		return
+	}
+
+	if mentionedUser.ID == mentionerID {
+		log.Debug().Str("mention_label", mention.Label).Msg("Skipping self-mention")
+		return
+	}
+
+	input := notificationService.CreateNotificationInput{
+		Recipients: []notificationService.Recipient{{Type: notificationService.RecipientTypeUser, ID: mentionedUser.ID}},
+		Type:       notificationService.TypeMention,
+		Title:      "Mentioned in Documentation",
+		Message:    fmt.Sprintf("%s mentioned you in \"%s\".", mentionerName, pageTitle),
+		Data: map[string]interface{}{
+			"page_id":     pageID,
+			"page_title":  pageTitle,
+			"entity_type": entityType,
+			"entity_id":   entityID,
+			"mentioner":   mentionerName,
+			"link":        link,
+		},
+	}
+
+	if err := n.notificationSvc.Create(ctx, input); err != nil {
+		log.Warn().Err(err).Str("user_id", mentionedUser.ID).Msg("Failed to send mention notification")
+	} else {
+		log.Info().Str("user_id", mentionedUser.ID).Str("page_id", pageID).Msg("Sent mention notification")
+	}
+}
+
+func (n *docsMentionNotifier) handleTeamMention(ctx context.Context, mention docsService.Mention, pageID, pageTitle, entityType, entityID, mentionerName, link string) {
+	var team *teamService.Team
+
+	// If we have an ID, try to get team directly
+	if mention.ID != "" {
+		if t, err := n.teamSvc.GetTeam(ctx, mention.ID); err == nil {
+			team = t
+			log.Debug().Str("mention_label", mention.Label).Str("team_id", t.ID).Msg("Found team by ID")
+		}
+	}
+
+	// Fall back to searching by name
+	if team == nil {
+		if t, err := n.teamSvc.GetTeamByName(ctx, mention.Label); err == nil {
+			team = t
+			log.Debug().Str("mention_label", mention.Label).Str("team_id", t.ID).Msg("Found team by name")
+		}
+	}
+
+	if team == nil {
+		log.Debug().Str("mention_label", mention.Label).Msg("No team found for mention")
+		return
+	}
+
+	input := notificationService.CreateNotificationInput{
+		Recipients: []notificationService.Recipient{{Type: notificationService.RecipientTypeTeam, ID: team.ID}},
+		Type:       notificationService.TypeMention,
+		Title:      "Team Mentioned in Documentation",
+		Message:    fmt.Sprintf("%s mentioned your team in \"%s\".", mentionerName, pageTitle),
+		Data: map[string]interface{}{
+			"page_id":     pageID,
+			"page_title":  pageTitle,
+			"entity_type": entityType,
+			"entity_id":   entityID,
+			"mentioner":   mentionerName,
+			"link":        link,
+		},
+	}
+
+	if err := n.notificationSvc.Create(ctx, input); err != nil {
+		log.Warn().Err(err).Str("team_id", team.ID).Msg("Failed to send team mention notification")
+	} else {
+		log.Info().Str("team_id", team.ID).Str("page_id", pageID).Msg("Sent team mention notification")
 	}
 }
 

@@ -17,6 +17,17 @@ type ListUsersResponse struct {
 	Offset int          `json:"offset"`
 }
 
+type UserSearchResult struct {
+	ID             string  `json:"id"`
+	Username       string  `json:"username"`
+	Name           string  `json:"name"`
+	ProfilePicture *string `json:"profile_picture,omitempty"`
+}
+
+type SearchUsersResponse struct {
+	Users []UserSearchResult `json:"users"`
+}
+
 // @Summary List users
 // @Description Get a list of users with optional filtering
 // @Tags users
@@ -210,4 +221,51 @@ func (h *Handler) deleteUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handler) searchUsers(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		common.RespondJSON(w, http.StatusOK, SearchUsersResponse{Users: []UserSearchResult{}})
+		return
+	}
+
+	limit := 10
+	if l := r.URL.Query().Get("limit"); l != "" {
+		if parsed, err := json.Number(l).Int64(); err == nil && parsed > 0 && parsed <= 20 {
+			limit = int(parsed)
+		}
+	}
+
+	filter := user.Filter{
+		Query:  query,
+		Limit:  limit,
+		Offset: 0,
+	}
+
+	active := true
+	filter.Active = &active
+
+	users, _, err := h.userService.List(r.Context(), filter)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to search users")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to search users")
+		return
+	}
+
+	results := make([]UserSearchResult, 0, len(users))
+	for _, u := range users {
+		var profilePic *string
+		if u.ProfilePicture != "" {
+			profilePic = &u.ProfilePicture
+		}
+		results = append(results, UserSearchResult{
+			ID:             u.ID,
+			Username:       u.Username,
+			Name:           u.Name,
+			ProfilePicture: profilePic,
+		})
+	}
+
+	common.RespondJSON(w, http.StatusOK, SearchUsersResponse{Users: results})
 }

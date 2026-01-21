@@ -64,6 +64,20 @@
 		loadPageTree();
 	});
 
+	// Find a page by ID recursively in the page tree
+	function findPageById(pages: Page[], id: string): Page | null {
+		for (const page of pages) {
+			if (page.id === id) {
+				return page;
+			}
+			if (page.children && page.children.length > 0) {
+				const found = findPageById(page.children, id);
+				if (found) return found;
+			}
+		}
+		return null;
+	}
+
 	async function loadPageTree() {
 		isLoading = true;
 		loadError = null;
@@ -78,7 +92,20 @@
 			const tree: PageTree = await response.json();
 			pageTree = tree;
 
-			// Auto-select first page if none selected
+			// Check for page query parameter
+			const urlParams = new URLSearchParams(window.location.search);
+			const pageId = urlParams.get('page');
+
+			if (pageId && tree.pages.length > 0) {
+				// Try to find and select the specified page
+				const targetPage = findPageById(tree.pages, pageId);
+				if (targetPage) {
+					await selectPage(targetPage);
+					return;
+				}
+			}
+
+			// Auto-select first page if none selected and no page param
 			if (!selectedPage && tree.pages.length > 0) {
 				await selectPage(tree.pages[0]);
 			}
@@ -110,6 +137,11 @@
 			editedContent = loadedPage.content || '';
 			editedTitle = loadedPage.title;
 			editedEmoji = loadedPage.emoji;
+
+			// Update URL with page query parameter
+			const url = new URL(window.location.href);
+			url.searchParams.set('page', page.id);
+			window.history.replaceState({}, '', url.toString());
 		} catch (err) {
 			console.error('Failed to load page:', err);
 		}
@@ -221,6 +253,24 @@
 		}
 	}
 
+	function preprocessMentions(markdown: string): string {
+		// Match markdown link format: [@Label](mention:type:id)
+		return markdown.replace(
+			/\[@([^\]]+)\]\(mention:(user|team):([^)]+)\)/g,
+			(_match, label, mentionType, id) => {
+				const mentionClass =
+					mentionType === 'team' ? 'mention mention-team' : 'mention mention-user';
+
+				// Make team mentions clickable links
+				if (mentionType === 'team' && id) {
+					return `<a href="/teams/${id}" class="${mentionClass}">@${label}</a>`;
+				}
+
+				return `<span class="${mentionClass}">@${label}</span>`;
+			}
+		);
+	}
+
 	function renderMarkdown(content: string): string {
 		// Configure marked with syntax highlighting
 		const renderer = new marked.Renderer();
@@ -237,7 +287,7 @@
 			}
 		};
 
-		return marked(content, { renderer }) as string;
+		return marked(preprocessMentions(content), { renderer }) as string;
 	}
 </script>
 
@@ -706,5 +756,28 @@
 	/* Images */
 	:global(.doc-content img) {
 		@apply max-w-full h-auto rounded-lg my-4;
+	}
+
+	/* Mentions - shared styles */
+	:global(.doc-content .mention) {
+		@apply px-1.5 py-0.5 rounded font-medium no-underline;
+	}
+
+	/* User mentions - terracotta/orange */
+	:global(.doc-content .mention-user) {
+		@apply bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-400;
+	}
+
+	/* Team mentions - blue */
+	:global(.doc-content .mention-team) {
+		@apply bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400;
+	}
+
+	/* Clickable mention links */
+	:global(.doc-content a.mention) {
+		@apply cursor-pointer transition-colors;
+	}
+	:global(.doc-content a.mention:hover) {
+		@apply bg-blue-200 dark:bg-blue-800/50;
 	}
 </style>
