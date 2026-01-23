@@ -18,6 +18,7 @@ type Repository interface {
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
 	GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error)
+	GetImmediateNeighbors(ctx context.Context, assetMRN string, direction string) ([]string, error)
 	StoreRunHistory(ctx context.Context, entry *RunHistoryEntry) error
 }
 
@@ -504,4 +505,37 @@ func (r *PostgresRepository) StoreRunHistory(ctx context.Context, entry *RunHist
 	}
 
 	return nil
+}
+
+func (r *PostgresRepository) GetImmediateNeighbors(ctx context.Context, assetMRN string, direction string) ([]string, error) {
+	var query string
+	switch direction {
+	case "upstream":
+		query = `SELECT DISTINCT source_mrn FROM lineage_edges WHERE target_mrn = $1`
+	case "downstream":
+		query = `SELECT DISTINCT target_mrn FROM lineage_edges WHERE source_mrn = $1`
+	default:
+		return nil, fmt.Errorf("invalid direction: %q", direction)
+	}
+
+	rows, err := r.db.Query(ctx, query, assetMRN)
+	if err != nil {
+		return nil, fmt.Errorf("querying immediate neighbors: %w", err)
+	}
+	defer rows.Close()
+
+	var mrns []string
+	for rows.Next() {
+		var mrn string
+		if err := rows.Scan(&mrn); err != nil {
+			return nil, fmt.Errorf("scanning neighbor MRN: %w", err)
+		}
+		mrns = append(mrns, mrn)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating neighbors: %w", err)
+	}
+
+	return mrns, nil
 }

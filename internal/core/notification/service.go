@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/background"
 	"github.com/marmotdata/marmot/internal/worker"
 	"github.com/rs/zerolog/log"
 )
@@ -17,12 +18,15 @@ const (
 )
 
 const (
-	TypeSystem       = "system"
-	TypeSchemaChange = "schema_change"
-	TypeAssetChange  = "asset_change"
-	TypeTeamInvite   = "team_invite"
-	TypeMention      = "mention"
-	TypeJobComplete  = "job_complete"
+	TypeSystem                 = "system"
+	TypeSchemaChange           = "schema_change"
+	TypeAssetChange            = "asset_change"
+	TypeTeamInvite             = "team_invite"
+	TypeMention                = "mention"
+	TypeJobComplete            = "job_complete"
+	TypeUpstreamSchemaChange   = "upstream_schema_change"
+	TypeDownstreamSchemaChange = "downstream_schema_change"
+	TypeLineageChange          = "lineage_change"
 )
 
 const (
@@ -30,7 +34,9 @@ const (
 	DefaultBatchSize = 100
 
 	DefaultPruneAge         = 90 * 24 * time.Hour
+	DefaultPruneReadAge     = 14 * 24 * time.Hour
 	DefaultPruneInterval    = 24 * time.Hour
+	DefaultMaxPerUser       = 500
 	DefaultAggregateWindow  = 2 * time.Minute
 	DefaultAggregateMaxWait = 5 * time.Minute
 )
@@ -110,7 +116,9 @@ type ServiceConfig struct {
 	QueueSize          int
 	BatchSize          int
 	PruneAge           time.Duration
+	PruneReadAge       time.Duration
 	PruneInterval      time.Duration
+	MaxPerUser         int
 	AggregateWindow    time.Duration
 	AggregateMaxWait   time.Duration
 	DisableAggregation bool
@@ -122,13 +130,14 @@ type Service struct {
 	teamProvider      TeamMembershipProvider
 	userPrefsProvider UserPreferencesProvider
 	config            *ServiceConfig
+	db                *pgxpool.Pool
 
 	workerPool *worker.Pool
 	aggregator *assetChangeAggregator
+	pruneTask  *background.SingletonTask
 
 	ctx    context.Context
 	cancel context.CancelFunc
-	wg     sync.WaitGroup
 }
 
 // NewService creates a new notification service.
@@ -138,7 +147,9 @@ func NewService(repo Repository, teamProvider TeamMembershipProvider, opts ...Se
 		QueueSize:        200,
 		BatchSize:        DefaultBatchSize,
 		PruneAge:         DefaultPruneAge,
+		PruneReadAge:     DefaultPruneReadAge,
 		PruneInterval:    DefaultPruneInterval,
+		MaxPerUser:       DefaultMaxPerUser,
 		AggregateWindow:  DefaultAggregateWindow,
 		AggregateMaxWait: DefaultAggregateMaxWait,
 	}
@@ -190,6 +201,13 @@ func WithConfig(config *ServiceConfig) ServiceOption {
 	}
 }
 
+// WithDB sets the database pool for singleton task coordination.
+func WithDB(db *pgxpool.Pool) ServiceOption {
+	return func(s *Service) {
+		s.db = db
+	}
+}
+
 // WithUserPreferencesProvider sets the user preferences provider.
 func WithUserPreferencesProvider(provider UserPreferencesProvider) ServiceOption {
 	return func(s *Service) {
@@ -207,8 +225,15 @@ func (s *Service) Start(ctx context.Context) {
 		s.aggregator.start(s.ctx)
 	}
 
-	s.wg.Add(1)
-	go s.pruneLoop()
+	s.pruneTask = background.NewSingletonTask(background.SingletonConfig{
+		Name:     "notification-prune",
+		DB:       s.db,
+		Interval: s.config.PruneInterval,
+		TaskFn: func(ctx context.Context) error {
+			return s.pruneOldNotifications()
+		},
+	})
+	s.pruneTask.Start(s.ctx)
 
 	log.Info().Msg("Notification service started")
 }
@@ -225,45 +250,61 @@ func (s *Service) Stop() {
 		s.aggregator.stop()
 	}
 
+	s.pruneTask.Stop()
 	s.workerPool.Stop()
-	s.wg.Wait()
 
 	log.Info().Msg("Notification service stopped")
 }
 
-func (s *Service) pruneLoop() {
-	defer s.wg.Done()
-
-	ticker := time.NewTicker(s.config.PruneInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-s.ctx.Done():
-			return
-		case <-ticker.C:
-			s.pruneOldNotifications()
-		}
-	}
-}
-
-func (s *Service) pruneOldNotifications() {
+func (s *Service) pruneOldNotifications() error {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 
-	cutoff := time.Now().Add(-s.config.PruneAge)
-	deleted, err := s.repo.DeleteOlderThan(ctx, cutoff)
+	var firstErr error
+
+	// Step 1: Remove read notifications older than PruneReadAge (default 14 days)
+	readCutoff := time.Now().Add(-s.config.PruneReadAge)
+	readDeleted, err := s.repo.DeleteReadOlderThan(ctx, readCutoff)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to prune old notifications")
-		return
+		log.Error().Err(err).Msg("Failed to prune old read notifications")
+		firstErr = err
+	} else if readDeleted > 0 {
+		log.Info().
+			Int64("deleted", readDeleted).
+			Time("cutoff", readCutoff).
+			Msg("Pruned old read notifications")
 	}
 
-	if deleted > 0 {
+	// Step 2: Remove all notifications older than PruneAge (default 90 days)
+	allCutoff := time.Now().Add(-s.config.PruneAge)
+	allDeleted, err := s.repo.DeleteOlderThan(ctx, allCutoff)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to prune old notifications")
+		if firstErr == nil {
+			firstErr = err
+		}
+	} else if allDeleted > 0 {
 		log.Info().
-			Int64("deleted", deleted).
-			Time("cutoff", cutoff).
+			Int64("deleted", allDeleted).
+			Time("cutoff", allCutoff).
 			Msg("Pruned old notifications")
 	}
+
+	// Step 3: Enforce per-user cap (default 500)
+	capDeleted, err := s.repo.EnforcePerUserLimit(ctx, s.config.MaxPerUser)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to enforce per-user notification limit")
+		if firstErr == nil {
+			firstErr = err
+		}
+	} else if capDeleted > 0 {
+		log.Info().
+			Int64("deleted", capDeleted).
+			Int("max_per_user", s.config.MaxPerUser).
+			Msg("Enforced per-user notification limit")
+	}
+
+	return firstErr
 }
 
 // Create queues notifications for the specified recipients.

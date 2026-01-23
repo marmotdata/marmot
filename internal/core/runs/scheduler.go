@@ -7,6 +7,8 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/background"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/plugin"
@@ -25,6 +27,7 @@ type Scheduler struct {
 	runsService Service
 	encryptor   *crypto.Encryptor
 	registry    *plugin.Registry
+	db          *pgxpool.Pool
 
 	maxWorkers        int
 	schedulerInterval time.Duration
@@ -34,6 +37,8 @@ type Scheduler struct {
 	jobQueue      chan *JobRun
 	semaphore     chan struct{}
 	activeWorkers atomic.Int32
+
+	schedulerTask *background.SingletonTask
 
 	ctx    context.Context
 	cancel context.CancelFunc
@@ -45,6 +50,7 @@ type SchedulerConfig struct {
 	SchedulerInterval time.Duration
 	LeaseExpiry       time.Duration
 	ClaimExpiry       time.Duration
+	DB                *pgxpool.Pool
 }
 
 func NewScheduler(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry, config *SchedulerConfig) *Scheduler {
@@ -77,6 +83,7 @@ func NewScheduler(service *ScheduleService, runsService Service, encryptor *cryp
 		runsService:       runsService,
 		encryptor:         encryptor,
 		registry:          registry,
+		db:                config.DB,
 		maxWorkers:        maxWorkers,
 		schedulerInterval: schedulerInterval,
 		leaseExpiry:       leaseExpiry,
@@ -95,11 +102,15 @@ func (s *Scheduler) Start(ctx context.Context) error {
 		s.jobDispatcher()
 	}()
 
-	s.wg.Add(1)
-	go func() {
-		defer s.wg.Done()
-		s.schedulerLoop()
-	}()
+	s.schedulerTask = background.NewSingletonTask(background.SingletonConfig{
+		Name:     "schedule-processor",
+		DB:       s.db,
+		Interval: s.schedulerInterval,
+		TaskFn: func(ctx context.Context) error {
+			return s.processSchedules(ctx)
+		},
+	})
+	s.schedulerTask.Start(s.ctx)
 
 	s.wg.Add(1)
 	go func() {
@@ -128,6 +139,7 @@ func (s *Scheduler) Stop() {
 		s.cancel()
 	}
 
+	s.schedulerTask.Stop()
 	close(s.jobQueue)
 	s.wg.Wait()
 
@@ -173,24 +185,7 @@ func (s *Scheduler) jobDispatcher() {
 	}
 }
 
-func (s *Scheduler) schedulerLoop() {
-	ticker := time.NewTicker(s.schedulerInterval)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-s.ctx.Done():
-			return
-		case <-ticker.C:
-			if err := s.processSchedules(); err != nil {
-				log.Error().Err(err).Msg("Error processing schedules")
-			}
-		}
-	}
-}
-
-func (s *Scheduler) processSchedules() error {
-	ctx := context.Background()
+func (s *Scheduler) processSchedules(ctx context.Context) error {
 
 	schedules, err := s.service.GetSchedulesDueForRun(ctx, 100)
 	if err != nil {

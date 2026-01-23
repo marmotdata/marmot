@@ -217,9 +217,13 @@
 					id: `${edge.source}-${cycleReturnId}`,
 					source: edge.source,
 					target: cycleReturnId,
-					type: 'bezier',
+					type: 'custom',
 					animated: true,
-					style: 'stroke: #f59e0b; stroke-width: 2px;'
+					style: 'stroke: #f59e0b; stroke-width: 2px;',
+					data: {
+						edgeId: edge.id,
+						...(canManageAssets && { onDelete: handleEdgeDelete })
+					}
 				});
 			} else {
 				modifiedEdges.push({

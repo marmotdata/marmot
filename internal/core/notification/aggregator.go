@@ -153,27 +153,49 @@ func (a *assetChangeAggregator) sendAggregatedNotification(ownerKey string, asse
 	var title, message string
 	data := make(map[string]interface{})
 
-	isSchemaChange := changeType == TypeSchemaChange
+	isSchemaRelated := changeType == TypeSchemaChange || changeType == TypeUpstreamSchemaChange || changeType == TypeDownstreamSchemaChange
 	if len(assets) == 1 {
 		asset := assets[0]
-		if isSchemaChange {
+		switch changeType {
+		case TypeSchemaChange:
 			title = "Schema Updated"
 			message = fmt.Sprintf("Schema for \"%s\" has been modified.", asset.assetName)
-		} else {
+		case TypeUpstreamSchemaChange:
+			title = "Upstream Schema Changed"
+			message = fmt.Sprintf("An upstream asset \"%s\" has had its schema modified.", asset.assetName)
+		case TypeDownstreamSchemaChange:
+			title = "Downstream Schema Changed"
+			message = fmt.Sprintf("A downstream asset \"%s\" has had its schema modified.", asset.assetName)
+		case TypeLineageChange:
+			title = "Lineage Changed"
+			message = fmt.Sprintf("Lineage connections for \"%s\" have been modified.", asset.assetName)
+		default:
 			title = "Asset Updated"
 			message = fmt.Sprintf("Asset \"%s\" has been modified.", asset.assetName)
 		}
 		data["asset_mrn"] = asset.assetMRN
 		link := fmt.Sprintf("/discover/%s", strings.TrimPrefix(asset.assetMRN, "mrn://"))
-		if isSchemaChange {
+		if isSchemaRelated {
 			link += "?tab=schema"
+		} else if changeType == TypeLineageChange {
+			link += "?tab=lineage"
 		}
 		data["link"] = link
 	} else {
-		if isSchemaChange {
+		switch changeType {
+		case TypeSchemaChange:
 			title = "Schemas Updated"
 			message = fmt.Sprintf("Schemas for %d assets you own have been modified.", len(assets))
-		} else {
+		case TypeUpstreamSchemaChange:
+			title = "Upstream Schemas Changed"
+			message = fmt.Sprintf("Schemas for %d upstream assets have been modified.", len(assets))
+		case TypeDownstreamSchemaChange:
+			title = "Downstream Schemas Changed"
+			message = fmt.Sprintf("Schemas for %d downstream assets have been modified.", len(assets))
+		case TypeLineageChange:
+			title = "Lineage Changed"
+			message = fmt.Sprintf("Lineage connections for %d assets have been modified.", len(assets))
+		default:
 			title = "Assets Updated"
 			message = fmt.Sprintf("%d assets you own have been modified.", len(assets))
 		}

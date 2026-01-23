@@ -1,0 +1,2 @@
+DROP INDEX IF EXISTS idx_notifications_read_created_at;
+DROP INDEX IF EXISTS idx_notifications_user_id_created_at_desc;

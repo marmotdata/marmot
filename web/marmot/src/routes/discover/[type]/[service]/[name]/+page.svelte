@@ -18,6 +18,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import Tags from '$components/shared/Tags.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
+	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	interface Owner {
@@ -380,6 +381,20 @@
 										/>
 									{/if}
 								</div>
+								{#if asset}
+									<div>
+										<div class="flex items-center gap-1.5 mb-1">
+											<IconifyIcon
+												icon="material-symbols:notifications-outline"
+												class="w-3.5 h-3.5 text-gray-400"
+											/>
+											<span class="text-xs font-medium text-gray-400 uppercase tracking-wide"
+												>Subscribe</span
+											>
+										</div>
+										<SubscribeButton assetId={asset.id} />
+									</div>
+								{/if}
 							</div>
 						</div>
 					</div>

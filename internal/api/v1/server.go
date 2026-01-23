@@ -45,6 +45,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
 	searchAPI "github.com/marmotdata/marmot/internal/api/v1/search"
+	subscriptionsAPI "github.com/marmotdata/marmot/internal/api/v1/subscriptions"
 	"github.com/marmotdata/marmot/internal/api/v1/teams"
 	"github.com/marmotdata/marmot/internal/api/v1/ui"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
@@ -59,6 +60,7 @@ import (
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
 	searchService "github.com/marmotdata/marmot/internal/core/search"
+	"github.com/marmotdata/marmot/internal/core/subscription"
 	teamService "github.com/marmotdata/marmot/internal/core/team"
 	userService "github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/metrics"
@@ -92,7 +94,7 @@ type Server struct {
 
 func New(config *config.Config, db *pgxpool.Pool) *Server {
 	metricsStore := metrics.NewPostgresStore(db)
-	metricsService := metrics.NewService(metricsStore)
+	metricsService := metrics.NewService(metricsStore, db)
 	metricsService.Start(context.Background())
 	recorder := metricsService.GetRecorder()
 
@@ -123,9 +125,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	notificationSvc := notificationService.NewService(
 		notificationRepo,
 		&teamMembershipAdapter{teamSvc: teamSvc},
+		notificationService.WithDB(db),
 		notificationService.WithUserPreferencesProvider(&userPreferencesAdapter{userSvc: userSvc}),
 	)
 	notificationSvc.Start(context.Background())
+	subscriptionRepo := subscription.NewPostgresRepository(db)
+	subscriptionSvc := subscription.NewService(subscriptionRepo)
 	membershipRepo := dataproductService.NewPostgresMembershipRepository(db, recorder)
 	membershipSvc := dataproductService.NewMembershipService(
 		dataProductRepo,
@@ -139,6 +144,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	)
 	membershipReconciler := dataproductService.NewReconciler(membershipSvc, &dataproductService.ReconcilerConfig{
 		Interval: 30 * time.Minute,
+		DB:       db,
 	})
 
 	// Start membership evaluation services
@@ -159,6 +165,15 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	assetSvc.SetNotificationObserver(&assetChangeNotifier{
 		notificationSvc: notificationSvc,
 		teamSvc:         teamSvc,
+		lineageSvc:      lineageSvc,
+		assetSvc:        assetSvc,
+		subscriptionSvc: subscriptionSvc,
+	})
+	lineageSvc.SetLineageChangeObserver(&lineageChangeNotifier{
+		notificationSvc: notificationSvc,
+		teamSvc:         teamSvc,
+		assetSvc:        assetSvc,
+		subscriptionSvc: subscriptionSvc,
 	})
 	teamSvc.SetMembershipNotifier(&teamMembershipNotifier{
 		notificationSvc: notificationSvc,
@@ -226,6 +241,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		SchedulerInterval: time.Duration(config.Pipelines.SchedulerInterval) * time.Second,
 		LeaseExpiry:       time.Duration(config.Pipelines.LeaseExpiry) * time.Second,
 		ClaimExpiry:       time.Duration(config.Pipelines.ClaimExpiry) * time.Second,
+		DB:                db,
 	}
 	scheduler := runService.NewScheduler(scheduleSvc, runsSvc, scheduleEncryptor, pluginRegistry, schedulerConfig)
 
@@ -312,6 +328,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config),
 		docsAPI.NewHandler(docsSvc, userSvc, authSvc, config),
 		notificationsAPI.NewHandler(notificationSvc, userSvc, authSvc, config),
+		subscriptionsAPI.NewHandler(subscriptionSvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
 		searchAPI.NewHandler(searchSvc, userSvc, authSvc, metricsService, config),
 		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config),
@@ -545,38 +562,223 @@ func (n *runCompletionNotifier) OnRunCompleted(ctx context.Context, run *plugin.
 type assetChangeNotifier struct {
 	notificationSvc *notificationService.Service
 	teamSvc         *teamService.Service
+	lineageSvc      lineageService.Service
+	assetSvc        asset.Service
+	subscriptionSvc *subscription.Service
 }
 
-func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, asset *asset.Asset, changeType string) {
-	owners, err := n.teamSvc.ListAssetOwners(ctx, asset.ID)
+func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, a *asset.Asset, changeType string) {
+	owners, err := n.teamSvc.ListAssetOwners(ctx, a.ID)
 	if err != nil {
-		log.Warn().Err(err).Str("asset_id", asset.ID).Msg("Failed to get asset owners for notification")
+		log.Warn().Err(err).Str("asset_id", a.ID).Msg("Failed to get asset owners for notification")
 		return
 	}
 
-	if len(owners) == 0 {
+	assetName := ""
+	if a.Name != nil {
+		assetName = *a.Name
+	}
+
+	assetMRN := ""
+	if a.MRN != nil {
+		assetMRN = *a.MRN
+	}
+
+	// Notify owners and subscribers of the changed asset
+	recipients := make([]notificationService.Recipient, 0, len(owners))
+	seen := make(map[string]bool)
+	for _, owner := range owners {
+		key := owner.Type + ":" + owner.ID
+		if !seen[key] {
+			recipients = append(recipients, notificationService.Recipient{
+				Type: owner.Type,
+				ID:   owner.ID,
+			})
+			seen[key] = true
+		}
+	}
+
+	// Also include subscribers who want this notification type
+	subscriberIDs, err := n.subscriptionSvc.GetSubscribersForAsset(ctx, a.ID, changeType)
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", a.ID).Msg("Failed to get asset subscribers")
+	} else {
+		for _, userID := range subscriberIDs {
+			key := notificationService.RecipientTypeUser + ":" + userID
+			if !seen[key] {
+				recipients = append(recipients, notificationService.Recipient{
+					Type: notificationService.RecipientTypeUser,
+					ID:   userID,
+				})
+				seen[key] = true
+			}
+		}
+	}
+
+	if len(recipients) > 0 {
+		n.notificationSvc.QueueAssetChange(a.ID, assetMRN, assetName, changeType, recipients)
+	}
+
+	// If this is a schema change, also notify lineage neighbors' owners.
+	// Dispatched to a goroutine to avoid blocking the request path.
+	if changeType == notificationService.TypeSchemaChange && assetMRN != "" {
+		go n.notifyLineageNeighborsOfSchemaChange(context.Background(), assetMRN, assetName)
+	}
+}
+
+func (n *assetChangeNotifier) notifyLineageNeighborsOfSchemaChange(ctx context.Context, assetMRN, assetName string) {
+	// Notify downstream asset owners (they have an upstream schema change)
+	downstreamMRNs, err := n.lineageSvc.GetImmediateNeighbors(ctx, assetMRN, "downstream")
+	if err != nil {
+		log.Warn().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to get downstream neighbors for upstream schema notification")
+	} else {
+		for _, downMRN := range downstreamMRNs {
+			n.notifyNeighborOwners(ctx, downMRN, assetMRN, assetName, notificationService.TypeUpstreamSchemaChange)
+		}
+	}
+
+	// Notify upstream asset owners (they have a downstream schema change)
+	upstreamMRNs, err := n.lineageSvc.GetImmediateNeighbors(ctx, assetMRN, "upstream")
+	if err != nil {
+		log.Warn().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to get upstream neighbors for downstream schema notification")
+	} else {
+		for _, upMRN := range upstreamMRNs {
+			n.notifyNeighborOwners(ctx, upMRN, assetMRN, assetName, notificationService.TypeDownstreamSchemaChange)
+		}
+	}
+}
+
+func (n *assetChangeNotifier) notifyNeighborOwners(ctx context.Context, neighborMRN, changedAssetMRN, changedAssetName, notifType string) {
+	neighborAsset, err := n.assetSvc.GetByMRN(ctx, neighborMRN)
+	if err != nil {
+		log.Warn().Err(err).Str("mrn", neighborMRN).Msg("Failed to get neighbor asset for lineage schema notification")
+		return
+	}
+
+	owners, err := n.teamSvc.ListAssetOwners(ctx, neighborAsset.ID)
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", neighborAsset.ID).Msg("Failed to get neighbor asset owners")
 		return
 	}
 
 	recipients := make([]notificationService.Recipient, 0, len(owners))
+	seen := make(map[string]bool)
 	for _, owner := range owners {
-		recipients = append(recipients, notificationService.Recipient{
-			Type: owner.Type,
-			ID:   owner.ID,
-		})
+		key := owner.Type + ":" + owner.ID
+		if !seen[key] {
+			recipients = append(recipients, notificationService.Recipient{
+				Type: owner.Type,
+				ID:   owner.ID,
+			})
+			seen[key] = true
+		}
+	}
+
+	// Also include subscribers of the neighbor asset who want this notification type
+	subscriberIDs, subErr := n.subscriptionSvc.GetSubscribersForAsset(ctx, neighborAsset.ID, notifType)
+	if subErr != nil {
+		log.Warn().Err(subErr).Str("asset_id", neighborAsset.ID).Msg("Failed to get neighbor asset subscribers")
+	} else {
+		for _, userID := range subscriberIDs {
+			key := notificationService.RecipientTypeUser + ":" + userID
+			if !seen[key] {
+				recipients = append(recipients, notificationService.Recipient{
+					Type: notificationService.RecipientTypeUser,
+					ID:   userID,
+				})
+				seen[key] = true
+			}
+		}
+	}
+
+	if len(recipients) == 0 {
+		return
+	}
+
+	// Use the changed asset's MRN and name for the notification content
+	// The aggregator will format the appropriate title/message based on notifType
+	n.notificationSvc.QueueAssetChange(neighborAsset.ID, changedAssetMRN, changedAssetName, notifType, recipients)
+}
+
+type lineageChangeNotifier struct {
+	notificationSvc *notificationService.Service
+	teamSvc         *teamService.Service
+	assetSvc        asset.Service
+	subscriptionSvc *subscription.Service
+}
+
+func (n *lineageChangeNotifier) OnEdgeCreated(ctx context.Context, sourceMRN, targetMRN, edgeType string) {
+	n.notifyLineageChange(ctx, sourceMRN, targetMRN)
+}
+
+func (n *lineageChangeNotifier) OnEdgeDeleted(ctx context.Context, sourceMRN, targetMRN string) {
+	n.notifyLineageChange(ctx, sourceMRN, targetMRN)
+}
+
+func (n *lineageChangeNotifier) notifyLineageChange(ctx context.Context, sourceMRN, targetMRN string) {
+	sourceAsset, err := n.assetSvc.GetByMRN(ctx, sourceMRN)
+	if err != nil {
+		log.Warn().Err(err).Str("mrn", sourceMRN).Msg("Failed to get source asset for lineage notification")
+		return
+	}
+	targetAsset, err := n.assetSvc.GetByMRN(ctx, targetMRN)
+	if err != nil {
+		log.Warn().Err(err).Str("mrn", targetMRN).Msg("Failed to get target asset for lineage notification")
+		return
+	}
+
+	// Queue source asset through the aggregator
+	n.queueLineageChangeForAsset(ctx, sourceAsset)
+
+	// Queue target asset through the aggregator
+	n.queueLineageChangeForAsset(ctx, targetAsset)
+}
+
+func (n *lineageChangeNotifier) queueLineageChangeForAsset(ctx context.Context, a *asset.Asset) {
+	owners, err := n.teamSvc.ListAssetOwners(ctx, a.ID)
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", a.ID).Msg("Failed to get asset owners for lineage notification")
+	}
+
+	recipients := make([]notificationService.Recipient, 0, len(owners))
+	seen := make(map[string]bool)
+	for _, owner := range owners {
+		key := owner.Type + ":" + owner.ID
+		if !seen[key] {
+			recipients = append(recipients, notificationService.Recipient{Type: owner.Type, ID: owner.ID})
+			seen[key] = true
+		}
+	}
+
+	subscriberIDs, err := n.subscriptionSvc.GetSubscribersForAsset(ctx, a.ID, "lineage_change")
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", a.ID).Msg("Failed to get asset subscribers for lineage notification")
+	}
+	for _, userID := range subscriberIDs {
+		key := notificationService.RecipientTypeUser + ":" + userID
+		if !seen[key] {
+			recipients = append(recipients, notificationService.Recipient{
+				Type: notificationService.RecipientTypeUser,
+				ID:   userID,
+			})
+			seen[key] = true
+		}
+	}
+
+	if len(recipients) == 0 {
+		return
 	}
 
 	assetName := ""
-	if asset.Name != nil {
-		assetName = *asset.Name
+	if a.Name != nil {
+		assetName = *a.Name
 	}
-
 	assetMRN := ""
-	if asset.MRN != nil {
-		assetMRN = *asset.MRN
+	if a.MRN != nil {
+		assetMRN = *a.MRN
 	}
 
-	n.notificationSvc.QueueAssetChange(asset.ID, assetMRN, assetName, changeType, recipients)
+	n.notificationSvc.QueueAssetChange(a.ID, assetMRN, assetName, notificationService.TypeLineageChange, recipients)
 }
 
 type teamMembershipNotifier struct {
