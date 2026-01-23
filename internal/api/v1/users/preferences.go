@@ -73,12 +73,15 @@ func (h *Handler) updatePreferences(w http.ResponseWriter, r *http.Request) {
 
 	if notifPrefs, ok := input.Preferences["notifications"].(map[string]interface{}); ok {
 		validTypes := map[string]bool{
-			notification.TypeSystem:       true,
-			notification.TypeSchemaChange: true,
-			notification.TypeAssetChange:  true,
-			notification.TypeTeamInvite:   true,
-			notification.TypeMention:      true,
-			notification.TypeJobComplete:  true,
+			notification.TypeSystem:                 true,
+			notification.TypeSchemaChange:           true,
+			notification.TypeAssetChange:            true,
+			notification.TypeTeamInvite:             true,
+			notification.TypeMention:                true,
+			notification.TypeJobComplete:            true,
+			notification.TypeUpstreamSchemaChange:   true,
+			notification.TypeDownstreamSchemaChange: true,
+			notification.TypeLineageChange:          true,
 		}
 		for key, val := range notifPrefs {
 			if !validTypes[key] {

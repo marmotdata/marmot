@@ -28,10 +28,28 @@
 			icon: 'material-symbols:schema-outline'
 		},
 		{
+			type: 'upstream_schema_change',
+			label: 'Upstream Schema Changes',
+			description: 'Schema changes to assets upstream of yours',
+			icon: 'material-symbols:arrow-upward-alt'
+		},
+		{
+			type: 'downstream_schema_change',
+			label: 'Downstream Schema Changes',
+			description: 'Schema changes to assets downstream of yours',
+			icon: 'material-symbols:arrow-downward-alt'
+		},
+		{
 			type: 'asset_change',
 			label: 'Asset Changes',
 			description: 'Metadata changes to assets you own',
 			icon: 'material-symbols:database-outline'
+		},
+		{
+			type: 'lineage_change',
+			label: 'Lineage Changes',
+			description: 'New or removed lineage connections involving your assets',
+			icon: 'material-symbols:timeline'
 		},
 		{
 			type: 'mention',

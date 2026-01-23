@@ -6,27 +6,29 @@ import (
 	"hash/fnv"
 	"sort"
 	"strings"
-	"sync"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/background"
 	"github.com/rs/zerolog/log"
 )
 
 type Service struct {
 	collector *Collector
 	store     Store
+	db        *pgxpool.Pool
 
-	stopCh chan struct{}
-	wg     sync.WaitGroup
+	aggregationTask *background.SingletonTask
+	cleanupTask     *background.SingletonTask
 }
 
-func NewService(store Store) *Service {
+func NewService(store Store, db *pgxpool.Pool) *Service {
 	collector := NewCollector(store)
 
 	return &Service{
 		collector: collector,
 		store:     store,
-		stopCh:    make(chan struct{}),
+		db:        db,
 	}
 }
 
@@ -107,18 +109,38 @@ func (s *Service) updateAssetMetrics(ctx context.Context) {
 func (s *Service) Start(ctx context.Context) {
 	s.updateAssetMetrics(ctx)
 
-	s.wg.Add(1)
-	go s.aggregationWorker(ctx)
+	s.aggregationTask = background.NewSingletonTask(background.SingletonConfig{
+		Name:     "metrics-aggregation",
+		DB:       s.db,
+		Interval: 5 * time.Minute,
+		TaskFn: func(ctx context.Context) error {
+			s.runAggregation(ctx)
+			return nil
+		},
+	})
+	s.aggregationTask.Start(ctx)
 
-	s.wg.Add(1)
-	go s.cleanupWorker(ctx)
+	s.cleanupTask = background.NewSingletonTask(background.SingletonConfig{
+		Name:     "metrics-cleanup",
+		DB:       s.db,
+		Interval: 24 * time.Hour,
+		TaskFn: func(ctx context.Context) error {
+			cutoff := time.Now().AddDate(0, 0, -7)
+			return s.store.DeleteOldMetrics(ctx, cutoff)
+		},
+	})
+	s.cleanupTask.Start(ctx)
 
 	log.Info().Msg("Metrics service started")
 }
 
 func (s *Service) Stop() {
-	close(s.stopCh)
-	s.wg.Wait()
+	if s.aggregationTask != nil {
+		s.aggregationTask.Stop()
+	}
+	if s.cleanupTask != nil {
+		s.cleanupTask.Stop()
+	}
 	log.Info().Msg("Metrics service stopped")
 }
 
@@ -194,22 +216,6 @@ func (s *Service) convertToAggregated(metrics []Metric, bucketSize time.Duration
 	return result
 }
 
-func (s *Service) aggregationWorker(ctx context.Context) {
-	defer s.wg.Done()
-
-	ticker := time.NewTicker(5 * time.Minute)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-s.stopCh:
-			return
-		case <-ticker.C:
-			s.runAggregation(ctx)
-		}
-	}
-}
-
 func (s *Service) runAggregation(ctx context.Context) {
 	start := time.Now()
 	defer func() {
@@ -269,25 +275,6 @@ func (s *Service) runDailyAggregation(ctx context.Context) {
 		log.Warn().Err(err).
 			Time("day_start", dayStart).
 			Msg("Daily metrics aggregation failed - will retry tomorrow")
-	}
-}
-
-func (s *Service) cleanupWorker(ctx context.Context) {
-	defer s.wg.Done()
-
-	ticker := time.NewTicker(24 * time.Hour)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-s.stopCh:
-			return
-		case <-ticker.C:
-			cutoff := time.Now().AddDate(0, 0, -7)
-			if err := s.store.DeleteOldMetrics(ctx, cutoff); err != nil {
-				log.Error().Err(err).Msg("Failed to cleanup old metrics")
-			}
-		}
 	}
 }
 

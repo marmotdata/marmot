@@ -7,7 +7,10 @@ export type NotificationType =
 	| 'schema_change'
 	| 'asset_change'
 	| 'mention'
-	| 'job_complete';
+	| 'job_complete'
+	| 'upstream_schema_change'
+	| 'downstream_schema_change'
+	| 'lineage_change';
 
 export interface NotificationPreferences {
 	system: boolean;
@@ -15,6 +18,9 @@ export interface NotificationPreferences {
 	asset_change: boolean;
 	mention: boolean;
 	job_complete: boolean;
+	upstream_schema_change: boolean;
+	downstream_schema_change: boolean;
+	lineage_change: boolean;
 }
 
 const defaultPreferences: NotificationPreferences = {
@@ -22,7 +28,10 @@ const defaultPreferences: NotificationPreferences = {
 	schema_change: true,
 	asset_change: true,
 	mention: true,
-	job_complete: true
+	job_complete: true,
+	upstream_schema_change: true,
+	downstream_schema_change: true,
+	lineage_change: true
 };
 
 function createNotificationPreferencesStore() {

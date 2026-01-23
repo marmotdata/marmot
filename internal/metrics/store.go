@@ -416,23 +416,6 @@ func (s *PostgresStore) GetAggregatedMetrics(ctx context.Context, opts QueryOpti
 }
 
 func (s *PostgresStore) AggregateMetrics(ctx context.Context, timeRange TimeRange, bucketSize time.Duration) error {
-	lockID := int64(12345)
-
-	locked, err := s.tryAdvisoryLock(ctx, lockID)
-	if err != nil {
-		log.Warn().Err(err).Msg("Failed to acquire advisory lock for metrics aggregation")
-		return err
-	}
-	if !locked {
-		log.Debug().Msg("Metrics aggregation already running, skipping")
-		return nil
-	}
-	defer func() {
-		if err := s.releaseAdvisoryLock(ctx, lockID); err != nil {
-			log.Warn().Err(err).Msg("Failed to release advisory lock")
-		}
-	}()
-
 	batchDuration := time.Hour
 	if bucketSize < time.Hour {
 		batchDuration = bucketSize * 12
@@ -646,16 +629,6 @@ func (s *PostgresStore) DeleteOldMetrics(ctx context.Context, olderThan time.Tim
 	return nil
 }
 
-func (s *PostgresStore) tryAdvisoryLock(ctx context.Context, lockID int64) (bool, error) {
-	var acquired bool
-	err := s.db.QueryRow(ctx, "SELECT pg_try_advisory_lock($1)", lockID).Scan(&acquired)
-	return acquired, err
-}
-
-func (s *PostgresStore) releaseAdvisoryLock(ctx context.Context, lockID int64) error {
-	_, err := s.db.Exec(ctx, "SELECT pg_advisory_unlock($1)", lockID)
-	return err
-}
 
 func getBucketString(duration time.Duration) string {
 	switch duration {

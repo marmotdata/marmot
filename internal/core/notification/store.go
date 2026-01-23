@@ -25,6 +25,8 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	DeleteAllRead(ctx context.Context, userID string) error
 	DeleteOlderThan(ctx context.Context, before time.Time) (int64, error)
+	DeleteReadOlderThan(ctx context.Context, before time.Time) (int64, error)
+	EnforcePerUserLimit(ctx context.Context, maxPerUser int) (int64, error)
 }
 
 // PostgresRepository implements Repository for PostgreSQL.
@@ -402,6 +404,37 @@ func (r *PostgresRepository) DeleteOlderThan(ctx context.Context, before time.Ti
 	result, err := r.db.Exec(ctx, query, before)
 	if err != nil {
 		return 0, fmt.Errorf("deleting old notifications: %w", err)
+	}
+	return result.RowsAffected(), nil
+}
+
+// DeleteReadOlderThan deletes read notifications created before the given time.
+func (r *PostgresRepository) DeleteReadOlderThan(ctx context.Context, before time.Time) (int64, error) {
+	query := `DELETE FROM notifications WHERE read = true AND created_at < $1`
+	result, err := r.db.Exec(ctx, query, before)
+	if err != nil {
+		return 0, fmt.Errorf("deleting old read notifications: %w", err)
+	}
+	return result.RowsAffected(), nil
+}
+
+// EnforcePerUserLimit deletes the oldest notifications for users who exceed maxPerUser.
+func (r *PostgresRepository) EnforcePerUserLimit(ctx context.Context, maxPerUser int) (int64, error) {
+	query := `
+		DELETE FROM notifications
+		WHERE id IN (
+			SELECT id FROM (
+				SELECT id, ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_at DESC) AS rn
+				FROM notifications
+				WHERE user_id IN (
+					SELECT user_id FROM notifications GROUP BY user_id HAVING count(*) > $1
+				)
+			) ranked
+			WHERE rn > $1
+		)`
+	result, err := r.db.Exec(ctx, query, maxPerUser)
+	if err != nil {
+		return 0, fmt.Errorf("enforcing per-user notification limit: %w", err)
 	}
 	return result.RowsAffected(), nil
 }
