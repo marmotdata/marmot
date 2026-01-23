@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -617,12 +618,15 @@ func (r *SchedulePostgresRepository) ListJobRuns(ctx context.Context, scheduleID
 		argPos++
 	}
 	if status != nil {
-		if !ValidJobStatus(*status) {
-			return nil, 0, ErrInvalidJobStatus
+		statuses := strings.Split(*status, ",")
+		for _, s := range statuses {
+			if !ValidJobStatus(strings.TrimSpace(s)) {
+				return nil, 0, ErrInvalidJobStatus
+			}
 		}
-		whereConditions = append(whereConditions, fmt.Sprintf("jr.status = $%d", argPos))
-		countArgs = append(countArgs, *status)
-		listArgs = append(listArgs, *status)
+		whereConditions = append(whereConditions, fmt.Sprintf("jr.status = ANY($%d)", argPos))
+		countArgs = append(countArgs, statuses)
+		listArgs = append(listArgs, statuses)
 		argPos++
 	}
 
