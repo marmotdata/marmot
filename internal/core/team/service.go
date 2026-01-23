@@ -197,6 +197,10 @@ func (s *Service) ListMembers(ctx context.Context, teamID string) ([]*TeamMember
 	return s.repo.ListMembers(ctx, teamID)
 }
 
+func (s *Service) GetMember(ctx context.Context, teamID, userID string) (*TeamMember, error) {
+	return s.repo.GetMember(ctx, teamID, userID)
+}
+
 func (s *Service) ListUserTeams(ctx context.Context, userID string) ([]*Team, error) {
 	return s.repo.ListUserTeams(ctx, userID)
 }

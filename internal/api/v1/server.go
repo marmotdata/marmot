@@ -42,6 +42,7 @@ import (
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	notificationsAPI "github.com/marmotdata/marmot/internal/api/v1/notifications"
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
+	webhooksAPI "github.com/marmotdata/marmot/internal/api/v1/webhooks"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
 	searchAPI "github.com/marmotdata/marmot/internal/api/v1/search"
@@ -62,6 +63,7 @@ import (
 	searchService "github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/subscription"
 	teamService "github.com/marmotdata/marmot/internal/core/team"
+	webhookService "github.com/marmotdata/marmot/internal/core/webhook"
 	userService "github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/plugin"
@@ -88,6 +90,9 @@ type Server struct {
 
 	// Notification service
 	notificationService *notificationService.Service
+
+	// Webhook dispatcher
+	webhookDispatcher *webhookService.Dispatcher
 
 	handlers []interface{ Routes() []common.Route }
 }
@@ -305,6 +310,17 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		}
 	}
 
+	// Webhook service for external notifications
+	webhookRepo := webhookService.NewPostgresRepository(db)
+	webhookRegistry := webhookService.DefaultRegistry()
+	webhookDispatcher := webhookService.NewDispatcher(webhookRepo, webhookRegistry, webhookService.DispatcherConfig{
+		MaxWorkers: 5,
+		QueueSize:  100,
+	})
+	webhookDispatcher.Start(context.Background())
+	webhookSvc := webhookService.NewService(webhookRepo, scheduleEncryptor, webhookDispatcher)
+	notificationSvc.SetExternalNotifier(webhookSvc)
+
 	server := &Server{
 		config:               config,
 		metricsService:       metricsService,
@@ -313,6 +329,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		membershipService:    membershipSvc,
 		membershipReconciler: membershipReconciler,
 		notificationService:  notificationSvc,
+		webhookDispatcher:    webhookDispatcher,
 	}
 
 	server.handlers = []interface{ Routes() []common.Route }{
@@ -330,6 +347,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		notificationsAPI.NewHandler(notificationSvc, userSvc, authSvc, config),
 		subscriptionsAPI.NewHandler(subscriptionSvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
+		webhooksAPI.NewHandler(webhookSvc, teamSvc, userSvc, authSvc, config),
 		searchAPI.NewHandler(searchSvc, userSvc, authSvc, metricsService, config),
 		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config),
 		websocket.NewHandler(wsHub, userSvc, authSvc, config),
@@ -346,6 +364,9 @@ func (s *Server) Stop() {
 	}
 	if s.membershipService != nil {
 		s.membershipService.Stop()
+	}
+	if s.webhookDispatcher != nil {
+		s.webhookDispatcher.Stop()
 	}
 	if s.notificationService != nil {
 		s.notificationService.Stop()

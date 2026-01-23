@@ -110,6 +110,11 @@ type UserPreferencesProvider interface {
 	GetNotificationPreferencesBatch(ctx context.Context, userIDs []string) (map[string]map[string]bool, error)
 }
 
+// ExternalNotifier dispatches notifications to external systems (webhooks).
+type ExternalNotifier interface {
+	DispatchToTeam(ctx context.Context, teamID, notificationType, title, message string, data map[string]interface{})
+}
+
 // ServiceConfig configures the notification service.
 type ServiceConfig struct {
 	MaxWorkers         int
@@ -129,6 +134,7 @@ type Service struct {
 	repo              Repository
 	teamProvider      TeamMembershipProvider
 	userPrefsProvider UserPreferencesProvider
+	externalNotifier  ExternalNotifier
 	config            *ServiceConfig
 	db                *pgxpool.Pool
 
@@ -213,6 +219,18 @@ func WithUserPreferencesProvider(provider UserPreferencesProvider) ServiceOption
 	return func(s *Service) {
 		s.userPrefsProvider = provider
 	}
+}
+
+// WithExternalNotifier sets the external notification dispatcher (webhooks) via option.
+func WithExternalNotifier(notifier ExternalNotifier) ServiceOption {
+	return func(s *Service) {
+		s.externalNotifier = notifier
+	}
+}
+
+// SetExternalNotifier sets the external notification dispatcher after service creation.
+func (s *Service) SetExternalNotifier(notifier ExternalNotifier) {
+	s.externalNotifier = notifier
 }
 
 // Start begins background processing.
@@ -366,6 +384,15 @@ func (s *Service) doFanout(ctx context.Context, input CreateNotificationInput) (
 			}
 		default:
 			log.Warn().Str("type", r.Type).Msg("Unknown recipient type")
+		}
+	}
+
+	// Dispatch to external webhooks for team recipients
+	if s.externalNotifier != nil {
+		for _, r := range input.Recipients {
+			if r.Type == RecipientTypeTeam {
+				go s.externalNotifier.DispatchToTeam(ctx, r.ID, input.Type, input.Title, input.Message, input.Data)
+			}
 		}
 	}
 
