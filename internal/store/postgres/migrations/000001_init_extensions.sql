@@ -1,0 +1,11 @@
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+
+---- create above / drop below ----
+
+DROP EXTENSION IF EXISTS pg_trgm;
+DROP EXTENSION IF EXISTS pgcrypto;
+DROP EXTENSION IF EXISTS uuid-ossp;
+

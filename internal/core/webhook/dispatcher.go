@@ -132,14 +132,18 @@ func (j *deliveryJob) Execute(ctx context.Context) error {
 	provider, ok := j.dispatcher.registry.Get(j.webhook.Provider)
 	if !ok {
 		errMsg := fmt.Sprintf("unknown provider: %s", j.webhook.Provider)
-		j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, &errMsg)
+		if err := j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, &errMsg); err != nil {
+			log.Warn().Err(err).Str("webhook_id", j.webhook.ID).Msg("Failed to update last triggered")
+		}
 		return errors.New(errMsg)
 	}
 
 	body, err := provider.FormatMessage(j.notification)
 	if err != nil {
 		errMsg := fmt.Sprintf("format error: %v", err)
-		j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, &errMsg)
+		if updateErr := j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, &errMsg); updateErr != nil {
+			log.Warn().Err(updateErr).Str("webhook_id", j.webhook.ID).Msg("Failed to update last triggered")
+		}
 		return fmt.Errorf("formatting message: %w", err)
 	}
 
@@ -147,7 +151,9 @@ func (j *deliveryJob) Execute(ctx context.Context) error {
 	for attempt := 1; attempt <= j.dispatcher.config.MaxRetries; attempt++ {
 		lastErr = j.doHTTPPost(ctx, provider.ContentType(), body)
 		if lastErr == nil {
-			j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, nil)
+			if err := j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, nil); err != nil {
+				log.Warn().Err(err).Str("webhook_id", j.webhook.ID).Msg("Failed to update last triggered")
+			}
 			log.Debug().
 				Str("webhook_id", j.webhook.ID).
 				Str("webhook_name", j.webhook.Name).
@@ -164,7 +170,9 @@ func (j *deliveryJob) Execute(ctx context.Context) error {
 				Str("webhook_id", j.webhook.ID).
 				Msg("Webhook delivery failed with non-retryable error")
 			errMsg := lastErr.Error()
-			j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, &errMsg)
+			if err := j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, &errMsg); err != nil {
+				log.Warn().Err(err).Str("webhook_id", j.webhook.ID).Msg("Failed to update last triggered")
+			}
 			return lastErr
 		}
 
@@ -186,7 +194,9 @@ func (j *deliveryJob) Execute(ctx context.Context) error {
 	}
 
 	errMsg := fmt.Sprintf("delivery failed after %d attempts: %v", j.dispatcher.config.MaxRetries, lastErr)
-	j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, &errMsg)
+	if err := j.dispatcher.repo.UpdateLastTriggered(ctx, j.webhook.ID, &errMsg); err != nil {
+		log.Warn().Err(err).Str("webhook_id", j.webhook.ID).Msg("Failed to update last triggered")
+	}
 	return errors.New(errMsg)
 }
 
@@ -203,7 +213,7 @@ func (j *deliveryJob) doHTTPPost(ctx context.Context, contentType string, body [
 		return fmt.Errorf("sending request: %w", err)
 	}
 	defer resp.Body.Close()
-	io.Copy(io.Discard, resp.Body)
+	_, _ = io.Copy(io.Discard, resp.Body)
 
 	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		return nil

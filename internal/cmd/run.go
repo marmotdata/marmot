@@ -7,10 +7,7 @@ import (
 	"os"
 	"time"
 
-	_ "github.com/golang-migrate/migrate/v4/database/postgres"
-	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/lib/pq"
 	v1 "github.com/marmotdata/marmot/internal/api/v1"
 	"github.com/marmotdata/marmot/internal/config"
 	"github.com/marmotdata/marmot/internal/staticfiles"

@@ -174,7 +174,7 @@
 
 	<!-- Notification List -->
 	<div
-		class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+		class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
 	>
 		{#if state.loading && state.notifications.length === 0}
 			<div class="flex items-center justify-center py-16">
@@ -212,10 +212,13 @@
 						tabindex="0"
 						onclick={() => handleNotificationClick(notification)}
 						onkeydown={(e) => e.key === 'Enter' && handleNotificationClick(notification)}
-						class="flex items-start gap-4 p-4 transition-colors group cursor-pointer {notification.read
-							? 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
-							: 'bg-earthy-yellow-50 dark:bg-earthy-yellow-900/10 hover:bg-earthy-yellow-100 dark:hover:bg-earthy-yellow-900/20'}"
+						class="relative flex items-start gap-4 p-4 transition-colors group cursor-pointer {notification.read
+							? 'opacity-60 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+							: 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}"
 					>
+						{#if !notification.read}
+							<div class="absolute left-0 top-0 bottom-0 w-0.5 bg-earthy-terracotta-700"></div>
+						{/if}
 						<div
 							class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center {colors.bg}"
 						>

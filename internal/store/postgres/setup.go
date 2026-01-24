@@ -5,16 +5,19 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
-	"path"
-	"sort"
+	"strconv"
 	"strings"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/jackc/tern/v2/migrate"
 	"github.com/rs/zerolog/log"
 )
 
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
+
+const versionTable = "public.schema_version"
 
 type Setup struct {
 	db *pgxpool.Pool
@@ -25,125 +28,130 @@ func NewSetup(db *pgxpool.Pool) *Setup {
 }
 
 func (s *Setup) Initialize(ctx context.Context) error {
-	migrations, err := s.loadMigrations()
+	conn, err := s.db.Acquire(ctx)
 	if err != nil {
+		return fmt.Errorf("acquiring connection: %w", err)
+	}
+	defer conn.Release()
+
+	migrator, err := migrate.NewMigrator(ctx, conn.Conn(), versionTable)
+	if err != nil {
+		return fmt.Errorf("creating migrator: %w", err)
+	}
+
+	migrator.OnStart = func(sequence int32, name, direction, sql string) {
+		log.Info().
+			Int32("sequence", sequence).
+			Str("name", name).
+			Str("direction", direction).
+			Msg("Running migration")
+	}
+
+	migrationsSubFS, err := fs.Sub(migrationsFS, "migrations")
+	if err != nil {
+		return fmt.Errorf("creating migrations sub filesystem: %w", err)
+	}
+
+	if err := migrator.LoadMigrations(migrationsSubFS); err != nil {
 		return fmt.Errorf("loading migrations: %w", err)
 	}
 
-	if err := s.createMigrationsTable(ctx); err != nil {
-		return fmt.Errorf("creating migrations table: %w", err)
+	if err := s.seedVersionFromLegacy(ctx, conn.Conn(), migrator); err != nil {
+		return fmt.Errorf("seeding version from legacy table: %w", err)
 	}
 
-	applied, err := s.getAppliedMigrations(ctx)
+	if err := migrator.Migrate(ctx); err != nil {
+		return fmt.Errorf("running migrations: %w", err)
+	}
+
+	currentVersion, err := migrator.GetCurrentVersion(ctx)
 	if err != nil {
-		return fmt.Errorf("getting applied migrations: %w", err)
+		return fmt.Errorf("getting current version: %w", err)
 	}
-
-	for _, m := range migrations {
-		if applied[m.Version] {
-			continue
-		}
-
-		if err := s.runMigrationSafely(ctx, m); err != nil {
-			return fmt.Errorf("migration %s failed: %w", m.Version, err)
-		}
-	}
+	log.Info().Int32("version", currentVersion).Msg("Database schema is up to date")
 
 	return nil
 }
 
-type migration struct {
-	Version string
-	UpSQL   string
-}
-
-func (s *Setup) loadMigrations() ([]migration, error) {
-	entries, err := migrationsFS.ReadDir("migrations")
-	if err != nil {
-		return nil, err
-	}
-
-	var migrations []migration
-	for _, entry := range entries {
-		if !strings.HasSuffix(entry.Name(), ".up.sql") {
-			continue
-		}
-
-		content, err := fs.ReadFile(migrationsFS, path.Join("migrations", entry.Name()))
-		if err != nil {
-			return nil, err
-		}
-
-		version := strings.TrimSuffix(entry.Name(), ".up.sql")
-		migrations = append(migrations, migration{
-			Version: version,
-			UpSQL:   string(content),
-		})
-	}
-
-	sort.Slice(migrations, func(i, j int) bool {
-		return migrations[i].Version < migrations[j].Version
-	})
-
-	return migrations, nil
-}
-
-func (s *Setup) createMigrationsTable(ctx context.Context) error {
-	_, err := s.db.Exec(ctx, `
-		CREATE TABLE IF NOT EXISTS schema_migrations (
-			version TEXT PRIMARY KEY,
-			applied_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+// seedVersionFromLegacy checks for the old schema_migrations table, parses the highest
+// applied version number, and seeds tern's schema_version table so already-applied
+// migrations are not re-run.
+func (s *Setup) seedVersionFromLegacy(ctx context.Context, conn *pgx.Conn, migrator *migrate.Migrator) error {
+	var exists bool
+	err := conn.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT FROM information_schema.tables
+			WHERE table_schema = 'public'
+			AND table_name = 'schema_migrations'
 		)
-	`)
-	return err
-}
-
-func (s *Setup) getAppliedMigrations(ctx context.Context) (map[string]bool, error) {
-	rows, err := s.db.Query(ctx, "SELECT version FROM schema_migrations")
+	`).Scan(&exists)
 	if err != nil {
-		return nil, err
+		return fmt.Errorf("checking for legacy table: %w", err)
+	}
+	if !exists {
+		return nil
+	}
+
+	currentVersion, err := migrator.GetCurrentVersion(ctx)
+	if err != nil {
+		return fmt.Errorf("getting current tern version: %w", err)
+	}
+	if currentVersion > 0 {
+		return nil
+	}
+
+	rows, err := conn.Query(ctx, "SELECT version FROM schema_migrations")
+	if err != nil {
+		return fmt.Errorf("querying legacy migrations: %w", err)
 	}
 	defer rows.Close()
 
-	applied := make(map[string]bool)
+	var maxVersion int32
 	for rows.Next() {
-		var version string
-		if err := rows.Scan(&version); err != nil {
-			return nil, err
+		var versionStr string
+		if err := rows.Scan(&versionStr); err != nil {
+			return fmt.Errorf("scanning version: %w", err)
 		}
-		applied[version] = true
-	}
 
+		numStr := versionStr
+		if idx := strings.Index(versionStr, "_"); idx > 0 {
+			numStr = versionStr[:idx]
+		}
+		numStr = strings.TrimLeft(numStr, "0")
+		if numStr == "" {
+			numStr = "0"
+		}
+
+		num, err := strconv.ParseInt(numStr, 10, 32)
+		if err != nil {
+			return fmt.Errorf("parsing version number from %q: %w", versionStr, err)
+		}
+		if int32(num) > maxVersion {
+			maxVersion = int32(num)
+		}
+	}
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return fmt.Errorf("iterating legacy migrations: %w", err)
 	}
 
-	return applied, nil
-}
+	if maxVersion == 0 {
+		return nil
+	}
 
-func (s *Setup) runMigrationSafely(ctx context.Context, m migration) error {
-	tx, err := s.db.Begin(ctx)
+	log.Info().
+		Int32("version", maxVersion).
+		Msg("Seeding tern schema_version from legacy schema_migrations table")
+
+	_, err = conn.Exec(ctx, fmt.Sprintf("UPDATE %s SET version=$1", versionTable), maxVersion)
 	if err != nil {
-		return fmt.Errorf("starting transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	log.Info().Str("version", m.Version).Msg("Running migration")
-
-	if _, err := tx.Exec(ctx, m.UpSQL); err != nil {
-		return fmt.Errorf("executing migration: %w", err)
+		return fmt.Errorf("updating tern version: %w", err)
 	}
 
-	if _, err := tx.Exec(ctx,
-		"INSERT INTO schema_migrations (version) VALUES ($1)",
-		m.Version); err != nil {
-		return fmt.Errorf("recording migration: %w", err)
+	_, err = conn.Exec(ctx, "ALTER TABLE schema_migrations RENAME TO schema_migrations_legacy")
+	if err != nil {
+		return fmt.Errorf("renaming legacy table: %w", err)
 	}
 
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("committing transaction: %w", err)
-	}
-
-	log.Info().Str("version", m.Version).Msg("Migration completed")
+	log.Info().Msg("Legacy schema_migrations table renamed to schema_migrations_legacy")
 	return nil
 }
