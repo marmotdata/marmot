@@ -6,8 +6,8 @@ import (
 )
 
 type Recorder interface {
-	RecordSearchQuery(ctx context.Context, queryType, query string) error
-	RecordAssetView(ctx context.Context, assetID, assetType, assetName, assetProvider string) error
+	RecordSearchQuery(ctx context.Context, queryType, query string)
+	RecordAssetView(ctx context.Context, assetID, assetType, assetName, assetProvider string)
 	RecordDBQuery(ctx context.Context, operation string, duration time.Duration, success bool)
 	WrapDBQuery(ctx context.Context, operation string, fn func() error) error
 	RecordCustomMetrics(ctx context.Context, metrics []Metric) error
@@ -21,12 +21,12 @@ func NewRecorder(collector *Collector) Recorder {
 	return &recorder{collector: collector}
 }
 
-func (r *recorder) RecordSearchQuery(ctx context.Context, queryType, query string) error {
-	return r.collector.RecordSearchQuery(queryType, query)
+func (r *recorder) RecordSearchQuery(ctx context.Context, queryType, query string) {
+	r.collector.RecordSearchQuery(queryType, query)
 }
 
-func (r *recorder) RecordAssetView(ctx context.Context, assetID, assetType, assetName, assetProvider string) error {
-	return r.collector.RecordAssetView(assetID, assetType, assetName, assetProvider)
+func (r *recorder) RecordAssetView(ctx context.Context, assetID, assetType, assetName, assetProvider string) {
+	r.collector.RecordAssetView(assetID, assetType, assetName, assetProvider)
 }
 
 func (r *recorder) RecordDBQuery(ctx context.Context, operation string, duration time.Duration, success bool) {
@@ -45,4 +45,3 @@ func (r *recorder) WrapDBQuery(ctx context.Context, operation string, fn func() 
 func (r *recorder) RecordCustomMetrics(ctx context.Context, metrics []Metric) error {
 	return r.collector.store.RecordMetrics(ctx, metrics)
 }
-

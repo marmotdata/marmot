@@ -2,10 +2,21 @@ package metrics
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"github.com/rs/zerolog/log"
+)
+
+const (
+	// Size of the async metric queue
+	metricQueueSize = 10000
+	// How often to flush queued metrics to the database
+	metricFlushInterval = 5 * time.Second
+	// Max metrics to batch in a single insert
+	metricBatchSize = 500
 )
 
 type Collector struct {
@@ -28,12 +39,19 @@ type Collector struct {
 	dbErrors        *prometheus.CounterVec
 
 	assets *prometheus.GaugeVec
+
+	// Async metric recording
+	metricQueue chan Metric
+	stopCh      chan struct{}
+	wg          sync.WaitGroup
 }
 
 func NewCollector(store Store) *Collector {
 	c := &Collector{
-		registry: prometheus.DefaultRegisterer,
-		store:    store,
+		registry:    prometheus.DefaultRegisterer,
+		store:       store,
+		metricQueue: make(chan Metric, metricQueueSize),
+		stopCh:      make(chan struct{}),
 	}
 
 	c.httpRequests = promauto.NewCounterVec(prometheus.CounterOpts{
@@ -106,11 +124,81 @@ func NewCollector(store Store) *Collector {
 	return c
 }
 
-func (c *Collector) RecordHTTPRequest(method, path, status string) error {
+// StartAsyncRecording starts the background worker for async metric recording
+func (c *Collector) StartAsyncRecording() {
+	c.wg.Add(1)
+	go c.asyncRecordingWorker()
+}
+
+// StopAsyncRecording stops the background worker and flushes remaining metrics
+func (c *Collector) StopAsyncRecording() {
+	close(c.stopCh)
+	c.wg.Wait()
+}
+
+// asyncRecordingWorker processes queued metrics in the background
+func (c *Collector) asyncRecordingWorker() {
+	defer c.wg.Done()
+
+	ticker := time.NewTicker(metricFlushInterval)
+	defer ticker.Stop()
+
+	var batch []Metric
+
+	flush := func() {
+		if len(batch) == 0 {
+			return
+		}
+		if err := c.store.RecordMetrics(context.Background(), batch); err != nil {
+			log.Error().Err(err).Int("count", len(batch)).Msg("Failed to flush metrics batch")
+		}
+		batch = batch[:0] // Reset slice but keep capacity
+	}
+
+	for {
+		select {
+		case metric, ok := <-c.metricQueue:
+			if !ok {
+				flush()
+				return
+			}
+			batch = append(batch, metric)
+			if len(batch) >= metricBatchSize {
+				flush()
+			}
+		case <-ticker.C:
+			flush()
+		case <-c.stopCh:
+			// Drain remaining metrics from queue
+			for {
+				select {
+				case metric := <-c.metricQueue:
+					batch = append(batch, metric)
+				default:
+					flush()
+					return
+				}
+			}
+		}
+	}
+}
+
+// queueMetric adds a metric to the async queue (non-blocking)
+func (c *Collector) queueMetric(metric Metric) {
+	select {
+	case c.metricQueue <- metric:
+		// Successfully queued
+	default:
+		// Queue full - drop metric to avoid blocking request
+		log.Warn().Str("metric", metric.Name).Msg("Metric queue full, dropping metric")
+	}
+}
+
+func (c *Collector) RecordHTTPRequest(method, path, status string) {
 	c.httpRequests.WithLabelValues(method, path, status).Inc()
 
 	if c.shouldStoreForUI("http_requests") {
-		return c.store.RecordMetric(context.Background(), Metric{
+		c.queueMetric(Metric{
 			Name:      "http_requests_total",
 			Type:      Counter,
 			Value:     1,
@@ -118,7 +206,6 @@ func (c *Collector) RecordHTTPRequest(method, path, status string) error {
 			Timestamp: time.Now(),
 		})
 	}
-	return nil
 }
 
 func (c *Collector) RecordHTTPDuration(method, path string, duration time.Duration) {
@@ -140,10 +227,10 @@ func (c *Collector) SetDBConnections(count int) {
 	c.dbConnections.Set(float64(count))
 }
 
-func (c *Collector) RecordSearchQuery(queryType, query string) error {
+func (c *Collector) RecordSearchQuery(queryType, query string) {
 	c.searchQueries.WithLabelValues(queryType).Inc()
 
-	return c.store.RecordMetric(context.Background(), Metric{
+	c.queueMetric(Metric{
 		Name:      "search_queries_detailed",
 		Type:      Counter,
 		Value:     1,
@@ -152,13 +239,13 @@ func (c *Collector) RecordSearchQuery(queryType, query string) error {
 	})
 }
 
-func (c *Collector) RecordAssetView(assetID, assetType, assetName, assetProvider string) error {
+func (c *Collector) RecordAssetView(assetID, assetType, assetName, assetProvider string) {
 	if assetType != "" && assetProvider != "" {
 		c.assetViews.WithLabelValues(assetType, assetProvider).Inc()
 	}
 
 	if c.shouldStoreForUI("asset_views") {
-		return c.store.RecordMetric(context.Background(), Metric{
+		c.queueMetric(Metric{
 			Name:  "asset_views_total",
 			Type:  Counter,
 			Value: 1,
@@ -171,8 +258,6 @@ func (c *Collector) RecordAssetView(assetID, assetType, assetName, assetProvider
 			Timestamp: time.Now(),
 		})
 	}
-
-	return nil
 }
 
 func (c *Collector) UpdateAssetMetrics(breakdown []AssetBreakdown) {

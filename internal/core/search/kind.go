@@ -60,17 +60,3 @@ func stripKindFilter(queryStr string) string {
 
 	return strings.TrimSpace(result)
 }
-
-// searchTypeIncluded checks if a result type should be included in search.
-// Returns true if no filter is specified (include all) or if target is in the list.
-func searchTypeIncluded(types []ResultType, target ResultType) bool {
-	if len(types) == 0 {
-		return true
-	}
-	for _, t := range types {
-		if t == target {
-			return true
-		}
-	}
-	return false
-}

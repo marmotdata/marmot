@@ -187,17 +187,13 @@
 
 	async function fetchData() {
 		try {
-			const [summaryRes, recentRes, userAssetsRes] = await Promise.all([
+			const [summaryRes, userAssetsRes] = await Promise.all([
 				fetchApi('/assets/summary'),
-				fetchApi('/assets/list?limit=6&sort_by=updated_at&sort_order=desc'),
 				fetchApi('/assets/my-assets?limit=6')
 			]);
 
 			if (summaryRes.ok) {
 				summary = await summaryRes.json();
-			}
-			if (recentRes.ok) {
-				await recentRes.json();
 			}
 			if (userAssetsRes.ok) {
 				const userData = await userAssetsRes.json();

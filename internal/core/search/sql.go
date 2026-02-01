@@ -26,8 +26,6 @@ const assetMetadataColumns = `jsonb_build_object(
 	'is_stub', is_stub
 ) as metadata`
 
-const assetURLExpr = `'/discover/' || type || '/' || providers[1] || '/' || SUBSTRING(mrn FROM 'mrn://[^/]+/[^/]+/(.+)') as url`
-
 const glossaryMetadataColumns = `jsonb_build_object(
 	'id', id,
 	'name', name,
@@ -39,8 +37,6 @@ const glossaryMetadataColumns = `jsonb_build_object(
 	'created_at', created_at,
 	'updated_at', updated_at
 ) as metadata`
-
-const glossaryURLExpr = `'/glossary/' || id::text as url`
 
 const teamMetadataColumns = `jsonb_build_object(
 	'id', id,
@@ -55,8 +51,6 @@ const teamMetadataColumns = `jsonb_build_object(
 	'updated_at', updated_at
 ) as metadata`
 
-const teamURLExpr = `'/teams/' || id as url`
-
 const dataProductMetadataColumns = `jsonb_build_object(
 	'id', dp.id,
 	'name', dp.name,
@@ -68,5 +62,3 @@ const dataProductMetadataColumns = `jsonb_build_object(
 	'created_at', dp.created_at,
 	'updated_at', dp.updated_at
 ) as metadata`
-
-const dataProductURLExpr = `'/products/' || dp.id::text as url`

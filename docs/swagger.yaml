@@ -141,17 +141,6 @@ definitions:
       total:
         type: integer
     type: object
-  asset.ListResult:
-    properties:
-      assets:
-        items:
-          $ref: '#/definitions/asset.Asset'
-        type: array
-      filters:
-        $ref: '#/definitions/asset.AvailableFilters'
-      total:
-        type: integer
-    type: object
   asset.MetadataFieldSuggestion:
     properties:
       count:
@@ -2608,32 +2597,6 @@ paths:
           schema:
             $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Batch create documentation
-      tags:
-      - assets
-  /assets/list:
-    get:
-      description: Get a paginated list of assets
-      parameters:
-      - description: Offset for pagination
-        in: query
-        name: offset
-        type: integer
-      - description: Limit for pagination
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/asset.ListResult'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
-      summary: List assets with pagination
       tags:
       - assets
   /assets/lookup/{type}/{service}/{name}:

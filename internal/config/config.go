@@ -112,6 +112,10 @@ type Config struct {
 		Banner BannerConfig `mapstructure:"banner"`
 	} `mapstructure:"ui"`
 
+	Search struct {
+		Timeout int `mapstructure:"timeout"` // seconds
+	} `mapstructure:"search"`
+
 	Pipelines struct {
 		MaxWorkers        int `mapstructure:"max_workers"`
 		SchedulerInterval int `mapstructure:"scheduler_interval"`
@@ -255,6 +259,9 @@ func loadConfig(configPath string) error {
 	v.BindEnv("pipelines.lease_expiry")
 	v.BindEnv("pipelines.claim_expiry")
 
+	// Search env vars
+	v.BindEnv("search.timeout")
+
 	// Set defaults
 	setDefaults(v)
 
@@ -287,8 +294,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("database.password", "postgres")
 	v.SetDefault("database.name", "marmot")
 	v.SetDefault("database.sslmode", "disable")
-	v.SetDefault("database.max_conns", 25)
-	v.SetDefault("database.idle_conns", 5)
+	v.SetDefault("database.max_conns", 50)
+	v.SetDefault("database.idle_conns", 25)
 	v.SetDefault("database.conn_lifetime", 5) // minutes
 
 	v.SetDefault("auth.anonymous.role", "user")
@@ -351,6 +358,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("pipelines.scheduler_interval", 60)
 	v.SetDefault("pipelines.lease_expiry", 300)
 	v.SetDefault("pipelines.claim_expiry", 30)
+
+	// Search defaults
+	v.SetDefault("search.timeout", 10) // 10 seconds
 }
 
 // BuildDSN builds a PostgreSQL connection string from config

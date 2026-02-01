@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync"
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
@@ -181,8 +182,6 @@ type Service interface {
 	Create(ctx context.Context, input CreateInput) (*Asset, error)
 	Get(ctx context.Context, id string) (*Asset, error)
 	GetByMRN(ctx context.Context, qualifiedName string) (*Asset, error)
-	List(ctx context.Context, offset, limit int) (*ListResult, error)
-	ListWithStubs(ctx context.Context, offset, limit int, includeStubs bool) (*ListResult, error)
 	Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error)
 	GetMyAssets(ctx context.Context, userID string, teamIDs []string, limit, offset int) ([]*Asset, int, error)
 	Summary(ctx context.Context) (*AssetSummary, error)
@@ -223,12 +222,31 @@ type NotificationObserver interface {
 	OnAssetUpdated(ctx context.Context, asset *Asset, changeType string)
 }
 
+// summaryCache holds cached summary data with TTL
+type summaryCache struct {
+	sync.RWMutex
+	data      *AssetSummary
+	expiresAt time.Time
+}
+
+// metadataFieldsCache holds cached metadata field suggestions with TTL
+type metadataFieldsCache struct {
+	sync.RWMutex
+	data      []MetadataFieldSuggestion
+	expiresAt time.Time
+}
+
+const summaryCacheTTL = 5 * time.Second
+const metadataFieldsCacheTTL = 30 * time.Second
+
 type service struct {
 	repo                 Repository
 	validator            *validator.Validate
 	metrics              MetricsClient
 	membershipObserver   MembershipObserver
 	notificationObserver NotificationObserver
+	summaryCache         summaryCache
+	metadataFieldsCache  metadataFieldsCache
 }
 
 type Logger interface {
@@ -292,14 +310,31 @@ func (s *service) GetRunHistory(ctx context.Context, assetID string, limit, offs
 }
 
 func (s *service) GetMetadataFields(ctx context.Context, queryContext *MetadataContext) ([]MetadataFieldSuggestion, error) {
-	if queryContext == nil || queryContext.Query == "" {
-		return s.repo.GetMetadataFields(ctx)
+	if queryContext != nil && queryContext.Query != "" {
+		fields, err := s.repo.GetMetadataFieldsWithContext(ctx, queryContext)
+		if err != nil {
+			return nil, fmt.Errorf("getting metadata fields with context: %w", err)
+		}
+		return fields, nil
 	}
 
-	fields, err := s.repo.GetMetadataFieldsWithContext(ctx, queryContext)
-	if err != nil {
-		return nil, fmt.Errorf("getting metadata fields with context: %w", err)
+	s.metadataFieldsCache.RLock()
+	if s.metadataFieldsCache.data != nil && time.Now().Before(s.metadataFieldsCache.expiresAt) {
+		cached := s.metadataFieldsCache.data
+		s.metadataFieldsCache.RUnlock()
+		return cached, nil
 	}
+	s.metadataFieldsCache.RUnlock()
+
+	fields, err := s.repo.GetMetadataFields(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("getting metadata fields: %w", err)
+	}
+
+	s.metadataFieldsCache.Lock()
+	s.metadataFieldsCache.data = fields
+	s.metadataFieldsCache.expiresAt = time.Now().Add(metadataFieldsCacheTTL)
+	s.metadataFieldsCache.Unlock()
 
 	return fields, nil
 }
@@ -451,22 +486,6 @@ func (s *service) GetByMRN(ctx context.Context, qualifiedName string) (*Asset, e
 	return asset, nil
 }
 
-func (s *service) List(ctx context.Context, offset, limit int) (*ListResult, error) {
-	result, err := s.repo.List(ctx, offset, limit, false)
-	if err != nil {
-		return nil, fmt.Errorf("listing assets: %w", err)
-	}
-	return result, nil
-}
-
-func (s *service) ListWithStubs(ctx context.Context, offset, limit int, includeStubs bool) (*ListResult, error) {
-	result, err := s.repo.List(ctx, offset, limit, includeStubs)
-	if err != nil {
-		return nil, fmt.Errorf("listing assets: %w", err)
-	}
-	return result, nil
-}
-
 func (s *service) Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error) {
 	if err := s.validator.Struct(filter); err != nil {
 		return nil, 0, AvailableFilters{}, fmt.Errorf("%w: %v", ErrInvalidInput, err)
@@ -481,10 +500,24 @@ func (s *service) Search(ctx context.Context, filter SearchFilter, calculateCoun
 }
 
 func (s *service) Summary(ctx context.Context) (*AssetSummary, error) {
+	s.summaryCache.RLock()
+	if s.summaryCache.data != nil && time.Now().Before(s.summaryCache.expiresAt) {
+		cached := s.summaryCache.data
+		s.summaryCache.RUnlock()
+		return cached, nil
+	}
+	s.summaryCache.RUnlock()
+
 	summary, err := s.repo.Summary(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get summary: %w", err)
 	}
+
+	s.summaryCache.Lock()
+	s.summaryCache.data = summary
+	s.summaryCache.expiresAt = time.Now().Add(summaryCacheTTL)
+	s.summaryCache.Unlock()
+
 	return summary, nil
 }
 

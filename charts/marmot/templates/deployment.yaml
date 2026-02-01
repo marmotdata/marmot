@@ -120,6 +120,12 @@ spec:
               value: {{ .Values.config.database.idleConns | quote }}
             - name: MARMOT_DATABASE_CONN_LIFETIME
               value: {{ .Values.config.database.connLifetime | quote }}
+            {{- if .Values.config.search }}
+            {{- if .Values.config.search.timeout }}
+            - name: MARMOT_SEARCH_TIMEOUT
+              value: {{ .Values.config.search.timeout | quote }}
+            {{- end }}
+            {{- end }}
             - name: MARMOT_DATABASE_PASSWORD
               {{- if .Values.postgresql.enabled }}
               valueFrom:

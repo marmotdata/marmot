@@ -24,13 +24,15 @@ var (
 )
 
 const (
+	// baseSelectAsset is the base query for fetching assets.
+	// Note: has_run_history is computed separately via HasRunHistory() to avoid
+	// expensive correlated subqueries on every asset fetch.
 	baseSelectAsset = `
    	SELECT
    		id, name, mrn, type, providers, environments, external_links,
    		description, user_description, metadata, schema, sources, tags,
    		created_at, created_by, updated_at, last_sync_at,
-   		query, query_language, is_stub,
-   		EXISTS(SELECT 1 FROM run_history WHERE asset_id = assets.id) as has_run_history
+   		query, query_language, is_stub
    	FROM assets`
 )
 
@@ -38,7 +40,6 @@ type Repository interface {
 	Create(ctx context.Context, asset *Asset) error
 	Get(ctx context.Context, id string) (*Asset, error)
 	GetByMRN(ctx context.Context, qualifiedName string) (*Asset, error)
-	List(ctx context.Context, offset, limit int, includeStubs bool) (*ListResult, error)
 	Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error)
 	GetMyAssets(ctx context.Context, userID string, teamIDs []string, limit, offset int) ([]*Asset, int, error)
 	Summary(ctx context.Context) (*AssetSummary, error)
@@ -60,12 +61,6 @@ type Repository interface {
 	RemoveTerm(ctx context.Context, assetID string, termID string) error
 	GetTerms(ctx context.Context, assetID string) ([]AssetTerm, error)
 	GetAssetsByTerm(ctx context.Context, termID string, limit, offset int) ([]*Asset, int, error)
-}
-
-type ListResult struct {
-	Assets  []*Asset
-	Total   int
-	Filters AvailableFilters
 }
 
 type AvailableFilters struct {
@@ -197,42 +192,6 @@ func (r *PostgresRepository) ListByPattern(ctx context.Context, pattern string, 
 	return assets, nil
 }
 
-func (r *PostgresRepository) List(ctx context.Context, offset, limit int, includeStubs bool) (*ListResult, error) {
-	tx, err := r.db.Begin(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("beginning transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	countQuery := "SELECT COUNT(*) FROM assets"
-	listQuery := baseSelectAsset + " ORDER BY updated_at DESC LIMIT $1 OFFSET $2"
-
-	if !includeStubs {
-		countQuery += " WHERE is_stub = FALSE"
-		listQuery = baseSelectAsset + " WHERE is_stub = FALSE ORDER BY updated_at DESC LIMIT $1 OFFSET $2"
-	}
-
-	var total int
-	err = tx.QueryRow(ctx, countQuery).Scan(&total)
-	if err != nil {
-		return nil, fmt.Errorf("counting assets: %w", err)
-	}
-
-	assets, err := r.scanMultipleAssets(ctx, listQuery, limit, offset)
-	if err != nil {
-		return nil, fmt.Errorf("scanning assets: %w", err)
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("committing transaction: %w", err)
-	}
-
-	return &ListResult{
-		Assets: assets,
-		Total:  total,
-	}, nil
-}
-
 func (r *PostgresRepository) Update(ctx context.Context, asset *Asset) error {
 	metadataJSON, sourcesJSON, environmentsJSON, externalLinksJSON, err := marshalAssetFields(asset)
 	if err != nil {
@@ -345,7 +304,7 @@ func (r *PostgresRepository) scanAsset(ctx context.Context, row pgx.Row) (*Asset
 		&environmentsJSON, &externalLinksJSON, &asset.Description, &asset.UserDescription,
 		&metadataJSON, &schemaJSON, &sourcesJSON,
 		&asset.Tags, &asset.CreatedAt, &asset.CreatedBy, &asset.UpdatedAt,
-		&asset.LastSyncAt, &asset.Query, &asset.QueryLanguage, &asset.IsStub, &asset.HasRunHistory,
+		&asset.LastSyncAt, &asset.Query, &asset.QueryLanguage, &asset.IsStub,
 	)
 
 	if err != nil {
@@ -450,6 +409,7 @@ func (r *PostgresRepository) GetMetadataFields(ctx context.Context) ([]MetadataF
 	query := `
 	WITH metadata_keys AS (
 		-- Get top-level keys from assets (sampled for performance at scale)
+		-- Using 2000 samples is sufficient since results are cached for 30s
 		SELECT
 			key as field,
 			jsonb_typeof(value) as type,
@@ -460,7 +420,7 @@ func (r *PostgresRepository) GetMetadataFields(ctx context.Context) ([]MetadataF
 			AND metadata IS NOT NULL
 			AND metadata != '{}'::jsonb
 			AND jsonb_typeof(metadata) = 'object'
-			LIMIT 10000
+			LIMIT 2000
 		) sampled,
 		jsonb_each(sampled.metadata)
 
@@ -524,7 +484,7 @@ func (r *PostgresRepository) GetMetadataFieldsWithContext(ctx context.Context, q
 			AND metadata IS NOT NULL
 			AND metadata != '{}'::jsonb
 			AND jsonb_typeof(metadata) = 'object'
-			LIMIT 5000
+			LIMIT 1000
 		) matched,
 		jsonb_each(matched.metadata)
 
@@ -668,67 +628,54 @@ func (r *PostgresRepository) GetMetadataValues(ctx context.Context, field string
 		return r.scanMetadataValues(ctx, query, prefix, limit)
 
 	default:
-		pathArray := strings.Split(field, ".")
-		sampleSize := limit * 100
-		if sampleSize > 10000 {
-			sampleSize = 10000
-		}
-		query := fmt.Sprintf(`
-			WITH MetadataValues AS (
-				SELECT id::text, value FROM (
-					SELECT
-						a.id,
-						jsonb_extract_path(a.metadata, VARIADIC $1::text[]) as value
-					FROM assets a
-					WHERE jsonb_typeof(jsonb_extract_path(a.metadata, VARIADIC $1::text[])) != 'null'
-					AND is_stub = FALSE
-					AND jsonb_typeof(a.metadata) = 'object'
-					LIMIT %d
-				) assets_sample
-
-				UNION ALL
-
-				SELECT id::text, value FROM (
-					SELECT
-						g.id,
-						jsonb_extract_path(g.metadata, VARIADIC $1::text[]) as value
-					FROM glossary_terms g
-					WHERE jsonb_typeof(jsonb_extract_path(g.metadata, VARIADIC $1::text[])) != 'null'
-					AND deleted_at IS NULL
-					AND jsonb_typeof(g.metadata) = 'object'
-					LIMIT 1000
-				) glossary_sample
-
-				UNION ALL
-
-				SELECT id::text, value FROM (
-					SELECT
-						t.id,
-						jsonb_extract_path(t.metadata, VARIADIC $1::text[]) as value
-					FROM teams t
-					WHERE jsonb_typeof(jsonb_extract_path(t.metadata, VARIADIC $1::text[])) != 'null'
-					AND jsonb_typeof(t.metadata) = 'object'
-					LIMIT 1000
-				) teams_sample
-			)
-			SELECT
-				value::text,
-				COUNT(DISTINCT id)
-			FROM MetadataValues
-			WHERE (
-				$2 = '' OR
-				CASE
-					WHEN jsonb_typeof(value) = 'string' THEN value::text ILIKE $2 || '%%'
-					WHEN jsonb_typeof(value) IN ('number', 'boolean') THEN value::text ILIKE $2 || '%%'
-					ELSE FALSE
-				END
-			)
-			AND jsonb_typeof(value) != 'null'
+		// Try materialized view first (fast, but only includes values with count >= 2)
+		query := `
+			SELECT value, SUM(count)::bigint as total_count
+			FROM metadata_value_counts
+			WHERE field_path = $1
+			AND ($2 = '' OR lower(value) LIKE lower($2) || '%')
 			GROUP BY value
-			ORDER BY COUNT(DISTINCT id) DESC, value ASC
-			LIMIT $3`, sampleSize)
+			ORDER BY total_count DESC, value ASC
+			LIMIT $3`
 
-		return r.scanMetadataValues(ctx, query, pathArray, prefix, limit)
+		results, err := r.scanMetadataValues(ctx, query, field, prefix, limit)
+		if err != nil {
+			return nil, err
+		}
+		if len(results) > 0 {
+			return results, nil
+		}
+
+		// Check if field exists at all before expensive fallback query
+		// Uses the GIN index on search_index.metadata for fast lookup
+		var fieldExists bool
+		err = r.db.QueryRow(ctx, `
+			SELECT EXISTS(
+				SELECT 1 FROM search_index
+				WHERE type = 'asset' AND metadata ? $1
+				LIMIT 1
+			)`, field).Scan(&fieldExists)
+		if err != nil || !fieldExists {
+			return []MetadataValueSuggestion{}, nil
+		}
+
+		// Fallback: query assets directly for values that may not be in materialized view
+		fallbackQuery := `
+			SELECT
+				CASE
+					WHEN jsonb_typeof(metadata->$1) = 'string' THEN trim('"' FROM (metadata->$1)::text)
+					ELSE (metadata->$1)::text
+				END as value,
+				COUNT(*) as count
+			FROM assets
+			WHERE is_stub = FALSE
+			AND metadata ? $1
+			AND ($2 = '' OR (metadata->$1)::text ILIKE '%' || $2 || '%')
+			GROUP BY value
+			ORDER BY count DESC, value ASC
+			LIMIT $3`
+
+		return r.scanMetadataValues(ctx, fallbackQuery, field, prefix, limit)
 	}
 }
 
@@ -904,70 +851,47 @@ func (r *PostgresRepository) Summary(ctx context.Context) (*AssetSummary, error)
 	}
 
 	rows, err := r.db.Query(ctx, `
-		WITH base_counts AS (
-			SELECT
-				type,
-				providers[1] as primary_provider,
-				tags
-			FROM assets
-			WHERE is_stub = FALSE
-		),
-		type_summary AS (
-			SELECT
-				type,
-				COUNT(*) as count,
-				(array_agg(primary_provider))[1] as service
-			FROM base_counts
-			GROUP BY type
-		),
-		provider_summary AS (
-			SELECT
-				unnest(providers) as provider,
-				COUNT(*) as count
-			FROM assets
-			WHERE is_stub = FALSE
-			GROUP BY unnest(providers)
-		),
-		tag_summary AS (
-			SELECT
-				unnest(tags) as tag,
-				COUNT(*) as count
-			FROM assets
-			WHERE is_stub = FALSE AND tags IS NOT NULL AND array_length(tags, 1) > 0
-			GROUP BY unnest(tags)
-			ORDER BY count DESC
-			LIMIT 100
-		)
-		SELECT 'type' as category, type as name, count, service FROM type_summary
-		UNION ALL
-		SELECT 'provider' as category, provider as name, count, NULL FROM provider_summary
-		UNION ALL
-		SELECT 'tag' as category, tag as name, count, NULL FROM tag_summary
+		SELECT dimension, key, count
+		FROM summary_counts
+		WHERE count > 0
+		ORDER BY
+			CASE dimension
+				WHEN 'type' THEN 1
+				WHEN 'provider' THEN 2
+				WHEN 'tag' THEN 3
+			END,
+			count DESC, key ASC
 	`)
 	if err != nil {
-		return nil, fmt.Errorf("querying summary: %w", err)
+		return nil, fmt.Errorf("querying summary counts: %w", err)
 	}
 	defer rows.Close()
 
+	tagCount := 0
 	for rows.Next() {
-		var category, name string
+		var dimension, key string
 		var count int
-		var service *string
-		if err := rows.Scan(&category, &name, &count, &service); err != nil {
+		if err := rows.Scan(&dimension, &key, &count); err != nil {
 			return nil, fmt.Errorf("scanning summary row: %w", err)
 		}
 
-		switch category {
+		switch dimension {
 		case "type":
-			svc := ""
-			if service != nil {
-				svc = *service
-			}
-			summary.Types[name] = AssetTypeSummary{Count: count, Service: svc}
+			summary.Types[key] = AssetTypeSummary{Count: count}
 		case "provider":
-			summary.Providers[name] = count
+			summary.Providers[key] = count
+			for typeName, typeSummary := range summary.Types {
+				if typeSummary.Service == "" {
+					typeSummary.Service = key
+					summary.Types[typeName] = typeSummary
+					break
+				}
+			}
 		case "tag":
-			summary.Tags[name] = count
+			if tagCount < 100 {
+				summary.Tags[key] = count
+				tagCount++
+			}
 		}
 	}
 
@@ -976,18 +900,12 @@ func (r *PostgresRepository) Summary(ctx context.Context) (*AssetSummary, error)
 
 func (r *PostgresRepository) GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error) {
 	rows, err := r.db.Query(ctx, `
-   	WITH tag_counts AS (
-   		SELECT DISTINCT unnest(tags) as tag, COUNT(*) as count
-   		FROM assets
-   		WHERE tags IS NOT NULL 
-   			AND array_length(tags, 1) > 0
-   			AND ($1 = '' OR unnest(tags) ILIKE $1 || '%')
-   			AND is_stub = FALSE
-   		GROUP BY unnest(tags)
-   		ORDER BY count DESC, tag ASC
-   		LIMIT $2
-   	)
-   	SELECT tag FROM tag_counts ORDER BY tag ASC`,
+		SELECT tag, COUNT(*) as cnt
+		FROM asset_tags
+		WHERE $1 = '' OR tag LIKE $1 || '%'
+		GROUP BY tag
+		ORDER BY cnt DESC, tag ASC
+		LIMIT $2`,
 		prefix, limit)
 	if err != nil {
 		return nil, fmt.Errorf("querying tag suggestions: %w", err)
@@ -997,7 +915,8 @@ func (r *PostgresRepository) GetTagSuggestions(ctx context.Context, prefix strin
 	var tags []string
 	for rows.Next() {
 		var tag string
-		if err := rows.Scan(&tag); err != nil {
+		var cnt int
+		if err := rows.Scan(&tag, &cnt); err != nil {
 			return nil, fmt.Errorf("scanning tag: %w", err)
 		}
 		tags = append(tags, tag)
@@ -1091,8 +1010,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
           id, name, mrn, type, providers, environments, external_links,
           description, user_description, metadata, schema, sources, tags,
           created_at, created_by, updated_at, last_sync_at,
-          query, query_language, is_stub,
-          EXISTS(SELECT 1 FROM run_history WHERE asset_id = search_results.id) as has_run_history
+          query, query_language, is_stub
       FROM search_results
       ORDER BY
           CASE WHEN name_similarity > 0.8 THEN name_similarity * 2
@@ -1575,8 +1493,7 @@ func (r *PostgresRepository) GetMyAssets(ctx context.Context, userID string, tea
 			a.id, a.name, a.mrn, a.type, a.providers, a.environments, a.external_links,
 			a.description, a.user_description, a.metadata, a.schema, a.sources, a.tags,
 			a.created_at, a.created_by, a.updated_at, a.last_sync_at,
-			a.query, a.query_language, a.is_stub,
-			EXISTS(SELECT 1 FROM run_history WHERE asset_id = a.id) as has_run_history
+			a.query, a.query_language, a.is_stub
 		FROM assets a
 		JOIN asset_owners ao ON a.id = ao.asset_id
 		WHERE (ao.user_id = $1 OR ao.team_id = ANY($2))

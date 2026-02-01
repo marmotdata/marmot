@@ -57,18 +57,18 @@ ingress:
 
 resources:
   limits:
+    cpu: 2000m
+    memory: 2Gi
+  requests:
     cpu: 500m
     memory: 512Mi
-  requests:
-    cpu: 100m
-    memory: 128Mi
 
 autoscaling:
-  enabled: false
-  minReplicas: 1
-  maxReplicas: 100
-  targetCPUUtilizationPercentage: 80
-  # targetMemoryUtilizationPercentage: 80
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
 
 nodeSelector: {}
 
@@ -127,9 +127,16 @@ config:
     #   key: "password"
     name: "marmot"
     sslmode: "disable"
-    maxConns: 25
-    idleConns: 5
-    connLifetime: 5
+    # Connection pool settings - tune based on expected concurrency
+    # maxConns should be: expected_concurrent_requests / num_replicas
+    maxConns: 100
+    idleConns: 20
+    connLifetime: 30  # minutes
+
+  # Search configuration
+  search:
+    # Query timeout prevents runaway queries from exhausting connections
+    timeout: 10  # seconds
 
   # Logging configuration
   logging:

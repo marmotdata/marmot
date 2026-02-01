@@ -104,10 +104,7 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 		if len(filter.Types) > 0 || len(filter.AssetTypes) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 {
 			queryType = "filtered"
 		}
-		err = recorder.RecordSearchQuery(r.Context(), queryType, query)
-		if err != nil {
-			log.Error().Err(err)
-		}
+		recorder.RecordSearchQuery(r.Context(), queryType, query)
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)

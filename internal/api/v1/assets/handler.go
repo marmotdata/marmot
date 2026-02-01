@@ -50,16 +50,6 @@ func NewHandler(
 func (h *Handler) Routes() []common.Route {
 	return []common.Route{
 		{
-			Path:    "/api/v1/assets/list",
-			Method:  http.MethodGet,
-			Handler: h.listAssets,
-			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService, h.config),
-				common.RequirePermission(h.userService, "assets", "view"),
-				common.WithRateLimit(h.config, 100, 60), // 100 requests per 60 seconds
-			},
-		},
-		{
 			Path:    "/api/v1/assets/",
 			Method:  http.MethodPost,
 			Handler: h.createAsset,

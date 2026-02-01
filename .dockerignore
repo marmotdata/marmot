@@ -1,0 +1,7 @@
+.git/
+web/
+test/
+charts/
+.claude/
+.github/
+*.md

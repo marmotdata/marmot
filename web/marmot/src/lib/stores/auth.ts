@@ -81,7 +81,7 @@ function createAuthStore() {
 
 				// Try to access a protected endpoint without authentication
 				// TODO: this is very crude, we should consider adding a status endpoint
-				const response = await fetch('/api/v1/assets/list');
+				const response = await fetch('/api/v1/assets/summary');
 
 				if (response.ok) {
 					isAnonymousMode.set(true);

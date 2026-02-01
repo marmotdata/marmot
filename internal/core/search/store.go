@@ -13,8 +13,17 @@ import (
 	"github.com/marmotdata/marmot/internal/query"
 )
 
+const (
+	// DefaultSearchTimeout prevents runaway queries from exhausting connections
+	DefaultSearchTimeout = 10 * time.Second
+
+	// Maximum results for facet aggregations
+	maxFacetResults = 50
+)
+
 type Repository interface {
 	Search(ctx context.Context, filter Filter) ([]*Result, int, *Facets, error)
+	GetMetadata(ctx context.Context, resultType ResultType, ids []string) (map[string]map[string]interface{}, error)
 }
 
 type PostgresRepository struct {
@@ -29,95 +38,468 @@ func NewPostgresRepository(db *pgxpool.Pool, recorder metrics.Recorder) *Postgre
 	}
 }
 
+// Search performs a unified search across all entity types using the search_index table.
+// It routes queries to optimized paths based on query characteristics.
 func (r *PostgresRepository) Search(ctx context.Context, filter Filter) ([]*Result, int, *Facets, error) {
 	start := time.Now()
-	var results []*Result
-	var err error
-	var searchMethod string
 
-	if filter.Query != "" {
-		results, err = r.searchExactMatch(ctx, filter)
-		if err != nil {
-			r.recorder.RecordDBQuery(ctx, "search_exact_match", time.Since(start), false)
-		} else if len(results) > 0 {
-			searchMethod = "exact_match"
-		}
+	ctx, cancel := context.WithTimeout(ctx, DefaultSearchTimeout)
+	defer cancel()
 
-		if len(results) == 0 && err == nil {
-			results, err = r.searchTrigramFuzzy(ctx, filter)
-			if err != nil {
-				r.recorder.RecordDBQuery(ctx, "search_trigram_fuzzy", time.Since(start), false)
-			} else if len(results) > 0 {
-				searchMethod = "trigram_fuzzy"
-			}
+	kindFilters := extractKindFilters(filter.Query)
+	if len(kindFilters) > 0 {
+		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
+			return []*Result{}, 0, emptyFacets(), nil
 		}
-
-		if len(results) == 0 && err == nil {
-			results, err = r.searchFullText(ctx, filter)
-			if err != nil {
-				r.recorder.RecordDBQuery(ctx, "search_full_text", time.Since(start), false)
-				return nil, 0, nil, fmt.Errorf("executing full-text search: %w", err)
-			}
-			searchMethod = "full_text"
-		}
-
-		if err != nil && len(results) == 0 {
-			return nil, 0, nil, fmt.Errorf("all search tiers failed: %w", err)
-		}
-	} else {
-		results, err = r.searchFullText(ctx, filter)
-		if err != nil {
-			r.recorder.RecordDBQuery(ctx, "search_no_query", time.Since(start), false)
-			return nil, 0, nil, fmt.Errorf("executing search without query: %w", err)
-		}
-		searchMethod = "no_query"
+		filter.Types = kindFilters
 	}
 
-	facets, err := r.buildFacets(ctx, filter)
+	searchQuery := stripKindFilter(filter.Query)
+
+	parser := query.NewParser()
+	parsedQuery, err := parser.Parse(searchQuery)
+	if err != nil {
+		parsedQuery = &query.Query{FreeText: searchQuery}
+	}
+
+	sqlQuery, params := r.buildOptimizedSearchQuery(parsedQuery.GetFreeText(), filter, parsedQuery)
+
+	rows, err := r.db.Query(ctx, sqlQuery, params...)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
+		return nil, 0, nil, fmt.Errorf("executing unified search: %w", err)
+	}
+	defer rows.Close()
+
+	results, err := r.scanSearchResults(rows)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
+		return nil, 0, nil, fmt.Errorf("scanning search results: %w", err)
+	}
+
+	facets, total, err := r.buildFacetsParallel(ctx, parsedQuery.GetFreeText(), filter, parsedQuery)
 	if err != nil {
 		r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), false)
 		return nil, 0, nil, fmt.Errorf("building facets: %w", err)
 	}
 
-	r.recorder.RecordDBQuery(ctx, "search_"+searchMethod, time.Since(start), true)
-	total := facets.Types[ResultTypeAsset] + facets.Types[ResultTypeGlossary] + facets.Types[ResultTypeTeam] + facets.Types[ResultTypeDataProduct]
+	r.recorder.RecordDBQuery(ctx, "unified_search", time.Since(start), true)
 	return results, total, facets, nil
 }
 
-// scanResults scans search result rows into Result structs.
-func scanResults(rows pgx.Rows) ([]*Result, error) {
+// queryType determines which search strategy to use
+type queryType int
+
+const (
+	queryTypeEmpty queryType = iota
+	queryTypeExact
+	queryTypePrefix
+	queryTypeFuzzy
+	queryTypeFullText
+)
+
+// classifyQuery determines the optimal search strategy based on query characteristics
+func classifyQuery(q string) queryType {
+	q = strings.TrimSpace(q)
+	if q == "" {
+		return queryTypeEmpty
+	}
+
+	words := strings.Fields(q)
+	hasSpecialChars := strings.ContainsAny(q, "\"'*?+-|&()~:")
+
+	if len(q) <= 2 {
+		return queryTypePrefix
+	}
+
+	if len(words) > 1 || hasSpecialChars {
+		return queryTypeFullText
+	}
+
+	return queryTypeFuzzy
+}
+
+// buildOptimizedSearchQuery routes to the appropriate query builder based on query type
+func (r *PostgresRepository) buildOptimizedSearchQuery(searchQuery string, filter Filter, parsedQuery *query.Query) (string, []interface{}) {
+	qType := classifyQuery(searchQuery)
+
+	switch qType {
+	case queryTypeEmpty:
+		return r.buildListingQuery(filter, parsedQuery)
+	case queryTypePrefix:
+		return r.buildPrefixSearchQuery(searchQuery, filter, parsedQuery)
+	case queryTypeFuzzy:
+		return r.buildFuzzySearchQuery(searchQuery, filter, parsedQuery)
+	case queryTypeFullText:
+		return r.buildFullTextSearchQuery(searchQuery, filter, parsedQuery)
+	default:
+		return r.buildFullTextSearchQuery(searchQuery, filter, parsedQuery)
+	}
+}
+
+// buildListingQuery handles empty queries with filters and sorts by recency.
+func (r *PostgresRepository) buildListingQuery(filter Filter, parsedQuery *query.Query) (string, []interface{}) {
+	var params []interface{}
+	paramCount := 0
+
+	whereClauses, params, paramCount := r.buildFilterClauses(filter, parsedQuery, params, paramCount)
+
+	whereSQL := ""
+	if len(whereClauses) > 0 {
+		whereSQL = "WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	paramCount++
+	limitParam := paramCount
+	paramCount++
+	offsetParam := paramCount
+	params = append(params, filter.Limit, filter.Offset)
+
+	canUseIndexSort := r.canUseIndexedSort(parsedQuery, filter)
+
+	if canUseIndexSort {
+		sqlQuery := fmt.Sprintf(`
+			SELECT
+				type, entity_id, name, description, url_path,
+				0.0::real as rank,
+				updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+			FROM search_index
+			%s
+			ORDER BY updated_at DESC
+			LIMIT $%d OFFSET $%d
+		`, whereSQL, limitParam, offsetParam)
+		return sqlQuery, params
+	}
+
+	if parsedQuery.HasStructuredFilters() || len(filter.Tags) > 0 {
+		sqlQuery := fmt.Sprintf(`
+			SELECT
+				type, entity_id, name, description, url_path,
+				0.0::real as rank,
+				updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+			FROM (
+				SELECT entity_id, type, name, description, url_path,
+				       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+				FROM search_index
+				%s
+				LIMIT 1000
+			) candidates
+			ORDER BY updated_at DESC
+			LIMIT $%d OFFSET $%d
+		`, whereSQL, limitParam, offsetParam)
+		return sqlQuery, params
+	}
+
+	// Simple filters (types, asset_types, providers from API params) or no filters
+	// These can use existing indexes effectively
+	sqlQuery := fmt.Sprintf(`
+		SELECT
+			type, entity_id, name, description, url_path,
+			0.0::real as rank,
+			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+		FROM search_index
+		%s
+		ORDER BY updated_at DESC
+		LIMIT $%d OFFSET $%d
+	`, whereSQL, limitParam, offsetParam)
+
+	return sqlQuery, params
+}
+
+// canUseIndexedSort checks if the filter combination can use a composite index
+// that covers both the filter predicate AND the sort order (updated_at DESC).
+// This avoids expensive in-memory sorts for high-cardinality matches.
+func (r *PostgresRepository) canUseIndexedSort(parsedQuery *query.Query, filter Filter) bool {
+	// Check if query can use composite index (single @type or @provider exact match)
+	if parsedQuery != nil && parsedQuery.CanUseCompositeIndex() && len(filter.Tags) == 0 {
+		return true
+	}
+
+	// API-level AssetTypes filter (single value) can use composite index
+	if parsedQuery != nil && !parsedQuery.HasStructuredFilters() && len(filter.AssetTypes) == 1 && len(filter.Tags) == 0 {
+		return true
+	}
+
+	// Unfiltered queries can use idx_search_index_updated_at_browse
+	// Note: selecting all 4 entity types is functionally equivalent to no type filter
+	allTypesSelected := len(filter.Types) == 4
+	noTypeFilter := len(filter.Types) == 0 || allTypesSelected
+	if (parsedQuery == nil || !parsedQuery.HasStructuredFilters()) &&
+		noTypeFilter && len(filter.AssetTypes) == 0 &&
+		len(filter.Providers) == 0 && len(filter.Tags) == 0 {
+		return true
+	}
+
+	return false
+}
+
+// buildPrefixSearchQuery handles short queries with exact/prefix matching.
+func (r *PostgresRepository) buildPrefixSearchQuery(searchQuery string, filter Filter, parsedQuery *query.Query) (string, []interface{}) {
+	var params []interface{}
+	paramCount := 0
+
+	// Add search query parameter
+	paramCount++
+	queryParam := paramCount
+	params = append(params, strings.ToLower(searchQuery))
+
+	whereClauses, params, paramCount := r.buildFilterClauses(filter, parsedQuery, params, paramCount)
+
+	whereSQL := ""
+	if len(whereClauses) > 0 {
+		whereSQL = "AND " + strings.Join(whereClauses, " AND ")
+	}
+
+	paramCount++
+	limitParam := paramCount
+	paramCount++
+	offsetParam := paramCount
+	params = append(params, filter.Limit, filter.Offset)
+
+	// Rank: exact match = 1000, prefix match = 500
+	sqlQuery := fmt.Sprintf(`
+		SELECT
+			type, entity_id, name, description, url_path,
+			CASE
+				WHEN lower(name) = $%d THEN 1000.0
+				ELSE 500.0
+			END::real as rank,
+			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+		FROM search_index
+		WHERE (lower(name) = $%d OR lower(name) LIKE $%d || '%%')
+		%s
+		ORDER BY rank DESC, updated_at DESC
+		LIMIT $%d OFFSET $%d
+	`, queryParam, queryParam, queryParam, whereSQL, limitParam, offsetParam)
+
+	return sqlQuery, params
+}
+
+// buildFuzzySearchQuery handles single-word queries with trigram similarity.
+func (r *PostgresRepository) buildFuzzySearchQuery(searchQuery string, filter Filter, parsedQuery *query.Query) (string, []interface{}) {
+	var params []interface{}
+	paramCount := 0
+
+	// Add search query parameter
+	paramCount++
+	queryParam := paramCount
+	params = append(params, searchQuery)
+
+	whereClauses, params, paramCount := r.buildFilterClauses(filter, parsedQuery, params, paramCount)
+
+	whereSQL := ""
+	if len(whereClauses) > 0 {
+		whereSQL = "AND " + strings.Join(whereClauses, " AND ")
+	}
+
+	paramCount++
+	limitParam := paramCount
+	paramCount++
+	offsetParam := paramCount
+	params = append(params, filter.Limit, filter.Offset)
+
+	// Use the %> operator which can use the GiST trigram index
+	// Limit candidates to 1000 before ranking to avoid expensive scans
+	sqlQuery := fmt.Sprintf(`
+		WITH candidates AS (
+			SELECT entity_id, type, name, description, url_path,
+			       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+			FROM search_index
+			WHERE name %%> $%d
+			%s
+			LIMIT 1000
+		)
+		SELECT
+			type, entity_id, name, description, url_path,
+			CASE
+				WHEN lower(name) = lower($%d) THEN 1000.0
+				WHEN lower(name) LIKE lower($%d) || '%%' THEN 500.0
+				ELSE (word_similarity($%d, name) * 100.0)
+			END::real as rank,
+			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+		FROM candidates
+		ORDER BY rank DESC, updated_at DESC
+		LIMIT $%d OFFSET $%d
+	`, queryParam, whereSQL, queryParam, queryParam, queryParam, limitParam, offsetParam)
+
+	return sqlQuery, params
+}
+
+// buildFullTextSearchQuery handles multi-word and complex queries.
+func (r *PostgresRepository) buildFullTextSearchQuery(searchQuery string, filter Filter, parsedQuery *query.Query) (string, []interface{}) {
+	var params []interface{}
+	paramCount := 0
+
+	// Add search query parameter
+	paramCount++
+	queryParam := paramCount
+	params = append(params, searchQuery)
+
+	whereClauses, params, paramCount := r.buildFilterClauses(filter, parsedQuery, params, paramCount)
+
+	whereSQL := ""
+	if len(whereClauses) > 0 {
+		whereSQL = "AND " + strings.Join(whereClauses, " AND ")
+	}
+
+	paramCount++
+	limitParam := paramCount
+	paramCount++
+	offsetParam := paramCount
+	params = append(params, filter.Limit, filter.Offset)
+
+	// Full-text search with candidate limiting to avoid expensive scans on large result sets
+	// The CTE grabs first 1000 index matches (fast), then we rank within that set
+	// This trades "most recent" for speed - acceptable for high-cardinality matches
+	sqlQuery := fmt.Sprintf(`
+		WITH candidates AS (
+			SELECT entity_id, type, name, description, url_path, search_text,
+			       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+			FROM search_index
+			WHERE search_text @@ websearch_to_tsquery('english', $%d)
+			%s
+			LIMIT 1000
+		)
+		SELECT
+			type, entity_id, name, description, url_path,
+			ts_rank_cd(search_text, websearch_to_tsquery('english', $%d), 32)::real as rank,
+			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+		FROM candidates
+		ORDER BY rank DESC, updated_at DESC
+		LIMIT $%d OFFSET $%d
+	`, queryParam, whereSQL, queryParam, limitParam, offsetParam)
+
+	return sqlQuery, params
+}
+
+// buildFilterClauses constructs WHERE clause conditions for filters
+func (r *PostgresRepository) buildFilterClauses(filter Filter, parsedQuery *query.Query, params []interface{}, paramCount int) ([]string, []interface{}, int) {
+	var whereClauses []string
+
+	// Type filter - skip if all 4 types are selected (functionally equivalent to no filter)
+	if len(filter.Types) > 0 && len(filter.Types) < 4 {
+		paramCount++
+		whereClauses = append(whereClauses, fmt.Sprintf("type = ANY($%d)", paramCount))
+		params = append(params, resultTypesToStrings(filter.Types))
+	}
+
+	// Asset-specific filters (applied only to assets, other types pass through)
+	if len(filter.AssetTypes) > 0 {
+		paramCount++
+		whereClauses = append(whereClauses, fmt.Sprintf("(type != 'asset' OR asset_type = ANY($%d))", paramCount))
+		params = append(params, filter.AssetTypes)
+	}
+
+	if len(filter.Providers) > 0 {
+		paramCount++
+		whereClauses = append(whereClauses, fmt.Sprintf("(type != 'asset' OR providers && $%d)", paramCount))
+		params = append(params, filter.Providers)
+	}
+
+	if len(filter.Tags) > 0 {
+		paramCount++
+		whereClauses = append(whereClauses, fmt.Sprintf("tags && $%d", paramCount))
+		params = append(params, filter.Tags)
+	}
+
+	// Add structured query conditions from the query package
+	if parsedQuery != nil && parsedQuery.HasStructuredFilters() {
+		builder := query.NewSearchIndexBuilder()
+		structuredConditions, structuredParams, newParamCount, err := builder.BuildSearchConditions(parsedQuery, paramCount)
+		if err == nil && len(structuredConditions) > 0 {
+			whereClauses = append(whereClauses, structuredConditions...)
+			params = append(params, structuredParams...)
+			paramCount = newParamCount
+		}
+	}
+
+	return whereClauses, params, paramCount
+}
+
+// scanSearchResults scans rows from the search_index table into Result structs.
+func (r *PostgresRepository) scanSearchResults(rows pgx.Rows) ([]*Result, error) {
 	var results []*Result
+
 	for rows.Next() {
-		var result Result
-		var metadataJSON []byte
-		var description *string
-		var updatedAt *time.Time
+		var (
+			resultType      string
+			entityID        string
+			name            string
+			description     *string
+			urlPath         string
+			rank            float32
+			updatedAt       *time.Time
+			assetType       *string
+			primaryProvider *string
+			providers       []string
+			tags            []string
+			mrn             *string
+			createdBy       *string
+			createdAt       *time.Time
+		)
 
 		err := rows.Scan(
-			&result.Type,
-			&result.ID,
-			&result.Name,
+			&resultType,
+			&entityID,
+			&name,
 			&description,
-			&metadataJSON,
-			&result.URL,
-			&result.Rank,
+			&urlPath,
+			&rank,
 			&updatedAt,
+			&assetType,
+			&primaryProvider,
+			&providers,
+			&tags,
+			&mrn,
+			&createdBy,
+			&createdAt,
 		)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("scanning row: %w", err)
 		}
 
-		result.Description = description
-		result.UpdatedAt = updatedAt
-
-		if len(metadataJSON) > 0 {
-			result.Metadata = make(map[string]interface{})
-			if err := json.Unmarshal(metadataJSON, &result.Metadata); err != nil {
-				return nil, fmt.Errorf("unmarshaling metadata: %w", err)
-			}
+		// Build metadata from indexed fields
+		metadata := make(map[string]interface{})
+		metadata["id"] = entityID
+		metadata["name"] = name
+		if description != nil {
+			metadata["description"] = *description
+		}
+		if updatedAt != nil {
+			metadata["updated_at"] = *updatedAt
+		}
+		if assetType != nil {
+			metadata["type"] = *assetType
+		}
+		if primaryProvider != nil {
+			metadata["primary_provider"] = *primaryProvider
+		}
+		if len(providers) > 0 {
+			metadata["providers"] = providers
+		}
+		if len(tags) > 0 {
+			metadata["tags"] = tags
+		}
+		if mrn != nil {
+			metadata["mrn"] = *mrn
+		}
+		if createdBy != nil {
+			metadata["created_by"] = *createdBy
+		}
+		if createdAt != nil {
+			metadata["created_at"] = *createdAt
 		}
 
-		results = append(results, &result)
+		results = append(results, &Result{
+			Type:        ResultType(resultType),
+			ID:          entityID,
+			Name:        name,
+			Description: description,
+			Metadata:    metadata,
+			URL:         urlPath,
+			Rank:        rank,
+			UpdatedAt:   updatedAt,
+		})
 	}
 
 	if rows.Err() != nil {
@@ -127,644 +509,359 @@ func scanResults(rows pgx.Rows) ([]*Result, error) {
 	return results, nil
 }
 
-func (r *PostgresRepository) searchFullText(ctx context.Context, filter Filter) ([]*Result, error) {
-	q, params := r.buildFullTextQuery(filter)
+// buildFacets computes facet counts.
+// For search queries with text, we skip facet computation entirely (too expensive).
+// Facets are only computed for listing queries (no search text).
+func (r *PostgresRepository) buildFacetsParallel(ctx context.Context, searchQuery string, filter Filter, parsedQuery *query.Query) (*Facets, int, error) {
+	facets := &Facets{
+		Types:      make(map[ResultType]int),
+		AssetTypes: []FacetValue{},
+		Providers:  []FacetValue{},
+		Tags:       []FacetValue{},
+	}
 
-	rows, err := r.db.Query(ctx, q, params...)
+	// For search queries, skip expensive facet computation
+	// The search results themselves provide the filtering - facets aren't needed
+	if searchQuery != "" || (parsedQuery != nil && parsedQuery.HasStructuredFilters()) {
+		// Just get a quick count from the search results
+		// We'll estimate total from the search query instead
+		return facets, 0, nil
+	}
+
+	// For unfiltered empty queries, use cached facets from summary_counts
+	// This avoids expensive GROUP BY and UNNEST queries on the full table
+	// Note: selecting all 4 entity types is functionally equivalent to no type filter
+	allTypesSelected := len(filter.Types) == 4
+	noTypeFilter := len(filter.Types) == 0 || allTypesSelected
+	if noTypeFilter && len(filter.AssetTypes) == 0 && len(filter.Providers) == 0 && len(filter.Tags) == 0 {
+		return r.buildCachedFacets(ctx, filter)
+	}
+
+	// For listing queries with filters, compute facets (filtered queries are fast)
+	baseWhere, baseParams := r.buildListingFacetWhereClause(filter)
+
+	// Type and asset_type facets (single query, no unnest)
+	typeQuery := fmt.Sprintf(`
+		SELECT type, asset_type, COUNT(*) as cnt
+		FROM search_index
+		%s
+		GROUP BY type, asset_type
+	`, baseWhere)
+
+	rows, err := r.db.Query(ctx, typeQuery, baseParams...)
 	if err != nil {
-		return nil, fmt.Errorf("executing full-text search: %w", err)
+		return nil, 0, fmt.Errorf("querying type facets: %w", err)
 	}
 	defer rows.Close()
 
-	results, err := scanResults(rows)
-	if err != nil {
-		return nil, fmt.Errorf("scanning full-text search results: %w", err)
-	}
-	return results, nil
-}
+	total := 0
+	assetTypeCounts := make(map[string]int)
 
-// renumberParameters renumbers SQL parameters from $2, $3, ... to $1, $2, ...
-func renumberParameters(sql string) string {
-	for i := 2; i <= 20; i++ {
-		old := fmt.Sprintf("$%d", i)
-		placeholder := fmt.Sprintf("__PARAM_%d__", i-1)
-		sql = strings.ReplaceAll(sql, old, placeholder)
-	}
-	for i := 1; i <= 19; i++ {
-		placeholder := fmt.Sprintf("__PARAM_%d__", i)
-		newParam := fmt.Sprintf("$%d", i)
-		sql = strings.ReplaceAll(sql, placeholder, newParam)
-	}
-	return sql
-}
-
-func (r *PostgresRepository) buildFullTextQuery(filter Filter) (string, []interface{}) {
-	kindFilters := extractKindFilters(filter.Query)
-	if len(kindFilters) > 0 {
-		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
-			return "SELECT NULL as type, NULL as id, NULL as name, NULL as description, NULL as metadata, NULL as url, 0 as rank, NULL as updated_at WHERE FALSE", []interface{}{}
+	for rows.Next() {
+		var t string
+		var assetType *string
+		var count int
+		if err := rows.Scan(&t, &assetType, &count); err != nil {
+			return nil, 0, fmt.Errorf("scanning type facet: %w", err)
 		}
-		filter.Types = kindFilters
+		facets.Types[ResultType(t)] += count
+		total += count
+		if assetType != nil && t == "asset" {
+			assetTypeCounts[*assetType] += count
+		}
+	}
+	if rows.Err() != nil {
+		return nil, 0, rows.Err()
 	}
 
-	searchQuery := stripKindFilter(filter.Query)
-
-	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
-	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
-	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
-	includeDataProducts := searchTypeIncluded(filter.Types, ResultTypeDataProduct)
-
-	var unions []string
-	var params []interface{}
-	paramCount := 0
-
-	if searchQuery != "" {
-		params = append(params, searchQuery)
-		paramCount = 1
+	// Convert asset type counts to sorted slice
+	for at, count := range assetTypeCounts {
+		facets.AssetTypes = append(facets.AssetTypes, FacetValue{Value: at, Count: count})
+	}
+	sortFacetValues(facets.AssetTypes)
+	if len(facets.AssetTypes) > maxFacetResults {
+		facets.AssetTypes = facets.AssetTypes[:maxFacetResults]
 	}
 
-	if includeAssets {
-		assetQuery, newParams, newCount := r.buildAssetFullTextQuery(searchQuery, filter, params, paramCount)
-		params = newParams
-		paramCount = newCount
-		unions = append(unions, assetQuery)
+	// Provider and tag facets (with unnest, but no search filter so faster)
+	if err := r.computeArrayFacets(ctx, baseWhere, baseParams, facets); err != nil {
+		// Non-fatal: return partial facets
+		return facets, total, nil
 	}
 
-	if includeGlossary {
-		q := r.buildGlossaryFullTextQuery(searchQuery, filter, paramCount)
-		unions = append(unions, q)
-	}
-
-	if includeTeams {
-		q := r.buildTeamFullTextQuery(searchQuery, filter, paramCount)
-		unions = append(unions, q)
-	}
-
-	if includeDataProducts {
-		q := r.buildDataProductFullTextQuery(searchQuery, filter, paramCount)
-		unions = append(unions, q)
-	}
-
-	if len(unions) == 0 {
-		return "SELECT NULL as type, NULL as id, NULL as name, NULL as description, NULL as metadata, NULL as url, 0 as rank, NULL as updated_at WHERE FALSE", []interface{}{}
-	}
-
-	paramCount++
-	limitParam := paramCount
-	paramCount++
-	offsetParam := paramCount
-
-	q := fmt.Sprintf(`
-		WITH search_results AS (
-			%s
-		)
-		SELECT * FROM search_results
-		ORDER BY rank DESC, updated_at DESC
-		LIMIT $%d OFFSET $%d
-	`, strings.Join(unions, " UNION ALL "), limitParam, offsetParam)
-
-	params = append(params, filter.Limit, filter.Offset)
-	return q, params
+	return facets, total, nil
 }
 
-func (r *PostgresRepository) buildAssetFullTextQuery(searchQuery string, filter Filter, params []interface{}, paramCount int) (string, []interface{}, int) {
-	hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
-		strings.Contains(searchQuery, "@type") ||
-		strings.Contains(searchQuery, "@provider") ||
-		strings.Contains(searchQuery, "@name"))
-
-	if hasStructuredQuery {
-		parser := query.NewParser()
-		builder := query.NewBuilder()
-
-		parsedQuery, err := parser.Parse(searchQuery)
-		if err == nil {
-			baseQuery := fmt.Sprintf(`SELECT
-				'asset' as type, id, name, description,
-				%s,
-				%s,
-				1.0 as rank, updated_at
-			FROM assets`, assetMetadataColumns, assetURLExpr)
-
-			builtQuery, queryParams, err := builder.BuildSQL(parsedQuery, baseQuery)
-			if err == nil {
-				builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
-				builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
-
-				if strings.Contains(builtQuery, "WHERE") {
-					builtQuery += " AND is_stub = FALSE"
-				} else {
-					builtQuery += " WHERE is_stub = FALSE"
-				}
-
-				builtQuery = renumberParameters(builtQuery)
-
-				if len(queryParams) > 1 {
-					params = queryParams[1:]
-					paramCount = len(params)
-				} else {
-					params = []interface{}{}
-					paramCount = 0
-				}
-
-				return r.addAssetFilters(builtQuery, filter, params, paramCount)
+// sortFacetValues sorts facet values by count descending
+func sortFacetValues(fv []FacetValue) {
+	for i := 0; i < len(fv); i++ {
+		for j := i + 1; j < len(fv); j++ {
+			if fv[j].Count > fv[i].Count {
+				fv[i], fv[j] = fv[j], fv[i]
 			}
 		}
 	}
-
-	var rankExpr, whereClause string
-	hasSearchQuery := searchQuery != ""
-
-	if hasSearchQuery {
-		rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-		whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND is_stub = FALSE"
-	} else {
-		rankExpr = "0"
-		whereClause = "WHERE is_stub = FALSE"
-	}
-
-	assetQuery := fmt.Sprintf(`
-		SELECT
-			'asset' as type, id, name, description,
-			%s,
-			%s,
-			%s as rank, updated_at
-		FROM assets
-		%s`, assetMetadataColumns, assetURLExpr, rankExpr, whereClause)
-
-	assetQuery, params, paramCount = r.addAssetFilters(assetQuery, filter, params, paramCount)
-
-	if !hasSearchQuery {
-		assetQuery = fmt.Sprintf(`SELECT * FROM (%s ORDER BY updated_at DESC LIMIT %d) sub`, assetQuery, filter.Limit+filter.Offset)
-	}
-
-	return assetQuery, params, paramCount
 }
 
-func (r *PostgresRepository) addAssetFilters(q string, filter Filter, params []interface{}, paramCount int) (string, []interface{}, int) {
+// buildListingFacetWhereClause builds WHERE clause for listing facets (no search text)
+func (r *PostgresRepository) buildListingFacetWhereClause(filter Filter) (string, []interface{}) {
+	var params []interface{}
+	paramCount := 0
+	var whereClauses []string
+
+	if len(filter.Types) > 0 {
+		paramCount++
+		whereClauses = append(whereClauses, fmt.Sprintf("type = ANY($%d)", paramCount))
+		params = append(params, resultTypesToStrings(filter.Types))
+	}
+
 	if len(filter.AssetTypes) > 0 {
 		paramCount++
-		q += fmt.Sprintf(" AND type = ANY($%d)", paramCount)
+		whereClauses = append(whereClauses, fmt.Sprintf("(type != 'asset' OR asset_type = ANY($%d))", paramCount))
 		params = append(params, filter.AssetTypes)
 	}
+
 	if len(filter.Providers) > 0 {
 		paramCount++
-		q += fmt.Sprintf(" AND providers && $%d", paramCount)
+		whereClauses = append(whereClauses, fmt.Sprintf("(type != 'asset' OR providers && $%d)", paramCount))
 		params = append(params, filter.Providers)
 	}
+
 	if len(filter.Tags) > 0 {
 		paramCount++
-		q += fmt.Sprintf(" AND tags && $%d", paramCount)
+		whereClauses = append(whereClauses, fmt.Sprintf("tags && $%d", paramCount))
 		params = append(params, filter.Tags)
 	}
-	return q, params, paramCount
+
+	whereSQL := "WHERE true"
+	if len(whereClauses) > 0 {
+		whereSQL = "WHERE " + strings.Join(whereClauses, " AND ")
+	}
+
+	return whereSQL, params
 }
 
-func (r *PostgresRepository) buildGlossaryFullTextQuery(searchQuery string, filter Filter, paramCount int) string {
-	hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
-		strings.Contains(searchQuery, "@name"))
-
-	if hasStructuredQuery {
-		parser := query.NewParser()
-		builder := query.NewBuilder()
-
-		parsedQuery, err := parser.Parse(searchQuery)
-		if err == nil {
-			baseQuery := fmt.Sprintf(`SELECT
-				'glossary' as type, id::text, name, definition as description,
-				%s,
-				%s,
-				1.0 as rank, updated_at
-			FROM glossary_terms`, glossaryMetadataColumns, glossaryURLExpr)
-
-			builtQuery, _, err := builder.BuildSQL(parsedQuery, baseQuery)
-			if err == nil {
-				builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
-				builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
-
-				if strings.Contains(builtQuery, "WHERE") {
-					builtQuery += " AND deleted_at IS NULL"
-				} else {
-					builtQuery += " WHERE deleted_at IS NULL"
-				}
-
-				return renumberParameters(builtQuery)
-			}
-		}
-	}
-
-	var rankExpr, whereClause string
-	hasSearchQuery := searchQuery != ""
-
-	if hasSearchQuery {
-		rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-		whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1) AND deleted_at IS NULL"
-	} else {
-		rankExpr = "0"
-		whereClause = "WHERE deleted_at IS NULL"
-	}
-
-	q := fmt.Sprintf(`
-		SELECT
-			'glossary' as type, id::text, name, definition as description,
-			%s,
-			%s,
-			%s as rank, updated_at
-		FROM glossary_terms
-		%s
-	`, glossaryMetadataColumns, glossaryURLExpr, rankExpr, whereClause)
-
-	if !hasSearchQuery {
-		q = fmt.Sprintf(`SELECT * FROM (%s ORDER BY updated_at DESC LIMIT %d) sub`, q, filter.Limit+filter.Offset)
-	}
-
-	return q
-}
-
-func (r *PostgresRepository) buildTeamFullTextQuery(searchQuery string, filter Filter, paramCount int) string {
-	hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
-		strings.Contains(searchQuery, "@name"))
-
-	if hasStructuredQuery {
-		parser := query.NewParser()
-		builder := query.NewBuilder()
-
-		parsedQuery, err := parser.Parse(searchQuery)
-		if err == nil {
-			baseQuery := fmt.Sprintf(`SELECT
-				'team' as type, id::text, name, description,
-				%s,
-				%s,
-				1.0 as rank, updated_at
-			FROM teams`, teamMetadataColumns, teamURLExpr)
-
-			builtQuery, _, err := builder.BuildSQL(parsedQuery, baseQuery)
-			if err == nil {
-				builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
-				builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
-				return renumberParameters(builtQuery)
-			}
-		}
-	}
-
-	var rankExpr, whereClause string
-	hasSearchQuery := searchQuery != ""
-
-	if hasSearchQuery {
-		rankExpr = "ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32)"
-		whereClause = "WHERE search_text @@ websearch_to_tsquery('english', $1)"
-	} else {
-		rankExpr = "0"
-		whereClause = ""
-	}
-
-	q := fmt.Sprintf(`
-		SELECT
-			'team' as type, id::text, name, description,
-			%s,
-			%s,
-			%s as rank, updated_at
-		FROM teams
-		%s
-	`, teamMetadataColumns, teamURLExpr, rankExpr, whereClause)
-
-	if !hasSearchQuery {
-		q = fmt.Sprintf(`SELECT * FROM (%s ORDER BY updated_at DESC LIMIT %d) sub`, q, filter.Limit+filter.Offset)
-	}
-
-	return q
-}
-
-func (r *PostgresRepository) buildDataProductFullTextQuery(searchQuery string, filter Filter, paramCount int) string {
-	hasStructuredQuery := searchQuery != "" && (strings.Contains(searchQuery, "@metadata.") ||
-		strings.Contains(searchQuery, "@name"))
-
-	if hasStructuredQuery {
-		parser := query.NewParser()
-		builder := query.NewBuilder()
-
-		parsedQuery, err := parser.Parse(searchQuery)
-		if err == nil {
-			baseQuery := fmt.Sprintf(`SELECT
-				'data_product' as type, dp.id::text, dp.name, dp.description,
-				%s,
-				%s,
-				1.0 as rank, dp.updated_at
-			FROM data_products dp
-			LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'`, dataProductMetadataColumns, dataProductURLExpr)
-
-			builtQuery, _, err := builder.BuildSQL(parsedQuery, baseQuery)
-			if err == nil {
-				builtQuery = strings.TrimPrefix(builtQuery, "WITH search_results AS (")
-				builtQuery = strings.TrimSuffix(builtQuery, ") SELECT * FROM search_results ORDER BY search_rank DESC")
-				return renumberParameters(builtQuery)
-			}
-		}
-	}
-
-	var rankExpr, whereClause string
-	hasSearchQuery := searchQuery != ""
-
-	if hasSearchQuery {
-		rankExpr = "ts_rank_cd(dp.search_text, websearch_to_tsquery('english', $1), 32)"
-		whereClause = "WHERE dp.search_text @@ websearch_to_tsquery('english', $1)"
-	} else {
-		rankExpr = "0"
-		whereClause = ""
-	}
-
-	q := fmt.Sprintf(`
-		SELECT
-			'data_product' as type, dp.id::text, dp.name, dp.description,
-			%s,
-			%s,
-			%s as rank, dp.updated_at
-		FROM data_products dp
-		LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
-		%s
-	`, dataProductMetadataColumns, dataProductURLExpr, rankExpr, whereClause)
-
-	if !hasSearchQuery {
-		q = fmt.Sprintf(`SELECT * FROM (%s ORDER BY updated_at DESC LIMIT %d) sub`, q, filter.Limit+filter.Offset)
-	}
-
-	return q
-}
-
-func (r *PostgresRepository) searchExactMatch(ctx context.Context, filter Filter) ([]*Result, error) {
-	if filter.Query == "" {
-		return nil, nil
-	}
-
-	kindFilters := extractKindFilters(filter.Query)
-	if len(kindFilters) > 0 {
-		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
-			return nil, nil
-		}
-		filter.Types = kindFilters
-	}
-
-	searchQuery := stripKindFilter(filter.Query)
-	if searchQuery == "" {
-		return nil, nil
-	}
-
-	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
-	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
-	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
-	includeDataProducts := searchTypeIncluded(filter.Types, ResultTypeDataProduct)
-
-	var unions []string
-	var params []interface{}
-	paramCount := 0
-
-	paramLower := strings.ToLower(searchQuery)
-	params = append(params, paramLower)
-	params = append(params, paramLower+"%")
-	paramCount = 2
-
-	if includeAssets {
-		assetQuery := fmt.Sprintf(`
-			SELECT
-				'asset' as type, id, name, description,
-				%s,
-				%s,
-				CASE
-					WHEN LOWER(name) = $1 THEN 100
-					WHEN LOWER(mrn) = $1 THEN 100
-					WHEN LOWER(name) LIKE $2 THEN 50
-					WHEN LOWER(mrn) LIKE $2 THEN 50
-					ELSE 25
-				END as rank,
-				updated_at
-			FROM assets
-			WHERE is_stub = FALSE
-			AND (
-				LOWER(name) = $1 OR
-				LOWER(mrn) = $1 OR
-				LOWER(type) = $1 OR
-				LOWER(name) LIKE $2 OR
-				LOWER(mrn) LIKE $2 OR
-				LOWER(type) LIKE $2
-			)`, assetMetadataColumns, assetURLExpr)
-
-		assetQuery, params, paramCount = r.addAssetFilters(assetQuery, filter, params, paramCount)
-		unions = append(unions, assetQuery)
-	}
-
-	if includeGlossary {
-		unions = append(unions, fmt.Sprintf(`
-			SELECT
-				'glossary' as type, id::text, name, definition as description,
-				%s,
-				%s,
-				CASE
-					WHEN LOWER(name) = $1 THEN 100
-					WHEN LOWER(name) LIKE $2 THEN 50
-					ELSE 25
-				END as rank,
-				updated_at
-			FROM glossary_terms
-			WHERE deleted_at IS NULL
-			AND (LOWER(name) = $1 OR LOWER(name) LIKE $2)
-		`, glossaryMetadataColumns, glossaryURLExpr))
-	}
-
-	if includeTeams {
-		unions = append(unions, fmt.Sprintf(`
-			SELECT
-				'team' as type, id::text, name, description,
-				%s,
-				%s,
-				CASE
-					WHEN LOWER(name) = $1 THEN 100
-					WHEN LOWER(name) LIKE $2 THEN 50
-					ELSE 25
-				END as rank,
-				updated_at
-			FROM teams
-			WHERE (LOWER(name) = $1 OR LOWER(name) LIKE $2)
-		`, teamMetadataColumns, teamURLExpr))
-	}
-
-	if includeDataProducts {
-		unions = append(unions, fmt.Sprintf(`
-			SELECT
-				'data_product' as type, dp.id::text, dp.name, dp.description,
-				%s,
-				%s,
-				CASE
-					WHEN LOWER(dp.name) = $1 THEN 100
-					WHEN LOWER(dp.name) LIKE $2 THEN 50
-					ELSE 25
-				END as rank,
-				dp.updated_at
-			FROM data_products dp
-			LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
-			WHERE (LOWER(dp.name) = $1 OR LOWER(dp.name) LIKE $2)
-		`, dataProductMetadataColumns, dataProductURLExpr))
-	}
-
-	if len(unions) == 0 {
-		return nil, nil
-	}
-
-	paramCount++
-	limitParam := paramCount
-	paramCount++
-	offsetParam := paramCount
-
-	q := fmt.Sprintf(`
-		WITH search_results AS (
+// computeArrayFacets computes provider and tag facets
+func (r *PostgresRepository) computeArrayFacets(ctx context.Context, baseWhere string, baseParams []interface{}, facets *Facets) error {
+	// Provider facets
+	providerQuery := fmt.Sprintf(`
+		SELECT p, COUNT(*) as cnt
+		FROM (
+			SELECT unnest(providers) as p
+			FROM search_index
 			%s
-		)
-		SELECT * FROM search_results
-		ORDER BY rank DESC, updated_at DESC
-		LIMIT $%d OFFSET $%d
-	`, strings.Join(unions, " UNION ALL "), limitParam, offsetParam)
+			AND type = 'asset' AND providers IS NOT NULL
+		) sub
+		GROUP BY p
+		ORDER BY cnt DESC
+		LIMIT %d
+	`, baseWhere, maxFacetResults)
 
-	params = append(params, filter.Limit, filter.Offset)
-
-	rows, err := r.db.Query(ctx, q, params...)
+	rows, err := r.db.Query(ctx, providerQuery, baseParams...)
 	if err != nil {
-		return nil, fmt.Errorf("executing exact match search: %w", err)
+		return fmt.Errorf("querying provider facets: %w", err)
 	}
 	defer rows.Close()
 
-	results, err := scanResults(rows)
-	if err != nil {
-		return nil, fmt.Errorf("scanning exact match results: %w", err)
+	for rows.Next() {
+		var val string
+		var count int
+		if err := rows.Scan(&val, &count); err != nil {
+			return fmt.Errorf("scanning provider facet: %w", err)
+		}
+		facets.Providers = append(facets.Providers, FacetValue{Value: val, Count: count})
 	}
-	return results, nil
+	if rows.Err() != nil {
+		return rows.Err()
+	}
+
+	// Tag facets
+	tagQuery := fmt.Sprintf(`
+		SELECT t, COUNT(*) as cnt
+		FROM (
+			SELECT unnest(tags) as t
+			FROM search_index
+			%s
+			AND tags IS NOT NULL AND array_length(tags, 1) > 0
+		) sub
+		GROUP BY t
+		ORDER BY cnt DESC
+		LIMIT %d
+	`, baseWhere, maxFacetResults)
+
+	rows2, err := r.db.Query(ctx, tagQuery, baseParams...)
+	if err != nil {
+		return fmt.Errorf("querying tag facets: %w", err)
+	}
+	defer rows2.Close()
+
+	for rows2.Next() {
+		var val string
+		var count int
+		if err := rows2.Scan(&val, &count); err != nil {
+			return fmt.Errorf("scanning tag facet: %w", err)
+		}
+		facets.Tags = append(facets.Tags, FacetValue{Value: val, Count: count})
+	}
+
+	return rows2.Err()
 }
 
-func (r *PostgresRepository) searchTrigramFuzzy(ctx context.Context, filter Filter) ([]*Result, error) {
-	if filter.Query == "" {
-		return nil, nil
+// GetMetadata fetches full metadata for a set of results by type and IDs.
+// This is used for lazy loading detailed information after initial search.
+func (r *PostgresRepository) GetMetadata(ctx context.Context, resultType ResultType, ids []string) (map[string]map[string]interface{}, error) {
+	if len(ids) == 0 {
+		return make(map[string]map[string]interface{}), nil
 	}
 
-	kindFilters := extractKindFilters(filter.Query)
-	if len(kindFilters) > 0 {
-		if len(kindFilters) == 1 && kindFilters[0] == "__CONTRADICTION__" {
-			return nil, nil
-		}
-		filter.Types = kindFilters
-	}
-
-	searchQuery := stripKindFilter(filter.Query)
-	if searchQuery == "" {
-		return nil, nil
-	}
-
-	includeAssets := searchTypeIncluded(filter.Types, ResultTypeAsset)
-	includeGlossary := searchTypeIncluded(filter.Types, ResultTypeGlossary)
-	includeTeams := searchTypeIncluded(filter.Types, ResultTypeTeam)
-	includeDataProducts := searchTypeIncluded(filter.Types, ResultTypeDataProduct)
-
-	var unions []string
-	var params []interface{}
-	paramCount := 0
-
-	params = append(params, searchQuery)
-	paramCount = 1
-
-	if includeAssets {
-		assetQuery := fmt.Sprintf(`
-			SELECT
-				'asset' as type, id, name, description,
-				%s,
-				%s,
-				(
-					GREATEST(
-						word_similarity($1, name),
-						word_similarity($1, mrn),
-						similarity($1, COALESCE(name, '') || ' ' || COALESCE(mrn, '') || ' ' || COALESCE(type, ''))
-					) * 30 +
-					(EXTRACT(EPOCH FROM NOW() - updated_at) / -86400.0 / 365.0)::numeric * 5
-				) as rank,
-				updated_at
+	var query string
+	switch resultType {
+	case ResultTypeAsset:
+		query = fmt.Sprintf(`
+			SELECT id, %s
 			FROM assets
-			WHERE is_stub = FALSE
-			AND (
-				word_similarity($1, name) > 0.3 OR
-				word_similarity($1, mrn) > 0.3 OR
-				similarity($1, COALESCE(name, '') || ' ' || COALESCE(mrn, '') || ' ' || COALESCE(type, '')) > 0.25
-			)`, assetMetadataColumns, assetURLExpr)
-
-		assetQuery, params, paramCount = r.addAssetFilters(assetQuery, filter, params, paramCount)
-		unions = append(unions, assetQuery)
-	}
-
-	if includeGlossary {
-		unions = append(unions, fmt.Sprintf(`
-			SELECT
-				'glossary' as type, id::text, name, definition as description,
-				%s,
-				%s,
-				(word_similarity($1, name) * 30) as rank,
-				updated_at
+			WHERE id = ANY($1)
+		`, assetMetadataColumns)
+	case ResultTypeGlossary:
+		query = fmt.Sprintf(`
+			SELECT id::text, %s
 			FROM glossary_terms
-			WHERE deleted_at IS NULL
-			AND word_similarity($1, name) > 0.3
-		`, glossaryMetadataColumns, glossaryURLExpr))
-	}
-
-	if includeTeams {
-		unions = append(unions, fmt.Sprintf(`
-			SELECT
-				'team' as type, id::text, name, description,
-				%s,
-				%s,
-				(word_similarity($1, name) * 30) as rank,
-				updated_at
+			WHERE id = ANY($1::uuid[])
+		`, glossaryMetadataColumns)
+	case ResultTypeTeam:
+		query = fmt.Sprintf(`
+			SELECT id::text, %s
 			FROM teams
-			WHERE word_similarity($1, name) > 0.3
-		`, teamMetadataColumns, teamURLExpr))
-	}
-
-	if includeDataProducts {
-		unions = append(unions, fmt.Sprintf(`
-			SELECT
-				'data_product' as type, dp.id::text, dp.name, dp.description,
-				%s,
-				%s,
-				(word_similarity($1, dp.name) * 30) as rank,
-				dp.updated_at
+			WHERE id = ANY($1::uuid[])
+		`, teamMetadataColumns)
+	case ResultTypeDataProduct:
+		query = fmt.Sprintf(`
+			SELECT dp.id::text, %s
 			FROM data_products dp
 			LEFT JOIN product_images pi ON dp.id = pi.data_product_id AND pi.purpose = 'icon'
-			WHERE word_similarity($1, dp.name) > 0.3
-		`, dataProductMetadataColumns, dataProductURLExpr))
+			WHERE dp.id = ANY($1::uuid[])
+		`, dataProductMetadataColumns)
+	default:
+		return nil, fmt.Errorf("unknown result type: %s", resultType)
 	}
 
-	if len(unions) == 0 {
-		return nil, nil
-	}
-
-	paramCount++
-	limitParam := paramCount
-	paramCount++
-	offsetParam := paramCount
-
-	q := fmt.Sprintf(`
-		WITH search_results AS (
-			%s
-		)
-		SELECT * FROM search_results
-		ORDER BY rank DESC, updated_at DESC
-		LIMIT $%d OFFSET $%d
-	`, strings.Join(unions, " UNION ALL "), limitParam, offsetParam)
-
-	params = append(params, filter.Limit, filter.Offset)
-
-	rows, err := r.db.Query(ctx, q, params...)
+	rows, err := r.db.Query(ctx, query, ids)
 	if err != nil {
-		return nil, fmt.Errorf("executing trigram fuzzy search: %w", err)
+		return nil, fmt.Errorf("querying %s metadata: %w", resultType, err)
 	}
 	defer rows.Close()
 
-	results, err := scanResults(rows)
-	if err != nil {
-		return nil, fmt.Errorf("scanning trigram fuzzy results: %w", err)
+	result := make(map[string]map[string]interface{})
+	for rows.Next() {
+		var id string
+		var metadataBytes []byte
+		if err := rows.Scan(&id, &metadataBytes); err != nil {
+			return nil, fmt.Errorf("scanning %s metadata row: %w", resultType, err)
+		}
+
+		var metadata map[string]interface{}
+		if err := json.Unmarshal(metadataBytes, &metadata); err != nil {
+			return nil, fmt.Errorf("unmarshaling %s metadata for id %s: %w", resultType, id, err)
+		}
+		result[id] = metadata
 	}
-	return results, nil
+
+	if rows.Err() != nil {
+		return nil, fmt.Errorf("iterating %s metadata rows: %w", resultType, rows.Err())
+	}
+
+	return result, nil
+}
+
+// resultTypesToStrings converts ResultType slice to string slice for SQL.
+func resultTypesToStrings(types []ResultType) []string {
+	result := make([]string, len(types))
+	for i, t := range types {
+		result[i] = string(t)
+	}
+	return result
+}
+
+// emptyFacets returns an initialized empty Facets struct.
+func emptyFacets() *Facets {
+	return &Facets{
+		Types:      make(map[ResultType]int),
+		AssetTypes: []FacetValue{},
+		Providers:  []FacetValue{},
+		Tags:       []FacetValue{},
+	}
+}
+
+// buildCachedFacets reads pre-computed facet counts from summary_counts table.
+// This is used for empty/browse queries where computing facets on-the-fly is expensive.
+// The summary_counts table is maintained by triggers on the source tables.
+func (r *PostgresRepository) buildCachedFacets(ctx context.Context, filter Filter) (*Facets, int, error) {
+	facets := &Facets{
+		Types:      make(map[ResultType]int),
+		AssetTypes: []FacetValue{},
+		Providers:  []FacetValue{},
+		Tags:       []FacetValue{},
+	}
+
+	rows, err := r.db.Query(ctx, `
+		SELECT dimension, key, count
+		FROM summary_counts
+		WHERE count > 0
+		ORDER BY
+			CASE dimension
+				WHEN 'entity_type' THEN 1
+				WHEN 'type' THEN 2
+				WHEN 'provider' THEN 3
+				WHEN 'tag' THEN 4
+			END,
+			count DESC, key ASC
+	`)
+	if err != nil {
+		return nil, 0, fmt.Errorf("querying cached facets: %w", err)
+	}
+	defer rows.Close()
+
+	total := 0
+	tagCount := 0
+
+	for rows.Next() {
+		var dimension, key string
+		var count int
+		if err := rows.Scan(&dimension, &key, &count); err != nil {
+			return nil, 0, fmt.Errorf("scanning cached facet: %w", err)
+		}
+
+		switch dimension {
+		case "entity_type":
+			// Entity types for the Types facet (asset, glossary, team, data_product)
+			facets.Types[ResultType(key)] = count
+			total += count
+		case "type":
+			// Asset types for the AssetTypes facet (table, dashboard, etc.)
+			facets.AssetTypes = append(facets.AssetTypes, FacetValue{Value: key, Count: count})
+		case "provider":
+			// Providers for the Providers facet
+			facets.Providers = append(facets.Providers, FacetValue{Value: key, Count: count})
+		case "tag":
+			// Tags for the Tags facet (limit to top 50)
+			if tagCount < maxFacetResults {
+				facets.Tags = append(facets.Tags, FacetValue{Value: key, Count: count})
+				tagCount++
+			}
+		}
+	}
+
+	if rows.Err() != nil {
+		return nil, 0, rows.Err()
+	}
+
+	// Limit facet slices to maxFacetResults
+	if len(facets.AssetTypes) > maxFacetResults {
+		facets.AssetTypes = facets.AssetTypes[:maxFacetResults]
+	}
+	if len(facets.Providers) > maxFacetResults {
+		facets.Providers = facets.Providers[:maxFacetResults]
+	}
+
+	return facets, total, nil
 }

@@ -434,10 +434,7 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 
 					duration := time.Since(start)
 					metricPath := s.getMetricPath(path, r.URL.Path)
-					err := s.metricsService.Collector().RecordHTTPRequest(r.Method, metricPath, strconv.Itoa(wrapped.statusCode))
-					if err != nil {
-						log.Error().Err(err)
-					}
+					s.metricsService.Collector().RecordHTTPRequest(r.Method, metricPath, strconv.Itoa(wrapped.statusCode))
 					s.metricsService.Collector().RecordHTTPDuration(r.Method, metricPath, duration)
 				}
 				return

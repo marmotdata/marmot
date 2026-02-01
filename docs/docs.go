@@ -1135,46 +1135,6 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/list": {
-            "get": {
-                "description": "Get a paginated list of assets",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "List assets with pagination",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Offset for pagination",
-                        "name": "offset",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "description": "Limit for pagination",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/asset.ListResult"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
         "/assets/lookup/{type}/{service}/{name}": {
             "get": {
                 "description": "Get an asset by its type, service (provider), and name",
@@ -4326,23 +4286,6 @@ const docTemplate = `{
                 },
                 "running": {
                     "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "asset.ListResult": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/asset.Asset"
-                    }
-                },
-                "filters": {
-                    "$ref": "#/definitions/asset.AvailableFilters"
                 },
                 "total": {
                     "type": "integer"

@@ -3,7 +3,6 @@ package assets
 import (
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 	"time"
 
@@ -12,14 +11,6 @@ import (
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/rs/zerolog/log"
 )
-
-type ListResponse struct {
-	Assets  []*asset.Asset         `json:"assets"`
-	Total   int                    `json:"total"`
-	Limit   int                    `json:"limit"`
-	Offset  int                    `json:"offset"`
-	Filters asset.AvailableFilters `json:"filters"`
-}
 
 type SearchFilter struct {
 	Query     string   `json:"query" validate:"omitempty"`
@@ -34,41 +25,6 @@ type SearchResponse struct {
 	Limit   int                    `json:"limit"`
 	Offset  int                    `json:"offset"`
 	Filters asset.AvailableFilters `json:"filters"`
-}
-
-// @Summary List assets with pagination
-// @Description Get a paginated list of assets
-// @Tags assets
-// @Produce json
-// @Param offset query int false "Offset for pagination"
-// @Param limit query int false "Limit for pagination"
-// @Success 200 {object} asset.ListResult
-// @Failure 500 {object} common.ErrorResponse
-// @Router /assets/list [get]
-func (h *Handler) listAssets(w http.ResponseWriter, r *http.Request) {
-	offset := 0
-	limit := 100
-
-	if offsetStr := r.URL.Query().Get("offset"); offsetStr != "" {
-		if o, err := strconv.Atoi(offsetStr); err == nil && o >= 0 {
-			offset = o
-		}
-	}
-
-	if limitStr := r.URL.Query().Get("limit"); limitStr != "" {
-		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
-			limit = l
-		}
-	}
-
-	result, err := h.assetService.List(r.Context(), offset, limit)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to list assets")
-		common.RespondError(w, http.StatusInternalServerError, "Failed to list assets")
-		return
-	}
-
-	common.RespondJSON(w, http.StatusOK, result)
 }
 
 // @Summary Search assets
@@ -133,10 +89,7 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 		if len(filter.Types) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 {
 			queryType = "filtered"
 		}
-		err = recorder.RecordSearchQuery(r.Context(), queryType, searchQuery)
-		if err != nil {
-			log.Error().Err(err)
-		}
+		recorder.RecordSearchQuery(r.Context(), queryType, searchQuery)
 	}
 
 	response := SearchResponse{
@@ -280,10 +233,7 @@ func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
-	if err != nil {
-		log.Error().Err(err)
-	}
+	h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
 
 	common.RespondJSON(w, http.StatusOK, result)
 }

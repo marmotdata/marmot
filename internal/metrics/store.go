@@ -9,7 +9,6 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/rs/zerolog/log"
 )
 
 type MetricType string
@@ -83,6 +82,7 @@ type Store interface {
 	GetTopQueries(ctx context.Context, timeRange TimeRange, limit int) ([]QueryCount, error)
 	GetTopAssets(ctx context.Context, timeRange TimeRange, limit int) ([]AssetCount, error)
 
+	// Asset statistics (from pre-computed table)
 	GetTotalAssets(ctx context.Context) (int64, error)
 	GetTotalAssetsFiltered(ctx context.Context, excludedTypes []string, excludedProviders []string) (int64, error)
 	GetAssetsByType(ctx context.Context) (map[string]int64, error)
@@ -91,10 +91,11 @@ type Store interface {
 	GetAssetsByOwner(ctx context.Context, ownerFields []string) (map[string]int64, error)
 	GetAssetBreakdown(ctx context.Context) ([]AssetBreakdown, error)
 
-	AggregateMetrics(ctx context.Context, timeRange TimeRange, bucketSize time.Duration) error
-	DeleteOldMetrics(ctx context.Context, olderThan time.Time) error
-
+	// Maintenance
+	RefreshAssetStatistics(ctx context.Context, ownerFields []string) error
+	RefreshMetadataValueCounts(ctx context.Context) error
 	CreatePartition(ctx context.Context, date time.Time) error
+	DeleteOldMetrics(ctx context.Context, olderThan time.Time) error
 }
 
 type PostgresStore struct {
@@ -105,18 +106,376 @@ func NewPostgresStore(db *pgxpool.Pool) Store {
 	return &PostgresStore{db: db}
 }
 
+// =============================================================================
+// WRITE METHODS (Array-based)
+// =============================================================================
+
 func (s *PostgresStore) RecordMetric(ctx context.Context, metric Metric) error {
 	return s.RecordMetrics(ctx, []Metric{metric})
 }
 
-func (s *PostgresStore) GetAssetsWithSchemas(ctx context.Context) (int64, error) {
-	query := `SELECT COUNT(*) FROM assets WHERE schema != '{}' AND schema IS NOT NULL`
+// RecordMetrics appends metrics to the array-based timeseries table.
+// Groups metrics by (name, labels, hour) and performs batch upserts.
+func (s *PostgresStore) RecordMetrics(ctx context.Context, metrics []Metric) error {
+	if len(metrics) == 0 {
+		return nil
+	}
+
+	// Group metrics by (name, labels, hour) for efficient batch upsert
+	type bucketKey struct {
+		name   string
+		labels string
+		hour   time.Time
+	}
+
+	buckets := make(map[bucketKey][]Metric)
+	for _, m := range metrics {
+		labelsJSON, _ := json.Marshal(m.Labels)
+		key := bucketKey{
+			name:   m.Name,
+			labels: string(labelsJSON),
+			hour:   m.Timestamp.Truncate(time.Hour),
+		}
+		buckets[key] = append(buckets[key], m)
+	}
+
+	// Upsert each bucket
+	query := `
+		INSERT INTO metrics_timeseries (
+			metric_name, metric_type, labels, hour, day,
+			timestamps, values, point_count, total_sum, min_value, max_value,
+			created_at, updated_at
+		) VALUES (
+			$1, $2, $3, $4, $5,
+			$6, $7, $8, $9, $10, $11,
+			NOW(), NOW()
+		)
+		ON CONFLICT (metric_name, labels, hour, day) DO UPDATE SET
+			timestamps = metrics_timeseries.timestamps || EXCLUDED.timestamps,
+			values = metrics_timeseries.values || EXCLUDED.values,
+			point_count = metrics_timeseries.point_count + EXCLUDED.point_count,
+			total_sum = metrics_timeseries.total_sum + EXCLUDED.total_sum,
+			min_value = LEAST(metrics_timeseries.min_value, EXCLUDED.min_value),
+			max_value = GREATEST(metrics_timeseries.max_value, EXCLUDED.max_value),
+			updated_at = NOW()`
+
+	batch := &pgx.Batch{}
+	for key, bucketMetrics := range buckets {
+		timestamps := make([]time.Time, len(bucketMetrics))
+		values := make([]float32, len(bucketMetrics))
+		var sum float64
+		var minVal, maxVal float32
+
+		for i, m := range bucketMetrics {
+			timestamps[i] = m.Timestamp
+			values[i] = float32(m.Value)
+			sum += m.Value
+			if i == 0 || float32(m.Value) < minVal {
+				minVal = float32(m.Value)
+			}
+			if i == 0 || float32(m.Value) > maxVal {
+				maxVal = float32(m.Value)
+			}
+		}
+
+		batch.Queue(query,
+			key.name,
+			string(bucketMetrics[0].Type),
+			[]byte(key.labels),
+			key.hour,
+			key.hour.Truncate(24*time.Hour),
+			timestamps,
+			values,
+			len(bucketMetrics),
+			sum,
+			minVal,
+			maxVal,
+		)
+	}
+
+	results := s.db.SendBatch(ctx, batch)
+	defer results.Close()
+
+	for range buckets {
+		if _, err := results.Exec(); err != nil {
+			return fmt.Errorf("executing batch upsert: %w", err)
+		}
+	}
+
+	return nil
+}
+
+// =============================================================================
+// READ METHODS (From pre-computed aggregates)
+// =============================================================================
+
+// GetMetrics returns raw metric data points by unnesting arrays.
+func (s *PostgresStore) GetMetrics(ctx context.Context, opts QueryOptions) ([]Metric, error) {
+	query := `
+		SELECT metric_name, metric_type, labels, t, v
+		FROM metrics_timeseries,
+			LATERAL unnest(timestamps, values) AS u(t, v)
+		WHERE day >= $1::date AND day <= $2::date
+		  AND hour >= date_trunc('hour', $1::timestamptz)
+		  AND hour <= date_trunc('hour', $2::timestamptz)
+		  AND t >= $1 AND t <= $2`
+
+	args := []interface{}{opts.TimeRange.Start, opts.TimeRange.End}
+	argNum := 3
+
+	if len(opts.MetricNames) > 0 {
+		query += fmt.Sprintf(" AND metric_name = ANY($%d)", argNum)
+		args = append(args, opts.MetricNames)
+		argNum++
+	}
+
+	if len(opts.Labels) > 0 {
+		for key, value := range opts.Labels {
+			query += fmt.Sprintf(" AND labels->>'%s' = $%d", key, argNum)
+			args = append(args, value)
+			argNum++
+		}
+	}
+
+	query += " ORDER BY t"
+
+	rows, err := s.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("querying metrics: %w", err)
+	}
+	defer rows.Close()
+
+	var metrics []Metric
+	for rows.Next() {
+		var metric Metric
+		var labelsJSON []byte
+		var metricType string
+
+		if err := rows.Scan(&metric.Name, &metricType, &labelsJSON, &metric.Timestamp, &metric.Value); err != nil {
+			return nil, fmt.Errorf("scanning metric: %w", err)
+		}
+
+		metric.Type = MetricType(metricType)
+		if len(labelsJSON) > 0 {
+			if err := json.Unmarshal(labelsJSON, &metric.Labels); err != nil {
+				return nil, fmt.Errorf("unmarshaling labels: %w", err)
+			}
+		}
+		metrics = append(metrics, metric)
+	}
+
+	return metrics, rows.Err()
+}
+
+// GetAggregatedMetrics returns aggregated metrics using pre-computed values.
+func (s *PostgresStore) GetAggregatedMetrics(ctx context.Context, opts QueryOptions) ([]AggregatedMetric, error) {
+	// Determine bucket size for grouping
+	bucketSize := opts.BucketSize
+	if bucketSize == 0 {
+		duration := opts.TimeRange.End.Sub(opts.TimeRange.Start)
+		switch {
+		case duration > 30*24*time.Hour:
+			bucketSize = 24 * time.Hour
+		case duration > 7*24*time.Hour:
+			bucketSize = time.Hour
+		default:
+			bucketSize = 5 * time.Minute
+		}
+	}
+
+	bucketExpr := getBucketExpression(bucketSize)
+
+	query := fmt.Sprintf(`
+		SELECT
+			metric_name,
+			'sum' as aggregation_type,
+			SUM(total_sum) as value,
+			labels,
+			%s as bucket_start,
+			%s + $3::interval as bucket_end
+		FROM metrics_timeseries
+		WHERE day >= $1::date AND day <= $2::date
+		  AND hour >= date_trunc('hour', $1::timestamptz)
+		  AND hour <= $2::timestamptz`,
+		bucketExpr, bucketExpr)
+
+	args := []interface{}{opts.TimeRange.Start, opts.TimeRange.End, bucketSize}
+	argNum := 4
+
+	if len(opts.MetricNames) > 0 {
+		query += fmt.Sprintf(" AND metric_name = ANY($%d)", argNum)
+		args = append(args, opts.MetricNames)
+		argNum++
+	}
+
+	if len(opts.Labels) > 0 {
+		for key, value := range opts.Labels {
+			query += fmt.Sprintf(" AND labels->>'%s' = $%d", key, argNum)
+			args = append(args, value)
+			argNum++
+		}
+	}
+
+	query += fmt.Sprintf(" GROUP BY metric_name, labels, %s ORDER BY bucket_start", bucketExpr)
+
+	rows, err := s.db.Query(ctx, query, args...)
+	if err != nil {
+		return nil, fmt.Errorf("querying aggregated metrics: %w", err)
+	}
+	defer rows.Close()
+
+	var metrics []AggregatedMetric
+	for rows.Next() {
+		var metric AggregatedMetric
+		var labelsJSON []byte
+
+		if err := rows.Scan(&metric.Name, &metric.AggregationType, &metric.Value,
+			&labelsJSON, &metric.BucketStart, &metric.BucketEnd); err != nil {
+			return nil, fmt.Errorf("scanning aggregated metric: %w", err)
+		}
+
+		metric.BucketSize = bucketSize
+		if len(labelsJSON) > 0 {
+			if err := json.Unmarshal(labelsJSON, &metric.Labels); err != nil {
+				return nil, fmt.Errorf("unmarshaling labels: %w", err)
+			}
+		}
+		metrics = append(metrics, metric)
+	}
+
+	return metrics, rows.Err()
+}
+
+func getBucketExpression(bucketSize time.Duration) string {
+	switch bucketSize {
+	case 5 * time.Minute:
+		return "date_trunc('hour', hour) + INTERVAL '5 min' * (EXTRACT(minute FROM hour)::int / 5)"
+	case 15 * time.Minute:
+		return "date_trunc('hour', hour) + INTERVAL '15 min' * (EXTRACT(minute FROM hour)::int / 15)"
+	case time.Hour:
+		return "hour"
+	case 6 * time.Hour:
+		return "date_trunc('day', hour) + INTERVAL '6 hour' * (EXTRACT(hour FROM hour)::int / 6)"
+	case 24 * time.Hour:
+		return "day::timestamptz"
+	default:
+		return "hour"
+	}
+}
+
+// GetTopQueries returns the most frequent search queries.
+func (s *PostgresStore) GetTopQueries(ctx context.Context, timeRange TimeRange, limit int) ([]QueryCount, error) {
+	query := `
+		SELECT
+			labels->>'query' as query,
+			labels->>'query_type' as query_type,
+			SUM(total_sum)::bigint as count
+		FROM metrics_timeseries
+		WHERE metric_name = 'search_queries_detailed'
+		  AND day >= $1::date AND day <= $2::date
+		  AND labels->>'query' IS NOT NULL
+		  AND labels->>'query' != ''
+		GROUP BY labels->>'query', labels->>'query_type'
+		ORDER BY count DESC
+		LIMIT $3`
+
+	rows, err := s.db.Query(ctx, query, timeRange.Start, timeRange.End, limit)
+	if err != nil {
+		return nil, fmt.Errorf("querying top queries: %w", err)
+	}
+	defer rows.Close()
+
+	var results []QueryCount
+	for rows.Next() {
+		var result QueryCount
+		if err := rows.Scan(&result.Query, &result.QueryType, &result.Count); err != nil {
+			return nil, fmt.Errorf("scanning query count: %w", err)
+		}
+		results = append(results, result)
+	}
+
+	return results, rows.Err()
+}
+
+// GetTopAssets returns the most viewed assets.
+func (s *PostgresStore) GetTopAssets(ctx context.Context, timeRange TimeRange, limit int) ([]AssetCount, error) {
+	query := `
+		SELECT
+			COALESCE(labels->>'asset_id', '') as asset_id,
+			COALESCE(labels->>'asset_type', '') as asset_type,
+			COALESCE(labels->>'asset_name', '') as asset_name,
+			COALESCE(labels->>'asset_provider', '') as asset_provider,
+			SUM(total_sum)::bigint as count
+		FROM metrics_timeseries
+		WHERE metric_name = 'asset_views_total'
+		  AND day >= $1::date AND day <= $2::date
+		  AND labels->>'asset_id' IS NOT NULL
+		GROUP BY labels->>'asset_id', labels->>'asset_type', labels->>'asset_name', labels->>'asset_provider'
+		ORDER BY count DESC
+		LIMIT $3`
+
+	rows, err := s.db.Query(ctx, query, timeRange.Start, timeRange.End, limit)
+	if err != nil {
+		return nil, fmt.Errorf("querying top assets: %w", err)
+	}
+	defer rows.Close()
+
+	var results []AssetCount
+	for rows.Next() {
+		var result AssetCount
+		if err := rows.Scan(&result.AssetID, &result.AssetType, &result.AssetName, &result.AssetProvider, &result.Count); err != nil {
+			return nil, fmt.Errorf("scanning asset count: %w", err)
+		}
+		results = append(results, result)
+	}
+
+	return results, rows.Err()
+}
+
+// =============================================================================
+// ASSET STATISTICS (From pre-computed table)
+// =============================================================================
+
+func (s *PostgresStore) GetTotalAssets(ctx context.Context) (int64, error) {
 	var count int64
-	err := s.db.QueryRow(ctx, query).Scan(&count)
+	err := s.db.QueryRow(ctx, `SELECT COALESCE(total_count, 0) FROM asset_statistics WHERE id = 1`).Scan(&count)
+	if err != nil {
+		// Fallback to counting assets directly if asset_statistics doesn't exist
+		return s.getTotalAssetsFromSource(ctx)
+	}
+	return count, nil
+}
+
+func (s *PostgresStore) getTotalAssetsFromSource(ctx context.Context) (int64, error) {
+	var count int64
+	// Try with is_stub filter first (most installations have this column)
+	err := s.db.QueryRow(ctx, `SELECT COUNT(*) FROM assets WHERE is_stub = FALSE`).Scan(&count)
+	if err != nil {
+		// Fallback without is_stub filter (column might not exist)
+		err = s.db.QueryRow(ctx, `SELECT COUNT(*) FROM assets`).Scan(&count)
+	}
 	return count, err
 }
 
 func (s *PostgresStore) GetTotalAssetsFiltered(ctx context.Context, excludedTypes []string, excludedProviders []string) (int64, error) {
+	// For filtered counts, we need to query the breakdown and exclude
+	query := `
+		SELECT COALESCE(SUM((item->>'count')::bigint), 0)
+		FROM asset_statistics, jsonb_array_elements(COALESCE(breakdown, '[]'::jsonb)) AS item
+		WHERE id = 1
+		  AND NOT (item->>'type' = ANY($1))
+		  AND NOT (item->>'provider' = ANY($2))`
+
+	var count int64
+	err := s.db.QueryRow(ctx, query, excludedTypes, excludedProviders).Scan(&count)
+	if err != nil {
+		// Fallback to querying assets directly
+		return s.getTotalAssetsFilteredFromSource(ctx, excludedTypes, excludedProviders)
+	}
+	return count, nil
+}
+
+func (s *PostgresStore) getTotalAssetsFilteredFromSource(ctx context.Context, excludedTypes []string, excludedProviders []string) (int64, error) {
 	query := `SELECT COUNT(*) FROM assets WHERE 1=1`
 	args := []interface{}{}
 	argNum := 1
@@ -137,63 +496,125 @@ func (s *PostgresStore) GetTotalAssetsFiltered(ctx context.Context, excludedType
 	return count, err
 }
 
-func (s *PostgresStore) GetTotalAssets(ctx context.Context) (int64, error) {
-	query := `SELECT COUNT(*) FROM assets`
-	var count int64
-	err := s.db.QueryRow(ctx, query).Scan(&count)
-	return count, err
-}
-
 func (s *PostgresStore) GetAssetsByType(ctx context.Context) (map[string]int64, error) {
-	query := `SELECT type, COUNT(*) FROM assets GROUP BY type ORDER BY COUNT(*) DESC`
+	var byTypeJSON []byte
+	err := s.db.QueryRow(ctx, `SELECT COALESCE(by_type, '{}'::jsonb) FROM asset_statistics WHERE id = 1`).Scan(&byTypeJSON)
+	if err != nil {
+		// Fallback to querying assets directly
+		return s.getAssetsByTypeFromSource(ctx)
+	}
 
 	result := make(map[string]int64)
-	rows, err := s.db.Query(ctx, query)
+	if len(byTypeJSON) == 0 {
+		return result, nil
+	}
+	if err := json.Unmarshal(byTypeJSON, &result); err != nil {
+		return nil, fmt.Errorf("unmarshaling by_type: %w", err)
+	}
+	return result, nil
+}
+
+func (s *PostgresStore) getAssetsByTypeFromSource(ctx context.Context) (map[string]int64, error) {
+	rows, err := s.db.Query(ctx, `SELECT type, COUNT(*) FROM assets WHERE is_stub = FALSE GROUP BY type`)
 	if err != nil {
-		return nil, err
+		// Fallback without is_stub filter
+		rows, err = s.db.Query(ctx, `SELECT type, COUNT(*) FROM assets GROUP BY type`)
+		if err != nil {
+			return nil, err
+		}
 	}
 	defer rows.Close()
 
+	result := make(map[string]int64)
 	for rows.Next() {
 		var assetType string
 		var count int64
-		err := rows.Scan(&assetType, &count)
-		if err != nil {
+		if err := rows.Scan(&assetType, &count); err != nil {
 			return nil, err
 		}
 		result[assetType] = count
 	}
-	return result, nil
+	return result, rows.Err()
 }
 
 func (s *PostgresStore) GetAssetsByProvider(ctx context.Context) (map[string]int64, error) {
-	query := `
-		SELECT providers[1] as provider, COUNT(*) 
-		FROM assets 
-		WHERE array_length(providers, 1) > 0
-		GROUP BY providers[1] 
-		ORDER BY COUNT(*) DESC`
+	var byProviderJSON []byte
+	err := s.db.QueryRow(ctx, `SELECT COALESCE(by_provider, '{}'::jsonb) FROM asset_statistics WHERE id = 1`).Scan(&byProviderJSON)
+	if err != nil {
+		// Fallback to querying assets directly
+		return s.getAssetsByProviderFromSource(ctx)
+	}
 
 	result := make(map[string]int64)
-	rows, err := s.db.Query(ctx, query)
+	if len(byProviderJSON) == 0 {
+		return result, nil
+	}
+	if err := json.Unmarshal(byProviderJSON, &result); err != nil {
+		return nil, fmt.Errorf("unmarshaling by_provider: %w", err)
+	}
+	return result, nil
+}
+
+func (s *PostgresStore) getAssetsByProviderFromSource(ctx context.Context) (map[string]int64, error) {
+	rows, err := s.db.Query(ctx, `
+		SELECT providers[1] as provider, COUNT(*)
+		FROM assets
+		WHERE is_stub = FALSE AND array_length(providers, 1) > 0
+		GROUP BY providers[1]`)
 	if err != nil {
-		return nil, err
+		// Fallback without is_stub filter
+		rows, err = s.db.Query(ctx, `
+			SELECT providers[1] as provider, COUNT(*)
+			FROM assets
+			WHERE array_length(providers, 1) > 0
+			GROUP BY providers[1]`)
+		if err != nil {
+			return nil, err
+		}
 	}
 	defer rows.Close()
 
+	result := make(map[string]int64)
 	for rows.Next() {
 		var provider string
 		var count int64
-		err := rows.Scan(&provider, &count)
-		if err != nil {
+		if err := rows.Scan(&provider, &count); err != nil {
 			return nil, err
 		}
 		result[provider] = count
 	}
-	return result, nil
+	return result, rows.Err()
+}
+
+func (s *PostgresStore) GetAssetsWithSchemas(ctx context.Context) (int64, error) {
+	var count int64
+	err := s.db.QueryRow(ctx, `SELECT COALESCE(with_schemas_count, 0) FROM asset_statistics WHERE id = 1`).Scan(&count)
+	if err != nil {
+		// Fallback to querying assets directly
+		err = s.db.QueryRow(ctx, `SELECT COUNT(*) FROM assets WHERE schema != '{}' AND schema IS NOT NULL`).Scan(&count)
+	}
+	return count, err
 }
 
 func (s *PostgresStore) GetAssetsByOwner(ctx context.Context, ownerFields []string) (map[string]int64, error) {
+	var byOwnerJSON []byte
+	err := s.db.QueryRow(ctx, `SELECT COALESCE(by_owner, '{}'::jsonb) FROM asset_statistics WHERE id = 1`).Scan(&byOwnerJSON)
+	if err != nil {
+		// Fallback to querying assets directly
+		return s.getAssetsByOwnerFromSource(ctx, ownerFields)
+	}
+
+	result := make(map[string]int64)
+	if len(byOwnerJSON) == 0 {
+		return result, nil
+	}
+	if err := json.Unmarshal(byOwnerJSON, &result); err != nil {
+		return nil, fmt.Errorf("unmarshaling by_owner: %w", err)
+	}
+	return result, nil
+}
+
+func (s *PostgresStore) getAssetsByOwnerFromSource(ctx context.Context, ownerFields []string) (map[string]int64, error) {
 	if len(ownerFields) == 0 {
 		return make(map[string]int64), nil
 	}
@@ -204,447 +625,118 @@ func (s *PostgresStore) GetAssetsByOwner(ctx context.Context, ownerFields []stri
 	}
 
 	query := fmt.Sprintf(`
-   	SELECT 
-   		COALESCE(%s) as owner,
-   		COUNT(*)
-   	FROM assets
-   	WHERE COALESCE(%s) IS NOT NULL
-   	GROUP BY owner ORDER BY COUNT(*) DESC`,
+		SELECT COALESCE(%s) as owner, COUNT(*)
+		FROM assets
+		WHERE COALESCE(%s) IS NOT NULL
+		GROUP BY 1`,
 		strings.Join(coalesceFields, ", "),
 		strings.Join(coalesceFields, ", "))
 
-	result := make(map[string]int64)
 	rows, err := s.db.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
+	result := make(map[string]int64)
 	for rows.Next() {
 		var owner string
 		var count int64
-		err := rows.Scan(&owner, &count)
-		if err != nil {
+		if err := rows.Scan(&owner, &count); err != nil {
 			return nil, err
 		}
 		result[owner] = count
 	}
-	return result, nil
+	return result, rows.Err()
 }
 
 func (s *PostgresStore) GetAssetBreakdown(ctx context.Context) ([]AssetBreakdown, error) {
-	query := `
-		SELECT 
+	var breakdownJSON []byte
+	err := s.db.QueryRow(ctx, `SELECT COALESCE(breakdown, '[]'::jsonb) FROM asset_statistics WHERE id = 1`).Scan(&breakdownJSON)
+	if err != nil {
+		// Fallback to querying assets directly
+		return s.getAssetBreakdownFromSource(ctx)
+	}
+
+	var result []AssetBreakdown
+	if len(breakdownJSON) == 0 {
+		return result, nil
+	}
+	if err := json.Unmarshal(breakdownJSON, &result); err != nil {
+		return nil, fmt.Errorf("unmarshaling breakdown: %w", err)
+	}
+	return result, nil
+}
+
+func (s *PostgresStore) getAssetBreakdownFromSource(ctx context.Context) ([]AssetBreakdown, error) {
+	rows, err := s.db.Query(ctx, `
+		SELECT
 			COALESCE(type, 'unknown') as type,
 			COALESCE(providers[1], 'unknown') as provider,
 			CASE WHEN schema != '{}' THEN true ELSE false END as has_schema,
 			COALESCE(COALESCE(metadata->>'owner', metadata->>'ownedBy'), 'unknown') as owner,
 			COUNT(*) as count
-		FROM assets 
+		FROM assets
+		WHERE is_stub = FALSE
 		GROUP BY type, providers[1], (schema != '{}'), COALESCE(metadata->>'owner', metadata->>'ownedBy')
-		ORDER BY count DESC`
-
-	rows, err := s.db.Query(ctx, query)
+		ORDER BY count DESC`)
 	if err != nil {
-		return nil, fmt.Errorf("querying asset breakdown: %w", err)
+		// Fallback without is_stub filter
+		rows, err = s.db.Query(ctx, `
+			SELECT
+				COALESCE(type, 'unknown') as type,
+				COALESCE(providers[1], 'unknown') as provider,
+				CASE WHEN schema != '{}' THEN true ELSE false END as has_schema,
+				COALESCE(COALESCE(metadata->>'owner', metadata->>'ownedBy'), 'unknown') as owner,
+				COUNT(*) as count
+			FROM assets
+			GROUP BY type, providers[1], (schema != '{}'), COALESCE(metadata->>'owner', metadata->>'ownedBy')
+			ORDER BY count DESC`)
+		if err != nil {
+			return nil, fmt.Errorf("querying asset breakdown: %w", err)
+		}
 	}
 	defer rows.Close()
 
 	var result []AssetBreakdown
 	for rows.Next() {
 		var breakdown AssetBreakdown
-		err := rows.Scan(&breakdown.Type, &breakdown.Provider, &breakdown.HasSchema, &breakdown.Owner, &breakdown.Count)
-		if err != nil {
+		if err := rows.Scan(&breakdown.Type, &breakdown.Provider, &breakdown.HasSchema, &breakdown.Owner, &breakdown.Count); err != nil {
 			return nil, fmt.Errorf("scanning asset breakdown: %w", err)
 		}
 		result = append(result, breakdown)
 	}
-
 	return result, rows.Err()
 }
 
-func (s *PostgresStore) RecordMetrics(ctx context.Context, metrics []Metric) error {
-	if len(metrics) == 0 {
-		return nil
+// =============================================================================
+// MAINTENANCE METHODS
+// =============================================================================
+
+// RefreshAssetStatistics updates the pre-computed asset statistics table.
+func (s *PostgresStore) RefreshAssetStatistics(ctx context.Context, ownerFields []string) error {
+	if len(ownerFields) == 0 {
+		ownerFields = []string{"owner", "ownedBy"}
 	}
-
-	query := `
-		INSERT INTO raw_metrics (metric_name, metric_type, value, labels, timestamp)
-		VALUES ($1, $2, $3, $4, $5)`
-
-	batch := &pgx.Batch{}
-	for _, metric := range metrics {
-		labelsJSON, err := json.Marshal(metric.Labels)
-		if err != nil {
-			return fmt.Errorf("marshaling labels: %w", err)
-		}
-
-		batch.Queue(query, metric.Name, string(metric.Type), metric.Value, labelsJSON, metric.Timestamp)
-	}
-
-	results := s.db.SendBatch(ctx, batch)
-	defer results.Close()
-
-	for i := 0; i < len(metrics); i++ {
-		_, err := results.Exec()
-		if err != nil {
-			return fmt.Errorf("executing batch insert: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func (s *PostgresStore) GetMetrics(ctx context.Context, opts QueryOptions) ([]Metric, error) {
-	query := `
-		SELECT metric_name, metric_type, value, labels, timestamp
-		FROM raw_metrics
-		WHERE timestamp >= $1 AND timestamp <= $2`
-
-	args := []interface{}{opts.TimeRange.Start, opts.TimeRange.End}
-	argNum := 3
-
-	if len(opts.MetricNames) > 0 {
-		query += fmt.Sprintf(" AND metric_name = ANY($%d)", argNum)
-		args = append(args, opts.MetricNames)
-		argNum++
-	}
-
-	if len(opts.Labels) > 0 {
-		for key, value := range opts.Labels {
-			query += fmt.Sprintf(" AND labels->>'%s' = $%d", key, argNum)
-			args = append(args, value)
-			argNum++
-		}
-	}
-
-	query += " ORDER BY timestamp"
-
-	rows, err := s.db.Query(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("querying metrics: %w", err)
-	}
-	defer rows.Close()
-
-	var metrics []Metric
-	for rows.Next() {
-		var metric Metric
-		var labelsJSON []byte
-		var metricType string
-
-		err := rows.Scan(&metric.Name, &metricType, &metric.Value, &labelsJSON, &metric.Timestamp)
-		if err != nil {
-			return nil, fmt.Errorf("scanning metric: %w", err)
-		}
-
-		metric.Type = MetricType(metricType)
-
-		if len(labelsJSON) > 0 {
-			if err := json.Unmarshal(labelsJSON, &metric.Labels); err != nil {
-				return nil, fmt.Errorf("unmarshaling labels: %w", err)
-			}
-		}
-
-		metrics = append(metrics, metric)
-	}
-
-	return metrics, rows.Err()
-}
-
-func (s *PostgresStore) GetAggregatedMetrics(ctx context.Context, opts QueryOptions) ([]AggregatedMetric, error) {
-	query := `
-		SELECT metric_name, aggregation_type, value, labels, bucket_start, bucket_end, bucket_size
-		FROM aggregated_metrics
-		WHERE bucket_start >= $1 AND bucket_end <= $2`
-
-	args := []interface{}{opts.TimeRange.Start, opts.TimeRange.End}
-	argNum := 3
-
-	if len(opts.MetricNames) > 0 {
-		query += fmt.Sprintf(" AND metric_name = ANY($%d)", argNum)
-		args = append(args, opts.MetricNames)
-		argNum++
-	}
-
-	if opts.AggregationType != "" {
-		query += fmt.Sprintf(" AND aggregation_type = $%d", argNum)
-		args = append(args, opts.AggregationType)
-		argNum++
-	}
-
-	if opts.BucketSize > 0 {
-		query += fmt.Sprintf(" AND bucket_size = $%d", argNum)
-		args = append(args, opts.BucketSize)
-	}
-
-	query += " ORDER BY bucket_start"
-
-	rows, err := s.db.Query(ctx, query, args...)
-	if err != nil {
-		return nil, fmt.Errorf("querying aggregated metrics: %w", err)
-	}
-	defer rows.Close()
-
-	var metrics []AggregatedMetric
-	for rows.Next() {
-		var metric AggregatedMetric
-		var labelsJSON []byte
-		var bucketSize string
-
-		err := rows.Scan(&metric.Name, &metric.AggregationType, &metric.Value,
-			&labelsJSON, &metric.BucketStart, &metric.BucketEnd, &bucketSize)
-		if err != nil {
-			return nil, fmt.Errorf("scanning aggregated metric: %w", err)
-		}
-
-		bucketDuration, err := time.ParseDuration(bucketSize)
-		if err != nil {
-			return nil, fmt.Errorf("parsing bucket size: %w", err)
-		}
-		metric.BucketSize = bucketDuration
-
-		if len(labelsJSON) > 0 {
-			if err := json.Unmarshal(labelsJSON, &metric.Labels); err != nil {
-				return nil, fmt.Errorf("unmarshaling labels: %w", err)
-			}
-		}
-
-		metrics = append(metrics, metric)
-	}
-
-	return metrics, rows.Err()
-}
-
-func (s *PostgresStore) AggregateMetrics(ctx context.Context, timeRange TimeRange, bucketSize time.Duration) error {
-	batchDuration := time.Hour
-	if bucketSize < time.Hour {
-		batchDuration = bucketSize * 12
-	}
-
-	currentStart := timeRange.Start
-	for currentStart.Before(timeRange.End) {
-		batchEnd := currentStart.Add(batchDuration)
-		if batchEnd.After(timeRange.End) {
-			batchEnd = timeRange.End
-		}
-
-		batchRange := TimeRange{Start: currentStart, End: batchEnd}
-
-		if err := s.aggregateBatch(ctx, batchRange, bucketSize); err != nil {
-			log.Warn().Err(err).
-				Time("batch_start", currentStart).
-				Time("batch_end", batchEnd).
-				Msg("Batch aggregation failed - continuing with next batch")
-		}
-
-		currentStart = batchEnd
-	}
-
-	return nil
-}
-
-func (s *PostgresStore) aggregateBatch(ctx context.Context, timeRange TimeRange, bucketSize time.Duration) error {
-	tx, err := s.db.Begin(ctx)
-	if err != nil {
-		return fmt.Errorf("beginning transaction: %w", err)
-	}
-	defer tx.Rollback(ctx)
-
-	if _, err := tx.Exec(ctx, "SET statement_timeout = '30s'"); err != nil {
-		return fmt.Errorf("setting statement timeout: %w", err)
-	}
-
-	if err := s.aggregateCountersBatch(ctx, tx, timeRange, bucketSize); err != nil {
-		return fmt.Errorf("aggregating counters: %w", err)
-	}
-
-	if err := s.aggregateGaugesBatch(ctx, tx, timeRange, bucketSize); err != nil {
-		return fmt.Errorf("aggregating gauges: %w", err)
-	}
-
-	return tx.Commit(ctx)
-}
-
-func (s *PostgresStore) aggregateCountersBatch(ctx context.Context, tx pgx.Tx, timeRange TimeRange, bucketSize time.Duration) error {
-	bucketStart := getBucketStart(bucketSize)
-
-	query := fmt.Sprintf(`
-		INSERT INTO aggregated_metrics (metric_name, aggregation_type, value, labels, bucket_start, bucket_end, bucket_size)
-		SELECT 
-			metric_name,
-			'sum' as aggregation_type,
-			SUM(value) as value,
-			labels,
-			%s as bucket_start,
-			%s + $3::INTERVAL as bucket_end,
-			$3::INTERVAL as bucket_size
-		FROM raw_metrics 
-		WHERE metric_type = 'counter'
-		  AND timestamp >= $1 AND timestamp < $2
-		GROUP BY metric_name, labels, (%s)
-		ON CONFLICT (metric_name, aggregation_type, labels, bucket_start, bucket_end) 
-		DO UPDATE SET value = EXCLUDED.value, created_at = NOW()`,
-		bucketStart, bucketStart, bucketStart)
-
-	_, err := tx.Exec(ctx, query, timeRange.Start, timeRange.End, bucketSize)
+	_, err := s.db.Exec(ctx, `SELECT refresh_asset_statistics($1)`, ownerFields)
 	return err
 }
 
-func (s *PostgresStore) aggregateGaugesBatch(ctx context.Context, tx pgx.Tx, timeRange TimeRange, bucketSize time.Duration) error {
-	aggregations := []string{"avg", "min", "max"}
-	bucketStart := getBucketStart(bucketSize)
-
-	for _, agg := range aggregations {
-		query := fmt.Sprintf(`
-			INSERT INTO aggregated_metrics (metric_name, aggregation_type, value, labels, bucket_start, bucket_end, bucket_size)
-			SELECT 
-				metric_name,
-				$1 as aggregation_type,
-				%s(value) as value,
-				labels,
-				%s as bucket_start,
-				%s + $4::INTERVAL as bucket_end,
-				$4::INTERVAL as bucket_size
-			FROM raw_metrics 
-			WHERE metric_type = 'gauge'
-			  AND timestamp >= $2 AND timestamp < $3
-			GROUP BY metric_name, labels, (%s)
-			ON CONFLICT (metric_name, aggregation_type, labels, bucket_start, bucket_end) 
-			DO UPDATE SET value = EXCLUDED.value, created_at = NOW()`,
-			strings.ToUpper(agg), bucketStart, bucketStart, bucketStart)
-
-		_, err := tx.Exec(ctx, query, agg, timeRange.Start, timeRange.End, bucketSize)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+// RefreshMetadataValueCounts refreshes the materialized view for metadata autocomplete.
+func (s *PostgresStore) RefreshMetadataValueCounts(ctx context.Context) error {
+	_, err := s.db.Exec(ctx, `REFRESH MATERIALIZED VIEW CONCURRENTLY metadata_value_counts`)
+	return err
 }
 
-func getBucketStart(bucketSize time.Duration) string {
-	switch bucketSize {
-	case 5 * time.Minute:
-		return "date_trunc('minute', timestamp) - INTERVAL '1 minute' * (EXTRACT(minute FROM timestamp)::int % 5)"
-	case 15 * time.Minute:
-		return "date_trunc('minute', timestamp) - INTERVAL '1 minute' * (EXTRACT(minute FROM timestamp)::int % 15)"
-	case 6 * time.Hour:
-		return "date_trunc('hour', timestamp) - INTERVAL '1 hour' * (EXTRACT(hour FROM timestamp)::int % 6)"
-	default:
-		return "date_trunc('" + getBucketString(bucketSize) + "', timestamp)"
-	}
-}
-
+// CreatePartition creates a partition for the given date.
 func (s *PostgresStore) CreatePartition(ctx context.Context, date time.Time) error {
-	_, err := s.db.Exec(ctx, "SELECT create_metrics_partition_for_date($1)", date)
-	if err != nil {
-		return fmt.Errorf("creating partition for date %v: %w", date, err)
-	}
-	return nil
+	_, err := s.db.Exec(ctx, `SELECT create_metrics_timeseries_partition($1)`, date)
+	return err
 }
 
-func (s *PostgresStore) GetTopQueries(ctx context.Context, timeRange TimeRange, limit int) ([]QueryCount, error) {
-	query := `
-		SELECT 
-			labels->>'query' as query,
-			labels->>'query_type' as query_type,
-			SUM(value)::bigint as count
-		FROM raw_metrics
-		WHERE metric_name = 'search_queries_detailed'
-		AND timestamp >= $1 AND timestamp <= $2
-		AND labels->>'query' IS NOT NULL
-		AND labels->>'query' != ''
-		GROUP BY labels->>'query', labels->>'query_type'
-		ORDER BY count DESC
-		LIMIT $3`
-
-	rows, err := s.db.Query(ctx, query, timeRange.Start, timeRange.End, limit)
-	if err != nil {
-		return nil, fmt.Errorf("querying top queries: %w", err)
-	}
-	defer rows.Close()
-
-	var results []QueryCount
-	for rows.Next() {
-		var result QueryCount
-		err := rows.Scan(&result.Query, &result.QueryType, &result.Count)
-		if err != nil {
-			return nil, fmt.Errorf("scanning query count: %w", err)
-		}
-		results = append(results, result)
-	}
-
-	return results, rows.Err()
-}
-
-func (s *PostgresStore) GetTopAssets(ctx context.Context, timeRange TimeRange, limit int) ([]AssetCount, error) {
-	query := `
-		SELECT 
-			COALESCE(labels->>'asset_id', '') as asset_id,
-			COALESCE(labels->>'asset_type', '') as asset_type,
-			COALESCE(labels->>'asset_name', '') as asset_name,
-			COALESCE(labels->>'asset_provider', '') as asset_provider,
-			SUM(value)::bigint as count
-		FROM raw_metrics
-		WHERE metric_name = 'asset_views_total'
-		AND timestamp >= $1 AND timestamp <= $2
-		AND labels->>'asset_id' IS NOT NULL
-		GROUP BY labels->>'asset_id', labels->>'asset_type', labels->>'asset_name', labels->>'asset_provider'
-		ORDER BY count DESC
-		LIMIT $3`
-
-	rows, err := s.db.Query(ctx, query, timeRange.Start, timeRange.End, limit)
-	if err != nil {
-		return nil, fmt.Errorf("querying top assets: %w", err)
-	}
-	defer rows.Close()
-
-	var results []AssetCount
-	for rows.Next() {
-		var result AssetCount
-		err := rows.Scan(&result.AssetID, &result.AssetType, &result.AssetName, &result.AssetProvider, &result.Count)
-		if err != nil {
-			return nil, fmt.Errorf("scanning asset count: %w", err)
-		}
-		results = append(results, result)
-	}
-
-	return results, rows.Err()
-}
-
+// DeleteOldMetrics drops partitions older than the cutoff date.
 func (s *PostgresStore) DeleteOldMetrics(ctx context.Context, olderThan time.Time) error {
-	_, err := s.db.Exec(ctx, "DELETE FROM raw_metrics WHERE timestamp < $1", olderThan)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to delete old raw metrics")
-		return err
-	}
-
-	aggregatedCutoff := olderThan.AddDate(0, -12, 0)
-	_, err = s.db.Exec(ctx, "DELETE FROM aggregated_metrics WHERE bucket_end < $1", aggregatedCutoff)
-	if err != nil {
-		log.Error().Err(err).Msg("Failed to delete old aggregated metrics")
-		return err
-	}
-
-	return nil
-}
-
-
-func getBucketString(duration time.Duration) string {
-	switch duration {
-	case time.Minute:
-		return "minute"
-	case 5 * time.Minute:
-		return "minute"
-	case 15 * time.Minute:
-		return "minute"
-	case time.Hour:
-		return "hour"
-	case 6 * time.Hour:
-		return "hour"
-	case 24 * time.Hour:
-		return "day"
-	default:
-		return "hour"
-	}
+	// Drop partitions for dates older than cutoff
+	_, err := s.db.Exec(ctx, `SELECT drop_metrics_timeseries_partition($1::date)`, olderThan)
+	return err
 }
