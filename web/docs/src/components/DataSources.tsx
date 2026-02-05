@@ -77,6 +77,19 @@ export default function DataSources(): JSX.Element {
             and more →
           </a>
         </div>
+
+        <p className="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
+          Don't see your data source?{" "}
+          <a
+            href="https://github.com/marmotdata/marmot/issues/new"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-earthy-terracotta-600 dark:text-earthy-terracotta-500 hover:underline"
+          >
+            Open an issue
+          </a>{" "}
+          to request a plugin.
+        </p>
       </div>
     </section>
   );

@@ -95,8 +95,6 @@ spec:
               {{- else }}
               value: {{ include "marmot.fullname" . }}-cnpg-rw
               {{- end }}
-              {{- else if index .Values "postgresql-ha" "enabled" }}
-              value: {{ include "marmot.fullname" . }}-postgresql-ha-pgpool
               {{- else if .Values.postgresql.enabled }}
               {{- if eq .Values.postgresql.architecture "replication" }}
               value: {{ include "marmot.fullname" . }}-postgresql-primary
@@ -107,7 +105,7 @@ spec:
               value: {{ .Values.config.database.host | quote }}
               {{- end }}
             - name: MARMOT_DATABASE_PORT
-              {{- if or .Values.cnpg.enabled .Values.postgresql.enabled (index .Values "postgresql-ha" "enabled") }}
+              {{- if or .Values.cnpg.enabled .Values.postgresql.enabled }}
               value: "5432"
               {{- else }}
               value: {{ .Values.config.database.port | quote }}
@@ -115,8 +113,6 @@ spec:
             - name: MARMOT_DATABASE_USER
               {{- if .Values.cnpg.enabled }}
               value: {{ .Values.cnpg.username | default "marmot" | quote }}
-              {{- else if index .Values "postgresql-ha" "enabled" }}
-              value: {{ index .Values "postgresql-ha" "postgresql" "username" | quote }}
               {{- else if .Values.postgresql.enabled }}
               value: {{ .Values.postgresql.auth.username | quote }}
               {{- else }}
@@ -125,8 +121,6 @@ spec:
             - name: MARMOT_DATABASE_NAME
               {{- if .Values.cnpg.enabled }}
               value: {{ .Values.cnpg.database | default "marmot" | quote }}
-              {{- else if index .Values "postgresql-ha" "enabled" }}
-              value: {{ index .Values "postgresql-ha" "postgresql" "database" | quote }}
               {{- else if .Values.postgresql.enabled }}
               value: {{ .Values.postgresql.auth.database | quote }}
               {{- else }}
@@ -151,11 +145,6 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: {{ include "marmot.fullname" . }}-cnpg-auth
-                  key: password
-              {{- else if index .Values "postgresql-ha" "enabled" }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ include "marmot.fullname" . }}-postgresql-ha-postgresql
                   key: password
               {{- else if .Values.postgresql.enabled }}
               valueFrom:

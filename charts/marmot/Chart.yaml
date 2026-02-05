@@ -9,13 +9,21 @@ sources:
   - https://github.com/marmotdata/marmot
 maintainers:
   - name: Charlie Haley
-    email: charlie@marmotdata.com
+    email: charlie@marmotdata.io
 keywords:
   - marmot
   - data
   - data catalog
   - lineage
   - catalog
+  - data discovery
+  - data governance
+  - metadata
+  - data lineage
+  - observability
+  - openlineage
+  - kubernetes
+  - postgresql
 
 dependencies:
   - name: postgresql

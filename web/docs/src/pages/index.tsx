@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import Layout from "@theme/Layout";
 import Hero from "../components/Hero";
+import Stats from "../components/Stats";
 import Value from "../components/Value";
 import DataSources from "../components/DataSources";
 import CTA from "../components/CTA";
@@ -28,6 +29,7 @@ export default function Home(): JSX.Element {
     >
       <div className="bg-earthy-brown-50 min-h-screen">
         <Hero />
+        <Stats />
         <Benefits />
         {/* <Value /> */}
         <Integrations />

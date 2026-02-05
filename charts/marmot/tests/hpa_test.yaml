@@ -2,14 +2,14 @@ suite: test hpa
 templates:
   - hpa.yaml
 tests:
-  - it: should not render hpa by default
+  - it: should not render hpa when disabled
+    set:
+      autoscaling.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
-  - it: should render hpa when enabled
-    set:
-      autoscaling.enabled: true
+  - it: should render hpa with default values
     asserts:
       - isKind:
           of: HorizontalPodAutoscaler
@@ -18,10 +18,10 @@ tests:
           value: RELEASE-NAME-marmot
       - equal:
           path: spec.minReplicas
-          value: 1
+          value: 2
       - equal:
           path: spec.maxReplicas
-          value: 100
+          value: 10
 
   - it: should configure cpu and memory metrics
     set:
@@ -36,7 +36,7 @@ tests:
               name: cpu
               target:
                 type: Utilization
-                averageUtilization: 80
+                averageUtilization: 70
       - contains:
           path: spec.metrics
           content:
