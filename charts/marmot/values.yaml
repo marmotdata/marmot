@@ -1,5 +1,4 @@
 # Default values for marmot.
-# This is a YAML-formatted file.
 
 replicaCount: 1
 
@@ -17,7 +16,7 @@ serviceAccount:
   create: true
   # Annotations to add to the service account
   annotations: {}
-  # The name of the service account to use.
+  # The name of the service account to use
   name: ""
 
 podAnnotations: {}
@@ -43,8 +42,6 @@ ingress:
   enabled: false
   className: ""
   annotations: {}
-    # kubernetes.io/ingress.class: nginx
-    # kubernetes.io/tls-acme: "true"
   hosts:
     - host: marmot.local
       paths:
@@ -71,9 +68,7 @@ autoscaling:
   targetMemoryUtilizationPercentage: 80
 
 nodeSelector: {}
-
 tolerations: []
-
 affinity: {}
 
 # Marmot application configuration
@@ -85,21 +80,65 @@ config:
     rootUrl: ""
     customResponseHeaders: {}
 
-    # Encryption key configuration for pipeline credentials
-    # Use ONE of the following options:
-    # 1. Auto-generate (recommended for new deployments)
+    # Encryption key for pipeline credentials
+    # Option 1: Auto-generate (recommended for new deployments)
     autoGenerateEncryptionKey: true
-    # 2. Provide key directly (not recommended for production)
+    # Option 2: Provide key directly (not recommended for production)
     encryptionKey: ""
-    # 3. Reference existing secret (recommended for production)
+    # Option 3: Reference existing secret (recommended for production)
     # encryptionKeySecretRef:
     #   name: "marmot-encryption-secret"
     #   key: "encryption-key"
 
     # Allow running without encryption (NOT RECOMMENDED)
-    # If true, Marmot will start even without an encryption key
-    # Pipeline credentials will be stored in PLAINTEXT in the database
     allowUnencrypted: false
+
+  # Database configuration
+  database:
+    # When postgresql.enabled is true, these are automatically populated
+    host: "postgresql"
+    port: 5432
+    user: "marmot"
+    # Use either password OR passwordSecretRef (not both)
+    password: ""
+    # passwordSecretRef:
+    #   name: "marmot-database-secret"
+    #   key: "password"
+    name: "marmot"
+    sslmode: "disable"
+    # Connection pool settings
+    maxConns: 100
+    idleConns: 20
+    connLifetime: 30  # minutes
+
+  # Search configuration
+  search:
+    timeout: 10  # seconds
+
+  # Logging configuration
+  logging:
+    level: "info"
+    format: "json"
+
+  # Authentication configuration
+  auth:
+    anonymous:
+      enabled: false
+      role: "user"
+
+    # OAuth providers (e.g., Okta, Google, GitHub)
+    providers: {}
+      # okta:
+      #   enabled: true
+      #   type: "okta"
+      #   name: "Okta"
+      #   clientId: ""
+      #   clientSecret: ""
+      #   url: "https://your-org.okta.com"
+      #   scopes:
+      #     - "openid"
+      #     - "profile"
+      #     - "email"
 
   # Metrics configuration
   metrics:
@@ -114,77 +153,7 @@ config:
         - "Service"
       excludedProviders: []
 
-  # Database configuration
-  database:
-    # When postgresql.enabled is true, these values are automatically populated
-    host: "postgresql"
-    port: 5432
-    user: "marmot"
-    # Use either password OR passwordSecretRef (not both)
-    password: ""
-    # passwordSecretRef:
-    #   name: "marmot-database-secret"
-    #   key: "password"
-    name: "marmot"
-    sslmode: "disable"
-    # Connection pool settings - tune based on expected concurrency
-    # maxConns should be: expected_concurrent_requests / num_replicas
-    maxConns: 100
-    idleConns: 20
-    connLifetime: 30  # minutes
-
-  # Search configuration
-  search:
-    # Query timeout prevents runaway queries from exhausting connections
-    timeout: 10  # seconds
-
-  # Logging configuration
-  logging:
-    level: "info"
-    format: "json"
-
-  # Authentication configuration
-  auth:
-    # Anonymous authentication
-    anonymous:
-      enabled: false
-      role: "user"
-
-    # OAuth providers (e.g., Okta, Google, etc.)
-    providers: {}
-      # okta:
-      #   enabled: false
-      #   type: "okta"
-      #   name: "Okta"
-      #   clientId: ""
-      #   # Use either clientSecret OR clientSecretRef (not both)
-      #   clientSecret: ""
-      #   # clientSecretRef:
-      #   #   name: "okta-secret"
-      #   #   key: "client-secret"
-      #   url: "https://your-org.okta.com"
-      #   redirectUrl: ""
-      #   scopes:
-      #     - "openid"
-      #     - "profile"
-      #     - "email"
-      #     - "groups"
-      #     - "offline_access"
-      #   allowSignup: true
-      #   groupMapping: []
-      #     # - groupName: "admin-group"
-      #     #   roles:
-      #     #     - "admin"
-      #   teamSync:
-      #     enabled: false
-      #     stripPrefix: ""
-      #     group:
-      #       claim: "groups"
-      #       filter:
-      #         mode: ""
-      #         pattern: ""
-
-  # Rate limiting configuration
+  # Rate limiting
   rateLimit:
     enabled: false
 
@@ -200,15 +169,16 @@ config:
   # Pipeline/ingestion configuration
   pipelines:
     maxWorkers: 10
-    schedulerInterval: 60  # seconds
-    leaseExpiry: 300  # seconds
-    claimExpiry: 30  # seconds
+    schedulerInterval: 60   # seconds
+    leaseExpiry: 300        # seconds
+    claimExpiry: 30         # seconds
 
   # OpenLineage configuration
   openlineage:
     auth:
       enabled: true
 
+# Prometheus ServiceMonitor
 monitoring:
   serviceMonitor:
     enabled: false
@@ -221,14 +191,13 @@ monitoring:
 # Additional environment variables
 env: {}
 
-# PostgreSQL subchart configuration
+# Bitnami PostgreSQL subchart
+# https://github.com/bitnami/charts/tree/main/bitnami/postgresql
 postgresql:
   enabled: false
   auth:
     username: "marmot"
     database: "marmot"
-    # If not specified, a random password will be generated
-    # password: "changeme"
   primary:
     persistence:
       enabled: true
@@ -240,4 +209,43 @@ postgresql:
       requests:
         cpu: 100m
         memory: 128Mi
-  # See here for additional config: https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+
+# CloudNativePG configuration
+# Requires the CNPG operator to be installed separately
+# https://cloudnative-pg.io/documentation/current/installation_upgrade/
+cnpg:
+  enabled: false
+  # PostgreSQL instances (1 primary + N-1 replicas)
+  instances: 3
+  image: "ghcr.io/cloudnative-pg/postgresql:16"
+  username: "marmot"
+  password: ""
+  database: "marmot"
+  # PostgreSQL parameters
+  parameters:
+    shared_buffers: "256MB"
+    work_mem: "64MB"
+    maintenance_work_mem: "128MB"
+    effective_cache_size: "1GB"
+    max_connections: "200"
+  # Storage configuration
+  persistence:
+    enabled: true
+    size: "8Gi"
+    # storageClass: ""
+  # Resource limits
+  resources:
+    requests:
+      memory: "512Mi"
+      cpu: "500m"
+    limits:
+      memory: "2Gi"
+      cpu: "2000m"
+  # PgBouncer connection pooler
+  pooler:
+    enabled: true
+    instances: 2
+    poolMode: "transaction"
+    maxClientConn: 1000
+    defaultPoolSize: 25
+    reservePoolSize: 5

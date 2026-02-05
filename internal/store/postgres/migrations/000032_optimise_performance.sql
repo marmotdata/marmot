@@ -23,8 +23,8 @@ CREATE TABLE IF NOT EXISTS search_index (
 -- Full-text search
 CREATE INDEX IF NOT EXISTS idx_search_index_fts ON search_index USING GIN(search_text);
 
--- Trigram similarity for fuzzy matching
-CREATE INDEX IF NOT EXISTS idx_search_index_name_trgm ON search_index USING gist(name gist_trgm_ops(siglen=256));
+-- Trigram similarity for fuzzy matching 
+CREATE INDEX IF NOT EXISTS idx_search_index_name_trgm ON search_index USING gin(name gin_trgm_ops);
 
 -- Prefix matching with covering columns
 CREATE INDEX IF NOT EXISTS idx_search_index_name_prefix ON search_index (type, lower(name) text_pattern_ops)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -116,6 +117,7 @@ func (s *PostgresStore) RecordMetric(ctx context.Context, metric Metric) error {
 
 // RecordMetrics appends metrics to the array-based timeseries table.
 // Groups metrics by (name, labels, hour) and performs batch upserts.
+// Deadlocks are handled gracefully since metrics are best-effort.
 func (s *PostgresStore) RecordMetrics(ctx context.Context, metrics []Metric) error {
 	if len(metrics) == 0 {
 		return nil
@@ -139,6 +141,20 @@ func (s *PostgresStore) RecordMetrics(ctx context.Context, metrics []Metric) err
 		buckets[key] = append(buckets[key], m)
 	}
 
+	sortedKeys := make([]bucketKey, 0, len(buckets))
+	for key := range buckets {
+		sortedKeys = append(sortedKeys, key)
+	}
+	sort.Slice(sortedKeys, func(i, j int) bool {
+		if sortedKeys[i].name != sortedKeys[j].name {
+			return sortedKeys[i].name < sortedKeys[j].name
+		}
+		if sortedKeys[i].labels != sortedKeys[j].labels {
+			return sortedKeys[i].labels < sortedKeys[j].labels
+		}
+		return sortedKeys[i].hour.Before(sortedKeys[j].hour)
+	})
+
 	// Upsert each bucket
 	query := `
 		INSERT INTO metrics_timeseries (
@@ -160,7 +176,8 @@ func (s *PostgresStore) RecordMetrics(ctx context.Context, metrics []Metric) err
 			updated_at = NOW()`
 
 	batch := &pgx.Batch{}
-	for key, bucketMetrics := range buckets {
+	for _, key := range sortedKeys {
+		bucketMetrics := buckets[key]
 		timestamps := make([]time.Time, len(bucketMetrics))
 		values := make([]float32, len(bucketMetrics))
 		var sum float64
@@ -196,8 +213,11 @@ func (s *PostgresStore) RecordMetrics(ctx context.Context, metrics []Metric) err
 	results := s.db.SendBatch(ctx, batch)
 	defer results.Close()
 
-	for range buckets {
+	for range sortedKeys {
 		if _, err := results.Exec(); err != nil {
+			if strings.Contains(err.Error(), "deadlock") {
+				continue
+			}
 			return fmt.Errorf("executing batch upsert: %w", err)
 		}
 	}

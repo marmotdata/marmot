@@ -89,25 +89,45 @@ spec:
 
             # Database configuration - use subchart values if enabled
             - name: MARMOT_DATABASE_HOST
-              {{- if .Values.postgresql.enabled }}
+              {{- if .Values.cnpg.enabled }}
+              {{- if .Values.cnpg.pooler.enabled }}
+              value: {{ include "marmot.fullname" . }}-pooler-rw
+              {{- else }}
+              value: {{ include "marmot.fullname" . }}-cnpg-rw
+              {{- end }}
+              {{- else if index .Values "postgresql-ha" "enabled" }}
+              value: {{ include "marmot.fullname" . }}-postgresql-ha-pgpool
+              {{- else if .Values.postgresql.enabled }}
+              {{- if eq .Values.postgresql.architecture "replication" }}
+              value: {{ include "marmot.fullname" . }}-postgresql-primary
+              {{- else }}
               value: {{ include "marmot.fullname" . }}-postgresql
+              {{- end }}
               {{- else }}
               value: {{ .Values.config.database.host | quote }}
               {{- end }}
             - name: MARMOT_DATABASE_PORT
-              {{- if .Values.postgresql.enabled }}
+              {{- if or .Values.cnpg.enabled .Values.postgresql.enabled (index .Values "postgresql-ha" "enabled") }}
               value: "5432"
               {{- else }}
               value: {{ .Values.config.database.port | quote }}
               {{- end }}
             - name: MARMOT_DATABASE_USER
-              {{- if .Values.postgresql.enabled }}
+              {{- if .Values.cnpg.enabled }}
+              value: {{ .Values.cnpg.username | default "marmot" | quote }}
+              {{- else if index .Values "postgresql-ha" "enabled" }}
+              value: {{ index .Values "postgresql-ha" "postgresql" "username" | quote }}
+              {{- else if .Values.postgresql.enabled }}
               value: {{ .Values.postgresql.auth.username | quote }}
               {{- else }}
               value: {{ .Values.config.database.user | quote }}
               {{- end }}
             - name: MARMOT_DATABASE_NAME
-              {{- if .Values.postgresql.enabled }}
+              {{- if .Values.cnpg.enabled }}
+              value: {{ .Values.cnpg.database | default "marmot" | quote }}
+              {{- else if index .Values "postgresql-ha" "enabled" }}
+              value: {{ index .Values "postgresql-ha" "postgresql" "database" | quote }}
+              {{- else if .Values.postgresql.enabled }}
               value: {{ .Values.postgresql.auth.database | quote }}
               {{- else }}
               value: {{ .Values.config.database.name | quote }}
@@ -127,7 +147,17 @@ spec:
             {{- end }}
             {{- end }}
             - name: MARMOT_DATABASE_PASSWORD
-              {{- if .Values.postgresql.enabled }}
+              {{- if .Values.cnpg.enabled }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "marmot.fullname" . }}-cnpg-auth
+                  key: password
+              {{- else if index .Values "postgresql-ha" "enabled" }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "marmot.fullname" . }}-postgresql-ha-postgresql
+                  key: password
+              {{- else if .Values.postgresql.enabled }}
               valueFrom:
                 secretKeyRef:
                   name: {{ include "marmot.fullname" . }}-postgresql

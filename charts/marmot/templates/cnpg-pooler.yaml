@@ -1,0 +1,39 @@
+{{- if and .Values.cnpg.enabled .Values.cnpg.pooler.enabled }}
+# Read-Write Pooler (connects to primary)
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: {{ include "marmot.fullname" . }}-pooler-rw
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+spec:
+  cluster:
+    name: {{ include "marmot.fullname" . }}-cnpg
+  instances: {{ .Values.cnpg.pooler.instances | default 2 }}
+  type: rw
+  pgbouncer:
+    poolMode: {{ .Values.cnpg.pooler.poolMode | default "transaction" }}
+    parameters:
+      max_client_conn: "{{ .Values.cnpg.pooler.maxClientConn | default 1000 }}"
+      default_pool_size: "{{ .Values.cnpg.pooler.defaultPoolSize | default 25 }}"
+      reserve_pool_size: "{{ .Values.cnpg.pooler.reservePoolSize | default 5 }}"
+---
+# Read-Only Pooler (load balances across replicas)
+apiVersion: postgresql.cnpg.io/v1
+kind: Pooler
+metadata:
+  name: {{ include "marmot.fullname" . }}-pooler-ro
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+spec:
+  cluster:
+    name: {{ include "marmot.fullname" . }}-cnpg
+  instances: {{ .Values.cnpg.pooler.instances | default 2 }}
+  type: ro
+  pgbouncer:
+    poolMode: {{ .Values.cnpg.pooler.poolMode | default "transaction" }}
+    parameters:
+      max_client_conn: "{{ .Values.cnpg.pooler.maxClientConn | default 1000 }}"
+      default_pool_size: "{{ .Values.cnpg.pooler.defaultPoolSize | default 25 }}"
+      reserve_pool_size: "{{ .Values.cnpg.pooler.reservePoolSize | default 5 }}"
+{{- end }}
