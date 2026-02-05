@@ -28,6 +28,7 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mysql"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/openapi"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/postgresql"
+	_ "github.com/marmotdata/marmot/internal/plugin/providers/redis"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/s3"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sns"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sqs"
