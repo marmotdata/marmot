@@ -53,7 +53,8 @@ Marmot requires PostgreSQL. Choose one of the following options:
 
 <Tabs items={[
 { label: "External PostgreSQL", value: "external", icon: "mdi:database" },
-{ label: "Embedded PostgreSQL", value: "embedded", icon: "mdi:database-cog" }
+{ label: "Embedded PostgreSQL", value: "embedded", icon: "mdi:database-cog" },
+{ label: "CloudNativePG", value: "cnpg", icon: "mdi:kubernetes" }
 ]}>
 <TabPanel>
 
@@ -81,6 +82,62 @@ For development and testing, enable the embedded PostgreSQL:
 helm install marmot marmotdata/marmot \
   --set postgresql.enabled=true
 ```
+
+  </TabPanel>
+  <TabPanel>
+
+For production Kubernetes deployments, [CloudNativePG](https://cloudnative-pg.io/) provides a robust PostgreSQL operator with automatic failover, read replicas and connection pooling.
+
+<Steps>
+  <Step title="Install the CloudNativePG operator">
+
+Follow the [CloudNativePG installation guide](https://cloudnative-pg.io/documentation/current/installation_upgrade/) to install the operator. The quickest method:
+
+```bash
+kubectl apply --server-side -f \
+  https://raw.githubusercontent.com/cloudnative-pg/cloudnative-pg/main/releases/cnpg-1.25.1.yaml
+```
+
+  </Step>
+  <Step title="Configure and install Marmot with CNPG">
+
+```yaml
+# values.yaml
+cnpg:
+  enabled: true
+  instances: 3  # 1 primary + 2 read replicas
+  password: "your-secure-password"
+
+  parameters:
+    shared_buffers: "256MB"
+    work_mem: "64MB"
+    effective_cache_size: "1GB"
+
+  persistence:
+    size: "10Gi"
+
+  pooler:
+    enabled: true
+    instances: 2
+    poolMode: "transaction"
+```
+
+```bash
+helm install marmot marmotdata/marmot -f values.yaml
+```
+
+  </Step>
+  <Step title="Verify the cluster is ready">
+
+```bash
+kubectl get clusters
+kubectl get pods -l cnpg.io/cluster=marmot-cnpg
+```
+
+All pods should show `Running` status with the primary indicated by the `-1` suffix.
+
+  </Step>
+</Steps>
 
   </TabPanel>
 </Tabs>

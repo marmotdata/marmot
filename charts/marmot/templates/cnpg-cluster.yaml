@@ -1,0 +1,47 @@
+{{- if .Values.cnpg.enabled }}
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: {{ include "marmot.fullname" . }}-cnpg
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+spec:
+  instances: {{ .Values.cnpg.instances | default 3 }}
+
+  imageName: {{ .Values.cnpg.image | default "ghcr.io/cloudnative-pg/postgresql:16" }}
+
+  postgresql:
+    parameters:
+      {{- toYaml .Values.cnpg.parameters | nindent 6 }}
+
+  bootstrap:
+    initdb:
+      database: {{ .Values.cnpg.database | default "marmot" }}
+      owner: {{ .Values.cnpg.username | default "marmot" }}
+      secret:
+        name: {{ include "marmot.fullname" . }}-cnpg-auth
+
+  storage:
+    size: {{ .Values.cnpg.persistence.size | default "8Gi" }}
+    {{- if .Values.cnpg.persistence.storageClass }}
+    storageClass: {{ .Values.cnpg.persistence.storageClass }}
+    {{- end }}
+
+  {{- if .Values.cnpg.resources }}
+  resources:
+    {{- toYaml .Values.cnpg.resources | nindent 4 }}
+  {{- end }}
+
+  enableSuperuserAccess: true
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "marmot.fullname" . }}-cnpg-auth
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+type: kubernetes.io/basic-auth
+stringData:
+  username: {{ .Values.cnpg.username | default "marmot" }}
+  password: {{ .Values.cnpg.password | default "marmot-loadtest" }}
+{{- end }}

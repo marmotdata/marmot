@@ -299,8 +299,7 @@ func (r *PostgresRepository) getUpstreamNodes(ctx context.Context, tx pgx.Tx, mr
 		SELECT DISTINCT
 			source_mrn as mrn,
 			-1::integer as depth,
-			job_mrn,
-			ARRAY[source_mrn, $1::varchar] as path
+			job_mrn
 		FROM lineage_edges
 		WHERE target_mrn = $1
 
@@ -309,14 +308,13 @@ func (r *PostgresRepository) getUpstreamNodes(ctx context.Context, tx pgx.Tx, mr
 		SELECT DISTINCT
 			e.source_mrn,
 			(u.depth - 1)::integer as depth,
-			e.job_mrn,
-			u.path || e.source_mrn
+			e.job_mrn
 		FROM lineage_edges e
 		JOIN upstream u ON e.target_mrn = u.mrn
 		WHERE e.source_mrn <> $1
 		AND u.depth > -$2::integer
-		AND NOT (e.source_mrn = ANY(u.path))
 	)
+	CYCLE mrn SET is_cycle USING path
 	SELECT DISTINCT ON (a.mrn)
 		a.id, a.name, a.mrn, a.type, a.providers, a.description,
 		a.metadata, a.schema, a.sources, a.tags,
@@ -324,6 +322,7 @@ func (r *PostgresRepository) getUpstreamNodes(ctx context.Context, tx pgx.Tx, mr
 		u.depth
 	FROM upstream u
 	JOIN assets a ON a.mrn = u.mrn
+	WHERE NOT u.is_cycle
 	ORDER BY a.mrn, abs(u.depth)`, mrn, limit)
 }
 
@@ -333,8 +332,7 @@ func (r *PostgresRepository) getDownstreamNodes(ctx context.Context, tx pgx.Tx, 
 		SELECT DISTINCT
 			target_mrn as mrn,
 			1 as depth,
-			job_mrn,
-			ARRAY[target_mrn, $1::varchar] as path
+			job_mrn
 		FROM lineage_edges
 		WHERE source_mrn = $1
 
@@ -343,14 +341,13 @@ func (r *PostgresRepository) getDownstreamNodes(ctx context.Context, tx pgx.Tx, 
 		SELECT DISTINCT
 			e.target_mrn,
 			d.depth + 1 as depth,
-			e.job_mrn,
-			d.path || e.target_mrn
+			e.job_mrn
 		FROM lineage_edges e
 		JOIN downstream d ON e.source_mrn = d.mrn
 		WHERE e.target_mrn <> $1
 		AND d.depth < $2
-		AND NOT (e.target_mrn = ANY(d.path))
 	)
+	CYCLE mrn SET is_cycle USING path
 	SELECT DISTINCT ON (a.mrn)
 		a.id, a.name, a.mrn, a.type, a.providers, a.description,
 		a.metadata, a.schema, a.sources, a.tags,
@@ -358,6 +355,7 @@ func (r *PostgresRepository) getDownstreamNodes(ctx context.Context, tx pgx.Tx, 
 		d.depth
 	FROM downstream d
 	JOIN assets a ON a.mrn = d.mrn
+	WHERE NOT d.is_cycle
 	ORDER BY a.mrn, abs(d.depth)`, mrn, limit)
 }
 

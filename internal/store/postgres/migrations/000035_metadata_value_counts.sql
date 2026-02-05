@@ -20,6 +20,8 @@ FROM (
     FROM assets a
     CROSS JOIN LATERAL jsonb_each(a.metadata) AS x(key, val)
     WHERE a.is_stub = FALSE
+    AND a.metadata IS NOT NULL
+    AND jsonb_typeof(a.metadata) = 'object'
     AND jsonb_typeof(val) IN ('string', 'number', 'boolean')
     AND length(val::text) <= 200
     GROUP BY key, val
@@ -38,6 +40,8 @@ FROM (
     FROM glossary_terms g
     CROSS JOIN LATERAL jsonb_each(g.metadata) AS x(key, val)
     WHERE g.deleted_at IS NULL
+    AND g.metadata IS NOT NULL
+    AND jsonb_typeof(g.metadata) = 'object'
     AND jsonb_typeof(val) IN ('string', 'number', 'boolean')
     AND length(val::text) <= 200
     GROUP BY key, val
@@ -55,7 +59,9 @@ FROM (
         COUNT(*) as count
     FROM teams t
     CROSS JOIN LATERAL jsonb_each(t.metadata) AS x(key, val)
-    WHERE jsonb_typeof(val) IN ('string', 'number', 'boolean')
+    WHERE t.metadata IS NOT NULL
+    AND jsonb_typeof(t.metadata) = 'object'
+    AND jsonb_typeof(val) IN ('string', 'number', 'boolean')
     AND length(val::text) <= 200
     GROUP BY key, val
     HAVING COUNT(*) >= 2

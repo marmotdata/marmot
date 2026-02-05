@@ -298,29 +298,16 @@ func (r *PostgresRepository) buildFuzzySearchQuery(searchQuery string, filter Fi
 	offsetParam := paramCount
 	params = append(params, filter.Limit, filter.Offset)
 
-	// Use the %> operator which can use the GiST trigram index
-	// Limit candidates to 1000 before ranking to avoid expensive scans
 	sqlQuery := fmt.Sprintf(`
-		WITH candidates AS (
-			SELECT entity_id, type, name, description, url_path,
-			       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
-			FROM search_index
-			WHERE name %%> $%d
-			%s
-			LIMIT 1000
-		)
-		SELECT
-			type, entity_id, name, description, url_path,
-			CASE
-				WHEN lower(name) = lower($%d) THEN 1000.0
-				WHEN lower(name) LIKE lower($%d) || '%%' THEN 500.0
-				ELSE (word_similarity($%d, name) * 100.0)
-			END::real as rank,
-			updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
-		FROM candidates
+		SELECT type, entity_id, name, description, url_path,
+		       (similarity($%d, name) * 100.0)::real as rank,
+		       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
+		FROM search_index
+		WHERE name %% $%d
+		%s
 		ORDER BY rank DESC, updated_at DESC
 		LIMIT $%d OFFSET $%d
-	`, queryParam, whereSQL, queryParam, queryParam, queryParam, limitParam, offsetParam)
+	`, queryParam, queryParam, whereSQL, limitParam, offsetParam)
 
 	return sqlQuery, params
 }
