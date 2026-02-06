@@ -35,8 +35,6 @@ type Config struct {
 	IncludeMetadata  bool `json:"include_metadata" description:"Include container metadata" default:"true"`
 	IncludeBlobCount bool `json:"include_blob_count" description:"Count blobs in each container (can be slow for large containers)" default:"false"`
 
-	// Filtering
-	Filter *plugin.Filter `json:"filter,omitempty" description:"Filter containers by name pattern"`
 }
 
 // Example configuration for the plugin
@@ -105,15 +103,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	for _, containerItem := range containers {
 		containerName := *containerItem.Name
-
-		filter := plugin.Filter{}
-		if s.config.Filter != nil {
-			filter = *s.config.Filter
-		}
-		if !plugin.ShouldIncludeResource(containerName, filter) {
-			log.Debug().Str("container", containerName).Msg("Skipping container due to filter")
-			continue
-		}
 
 		asset, err := s.createContainerAsset(ctx, containerItem)
 		if err != nil {

@@ -428,6 +428,8 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 			return err
 		}
 
+		plugin.FilterDiscoveryResult(result, rawConfig)
+
 		if len(result.Assets) == 0 {
 			printWarning("No assets discovered")
 			summary := &plugin.RunSummary{

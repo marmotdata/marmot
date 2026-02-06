@@ -239,7 +239,7 @@ func TestSource_Discover(t *testing.T) {
 	assert.Len(t, result.Lineage, 5)
 }
 
-func TestSource_DiscoverWithDAGFilter(t *testing.T) {
+func TestSource_DiscoverWithFilter(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
@@ -273,13 +273,13 @@ func TestSource_DiscoverWithDAGFilter(t *testing.T) {
 	defer server.Close()
 
 	config := plugin.RawPluginConfig{
-		"host":            server.URL,
-		"username":        "admin",
-		"password":        "admin",
-		"discover_dags":   true,
-		"discover_tasks":  false,
+		"host":              server.URL,
+		"username":          "admin",
+		"password":          "admin",
+		"discover_dags":     true,
+		"discover_tasks":    false,
 		"discover_datasets": false,
-		"dag_filter": map[string]interface{}{
+		"filter": map[string]interface{}{
 			"include": []interface{}{"^analytics_.*"},
 			"exclude": []interface{}{},
 		},
@@ -291,7 +291,8 @@ func TestSource_DiscoverWithDAGFilter(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
-	// Should only have 2 DAGs matching the analytics_ pattern
+	// Discover returns all 4 DAGs; central filter narrows to 2
+	plugin.FilterDiscoveryResult(result, config)
 	assert.Len(t, result.Assets, 2)
 
 	for _, a := range result.Assets {

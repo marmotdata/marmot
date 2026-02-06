@@ -36,8 +36,7 @@ type Config struct {
 	IncludeRunHistory bool `json:"include_run_history" description:"Include DAG run history in metadata" default:"true"`
 	RunHistoryDays    int  `json:"run_history_days" description:"Number of days of run history to fetch" default:"7"`
 
-	DAGFilter  *plugin.Filter `json:"dag_filter,omitempty" description:"Filter DAGs by ID pattern (include/exclude regex)"`
-	OnlyActive bool           `json:"only_active" description:"Only discover active (unpaused) DAGs" default:"true"`
+	OnlyActive bool `json:"only_active" description:"Only discover active (unpaused) DAGs" default:"true"`
 }
 
 // +marmot:example-config
@@ -51,7 +50,7 @@ discover_datasets: true
 include_run_history: true
 run_history_days: 7
 only_active: true
-dag_filter:
+filter:
   include:
     - "^analytics_.*"
   exclude:
@@ -159,13 +158,6 @@ func (s *Source) discoverDAGs(ctx context.Context) ([]asset.Asset, []lineage.Lin
 	log.Debug().Int("count", len(dags)).Msg("Found DAGs")
 
 	for _, dag := range dags {
-		if s.config.DAGFilter != nil {
-			if !plugin.ShouldIncludeResource(dag.DagID, *s.config.DAGFilter) {
-				log.Debug().Str("dag_id", dag.DagID).Msg("Skipping DAG due to filter")
-				continue
-			}
-		}
-
 		dagAsset := s.createDAGAsset(dag)
 		assets = append(assets, dagAsset)
 		dagMRN := mrn.New("Pipeline", "Airflow", dag.DagID)

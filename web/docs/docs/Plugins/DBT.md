@@ -73,11 +73,11 @@ The following configuration options are available:
 | discover_tests | bool | false | Discover DBT tests |
 | environment | string | false | Environment name (e.g., production, staging) |
 | external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | include_catalog | bool | false | Include catalog.json for table/column descriptions |
 | include_manifest | bool | false | Include manifest.json for model definitions |
 | include_run_results | bool | false | Include run_results.json for test results |
 | include_sources_json | bool | false | Include sources.json for source definitions |
-| model_filter | plugin.Filter | false | Filter configuration for models |
 | project_name | string | false | DBT project name |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 | target_path | string | false | Path to DBT target directory containing manifest.json, catalog.json, etc. |

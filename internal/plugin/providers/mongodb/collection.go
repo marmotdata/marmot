@@ -46,10 +46,6 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]asse
 
 		collName := collInfo.Name
 
-		if s.config.CollectionFilter != nil && !plugin.ShouldIncludeResource(collName, *s.config.CollectionFilter) {
-			continue
-		}
-
 		if strings.HasPrefix(collName, "system.") {
 			continue
 		}

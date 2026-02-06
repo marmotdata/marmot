@@ -92,13 +92,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	for _, queueURL := range queues {
 		name := extractQueueName(queueURL)
 
-		if config.AWSConfig != nil {
-			if !plugin.ShouldIncludeResource(name, config.AWSConfig.Filter) {
-				log.Debug().Str("queue", name).Msg("Skipping queue due to filter")
-				continue
-			}
-		}
-
 		asset, arn, err := s.createQueueAsset(ctx, queueURL)
 		if err != nil {
 			log.Warn().Err(err).Str("queue", queueURL).Msg("Failed to create asset for queue")

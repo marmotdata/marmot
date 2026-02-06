@@ -52,7 +52,6 @@ type Config struct {
 	DiscoverChannels bool `json:"discover_channels" description:"Create channel/topic assets from channels and bindings" default:"true"`
 	DiscoverMessages bool `json:"discover_messages" description:"Attach message schemas to channel assets" default:"true"`
 
-	ChannelFilter *plugin.Filter `json:"channel_filter,omitempty" description:"Filter channels by name pattern"`
 }
 
 // Example configuration for the plugin
@@ -66,7 +65,7 @@ discover_messages: true
 tags:
   - "asyncapi"
   - "event-driven"
-channel_filter:
+filter:
   include:
     - "orders.*"
     - "users.*"
@@ -152,14 +151,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 					continue
 				}
 
-				if config.ChannelFilter != nil {
-					if !plugin.ShouldIncludeResource(channelName, *config.ChannelFilter) {
-						log.Debug().Str("channel", channelName).Msg("Skipping channel due to filter")
-						continue
-					}
-				}
-
-				channelAssets := s.createChannelAssets(doc, channelName, channel)
+					channelAssets := s.createChannelAssets(doc, channelName, channel)
 				for _, channelAsset := range channelAssets {
 					s.addUniqueAsset(&assets, channelAsset, seenAssets)
 				}

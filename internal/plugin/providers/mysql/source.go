@@ -33,10 +33,9 @@ type Config struct {
 	Database string `json:"database" description:"Database name to connect to" validate:"required"`
 	TLS      string `json:"tls" description:"TLS configuration (false, true, skip-verify, preferred)" default:"false" validate:"omitempty,oneof=false true skip-verify preferred"`
 
-	IncludeColumns      bool           `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	IncludeRowCounts    bool           `json:"include_row_counts" description:"Whether to include approximate row counts" default:"true"`
-	DiscoverForeignKeys bool           `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	TableFilter         *plugin.Filter `json:"table_filter,omitempty" description:"Filter configuration for tables"`
+	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
+	IncludeRowCounts    bool `json:"include_row_counts" description:"Whether to include approximate row counts" default:"true"`
+	DiscoverForeignKeys bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
 }
 
 // Example configuration for the plugin
@@ -225,11 +224,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			Str("engine", engine.String).
 			Msg("Found database object")
 
-		if s.config.TableFilter != nil && !plugin.ShouldIncludeResource(objectName, *s.config.TableFilter) {
-			log.Debug().Str("object", objectName).Msg("Skipping object due to filter")
-			continue
-		}
-
 		metadata := make(map[string]interface{})
 		metadata["host"] = s.config.Host
 		metadata["port"] = s.config.Port
@@ -374,13 +368,6 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 			Str("target", fmt.Sprintf("%s.%s.%s", targetSchema.String, targetTable.String, targetColumn.String)).
 			Str("constraint", constraintName).
 			Msg("Found foreign key relationship")
-
-		if s.config.TableFilter != nil {
-			if !plugin.ShouldIncludeResource(sourceTable, *s.config.TableFilter) ||
-				!plugin.ShouldIncludeResource(targetTable.String, *s.config.TableFilter) {
-				continue
-			}
-		}
 
 		sourceMRN := mrn.New("Table", "MySQL", sourceTable)
 		targetMRN := mrn.New("Table", "MySQL", targetTable.String)

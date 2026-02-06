@@ -35,14 +35,11 @@ type Config struct {
 	SSLMode  string `json:"ssl_mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
 
 	// Discovery configuration
-	IncludeDatabases     bool           `json:"include_databases" description:"Whether to discover databases" default:"true"`
-	IncludeColumns       bool           `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	EnableMetrics        bool           `json:"enable_metrics" description:"Whether to include table metrics" default:"true"`
-	DiscoverForeignKeys  bool           `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
-	SchemaFilter         *plugin.Filter `json:"schema_filter,omitempty" description:"Filter configuration for schemas"`
-	TableFilter          *plugin.Filter `json:"table_filter,omitempty" description:"Filter configuration for tables"`
-	DatabaseFilter       *plugin.Filter `json:"database_filter,omitempty" description:"Filter configuration for databases"`
-	ExcludeSystemSchemas bool           `json:"exclude_system_schemas" description:"Whether to exclude system schemas (pg_*)" default:"true"`
+	IncludeDatabases     bool `json:"include_databases" description:"Whether to discover databases" default:"true"`
+	IncludeColumns       bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
+	EnableMetrics        bool `json:"enable_metrics" description:"Whether to include table metrics" default:"true"`
+	DiscoverForeignKeys  bool `json:"discover_foreign_keys" description:"Whether to discover foreign key relationships" default:"true"`
+	ExcludeSystemSchemas bool `json:"exclude_system_schemas" description:"Whether to exclude system schemas (pg_*)" default:"true"`
 }
 
 // Example configuration for the plugin
@@ -117,10 +114,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 			continue
 		}
 		dbName := *dbAsset.Name
-		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(dbName, *s.config.DatabaseFilter) {
-			log.Debug().Str("database", dbName).Msg("Skipping database due to filter")
-			continue
-		}
 		if dbName == "template0" || dbName == "template1" {
 			continue
 		}
@@ -293,11 +286,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 			Int64("size", size).
 			Msg("Found database")
 
-		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(name, *s.config.DatabaseFilter) {
-			log.Debug().Str("database", name).Msg("Skipping database due to filter")
-			continue
-		}
-
 		metadata := make(map[string]interface{})
 		metadata["host"] = s.config.Host
 		metadata["port"] = s.config.Port
@@ -413,15 +401,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			Str("type", objectType).
 			Str("owner", owner).
 			Msg("Found database object")
-
-		if s.config.SchemaFilter != nil && !plugin.ShouldIncludeResource(schemaName, *s.config.SchemaFilter) {
-			log.Debug().Str("schema", schemaName).Msg("Skipping schema due to filter")
-			continue
-		}
-		if s.config.TableFilter != nil && !plugin.ShouldIncludeResource(objectName, *s.config.TableFilter) {
-			log.Debug().Str("object", objectName).Msg("Skipping object due to filter")
-			continue
-		}
 
 		metadata := make(map[string]interface{})
 		metadata["host"] = s.config.Host
@@ -685,20 +664,6 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 			Str("target", fmt.Sprintf("%s.%s.%s", targetSchema, targetTable, targetColumn)).
 			Str("constraint", constraintName).
 			Msg("Found foreign key relationship")
-
-		if s.config.SchemaFilter != nil {
-			if !plugin.ShouldIncludeResource(sourceSchema, *s.config.SchemaFilter) ||
-				!plugin.ShouldIncludeResource(targetSchema, *s.config.SchemaFilter) {
-				continue
-			}
-		}
-
-		if s.config.TableFilter != nil {
-			if !plugin.ShouldIncludeResource(sourceTable, *s.config.TableFilter) ||
-				!plugin.ShouldIncludeResource(targetTable, *s.config.TableFilter) {
-				continue
-			}
-		}
 
 		sourceMRN := mrn.New("Table", "PostgreSQL", sourceTable)
 		targetMRN := mrn.New("Table", "PostgreSQL", targetTable)

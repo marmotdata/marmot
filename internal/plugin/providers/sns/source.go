@@ -83,13 +83,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	var assets []asset.Asset
 	for _, topic := range topics {
-		name := extractTopicName(*topic.TopicArn)
-
-		if s.config.AWSConfig != nil && !plugin.ShouldIncludeResource(name, s.config.AWSConfig.Filter) {
-			log.Debug().Str("topic", name).Msg("Skipping topic due to filter")
-			continue
-		}
-
 		asset, err := s.createTopicAsset(ctx, topic)
 		if err != nil {
 			log.Warn().Err(err).Str("topic", *topic.TopicArn).Msg("Failed to create asset for topic")

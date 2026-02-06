@@ -37,10 +37,9 @@ type Config struct {
 	IncludeRunResults  bool `json:"include_run_results" description:"Include run_results.json for test results" default:"false"`
 	IncludeSourcesJSON bool `json:"include_sources_json" description:"Include sources.json for source definitions" default:"false"`
 
-	DiscoverModels  bool           `json:"discover_models" description:"Discover DBT models" default:"true"`
-	DiscoverSources bool           `json:"discover_sources" description:"Discover DBT sources" default:"true"`
-	DiscoverTests   bool           `json:"discover_tests" description:"Discover DBT tests" default:"false"`
-	ModelFilter     *plugin.Filter `json:"model_filter,omitempty" description:"Filter configuration for models"`
+	DiscoverModels  bool `json:"discover_models" description:"Discover DBT models" default:"true"`
+	DiscoverSources bool `json:"discover_sources" description:"Discover DBT sources" default:"true"`
+	DiscoverTests   bool `json:"discover_tests" description:"Discover DBT tests" default:"false"`
 }
 
 // Example configuration for the plugin
@@ -336,13 +335,6 @@ func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
 	for nodeID, node := range s.manifest.Nodes {
 		if node.ResourceType != "model" {
 			continue
-		}
-
-		if s.config.ModelFilter != nil {
-			if !plugin.ShouldIncludeResource(node.Name, *s.config.ModelFilter) {
-				log.Debug().Str("model", node.Name).Msg("Skipping model due to filter")
-				continue
-			}
 		}
 
 		modelAsset := s.createModelAsset(node, nodeID)

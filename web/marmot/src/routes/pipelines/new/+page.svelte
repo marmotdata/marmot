@@ -44,7 +44,7 @@
 	let name = $state('');
 	let cronExpression = $state('');
 	let disableSchedule = $state(false);
-	let config = $state<Record<string, any>>({});
+	let config = $state<Record<string, any>>({ tags: [], external_links: [], filter: { include: [], exclude: [] } });
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 	let pluginSearchQuery = $state('');
@@ -53,7 +53,7 @@
 		{ title: 'Basic Info' },
 		{ title: 'Choose Plugin' },
 		{ title: 'Configure' },
-		{ title: 'Schedule' }
+		{ title: 'Schedule & Filter' }
 	];
 	let validating = $state(false);
 	let fieldErrors = $state<Record<string, string>>({});
@@ -224,7 +224,10 @@
 
 	function handlePluginChange(pluginId: string) {
 		selectedPluginId = pluginId;
-		// Reset config and pre-populate with default values
+		// Reset config but preserve base fields (tags, external_links, filter)
+		const savedTags = config.tags || [];
+		const savedLinks = config.external_links || [];
+		const savedFilter = config.filter || { include: [], exclude: [] };
 		config = {};
 		fieldErrors = {};
 		configValidated = false;
@@ -235,6 +238,11 @@
 		if (plugin && plugin.config_spec) {
 			config = initializeConfigDefaults(plugin.config_spec);
 		}
+
+		// Restore base fields
+		config.tags = savedTags;
+		config.external_links = savedLinks;
+		config.filter = savedFilter;
 
 		// Check if this is an AWS plugin and fetch credential status
 		if (['s3', 'sns', 'sqs', 'dynamodb', 'kinesis'].includes(pluginId)) {
@@ -416,7 +424,10 @@
 			return expandedSections[sectionName];
 		}
 
-		// Default to expanded for all sections
+		// Default collapsed for asset filter
+		if (sectionName === 'asset_filter') return false;
+
+		// Default to expanded for all other sections
 		return true;
 	}
 
@@ -469,7 +480,7 @@
 				<Step title="Basic Info" icon="material-symbols:info-outline" />
 				<Step title="Choose Plugin" icon="material-symbols:extension" />
 				<Step title="Configure" icon="material-symbols:settings" />
-				<Step title="Schedule" icon="material-symbols:schedule" />
+				<Step title="Schedule & Filter" icon="material-symbols:schedule" />
 			</Stepper>
 		</div>
 	</div>
@@ -519,6 +530,151 @@
 						class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
 						required
 					/>
+				</div>
+
+				<!-- Tags -->
+				<div class="mt-6">
+					<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+						Tags
+					</span>
+					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+						Tags to apply to discovered assets
+					</p>
+					{#if true}
+					{@const tagsValue = config.tags || []}
+					<div class="space-y-2">
+						{#each tagsValue as item, index}
+							<div class="flex items-center gap-2">
+								<input
+									type="text"
+									value={item}
+									oninput={(e) => {
+										const target = e.target as HTMLInputElement;
+										tagsValue[index] = target.value;
+										config.tags = [...tagsValue];
+									}}
+									class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+								/>
+								<button
+									type="button"
+									onclick={(e) => {
+										e.preventDefault();
+										tagsValue.splice(index, 1);
+										config.tags = [...tagsValue];
+									}}
+									class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+									aria-label="Remove tag"
+								>
+									<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
+								</button>
+							</div>
+						{/each}
+						<div class="flex items-center gap-2">
+							<input
+								type="text"
+								placeholder="Type to add tags..."
+								onkeydown={(e) => {
+									if (e.key === 'Enter') {
+										e.preventDefault();
+										const target = e.target as HTMLInputElement;
+										const value = target.value.trim();
+										if (value) {
+											config.tags = [...(config.tags || []), value];
+											target.value = '';
+										}
+									}
+								}}
+								class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
+							/>
+						</div>
+						<p class="text-xs text-gray-500 dark:text-gray-400">
+							Press Enter to add items
+						</p>
+					</div>
+					{/if}
+				</div>
+
+				<!-- External Links -->
+				<div class="mt-6">
+					<span class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2 block">
+						External Links
+					</span>
+					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
+						External links to show on all assets
+					</p>
+					{#if true}
+					{@const linksValue = config.external_links || []}
+					<div class="space-y-3">
+						{#each linksValue as item, index}
+							<div
+								class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-750/50"
+							>
+								<div class="flex items-end justify-end mb-3">
+									<button
+										type="button"
+										onclick={(e) => {
+											e.preventDefault();
+											linksValue.splice(index, 1);
+											config.external_links = [...linksValue];
+										}}
+										class="p-1 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+									>
+										<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
+									</button>
+								</div>
+								<div class="grid grid-cols-1 gap-3">
+									<div>
+										<label class="block">
+											<span
+												class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
+											>
+												Name
+											</span>
+											<input
+												type="text"
+												bind:value={item.name}
+												oninput={() => {
+													config.external_links = [...linksValue];
+												}}
+												placeholder="Link name"
+												class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+											/>
+										</label>
+									</div>
+									<div>
+										<label class="block">
+											<span
+												class="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block"
+											>
+												URL
+											</span>
+											<input
+												type="url"
+												bind:value={item.url}
+												oninput={() => {
+													config.external_links = [...linksValue];
+												}}
+												placeholder="https://..."
+												class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
+											/>
+										</label>
+									</div>
+								</div>
+							</div>
+						{/each}
+						<button
+							type="button"
+							onclick={(e) => {
+								e.preventDefault();
+								config.external_links = [...(config.external_links || []), { name: '', url: '' }];
+							}}
+							class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
+						>
+							<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
+							Add External Link
+						</button>
+					</div>
+					{/if}
 				</div>
 			</div>
 		{/if}
@@ -1085,7 +1241,7 @@
 					{/snippet}
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each configSpec as field}
+						{#each configSpec.filter(f => !['tags', 'external_links', 'filter'].includes(f.name)) as field}
 							{@render renderField(field, field.name, config, 0)}
 						{/each}
 					</div>
@@ -1118,7 +1274,7 @@
 						icon="material-symbols:schedule"
 						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
 					/>
-					Schedule Configuration
+					Schedule & Filtering
 				</h3>
 				<div class="space-y-5">
 					<div>
@@ -1224,6 +1380,184 @@
 							</label>
 						</div>
 					{/if}
+
+					<!-- Filter -->
+					<div class="border-t border-gray-200 dark:border-gray-700 pt-5">
+						<button
+							type="button"
+							onclick={() => toggleSection('asset_filter')}
+							class="w-full flex items-center justify-between px-4 py-3 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-750 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors group {isExpanded('asset_filter') ? 'rounded-b-none border-b-0' : ''}"
+						>
+							<div class="flex items-center gap-2">
+								<IconifyIcon
+									icon="material-symbols:filter-alt"
+									class="h-4 w-4 text-gray-500 dark:text-gray-400"
+								/>
+								<h4 class="text-sm font-medium text-gray-700 dark:text-gray-300">
+									Asset Filter
+								</h4>
+								<span class="text-xs text-gray-400 dark:text-gray-500">
+									— optional
+								</span>
+							</div>
+							<IconifyIcon
+								icon={isExpanded('asset_filter') ? 'material-symbols:expand-less' : 'material-symbols:expand-more'}
+								class="h-5 w-5 text-gray-400 dark:text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+							/>
+						</button>
+
+						{#if isExpanded('asset_filter')}
+						<div class="px-4 py-4 rounded-b-lg border border-t-0 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+							<p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+								Filter which assets get ingested by name. Supports plain text or <span class="font-mono bg-gray-100 dark:bg-gray-700 px-1 py-0.5 rounded text-[11px]">regex</span> patterns.
+							</p>
+
+							<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<!-- Include patterns -->
+								<div class="rounded-lg border border-green-200 dark:border-green-800/50 bg-green-50/50 dark:bg-green-900/10 p-4">
+									<div class="flex items-center gap-2 mb-3">
+										<IconifyIcon icon="material-symbols:check-circle-outline" class="h-4 w-4 text-green-600 dark:text-green-400" />
+										<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+											Include
+										</span>
+									</div>
+									<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+										Only matching assets will be ingested
+									</p>
+									{#if true}
+									{@const includeValue = config.filter?.include || []}
+									<div class="space-y-2">
+										{#each includeValue as item, index}
+											<div class="flex items-center gap-1.5">
+												<span class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none">/</span>
+												<input
+													type="text"
+													value={item}
+													oninput={(e) => {
+														const target = e.target as HTMLInputElement;
+														includeValue[index] = target.value;
+														config.filter = { ...config.filter, include: [...includeValue] };
+													}}
+													class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all font-mono text-sm"
+												/>
+												<span class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none">/</span>
+												<button
+													type="button"
+													onclick={(e) => {
+														e.preventDefault();
+														includeValue.splice(index, 1);
+														config.filter = { ...config.filter, include: [...includeValue] };
+													}}
+													class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+													aria-label="Remove pattern"
+												>
+													<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
+												</button>
+											</div>
+										{/each}
+										<div class="flex items-center gap-1.5">
+											<span class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none">/</span>
+											<input
+												type="text"
+												placeholder="^public_.*"
+												onkeydown={(e) => {
+													if (e.key === 'Enter') {
+														e.preventDefault();
+														const target = e.target as HTMLInputElement;
+														const value = target.value.trim();
+														if (value) {
+															if (!config.filter) config.filter = {};
+															config.filter = { ...config.filter, include: [...(config.filter.include || []), value] };
+															target.value = '';
+														}
+													}
+												}}
+												class="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-mono text-sm"
+											/>
+											<span class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none">/</span>
+											<div class="w-[30px]"></div>
+										</div>
+										<p class="text-[11px] text-gray-400 dark:text-gray-500 pl-3">
+											Press Enter to add
+										</p>
+									</div>
+									{/if}
+								</div>
+
+								<!-- Exclude patterns -->
+								<div class="rounded-lg border border-amber-200 dark:border-amber-800/50 bg-amber-50/50 dark:bg-amber-900/10 p-4">
+									<div class="flex items-center gap-2 mb-3">
+										<IconifyIcon icon="material-symbols:block" class="h-4 w-4 text-amber-600 dark:text-amber-400" />
+										<span class="text-sm font-medium text-gray-800 dark:text-gray-200">
+											Exclude
+										</span>
+									</div>
+									<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
+										Matching assets will be skipped
+									</p>
+									{#if true}
+									{@const excludeValue = config.filter?.exclude || []}
+									<div class="space-y-2">
+										{#each excludeValue as item, index}
+											<div class="flex items-center gap-1.5">
+												<span class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none">/</span>
+												<input
+													type="text"
+													value={item}
+													oninput={(e) => {
+														const target = e.target as HTMLInputElement;
+														excludeValue[index] = target.value;
+														config.filter = { ...config.filter, exclude: [...excludeValue] };
+													}}
+													class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all font-mono text-sm"
+												/>
+												<span class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none">/</span>
+												<button
+													type="button"
+													onclick={(e) => {
+														e.preventDefault();
+														excludeValue.splice(index, 1);
+														config.filter = { ...config.filter, exclude: [...excludeValue] };
+													}}
+													class="p-1.5 text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+													aria-label="Remove pattern"
+												>
+													<IconifyIcon icon="material-symbols:close" class="h-4 w-4" />
+												</button>
+											</div>
+										{/each}
+										<div class="flex items-center gap-1.5">
+											<span class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none">/</span>
+											<input
+												type="text"
+												placeholder="^_tmp_.*"
+												onkeydown={(e) => {
+													if (e.key === 'Enter') {
+														e.preventDefault();
+														const target = e.target as HTMLInputElement;
+														const value = target.value.trim();
+														if (value) {
+															if (!config.filter) config.filter = {};
+															config.filter = { ...config.filter, exclude: [...(config.filter.exclude || []), value] };
+															target.value = '';
+														}
+													}
+												}}
+												class="flex-1 px-3 py-2 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-amber-500 focus:border-amber-500 transition-all font-mono text-sm"
+											/>
+											<span class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none">/</span>
+											<div class="w-[30px]"></div>
+										</div>
+										<p class="text-[11px] text-gray-400 dark:text-gray-500 pl-3">
+											Press Enter to add
+										</p>
+									</div>
+									{/if}
+								</div>
+							</div>
+						</div>
+						{/if}
+					</div>
 				</div>
 			</div>
 		{/if}

@@ -105,7 +105,7 @@ The following configuration options are available:
 | connection_string | string | false | Azure Storage connection string |
 | endpoint | string | false | Custom endpoint URL (for Azurite or other emulators) |
 | external_links | []ExternalLink | false | External links to show on all assets |
-| filter | plugin.Filter | false | Filter containers by name pattern |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | include_blob_count | bool | false | Count blobs in each container (can be slow for large containers) |
 | include_metadata | bool | false | Include container metadata |
 | tags | TagsConfig | false | Tags to apply to discovered assets |

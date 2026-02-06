@@ -92,13 +92,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	var lineages []lineage.LineageEdge
 
 	for _, bucket := range buckets {
-		if config.AWSConfig != nil {
-			if !plugin.ShouldIncludeResource(*bucket.Name, config.AWSConfig.Filter) {
-				log.Debug().Str("bucket", *bucket.Name).Msg("Skipping bucket due to filter")
-				continue
-			}
-		}
-
 		asset, err := s.createBucketAsset(ctx, bucket)
 		if err != nil {
 			log.Warn().Err(err).Str("bucket", *bucket.Name).Msg("Failed to create asset for bucket")

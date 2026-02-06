@@ -62,19 +62,17 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| database_filter | plugin.Filter | false | Filter configuration for databases |
 | discover_foreign_keys | bool | false | Whether to discover foreign key relationships |
 | enable_metrics | bool | false | Whether to include table metrics |
 | exclude_system_schemas | bool | false | Whether to exclude system schemas (pg_*) |
 | external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | host | string | false | PostgreSQL server hostname or IP address |
 | include_columns | bool | false | Whether to include column information in table metadata |
 | include_databases | bool | false | Whether to discover databases |
 | password | string | false | Password for authentication |
 | port | int | false | PostgreSQL server port |
-| schema_filter | plugin.Filter | false | Filter configuration for schemas |
 | ssl_mode | string | false | SSL mode (disable, require, verify-ca, verify-full) |
-| table_filter | plugin.Filter | false | Filter configuration for tables |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 | user | string | false | Username for authentication |
 

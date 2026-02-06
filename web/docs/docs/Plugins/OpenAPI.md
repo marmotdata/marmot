@@ -51,6 +51,7 @@ The following configuration options are available:
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | spec_path | string | false | Path to the directory containing the OpenAPI specifications |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 

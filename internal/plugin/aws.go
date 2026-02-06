@@ -36,7 +36,6 @@ type AWSConfig struct {
 	Credentials    AWSCredentials `json:"credentials" description:"AWS credentials configuration"`
 	TagsToMetadata bool           `json:"tags_to_metadata,omitempty" description:"Convert AWS tags to Marmot metadata"`
 	IncludeTags    []string       `json:"include_tags,omitempty" description:"List of AWS tags to include as metadata. By default, all tags are included."`
-	Filter         Filter         `json:"filter,omitempty" description:"Filter patterns for AWS resources"`
 }
 
 func (a *AWSConfig) Validate() error {

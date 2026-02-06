@@ -40,9 +40,7 @@ type Config struct {
 	SampleSchema       bool           `json:"sample_schema" description:"Sample documents to infer schema" default:"true"`
 	SampleSize         int            `json:"sample_size" description:"Number of documents to sample (-1 for entire collection)" default:"1000" validate:"omitempty,min=-1"`
 	UseRandomSampling  bool           `json:"use_random_sampling" description:"Use random sampling for schema inference" default:"true"`
-	DatabaseFilter     *plugin.Filter `json:"database_filter,omitempty" description:"Filter configuration for databases"`
-	CollectionFilter   *plugin.Filter `json:"collection_filter,omitempty" description:"Filter configuration for collections"`
-	ExcludeSystemDbs   bool           `json:"exclude_system_dbs" description:"Whether to exclude system databases (admin, config, local)" default:"true"`
+	ExcludeSystemDbs bool `json:"exclude_system_dbs" description:"Whether to exclude system databases (admin, config, local)" default:"true"`
 }
 
 // Example configuration for the plugin
@@ -125,10 +123,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 			}
 
 			dbName := *dbAsset.Name
-			if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(dbName, *s.config.DatabaseFilter) {
-				log.Debug().Str("database", dbName).Msg("Skipping database due to filter")
-				continue
-			}
 
 			if s.config.ExcludeSystemDbs && (dbName == "admin" || dbName == "config" || dbName == "local") {
 				log.Debug().Str("database", dbName).Msg("Skipping system database")

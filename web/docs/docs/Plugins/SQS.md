@@ -86,7 +86,7 @@ The following configuration options are available:
 | credentials | AWSCredentials | false | AWS credentials configuration |
 | discover_dlq | bool | false | Discover Dead Letter Queue relationships |
 | external_links | []ExternalLink | false | External links to show on all assets |
-| filter | Filter | false | Filter patterns for AWS resources |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | include_tags | []string | false | List of AWS tags to include as metadata. By default, all tags are included. |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 | tags_to_metadata | bool | false | Convert AWS tags to Marmot metadata |

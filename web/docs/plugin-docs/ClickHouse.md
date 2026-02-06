@@ -33,7 +33,7 @@ secure: true
 include_databases: true
 include_columns: true
 enable_metrics: true
-database_filter:
+filter:
   include:
     - "^analytics.*"
   exclude:

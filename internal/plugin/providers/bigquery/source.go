@@ -33,13 +33,11 @@ type Config struct {
 	CredentialsJSON       string `json:"credentials_json,omitempty" description:"Service account credentials JSON content" sensitive:"true"`
 	UseDefaultCredentials bool   `json:"use_default_credentials" description:"Use default Google Cloud credentials" default:"false"`
 
-	IncludeDatasets       bool           `json:"include_datasets" description:"Whether to discover datasets" default:"true"`
-	IncludeTableStats     bool           `json:"include_table_stats" description:"Whether to include table statistics (row count, size)" default:"true"`
-	IncludeViews          bool           `json:"include_views" description:"Whether to discover views" default:"true"`
-	IncludeExternalTables bool           `json:"include_external_tables" description:"Whether to discover external tables" default:"true"`
-	DatasetFilter         *plugin.Filter `json:"dataset_filter,omitempty" description:"Filter configuration for datasets"`
-	TableFilter           *plugin.Filter `json:"table_filter,omitempty" description:"Filter configuration for tables"`
-	ExcludeSystemDatasets bool           `json:"exclude_system_datasets" description:"Whether to exclude system datasets (_script, _analytics, etc.)" default:"true"`
+	IncludeDatasets       bool `json:"include_datasets" description:"Whether to discover datasets" default:"true"`
+	IncludeTableStats     bool `json:"include_table_stats" description:"Whether to include table statistics (row count, size)" default:"true"`
+	IncludeViews          bool `json:"include_views" description:"Whether to discover views" default:"true"`
+	IncludeExternalTables bool `json:"include_external_tables" description:"Whether to discover external tables" default:"true"`
+	ExcludeSystemDatasets bool `json:"exclude_system_datasets" description:"Whether to exclude system datasets (_script, _analytics, etc.)" default:"true"`
 	MaxConcurrentRequests int            `json:"max_concurrent_requests" description:"Maximum number of concurrent API requests" default:"10" validate:"omitempty,min=1,max=100"`
 }
 
@@ -138,10 +136,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 			}
 
 			datasetID := *datasetAsset.Name
-			if s.config.DatasetFilter != nil && !plugin.ShouldIncludeResource(datasetID, *s.config.DatasetFilter) {
-				log.Debug().Str("dataset", datasetID).Msg("Skipping dataset due to filter")
-				continue
-			}
 
 			log.Debug().Str("dataset", datasetID).Msg("Starting table discovery")
 			tableAssets, err := s.discoverTables(ctx, datasetID)
@@ -231,11 +225,6 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, error) {
 			continue
 		}
 
-		if s.config.DatasetFilter != nil && !plugin.ShouldIncludeResource(datasetID, *s.config.DatasetFilter) {
-			log.Debug().Str("dataset", datasetID).Msg("Skipping dataset due to filter")
-			continue
-		}
-
 		datasetRef := s.client.Dataset(datasetID)
 		metadata, err := datasetRef.Metadata(ctx)
 		if err != nil {
@@ -318,11 +307,6 @@ func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]asset.
 		}
 
 		tableID := table.TableID
-
-		if s.config.TableFilter != nil && !plugin.ShouldIncludeResource(tableID, *s.config.TableFilter) {
-			log.Debug().Str("table", tableID).Msg("Skipping table due to filter")
-			continue
-		}
 
 		metadata, err := table.Metadata(ctx)
 		if err != nil {

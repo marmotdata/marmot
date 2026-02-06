@@ -33,12 +33,10 @@ type Config struct {
 	Database string `json:"database" description:"Default database to connect to" default:"default"`
 	Secure   bool   `json:"secure" description:"Use TLS/SSL connection" default:"false"`
 
-	IncludeDatabases     bool           `json:"include_databases" description:"Whether to discover databases" default:"true"`
-	IncludeColumns       bool           `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
-	EnableMetrics        bool           `json:"enable_metrics" description:"Whether to include table metrics (row counts, sizes)" default:"true"`
-	DatabaseFilter       *plugin.Filter `json:"database_filter,omitempty" description:"Filter configuration for databases"`
-	TableFilter          *plugin.Filter `json:"table_filter,omitempty" description:"Filter configuration for tables"`
-	ExcludeSystemTables  bool           `json:"exclude_system_tables" description:"Whether to exclude system tables" default:"true"`
+	IncludeDatabases    bool `json:"include_databases" description:"Whether to discover databases" default:"true"`
+	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
+	EnableMetrics       bool `json:"enable_metrics" description:"Whether to include table metrics (row counts, sizes)" default:"true"`
+	ExcludeSystemTables bool `json:"exclude_system_tables" description:"Whether to exclude system tables" default:"true"`
 }
 
 // +marmot:example-config
@@ -53,7 +51,7 @@ include_databases: true
 include_columns: true
 enable_metrics: true
 exclude_system_tables: true
-database_filter:
+filter:
   include:
     - "^analytics.*"
   exclude:
@@ -233,11 +231,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 			continue
 		}
 
-		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(name, *s.config.DatabaseFilter) {
-			log.Debug().Str("database", name).Msg("Skipping database due to filter")
-			continue
-		}
-
 		metadata := map[string]interface{}{
 			"host":     s.config.Host,
 			"port":     s.config.Port,
@@ -309,11 +302,6 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]asset.Ass
 
 		if err := rows.Scan(&name, &engine, &totalRows, &totalBytes, &comment, &createQuery); err != nil {
 			log.Warn().Err(err).Msg("Failed to scan table row")
-			continue
-		}
-
-		if s.config.TableFilter != nil && !plugin.ShouldIncludeResource(name, *s.config.TableFilter) {
-			log.Debug().Str("table", name).Msg("Skipping table due to filter")
 			continue
 		}
 

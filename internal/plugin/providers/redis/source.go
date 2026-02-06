@@ -39,8 +39,6 @@ type Config struct {
 	// Discovery options
 	DiscoverAllDatabases bool `json:"discover_all_databases" description:"Discover all databases with keys (db0-db15)" default:"true"`
 
-	// Filtering
-	Filter *plugin.Filter `json:"filter,omitempty" description:"Filter databases by name pattern"`
 }
 
 // Example configuration for the plugin
@@ -129,15 +127,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		// Discover databases from keyspace info
 		for dbName, dbStats := range keyspaceInfo {
 			if !strings.HasPrefix(dbName, "db") {
-				continue
-			}
-
-			filter := plugin.Filter{}
-			if s.config.Filter != nil {
-				filter = *s.config.Filter
-			}
-			if !plugin.ShouldIncludeResource(dbName, filter) {
-				log.Debug().Str("database", dbName).Msg("Skipping database due to filter")
 				continue
 			}
 

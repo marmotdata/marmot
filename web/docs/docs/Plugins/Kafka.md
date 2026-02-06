@@ -122,12 +122,12 @@ The following configuration options are available:
 | client_timeout_seconds | int | false | Request timeout in seconds |
 | consumer_config | map[string]string | false | Additional consumer configuration |
 | external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | include_partition_info | bool | false | Whether to include partition information in metadata |
 | include_topic_config | bool | false | Whether to include topic configuration in metadata |
 | schema_registry | SchemaRegistryConfig | false | Schema Registry configuration |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 | tls | TLSConfig | false | TLS configuration |
-| topic_filter | plugin.Filter | false | Filter configuration for topics |
 
 ## Available Metadata
 

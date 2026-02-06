@@ -65,7 +65,7 @@ The following configuration options are available:
 | db | int | false | Default database number |
 | discover_all_databases | bool | false | Discover all databases with keys (db0-db15) |
 | external_links | []ExternalLink | false | External links to show on all assets |
-| filter | plugin.Filter | false | Filter databases by name pattern |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | host | string | false | Redis server hostname or IP address |
 | password | string | false | Password for authentication |
 | port | int | false | Redis server port |

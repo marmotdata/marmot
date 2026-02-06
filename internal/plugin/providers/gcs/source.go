@@ -38,8 +38,6 @@ type Config struct {
 	IncludeMetadata  bool `json:"include_metadata" description:"Include bucket metadata like labels" default:"true"`
 	IncludeObjectCount bool `json:"include_object_count" description:"Count objects in each bucket (can be slow for large buckets)" default:"false"`
 
-	// Filtering
-	Filter *plugin.Filter `json:"filter,omitempty" description:"Filter buckets by name pattern"`
 }
 
 // Example configuration for the plugin
@@ -105,15 +103,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	var lineages []lineage.LineageEdge
 
 	for _, bucket := range buckets {
-		filter := plugin.Filter{}
-		if s.config.Filter != nil {
-			filter = *s.config.Filter
-		}
-		if !plugin.ShouldIncludeResource(bucket.Name, filter) {
-			log.Debug().Str("bucket", bucket.Name).Msg("Skipping bucket due to filter")
-			continue
-		}
-
 		asset, err := s.createBucketAsset(ctx, bucket)
 		if err != nil {
 			log.Warn().Err(err).Str("bucket", bucket.Name).Msg("Failed to create asset for bucket")

@@ -66,12 +66,12 @@ The following configuration options are available:
 | database | string | false | Database name to connect to |
 | discover_foreign_keys | bool | false | Whether to discover foreign key relationships |
 | external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | host | string | false | MySQL server hostname or IP address |
 | include_columns | bool | false | Whether to include column information in table metadata |
 | include_row_counts | bool | false | Whether to include approximate row counts |
 | password | string | false | Password for authentication |
 | port | int | false | MySQL server port |
-| table_filter | plugin.Filter | false | Filter configuration for tables |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 | tls | string | false | TLS configuration (false, true, skip-verify, preferred) |
 | user | string | false | Username for authentication |

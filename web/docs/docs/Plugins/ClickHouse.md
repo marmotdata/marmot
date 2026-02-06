@@ -63,7 +63,7 @@ secure: true
 include_databases: true
 include_columns: true
 enable_metrics: true
-database_filter:
+filter:
   include:
     - "^analytics.*"
   exclude:
@@ -109,7 +109,7 @@ include_databases: true
 include_columns: true
 enable_metrics: true
 exclude_system_tables: true
-database_filter:
+filter:
   include:
     - "^analytics.*"
   exclude:
@@ -126,17 +126,16 @@ The following configuration options are available:
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | database | string | false | Default database to connect to |
-| database_filter | plugin.Filter | false | Filter configuration for databases |
 | enable_metrics | bool | false | Whether to include table metrics (row counts, sizes) |
 | exclude_system_tables | bool | false | Whether to exclude system tables |
 | external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | host | string | false | ClickHouse server hostname or IP address |
 | include_columns | bool | false | Whether to include column information in table metadata |
 | include_databases | bool | false | Whether to discover databases |
 | password | string | false | Password for authentication |
 | port | int | false | ClickHouse native protocol port |
 | secure | bool | false | Use TLS/SSL connection |
-| table_filter | plugin.Filter | false | Filter configuration for tables |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 | user | string | false | Username for authentication |
 

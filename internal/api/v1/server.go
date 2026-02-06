@@ -26,6 +26,7 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/kafka"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mongodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mysql"
+	_ "github.com/marmotdata/marmot/internal/plugin/providers/nats"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/openapi"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/postgresql"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/redis"

@@ -107,7 +107,7 @@ The following configuration options are available:
 | disable_auth | bool | false | Disable authentication (for local emulators) |
 | endpoint | string | false | Custom endpoint URL (for fake-gcs-server or other emulators) |
 | external_links | []ExternalLink | false | External links to show on all assets |
-| filter | plugin.Filter | false | Filter buckets by name pattern |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | include_metadata | bool | false | Include bucket metadata like labels |
 | include_object_count | bool | false | Count objects in each bucket (can be slow for large buckets) |
 | project_id | string | false | Google Cloud project ID |

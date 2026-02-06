@@ -32,8 +32,6 @@ type Config struct {
 
 	SchemaRegistry *SchemaRegistryConfig `json:"schema_registry,omitempty" description:"Schema Registry configuration"`
 
-	TopicFilter *plugin.Filter `json:"topic_filter,omitempty" description:"Filter configuration for topics"`
-
 	IncludePartitionInfo bool `json:"include_partition_info" description:"Whether to include partition information in metadata" default:"true"`
 
 	IncludeTopicConfig bool `json:"include_topic_config" description:"Whether to include topic configuration in metadata" default:"true"`
@@ -149,11 +147,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	var assets []asset.Asset
 	for _, topic := range topics {
-		if s.config.TopicFilter != nil && !plugin.ShouldIncludeResource(topic, *s.config.TopicFilter) {
-			log.Debug().Str("topic", topic).Msg("Skipping topic due to filter")
-			continue
-		}
-
 		asset, err := s.createTopicAsset(ctx, topic)
 		if err != nil {
 			log.Warn().Err(err).Str("topic", topic).Msg("Failed to create asset for topic")

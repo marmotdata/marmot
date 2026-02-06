@@ -41,7 +41,7 @@ discover_messages: true
 tags:
   - "asyncapi"
   - "event-driven"
-channel_filter:
+filter:
   include:
     - "orders.*"
     - "users.*"
@@ -53,12 +53,12 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| channel_filter | plugin.Filter | false | Filter channels by name pattern |
 | discover_channels | bool | false | Create channel/topic assets from channels and bindings |
 | discover_messages | bool | false | Attach message schemas to channel assets |
 | discover_services | bool | false | Create service assets from AsyncAPI info |
 | environment | string | false | Environment name (e.g., production, staging) |
 | external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | spec_path | string | false | Path to AsyncAPI spec file or directory containing specs |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 

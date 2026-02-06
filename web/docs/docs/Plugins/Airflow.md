@@ -66,7 +66,7 @@ discover_datasets: true
 include_run_history: true
 run_history_days: 7
 only_active: true
-dag_filter:
+filter:
   include:
     - "^analytics_.*"
   exclude:
@@ -83,11 +83,11 @@ The following configuration options are available:
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | api_token | string | false | API token for authentication (alternative to basic auth) |
-| dag_filter | plugin.Filter | false | Filter DAGs by ID pattern (include/exclude regex) |
 | discover_dags | bool | false | Discover Airflow DAGs as Pipeline assets |
 | discover_datasets | bool | false | Discover Airflow Datasets for lineage (requires Airflow 2.4+) |
 | discover_tasks | bool | false | Discover tasks within DAGs |
 | external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | host | string | false | Airflow webserver URL (e.g., http://localhost:8080) |
 | include_run_history | bool | false | Include DAG run history in metadata |
 | only_active | bool | false | Only discover active (unpaused) DAGs |

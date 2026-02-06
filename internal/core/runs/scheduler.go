@@ -359,6 +359,8 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		return fmt.Errorf("executing plugin: %w", err)
 	}
 
+	plugin.FilterDiscoveryResult(result, validatedConfig)
+
 	assetsInput := make([]CreateAssetInput, 0, len(result.Assets))
 	for _, a := range result.Assets {
 		name := ""

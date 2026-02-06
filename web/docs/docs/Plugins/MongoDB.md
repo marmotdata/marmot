@@ -68,11 +68,10 @@ The following configuration options are available:
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
 | auth_source | string | false | Authentication database name |
-| collection_filter | plugin.Filter | false | Filter configuration for collections |
 | connection_uri | string | false | MongoDB connection URI (overrides host/port/user/password) |
-| database_filter | plugin.Filter | false | Filter configuration for databases |
 | exclude_system_dbs | bool | false | Whether to exclude system databases (admin, config, local) |
 | external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
 | host | string | false | MongoDB server hostname or IP address |
 | include_collections | bool | false | Whether to discover collections |
 | include_databases | bool | false | Whether to discover databases |

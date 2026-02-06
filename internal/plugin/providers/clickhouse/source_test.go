@@ -66,7 +66,7 @@ func TestSource_Validate(t *testing.T) {
 			config: plugin.RawPluginConfig{
 				"host": "localhost",
 				"user": "default",
-				"database_filter": map[string]interface{}{
+				"filter": map[string]interface{}{
 					"include": []interface{}{"^analytics.*"},
 					"exclude": []interface{}{".*_temp$"},
 				},

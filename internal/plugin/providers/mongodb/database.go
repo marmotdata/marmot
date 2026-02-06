@@ -23,10 +23,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 	var assets []asset.Asset
 
 	for _, dbName := range dbs {
-		if s.config.DatabaseFilter != nil && !plugin.ShouldIncludeResource(dbName, *s.config.DatabaseFilter) {
-			continue
-		}
-
 		if s.config.ExcludeSystemDbs && (dbName == "admin" || dbName == "config" || dbName == "local") {
 			continue
 		}
