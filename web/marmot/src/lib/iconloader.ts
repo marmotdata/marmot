@@ -471,6 +471,20 @@ export class IconLoader {
 				return regularUrl;
 			}
 		} catch (error) {
+			console.debug(`SVG not found for ${name}`);
+		}
+
+		try {
+			const pngUrl = `/images/asset-logos/${formattedName}.png`;
+			const response = await fetch(pngUrl);
+
+			if (response.ok) {
+				const contentType = response.headers.get('content-type');
+				if (contentType && contentType.includes('image/png')) {
+					return pngUrl;
+				}
+			}
+		} catch (error) {
 			console.warn(`Failed to load icon for ${name}`);
 		}
 

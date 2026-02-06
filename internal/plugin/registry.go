@@ -255,6 +255,98 @@ func parseDefault(value string, t reflect.Type) interface{} {
 	return value
 }
 
+// ConfigOverride defines overrides for individual config fields.
+type ConfigOverride struct {
+	Default     interface{}
+	Description string
+	Placeholder string
+	Required    *bool
+}
+
+// CloneConfigSpec deep-copies a config spec.
+func CloneConfigSpec(spec []ConfigField) []ConfigField {
+	clone := make([]ConfigField, len(spec))
+	for i, f := range spec {
+		clone[i] = f
+
+		if len(f.Options) > 0 {
+			clone[i].Options = make([]FieldOption, len(f.Options))
+			copy(clone[i].Options, f.Options)
+		}
+
+		if f.Validation != nil {
+			v := *f.Validation
+			clone[i].Validation = &v
+		}
+
+		if len(f.Fields) > 0 {
+			clone[i].Fields = CloneConfigSpec(f.Fields)
+		}
+	}
+	return clone
+}
+
+// ApplyConfigOverrides applies overrides to a config spec.
+// Use dot notation for nested fields (e.g. "authentication.type").
+func ApplyConfigOverrides(spec []ConfigField, overrides map[string]ConfigOverride) []ConfigField {
+	return applyOverrides(spec, overrides, "")
+}
+
+func applyOverrides(spec []ConfigField, overrides map[string]ConfigOverride, prefix string) []ConfigField {
+	for i := range spec {
+		key := prefix + spec[i].Name
+
+		if o, ok := overrides[key]; ok {
+			if o.Default != nil {
+				spec[i].Default = o.Default
+			}
+			if o.Description != "" {
+				spec[i].Description = o.Description
+			}
+			if o.Placeholder != "" {
+				spec[i].Placeholder = o.Placeholder
+			}
+			if o.Required != nil {
+				spec[i].Required = *o.Required
+			}
+		}
+
+		if len(spec[i].Fields) > 0 {
+			spec[i].Fields = applyOverrides(spec[i].Fields, overrides, key+".")
+		}
+	}
+	return spec
+}
+
+// RemoveConfigFields removes fields by name.
+// Use dot notation for nested fields (e.g. "authentication.type").
+func RemoveConfigFields(spec []ConfigField, names []string) []ConfigField {
+	topLevel := make(map[string]bool)
+	nested := make(map[string][]string) // parent -> child names
+
+	for _, name := range names {
+		if idx := strings.IndexByte(name, '.'); idx != -1 {
+			parent := name[:idx]
+			child := name[idx+1:]
+			nested[parent] = append(nested[parent], child)
+		} else {
+			topLevel[name] = true
+		}
+	}
+
+	result := make([]ConfigField, 0, len(spec))
+	for _, f := range spec {
+		if topLevel[f.Name] {
+			continue
+		}
+		if children, ok := nested[f.Name]; ok && len(f.Fields) > 0 {
+			f.Fields = RemoveConfigFields(f.Fields, children)
+		}
+		result = append(result, f)
+	}
+	return result
+}
+
 type Registry struct {
 	mu      sync.RWMutex
 	plugins map[string]*RegistryEntry

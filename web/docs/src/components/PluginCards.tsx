@@ -43,6 +43,13 @@ const plugins: Plugin[] = [
     icon: "simple-icons:clickhouse",
   },
   {
+    name: "Confluent Cloud",
+    description: "Discover Kafka topics from Confluent Cloud clusters",
+    href: "/docs/Plugins/Confluent%20Cloud",
+    icon: "confluent.png",
+    useLocalIcon: true,
+  },
+  {
     name: "DBT",
     description: "Ingest models, sources, seeds, and lineage from dbt projects",
     href: "/docs/Plugins/DBT",
@@ -73,6 +80,12 @@ const plugins: Plugin[] = [
     icon: "devicon:mysql",
   },
   {
+    name: "NATS",
+    description: "Discover JetStream streams from NATS servers",
+    href: "/docs/Plugins/NATS",
+    icon: "devicon:nats",
+  },
+  {
     name: "OpenAPI",
     description: "Discover services and endpoints from OpenAPI v3 specifications",
     href: "/docs/Plugins/OpenAPI",
@@ -83,6 +96,19 @@ const plugins: Plugin[] = [
     description: "Discover tables, views, and relationships from PostgreSQL databases",
     href: "/docs/Plugins/PostgreSQL",
     icon: "devicon:postgresql",
+  },
+  {
+    name: "Redis",
+    description: "Discover databases from Redis instances",
+    href: "/docs/Plugins/Redis",
+    icon: "devicon:redis",
+  },
+  {
+    name: "Redpanda",
+    description: "Discover topics from Redpanda clusters",
+    href: "/docs/Plugins/Redpanda",
+    icon: "redpanda",
+    useLocalIcon: true,
   },
   {
     name: "S3",
@@ -106,7 +132,8 @@ const plugins: Plugin[] = [
 
 function PluginIcon({ plugin, isDarkTheme }: { plugin: Plugin; isDarkTheme: boolean }) {
   if (plugin.useLocalIcon) {
-    const iconSrc = isDarkTheme ? `/img/dark-${plugin.icon}.svg` : `/img/${plugin.icon}.svg`;
+    const ext = plugin.icon.includes('.') ? '' : '.svg';
+    const iconSrc = isDarkTheme ? `/img/dark-${plugin.icon}${ext}` : `/img/${plugin.icon}${ext}`;
     return <img src={iconSrc} alt={`${plugin.name} icon`} className="w-8 h-8" />;
   }
 
