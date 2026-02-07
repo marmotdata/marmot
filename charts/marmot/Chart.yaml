@@ -4,6 +4,7 @@ description: Marmot is an open-source data catalog that helps teams discover, un
 type: application
 version: 0.6.1
 appVersion: "0.6.0"
+icon: https://marmotdata.github.io/charts/marmot.png
 home: https://github.com/marmotdata/marmot
 sources:
   - https://github.com/marmotdata/marmot
