@@ -266,16 +266,14 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, error) {
 		}
 
 		mrnValue := mrn.New("Dataset", "BigQuery", datasetID)
-		description := fmt.Sprintf("BigQuery dataset %s in project %s", datasetID, s.config.ProjectID)
 
 		processedTags := plugin.InterpolateTags(s.config.Tags, assetMetadata)
 
 		assets = append(assets, asset.Asset{
-			Name:        &datasetID,
-			MRN:         &mrnValue,
-			Type:        "Dataset",
-			Providers:   []string{"BigQuery"},
-			Description: &description,
+			Name:      &datasetID,
+			MRN:       &mrnValue,
+			Type:      "Dataset",
+			Providers: []string{"BigQuery"},
 			Metadata:    assetMetadata,
 			Tags:        processedTags,
 			Sources: []asset.AssetSource{{

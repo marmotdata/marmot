@@ -305,16 +305,14 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		}
 
 		mrnValue := mrn.New("Database", "PostgreSQL", name)
-		assetDescription := fmt.Sprintf("PostgreSQL database %s", name)
 
 		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
-			Name:        &name,
-			MRN:         &mrnValue,
-			Type:        "Database",
-			Providers:   []string{"PostgreSQL"},
-			Description: &assetDescription,
+			Name:      &name,
+			MRN:       &mrnValue,
+			Type:      "Database",
+			Providers: []string{"PostgreSQL"},
 			Metadata:    metadata,
 			Tags:        processedTags,
 			Sources: []asset.AssetSource{{

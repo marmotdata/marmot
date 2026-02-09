@@ -4,7 +4,6 @@
 	import { fetchApi } from '$lib/api';
 	import type { Asset } from '$lib/assets/types';
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
-	import Button from '$components/ui/Button.svelte';
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
 	import AssetSources from '$components/asset/AssetSources.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
@@ -17,6 +16,7 @@
 	import Icon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import Tags from '$components/shared/Tags.svelte';
+	import ExternalLinks from '$components/shared/ExternalLinks.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
 	import { auth } from '$lib/stores/auth';
@@ -258,19 +258,6 @@
 								<h1 class="text-2xl font-semibold text-gray-900 dark:text-gray-100">
 									{asset.name}
 								</h1>
-								{#if asset.external_links && asset.external_links.length > 0}
-									<div class="flex gap-1">
-										{#each asset.external_links as link}
-											<Button
-												icon={link.icon}
-												text={link.name}
-												variant="clear"
-												href={link.url}
-												target="_blank"
-											/>
-										{/each}
-									</div>
-								{/if}
 							</div>
 
 							<p class="text-xs text-gray-500 dark:text-gray-400 font-mono">{asset.mrn}</p>
@@ -397,6 +384,15 @@
 								{/if}
 							</div>
 						</div>
+					</div>
+
+					<div class="pt-3">
+						<ExternalLinks
+							links={asset.external_links ?? []}
+							endpoint="/assets"
+							id={asset.id}
+							canEdit={canManageAssets}
+						/>
 					</div>
 
 					<Tabs tabs={visibleTabs} bind:activeTab onTabChange={setActiveTab} />

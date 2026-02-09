@@ -10,6 +10,7 @@ import (
 	"context"
 	"crypto/tls"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"time"
 
@@ -333,7 +334,7 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]asset.Ass
 		mrnValue := mrn.New(assetType, "ClickHouse", fmt.Sprintf("%s.%s", dbName, name))
 		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		a := asset.Asset{
 			Name:      &name,
 			MRN:       &mrnValue,
 			Type:      assetType,
@@ -346,7 +347,15 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]asset.Ass
 				Properties: metadata,
 				Priority:   1,
 			}},
-		})
+		}
+
+		if createQuery != "" {
+			lang := "sql"
+			a.Query = &createQuery
+			a.QueryLanguage = &lang
+		}
+
+		assets = append(assets, a)
 	}
 
 	if err := rows.Err(); err != nil {
@@ -361,7 +370,15 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]asset.Ass
 			for i := range assets {
 				tableName := *assets[i].Name
 				if columns, exists := columnMap[tableName]; exists {
-					assets[i].Metadata["columns"] = columns
+					jsonBytes, err := json.Marshal(columns)
+					if err != nil {
+						log.Warn().Err(err).Str("table", tableName).Msg("Failed to marshal columns")
+						continue
+					}
+					if assets[i].Schema == nil {
+						assets[i].Schema = make(map[string]string)
+					}
+					assets[i].Schema["columns"] = string(jsonBytes)
 				}
 			}
 		}
@@ -461,12 +478,15 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 			})
 		}
 
-		if columns, ok := a.Metadata["columns"].([]map[string]interface{}); ok {
-			statistics = append(statistics, plugin.Statistic{
-				AssetMRN:   *a.MRN,
-				MetricName: "asset.column_count",
-				Value:      float64(len(columns)),
-			})
+		if raw, ok := a.Schema["columns"]; ok {
+			var columns []map[string]interface{}
+			if err := json.Unmarshal([]byte(raw), &columns); err == nil {
+				statistics = append(statistics, plugin.Statistic{
+					AssetMRN:   *a.MRN,
+					MetricName: "asset.column_count",
+					Value:      float64(len(columns)),
+				})
+			}
 		}
 	}
 

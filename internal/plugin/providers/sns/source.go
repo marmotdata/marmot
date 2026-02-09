@@ -152,16 +152,14 @@ func (s *Source) createTopicAsset(ctx context.Context, topic types.Topic) (asset
 
 	name := extractTopicName(*topic.TopicArn)
 	mrnValue := mrn.New("Topic", "SNS", name)
-	description := fmt.Sprintf("SNS topic %s", name)
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
-		Name:        &name,
-		MRN:         &mrnValue,
-		Type:        "Topic",
-		Providers:   []string{"SNS"},
-		Description: &description,
+		Name:      &name,
+		MRN:       &mrnValue,
+		Type:      "Topic",
+		Providers: []string{"SNS"},
 		Metadata:    metadata,
 		Tags:        processedTags,
 		Sources: []asset.AssetSource{{

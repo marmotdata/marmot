@@ -35,6 +35,7 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/s3"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sns"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sqs"
+	_ "github.com/marmotdata/marmot/internal/plugin/providers/trino"
 
 	"github.com/marmotdata/marmot/internal/api/auth"
 	"github.com/marmotdata/marmot/internal/api/v1/common"

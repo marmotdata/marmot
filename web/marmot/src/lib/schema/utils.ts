@@ -3,6 +3,7 @@ import { processJsonSchema, isJsonSchema, validateJsonSchema } from './json';
 import { processAvroSchema, isAvroSchema, validateAvroSchema } from './avro';
 import { processProtobufSchema, isProtobufSchema, validateProtobufSchema } from './protobuf';
 import { processDbtSchema, isDbtSchema, validateDbtSchema } from './dbt';
+import { processSqlColumnSchema, isSqlColumnSchema, validateSqlColumnSchema } from './sql';
 
 /**
  * Format example (ensures JSON is properly parsed if it's a string)
@@ -64,6 +65,10 @@ export function isSchemaAvailable(schemaSection: any): boolean {
 			// For non-JSON strings (YAML, Avro, Protobuf)
 			return isStringSchema(schemaSection);
 		}
+	}
+
+	if (isSqlColumnSchema(schemaSection)) {
+		return true;
 	}
 
 	if (isDbtSchema(schemaSection)) {
@@ -144,7 +149,9 @@ export function detectSchemaType(schemaSection: any): SchemaType {
 		return 'json';
 	}
 
-	// Object-based detection logic - check dbt first since it's a simple array format
+	// Object-based detection logic - check sql before dbt since both are arrays
+	// but sql columns use `column_name` while dbt uses `name`
+	if (isSqlColumnSchema(schemaSection)) return 'sql';
 	if (isDbtSchema(schemaSection)) return 'dbt';
 	if (isJsonSchema(schemaSection)) return 'json';
 	if (isAvroSchema(schemaSection)) return 'avro';
@@ -183,6 +190,9 @@ export function processSchema(schemaSection: any): SchemaProcessingResult {
 
 	try {
 		switch (schemaType) {
+			case 'sql':
+				fields = processSqlColumnSchema(processableSchema);
+				break;
 			case 'dbt':
 				fields = processDbtSchema(processableSchema);
 				break;
@@ -269,6 +279,8 @@ export function validateSchema(schema: any): any[] {
 		const schemaType = detectSchemaType(cleanSchema);
 
 		switch (schemaType) {
+			case 'sql':
+				return validateSqlColumnSchema(cleanSchema);
 			case 'dbt':
 				return validateDbtSchema(cleanSchema);
 			case 'json':

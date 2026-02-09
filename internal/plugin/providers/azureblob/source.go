@@ -214,16 +214,14 @@ func (s *Source) createContainerAsset(ctx context.Context, containerItem *servic
 	}
 
 	mrnValue := mrn.New("Container", "AzureBlob", containerName)
-	description := fmt.Sprintf("Azure Blob Storage container %s", containerName)
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
-		Name:        &containerName,
-		MRN:         &mrnValue,
-		Type:        "Container",
-		Providers:   []string{"AzureBlob"},
-		Description: &description,
+		Name:      &containerName,
+		MRN:       &mrnValue,
+		Type:      "Container",
+		Providers: []string{"AzureBlob"},
 		Metadata:    metadata,
 		Tags:        processedTags,
 		Sources: []asset.AssetSource{{

@@ -65,16 +65,14 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		}
 
 		mrnValue := mrn.New("Database", "MongoDB", dbName)
-		assetDescription := fmt.Sprintf("MongoDB database %s", dbName)
 
 		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
-			Name:        &dbName,
-			MRN:         &mrnValue,
-			Type:        "Database",
-			Providers:   []string{"MongoDB"},
-			Description: &assetDescription,
+			Name:      &dbName,
+			MRN:       &mrnValue,
+			Type:      "Database",
+			Providers: []string{"MongoDB"},
 			Metadata:    metadata,
 			Tags:        processedTags,
 			Sources: []asset.AssetSource{{

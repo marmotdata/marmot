@@ -18,8 +18,8 @@
 		notifications.refresh();
 	});
 
-	function getNotificationIcon(type: string): string {
-		switch (type) {
+	function getNotificationIcon(notification: Notification): string {
+		switch (notification.type) {
 			case 'asset_change':
 				return 'material-symbols:database';
 			case 'team_invite':
@@ -27,6 +27,8 @@
 			case 'mention':
 				return 'material-symbols:alternate-email';
 			case 'job_complete':
+				if (notification.data?.status === 'failed') return 'material-symbols:error';
+				if (notification.data?.status === 'cancelled') return 'material-symbols:cancel';
 				return 'material-symbols:check-circle';
 			case 'system':
 			default:
@@ -34,8 +36,8 @@
 		}
 	}
 
-	function getNotificationColors(type: string): { bg: string; icon: string } {
-		switch (type) {
+	function getNotificationColors(notification: Notification): { bg: string; icon: string } {
+		switch (notification.type) {
 			case 'asset_change':
 				return {
 					bg: 'bg-earthy-blue-100 dark:bg-earthy-blue-900/30',
@@ -52,6 +54,18 @@
 					icon: 'text-earthy-green-700 dark:text-earthy-green-400'
 				};
 			case 'job_complete':
+				if (notification.data?.status === 'failed') {
+					return {
+						bg: 'bg-red-100 dark:bg-red-900/30',
+						icon: 'text-red-700 dark:text-red-400'
+					};
+				}
+				if (notification.data?.status === 'cancelled') {
+					return {
+						bg: 'bg-amber-100 dark:bg-amber-900/30',
+						icon: 'text-amber-700 dark:text-amber-400'
+					};
+				}
 				return {
 					bg: 'bg-green-100 dark:bg-green-900/30',
 					icon: 'text-green-700 dark:text-green-400'
@@ -206,7 +220,7 @@
 		{:else}
 			<div class="divide-y divide-gray-200 dark:divide-gray-700">
 				{#each filteredNotifications as notification (notification.id)}
-					{@const colors = getNotificationColors(notification.type)}
+					{@const colors = getNotificationColors(notification)}
 					<div
 						role="button"
 						tabindex="0"
@@ -222,7 +236,7 @@
 						<div
 							class="flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center {colors.bg}"
 						>
-							<Icon icon={getNotificationIcon(notification.type)} class="w-5 h-5 {colors.icon}" />
+							<Icon icon={getNotificationIcon(notification)} class="w-5 h-5 {colors.icon}" />
 						</div>
 						<div class="flex-1 min-w-0">
 							<div class="flex items-start justify-between gap-4">

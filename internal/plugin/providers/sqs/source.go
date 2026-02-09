@@ -192,16 +192,14 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 
 	name := extractQueueName(queueURL)
 	mrnValue := mrn.New("Queue", "SQS", name)
-	description := fmt.Sprintf("SQS queue %s", name)
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
-		Name:        &name,
-		MRN:         &mrnValue,
-		Type:        "Queue",
-		Providers:   []string{"SQS"},
-		Description: &description,
+		Name:      &name,
+		MRN:       &mrnValue,
+		Type:      "Queue",
+		Providers: []string{"SQS"},
 		Metadata:    metadata,
 		Tags:        processedTags,
 		Sources: []asset.AssetSource{{

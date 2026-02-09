@@ -214,16 +214,14 @@ func (s *Source) createBucketAsset(ctx context.Context, bucket *storage.BucketAt
 	}
 
 	mrnValue := mrn.New("Bucket", "GCS", bucketName)
-	description := fmt.Sprintf("Google Cloud Storage bucket %s", bucketName)
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
-		Name:        &bucketName,
-		MRN:         &mrnValue,
-		Type:        "Bucket",
-		Providers:   []string{"GCS"},
-		Description: &description,
+		Name:      &bucketName,
+		MRN:       &mrnValue,
+		Type:      "Bucket",
+		Providers: []string{"GCS"},
 		Metadata:    metadata,
 		Tags:        processedTags,
 		Sources: []asset.AssetSource{{

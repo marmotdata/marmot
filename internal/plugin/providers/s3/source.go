@@ -231,16 +231,14 @@ func (s *Source) createBucketAsset(ctx context.Context, bucket types.Bucket) (as
 	}
 
 	mrnValue := mrn.New("Bucket", "S3", bucketName)
-	description := fmt.Sprintf("S3 bucket %s", bucketName)
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
-		Name:        &bucketName,
-		MRN:         &mrnValue,
-		Type:        "Bucket",
-		Providers:   []string{"S3"},
-		Description: &description,
+		Name:      &bucketName,
+		MRN:       &mrnValue,
+		Type:      "Bucket",
+		Providers: []string{"S3"},
 		Metadata:    metadata,
 		Tags:        processedTags,
 		Sources: []asset.AssetSource{{

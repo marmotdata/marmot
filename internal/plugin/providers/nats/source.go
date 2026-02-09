@@ -167,16 +167,14 @@ func (s *Source) createStreamAsset(info *jetstream.StreamInfo) asset.Asset {
 
 	streamName := info.Config.Name
 	mrnValue := mrn.New("Stream", "NATS", streamName)
-	description := fmt.Sprintf("NATS JetStream stream %s on %s:%d", streamName, s.config.Host, s.config.Port)
 
 	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
-		Name:        &streamName,
-		MRN:         &mrnValue,
-		Type:        "Stream",
-		Providers:   []string{"NATS"},
-		Description: &description,
+		Name:      &streamName,
+		MRN:       &mrnValue,
+		Type:      "Stream",
+		Providers: []string{"NATS"},
 		Metadata:    metadata,
 		Tags:        processedTags,
 		Sources: []asset.AssetSource{{

@@ -439,9 +439,9 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 
 	mrnValue := mrn.New("Model", "DBT", fqn)
 
-	description := node.Description
-	if description == "" {
-		description = fmt.Sprintf("DBT model %s materialized as %s", modelName, materialization)
+	var description *string
+	if node.Description != "" {
+		description = &node.Description
 	}
 
 	var query *string
@@ -474,7 +474,7 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 		MRN:           &mrnValue,
 		Type:          "Model",
 		Providers:     []string{"DBT"},
-		Description:   &description,
+		Description:   description,
 		Metadata:      cleanMetadata,
 		Tags:          allTags,
 		Query:         query,
@@ -586,9 +586,9 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 
 	mrnValue := mrn.New(assetType, provider, tableFQN)
 
-	description := node.Description
-	if description == "" {
-		description = fmt.Sprintf("%s %s in %s.%s", assetType, tableName, node.Database, node.Schema)
+	var description *string
+	if node.Description != "" {
+		description = &node.Description
 	}
 
 	cleanMetadata := s.cleanMetadata(metadata)
@@ -598,7 +598,7 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 		MRN:         &mrnValue,
 		Type:        assetType,
 		Providers:   []string{provider},
-		Description: &description,
+		Description: description,
 		Metadata:    cleanMetadata,
 		Tags:        allTags,
 		Schema:      schema,
@@ -776,9 +776,9 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 	allTags = append(allTags, "dbt-source")
 
 	mrnValue := mrn.New("Table", provider, tableFQN)
-	description := node.Description
-	if description == "" {
-		description = fmt.Sprintf("DBT source: %s", tableName)
+	var description *string
+	if node.Description != "" {
+		description = &node.Description
 	}
 
 	cleanMetadata := s.cleanMetadata(metadata)
@@ -788,7 +788,7 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 		MRN:         &mrnValue,
 		Type:        "Table",
 		Providers:   []string{provider},
-		Description: &description,
+		Description: description,
 		Metadata:    cleanMetadata,
 		Tags:        allTags,
 		Schema:      schema,
@@ -864,9 +864,9 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
 	allTags = append(allTags, "dbt-seed")
 
 	mrnValue := mrn.New("Table", provider, tableFQN)
-	description := node.Description
-	if description == "" {
-		description = fmt.Sprintf("DBT seed: %s", seedName)
+	var description *string
+	if node.Description != "" {
+		description = &node.Description
 	}
 
 	cleanMetadata := s.cleanMetadata(metadata)
@@ -876,7 +876,7 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
 		MRN:         &mrnValue,
 		Type:        "Table",
 		Providers:   []string{provider},
-		Description: &description,
+		Description: description,
 		Metadata:    cleanMetadata,
 		Tags:        allTags,
 		Schema:      schema,
