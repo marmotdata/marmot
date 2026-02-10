@@ -17,6 +17,12 @@ export interface ExternalLink {
 	icon?: string;
 }
 
+export interface EnrichedExternalLink extends ExternalLink {
+	source: string;
+	rule_id?: string;
+	rule_name?: string;
+}
+
 export interface Asset {
 	id: string;
 	name: string;

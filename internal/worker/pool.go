@@ -1,4 +1,3 @@
-// Package worker provides a reusable background worker pool for async job processing.
 package worker
 
 import (

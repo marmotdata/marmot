@@ -7,6 +7,7 @@ import (
 	"github.com/marmotdata/marmot/internal/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
+	"github.com/marmotdata/marmot/internal/core/assetrule"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/runs"
 	"github.com/marmotdata/marmot/internal/core/team"
@@ -22,6 +23,7 @@ type Handler struct {
 	metricsService   *metrics.Service
 	runService       runs.Service
 	teamService      *team.Service
+	assetRuleService assetrule.Service
 	config           *config.Config
 }
 
@@ -33,6 +35,7 @@ func NewHandler(
 	metricsService *metrics.Service,
 	runService runs.Service,
 	teamService *team.Service,
+	assetRuleService assetrule.Service,
 	config *config.Config,
 ) *Handler {
 	return &Handler{
@@ -43,6 +46,7 @@ func NewHandler(
 		metricsService:   metricsService,
 		runService:       runService,
 		teamService:      teamService,
+		assetRuleService: assetRuleService,
 		config:           config,
 	}
 }

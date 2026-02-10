@@ -206,6 +206,8 @@ type Service interface {
 
 	// SetMembershipObserver registers an observer for asset create/delete events.
 	SetMembershipObserver(observer MembershipObserver)
+	// AddMembershipObserver registers an additional observer for asset create/delete events.
+	AddMembershipObserver(observer MembershipObserver)
 	// SetNotificationObserver registers an observer for asset update notifications.
 	SetNotificationObserver(observer NotificationObserver)
 }
@@ -240,13 +242,14 @@ const summaryCacheTTL = 5 * time.Second
 const metadataFieldsCacheTTL = 30 * time.Second
 
 type service struct {
-	repo                 Repository
-	validator            *validator.Validate
-	metrics              MetricsClient
-	membershipObserver   MembershipObserver
-	notificationObserver NotificationObserver
-	summaryCache         summaryCache
-	metadataFieldsCache  metadataFieldsCache
+	repo                  Repository
+	validator             *validator.Validate
+	metrics               MetricsClient
+	membershipObserver    MembershipObserver
+	membershipObservers   []MembershipObserver
+	notificationObserver  NotificationObserver
+	summaryCache          summaryCache
+	metadataFieldsCache   metadataFieldsCache
 }
 
 type Logger interface {
@@ -282,6 +285,10 @@ func WithMetrics(metrics MetricsClient) ServiceOption {
 
 func (s *service) SetMembershipObserver(observer MembershipObserver) {
 	s.membershipObserver = observer
+}
+
+func (s *service) AddMembershipObserver(observer MembershipObserver) {
+	s.membershipObservers = append(s.membershipObservers, observer)
 }
 
 func (s *service) SetNotificationObserver(observer NotificationObserver) {
@@ -448,9 +455,12 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 		return nil, fmt.Errorf("failed to create asset: %w", err)
 	}
 
-	// Notify membership observer asynchronously
+	// Notify membership observers asynchronously
 	if s.membershipObserver != nil {
 		s.membershipObserver.OnAssetCreated(ctx, asset)
+	}
+	for _, observer := range s.membershipObservers {
+		observer.OnAssetCreated(ctx, asset)
 	}
 
 	return asset, nil
@@ -655,9 +665,14 @@ func UpdateSources(existing, new []AssetSource) []AssetSource {
 }
 
 func (s *service) Delete(ctx context.Context, id string) error {
-	// Notify membership observer before deletion
+	// Notify membership observers before deletion
 	if s.membershipObserver != nil {
 		if err := s.membershipObserver.OnAssetDeleted(ctx, id); err != nil {
+			log.Warn().Err(err).Str("asset_id", id).Msg("Failed to notify membership observer of deletion")
+		}
+	}
+	for _, observer := range s.membershipObservers {
+		if err := observer.OnAssetDeleted(ctx, id); err != nil {
 			log.Warn().Err(err).Str("asset_id", id).Msg("Failed to notify membership observer of deletion")
 		}
 	}

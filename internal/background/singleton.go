@@ -1,4 +1,3 @@
-// Package background provides reusable background task primitives for distributed coordination.
 package background
 
 import (

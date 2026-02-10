@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, afterUpdate } from 'svelte';
 	import { writable, type Writable } from 'svelte/store';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -295,6 +295,10 @@
 		}
 	}
 
+	afterUpdate(() => {
+		document.title = `${selectedTerm?.name || 'Glossary'} - Marmot`;
+	});
+
 	onMount(() => {
 		fetchTerms();
 	});
@@ -495,7 +499,12 @@
 											maxDepth={2}
 										/>
 									{:else}
-										<MetadataView metadata={selectedTerm.metadata} readOnly={false} maxDepth={2} />
+										<MetadataView
+											metadata={selectedTerm.metadata}
+											endpoint="/glossary"
+											id={selectedTerm.id}
+											maxDepth={2}
+										/>
 									{/if}
 								</div>
 

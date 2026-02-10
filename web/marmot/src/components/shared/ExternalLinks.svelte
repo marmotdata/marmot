@@ -1,23 +1,28 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
-	import type { ExternalLink } from '$lib/assets/types';
+	import type { ExternalLink, EnrichedExternalLink } from '$lib/assets/types';
 	import Button from '$components/ui/Button.svelte';
 	import IconPicker from '$components/shared/IconPicker.svelte';
 	import IconifyIcon from '@iconify/svelte';
 
 	let {
 		links = $bindable([]),
+		enrichedLinks = [],
 		endpoint,
 		id,
 		canEdit = false,
 		saving = $bindable(false)
 	}: {
 		links: ExternalLink[];
+		enrichedLinks?: EnrichedExternalLink[];
 		endpoint?: string;
 		id?: string;
 		canEdit?: boolean;
 		saving?: boolean;
 	} = $props();
+
+	// Rule-managed links are those with source !== 'asset'
+	let ruleManagedLinks = $derived(enrichedLinks.filter((l) => l.source !== 'asset'));
 
 	let newName = $state('');
 	let newUrl = $state('');
@@ -143,7 +148,17 @@
 			</div>
 		{/each}
 
-		{#if links.length === 0 && !canEdit}
+		{#each ruleManagedLinks as ruleLink}
+			<Button
+				icon={ruleLink.icon || 'material-symbols:link'}
+				text={ruleLink.name}
+				variant="clear"
+				href={ruleLink.url}
+				target="_blank"
+			/>
+		{/each}
+
+		{#if links.length === 0 && ruleManagedLinks.length === 0 && !canEdit}
 			<span class="text-sm text-gray-400 dark:text-gray-500 italic">No links</span>
 		{/if}
 
@@ -180,10 +195,14 @@
 					if (e.key === 'Enter') addLink();
 					if (e.key === 'Escape') resetForm();
 				}}
-				oninput={() => { if (urlError) urlError = ''; }}
+				oninput={() => {
+					if (urlError) urlError = '';
+				}}
 				placeholder="https://..."
 				aria-label="Link URL"
-				class="w-56 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 {urlError ? 'border-red-400 dark:border-red-500' : ''}"
+				class="w-56 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 {urlError
+					? 'border-red-400 dark:border-red-500'
+					: ''}"
 			/>
 			<div class="flex items-center gap-1.5">
 				<button

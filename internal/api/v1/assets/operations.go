@@ -8,10 +8,17 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/assetrule"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/rs/zerolog/log"
 )
+
+// AssetResponse wraps an asset with enriched external links from rules.
+type AssetResponse struct {
+	*asset.Asset
+	EnrichedExternalLinks []assetrule.EnrichedExternalLink `json:"enriched_external_links,omitempty"`
+}
 
 type CreateRequest struct {
 	Name          string                       `json:"name" validate:"required"`
@@ -103,6 +110,28 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusCreated, newAsset)
 }
 
+func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *AssetResponse {
+	resp := &AssetResponse{Asset: result}
+
+	enrichedLinks, err := h.assetRuleService.GetEnrichedLinks(r.Context(), result.ID)
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", result.ID).Msg("Failed to get enriched links")
+	} else if len(enrichedLinks) > 0 {
+		// Merge direct links (source: "asset") with rule-managed links
+		allLinks := make([]assetrule.EnrichedExternalLink, 0, len(result.ExternalLinks)+len(enrichedLinks))
+		for _, l := range result.ExternalLinks {
+			allLinks = append(allLinks, assetrule.EnrichedExternalLink{
+				ExternalLink: l,
+				Source:        "asset",
+			})
+		}
+		allLinks = append(allLinks, enrichedLinks...)
+		resp.EnrichedExternalLinks = allLinks
+	}
+
+	return resp
+}
+
 // @Summary Get an asset by ID
 // @Description Get detailed information about a specific asset
 // @Tags assets
@@ -134,7 +163,7 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 
 	h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
 
-	common.RespondJSON(w, http.StatusOK, result)
+	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }
 
 // @Summary Update an asset
@@ -262,5 +291,5 @@ func (h *Handler) getAssetByMRN(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, result)
+	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }

@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/nats-io/nats.go"
@@ -75,17 +74,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
-	if err != nil {
-		return nil, fmt.Errorf("unmarshaling config: %w", err)
-	}
-	s.config = config
-
-	if s.config.Port == 0 {
-		s.config.Port = 4222
-	}
-
+func (s *Source) Discover(ctx context.Context, _ plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
 	nc, err := s.connect()
 	if err != nil {
 		return nil, fmt.Errorf("connecting to NATS: %w", err)
@@ -98,7 +87,6 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 
 	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
 
 	streams := js.ListStreams(ctx)
 	for info := range streams.Info() {
@@ -110,15 +98,17 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 
 	return &plugin.DiscoveryResult{
-		Assets:  assets,
-		Lineage: lineages,
+		Assets: assets,
 	}, nil
 }
 
 func (s *Source) connect() (*nats.Conn, error) {
 	addr := fmt.Sprintf("nats://%s:%d", s.config.Host, s.config.Port)
 
-	var opts []nats.Option
+	opts := []nats.Option{
+		nats.Timeout(10 * time.Second),
+		nats.Name("marmot-discovery"),
+	}
 
 	if s.config.Token != "" {
 		opts = append(opts, nats.Token(s.config.Token))

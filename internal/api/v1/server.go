@@ -43,11 +43,11 @@ import (
 	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docs"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
+	assetrulesAPI "github.com/marmotdata/marmot/internal/api/v1/assetrules"
 	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	notificationsAPI "github.com/marmotdata/marmot/internal/api/v1/notifications"
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
-	webhooksAPI "github.com/marmotdata/marmot/internal/api/v1/webhooks"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
 	searchAPI "github.com/marmotdata/marmot/internal/api/v1/search"
@@ -55,21 +55,24 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/teams"
 	"github.com/marmotdata/marmot/internal/api/v1/ui"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
+	webhooksAPI "github.com/marmotdata/marmot/internal/api/v1/webhooks"
 	"github.com/marmotdata/marmot/internal/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
 	dataproductService "github.com/marmotdata/marmot/internal/core/dataproduct"
 	docsService "github.com/marmotdata/marmot/internal/core/docs"
+	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
+	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
 	searchService "github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/subscription"
 	teamService "github.com/marmotdata/marmot/internal/core/team"
-	webhookService "github.com/marmotdata/marmot/internal/core/webhook"
 	userService "github.com/marmotdata/marmot/internal/core/user"
+	webhookService "github.com/marmotdata/marmot/internal/core/webhook"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/websocket"
@@ -92,6 +95,10 @@ type Server struct {
 	// Data product membership evaluation
 	membershipService    *dataproductService.MembershipService
 	membershipReconciler *dataproductService.Reconciler
+
+	// Asset rule membership evaluation
+	assetRuleMembershipService *assetruleService.MembershipService
+	assetRuleReconciler        *assetruleService.Reconciler
 
 	// Notification service
 	notificationService *notificationService.Service
@@ -157,12 +164,35 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		DB:       db,
 	})
 
+	// Asset rule services
+	enrichmentEvaluator := enrichment.NewEvaluator(db)
+	assetRuleRepo := assetruleService.NewPostgresRepository(db, recorder)
+	assetRuleMemberRepo := assetruleService.NewPostgresMembershipRepository(db, recorder)
+	assetRuleMemberSvc := assetruleService.NewMembershipService(
+		assetRuleRepo,
+		assetRuleMemberRepo,
+		enrichmentEvaluator,
+		&assetruleService.MembershipConfig{
+			MaxWorkers:    5,
+			BatchSize:     50,
+			FlushInterval: 500 * time.Millisecond,
+		},
+	)
+	assetRuleReconciler := assetruleService.NewReconciler(assetRuleMemberSvc, &assetruleService.ReconcilerConfig{
+		Interval: 30 * time.Minute,
+		DB:       db,
+	})
+	assetRuleSvc := assetruleService.NewService(assetRuleRepo, assetRuleMemberRepo, enrichmentEvaluator, assetRuleMemberSvc)
+
 	// Start membership evaluation services
 	membershipSvc.Start(context.Background())
 	membershipReconciler.Start(context.Background())
+	assetRuleMemberSvc.Start(context.Background())
+	assetRuleReconciler.Start(context.Background())
 
 	// Register membership service with asset service for event hooks
 	assetSvc.SetMembershipObserver(membershipSvc)
+	assetSvc.AddMembershipObserver(assetRuleMemberSvc)
 
 	// Register membership service with data product service for rule event hooks
 	dataProductSvc.SetRuleObserver(membershipSvc)
@@ -327,19 +357,21 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	notificationSvc.SetExternalNotifier(webhookSvc)
 
 	server := &Server{
-		config:               config,
-		metricsService:       metricsService,
-		wsHub:                wsHub,
-		scheduler:            scheduler,
-		membershipService:    membershipSvc,
-		membershipReconciler: membershipReconciler,
-		notificationService:  notificationSvc,
-		webhookDispatcher:    webhookDispatcher,
+		config:                    config,
+		metricsService:            metricsService,
+		wsHub:                     wsHub,
+		scheduler:                 scheduler,
+		membershipService:         membershipSvc,
+		membershipReconciler:      membershipReconciler,
+		assetRuleMembershipService: assetRuleMemberSvc,
+		assetRuleReconciler:        assetRuleReconciler,
+		notificationService:       notificationSvc,
+		webhookDispatcher:         webhookDispatcher,
 	}
 
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
-		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, teamSvc, config),
+		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, teamSvc, assetRuleSvc, config),
 		users.NewHandler(userSvc, authSvc, config),
 		auth.NewHandler(authSvc, oauthManager, userSvc, config),
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
@@ -348,6 +380,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
 		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config),
+		assetrulesAPI.NewHandler(assetRuleSvc, userSvc, authSvc, config),
 		docsAPI.NewHandler(docsSvc, userSvc, authSvc, config),
 		notificationsAPI.NewHandler(notificationSvc, userSvc, authSvc, config),
 		subscriptionsAPI.NewHandler(subscriptionSvc, userSvc, authSvc, config),
@@ -369,6 +402,12 @@ func (s *Server) Stop() {
 	}
 	if s.membershipService != nil {
 		s.membershipService.Stop()
+	}
+	if s.assetRuleReconciler != nil {
+		s.assetRuleReconciler.Stop()
+	}
+	if s.assetRuleMembershipService != nil {
+		s.assetRuleMembershipService.Stop()
 	}
 	if s.webhookDispatcher != nil {
 		s.webhookDispatcher.Stop()

@@ -235,5 +235,5 @@ func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
 
 	h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
 
-	common.RespondJSON(w, http.StatusOK, result)
+	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }

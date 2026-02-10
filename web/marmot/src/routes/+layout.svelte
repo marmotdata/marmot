@@ -201,7 +201,10 @@
 	}
 
 	function capitalizeWord(word: string): string {
-		return word.charAt(0).toUpperCase() + word.slice(1);
+		return word
+			.split('-')
+			.map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+			.join(' ');
 	}
 
 	$: pathSegments = $page.url.pathname.split('/').filter(Boolean);
@@ -327,7 +330,9 @@
 								}}
 								class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
 									'/glossary'
-								) || $page.url.pathname.startsWith('/products')
+								) ||
+								$page.url.pathname.startsWith('/products') ||
+								$page.url.pathname.startsWith('/asset-rules')
 									? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
 									: 'text-gray-600 dark:text-gray-300 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700'}"
 							>
@@ -368,6 +373,18 @@
 									>
 										<Icon icon="material-symbols:inventory-2" class="w-4 h-4" />
 										Data Products
+									</a>
+									<a
+										href="/asset-rules"
+										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
+											'/asset-rules'
+										)
+											? 'text-earthy-terracotta-700 dark:text-earthy-terracotta-700'
+											: ''}"
+										role="menuitem"
+									>
+										<Icon icon="material-symbols:rule-settings" class="w-4 h-4" />
+										Asset Rules
 									</a>
 								</div>
 							{/if}

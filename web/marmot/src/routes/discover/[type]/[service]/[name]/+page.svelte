@@ -2,7 +2,7 @@
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { fetchApi } from '$lib/api';
-	import type { Asset } from '$lib/assets/types';
+	import type { Asset, EnrichedExternalLink } from '$lib/assets/types';
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
 	import AssetSources from '$components/asset/AssetSources.svelte';
@@ -31,6 +31,7 @@
 	}
 
 	let asset: Asset | null = $state(null);
+	let enrichedLinks = $state<EnrichedExternalLink[]>([]);
 	let loading = $state(true);
 	let error: string | null = $state(null);
 	let bladeCollapsed = $state(false);
@@ -59,7 +60,9 @@
 			if (!response.ok) {
 				throw new Error('Failed to fetch asset');
 			}
-			asset = await response.json();
+			const data = await response.json();
+			enrichedLinks = data.enriched_external_links || [];
+			asset = data;
 		} catch (err) {
 			console.error('Error fetching asset:', err);
 			error = err instanceof Error ? err.message : 'Failed to load asset';
@@ -391,6 +394,7 @@
 							links={asset.external_links ?? []}
 							endpoint="/assets"
 							id={asset.id}
+							{enrichedLinks}
 							canEdit={canManageAssets}
 						/>
 					</div>

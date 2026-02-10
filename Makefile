@@ -1,4 +1,4 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate lint frontend-build actionlint frontend-lint frontend-typecheck
+.PHONY: swagger build run test clean dev release docker-build dev-deps generate lint frontend-build actionlint frontend-lint frontend-typecheck fix
 
 # Build variables
 BINARY_NAME=marmot
@@ -48,6 +48,9 @@ frontend-lint:
 
 frontend-typecheck:
 	cd web/marmot && pnpm install && pnpm run check
+
+fix:
+	cd web/marmot && pnpm run format
 
 actionlint:
 	actionlint
