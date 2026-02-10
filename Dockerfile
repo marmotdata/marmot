@@ -18,7 +18,7 @@ COPY . .
 COPY --from=frontend /app/web/marmot/build ./internal/staticfiles/build
 RUN CGO_ENABLED=0 go build -tags production -o marmot ./cmd/main.go
 
-FROM alpine:3.18
+FROM alpine:3.21
 
 RUN apk add --no-cache ca-certificates tzdata
 RUN adduser -D -u 10001 marmot
