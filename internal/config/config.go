@@ -93,8 +93,9 @@ type Config struct {
 
 	Auth struct {
 		Google   *OAuthProviderConfig `mapstructure:"google"`
-		GitHub   *OAuthProviderConfig `mapstructure:"github"`
-		GitLab   *OAuthProviderConfig `mapstructure:"gitlab"`
+		GenericOIDC *OAuthProviderConfig `mapstructure:"generic_oidc"`
+		GitHub      *OAuthProviderConfig `mapstructure:"github"`
+		GitLab      *OAuthProviderConfig `mapstructure:"gitlab"`
 		Keycloak *OAuthProviderConfig `mapstructure:"keycloak"`
 		Okta     *OAuthProviderConfig `mapstructure:"okta"`
 		Slack    *OAuthProviderConfig `mapstructure:"slack"`
@@ -199,6 +200,17 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.google.type")
 	v.BindEnv("auth.google.name")
 	v.BindEnv("auth.google.allow_signup")
+
+	v.BindEnv("auth.generic_oidc.client_id")
+	v.BindEnv("auth.generic_oidc.client_secret")
+	v.BindEnv("auth.generic_oidc.url")
+	v.BindEnv("auth.generic_oidc.redirect_url")
+	v.BindEnv("auth.generic_oidc.enabled")
+	v.BindEnv("auth.generic_oidc.type")
+	v.BindEnv("auth.generic_oidc.name")
+	v.BindEnv("auth.generic_oidc.allow_signup")
+	v.BindEnv("auth.generic_oidc.team_sync.enabled")
+	v.BindEnv("auth.generic_oidc.team_sync.group_claim")
 
 	v.BindEnv("auth.github.client_id")
 	v.BindEnv("auth.github.client_secret")
@@ -333,6 +345,13 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("auth.google.name", "Google")
 	v.SetDefault("auth.google.allow_signup", true)
 	v.SetDefault("auth.google.scopes", []string{"openid", "profile", "email"})
+
+	v.SetDefault("auth.generic_oidc.type", "generic_oidc")
+	v.SetDefault("auth.generic_oidc.name", "SSO")
+	v.SetDefault("auth.generic_oidc.allow_signup", true)
+	v.SetDefault("auth.generic_oidc.scopes", []string{"openid", "profile", "email"})
+	v.SetDefault("auth.generic_oidc.team_sync.enabled", false)
+	v.SetDefault("auth.generic_oidc.team_sync.group_claim", "groups")
 
 	v.SetDefault("auth.github.type", "github")
 	v.SetDefault("auth.github.name", "GitHub")

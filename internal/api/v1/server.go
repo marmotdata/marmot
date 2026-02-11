@@ -317,6 +317,19 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		}
 	}
 
+	if genericOIDCConfig := config.Auth.GenericOIDC; genericOIDCConfig != nil && genericOIDCConfig.Enabled {
+		if genericOIDCConfig.ClientID != "" && genericOIDCConfig.ClientSecret != "" && genericOIDCConfig.URL != "" {
+			genericOIDCProvider, err := authService.NewGenericOIDCProvider(config, userSvc, authSvc, teamSvc)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to initialize Generic OIDC provider")
+			} else {
+				oauthManager.RegisterProvider(genericOIDCProvider)
+			}
+		} else {
+			log.Warn().Msg("Incomplete Generic OIDC configuration found - provider will not be initialized")
+		}
+	}
+
 	if githubConfig := config.Auth.GitHub; githubConfig != nil && githubConfig.Enabled {
 		if githubConfig.ClientID != "" && githubConfig.ClientSecret != "" {
 			githubProvider, err := authService.NewGitHubProvider(config, userSvc)

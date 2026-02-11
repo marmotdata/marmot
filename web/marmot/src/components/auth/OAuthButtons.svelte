@@ -129,5 +129,14 @@
 				click={() => handleOAuthLogin('auth0')}
 			/>
 		{/if}
+		{#if enabledProviders.includes('generic_oidc')}
+			<Button
+				variant="clear"
+				icon="mdi:shield-key-outline"
+				text="Sign in with SSO"
+				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+				click={() => handleOAuthLogin('generic_oidc')}
+			/>
+		{/if}
 	</div>
 {/if}

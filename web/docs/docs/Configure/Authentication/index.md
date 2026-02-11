@@ -13,6 +13,12 @@ import { DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/compon
 
 <DocCardGrid>
   <DocCard
+    title="Generic OIDC"
+    description="Any OIDC-compliant provider with team synchronisation"
+    href="/docs/Configure/Authentication/generic-oidc"
+    icon="mdi:shield-key-outline"
+  />
+  <DocCard
     title="Google OIDC"
     description="OpenID Connect authentication with Google Workspace"
     href="/docs/Configure/Authentication/google-oidc"
