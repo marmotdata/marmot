@@ -93,6 +93,15 @@
 				click={() => handleOAuthLogin('gitlab')}
 			/>
 		{/if}
+		{#if enabledProviders.includes('keycloak')}
+			<Button
+				variant="clear"
+				icon="simple-icons:keycloak"
+				text="Sign in with Keycloak"
+				class="w-full justify-center border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500"
+				click={() => handleOAuthLogin('keycloak')}
+			/>
+		{/if}
 		{#if enabledProviders.includes('okta')}
 			<Button
 				variant="clear"

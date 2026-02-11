@@ -24,6 +24,7 @@ type OAuthProviderConfig struct {
 	ClientID     string           `mapstructure:"client_id"`
 	ClientSecret string           `mapstructure:"client_secret"`
 	URL          string           `mapstructure:"url"`
+	Realm        string           `mapstructure:"realm"`
 	RedirectURL  string           `mapstructure:"redirect_url"`
 	Scopes       []string         `mapstructure:"scopes"`
 	AllowSignup  bool             `mapstructure:"allow_signup"`
@@ -91,12 +92,13 @@ type Config struct {
 	} `mapstructure:"logging"`
 
 	Auth struct {
-		Google    *OAuthProviderConfig `mapstructure:"google"`
-		GitHub    *OAuthProviderConfig `mapstructure:"github"`
-		GitLab    *OAuthProviderConfig `mapstructure:"gitlab"`
-		Okta      *OAuthProviderConfig `mapstructure:"okta"`
-		Slack     *OAuthProviderConfig `mapstructure:"slack"`
-		Auth0     *OAuthProviderConfig `mapstructure:"auth0"`
+		Google   *OAuthProviderConfig `mapstructure:"google"`
+		GitHub   *OAuthProviderConfig `mapstructure:"github"`
+		GitLab   *OAuthProviderConfig `mapstructure:"gitlab"`
+		Keycloak *OAuthProviderConfig `mapstructure:"keycloak"`
+		Okta     *OAuthProviderConfig `mapstructure:"okta"`
+		Slack    *OAuthProviderConfig `mapstructure:"slack"`
+		Auth0    *OAuthProviderConfig `mapstructure:"auth0"`
 		Anonymous AnonymousAuthConfig  `mapstructure:"anonymous"`
 	} `mapstructure:"auth"`
 
@@ -215,6 +217,18 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.gitlab.name")
 	v.BindEnv("auth.gitlab.allow_signup")
 
+	v.BindEnv("auth.keycloak.client_id")
+	v.BindEnv("auth.keycloak.client_secret")
+	v.BindEnv("auth.keycloak.url")
+	v.BindEnv("auth.keycloak.realm")
+	v.BindEnv("auth.keycloak.redirect_url")
+	v.BindEnv("auth.keycloak.enabled")
+	v.BindEnv("auth.keycloak.type")
+	v.BindEnv("auth.keycloak.name")
+	v.BindEnv("auth.keycloak.allow_signup")
+	v.BindEnv("auth.keycloak.team_sync.enabled")
+	v.BindEnv("auth.keycloak.team_sync.group_claim")
+
 	v.BindEnv("auth.slack.client_id")
 	v.BindEnv("auth.slack.client_secret")
 	v.BindEnv("auth.slack.redirect_url")
@@ -330,6 +344,13 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("auth.gitlab.allow_signup", true)
 	v.SetDefault("auth.gitlab.url", "https://gitlab.com")
 	v.SetDefault("auth.gitlab.scopes", []string{"openid", "profile", "email"})
+
+	v.SetDefault("auth.keycloak.type", "keycloak")
+	v.SetDefault("auth.keycloak.name", "Keycloak")
+	v.SetDefault("auth.keycloak.allow_signup", true)
+	v.SetDefault("auth.keycloak.scopes", []string{"openid", "profile", "email"})
+	v.SetDefault("auth.keycloak.team_sync.enabled", false)
+	v.SetDefault("auth.keycloak.team_sync.group_claim", "groups")
 
 	v.SetDefault("auth.slack.type", "slack")
 	v.SetDefault("auth.slack.name", "Slack")

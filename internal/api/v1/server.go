@@ -293,8 +293,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	if oktaConfig := config.Auth.Okta; oktaConfig != nil && oktaConfig.Enabled {
 		if oktaConfig.ClientID != "" && oktaConfig.ClientSecret != "" && oktaConfig.URL != "" {
-			oktaProvider := authService.NewOktaProvider(config, userSvc, authSvc, teamSvc)
-			oauthManager.RegisterProvider(oktaProvider)
+			oktaProvider, err := authService.NewOktaProvider(config, userSvc, authSvc, teamSvc)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to initialize Okta provider")
+			} else {
+				oauthManager.RegisterProvider(oktaProvider)
+			}
 		} else {
 			log.Warn().Msg("Incomplete Okta configuration found - provider will not be initialized")
 		}
@@ -302,8 +306,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	if googleConfig := config.Auth.Google; googleConfig != nil && googleConfig.Enabled {
 		if googleConfig.ClientID != "" && googleConfig.ClientSecret != "" {
-			googleProvider := authService.NewGoogleProvider(config, userSvc)
-			oauthManager.RegisterProvider(googleProvider)
+			googleProvider, err := authService.NewGoogleProvider(config, userSvc)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to initialize Google provider")
+			} else {
+				oauthManager.RegisterProvider(googleProvider)
+			}
 		} else {
 			log.Warn().Msg("Incomplete Google configuration found - provider will not be initialized")
 		}
@@ -311,8 +319,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	if githubConfig := config.Auth.GitHub; githubConfig != nil && githubConfig.Enabled {
 		if githubConfig.ClientID != "" && githubConfig.ClientSecret != "" {
-			githubProvider := authService.NewGitHubProvider(config, userSvc)
-			oauthManager.RegisterProvider(githubProvider)
+			githubProvider, err := authService.NewGitHubProvider(config, userSvc)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to initialize GitHub provider")
+			} else {
+				oauthManager.RegisterProvider(githubProvider)
+			}
 		} else {
 			log.Warn().Msg("Incomplete GitHub configuration found - provider will not be initialized")
 		}
@@ -320,8 +332,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	if gitlabConfig := config.Auth.GitLab; gitlabConfig != nil && gitlabConfig.Enabled {
 		if gitlabConfig.ClientID != "" && gitlabConfig.ClientSecret != "" {
-			gitlabProvider := authService.NewGitLabProvider(config, userSvc)
-			oauthManager.RegisterProvider(gitlabProvider)
+			gitlabProvider, err := authService.NewGitLabProvider(config, userSvc)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to initialize GitLab provider")
+			} else {
+				oauthManager.RegisterProvider(gitlabProvider)
+			}
 		} else {
 			log.Warn().Msg("Incomplete GitLab configuration found - provider will not be initialized")
 		}
@@ -329,17 +345,38 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	if slackConfig := config.Auth.Slack; slackConfig != nil && slackConfig.Enabled {
 		if slackConfig.ClientID != "" && slackConfig.ClientSecret != "" {
-			slackProvider := authService.NewSlackProvider(config, userSvc)
-			oauthManager.RegisterProvider(slackProvider)
+			slackProvider, err := authService.NewSlackProvider(config, userSvc)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to initialize Slack provider")
+			} else {
+				oauthManager.RegisterProvider(slackProvider)
+			}
 		} else {
 			log.Warn().Msg("Incomplete Slack configuration found - provider will not be initialized")
 		}
 	}
 
+	if keycloakConfig := config.Auth.Keycloak; keycloakConfig != nil && keycloakConfig.Enabled {
+		if keycloakConfig.ClientID != "" && keycloakConfig.ClientSecret != "" && keycloakConfig.URL != "" && keycloakConfig.Realm != "" {
+			keycloakProvider, err := authService.NewKeycloakProvider(config, userSvc, authSvc, teamSvc)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to initialize Keycloak provider")
+			} else {
+				oauthManager.RegisterProvider(keycloakProvider)
+			}
+		} else {
+			log.Warn().Msg("Incomplete Keycloak configuration found - provider will not be initialized")
+		}
+	}
+
 	if auth0Config := config.Auth.Auth0; auth0Config != nil && auth0Config.Enabled {
 		if auth0Config.ClientID != "" && auth0Config.ClientSecret != "" && auth0Config.URL != "" {
-			auth0Provider := authService.NewAuth0Provider(config, userSvc, authSvc, teamSvc)
-			oauthManager.RegisterProvider(auth0Provider)
+			auth0Provider, err := authService.NewAuth0Provider(config, userSvc, authSvc, teamSvc)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to initialize Auth0 provider")
+			} else {
+				oauthManager.RegisterProvider(auth0Provider)
+			}
 		} else {
 			log.Warn().Msg("Incomplete Auth0 configuration found - provider will not be initialized")
 		}

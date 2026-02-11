@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -23,18 +24,16 @@ type GoogleProvider struct {
 	oidcProvider *oidc.Provider
 }
 
-func NewGoogleProvider(cfg *config.Config, userService user.Service) *GoogleProvider {
+func NewGoogleProvider(cfg *config.Config, userService user.Service) (*GoogleProvider, error) {
 	providerCfg := cfg.Auth.Google
 	if providerCfg == nil {
-		log.Fatal().Msg("google provider config not found")
-		return nil
+		return nil, fmt.Errorf("google provider config not found")
 	}
 
 	ctx := context.Background()
 	oidcProvider, err := oidc.NewProvider(ctx, "https://accounts.google.com")
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create Google OIDC provider")
-		return nil
+		return nil, fmt.Errorf("failed to create Google OIDC provider: %w", err)
 	}
 
 	p := &GoogleProvider{
@@ -58,7 +57,7 @@ func NewGoogleProvider(cfg *config.Config, userService user.Service) *GoogleProv
 		Scopes:       providerCfg.Scopes,
 	}
 
-	return p
+	return p, nil
 }
 
 func (p *GoogleProvider) GetAuthURL(state string) string {
@@ -121,7 +120,7 @@ func (p *GoogleProvider) HandleCallback(ctx context.Context, code string) (*user
 		return usr, nil
 	}
 
-	if err != user.ErrUserNotFound {
+	if !errors.Is(err, user.ErrUserNotFound) {
 		return nil, fmt.Errorf("failed to get user by provider ID: %w", err)
 	}
 

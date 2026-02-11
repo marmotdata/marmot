@@ -6,6 +6,31 @@ import (
 	"github.com/marmotdata/marmot/internal/core/user"
 )
 
+// extractGroups extracts group names from a userInfo claims map using the specified claim key.
+func extractGroups(userInfo map[string]interface{}, groupClaim string) []string {
+	groups := []string{}
+
+	groupsRaw, ok := userInfo[groupClaim]
+	if !ok {
+		return groups
+	}
+
+	switch v := groupsRaw.(type) {
+	case []interface{}:
+		for _, g := range v {
+			if groupStr, ok := g.(string); ok {
+				groups = append(groups, groupStr)
+			}
+		}
+	case []string:
+		groups = v
+	case string:
+		groups = []string{v}
+	}
+
+	return groups
+}
+
 type OAuthProvider interface {
 	GetAuthURL(state string) string
 	HandleCallback(ctx context.Context, code string) (*user.User, error)

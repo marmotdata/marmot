@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -22,18 +23,16 @@ type SlackProvider struct {
 	oidcProvider *oidc.Provider
 }
 
-func NewSlackProvider(cfg *config.Config, userService user.Service) *SlackProvider {
+func NewSlackProvider(cfg *config.Config, userService user.Service) (*SlackProvider, error) {
 	providerCfg := cfg.Auth.Slack
 	if providerCfg == nil {
-		log.Fatal().Msg("slack provider config not found")
-		return nil
+		return nil, fmt.Errorf("slack provider config not found")
 	}
 
 	ctx := context.Background()
 	oidcProvider, err := oidc.NewProvider(ctx, "https://slack.com")
 	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create Slack OIDC provider")
-		return nil
+		return nil, fmt.Errorf("failed to create Slack OIDC provider: %w", err)
 	}
 
 	p := &SlackProvider{
@@ -57,7 +56,7 @@ func NewSlackProvider(cfg *config.Config, userService user.Service) *SlackProvid
 		Scopes:       providerCfg.Scopes,
 	}
 
-	return p
+	return p, nil
 }
 
 func (p *SlackProvider) GetAuthURL(state string) string {
@@ -120,7 +119,7 @@ func (p *SlackProvider) HandleCallback(ctx context.Context, code string) (*user.
 		return usr, nil
 	}
 
-	if err != user.ErrUserNotFound {
+	if !errors.Is(err, user.ErrUserNotFound) {
 		return nil, fmt.Errorf("failed to get user by provider ID: %w", err)
 	}
 

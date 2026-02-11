@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -23,11 +24,10 @@ type GitLabProvider struct {
 	oidcProvider *oidc.Provider
 }
 
-func NewGitLabProvider(cfg *config.Config, userService user.Service) *GitLabProvider {
+func NewGitLabProvider(cfg *config.Config, userService user.Service) (*GitLabProvider, error) {
 	providerCfg := cfg.Auth.GitLab
 	if providerCfg == nil {
-		log.Fatal().Msg("gitlab provider config not found")
-		return nil
+		return nil, fmt.Errorf("gitlab provider config not found")
 	}
 
 	gitlabURL := providerCfg.URL
@@ -38,8 +38,7 @@ func NewGitLabProvider(cfg *config.Config, userService user.Service) *GitLabProv
 	ctx := context.Background()
 	oidcProvider, err := oidc.NewProvider(ctx, gitlabURL)
 	if err != nil {
-		log.Fatal().Err(err).Str("url", gitlabURL).Msg("failed to create GitLab OIDC provider")
-		return nil
+		return nil, fmt.Errorf("failed to create GitLab OIDC provider: %w", err)
 	}
 
 	p := &GitLabProvider{
@@ -64,7 +63,7 @@ func NewGitLabProvider(cfg *config.Config, userService user.Service) *GitLabProv
 		Scopes:       providerCfg.Scopes,
 	}
 
-	return p
+	return p, nil
 }
 
 func (p *GitLabProvider) GetAuthURL(state string) string {
@@ -127,7 +126,7 @@ func (p *GitLabProvider) HandleCallback(ctx context.Context, code string) (*user
 		return usr, nil
 	}
 
-	if err != user.ErrUserNotFound {
+	if !errors.Is(err, user.ErrUserNotFound) {
 		return nil, fmt.Errorf("failed to get user by provider ID: %w", err)
 	}
 

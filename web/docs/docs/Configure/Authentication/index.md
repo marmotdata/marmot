@@ -31,6 +31,12 @@ import { DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/compon
     icon="mdi:gitlab"
   />
   <DocCard
+    title="Keycloak OIDC"
+    description="OpenID Connect with team synchronisation"
+    href="/docs/Configure/Authentication/keycloak-oidc"
+    icon="simple-icons:keycloak"
+  />
+  <DocCard
     title="Okta OIDC"
     description="OpenID Connect with team synchronisation"
     href="/docs/Configure/Authentication/okta-oidc"

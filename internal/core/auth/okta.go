@@ -2,9 +2,8 @@ package auth
 
 import (
 	"context"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"net/http"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/marmotdata/marmot/internal/config"
@@ -24,17 +23,15 @@ type OktaProvider struct {
 	authService  Service
 	teamService  *team.Service
 	verifier     *oidc.IDTokenVerifier
-	userInfoURL  string
 	oauthConfig  *oauth2.Config
 	oidcProvider *oidc.Provider
 }
 
 // NewOktaProvider creates a new OktaProvider.
-func NewOktaProvider(cfg *config.Config, userService user.Service, authService Service, teamService *team.Service) *OktaProvider {
+func NewOktaProvider(cfg *config.Config, userService user.Service, authService Service, teamService *team.Service) (*OktaProvider, error) {
 	providerCfg := cfg.Auth.Okta
 	if providerCfg == nil {
-		log.Fatal().Msg("okta provider config not found")
-		return nil
+		return nil, fmt.Errorf("okta provider config not found")
 	}
 
 	p := &OktaProvider{
@@ -47,31 +44,25 @@ func NewOktaProvider(cfg *config.Config, userService user.Service, authService S
 		teamService:  teamService,
 	}
 
+	var err error
+	p.oidcProvider, err = oidc.NewProvider(context.Background(), providerCfg.URL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create Okta OIDC provider: %w", err)
+	}
+
 	p.oauthConfig = &oauth2.Config{
 		ClientID:     p.clientID,
 		ClientSecret: p.clientSecret,
 		RedirectURL:  p.redirectURL,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  providerCfg.URL + "/oauth2/v1/authorize",
-			TokenURL: providerCfg.URL + "/oauth2/v1/token",
-		},
-		Scopes: providerCfg.Scopes,
-	}
-
-	var err error
-	p.oidcProvider, err = oidc.NewProvider(context.Background(), providerCfg.URL)
-	if err != nil {
-		log.Fatal().Err(err).Msg("failed to create OIDC provider")
-		return nil
+		Endpoint:     p.oidcProvider.Endpoint(),
+		Scopes:       providerCfg.Scopes,
 	}
 
 	p.verifier = p.oidcProvider.Verifier(&oidc.Config{
 		ClientID: p.clientID,
 	})
 
-	p.userInfoURL = providerCfg.URL + "/oauth2/v1/userinfo"
-
-	return p
+	return p, nil
 }
 
 func (p *OktaProvider) GetAuthURL(state string) string {
@@ -111,7 +102,7 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 				log.Warn().Err(err).Str("user_id", usr.ID).Msg("failed to update profile picture")
 			}
 		}
-	case err == user.ErrUserNotFound:
+	case errors.Is(err, user.ErrUserNotFound):
 		email, ok := userInfo["email"].(string)
 		if !ok || email == "" {
 			return nil, fmt.Errorf("email not provided by Okta")
@@ -156,7 +147,7 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 				groupClaim = providerCfg.TeamSync.Group.Claim
 			}
 
-			groups := p.extractGroups(userInfo, groupClaim)
+			groups := extractGroups(userInfo, groupClaim)
 			if len(groups) > 0 {
 				log.Debug().Strs("groups", groups).Str("user_id", usr.ID).Msg("syncing team memberships from SSO")
 				if err := p.teamService.SyncUserTeamsFromSSO(ctx, usr.ID, "okta", groups, providerCfg.TeamSync); err != nil {
@@ -171,7 +162,6 @@ func (p *OktaProvider) HandleCallback(ctx context.Context, code string) (*user.U
 
 // getUserInfo fetches the user's information from Okta.
 func (p *OktaProvider) getUserInfo(ctx context.Context, token *oauth2.Token) (map[string]interface{}, error) {
-	// Verify ID token
 	rawIDToken, ok := token.Extra("id_token").(string)
 	if !ok {
 		return nil, fmt.Errorf("no id_token field in oauth2 token")
@@ -182,32 +172,19 @@ func (p *OktaProvider) getUserInfo(ctx context.Context, token *oauth2.Token) (ma
 		return nil, fmt.Errorf("failed to verify ID token: %w", err)
 	}
 
-	// Extract custom claims into a map
 	var claims map[string]interface{}
 	if err := idToken.Claims(&claims); err != nil {
 		return nil, fmt.Errorf("failed to parse ID token claims: %w", err)
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "GET", p.userInfoURL, nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create request: %w", err)
-	}
-	req.Header.Set("Authorization", "Bearer "+token.AccessToken)
-
-	resp, err := http.DefaultClient.Do(req)
+	oidcUserInfo, err := p.oidcProvider.UserInfo(ctx, oauth2.StaticTokenSource(token))
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch user info: %w", err)
 	}
-	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
-	}
-
-	// Merge claims from userinfo endpoint
 	var userInfo map[string]interface{}
-	if err := json.NewDecoder(resp.Body).Decode(&userInfo); err != nil {
-		return nil, fmt.Errorf("failed to decode user info: %w", err)
+	if err := oidcUserInfo.Claims(&userInfo); err != nil {
+		return nil, fmt.Errorf("failed to parse user info claims: %w", err)
 	}
 
 	// Merge the claims from the ID token into the userInfo map
@@ -226,28 +203,4 @@ func (p *OktaProvider) Name() string {
 // Type returns the type of the provider.
 func (p *OktaProvider) Type() string {
 	return "okta"
-}
-
-func (p *OktaProvider) extractGroups(userInfo map[string]interface{}, groupClaim string) []string {
-	groups := []string{}
-
-	groupsRaw, ok := userInfo[groupClaim]
-	if !ok {
-		return groups
-	}
-
-	switch v := groupsRaw.(type) {
-	case []interface{}:
-		for _, g := range v {
-			if groupStr, ok := g.(string); ok {
-				groups = append(groups, groupStr)
-			}
-		}
-	case []string:
-		groups = v
-	case string:
-		groups = []string{v}
-	}
-
-	return groups
 }

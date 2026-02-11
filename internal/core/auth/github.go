@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -22,11 +23,10 @@ type GitHubProvider struct {
 	oauthConfig  *oauth2.Config
 }
 
-func NewGitHubProvider(cfg *config.Config, userService user.Service) *GitHubProvider {
+func NewGitHubProvider(cfg *config.Config, userService user.Service) (*GitHubProvider, error) {
 	providerCfg := cfg.Auth.GitHub
 	if providerCfg == nil {
-		log.Fatal().Msg("github provider config not found")
-		return nil
+		return nil, fmt.Errorf("github provider config not found")
 	}
 
 	p := &GitHubProvider{
@@ -45,7 +45,7 @@ func NewGitHubProvider(cfg *config.Config, userService user.Service) *GitHubProv
 		Scopes:       providerCfg.Scopes,
 	}
 
-	return p
+	return p, nil
 }
 
 func (p *GitHubProvider) GetAuthURL(state string) string {
@@ -85,7 +85,7 @@ func (p *GitHubProvider) HandleCallback(ctx context.Context, code string) (*user
 		return usr, nil
 	}
 
-	if err != user.ErrUserNotFound {
+	if !errors.Is(err, user.ErrUserNotFound) {
 		return nil, fmt.Errorf("failed to get user by provider ID: %w", err)
 	}
 
