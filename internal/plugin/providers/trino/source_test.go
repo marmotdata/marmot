@@ -91,7 +91,7 @@ func TestSource_ValidateDefaults(t *testing.T) {
 	assert.True(t, s.config.IncludeColumns)
 	assert.False(t, s.config.IncludeStats)
 	assert.Equal(t, []string{"system", "jmx"}, s.config.ExcludeCatalogs)
-	assert.Equal(t, 100, s.config.AIMaxEnrichments)
+	assert.Equal(t, 0, s.config.AIMaxEnrichments)
 }
 
 func TestSource_ValidateBoolOverrides(t *testing.T) {

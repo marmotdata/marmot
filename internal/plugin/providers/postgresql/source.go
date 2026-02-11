@@ -32,7 +32,7 @@ type Config struct {
 	Port     int    `json:"port" description:"PostgreSQL server port" default:"5432" validate:"omitempty,min=1,max=65535"`
 	User     string `json:"user" description:"Username for authentication" validate:"required"`
 	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
-	SSLMode  string `json:"ssl_mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
+	SSLMode  string `json:"ssl_mode" label:"SSL Mode" description:"SSL mode (disable, require, verify-ca, verify-full)" default:"disable" validate:"omitempty,oneof=disable require verify-ca verify-full"`
 
 	// Discovery configuration
 	IncludeDatabases     bool `json:"include_databases" description:"Whether to discover databases" default:"true"`

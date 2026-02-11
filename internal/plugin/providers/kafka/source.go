@@ -24,7 +24,7 @@ type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
 	BootstrapServers string            `json:"bootstrap_servers" description:"Comma-separated list of bootstrap servers" validate:"required"`
-	ClientID         string            `json:"client_id" description:"Client ID for the consumer"`
+	ClientID         string            `json:"client_id" label:"Client ID" description:"Client ID for the consumer"`
 	Authentication   *AuthConfig       `json:"authentication,omitempty" description:"Authentication configuration"`
 	ConsumerConfig   map[string]string `json:"consumer_config,omitempty" description:"Additional consumer configuration"`
 	ClientTimeout    int               `json:"client_timeout_seconds" description:"Request timeout in seconds" validate:"omitempty,min=1,max=300"`

@@ -34,7 +34,7 @@ type Config struct {
 	Username string `json:"username,omitempty" description:"Username for ACL authentication"`
 	DB          int    `json:"db,omitempty" description:"Default database number" default:"0" validate:"omitempty,min=0,max=15"`
 	TLS         bool   `json:"tls,omitempty" description:"Enable TLS connection"`
-	TLSInsecure bool   `json:"tls_insecure,omitempty" description:"Skip TLS certificate verification"`
+	TLSInsecure bool   `json:"tls_insecure,omitempty" label:"TLS Insecure" description:"Skip TLS certificate verification"`
 
 	// Discovery options
 	DiscoverAllDatabases bool `json:"discover_all_databases" description:"Discover all databases with keys (db0-db15)" default:"true"`

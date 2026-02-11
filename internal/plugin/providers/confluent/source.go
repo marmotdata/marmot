@@ -2,6 +2,7 @@
 // +marmot:description=Discover Kafka topics from Confluent Cloud clusters.
 // +marmot:status=experimental
 // +marmot:features=Assets
+// +marmot:config-source=../kafka
 package confluent
 
 //go:generate go run ../../../docgen/cmd/main.go

@@ -90,6 +90,7 @@ type PluginDoc struct {
 	Features           []string
 	AdditionalContent  string
 	AdditionalSections []AdditionalSection
+	configSource       string // relative path to source plugin for whitelabel plugins
 }
 
 type PropertyDoc struct {
@@ -236,6 +237,69 @@ func GeneratePluginDocs(pluginPath string, outputDir string) error {
 		return fmt.Errorf("no plugin documentation found")
 	}
 
+	// If no config was found locally, check for config-source marker pointing to another plugin
+	if len(pluginDoc.ConfigProperties) == 0 && pluginDoc.configSource != "" {
+		sourcePath := filepath.Join(pluginPath, pluginDoc.configSource)
+		sourcePath, _ = filepath.Abs(sourcePath)
+		fmt.Printf("Loading config from source plugin: %s\n", sourcePath)
+
+		sourceDoc := &PluginDoc{}
+		sourceRegistry := NewTypeRegistry()
+
+		// Scan the source plugin directory for types
+		_ = filepath.Walk(sourcePath, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() || !strings.HasSuffix(path, ".go") {
+				return err
+			}
+			file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+			if err != nil {
+				return nil
+			}
+			sourceRegistry.addFile(file)
+			return nil
+		})
+
+		// Also scan the plugin package for embedded types (e.g. BaseConfig)
+		pluginParentSearch := filepath.Dir(sourcePath)
+		for i := 0; i < 3; i++ {
+			pluginPkgDir := filepath.Join(pluginParentSearch, "plugin")
+			if _, statErr := os.Stat(pluginPkgDir); statErr == nil {
+				_ = filepath.Walk(pluginPkgDir, func(path string, info os.FileInfo, err error) error {
+					if err != nil || info.IsDir() || !strings.HasSuffix(path, ".go") {
+						return err
+					}
+					file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+					if err != nil {
+						return nil
+					}
+					sourceRegistry.addFile(file)
+					return nil
+				})
+				break
+			}
+			pluginParentSearch = filepath.Dir(pluginParentSearch)
+		}
+
+		// Process source files for config and metadata
+		_ = filepath.Walk(sourcePath, func(path string, info os.FileInfo, err error) error {
+			if err != nil || info.IsDir() || !strings.HasSuffix(path, ".go") {
+				return err
+			}
+			file, err := parser.ParseFile(fset, path, nil, parser.ParseComments)
+			if err != nil {
+				return nil
+			}
+			processFile(sourceDoc, file, sourceRegistry)
+			return nil
+		})
+
+		pluginDoc.ConfigProperties = sourceDoc.ConfigProperties
+		pluginDoc.MetadataFields = sourceDoc.MetadataFields
+		if pluginDoc.ExampleConfig == "" {
+			pluginDoc.ExampleConfig = sourceDoc.ExampleConfig
+		}
+	}
+
 	pluginDoc.AdditionalContent = loadAdditionalMarkdown(pluginDoc.Name, outputDir)
 
 	// Remove duplicates and sort
@@ -348,6 +412,9 @@ func processFile(pluginDoc *PluginDoc, file *ast.File, registry *TypeRegistry) {
 					pluginDoc.Features = append(pluginDoc.Features, f)
 				}
 			}
+		}
+		if source, ok := markers["config-source"]; ok {
+			pluginDoc.configSource = source
 		}
 	}
 

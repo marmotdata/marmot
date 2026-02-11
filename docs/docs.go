@@ -896,6 +896,387 @@ const docTemplate = `{
                 }
             }
         },
+        "/asset-rules": {
+            "post": {
+                "description": "Create a new asset rule that applies enrichments to matching assets",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "asset-rules"
+                ],
+                "summary": "Create an asset rule",
+                "parameters": [
+                    {
+                        "description": "Asset rule creation request",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_assetrules.CreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/assetrule.AssetRule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/asset-rules/assets/{id}": {
+            "get": {
+                "description": "Get the list of asset IDs matched by an asset rule",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "asset-rules"
+                ],
+                "summary": "Get assets matched by a rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Number of items to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/asset-rules/list": {
+            "get": {
+                "description": "List all asset rules with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "asset-rules"
+                ],
+                "summary": "List asset rules",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Number of items to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/assetrule.ListResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/asset-rules/preview": {
+            "post": {
+                "description": "Preview which assets would match a rule configuration",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "asset-rules"
+                ],
+                "summary": "Preview an asset rule",
+                "parameters": [
+                    {
+                        "description": "Rule preview request",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_assetrules.PreviewRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/assetrule.RulePreview"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/asset-rules/search": {
+            "get": {
+                "description": "Search asset rules by name",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "asset-rules"
+                ],
+                "summary": "Search asset rules",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "query",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 50,
+                        "description": "Number of items to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/assetrule.ListResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/asset-rules/{id}": {
+            "get": {
+                "description": "Get an asset rule by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "asset-rules"
+                ],
+                "summary": "Get an asset rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/assetrule.AssetRule"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update an existing asset rule",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "asset-rules"
+                ],
+                "summary": "Update an asset rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Asset rule update request",
+                        "name": "rule",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_assetrules.UpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/assetrule.AssetRule"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete an asset rule by ID",
+                "tags": [
+                    "asset-rules"
+                ],
+                "summary": "Delete an asset rule",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset rule ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/assets": {
             "post": {
                 "description": "Create a new asset in the system",
@@ -4397,6 +4778,119 @@ const docTemplate = `{
                 }
             }
         },
+        "assetrule.AssetRule": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "last_reconciled_at": {
+                    "type": "string"
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/assetrule.ExternalLink"
+                    }
+                },
+                "membership_count": {
+                    "type": "integer"
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "reconciliation_hash": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "$ref": "#/definitions/enrichment.RuleType"
+                },
+                "term_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "assetrule.ExternalLink": {
+            "type": "object",
+            "properties": {
+                "icon": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "assetrule.ListResult": {
+            "type": "object",
+            "properties": {
+                "asset_rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/assetrule.AssetRule"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "assetrule.RulePreview": {
+            "type": "object",
+            "properties": {
+                "asset_count": {
+                    "type": "integer"
+                },
+                "asset_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "auth.AuthConfig": {
             "type": "object",
             "properties": {
@@ -4447,6 +4941,17 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "enrichment.RuleType": {
+            "type": "string",
+            "enum": [
+                "query",
+                "metadata_match"
+            ],
+            "x-enum-varnames": [
+                "RuleTypeQuery",
+                "RuleTypeMetadataMatch"
+            ]
         },
         "github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse": {
             "type": "object",
@@ -5322,6 +5827,117 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "v1_assetrules.CreateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/assetrule.ExternalLink"
+                    }
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "type": "string"
+                },
+                "term_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_assetrules.PreviewRequest": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assetrules.UpdateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/assetrule.ExternalLink"
+                    }
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "type": "string"
+                },
+                "term_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

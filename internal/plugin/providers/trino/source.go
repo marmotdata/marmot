@@ -119,7 +119,7 @@ type Config struct {
 	User        string `json:"user" validate:"required" description:"Username for authentication"`
 	Password    string `json:"password,omitempty" sensitive:"true" description:"Password (requires HTTPS)"`
 	Secure      bool   `json:"secure,omitempty" default:"false" description:"Use HTTPS"`
-	SSLCertPath string `json:"ssl_cert_path,omitempty" description:"Path to TLS certificate file"`
+	SSLCertPath string `json:"ssl_cert_path,omitempty" label:"SSL Cert Path" description:"Path to TLS certificate file"`
 	AccessToken string `json:"access_token,omitempty" sensitive:"true" description:"JWT bearer token"`
 
 	// Scope
@@ -132,11 +132,11 @@ type Config struct {
 	IncludeStats    bool `json:"include_stats,omitempty" default:"false" description:"Collect table statistics (can be slow)"`
 
 	// AI enrichment (requires Trino AI connector)
-	AICatalog              string   `json:"ai_catalog,omitempty" description:"Name of the AI connector catalog (empty = disabled)"`
-	AIGenerateDescriptions bool     `json:"ai_generate_descriptions,omitempty" default:"false" description:"Auto-generate descriptions for undocumented tables"`
-	AIClassifyTables       bool     `json:"ai_classify_tables,omitempty" default:"false" description:"Auto-classify tables into categories"`
-	AIClassifyLabels       []string `json:"ai_classify_labels,omitempty" description:"Custom classification labels" default:"[\"analytics\",\"operational\",\"pii\",\"financial\",\"logs\",\"reference\"]"`
-	AIMaxEnrichments       int      `json:"ai_max_enrichments,omitempty" default:"100" description:"Max tables to enrich with AI (0 = unlimited)"`
+	AICatalog              string   `json:"ai_catalog,omitempty" label:"AI Catalog" description:"Name of the AI connector catalog (empty = disabled)"`
+	AIGenerateDescriptions bool     `json:"ai_generate_descriptions,omitempty" label:"AI Generate Descriptions" default:"false" description:"Auto-generate descriptions for undocumented tables"`
+	AIClassifyTables       bool     `json:"ai_classify_tables,omitempty" label:"AI Classify Tables" default:"false" description:"Auto-classify tables into categories"`
+	AIClassifyLabels       []string `json:"ai_classify_labels,omitempty" label:"AI Classify Labels" description:"Custom classification labels" default:"[\"analytics\",\"operational\",\"pii\",\"financial\",\"logs\",\"reference\"]"`
+	AIMaxEnrichments       int      `json:"ai_max_enrichments,omitempty" label:"AI Max Enrichments" default:"0" description:"Max tables to enrich with AI (0 = unlimited)"`
 }
 
 // Example configuration for the plugin
@@ -183,11 +183,6 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.IncludeColumns = true
 	}
 
-	if config.AIMaxEnrichments == 0 {
-		if _, ok := rawConfig["ai_max_enrichments"]; !ok {
-			config.AIMaxEnrichments = 100
-		}
-	}
 
 	if config.AIClassifyLabels == nil && config.AIClassifyTables {
 		config.AIClassifyLabels = []string{"analytics", "operational", "pii", "financial", "logs", "reference"}
@@ -660,16 +655,40 @@ func (s *Source) getTableRowCount(ctx context.Context, catalog, schema, table st
 	return -1
 }
 
+// probeAICatalog checks that the AI catalog is reachable before starting enrichment.
+func (s *Source) probeAICatalog(ctx context.Context) bool {
+	queryCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
+	defer cancel()
+
+	query := fmt.Sprintf("SELECT %s.ai.ai_gen('test')", quoteIdentifier(s.config.AICatalog))
+	var result sql.NullString
+	if err := s.db.QueryRowContext(queryCtx, query).Scan(&result); err != nil {
+		log.Warn().Err(err).Str("catalog", s.config.AICatalog).Msg("AI catalog not available, skipping enrichment")
+		return false
+	}
+	return true
+}
+
 // enrichWithAI performs AI-powered enrichment on discovered assets
 func (s *Source) enrichWithAI(ctx context.Context, assets []asset.Asset) {
 	if !s.config.AIGenerateDescriptions && !s.config.AIClassifyTables {
 		return
 	}
 
+	if !s.probeAICatalog(ctx) {
+		return
+	}
+
 	enriched := 0
 	limit := s.config.AIMaxEnrichments
+	generateEnabled := s.config.AIGenerateDescriptions
+	classifyEnabled := s.config.AIClassifyTables
 
 	for i := range assets {
+		if !generateEnabled && !classifyEnabled {
+			break
+		}
+
 		if assets[i].Type != "Table" && assets[i].Type != "View" {
 			continue
 		}
@@ -683,22 +702,26 @@ func (s *Source) enrichWithAI(ctx context.Context, assets []asset.Asset) {
 		schemaVal, _ := assets[i].Metadata["schema"].(string)
 		tableVal, _ := assets[i].Metadata["table_name"].(string)
 
-		if s.config.AIGenerateDescriptions {
-			// Only enrich tables without existing descriptions
+		if generateEnabled {
 			if assets[i].Description == nil || *assets[i].Description == "" {
-				desc := s.aiGenerateDescription(ctx, schemaVal, tableVal, columnSummary)
-				if desc != "" {
+				desc, err := s.aiGenerateDescription(ctx, schemaVal, tableVal, columnSummary)
+				if err != nil {
+					log.Warn().Err(err).Msg("AI description generation failed, disabling for remaining tables")
+					generateEnabled = false
+				} else if desc != "" {
 					assets[i].Description = &desc
-					assets[i].Tags = append(assets[i].Tags, "ai-generated-description")
 					enriched++
 				}
 			}
 		}
 
-		if s.config.AIClassifyTables {
-			category := s.aiClassifyTable(ctx, tableVal, columnSummary)
-			if category != "" {
-				assets[i].Tags = append(assets[i].Tags, "ai-category:"+category)
+		if classifyEnabled {
+			category, err := s.aiClassifyTable(ctx, tableVal, columnSummary)
+			if err != nil {
+				log.Warn().Err(err).Msg("AI classification failed, disabling for remaining tables")
+				classifyEnabled = false
+			} else if category != "" {
+				assets[i].Metadata["ai_classification"] = category
 				enriched++
 			}
 		}
@@ -707,7 +730,7 @@ func (s *Source) enrichWithAI(ctx context.Context, assets []asset.Asset) {
 	log.Debug().Int("enriched", enriched).Msg("AI enrichment complete")
 }
 
-func (s *Source) aiGenerateDescription(ctx context.Context, schema, table, columnSummary string) string {
+func (s *Source) aiGenerateDescription(ctx context.Context, schema, table, columnSummary string) (string, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -723,19 +746,17 @@ func (s *Source) aiGenerateDescription(ctx context.Context, schema, table, colum
 	)
 
 	var result sql.NullString
-	err := s.db.QueryRowContext(queryCtx, query).Scan(&result)
-	if err != nil {
-		log.Warn().Err(err).Str("table", schema+"."+table).Msg("AI description generation failed")
-		return ""
+	if err := s.db.QueryRowContext(queryCtx, query).Scan(&result); err != nil {
+		return "", err
 	}
 
 	if result.Valid {
-		return strings.TrimSpace(result.String)
+		return strings.TrimSpace(result.String), nil
 	}
-	return ""
+	return "", nil
 }
 
-func (s *Source) aiClassifyTable(ctx context.Context, table, columnSummary string) string {
+func (s *Source) aiClassifyTable(ctx context.Context, table, columnSummary string) (string, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -758,16 +779,14 @@ func (s *Source) aiClassifyTable(ctx context.Context, table, columnSummary strin
 	)
 
 	var result sql.NullString
-	err := s.db.QueryRowContext(queryCtx, query).Scan(&result)
-	if err != nil {
-		log.Warn().Err(err).Str("table", table).Msg("AI classification failed")
-		return ""
+	if err := s.db.QueryRowContext(queryCtx, query).Scan(&result); err != nil {
+		return "", err
 	}
 
 	if result.Valid {
-		return strings.TrimSpace(strings.ToLower(result.String))
+		return strings.TrimSpace(strings.ToLower(result.String)), nil
 	}
-	return ""
+	return "", nil
 }
 
 func (s *Source) createCatalogAsset(catalogName string) asset.Asset {

@@ -24,14 +24,14 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	ConnectionURI string `json:"connection_uri" description:"MongoDB connection URI (overrides host/port/user/password)" validate:"omitempty,uri"`
+	ConnectionURI string `json:"connection_uri" label:"Connection URI" description:"MongoDB connection URI (overrides host/port/user/password)" validate:"omitempty,uri"`
 	Host          string `json:"host" description:"MongoDB server hostname or IP address" validate:"required_without=ConnectionURI"`
 	Port          int    `json:"port" description:"MongoDB server port" default:"27017" validate:"omitempty,min=1,max=65535"`
 	User          string `json:"user" description:"Username for authentication"`
 	Password      string `json:"password" description:"Password for authentication" sensitive:"true"`
 	AuthSource    string `json:"auth_source" description:"Authentication database name" default:"admin"`
 	TLS           bool   `json:"tls" description:"Enable TLS/SSL for connection" default:"false"`
-	TLSInsecure   bool   `json:"tls_insecure" description:"Skip verification of server certificate" default:"false"`
+	TLSInsecure   bool   `json:"tls_insecure" label:"TLS Insecure" description:"Skip verification of server certificate" default:"false"`
 
 	IncludeDatabases   bool           `json:"include_databases" description:"Whether to discover databases" default:"true"`
 	IncludeCollections bool           `json:"include_collections" description:"Whether to discover collections" default:"true"`

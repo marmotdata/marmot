@@ -2,6 +2,7 @@
 // +marmot:description=Discover topics from Redpanda clusters.
 // +marmot:status=experimental
 // +marmot:features=Assets
+// +marmot:config-source=../kafka
 package redpanda
 
 //go:generate go run ../../../docgen/cmd/main.go

@@ -115,10 +115,15 @@ func generateConfigSpecRecursive(configType interface{}, prefix string) []Config
 			required = strings.Contains(validateTag, "required")
 		}
 
+		label := field.Tag.Get("label")
+		if label == "" {
+			label = toLabel(jsonName)
+		}
+
 		configField := ConfigField{
 			Name:        jsonName,
 			Type:        fieldType,
-			Label:       toLabel(jsonName),
+			Label:       label,
 			Description: description,
 			Required:    required,
 			Sensitive:   sensitive,

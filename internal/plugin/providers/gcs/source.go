@@ -28,7 +28,7 @@ type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
 	// Connection options
-	ProjectID           string `json:"project_id" description:"Google Cloud project ID" validate:"required"`
+	ProjectID           string `json:"project_id" label:"Project ID" description:"Google Cloud project ID" validate:"required"`
 	CredentialsFile     string `json:"credentials_file,omitempty" description:"Path to service account JSON file"`
 	CredentialsJSON     string `json:"credentials_json,omitempty" description:"Service account JSON content" sensitive:"true"`
 	Endpoint            string `json:"endpoint,omitempty" description:"Custom endpoint URL (for fake-gcs-server or other emulators)"`

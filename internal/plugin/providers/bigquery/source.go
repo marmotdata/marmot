@@ -28,7 +28,7 @@ import (
 type Config struct {
 	plugin.BaseConfig `json:",inline"`
 
-	ProjectID             string `json:"project_id" description:"Google Cloud Project ID" validate:"required"`
+	ProjectID             string `json:"project_id" label:"Project ID" description:"Google Cloud Project ID" validate:"required"`
 	CredentialsPath       string `json:"credentials_path,omitempty" description:"Path to service account credentials JSON file"`
 	CredentialsJSON       string `json:"credentials_json,omitempty" description:"Service account credentials JSON content" sensitive:"true"`
 	UseDefaultCredentials bool   `json:"use_default_credentials" description:"Use default Google Cloud credentials" default:"false"`

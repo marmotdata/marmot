@@ -210,6 +210,80 @@ definitions:
       updated_at:
         type: string
     type: object
+  assetrule.AssetRule:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_enabled:
+        type: boolean
+      last_reconciled_at:
+        type: string
+      links:
+        items:
+          $ref: '#/definitions/assetrule.ExternalLink'
+        type: array
+      membership_count:
+        type: integer
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      reconciliation_hash:
+        type: string
+      rule_type:
+        $ref: '#/definitions/enrichment.RuleType'
+      term_ids:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  assetrule.ExternalLink:
+    properties:
+      icon:
+        type: string
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  assetrule.ListResult:
+    properties:
+      asset_rules:
+        items:
+          $ref: '#/definitions/assetrule.AssetRule'
+        type: array
+      total:
+        type: integer
+    type: object
+  assetrule.RulePreview:
+    properties:
+      asset_count:
+        type: integer
+      asset_ids:
+        items:
+          type: string
+        type: array
+      errors:
+        items:
+          type: string
+        type: array
+    type: object
   auth.AuthConfig:
     properties:
       enabled_providers:
@@ -244,6 +318,14 @@ definitions:
       url:
         type: string
     type: object
+  enrichment.RuleType:
+    enum:
+    - query
+    - metadata_match
+    type: string
+    x-enum-varnames:
+    - RuleTypeQuery
+    - RuleTypeMetadataMatch
   github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse:
     properties:
       error:
@@ -829,6 +911,79 @@ definitions:
         type: string
       user_id:
         type: string
+    type: object
+  v1_assetrules.CreateRequest:
+    properties:
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      links:
+        items:
+          $ref: '#/definitions/assetrule.ExternalLink'
+        type: array
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+      term_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_assetrules.PreviewRequest:
+    properties:
+      limit:
+        type: integer
+      metadata_field:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+    type: object
+  v1_assetrules.UpdateRequest:
+    properties:
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      links:
+        items:
+          $ref: '#/definitions/assetrule.ExternalLink'
+        type: array
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+      term_ids:
+        items:
+          type: string
+        type: array
     type: object
   v1_assets.AddTermsRequest:
     properties:
@@ -2101,6 +2256,259 @@ paths:
       summary: Get AWS credential detection status
       tags:
       - plugins
+  /asset-rules:
+    post:
+      consumes:
+      - application/json
+      description: Create a new asset rule that applies enrichments to matching assets
+      parameters:
+      - description: Asset rule creation request
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assetrules.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/assetrule.AssetRule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Create an asset rule
+      tags:
+      - asset-rules
+  /asset-rules/{id}:
+    delete:
+      description: Delete an asset rule by ID
+      parameters:
+      - description: Asset rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Delete an asset rule
+      tags:
+      - asset-rules
+    get:
+      description: Get an asset rule by ID
+      parameters:
+      - description: Asset rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assetrule.AssetRule'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get an asset rule
+      tags:
+      - asset-rules
+    put:
+      consumes:
+      - application/json
+      description: Update an existing asset rule
+      parameters:
+      - description: Asset rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Asset rule update request
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assetrules.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assetrule.AssetRule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Update an asset rule
+      tags:
+      - asset-rules
+  /asset-rules/assets/{id}:
+    get:
+      description: Get the list of asset IDs matched by an asset rule
+      parameters:
+      - description: Asset rule ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 50
+        description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get assets matched by a rule
+      tags:
+      - asset-rules
+  /asset-rules/list:
+    get:
+      description: List all asset rules with pagination
+      parameters:
+      - default: 50
+        description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assetrule.ListResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List asset rules
+      tags:
+      - asset-rules
+  /asset-rules/preview:
+    post:
+      consumes:
+      - application/json
+      description: Preview which assets would match a rule configuration
+      parameters:
+      - description: Rule preview request
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assetrules.PreviewRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assetrule.RulePreview'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Preview an asset rule
+      tags:
+      - asset-rules
+  /asset-rules/search:
+    get:
+      description: Search asset rules by name
+      parameters:
+      - description: Search query
+        in: query
+        name: query
+        type: string
+      - default: 50
+        description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/assetrule.ListResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Search asset rules
+      tags:
+      - asset-rules
   /assets:
     post:
       consumes:

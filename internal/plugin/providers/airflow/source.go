@@ -27,9 +27,9 @@ type Config struct {
 	Host     string `json:"host" description:"Airflow webserver URL (e.g., http://localhost:8080)" validate:"required,url"`
 	Username string `json:"username,omitempty" description:"Username for basic authentication"`
 	Password string `json:"password,omitempty" description:"Password for basic authentication" sensitive:"true"`
-	APIToken string `json:"api_token,omitempty" description:"API token for authentication (alternative to basic auth)" sensitive:"true"`
+	APIToken string `json:"api_token,omitempty" label:"API Token" description:"API token for authentication (alternative to basic auth)" sensitive:"true"`
 
-	DiscoverDAGs     bool `json:"discover_dags" description:"Discover Airflow DAGs as Pipeline assets" default:"true"`
+	DiscoverDAGs     bool `json:"discover_dags" label:"Discover DAGs" description:"Discover Airflow DAGs as Pipeline assets" default:"true"`
 	DiscoverTasks    bool `json:"discover_tasks" description:"Discover tasks within DAGs" default:"true"`
 	DiscoverDatasets bool `json:"discover_datasets" description:"Discover Airflow Datasets for lineage (requires Airflow 2.4+)" default:"true"`
 

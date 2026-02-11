@@ -34,7 +34,7 @@ type Config struct {
 	Password        string `json:"password,omitempty" description:"Password for authentication" sensitive:"true"`
 	CredentialsFile string `json:"credentials_file,omitempty" description:"Path to NATS credentials file (.creds)"`
 	TLS             bool   `json:"tls,omitempty" description:"Enable TLS connection"`
-	TLSInsecure     bool   `json:"tls_insecure,omitempty" description:"Skip TLS certificate verification"`
+	TLSInsecure     bool   `json:"tls_insecure,omitempty" label:"TLS Insecure" description:"Skip TLS certificate verification"`
 
 }
 

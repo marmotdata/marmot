@@ -51,6 +51,17 @@ type PreviewRequest struct {
 	Limit           int     `json:"limit,omitempty"`
 }
 
+// @Summary Create an asset rule
+// @Description Create a new asset rule that applies enrichments to matching assets
+// @Tags asset-rules
+// @Accept json
+// @Produce json
+// @Param rule body CreateRequest true "Asset rule creation request"
+// @Success 201 {object} assetrule.AssetRule
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 409 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /asset-rules [post]
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -94,6 +105,15 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusCreated, rule)
 }
 
+// @Summary Get an asset rule
+// @Description Get an asset rule by ID
+// @Tags asset-rules
+// @Produce json
+// @Param id path string true "Asset rule ID"
+// @Success 200 {object} assetrule.AssetRule
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /asset-rules/{id} [get]
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/asset-rules/")
 	if id == "" {
@@ -115,6 +135,19 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, rule)
 }
 
+// @Summary Update an asset rule
+// @Description Update an existing asset rule
+// @Tags asset-rules
+// @Accept json
+// @Produce json
+// @Param id path string true "Asset rule ID"
+// @Param rule body UpdateRequest true "Asset rule update request"
+// @Success 200 {object} assetrule.AssetRule
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 409 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /asset-rules/{id} [put]
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/asset-rules/")
 	if id == "" {
@@ -164,6 +197,14 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, rule)
 }
 
+// @Summary Delete an asset rule
+// @Description Delete an asset rule by ID
+// @Tags asset-rules
+// @Param id path string true "Asset rule ID"
+// @Success 204 "No Content"
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /asset-rules/{id} [delete]
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/asset-rules/")
 	if id == "" {
@@ -185,6 +226,15 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// @Summary List asset rules
+// @Description List all asset rules with pagination
+// @Tags asset-rules
+// @Produce json
+// @Param limit query int false "Number of items to return" default(50)
+// @Param offset query int false "Number of items to skip" default(0)
+// @Success 200 {object} assetrule.ListResult
+// @Failure 500 {object} common.ErrorResponse
+// @Router /asset-rules/list [get]
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -199,6 +249,16 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, result)
 }
 
+// @Summary Search asset rules
+// @Description Search asset rules by name
+// @Tags asset-rules
+// @Produce json
+// @Param query query string false "Search query"
+// @Param limit query int false "Number of items to return" default(50)
+// @Param offset query int false "Number of items to skip" default(0)
+// @Success 200 {object} assetrule.ListResult
+// @Failure 500 {object} common.ErrorResponse
+// @Router /asset-rules/search [get]
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -219,6 +279,16 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, result)
 }
 
+// @Summary Preview an asset rule
+// @Description Preview which assets would match a rule configuration
+// @Tags asset-rules
+// @Accept json
+// @Produce json
+// @Param rule body PreviewRequest true "Rule preview request"
+// @Success 200 {object} assetrule.RulePreview
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /asset-rules/preview [post]
 func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 	var req PreviewRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -244,6 +314,17 @@ func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, result)
 }
 
+// @Summary Get assets matched by a rule
+// @Description Get the list of asset IDs matched by an asset rule
+// @Tags asset-rules
+// @Produce json
+// @Param id path string true "Asset rule ID"
+// @Param limit query int false "Number of items to return" default(50)
+// @Param offset query int false "Number of items to skip" default(0)
+// @Success 200 {object} map[string]interface{}
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /asset-rules/assets/{id} [get]
 func (h *Handler) getAssets(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
