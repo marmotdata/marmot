@@ -22,6 +22,8 @@
 		switch (notification.type) {
 			case 'asset_change':
 				return 'material-symbols:database';
+			case 'asset_deleted':
+				return 'material-symbols:delete';
 			case 'team_invite':
 				return 'material-symbols:group-add';
 			case 'mention':
@@ -42,6 +44,11 @@
 				return {
 					bg: 'bg-earthy-blue-100 dark:bg-earthy-blue-900/30',
 					icon: 'text-earthy-blue-700 dark:text-earthy-blue-400'
+				};
+			case 'asset_deleted':
+				return {
+					bg: 'bg-red-100 dark:bg-red-900/30',
+					icon: 'text-red-700 dark:text-red-400'
 				};
 			case 'team_invite':
 				return {
@@ -82,6 +89,11 @@
 	async function handleNotificationClick(notification: Notification) {
 		if (!notification.read) {
 			await notifications.markAsRead(notification.id);
+		}
+
+		// Deleted assets no longer exist, so don't try to navigate
+		if (notification.type === 'asset_deleted') {
+			return;
 		}
 
 		if (notification.data?.link) {

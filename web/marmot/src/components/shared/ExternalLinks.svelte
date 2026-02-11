@@ -124,6 +124,7 @@
 	}
 </script>
 
+{#if links.length > 0 || ruleManagedLinks.length > 0 || canEdit}
 <div class="space-y-2">
 	<div class="flex gap-1.5 items-center flex-wrap">
 		{#each links as link, i}
@@ -157,10 +158,6 @@
 				target="_blank"
 			/>
 		{/each}
-
-		{#if links.length === 0 && ruleManagedLinks.length === 0 && !canEdit}
-			<span class="text-sm text-gray-400 dark:text-gray-500 italic">No links</span>
-		{/if}
 
 		{#if canEdit && !showAddForm}
 			<button
@@ -229,3 +226,4 @@
 		</div>
 	{/if}
 </div>
+{/if}

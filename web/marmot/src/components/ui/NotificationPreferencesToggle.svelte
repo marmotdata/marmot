@@ -58,6 +58,12 @@
 			icon: 'material-symbols:alternate-email'
 		},
 		{
+			type: 'asset_deleted',
+			label: 'Asset Deletions',
+			description: 'When assets you own or subscribe to are deleted',
+			icon: 'material-symbols:delete-outline'
+		},
+		{
 			type: 'job_complete',
 			label: 'Job Completion',
 			description: 'Pipeline job completions',

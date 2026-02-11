@@ -82,6 +82,7 @@ func (h *Handler) updatePreferences(w http.ResponseWriter, r *http.Request) {
 			notification.TypeUpstreamSchemaChange:   true,
 			notification.TypeDownstreamSchemaChange: true,
 			notification.TypeLineageChange:          true,
+			notification.TypeAssetDeleted:           true,
 		}
 		for key, val := range notifPrefs {
 			if !validTypes[key] {

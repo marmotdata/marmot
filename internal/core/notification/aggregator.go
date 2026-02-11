@@ -169,18 +169,23 @@ func (a *assetChangeAggregator) sendAggregatedNotification(ownerKey string, asse
 		case TypeLineageChange:
 			title = "Lineage Changed"
 			message = fmt.Sprintf("Lineage connections for \"%s\" have been modified.", asset.assetName)
+		case TypeAssetDeleted:
+			title = "Asset Deleted"
+			message = fmt.Sprintf("Asset \"%s\" has been deleted.", asset.assetName)
 		default:
 			title = "Asset Updated"
 			message = fmt.Sprintf("Asset \"%s\" has been modified.", asset.assetName)
 		}
 		data["asset_mrn"] = asset.assetMRN
-		link := fmt.Sprintf("/discover/%s", strings.TrimPrefix(asset.assetMRN, "mrn://"))
-		if isSchemaRelated {
-			link += "?tab=schema"
-		} else if changeType == TypeLineageChange {
-			link += "?tab=lineage"
+		if changeType != TypeAssetDeleted {
+			link := fmt.Sprintf("/discover/%s", strings.TrimPrefix(asset.assetMRN, "mrn://"))
+			if isSchemaRelated {
+				link += "?tab=schema"
+			} else if changeType == TypeLineageChange {
+				link += "?tab=lineage"
+			}
+			data["link"] = link
 		}
-		data["link"] = link
 	} else {
 		switch changeType {
 		case TypeSchemaChange:
@@ -195,6 +200,9 @@ func (a *assetChangeAggregator) sendAggregatedNotification(ownerKey string, asse
 		case TypeLineageChange:
 			title = "Lineage Changed"
 			message = fmt.Sprintf("Lineage connections for %d assets have been modified.", len(assets))
+		case TypeAssetDeleted:
+			title = "Assets Deleted"
+			message = fmt.Sprintf("%d assets you own have been deleted.", len(assets))
 		default:
 			title = "Assets Updated"
 			message = fmt.Sprintf("%d assets you own have been modified.", len(assets))

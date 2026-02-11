@@ -63,6 +63,8 @@ func discordColorForType(notifType string) int {
 		return 0xE67E22 // Orange
 	case "asset_change":
 		return 0x3498DB // Blue
+	case "asset_deleted":
+		return 0xE74C3C // Red
 	case "job_complete":
 		return 0x2ECC71 // Green
 	case "lineage_change":
@@ -115,6 +117,8 @@ func formatNotificationType(t string) string {
 		return "Schema Change"
 	case "asset_change":
 		return "Asset Change"
+	case "asset_deleted":
+		return "Asset Deleted"
 	case "team_invite":
 		return "Team Invite"
 	case "mention":

@@ -738,6 +738,58 @@ func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, a *asset.Asset
 	}
 }
 
+func (n *assetChangeNotifier) OnAssetDeleted(ctx context.Context, a *asset.Asset) {
+	owners, err := n.teamSvc.ListAssetOwners(ctx, a.ID)
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", a.ID).Msg("Failed to get asset owners for deletion notification")
+		return
+	}
+
+	assetName := ""
+	if a.Name != nil {
+		assetName = *a.Name
+	}
+
+	assetMRN := ""
+	if a.MRN != nil {
+		assetMRN = *a.MRN
+	}
+
+	recipients := make([]notificationService.Recipient, 0, len(owners))
+	seen := make(map[string]bool)
+	for _, owner := range owners {
+		key := owner.Type + ":" + owner.ID
+		if !seen[key] {
+			recipients = append(recipients, notificationService.Recipient{
+				Type: owner.Type,
+				ID:   owner.ID,
+			})
+			seen[key] = true
+		}
+	}
+
+	// Also include subscribers who want asset_deleted notifications
+	subscriberIDs, err := n.subscriptionSvc.GetSubscribersForAsset(ctx, a.ID, notificationService.TypeAssetDeleted)
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", a.ID).Msg("Failed to get asset subscribers for deletion notification")
+	} else {
+		for _, userID := range subscriberIDs {
+			key := notificationService.RecipientTypeUser + ":" + userID
+			if !seen[key] {
+				recipients = append(recipients, notificationService.Recipient{
+					Type: notificationService.RecipientTypeUser,
+					ID:   userID,
+				})
+				seen[key] = true
+			}
+		}
+	}
+
+	if len(recipients) > 0 {
+		n.notificationSvc.QueueAssetChange(a.ID, assetMRN, assetName, notificationService.TypeAssetDeleted, recipients)
+	}
+}
+
 func (n *assetChangeNotifier) notifyLineageNeighborsOfSchemaChange(ctx context.Context, assetMRN, assetName string) {
 	// Notify downstream asset owners (they have an upstream schema change)
 	downstreamMRNs, err := n.lineageSvc.GetImmediateNeighbors(ctx, assetMRN, "downstream")

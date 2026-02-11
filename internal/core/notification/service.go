@@ -27,6 +27,7 @@ const (
 	TypeUpstreamSchemaChange   = "upstream_schema_change"
 	TypeDownstreamSchemaChange = "downstream_schema_change"
 	TypeLineageChange          = "lineage_change"
+	TypeAssetDeleted           = "asset_deleted"
 )
 
 const (

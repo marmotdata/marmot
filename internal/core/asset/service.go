@@ -222,6 +222,7 @@ type MembershipObserver interface {
 // NotificationObserver is notified when assets are modified.
 type NotificationObserver interface {
 	OnAssetUpdated(ctx context.Context, asset *Asset, changeType string)
+	OnAssetDeleted(ctx context.Context, asset *Asset)
 }
 
 // summaryCache holds cached summary data with TTL
@@ -242,14 +243,14 @@ const summaryCacheTTL = 5 * time.Second
 const metadataFieldsCacheTTL = 30 * time.Second
 
 type service struct {
-	repo                  Repository
-	validator             *validator.Validate
-	metrics               MetricsClient
-	membershipObserver    MembershipObserver
-	membershipObservers   []MembershipObserver
-	notificationObserver  NotificationObserver
-	summaryCache          summaryCache
-	metadataFieldsCache   metadataFieldsCache
+	repo                 Repository
+	validator            *validator.Validate
+	metrics              MetricsClient
+	membershipObserver   MembershipObserver
+	membershipObservers  []MembershipObserver
+	notificationObserver NotificationObserver
+	summaryCache         summaryCache
+	metadataFieldsCache  metadataFieldsCache
 }
 
 type Logger interface {
@@ -665,6 +666,18 @@ func UpdateSources(existing, new []AssetSource) []AssetSource {
 }
 
 func (s *service) Delete(ctx context.Context, id string) error {
+	asset, err := s.repo.Get(ctx, id)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return ErrAssetNotFound
+		}
+		return fmt.Errorf("fetching asset before deletion: %w", err)
+	}
+
+	if s.notificationObserver != nil {
+		s.notificationObserver.OnAssetDeleted(ctx, asset)
+	}
+
 	// Notify membership observers before deletion
 	if s.membershipObserver != nil {
 		if err := s.membershipObserver.OnAssetDeleted(ctx, id); err != nil {
@@ -696,6 +709,29 @@ func (s *service) Delete(ctx context.Context, id string) error {
 }
 
 func (s *service) DeleteByMRN(ctx context.Context, mrn string) error {
+	asset, err := s.repo.GetByMRN(ctx, mrn)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			return ErrAssetNotFound
+		}
+		return fmt.Errorf("fetching asset before deletion: %w", err)
+	}
+
+	if s.notificationObserver != nil {
+		s.notificationObserver.OnAssetDeleted(ctx, asset)
+	}
+
+	if s.membershipObserver != nil {
+		if err := s.membershipObserver.OnAssetDeleted(ctx, asset.ID); err != nil {
+			log.Warn().Err(err).Str("asset_id", asset.ID).Msg("Failed to notify membership observer of deletion")
+		}
+	}
+	for _, observer := range s.membershipObservers {
+		if err := observer.OnAssetDeleted(ctx, asset.ID); err != nil {
+			log.Warn().Err(err).Str("asset_id", asset.ID).Msg("Failed to notify membership observer of deletion")
+		}
+	}
+
 	if err := s.repo.DeleteByMRN(ctx, mrn); err != nil {
 		if errors.Is(err, ErrNotFound) {
 			return ErrAssetNotFound

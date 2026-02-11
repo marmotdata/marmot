@@ -32,6 +32,7 @@ var ValidNotificationTypes = map[string]bool{
 	"upstream_schema_change":   true,
 	"downstream_schema_change": true,
 	"lineage_change":           true,
+	"asset_deleted":            true,
 }
 
 // Subscription represents a user's subscription to notifications for a specific asset.

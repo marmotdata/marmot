@@ -22,7 +22,8 @@
 		{ type: 'schema_change', label: 'Schema Changes' },
 		{ type: 'upstream_schema_change', label: 'Upstream Schema' },
 		{ type: 'downstream_schema_change', label: 'Downstream Schema' },
-		{ type: 'lineage_change', label: 'Lineage Changes' }
+		{ type: 'lineage_change', label: 'Lineage Changes' },
+		{ type: 'asset_deleted', label: 'Asset Deletions' }
 	];
 
 	let subscription: Subscription | null = $state(null);
