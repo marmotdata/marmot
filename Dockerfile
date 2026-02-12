@@ -8,7 +8,7 @@ RUN pnpm install --frozen-lockfile
 COPY web/marmot/ ./
 RUN pnpm build
 
-FROM golang:1.24 AS builder
+FROM golang:1.25 AS builder
 
 WORKDIR /app
 COPY go.mod go.sum ./
