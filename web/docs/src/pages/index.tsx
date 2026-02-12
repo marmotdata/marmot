@@ -2,11 +2,10 @@ import React, { useEffect } from "react";
 import Layout from "@theme/Layout";
 import Hero from "../components/Hero";
 import Stats from "../components/Stats";
-import Value from "../components/Value";
-import DataSources from "../components/DataSources";
-import CTA from "../components/CTA";
 import Benefits from "../components/BenefitsShowcase";
+import DataSources from "../components/DataSources";
 import Integrations from "../components/Integrations";
+import CTA from "../components/CTA";
 
 export default function Home(): JSX.Element {
   useEffect(() => {
@@ -31,9 +30,8 @@ export default function Home(): JSX.Element {
         <Hero />
         <Stats />
         <Benefits />
-        {/* <Value /> */}
-        <Integrations />
         <DataSources />
+        <Integrations />
         <CTA />
       </div>
     </Layout>
