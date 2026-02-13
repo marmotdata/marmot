@@ -76,7 +76,35 @@ dockers:
       - "--label=org.opencontainers.image.version={{.Version}}"
     goos: linux
     goarch: arm64
-    
+
+  - image_templates:
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-distroless-amd64"
+      - "ghcr.io/marmotdata/marmot:latest-distroless-amd64"
+    dockerfile: Dockerfile.goreleaser.distroless
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/amd64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: amd64
+
+  - image_templates:
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-distroless-arm64"
+      - "ghcr.io/marmotdata/marmot:latest-distroless-arm64"
+    dockerfile: Dockerfile.goreleaser.distroless
+    use: buildx
+    build_flag_templates:
+      - "--platform=linux/arm64"
+      - "--label=org.opencontainers.image.created={{.Date}}"
+      - "--label=org.opencontainers.image.title={{.ProjectName}}"
+      - "--label=org.opencontainers.image.revision={{.FullCommit}}"
+      - "--label=org.opencontainers.image.version={{.Version}}"
+    goos: linux
+    goarch: arm64
+
 docker_manifests:
   - name_template: "ghcr.io/marmotdata/marmot:{{ .Version }}"
     image_templates:
@@ -93,6 +121,23 @@ docker_manifests:
     image_templates:
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-amd64"
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-arm64"
+    skip_push: '{{ contains .Version "preview" }}'
+
+  - name_template: "ghcr.io/marmotdata/marmot:{{ .Version }}-distroless"
+    image_templates:
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-distroless-amd64"
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-distroless-arm64"
+
+  - name_template: "ghcr.io/marmotdata/marmot:latest-distroless"
+    image_templates:
+      - "ghcr.io/marmotdata/marmot:latest-distroless-amd64"
+      - "ghcr.io/marmotdata/marmot:latest-distroless-arm64"
+    skip_push: '{{ contains .Version "preview" }}'
+
+  - name_template: "ghcr.io/marmotdata/marmot:{{ .Major }}.{{ .Minor }}-distroless"
+    image_templates:
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-distroless-amd64"
+      - "ghcr.io/marmotdata/marmot:{{ .Version }}-distroless-arm64"
     skip_push: '{{ contains .Version "preview" }}'
 
 release:

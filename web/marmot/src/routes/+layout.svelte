@@ -234,7 +234,7 @@
 		/>
 	{/if}
 	{#if !$page.url.pathname.startsWith('/login')}
-		<nav class="bg-earthy-brown-50 dark:bg-gray-900 flex-none">
+		<nav class="glass-navbar flex-none sticky top-0 z-40">
 			<div class="max-w-14xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div class="flex items-center justify-between h-16 gap-6">
 					<!-- Logo -->
@@ -347,7 +347,7 @@
 							</button>
 							{#if isGovernanceOpen}
 								<div
-									class="origin-top-left absolute left-0 mt-2 w-48 rounded-md shadow dark:shadow-white/10 bg-earthy-brown-50 dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50"
+									class="origin-top-left absolute left-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
 									role="menu"
 								>
 									<a
@@ -422,7 +422,7 @@
 							</div>
 							{#if isDropdownOpen}
 								<div
-									class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow dark:shadow-white/10 bg-earthy-brown-50 dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50"
+									class="origin-top-right absolute right-0 mt-2 w-48 rounded-md glass-dropdown shadow-lg ring-1 ring-black ring-opacity-5 z-50"
 									role="menu"
 									aria-orientation="vertical"
 									aria-labelledby="user-menu"
@@ -489,7 +489,7 @@
 		tabindex="-1"
 	>
 		<div
-			class="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 overflow-visible"
+			class="w-full max-w-2xl glass-modal rounded-xl shadow-2xl overflow-visible"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"

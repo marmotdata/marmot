@@ -1,6 +1,8 @@
 package main
 
 import (
+	_ "time/tzdata"
+
 	"github.com/marmotdata/marmot/internal/cmd"
 	"github.com/rs/zerolog/log"
 )

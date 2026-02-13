@@ -1,0 +1,5 @@
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY marmot /usr/local/bin/marmot
+EXPOSE 8080
+ENTRYPOINT ["/usr/local/bin/marmot"]
+CMD ["run"]

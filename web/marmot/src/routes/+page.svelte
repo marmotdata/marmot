@@ -114,10 +114,10 @@
 			color: 'purple'
 		},
 		{
-			title: 'Query Marmot',
-			description: 'Learn how to search and query',
-			icon: 'material-symbols:search',
-			href: 'https://marmotdata.io/docs/queries',
+			title: 'Data Products',
+			description: 'Browse and manage data products',
+			icon: 'material-symbols:inventory-2',
+			href: '/products',
 			color: 'blue'
 		}
 	];
@@ -311,7 +311,8 @@
 			airflow: 'apacheairflow',
 			flink: 'apacheflink',
 			hive: 'apachehive',
-			openapi: 'openapiinitiative'
+			openapi: 'openapiinitiative',
+			nats: 'natsdotio'
 		};
 		const normalizedProvider = provider.toLowerCase();
 		return iconMap[normalizedProvider] || normalizedProvider;
@@ -333,9 +334,7 @@
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 			{#each quickStats as stat}
-				<div
-					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-				>
+				<div class="glass-card rounded-xl p-6">
 					<div class="flex items-center justify-between mb-2">
 						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
 					</div>
@@ -359,7 +358,7 @@
 					href={action.href}
 					target={action.href.startsWith('http') ? '_blank' : undefined}
 					rel={action.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-					class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:border-earthy-terracotta-500 dark:hover:border-earthy-terracotta-600 hover:shadow-lg transition-all"
+					class="group glass-card-interactive rounded-xl p-5"
 				>
 					<div class="flex items-start gap-4">
 						<div
@@ -397,9 +396,7 @@
 								See all →
 							</a>
 						</div>
-						<div
-							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 divide-y divide-gray-200 dark:divide-gray-700"
-						>
+						<div class="glass-card rounded-xl divide-y divide-gray-200 dark:divide-gray-700">
 							{#each popularAssets as asset}
 								<button
 									onclick={() => navigateToAsset(asset)}
@@ -445,9 +442,7 @@
 								View all →
 							</a>
 						</div>
-						<div
-							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700"
-						>
+						<div class="glass-card rounded-xl">
 							{#if userAssets.length > 0}
 								<div class="divide-y divide-gray-200 dark:divide-gray-700">
 									{#each userAssets as asset}
@@ -505,9 +500,7 @@
 				<!-- Data Breakdown -->
 				<div>
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Overview</h2>
-					<div
-						class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-					>
+					<div class="glass-card rounded-xl p-6">
 						<!-- Asset Types -->
 						<div class="mb-6">
 							<h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
@@ -593,9 +586,7 @@
 			{#if topTags.length > 0}
 				<div>
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Popular Tags</h2>
-					<div
-						class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-					>
+					<div class="glass-card rounded-xl p-6">
 						<div class="flex flex-wrap gap-2">
 							{#each topTags as item}
 								<button
@@ -642,9 +633,7 @@
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 			{#each quickStats as stat}
-				<div
-					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-				>
+				<div class="glass-card rounded-xl p-6">
 					<div class="flex items-center justify-between mb-2">
 						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
 					</div>
@@ -668,7 +657,7 @@
 					href={action.href}
 					target={action.href.startsWith('http') ? '_blank' : undefined}
 					rel={action.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-					class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-5 hover:border-earthy-terracotta-500 dark:hover:border-earthy-terracotta-600 hover:shadow-lg transition-all"
+					class="group glass-card-interactive rounded-xl p-5"
 				>
 					<div class="flex items-start gap-4">
 						<div

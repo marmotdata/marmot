@@ -379,7 +379,7 @@ func (r *PostgresRepository) buildFilterClauses(filter Filter, parsedQuery *quer
 
 	if len(filter.Providers) > 0 {
 		paramCount++
-		whereClauses = append(whereClauses, fmt.Sprintf("(type != 'asset' OR providers && $%d)", paramCount))
+		whereClauses = append(whereClauses, fmt.Sprintf("(type = 'asset' AND providers && $%d)", paramCount))
 		params = append(params, filter.Providers)
 	}
 
@@ -610,7 +610,7 @@ func (r *PostgresRepository) buildListingFacetWhereClause(filter Filter) (string
 
 	if len(filter.Providers) > 0 {
 		paramCount++
-		whereClauses = append(whereClauses, fmt.Sprintf("(type != 'asset' OR providers && $%d)", paramCount))
+		whereClauses = append(whereClauses, fmt.Sprintf("(type = 'asset' AND providers && $%d)", paramCount))
 		params = append(params, filter.Providers)
 	}
 

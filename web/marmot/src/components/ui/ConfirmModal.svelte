@@ -69,7 +69,7 @@
 		aria-hidden="true"
 	>
 		<div
-			class="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full overflow-hidden"
+			class="glass-modal rounded-xl shadow-xl max-w-md w-full overflow-hidden"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
 			role="dialog"
@@ -114,7 +114,7 @@
 			</div>
 
 			<div class="border-t border-gray-200 dark:border-gray-700">
-				<div class="flex items-center justify-end gap-3 px-6 py-4 bg-gray-50 dark:bg-gray-900/50">
+				<div class="flex items-center justify-end gap-3 px-6 py-4 bg-white/30 dark:bg-black/20">
 					<Button variant="clear" click={handleCancel} text={cancelText} />
 					<button
 						onclick={() => onConfirm(checkboxChecked)}
