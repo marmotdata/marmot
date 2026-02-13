@@ -32,6 +32,12 @@ const config: Config = {
     defaultLocale: "en",
     locales: ["en"],
   },
+  stylesheets: [
+    {
+      href: "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap",
+      type: "text/css",
+    },
+  ],
   headTags: [
     {
       tagName: "meta",
@@ -115,8 +121,14 @@ const config: Config = {
           position: "left",
         },
         {
+          href: "https://github.com/marmotdata/marmot",
+          position: "right",
+          className: "header-github-link",
+          "aria-label": "GitHub repository",
+        },
+        {
           href: "https://demo.marmotdata.io",
-          label: "✨ Live Demo",
+          label: "Live Demo",
           position: "right",
           className: "demo-button",
         },

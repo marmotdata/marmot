@@ -6328,7 +6328,8 @@ const docTemplate = `{
                 "assets": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64"
                     }
                 }
             }
@@ -6339,7 +6340,8 @@ const docTemplate = `{
                 "assets": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64"
                     }
                 }
             }
@@ -6350,7 +6352,8 @@ const docTemplate = `{
                 "assets": {
                     "type": "object",
                     "additionalProperties": {
-                        "type": "integer"
+                        "type": "integer",
+                        "format": "int64"
                     }
                 }
             }

@@ -77,7 +77,7 @@ Supported plugins such as Airflow and dbt will automatically fill out lineage fo
 
 ## Search
 
-Marmot has a custom query language that lets you search across everything - assets, glossary terms, data products - all in one place. No clicking through folders or navigating hierarchies. Just type what you're looking for.
+Marmot has a custom query language that lets you search across everything - assets, glossary terms, data products - all in one place.
 
 e.g Find all PostgreSQL tables owned by a specific team:
 
@@ -99,7 +99,7 @@ Works with Claude Desktop, Claude Code, Cursor, Cline and other MCP-compatible t
 
 ## Try It Out
 
-Marmot is still early and I'm actively looking for feedback to shape the roadmap. Get involved on GitHub, reach out on Discord or just try the demo and let me know what you think. 
+Marmot is still early and I'm actively looking for feedback to shape the roadmap. Get involved on GitHub, reach out on Discord or just try the demo and let me know what you think.
 
 - **Live demo:** [demo.marmotdata.io](https://demo.marmotdata.io)
 - **Documentation:** [marmotdata.io/docs](https://marmotdata.io/docs)

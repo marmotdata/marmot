@@ -18,65 +18,44 @@ export default function FeaturedCard({
   title,
   description,
   href,
-  color = "bg-white dark:bg-gray-800",
-  useThemeColor = false,
-  themeColor = "bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20",
   large = false,
   className = "",
 }: FeaturedCardProps): JSX.Element {
   const CardContent = () => (
     <>
-      <div className="mb-4 flex justify-center">
+      <div className="mb-5 flex justify-center">
         <Icon
           type={icon}
           size={large ? "lg" : "md"}
-          className={`transition-transform duration-300 group-hover:scale-110 ${
-            large ? "w-20 h-20" : ""
-          }`}
+          className="transition-transform duration-300 group-hover:scale-110"
         />
       </div>
       <h3
-        className={`${
-          large ? "text-xl" : "text-lg"
-        } font-medium text-gray-900 dark:text-white mb-2`}
+        className={`${large ? "text-lg" : "text-base"} font-semibold text-gray-900 dark:text-white mb-2`}
       >
         {title}
       </h3>
       <p
-        className={`${
-          large ? "text-base" : "text-sm"
-        } text-gray-600 dark:text-gray-300`}
+        className={`${large ? "text-sm" : "text-xs"} text-gray-500 dark:text-gray-400 leading-relaxed`}
       >
         {description}
       </p>
     </>
   );
 
-  const classes = `
-    ${useThemeColor ? themeColor : color}
-    ${className}
-    group
-    ${large ? "p-8" : "p-6"}
-    rounded-lg 
-    border border-gray-200 dark:border-gray-700
-    shadow-sm 
-    hover:shadow-md 
-    hover:border-earthy-terracotta-600 dark:hover:border-earthy-terracotta-500
-    transition-all 
-    duration-200 
-    hover:translate-y-[-2px]
-  `;
+  const padding = large ? "p-8" : "p-6";
+  const base = `group ${padding} rounded-2xl text-center h-full bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 ${className}`;
 
   if (href) {
     return (
-      <a href={href} className={classes}>
+      <a href={href} className={base}>
         <CardContent />
       </a>
     );
   }
 
   return (
-    <div className={classes}>
+    <div className={base}>
       <CardContent />
     </div>
   );

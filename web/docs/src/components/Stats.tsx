@@ -10,24 +10,27 @@ const stats = [
 
 export default function Stats(): React.ReactElement {
   return (
-    <section className="py-10 px-4 bg-earthy-brown-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-800">
-      <div className="max-w-4xl mx-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 text-center">
-          {stats.map((stat, index) => (
-            <div key={index} className="flex flex-col items-center gap-1">
+    <section className="py-12 px-4 bg-earthy-brown-50 dark:bg-gray-900">
+      <div
+        data-animate
+        className="max-w-3xl mx-auto flex flex-wrap items-center justify-center divide-x divide-gray-200 dark:divide-gray-700"
+      >
+        {stats.map((stat, index) => (
+          <div key={index} className="px-6 sm:px-10 py-2 text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
               <Icon
                 icon={stat.icon}
-                className="w-5 h-5 text-gray-400 dark:text-gray-500 mb-1"
+                className="w-4 h-4 text-gray-300 dark:text-gray-600"
               />
-              <span className="text-2xl font-semibold text-gray-400 dark:text-gray-500">
+              <span className="text-2xl font-bold text-gray-400 dark:text-gray-500 tracking-tight">
                 {stat.value}
               </span>
-              <span className="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                {stat.label}
-              </span>
             </div>
-          ))}
-        </div>
+            <span className="text-xs uppercase tracking-wider font-medium text-gray-400 dark:text-gray-500">
+              {stat.label}
+            </span>
+          </div>
+        ))}
       </div>
     </section>
   );

@@ -8,6 +8,352 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================
+   Font
+   ============================================ */
+
+:root {
+  --ifm-font-family-base: "Inter", system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", Roboto, sans-serif;
+  --ifm-heading-font-family: "Inter", system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+/* ============================================
+   Infima / Docusaurus Overrides
+   ============================================ */
+
+:root {
+  --ifm-breadcrumb-color-active: #d25a30;
+  --ifm-color-primary: #d25a30 !important;
+  --ifm-footer-background-color: #f9f7f5;
+  --ifm-navbar-background-color: rgba(254, 252, 251, 0.8);
+  --ifm-background-color: #fefcfb;
+  --ifm-navbar-shadow: none;
+  --ifm-link-color: #d25a30;
+  --ifm-color-primary-dark: #b34822;
+  --ifm-color-primary-darker: #a6431f;
+  --ifm-color-primary-darkest: #8d3718;
+  --ifm-color-primary-light: #e86f42;
+  --ifm-color-primary-lighter: #ed7e52;
+  --ifm-color-primary-lightest: #f7885e;
+  --ifm-code-font-size: 95%;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
+}
+
+html[data-theme="dark"] {
+  --ifm-footer-background-color: #2e2e2e;
+  --ifm-navbar-background-color: rgba(26, 26, 26, 0.8);
+  --ifm-background-color: #1a1a1a;
+  --ifm-link-color: #f7885e;
+  --ifm-color-primary: #f7885e;
+}
+
+[data-theme="dark"] {
+  --ifm-color-primary: #f7885e;
+  --ifm-color-primary-dark: #f5793f;
+  --ifm-color-primary-darker: #f46f30;
+  --ifm-color-primary-darkest: #e86f42;
+  --ifm-color-primary-light: #f99d7a;
+  --ifm-color-primary-lighter: #faa789;
+  --ifm-color-primary-lightest: #fbb89d;
+  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="dark"] .menu-content {
+  background-color: #1a1a1a !important;
+}
+
+html[data-theme="dark"] .menu-content .scrollbar-container ul li label {
+  background-color: #1a1a1a !important;
+}
+
+.menu-content {
+  background-color: #fefcfb !important;
+}
+
+.menu-content .scrollbar-container ul li label {
+  background-color: #fefcfb !important;
+}
+
+/* Glassmorphic navbar */
+.navbar {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 0.5rem 1rem;
+  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+html[data-theme="dark"] .navbar {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.navbar__title {
+  font-weight: 700;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+}
+
+.navbar__logo {
+  height: 1.75rem;
+}
+
+/* Nav links styling */
+.navbar__link {
+  font-weight: 500;
+  font-size: 0.9rem;
+  letter-spacing: -0.01em;
+  color: #4b5563;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.5rem;
+  transition: color 0.2s ease, background-color 0.2s ease;
+}
+
+.navbar__link:hover {
+  color: #d25a30;
+  background-color: rgba(210, 90, 48, 0.06);
+}
+
+.navbar__link--active {
+  color: #d25a30;
+  font-weight: 600;
+  background-color: rgba(210, 90, 48, 0.08);
+}
+
+html[data-theme="dark"] .navbar__link {
+  color: #d1d5db;
+}
+
+html[data-theme="dark"] .navbar__link:hover {
+  color: #f7885e;
+  background-color: rgba(247, 136, 94, 0.1);
+}
+
+html[data-theme="dark"] .navbar__link--active {
+  color: #f7885e;
+  background-color: rgba(247, 136, 94, 0.12);
+}
+
+/* GitHub icon link */
+.header-github-link::before {
+  content: "";
+  width: 24px;
+  height: 24px;
+  display: flex;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12' fill='%234b5563'/%3E%3C/svg%3E") no-repeat;
+  background-size: contain;
+  transition: opacity 0.2s ease;
+}
+
+.header-github-link:hover::before {
+  opacity: 0.7;
+}
+
+html[data-theme="dark"] .header-github-link::before {
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12' fill='%23d1d5db'/%3E%3C/svg%3E") no-repeat;
+  background-size: contain;
+}
+
+/* ============================================
+   Scroll Reveal Animations
+   ============================================ */
+
+[data-animate] {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+[data-animate].animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+[data-animate-delay="1"] {
+  transition-delay: 0.1s;
+}
+[data-animate-delay="2"] {
+  transition-delay: 0.2s;
+}
+[data-animate-delay="3"] {
+  transition-delay: 0.3s;
+}
+[data-animate-delay="4"] {
+  transition-delay: 0.4s;
+}
+[data-animate-delay="5"] {
+  transition-delay: 0.5s;
+}
+[data-animate-delay="6"] {
+  transition-delay: 0.6s;
+}
+
+/* ============================================
+   Gradient Mesh Backgrounds
+   ============================================ */
+
+.gradient-mesh-hero {
+  background: radial-gradient(
+      ellipse 80% 50% at 20% 40%,
+      rgba(210, 90, 48, 0.07) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 80% 20%,
+      rgba(247, 136, 94, 0.05) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 60% at 50% 90%,
+      rgba(139, 168, 139, 0.05) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 30% at 90% 70%,
+      rgba(232, 111, 66, 0.04) 0%,
+      transparent 70%
+    );
+}
+
+html[data-theme="dark"] .gradient-mesh-hero {
+  background: radial-gradient(
+      ellipse 80% 50% at 20% 40%,
+      rgba(210, 90, 48, 0.12) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 60% 40% at 80% 20%,
+      rgba(247, 136, 94, 0.08) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 50% 60% at 50% 90%,
+      rgba(139, 168, 139, 0.06) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse 40% 30% at 90% 70%,
+      rgba(232, 111, 66, 0.06) 0%,
+      transparent 70%
+    );
+}
+
+/* ============================================
+   Dot Pattern
+   ============================================ */
+
+.dot-pattern {
+  background-image: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 0.06) 1px,
+    transparent 1px
+  );
+  background-size: 24px 24px;
+}
+
+html[data-theme="dark"] .dot-pattern {
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.04) 1px,
+    transparent 1px
+  );
+}
+
+/* ============================================
+   Glass Morphism
+   ============================================ */
+
+.glass {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+html[data-theme="dark"] .glass {
+  background: rgba(46, 46, 46, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: rgba(210, 90, 48, 0.2);
+  box-shadow: 0 8px 32px rgba(210, 90, 48, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+}
+
+html[data-theme="dark"] .glass-card {
+  background: rgba(46, 46, 46, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+html[data-theme="dark"] .glass-card:hover {
+  background: rgba(46, 46, 46, 0.8);
+  border-color: rgba(247, 136, 94, 0.2);
+  box-shadow: 0 8px 32px rgba(247, 136, 94, 0.08),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   Image Glow Effect
+   ============================================ */
+
+.image-glow {
+  position: relative;
+}
+
+.image-glow::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(210, 90, 48, 0.3),
+    rgba(247, 136, 94, 0.1),
+    rgba(139, 168, 139, 0.1),
+    rgba(210, 90, 48, 0.2)
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ============================================
+   Gradient Text
+   ============================================ */
+
+.gradient-text {
+  background: linear-gradient(135deg, #d25a30 0%, #e86f42 50%, #f7885e 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+html[data-theme="dark"] .gradient-text {
+  background: linear-gradient(135deg, #f7885e 0%, #f99d7a 50%, #fbb89d 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ============================================
+   Flow Animation (for lineage)
+   ============================================ */
+
 @keyframes flow {
   from {
     stroke-dashoffset: 8;
@@ -20,17 +366,10 @@
   animation: flow 0.5s linear infinite;
 }
 
-:root {
-  --ifm-breadcrumb-color-active: #d25a30;
-  --ifm-color-primary: #d25a30 !important;
-  --ifm-footer-background-color: #f9f7f5;
-  --ifm-navbar-background-color: #fefcfb;
-  --ifm-background-color: #fefcfb;
-  --ifm-navbar-shadow: none;
-  --ifm-link-color: #d25a30;
-}
+/* ============================================
+   Scroll Animations
+   ============================================ */
 
-/* Animation keyframes for seamless infinite scrolling */
 @keyframes scrollLeft {
   0% {
     transform: translateX(0);
@@ -40,12 +379,10 @@
   }
 }
 
-/* Animation class */
 .animate-scroll-left {
   animation: scrollLeft 40s linear infinite;
 }
 
-/* Ensure the container has no visible overflow during transition */
 .scroll-container {
   position: relative;
   width: 100%;
@@ -57,464 +394,13 @@
   width: fit-content;
 }
 
-html[data-theme="dark"] {
-  --ifm-footer-background-color: #2e2e2e;
-  --ifm-navbar-background-color: #1a1a1a;
-  --ifm-background-color: #1a1a1a;
-  --ifm-link-color: #f7885e;
-  --ifm-color-primary: #f7885e;
-
-  .menu-content {
-    background-color: #1a1a1a !important;
-    .scrollbar-container {
-      ul {
-        li label {
-          background-color: #1a1a1a !important;
-        }
-      }
-    }
-  }
-}
-
-.menu-content {
-  background-color: #fefcfb !important;
-  .scrollbar-container {
-    ul {
-      li label {
-        background-color: #fefcfb !important;
-      }
-    }
-  }
-}
-
-.navbar__title {
-  display: none;
-}
-
-/* Earthy Greens */
-.text-earthy-green-50 {
-  color: #f9faf8;
-}
-.text-earthy-green-100 {
-  color: #f4f7f5;
-}
-.text-earthy-green-200 {
-  color: #e8f0e8;
-}
-.text-earthy-green-300 {
-  color: #d1dfd1;
-}
-.text-earthy-green-400 {
-  color: #b9cdb9;
-}
-.text-earthy-green-500 {
-  color: #8ba88b;
-}
-.text-earthy-green-600 {
-  color: #75927f;
-}
-.text-earthy-green-700 {
-  color: #607b60;
-}
-.text-earthy-green-800 {
-  color: #4a674a;
-}
-.text-earthy-green-900 {
-  color: #35593b;
-}
-
-.bg-earthy-green-50 {
-  background-color: #f9faf8;
-}
-.bg-earthy-green-100 {
-  background-color: #f4f7f5;
-}
-.bg-earthy-green-200 {
-  background-color: #e8f0e8;
-}
-.bg-earthy-green-300 {
-  background-color: #d1dfd1;
-}
-.bg-earthy-green-400 {
-  background-color: #b9cdb9;
-}
-.bg-earthy-green-500 {
-  background-color: #8ba88b;
-}
-.bg-earthy-green-600 {
-  background-color: #75927f;
-}
-.bg-earthy-green-700 {
-  background-color: #607b60;
-}
-.bg-earthy-green-800 {
-  background-color: #4a674a;
-}
-.bg-earthy-green-900 {
-  background-color: #35593b;
-}
-
-/* Earthy Browns */
-.text-earthy-brown-50 {
-  color: #fefcfb;
-}
-.text-earthy-brown-100 {
-  color: #f9f7f5;
-}
-.text-earthy-brown-200 {
-  color: #f0ece8;
-}
-.text-earthy-brown-300 {
-  color: #e2d9d1;
-}
-.text-earthy-brown-400 {
-  color: #c6b4a2;
-}
-.text-earthy-brown-500 {
-  color: #b8a28b;
-}
-.text-earthy-brown-600 {
-  color: #a98f75;
-}
-.text-earthy-brown-700 {
-  color: #997c60;
-}
-.text-earthy-brown-800 {
-  color: #8a6a4a;
-}
-.text-earthy-brown-900 {
-  color: #7b5935;
-}
-
-.bg-earthy-brown-50 {
-  background-color: #fefcfb;
-}
-.bg-earthy-brown-100 {
-  background-color: #f9f7f5;
-}
-.bg-earthy-brown-200 {
-  background-color: #f0ece8;
-}
-.bg-earthy-brown-300 {
-  background-color: #e2d9d1;
-}
-.bg-earthy-brown-400 {
-  background-color: #c6b4a2;
-}
-.bg-earthy-brown-500 {
-  background-color: #b8a28b;
-}
-.bg-earthy-brown-600 {
-  background-color: #a98f75;
-}
-.bg-earthy-brown-700 {
-  background-color: #997c60;
-}
-.bg-earthy-brown-800 {
-  background-color: #8a6a4a;
-}
-.bg-earthy-brown-900 {
-  background-color: #7b5935;
-}
-
-/* Earthy Yellows */
-.text-earthy-yellow-50 {
-  color: #fefdf8;
-}
-.text-earthy-yellow-100 {
-  color: #fdf8f2;
-}
-.text-earthy-yellow-200 {
-  color: #fbf1e5;
-}
-.text-earthy-yellow-300 {
-  color: #f6e6c9;
-}
-.text-earthy-yellow-400 {
-  color: #ecd292;
-}
-.text-earthy-yellow-500 {
-  color: #e7c776;
-}
-.text-earthy-yellow-600 {
-  color: #ddb65c;
-}
-.text-earthy-yellow-700 {
-  color: #d4a442;
-}
-.text-earthy-yellow-800 {
-  color: #cb9228;
-}
-.text-earthy-yellow-900 {
-  color: #c2810f;
-}
-
-.bg-earthy-yellow-50 {
-  background-color: #fefdf8;
-}
-.bg-earthy-yellow-100 {
-  background-color: #fdf8f2;
-}
-.bg-earthy-yellow-200 {
-  background-color: #fbf1e5;
-}
-.bg-earthy-yellow-300 {
-  background-color: #f6e6c9;
-}
-.bg-earthy-yellow-400 {
-  background-color: #ecd292;
-}
-.bg-earthy-yellow-500 {
-  background-color: #e7c776;
-}
-.bg-earthy-yellow-600 {
-  background-color: #ddb65c;
-}
-.bg-earthy-yellow-700 {
-  background-color: #d4a442;
-}
-.bg-earthy-yellow-800 {
-  background-color: #cb9228;
-}
-.bg-earthy-yellow-900 {
-  background-color: #c2810f;
-}
-
-/* Earthy Terracotta - 70's Revival */
-.text-earthy-terracotta-50 {
-  color: #fef6f3;
-}
-.text-earthy-terracotta-100 {
-  color: #feeae0;
-}
-.text-earthy-terracotta-200 {
-  color: #fcd4c1;
-}
-.text-earthy-terracotta-300 {
-  color: #fbb89d;
-}
-.text-earthy-terracotta-400 {
-  color: #f99d7a;
-}
-.text-earthy-terracotta-500 {
-  color: #f7885e;
-}
-.text-earthy-terracotta-600 {
-  color: #e86f42;
-}
-.text-earthy-terracotta-700 {
-  color: #d25a30;
-}
-.text-earthy-terracotta-800 {
-  color: #b34822;
-}
-.text-earthy-terracotta-900 {
-  color: #8d3718;
-}
-
-.bg-earthy-terracotta-50 {
-  background-color: #fef6f3;
-}
-.bg-earthy-terracotta-100 {
-  background-color: #feeae0;
-}
-.bg-earthy-terracotta-200 {
-  background-color: #fcd4c1;
-}
-.bg-earthy-terracotta-300 {
-  background-color: #fbb89d;
-}
-.bg-earthy-terracotta-400 {
-  background-color: #f99d7a;
-}
-.bg-earthy-terracotta-500 {
-  background-color: #f7885e;
-}
-.bg-earthy-terracotta-600 {
-  background-color: #e86f42;
-}
-.bg-earthy-terracotta-700 {
-  background-color: #d25a30;
-}
-.bg-earthy-terracotta-800 {
-  background-color: #b34822;
-}
-.bg-earthy-terracotta-900 {
-  background-color: #8d3718;
-}
-
-/* Earthy Blues */
-.text-earthy-blue-50 {
-  color: #f9fafb;
-}
-.text-earthy-blue-100 {
-  color: #f4f7f9;
-}
-.text-earthy-blue-200 {
-  color: #e8edf0;
-}
-.text-earthy-blue-300 {
-  color: #d1dbe2;
-}
-.text-earthy-blue-400 {
-  color: #a2b4c6;
-}
-.text-earthy-blue-500 {
-  color: #8ba0b8;
-}
-.text-earthy-blue-600 {
-  color: #758c9f;
-}
-.text-earthy-blue-700 {
-  color: #607985;
-}
-.text-earthy-blue-800 {
-  color: #4a656f;
-}
-.text-earthy-blue-900 {
-  color: #355159;
-}
-
-.bg-earthy-blue-50 {
-  background-color: #f9fafb;
-}
-.bg-earthy-blue-100 {
-  background-color: #f4f7f9;
-}
-.bg-earthy-blue-200 {
-  background-color: #e8edf0;
-}
-.bg-earthy-blue-300 {
-  background-color: #d1dbe2;
-}
-.bg-earthy-blue-400 {
-  background-color: #a2b4c6;
-}
-.bg-earthy-blue-500 {
-  background-color: #8ba0b8;
-}
-.bg-earthy-blue-600 {
-  background-color: #758c9f;
-}
-.bg-earthy-blue-700 {
-  background-color: #607985;
-}
-.bg-earthy-blue-800 {
-  background-color: #4a656f;
-}
-.bg-earthy-blue-900 {
-  background-color: #355159;
-}
-
-/* You can override the default Infima variables here. */
-:root {
-  --ifm-color-primary: #d25a30;
-  --ifm-color-primary-dark: #b34822;
-  --ifm-color-primary-darker: #a6431f;
-  --ifm-color-primary-darkest: #8d3718;
-  --ifm-color-primary-light: #e86f42;
-  --ifm-color-primary-lighter: #ed7e52;
-  --ifm-color-primary-lightest: #f7885e;
-  --ifm-code-font-size: 95%;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.1);
-}
-
-/* For readability concerns, you should choose a lighter palette in dark mode. */
-[data-theme="dark"] {
-  --ifm-color-primary: #f7885e;
-  --ifm-color-primary-dark: #f5793f;
-  --ifm-color-primary-darker: #f46f30;
-  --ifm-color-primary-darkest: #e86f42;
-  --ifm-color-primary-light: #f99d7a;
-  --ifm-color-primary-lighter: #faa789;
-  --ifm-color-primary-lightest: #fbb89d;
-  --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
-}
-
-/* Demo Button Styles */
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(210, 90, 48, 0.7);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(210, 90, 48, 0);
-  }
-}
-
-@keyframes bounce-subtle {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-3px);
-  }
-}
-
-.demo-button {
-  background: linear-gradient(135deg, #d25a30 0%, #e86f42 100%) !important;
-  color: white !important;
-  padding: 0.5rem 1.25rem !important;
-  border-radius: 9999px !important;
-  font-weight: 600 !important;
-  transition: all 0.3s ease !important;
-  animation: pulse-glow 2s infinite;
-  border: none !important;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  margin-right: 0 !important;
-}
-
-.demo-button:hover {
-  background: linear-gradient(135deg, #e86f42 0%, #f7885e 100%) !important;
-  transform: translateY(-2px) !important;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05) !important;
-  animation: bounce-subtle 0.6s ease-in-out infinite;
-}
-
-html[data-theme="dark"] .demo-button {
-  background: linear-gradient(135deg, #e86f42 0%, #f7885e 100%) !important;
-}
-
-html[data-theme="dark"] .demo-button:hover {
-  background: linear-gradient(135deg, #f7885e 0%, #f99d7a 100%) !important;
-}
-
-/* Keep demo button visible on mobile */
-@media (max-width: 996px) {
-  .demo-button {
-    display: inline-flex !important;
-    padding: 0.4rem 1rem !important;
-    font-size: 0.875rem !important;
-    margin-left: 0.5rem !important;
-  }
-
-  /* Ensure navbar items container shows the demo button */
-  .navbar__items--right {
-    display: flex !important;
-  }
-
-  /* Adjust spacing for mobile */
-  .navbar__item.navbar__link.demo-button {
-    display: inline-flex !important;
-  }
-}
-
-/* Kafka icon dark mode styling */
-html[data-theme="dark"] .kafka-icon {
-  filter: brightness(0) invert(1);
-}
-
-/* Floating Marmot Animations */
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
+/* ============================================
+   Float & Wave Animations
+   ============================================ */
 
 @keyframes wave {
-  0%, 100% {
+  0%,
+  100% {
     transform: rotate(0deg);
   }
   25% {
@@ -525,25 +411,17 @@ html[data-theme="dark"] .kafka-icon {
   }
 }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
 .animate-wave {
   animation: wave 0.5s ease-in-out 2;
 }
 
-/* Pixel art rendering */
-.pixel-art-container svg {
-  image-rendering: -moz-crisp-edges;
-  image-rendering: -webkit-crisp-edges;
-  image-rendering: pixelated;
-  image-rendering: crisp-edges;
-}
+/* ============================================
+   Sparkle Effects
+   ============================================ */
 
-/* Sparkle Effects */
 @keyframes sparkle {
-  0%, 100% {
+  0%,
+  100% {
     opacity: 0;
     transform: scale(0) rotate(0deg);
   }
@@ -626,7 +504,101 @@ html[data-theme="dark"] .kafka-icon {
   animation-delay: 1.2s;
 }
 
-/* Hide navbar color mode toggle */
+/* ============================================
+   Demo Button
+   ============================================ */
+
+@keyframes pulse-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(210, 90, 48, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(210, 90, 48, 0);
+  }
+}
+
+@keyframes bounce-subtle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3px);
+  }
+}
+
+.demo-button {
+  background: linear-gradient(135deg, #d25a30 0%, #e86f42 100%) !important;
+  color: white !important;
+  padding: 0.4rem 1.1rem !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  letter-spacing: -0.01em;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  border: none !important;
+  box-shadow: 0 1px 3px rgba(210, 90, 48, 0.2);
+  margin-right: 0 !important;
+}
+
+.demo-button:hover {
+  background: linear-gradient(135deg, #c04e28 0%, #d25a30 100%) !important;
+  color: white !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(210, 90, 48, 0.25) !important;
+}
+
+html[data-theme="dark"] .demo-button {
+  background: linear-gradient(135deg, #e86f42 0%, #f7885e 100%) !important;
+  box-shadow: 0 1px 3px rgba(232, 111, 66, 0.3);
+}
+
+html[data-theme="dark"] .demo-button:hover {
+  background: linear-gradient(135deg, #d25a30 0%, #e86f42 100%) !important;
+  box-shadow: 0 4px 12px rgba(232, 111, 66, 0.3) !important;
+}
+
+@media (max-width: 996px) {
+  .demo-button {
+    display: inline-flex !important;
+    padding: 0.35rem 0.9rem !important;
+    font-size: 0.8rem !important;
+    margin-left: 0.5rem !important;
+  }
+
+  .navbar__items--right {
+    display: flex !important;
+  }
+
+  .navbar__item.navbar__link.demo-button {
+    display: inline-flex !important;
+  }
+}
+
+/* ============================================
+   Kafka icon dark mode
+   ============================================ */
+
+html[data-theme="dark"] .kafka-icon {
+  filter: brightness(0) invert(1);
+}
+
+/* ============================================
+   Pixel Art
+   ============================================ */
+
+.pixel-art-container svg {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -webkit-crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+
+/* ============================================
+   Color Mode Toggle (hidden, using FloatingThemeToggle)
+   ============================================ */
+
 .navbar__items button[class*="colorModeToggle"],
 .navbar__items button[class*="toggle"],
 .navbar__items > button[title*="mode"],
@@ -636,9 +608,9 @@ div[class*="toggle_"] {
   display: none !important;
 }
 
-/* Remove padding/margin from navbar items right */
 .navbar__items--right {
-  gap: 0 !important;
+  gap: 0.25rem !important;
+  align-items: center;
 }
 
 .navbar__items--right > *:last-child {
@@ -646,7 +618,59 @@ div[class*="toggle_"] {
   padding-right: 0 !important;
 }
 
-/* Code block styling to match main UI - using CSS variables for reactive theme switching */
+/* Hamburger toggle */
+.navbar__toggle {
+  color: #4b5563;
+  transition: color 0.2s ease;
+}
+
+.navbar__toggle:hover {
+  color: #d25a30;
+}
+
+html[data-theme="dark"] .navbar__toggle {
+  color: #d1d5db;
+}
+
+html[data-theme="dark"] .navbar__toggle:hover {
+  color: #f7885e;
+}
+
+/* Mobile sidebar */
+.navbar-sidebar {
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.navbar-sidebar__brand {
+  padding: 1rem 1.25rem;
+}
+
+.navbar-sidebar .menu__link {
+  font-weight: 500;
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  transition: background-color 0.2s ease;
+}
+
+.navbar-sidebar .menu__link:hover {
+  background-color: rgba(210, 90, 48, 0.06);
+}
+
+.navbar-sidebar .menu__link--active {
+  color: #d25a30;
+  background-color: rgba(210, 90, 48, 0.08);
+}
+
+html[data-theme="dark"] .navbar-sidebar .menu__link--active {
+  color: #f7885e;
+  background-color: rgba(247, 136, 94, 0.12);
+}
+
+/* ============================================
+   Code Block Styling
+   ============================================ */
+
 :root {
   --prism-background-color: #f9fafb !important;
   --ifm-pre-background: #f9fafb;
@@ -659,11 +683,6 @@ div[class*="toggle_"] {
   --code-block-bg: #1f2937;
 }
 
-/*
- * Force code block backgrounds to use CSS variable.
- * The key is that prism-react-renderer sets inline styles,
- * but we can override with !important on the CSS variable reference.
- */
 .prism-code,
 pre[class*="language-"],
 div[class*="codeBlockContainer"] pre,
@@ -672,31 +691,28 @@ div[class*="codeBlockContent"] pre {
   background-color: var(--code-block-bg) !important;
 }
 
-/* Target the container */
 div[class*="codeBlockContainer"] {
   background-color: var(--code-block-bg) !important;
   border-radius: 0.5rem !important;
   margin: 1rem 0 !important;
 }
 
-/* Ensure content area is transparent */
 div[class*="codeBlockContent"] {
   background: transparent !important;
 }
 
-/* Style the pre element */
 div[class*="codeBlockContainer"] pre {
   margin: 0 !important;
   padding: 1.5rem !important;
 }
 
-/* Code inside blocks */
 div[class*="codeBlockContainer"] code {
   background: transparent !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace !important;
 }
 
-/* Copy button styling to match main UI */
+/* Copy button */
 :root {
   --copy-button-bg: #f3f4f6;
   --copy-button-bg-hover: #e5e7eb;
@@ -726,17 +742,20 @@ button[class*="copyButton"]:hover {
   background: var(--copy-button-bg-hover) !important;
 }
 
-/* Inline code styling */
 code:not([class*="language-"]) {
   background: var(--inline-code-bg) !important;
   color: var(--inline-code-color) !important;
   padding: 0.125rem 0.375rem !important;
   border-radius: 0.25rem !important;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace !important;
   border: none !important;
 }
 
-/* Plugin Badge Dark Mode Overrides */
+/* ============================================
+   Plugin Badge Dark Mode Overrides
+   ============================================ */
+
 html[data-theme="dark"] .bg-earthy-green-100 {
   background-color: #1a2e1c !important;
 }
@@ -763,13 +782,10 @@ html[data-theme="dark"] .text-earthy-yellow-900 {
   color: #f6e6c9 !important;
 }
 
-/*
- * Prism syntax highlighting - CSS-based theme switching
- * These override inline styles from prism-react-renderer
- * to enable reactive theme changes without page refresh.
- */
+/* ============================================
+   Prism Syntax Highlighting
+   ============================================ */
 
-/* Light mode token colors */
 :root {
   --prism-plain-color: #1f2937;
   --prism-comment-color: #4a674a;
@@ -780,7 +796,6 @@ html[data-theme="dark"] .text-earthy-yellow-900 {
   --prism-function-color: #b34822;
 }
 
-/* Dark mode token colors */
 [data-theme="dark"] {
   --prism-plain-color: #f3f4f6;
   --prism-comment-color: #a8c5a8;
@@ -791,7 +806,6 @@ html[data-theme="dark"] .text-earthy-yellow-900 {
   --prism-function-color: #ffb899;
 }
 
-/* Apply colors to Prism tokens via CSS */
 .prism-code .token.plain,
 pre[class*="language-"] .token.plain {
   color: var(--prism-plain-color) !important;
@@ -872,10 +886,112 @@ pre[class*="language-"] .token.class-name {
   color: var(--prism-function-color) !important;
 }
 
-/* Plain text in code blocks */
 .prism-code,
 .prism-code code,
 pre[class*="language-"],
 pre[class*="language-"] code {
   color: var(--prism-plain-color) !important;
+}
+
+/* ============================================
+   Benefits tab image cross-fade
+   ============================================ */
+
+.benefit-image-enter {
+  animation: benefitFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes benefitFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ============================================
+   Quick Deploy Terminal
+   ============================================ */
+
+.quick-deploy-terminal code {
+  background: transparent !important;
+  color: inherit !important;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  font-size: inherit !important;
+}
+
+/* ============================================
+   Architecture Comparison
+   ============================================ */
+
+.arch-line {
+  stroke: rgba(209, 213, 219, 0.4);
+  stroke-width: 1;
+  stroke-dasharray: 4 3;
+}
+
+html[data-theme="dark"] .arch-line {
+  stroke: rgba(75, 85, 99, 0.4);
+}
+
+.arch-marmot-card {
+  background:
+    radial-gradient(ellipse at 85% 90%, rgba(210, 90, 48, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 15% 20%, rgba(210, 90, 48, 0.04) 0%, transparent 40%),
+    linear-gradient(160deg, rgba(254, 252, 251, 0.95) 0%, rgba(255, 248, 244, 0.8) 50%, rgba(210, 90, 48, 0.06) 100%);
+  border: 1px solid rgba(210, 90, 48, 0.12);
+  box-shadow: 0 0 60px rgba(210, 90, 48, 0.06),
+    0 0 120px rgba(210, 90, 48, 0.03);
+}
+
+html[data-theme="dark"] .arch-marmot-card {
+  background:
+    radial-gradient(ellipse at 85% 90%, rgba(210, 90, 48, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at 15% 20%, rgba(210, 90, 48, 0.05) 0%, transparent 40%),
+    linear-gradient(160deg, rgba(26, 26, 26, 0.95) 0%, rgba(30, 25, 22, 0.9) 50%, rgba(210, 90, 48, 0.08) 100%);
+  border: 1px solid rgba(210, 90, 48, 0.18);
+  box-shadow: 0 0 60px rgba(210, 90, 48, 0.08),
+    0 0 120px rgba(210, 90, 48, 0.04);
+}
+
+@keyframes archPulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(52, 211, 153, 0);
+  }
+}
+
+.arch-pulse {
+  animation: archPulse 2.5s ease-in-out infinite;
+}
+
+/* ============================================
+   Section divider gradient
+   ============================================ */
+
+.section-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(210, 90, 48, 0.15) 50%,
+    transparent 100%
+  );
+}
+
+html[data-theme="dark"] .section-divider {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(247, 136, 94, 0.15) 50%,
+    transparent 100%
+  );
 }

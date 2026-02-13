@@ -9,7 +9,11 @@ export default function DataSources(): JSX.Element {
       icon: "devicon:postgresql",
     },
     { name: "MySQL", href: "/docs/Plugins/MySQL", icon: "devicon:mysql" },
-    { name: "MongoDB", href: "/docs/Plugins/MongoDB", icon: "devicon:mongodb" },
+    {
+      name: "MongoDB",
+      href: "/docs/Plugins/MongoDB",
+      icon: "devicon:mongodb",
+    },
     {
       name: "ClickHouse",
       href: "/docs/Plugins/ClickHouse",
@@ -20,7 +24,11 @@ export default function DataSources(): JSX.Element {
       href: "/docs/Plugins/BigQuery",
       icon: "devicon:googlecloud",
     },
-    { name: "Kafka", href: "/docs/Plugins/Kafka", icon: "devicon:apachekafka" },
+    {
+      name: "Kafka",
+      href: "/docs/Plugins/Kafka",
+      icon: "devicon:apachekafka",
+    },
     {
       name: "Airflow",
       href: "/docs/Plugins/Airflow",
@@ -38,53 +46,71 @@ export default function DataSources(): JSX.Element {
   ];
 
   return (
-    <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
-      <div className="max-w-6xl mx-auto">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+    <section className="py-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900">
+      <div className="max-w-5xl mx-auto">
+        <div data-animate className="text-center mb-14">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
             Connect to your data sources
           </h2>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
+          <p className="text-lg text-gray-500 dark:text-gray-400">
             Growing ecosystem of plugins
           </p>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {sources.map((source) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {sources.map((source, index) => (
             <a
               key={source.name}
               href={source.href}
-              className="group p-6 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-500 dark:hover:border-earthy-terracotta-600 hover:shadow-lg transition-all text-center"
+              data-animate
+              data-animate-delay={((index % 4) + 1).toString()}
+              className="group glass-card rounded-2xl p-6 flex flex-col items-center gap-3 text-center"
             >
-              <div className="flex justify-center mb-3 transform group-hover:scale-110 transition-transform">
+              <div className="transform transition-all duration-300 group-hover:scale-110 group-hover:-translate-y-1">
                 <Icon
                   icon={source.icon}
                   className={`w-12 h-12 ${source.name === "Kafka" ? "kafka-icon" : ""}`}
                 />
               </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-400 transition-colors">
                 {source.name}
               </h3>
             </a>
           ))}
         </div>
 
-        <div className="text-center mt-8">
+        <div data-animate className="text-center mt-10">
           <a
             href="/docs/Plugins/"
-            className="text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
+            className="inline-flex items-center gap-1 text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-300 font-semibold transition-colors"
           >
-            and more →
+            View all plugins
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 7l5 5m0 0l-5 5m5-5H6"
+              />
+            </svg>
           </a>
         </div>
 
-        <p className="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
+        <p
+          data-animate
+          className="text-center mt-6 text-sm text-gray-500 dark:text-gray-400"
+        >
           Don't see your data source?{" "}
           <a
             href="https://github.com/marmotdata/marmot/issues/new"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-earthy-terracotta-600 dark:text-earthy-terracotta-500 hover:underline"
+            className="text-earthy-terracotta-600 dark:text-earthy-terracotta-400 hover:underline font-medium"
           >
             Open an issue
           </a>{" "}
