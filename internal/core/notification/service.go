@@ -356,11 +356,11 @@ func (s *Service) CreateSync(ctx context.Context, input CreateNotificationInput)
 
 // QueueAssetChange queues an asset change for aggregated notification.
 // changeType should be TypeAssetChange or TypeSchemaChange.
-func (s *Service) QueueAssetChange(assetID, assetMRN, assetName, changeType string, owners []Recipient) {
+func (s *Service) QueueAssetChange(assetID, assetMRN, assetName, changeType string, owners []Recipient, changedFields []string) {
 	if s.aggregator == nil {
 		return
 	}
-	s.aggregator.queue(assetID, assetMRN, assetName, changeType, owners)
+	s.aggregator.queue(assetID, assetMRN, assetName, changeType, owners, changedFields)
 }
 
 func (s *Service) doFanout(ctx context.Context, input CreateNotificationInput) (int, error) {
