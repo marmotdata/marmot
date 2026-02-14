@@ -4,6 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
+	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -221,7 +224,7 @@ type MembershipObserver interface {
 
 // NotificationObserver is notified when assets are modified.
 type NotificationObserver interface {
-	OnAssetUpdated(ctx context.Context, asset *Asset, changeType string)
+	OnAssetUpdated(ctx context.Context, asset *Asset, changeType string, changedFields []string)
 	OnAssetDeleted(ctx context.Context, asset *Asset)
 }
 
@@ -545,6 +548,10 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		return nil, fmt.Errorf("getting asset: %w", err)
 	}
 
+	// Detect which fields are being changed before updating
+	oldAsset := *asset
+	changedFields := detectChangedFields(&oldAsset, &input)
+
 	updated := false
 	schemaUpdated := false
 
@@ -569,9 +576,6 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		updated = true
 	}
 	if input.Schema != nil {
-		if input.Schema == nil {
-			input.Schema = make(map[string]string)
-		}
 		asset.Schema = input.Schema
 		updated = true
 		schemaUpdated = true
@@ -616,12 +620,12 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		return nil, fmt.Errorf("failed to update asset: %w", err)
 	}
 
-	if s.notificationObserver != nil && !input.SkipNotification {
+	if s.notificationObserver != nil && !input.SkipNotification && len(changedFields) > 0 {
 		changeType := "asset_change"
 		if schemaUpdated {
 			changeType = "schema_change"
 		}
-		s.notificationObserver.OnAssetUpdated(ctx, asset, changeType)
+		s.notificationObserver.OnAssetUpdated(ctx, asset, changeType, changedFields)
 	}
 
 	return asset, nil
@@ -663,6 +667,60 @@ func UpdateSources(existing, new []AssetSource) []AssetSource {
 	}
 
 	return result
+}
+
+// detectChangedFields compares old and new asset states to determine which fields changed.
+func detectChangedFields(old *Asset, input *UpdateInput) []string {
+	var changedFields []string
+
+	// Simple pointer string fields
+	if input.Name != nil && (old.Name == nil || *old.Name != *input.Name) {
+		changedFields = append(changedFields, FieldName)
+	}
+	if input.Description != nil && (old.Description == nil || *old.Description != *input.Description) {
+		changedFields = append(changedFields, FieldDescription)
+	}
+	if input.UserDescription != nil && (old.UserDescription == nil || *old.UserDescription != *input.UserDescription) {
+		changedFields = append(changedFields, FieldUserDescription)
+	}
+	if input.Query != nil && (old.Query == nil || *old.Query != *input.Query) {
+		changedFields = append(changedFields, FieldQuery)
+	}
+	if input.QueryLanguage != nil && (old.QueryLanguage == nil || *old.QueryLanguage != *input.QueryLanguage) {
+		changedFields = append(changedFields, FieldQueryLanguage)
+	}
+
+	// Complex fields using standard library comparisons
+	if input.Tags != nil && !slices.Equal(old.Tags, input.Tags) {
+		changedFields = append(changedFields, FieldTags)
+	}
+	if input.Schema != nil && !maps.Equal(old.Schema, input.Schema) {
+		changedFields = append(changedFields, FieldSchema)
+	}
+	if input.ExternalLinks != nil && !slices.Equal(old.ExternalLinks, input.ExternalLinks) {
+		changedFields = append(changedFields, FieldExternalLinks)
+	}
+	// Fields with non-comparable types (contain maps/interfaces) require reflect.DeepEqual
+	if input.Metadata != nil && !reflect.DeepEqual(old.Metadata, input.Metadata) {
+		changedFields = append(changedFields, FieldMetadata)
+	}
+	if input.Sources != nil && !reflect.DeepEqual(old.Sources, UpdateSources(old.Sources, input.Sources)) {
+		changedFields = append(changedFields, FieldSources)
+	}
+	if input.Environments != nil {
+		merged := make(map[string]Environment)
+		for k, v := range old.Environments {
+			merged[k] = v
+		}
+		for k, v := range input.Environments {
+			merged[k] = v
+		}
+		if !reflect.DeepEqual(old.Environments, merged) {
+			changedFields = append(changedFields, FieldEnvironments)
+		}
+	}
+
+	return changedFields
 }
 
 func (s *service) Delete(ctx context.Context, id string) error {

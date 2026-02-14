@@ -679,7 +679,7 @@ type assetChangeNotifier struct {
 	subscriptionSvc *subscription.Service
 }
 
-func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, a *asset.Asset, changeType string) {
+func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, a *asset.Asset, changeType string, changedFields []string) {
 	owners, err := n.teamSvc.ListAssetOwners(ctx, a.ID)
 	if err != nil {
 		log.Warn().Err(err).Str("asset_id", a.ID).Msg("Failed to get asset owners for notification")
@@ -728,7 +728,7 @@ func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, a *asset.Asset
 	}
 
 	if len(recipients) > 0 {
-		n.notificationSvc.QueueAssetChange(a.ID, assetMRN, assetName, changeType, recipients)
+		n.notificationSvc.QueueAssetChange(a.ID, assetMRN, assetName, changeType, recipients, changedFields)
 	}
 
 	// If this is a schema change, also notify lineage neighbors' owners.
@@ -786,7 +786,7 @@ func (n *assetChangeNotifier) OnAssetDeleted(ctx context.Context, a *asset.Asset
 	}
 
 	if len(recipients) > 0 {
-		n.notificationSvc.QueueAssetChange(a.ID, assetMRN, assetName, notificationService.TypeAssetDeleted, recipients)
+		n.notificationSvc.QueueAssetChange(a.ID, assetMRN, assetName, notificationService.TypeAssetDeleted, recipients, nil)
 	}
 }
 
@@ -861,7 +861,7 @@ func (n *assetChangeNotifier) notifyNeighborOwners(ctx context.Context, neighbor
 
 	// Use the changed asset's MRN and name for the notification content
 	// The aggregator will format the appropriate title/message based on notifType
-	n.notificationSvc.QueueAssetChange(neighborAsset.ID, changedAssetMRN, changedAssetName, notifType, recipients)
+	n.notificationSvc.QueueAssetChange(neighborAsset.ID, changedAssetMRN, changedAssetName, notifType, recipients, nil)
 }
 
 type lineageChangeNotifier struct {
@@ -942,7 +942,7 @@ func (n *lineageChangeNotifier) queueLineageChangeForAsset(ctx context.Context, 
 		assetMRN = *a.MRN
 	}
 
-	n.notificationSvc.QueueAssetChange(a.ID, assetMRN, assetName, notificationService.TypeLineageChange, recipients)
+	n.notificationSvc.QueueAssetChange(a.ID, assetMRN, assetName, notificationService.TypeLineageChange, recipients, nil)
 }
 
 type teamMembershipNotifier struct {
