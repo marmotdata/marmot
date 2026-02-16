@@ -139,6 +139,27 @@ config:
       #     - "openid"
       #     - "profile"
       #     - "email"
+      # keycloak:
+      #   enabled: true
+      #   clientId: ""
+      #   clientSecret: ""
+      #   url: "https://keycloak.example.com"
+      #   realm: "your-realm"
+      #   redirectUrl: "https://marmot.example.com/api/v1/auth/callback/keycloak"
+      #   allowSignup: true
+      #   teamSync:
+      #     enabled: false
+      #     groupClaim: "groups"
+      # genericOidc:
+      #   enabled: true
+      #   clientId: ""
+      #   clientSecret: ""
+      #   url: "https://your-oidc-provider.example.com"
+      #   redirectUrl: "https://marmot.example.com/api/v1/auth/callback/generic_oidc"
+      #   allowSignup: true
+      #   teamSync:
+      #     enabled: false
+      #     groupClaim: "groups"
 
   # Metrics configuration
   metrics:

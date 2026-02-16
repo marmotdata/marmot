@@ -350,6 +350,74 @@ spec:
               {{- end }}
             {{- end }}
 
+            {{- if and .Values.config.auth.providers .Values.config.auth.providers.keycloak .Values.config.auth.providers.keycloak.enabled }}
+            - name: MARMOT_AUTH_KEYCLOAK_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_KEYCLOAK_CLIENT_ID
+              value: {{ .Values.config.auth.providers.keycloak.clientId | quote }}
+            - name: MARMOT_AUTH_KEYCLOAK_URL
+              value: {{ .Values.config.auth.providers.keycloak.url | quote }}
+            - name: MARMOT_AUTH_KEYCLOAK_REALM
+              value: {{ .Values.config.auth.providers.keycloak.realm | quote }}
+            - name: MARMOT_AUTH_KEYCLOAK_REDIRECT_URL
+              value: {{ .Values.config.auth.providers.keycloak.redirectUrl | quote }}
+            - name: MARMOT_AUTH_KEYCLOAK_ALLOW_SIGNUP
+              value: {{ .Values.config.auth.providers.keycloak.allowSignup | quote }}
+            - name: MARMOT_AUTH_KEYCLOAK_CLIENT_SECRET
+              {{- if .Values.config.auth.providers.keycloak.clientSecretRef }}
+              {{- if and .Values.config.auth.providers.keycloak.clientSecret .Values.config.auth.providers.keycloak.clientSecretRef }}
+              {{- fail "Cannot specify both config.auth.providers.keycloak.clientSecret and config.auth.providers.keycloak.clientSecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.auth.providers.keycloak.clientSecretRef.name }}
+                  key: {{ .Values.config.auth.providers.keycloak.clientSecretRef.key }}
+              {{- else }}
+              value: {{ .Values.config.auth.providers.keycloak.clientSecret | quote }}
+              {{- end }}
+            {{- if .Values.config.auth.providers.keycloak.teamSync }}
+            {{- if .Values.config.auth.providers.keycloak.teamSync.enabled }}
+            - name: MARMOT_AUTH_KEYCLOAK_TEAM_SYNC_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_KEYCLOAK_TEAM_SYNC_GROUP_CLAIM
+              value: {{ .Values.config.auth.providers.keycloak.teamSync.groupClaim | default "groups" | quote }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+
+            {{- if and .Values.config.auth.providers .Values.config.auth.providers.genericOidc .Values.config.auth.providers.genericOidc.enabled }}
+            - name: MARMOT_AUTH_GENERIC_OIDC_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_GENERIC_OIDC_CLIENT_ID
+              value: {{ .Values.config.auth.providers.genericOidc.clientId | quote }}
+            - name: MARMOT_AUTH_GENERIC_OIDC_URL
+              value: {{ .Values.config.auth.providers.genericOidc.url | quote }}
+            - name: MARMOT_AUTH_GENERIC_OIDC_REDIRECT_URL
+              value: {{ .Values.config.auth.providers.genericOidc.redirectUrl | quote }}
+            - name: MARMOT_AUTH_GENERIC_OIDC_ALLOW_SIGNUP
+              value: {{ .Values.config.auth.providers.genericOidc.allowSignup | quote }}
+            - name: MARMOT_AUTH_GENERIC_OIDC_CLIENT_SECRET
+              {{- if .Values.config.auth.providers.genericOidc.clientSecretRef }}
+              {{- if and .Values.config.auth.providers.genericOidc.clientSecret .Values.config.auth.providers.genericOidc.clientSecretRef }}
+              {{- fail "Cannot specify both config.auth.providers.genericOidc.clientSecret and config.auth.providers.genericOidc.clientSecretRef" }}
+              {{- end }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.config.auth.providers.genericOidc.clientSecretRef.name }}
+                  key: {{ .Values.config.auth.providers.genericOidc.clientSecretRef.key }}
+              {{- else }}
+              value: {{ .Values.config.auth.providers.genericOidc.clientSecret | quote }}
+              {{- end }}
+            {{- if .Values.config.auth.providers.genericOidc.teamSync }}
+            {{- if .Values.config.auth.providers.genericOidc.teamSync.enabled }}
+            - name: MARMOT_AUTH_GENERIC_OIDC_TEAM_SYNC_ENABLED
+              value: "true"
+            - name: MARMOT_AUTH_GENERIC_OIDC_TEAM_SYNC_GROUP_CLAIM
+              value: {{ .Values.config.auth.providers.genericOidc.teamSync.groupClaim | default "groups" | quote }}
+            {{- end }}
+            {{- end }}
+            {{- end }}
+
             # Rate limit configuration
             - name: MARMOT_RATE_LIMIT_ENABLED
               value: {{ .Values.config.rateLimit.enabled | quote }}
