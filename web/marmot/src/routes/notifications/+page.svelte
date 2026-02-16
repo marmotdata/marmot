@@ -22,6 +22,12 @@
 		switch (notification.type) {
 			case 'asset_change':
 				return 'material-symbols:database';
+			case 'schema_change':
+			case 'upstream_schema_change':
+			case 'downstream_schema_change':
+				return 'material-symbols:schema';
+			case 'lineage_change':
+				return 'material-symbols:account-tree';
 			case 'asset_deleted':
 				return 'material-symbols:delete';
 			case 'team_invite':
@@ -40,6 +46,18 @@
 
 	function getNotificationColors(notification: Notification): { bg: string; icon: string } {
 		switch (notification.type) {
+			case 'schema_change':
+			case 'upstream_schema_change':
+			case 'downstream_schema_change':
+				return {
+					bg: 'bg-orange-100 dark:bg-orange-900/30',
+					icon: 'text-orange-700 dark:text-orange-400'
+				};
+			case 'lineage_change':
+				return {
+					bg: 'bg-purple-100 dark:bg-purple-900/30',
+					icon: 'text-purple-700 dark:text-purple-400'
+				};
 			case 'asset_change':
 				return {
 					bg: 'bg-earthy-blue-100 dark:bg-earthy-blue-900/30',
