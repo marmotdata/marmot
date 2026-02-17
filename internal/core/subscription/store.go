@@ -18,6 +18,7 @@ type Repository interface {
 	Delete(ctx context.Context, id string) error
 	GetByID(ctx context.Context, id string) (*Subscription, error)
 	GetByAssetAndUser(ctx context.Context, assetID, userID string) (*Subscription, error)
+	ListByAssets(ctx context.Context, userID string, assetIDs []string) (map[string]*Subscription, error)
 	ListByUser(ctx context.Context, userID string) ([]*SubscriptionWithAsset, error)
 	GetSubscribersForAsset(ctx context.Context, assetID string, notificationType string) ([]string, error)
 }
@@ -135,6 +136,44 @@ func (r *PostgresRepository) GetByAssetAndUser(ctx context.Context, assetID, use
 	}
 
 	return &sub, nil
+}
+
+func (r *PostgresRepository) ListByAssets(ctx context.Context, userID string, assetIDs []string) (map[string]*Subscription, error) {
+	if len(assetIDs) == 0 {
+		return make(map[string]*Subscription), nil
+	}
+
+	rows, err := r.db.Query(ctx, `
+		SELECT id, asset_id, user_id, notification_types, created_at, updated_at
+		FROM asset_subscriptions
+		WHERE user_id = $1 AND asset_id = ANY($2)`,
+		userID, assetIDs)
+	if err != nil {
+		return nil, fmt.Errorf("querying subscriptions by assets: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(map[string]*Subscription)
+	for rows.Next() {
+		var sub Subscription
+		var typesRaw []byte
+
+		if err := rows.Scan(&sub.ID, &sub.AssetID, &sub.UserID, &typesRaw, &sub.CreatedAt, &sub.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scanning subscription: %w", err)
+		}
+
+		if err := json.Unmarshal(typesRaw, &sub.NotificationTypes); err != nil {
+			return nil, fmt.Errorf("unmarshaling notification types: %w", err)
+		}
+
+		result[sub.AssetID] = &sub
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating subscriptions: %w", err)
+	}
+
+	return result, nil
 }
 
 func (r *PostgresRepository) ListByUser(ctx context.Context, userID string) ([]*SubscriptionWithAsset, error) {

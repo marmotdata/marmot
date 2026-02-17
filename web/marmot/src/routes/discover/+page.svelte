@@ -15,6 +15,7 @@
 	import GettingStarted from '$components/ui/GettingStarted.svelte';
 	import { auth } from '$lib/stores/auth';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
+	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
 
 	interface SearchResult {
 		type: 'asset' | 'glossary' | 'team' | 'data_product';
@@ -58,6 +59,11 @@
 	const isLoading: Writable<boolean> = writable(true);
 	const error: Writable<{ status: number; message: string } | null> = writable(null);
 
+	interface Subscription {
+		id: string;
+		notification_types: string[];
+	}
+
 	let currentPage = $state(1);
 	const itemsPerPage = 20;
 	let selectedAsset = $state<Asset | null>(null);
@@ -68,6 +74,7 @@
 	let selectedTypes = $state<string[]>([]);
 	let selectedProviders = $state<string[]>([]);
 	let selectedTags = $state<string[]>([]);
+	let subscriptionsMap = $state<Record<string, Subscription>>({});
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 	let filtersExpanded = $state(true);
 	let queryBuilderExpanded = $state(false);
@@ -161,6 +168,30 @@
 				providers: data.facets?.providers || [],
 				tags: data.facets?.tags || []
 			};
+
+			if (auth.getToken() && $results.length > 0) {
+				const assetIds = $results.filter((r) => r.type === 'asset').map((r) => r.id);
+
+				if (assetIds.length > 0) {
+					try {
+						const subsResponse = await fetchApi('/subscriptions/list', {
+							method: 'POST',
+							body: JSON.stringify({ asset_ids: assetIds })
+						});
+						if (subsResponse.ok) {
+							const subsData = await subsResponse.json();
+							subscriptionsMap = subsData.subscriptions || {};
+						}
+					} catch (subErr) {
+						console.error('Error fetching subscriptions:', subErr);
+						subscriptionsMap = {};
+					}
+				} else {
+					subscriptionsMap = {};
+				}
+			} else {
+				subscriptionsMap = {};
+			}
 		} catch (e: any) {
 			const errorStatus = e.status || 500;
 			$error = { status: errorStatus, message: e.message };
@@ -249,6 +280,11 @@
 			selectedTypes = [...selectedTypes, type];
 			handleFilterChange();
 		}
+	}
+
+	function handleSubscribeClick(event: MouseEvent | KeyboardEvent) {
+		event.preventDefault();
+		event.stopPropagation();
 	}
 
 	function removeFilter(filterType: 'kind' | 'types' | 'providers' | 'tags', value: string) {
@@ -784,7 +820,7 @@
 					</div>
 
 					<!-- Results List -->
-					<div class="flex-1 overflow-y-auto space-y-2">
+					<div class="space-y-2">
 						{#if $isLoading}
 							{#each Array(itemsPerPage) as _}
 								<div
@@ -850,14 +886,19 @@
 													</p>
 												</div>
 											</div>
-											<button
-												onclick={(e) => handleTypeClick(result.metadata?.type, e)}
-												class="flex-shrink-0 text-xs {getTagColor(
-													result.metadata?.type
-												)} px-2 py-0.5 rounded hover:opacity-80 transition-opacity font-medium"
-											>
-												{result.metadata?.type?.replace(/_/g, ' ')}
-											</button>
+											<div class="flex items-center gap-1.5 flex-shrink-0">
+												<div role="none" onclick={handleSubscribeClick}>
+													<SubscribeButton assetId={result.id} variant="icon-only" />
+												</div>
+												<button
+													onclick={(e) => handleTypeClick(result.metadata?.type, e)}
+													class="text-xs {getTagColor(
+														result.metadata?.type
+													)} px-2 py-0.5 rounded hover:opacity-80 transition-opacity font-medium"
+												>
+													{result.metadata?.type?.replace(/_/g, ' ')}
+												</button>
+											</div>
 										</div>
 
 										{#if result.description}
