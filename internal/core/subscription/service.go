@@ -119,6 +119,10 @@ func (s *Service) GetByAssetAndUser(ctx context.Context, assetID, userID string)
 	return s.repo.GetByAssetAndUser(ctx, assetID, userID)
 }
 
+func (s *Service) ListByAssets(ctx context.Context, userID string, assetIDs []string) (map[string]*Subscription, error) {
+	return s.repo.ListByAssets(ctx, userID, assetIDs)
+}
+
 func (s *Service) ListByUser(ctx context.Context, userID string) ([]*SubscriptionWithAsset, error) {
 	return s.repo.ListByUser(ctx, userID)
 }

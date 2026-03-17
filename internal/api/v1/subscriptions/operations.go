@@ -57,6 +57,35 @@ func (h *Handler) listSubscriptions(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (h *Handler) listSubscriptionsByAssets(w http.ResponseWriter, r *http.Request) {
+	usr, ok := common.GetAuthenticatedUser(r.Context())
+	if !ok {
+		common.RespondError(w, http.StatusUnauthorized, "Authentication required")
+		return
+	}
+
+	var input struct {
+		AssetIDs []string `json:"asset_ids"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	subs, err := h.svc.ListByAssets(r.Context(), usr.ID, input.AssetIDs)
+	if err != nil {
+		common.RespondError(w, http.StatusInternalServerError, "Failed to get subscriptions")
+		return
+	}
+	if subs == nil {
+		subs = make(map[string]*subscription.Subscription)
+	}
+
+	common.RespondJSON(w, http.StatusOK, map[string]interface{}{
+		"subscriptions": subs,
+	})
+}
+
 func (h *Handler) createSubscription(w http.ResponseWriter, r *http.Request) {
 	usr, ok := common.GetAuthenticatedUser(r.Context())
 	if !ok {

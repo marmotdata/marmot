@@ -50,6 +50,14 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
+			Path:    "/api/v1/subscriptions/list",
+			Method:  http.MethodPost,
+			Handler: h.listSubscriptionsByAssets,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+			},
+		},
+		{
 			Path:    "/api/v1/subscriptions",
 			Method:  http.MethodPost,
 			Handler: h.createSubscription,

@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 
 	interface Props {
 		assetId: string;
+		variant?: 'default' | 'icon-only';
 	}
 
-	let { assetId }: Props = $props();
+	let { assetId, variant = 'default' }: Props = $props();
 
 	interface Subscription {
 		id: string;
@@ -29,6 +30,9 @@
 	let subscription: Subscription | null = $state(null);
 	let loading = $state(true);
 	let showDropdown = $state(false);
+	let dropdownOnTop = $state(false);
+	let buttonRef = $state<HTMLElement | undefined>();
+	let dropdownRef = $state<HTMLElement | undefined>();
 
 	let isLoggedIn = $derived(!!auth.getToken());
 
@@ -67,6 +71,8 @@
 			if (response.ok) {
 				subscription = await response.json();
 				showDropdown = true;
+				await tick();
+				checkDropdownPosition();
 			}
 		} catch {
 			// ignore
@@ -117,12 +123,31 @@
 		}
 	}
 
-	function handleButtonClick() {
+	async function handleButtonClick() {
 		if (subscription) {
 			showDropdown = !showDropdown;
+
+			if (showDropdown) {
+				await tick(); // wait for dropdown to render
+				checkDropdownPosition();
+			}
 		} else {
 			subscribe();
 		}
+	}
+
+	function checkDropdownPosition() {
+		if (!buttonRef || !dropdownRef) return;
+
+		const buttonRect = buttonRef.getBoundingClientRect();
+		const dropdownRect = dropdownRef.getBoundingClientRect();
+		const viewportHeight = window.innerHeight;
+
+		const spaceBelow = viewportHeight - buttonRect.bottom;
+		const spaceAbove = buttonRect.top;
+
+		// Flip if not enough space below and more space above
+		dropdownOnTop = spaceBelow < dropdownRect.height && spaceAbove > spaceBelow;
 	}
 
 	function handleClickOutside(event: MouseEvent) {
@@ -137,10 +162,13 @@
 
 <div class="subscribe-dropdown-container relative">
 	<button
+		bind:this={buttonRef}
 		type="button"
 		onclick={handleButtonClick}
 		disabled={loading || !isLoggedIn}
-		class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors
+		class="{variant === 'icon-only'
+			? 'inline-flex items-center justify-center w-7 h-7 text-sm rounded-md transition-colors'
+			: 'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors'}
 			{!isLoggedIn
 			? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
 			: subscription
@@ -157,14 +185,18 @@
 			icon={subscription
 				? 'material-symbols:notifications'
 				: 'material-symbols:notifications-outline'}
-			class="w-3.5 h-3.5"
+			class={variant === 'icon-only' ? 'w-4 h-4' : 'w-3.5 h-3.5'}
 		/>
-		{subscription ? 'Subscribed' : 'Subscribe'}
+		{#if variant === 'default'}
+			{subscription ? 'Subscribed' : 'Subscribe'}
+		{/if}
 	</button>
 
 	{#if showDropdown && subscription}
 		<div
-			class="absolute top-full left-0 mt-1 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50"
+			bind:this={dropdownRef}
+			class="absolute right-0 w-56 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-50
+			{dropdownOnTop ? 'bottom-full mb-1' : 'top-full mt-1'}"
 		>
 			<div class="p-2 space-y-0.5">
 				{#each notificationTypes as { type, label }}
