@@ -3,7 +3,7 @@ import { Icon } from "@iconify/react";
 
 const stats = [
   { value: "500+", label: "GitHub Stars", icon: "mdi:star" },
-  { value: "6k+", label: "Downloads", icon: "mdi:download" },
+  { value: "7k+", label: "Downloads", icon: "mdi:download" },
   { value: "20+", label: "Integrations", icon: "mdi:puzzle" },
   { value: "MIT", label: "Licensed", icon: "mdi:license" },
 ];
@@ -45,12 +45,12 @@ export default function Hero(): JSX.Element {
         <div
           data-animate
           data-animate-delay="4"
-          className="flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="flex flex-row items-center justify-center gap-4"
         >
           <span className="sparkle-container">
             <a
               href="/docs/introduction"
-              className="group inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 text-base font-semibold rounded-xl text-white bg-gradient-to-r from-earthy-terracotta-700 to-earthy-terracotta-600 hover:from-earthy-terracotta-800 hover:to-earthy-terracotta-700 shadow-lg shadow-earthy-terracotta-700/20 hover:shadow-xl hover:shadow-earthy-terracotta-700/30 transition-all duration-300 hover:-translate-y-0.5"
+              className="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl text-white bg-gradient-to-r from-earthy-terracotta-700 to-earthy-terracotta-600 hover:from-earthy-terracotta-800 hover:to-earthy-terracotta-700 shadow-lg shadow-earthy-terracotta-700/20 hover:shadow-xl hover:shadow-earthy-terracotta-700/30 transition-all duration-300 hover:-translate-y-0.5"
             >
               Get Started
               <svg
@@ -75,7 +75,7 @@ export default function Hero(): JSX.Element {
             href="https://demo.marmotdata.io"
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center justify-center w-full sm:w-auto px-8 py-4 text-base font-semibold rounded-xl text-earthy-terracotta-700 dark:text-earthy-terracotta-400 bg-white/60 dark:bg-gray-800/50 backdrop-blur-md border border-white/40 dark:border-white/10 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-300 hover:-translate-y-0.5"
+            className="group inline-flex items-center justify-center px-8 py-4 text-base font-semibold rounded-xl text-earthy-terracotta-700 dark:text-earthy-terracotta-400 bg-white/60 dark:bg-gray-800/50 backdrop-blur-md border border-white/40 dark:border-white/10 hover:bg-white/80 dark:hover:bg-gray-800/80 transition-all duration-300 hover:-translate-y-0.5"
           >
             <svg
               className="w-5 h-5 mr-2 transition-transform duration-200 group-hover:scale-110"
