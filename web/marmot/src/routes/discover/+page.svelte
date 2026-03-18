@@ -887,9 +887,6 @@
 												</div>
 											</div>
 											<div class="flex items-center gap-1.5 flex-shrink-0">
-												<div role="none" onclick={handleSubscribeClick}>
-													<SubscribeButton assetId={result.id} variant="icon-only" />
-												</div>
 												<button
 													onclick={(e) => handleTypeClick(result.metadata?.type, e)}
 													class="text-xs {getTagColor(
@@ -927,17 +924,26 @@
 										{/if}
 
 										<div
-											class="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 pt-1.5 border-t border-gray-100 dark:border-gray-700"
+											class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 pt-1.5 border-t border-gray-100 dark:border-gray-700"
 										>
-											{#if result.metadata?.created_by}
-												<span>{result.metadata.created_by}</span>
-												<span>•</span>
-											{/if}
-											<span>
-												{#if result.metadata?.created_at}
-													{formatDate(result.metadata.created_at)}
+											<div class="flex items-center gap-2">
+												{#if result.metadata?.created_by}
+													<span>{result.metadata.created_by}</span>
+													<span>•</span>
 												{/if}
-											</span>
+												<span>
+													{#if result.metadata?.created_at}
+														{formatDate(result.metadata.created_at)}
+													{/if}
+												</span>
+											</div>
+											<div
+												role="none"
+												onclick={handleSubscribeClick}
+												class="opacity-40 group-hover:opacity-100 transition-opacity"
+											>
+												<SubscribeButton assetId={result.id} variant="icon-only" />
+											</div>
 										</div>
 									</div>
 								{:else if result.type === 'data_product'}

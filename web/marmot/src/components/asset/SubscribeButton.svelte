@@ -170,10 +170,16 @@
 			? 'inline-flex items-center justify-center w-7 h-7 text-sm rounded-md transition-colors'
 			: 'inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md transition-colors'}
 			{!isLoggedIn
-			? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
+			? variant === 'icon-only'
+				? 'text-gray-400 cursor-not-allowed dark:text-gray-500'
+				: 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-700 dark:text-gray-500'
 			: subscription
-				? 'bg-earthy-terracotta-50 text-earthy-terracotta-700 hover:bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 dark:text-earthy-terracotta-400 dark:hover:bg-earthy-terracotta-900/30'
-				: 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}
+				? variant === 'icon-only'
+					? 'text-earthy-terracotta-600 hover:text-earthy-terracotta-700 dark:text-earthy-terracotta-400 dark:hover:text-earthy-terracotta-300'
+					: 'bg-earthy-terracotta-50 text-earthy-terracotta-700 hover:bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900/20 dark:text-earthy-terracotta-400 dark:hover:bg-earthy-terracotta-900/30'
+				: variant === 'icon-only'
+					? 'text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300'
+					: 'bg-gray-100 text-gray-600 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'}
 			{loading ? 'opacity-50 cursor-not-allowed' : !isLoggedIn ? '' : 'cursor-pointer'}"
 		title={!isLoggedIn
 			? 'You must be logged in to subscribe to assets'

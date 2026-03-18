@@ -20,7 +20,7 @@ RUN CGO_ENABLED=0 go build -tags production -o marmot ./cmd/main.go
 
 FROM alpine:3.23.3
 
-RUN apk add --no-cache ca-certificates tzdata
+RUN apk upgrade --no-cache && apk add --no-cache ca-certificates tzdata
 RUN adduser -D -u 10001 marmot
 
 WORKDIR /app

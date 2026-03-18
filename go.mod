@@ -1,6 +1,6 @@
 module github.com/marmotdata/marmot
 
-go 1.26.0
+go 1.26.1
 
 require (
 	cloud.google.com/go/bigquery v1.73.1
@@ -58,7 +58,7 @@ require (
 	cloud.google.com/go/iam v1.5.3 // indirect
 	cloud.google.com/go/monitoring v1.24.3 // indirect
 	dario.cat/mergo v1.0.2 // indirect
-	filippo.io/edwards25519 v1.1.0 // indirect
+	filippo.io/edwards25519 v1.1.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
 	github.com/ClickHouse/ch-go v0.71.0 // indirect
