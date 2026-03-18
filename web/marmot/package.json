@@ -14,9 +14,9 @@
 	"devDependencies": {
 		"@iconify/json": "^2.2.345",
 		"@iconify/svelte": "^5.0.0",
-		"@sveltejs/adapter-auto": "^6.0.1",
-		"@sveltejs/adapter-static": "^3.0.8",
-		"@sveltejs/kit": "^2.21.1",
+		"@sveltejs/adapter-auto": "^6.1.1",
+		"@sveltejs/adapter-static": "^3.0.10",
+		"@sveltejs/kit": "^2.55.0",
 		"@sveltejs/vite-plugin-svelte": "^5.0.3",
 		"@tailwindcss/typography": "^0.5.16",
 		"@types/d3": "^7.4.3",
@@ -31,7 +31,7 @@
 		"postcss": "^8.5.4",
 		"prettier": "^3.5.3",
 		"prettier-plugin-svelte": "^3.4.0",
-		"svelte": "^5.33.13",
+		"svelte": "^5.54.0",
 		"svelte-check": "^4.2.1",
 		"tailwindcss": "^3.4.14",
 		"typescript": "^5.8.3",
@@ -87,16 +87,24 @@
 		"overrides": {
 			"pbkdf2": ">=3.1.5",
 			"sha.js": ">=2.4.12",
-			"devalue": ">=5.2.1",
+			"devalue": ">=5.6.4",
 			"glob": ">=10.5.0",
 			"brace-expansion@1": ">=1.1.12",
 			"brace-expansion@2": ">=2.0.2",
 			"brace-expansion": ">=2.0.2",
-			"minimatch": ">=9.0.0",
+			"@isaacs/brace-expansion": ">=5.0.1",
+			"minimatch": ">=10.2.3",
 			"@eslint/plugin-kit": ">=0.3.4",
 			"mermaid": ">=11.10.0",
 			"js-yaml": ">=4.1.1",
-			"cookie": ">=0.7.0"
+			"cookie": ">=0.7.0",
+			"flatted": ">=3.4.0",
+			"rollup": ">=4.59.0",
+			"dompurify": ">=3.3.2",
+			"markdown-it": ">=14.1.1",
+			"lodash-es": ">=4.17.23",
+			"qs": ">=6.14.2",
+			"bn.js": ">=5.2.3"
 		}
 	}
 }
