@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -25,6 +26,7 @@ type KeycloakProvider struct {
 	verifier     *oidc.IDTokenVerifier
 	oauthConfig  *oauth2.Config
 	oidcProvider *oidc.Provider
+	httpClient   *http.Client
 }
 
 func NewKeycloakProvider(cfg *config.Config, userService user.Service, authService Service, teamService *team.Service) (*KeycloakProvider, error) {
@@ -45,8 +47,20 @@ func NewKeycloakProvider(cfg *config.Config, userService user.Service, authServi
 		teamService:  teamService,
 	}
 
+	ctx := context.Background()
+	if providerCfg.TLS != nil {
+		httpClient, err := providerCfg.TLS.HTTPClient()
+		if err != nil {
+			return nil, fmt.Errorf("configuring TLS for Keycloak: %w", err)
+		}
+		if httpClient != nil {
+			p.httpClient = httpClient
+			ctx = oidc.ClientContext(ctx, httpClient)
+		}
+	}
+
 	var err error
-	p.oidcProvider, err = oidc.NewProvider(context.Background(), issuerURL)
+	p.oidcProvider, err = oidc.NewProvider(ctx, issuerURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Keycloak OIDC provider: %w", err)
 	}
@@ -71,6 +85,10 @@ func (p *KeycloakProvider) GetAuthURL(state string) string {
 }
 
 func (p *KeycloakProvider) HandleCallback(ctx context.Context, code string) (*user.User, error) {
+	if p.httpClient != nil {
+		ctx = oidc.ClientContext(ctx, p.httpClient)
+	}
+
 	log.Debug().Str("code_length", fmt.Sprintf("%d", len(code))).Msg("exchanging Keycloak code for token")
 
 	token, err := p.oauthConfig.Exchange(ctx, code)

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 
 	"github.com/coreos/go-oidc/v3/oidc"
@@ -26,6 +27,7 @@ type GenericOIDCProvider struct {
 	verifier     *oidc.IDTokenVerifier
 	oauthConfig  *oauth2.Config
 	oidcProvider *oidc.Provider
+	httpClient   *http.Client
 }
 
 func NewGenericOIDCProvider(cfg *config.Config, userService user.Service, authService Service, teamService *team.Service) (*GenericOIDCProvider, error) {
@@ -52,8 +54,20 @@ func NewGenericOIDCProvider(cfg *config.Config, userService user.Service, authSe
 		teamService:  teamService,
 	}
 
+	ctx := context.Background()
+	if providerCfg.TLS != nil {
+		httpClient, err := providerCfg.TLS.HTTPClient()
+		if err != nil {
+			return nil, fmt.Errorf("configuring TLS for Generic OIDC: %w", err)
+		}
+		if httpClient != nil {
+			p.httpClient = httpClient
+			ctx = oidc.ClientContext(ctx, httpClient)
+		}
+	}
+
 	var err error
-	p.oidcProvider, err = oidc.NewProvider(context.Background(), issuerURL)
+	p.oidcProvider, err = oidc.NewProvider(ctx, issuerURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Generic OIDC provider: %w", err)
 	}
@@ -78,6 +92,10 @@ func (p *GenericOIDCProvider) GetAuthURL(state string) string {
 }
 
 func (p *GenericOIDCProvider) HandleCallback(ctx context.Context, code string) (*user.User, error) {
+	if p.httpClient != nil {
+		ctx = oidc.ClientContext(ctx, p.httpClient)
+	}
+
 	log.Debug().Str("code_length", fmt.Sprintf("%d", len(code))).Msg("exchanging Generic OIDC code for token")
 
 	token, err := p.oauthConfig.Exchange(ctx, code)

@@ -30,6 +30,7 @@ type OAuthProviderConfig struct {
 	AllowSignup  bool             `mapstructure:"allow_signup"`
 	GroupMapping []GroupMapConfig `mapstructure:"group_mapping"`
 	TeamSync     TeamSyncConfig   `mapstructure:"team_sync"`
+	TLS          *TLSConfig       `mapstructure:"tls"`
 }
 
 type GroupMapConfig struct {
@@ -192,6 +193,10 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.okta.allow_signup")
 	v.BindEnv("auth.okta.team_sync.enabled")
 	v.BindEnv("auth.okta.team_sync.group_claim")
+	v.BindEnv("auth.okta.tls.insecure_skip_verify")
+	v.BindEnv("auth.okta.tls.ca_cert_path")
+	v.BindEnv("auth.okta.tls.cert_path")
+	v.BindEnv("auth.okta.tls.key_path")
 
 	v.BindEnv("auth.google.client_id")
 	v.BindEnv("auth.google.client_secret")
@@ -211,6 +216,10 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.generic_oidc.allow_signup")
 	v.BindEnv("auth.generic_oidc.team_sync.enabled")
 	v.BindEnv("auth.generic_oidc.team_sync.group_claim")
+	v.BindEnv("auth.generic_oidc.tls.insecure_skip_verify")
+	v.BindEnv("auth.generic_oidc.tls.ca_cert_path")
+	v.BindEnv("auth.generic_oidc.tls.cert_path")
+	v.BindEnv("auth.generic_oidc.tls.key_path")
 
 	v.BindEnv("auth.github.client_id")
 	v.BindEnv("auth.github.client_secret")
@@ -228,6 +237,10 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.gitlab.type")
 	v.BindEnv("auth.gitlab.name")
 	v.BindEnv("auth.gitlab.allow_signup")
+	v.BindEnv("auth.gitlab.tls.insecure_skip_verify")
+	v.BindEnv("auth.gitlab.tls.ca_cert_path")
+	v.BindEnv("auth.gitlab.tls.cert_path")
+	v.BindEnv("auth.gitlab.tls.key_path")
 
 	v.BindEnv("auth.keycloak.client_id")
 	v.BindEnv("auth.keycloak.client_secret")
@@ -240,6 +253,10 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.keycloak.allow_signup")
 	v.BindEnv("auth.keycloak.team_sync.enabled")
 	v.BindEnv("auth.keycloak.team_sync.group_claim")
+	v.BindEnv("auth.keycloak.tls.insecure_skip_verify")
+	v.BindEnv("auth.keycloak.tls.ca_cert_path")
+	v.BindEnv("auth.keycloak.tls.cert_path")
+	v.BindEnv("auth.keycloak.tls.key_path")
 
 	v.BindEnv("auth.slack.client_id")
 	v.BindEnv("auth.slack.client_secret")
@@ -259,6 +276,10 @@ func loadConfig(configPath string) error {
 	v.BindEnv("auth.auth0.allow_signup")
 	v.BindEnv("auth.auth0.team_sync.enabled")
 	v.BindEnv("auth.auth0.team_sync.group_claim")
+	v.BindEnv("auth.auth0.tls.insecure_skip_verify")
+	v.BindEnv("auth.auth0.tls.ca_cert_path")
+	v.BindEnv("auth.auth0.tls.cert_path")
+	v.BindEnv("auth.auth0.tls.key_path")
 
 	v.BindEnv("auth.anonymous.enabled")
 	v.BindEnv("auth.anonymous.role")

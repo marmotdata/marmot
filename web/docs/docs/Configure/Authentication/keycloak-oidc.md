@@ -95,3 +95,49 @@ To include groups in the ID token:
    - **Add to access token**: On
    - **Add to userinfo**: On
 7. Click **Save**
+
+## Custom TLS Configuration
+
+If your Keycloak instance uses a self-signed certificate or a certificate signed by an internal CA, you can configure Marmot to trust it:
+
+```yaml
+auth:
+  keycloak:
+    enabled: true
+    client_id: "marmot"
+    client_secret: "your-client-secret"
+    url: "https://keycloak.internal"
+    realm: "your-realm"
+    tls:
+      ca_cert_path: "/etc/ssl/certs/internal-ca.pem"
+```
+
+Or via environment variables:
+
+```bash
+export MARMOT_AUTH_KEYCLOAK_TLS_CA_CERT_PATH="/etc/ssl/certs/internal-ca.pem"
+```
+
+To skip TLS verification entirely (not recommended for production):
+
+```bash
+export MARMOT_AUTH_KEYCLOAK_TLS_INSECURE_SKIP_VERIFY=true
+```
+
+If your Keycloak instance requires mutual TLS (mTLS), you can provide a client certificate and key:
+
+```yaml
+auth:
+  keycloak:
+    tls:
+      ca_cert_path: "/etc/ssl/certs/internal-ca.pem"
+      cert_path: "/etc/ssl/certs/client.pem"
+      key_path: "/etc/ssl/private/client-key.pem"
+```
+
+| Field | Description |
+|-------|-------------|
+| `tls.ca_cert_path` | Path to a PEM-encoded CA certificate to trust |
+| `tls.cert_path` | Path to a PEM-encoded client certificate for mTLS |
+| `tls.key_path` | Path to the client certificate's private key |
+| `tls.insecure_skip_verify` | Skip TLS certificate verification (default: `false`) |

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/marmotdata/marmot/internal/config"
@@ -24,6 +25,7 @@ type Auth0Provider struct {
 	verifier     *oidc.IDTokenVerifier
 	oauthConfig  *oauth2.Config
 	oidcProvider *oidc.Provider
+	httpClient   *http.Client
 }
 
 func NewAuth0Provider(cfg *config.Config, userService user.Service, authService Service, teamService *team.Service) (*Auth0Provider, error) {
@@ -42,8 +44,20 @@ func NewAuth0Provider(cfg *config.Config, userService user.Service, authService 
 		teamService:  teamService,
 	}
 
+	ctx := context.Background()
+	if providerCfg.TLS != nil {
+		httpClient, err := providerCfg.TLS.HTTPClient()
+		if err != nil {
+			return nil, fmt.Errorf("configuring TLS for Auth0: %w", err)
+		}
+		if httpClient != nil {
+			p.httpClient = httpClient
+			ctx = oidc.ClientContext(ctx, httpClient)
+		}
+	}
+
 	var err error
-	p.oidcProvider, err = oidc.NewProvider(context.Background(), providerCfg.URL)
+	p.oidcProvider, err = oidc.NewProvider(ctx, providerCfg.URL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create Auth0 OIDC provider: %w", err)
 	}
@@ -68,6 +82,10 @@ func (p *Auth0Provider) GetAuthURL(state string) string {
 }
 
 func (p *Auth0Provider) HandleCallback(ctx context.Context, code string) (*user.User, error) {
+	if p.httpClient != nil {
+		ctx = oidc.ClientContext(ctx, p.httpClient)
+	}
+
 	log.Debug().Str("code_length", fmt.Sprintf("%d", len(code))).Msg("exchanging Auth0 code for token")
 
 	token, err := p.oauthConfig.Exchange(ctx, code)

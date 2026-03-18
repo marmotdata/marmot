@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/http"
 
 	"github.com/coreos/go-oidc/v3/oidc"
 	"github.com/marmotdata/marmot/internal/config"
@@ -22,6 +23,7 @@ type GitLabProvider struct {
 	verifier     *oidc.IDTokenVerifier
 	oauthConfig  *oauth2.Config
 	oidcProvider *oidc.Provider
+	httpClient   *http.Client
 }
 
 func NewGitLabProvider(cfg *config.Config, userService user.Service) (*GitLabProvider, error) {
@@ -35,12 +37,6 @@ func NewGitLabProvider(cfg *config.Config, userService user.Service) (*GitLabPro
 		gitlabURL = "https://gitlab.com"
 	}
 
-	ctx := context.Background()
-	oidcProvider, err := oidc.NewProvider(ctx, gitlabURL)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create GitLab OIDC provider: %w", err)
-	}
-
 	p := &GitLabProvider{
 		clientID:     providerCfg.ClientID,
 		clientSecret: providerCfg.ClientSecret,
@@ -48,8 +44,25 @@ func NewGitLabProvider(cfg *config.Config, userService user.Service) (*GitLabPro
 		gitlabURL:    gitlabURL,
 		config:       cfg,
 		userService:  userService,
-		oidcProvider: oidcProvider,
 	}
+
+	ctx := context.Background()
+	if providerCfg.TLS != nil {
+		httpClient, err := providerCfg.TLS.HTTPClient()
+		if err != nil {
+			return nil, fmt.Errorf("configuring TLS for GitLab: %w", err)
+		}
+		if httpClient != nil {
+			p.httpClient = httpClient
+			ctx = oidc.ClientContext(ctx, httpClient)
+		}
+	}
+
+	oidcProvider, err := oidc.NewProvider(ctx, gitlabURL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create GitLab OIDC provider: %w", err)
+	}
+	p.oidcProvider = oidcProvider
 
 	p.verifier = oidcProvider.Verifier(&oidc.Config{
 		ClientID: p.clientID,
@@ -71,6 +84,10 @@ func (p *GitLabProvider) GetAuthURL(state string) string {
 }
 
 func (p *GitLabProvider) HandleCallback(ctx context.Context, code string) (*user.User, error) {
+	if p.httpClient != nil {
+		ctx = oidc.ClientContext(ctx, p.httpClient)
+	}
+
 	log.Debug().Str("code_length", fmt.Sprintf("%d", len(code))).Msg("exchanging GitLab code for token")
 
 	token, err := p.oauthConfig.Exchange(ctx, code)
