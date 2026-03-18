@@ -84,6 +84,26 @@ func runMarmot(_ *cobra.Command) error {
 	}
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
+
+	if cfg.Server.TLS != nil {
+		tlsCfg, err := cfg.Server.TLS.ToServerTLSConfig()
+		if err != nil {
+			return fmt.Errorf("configuring server TLS: %w", err)
+		}
+
+		log.Info().
+			Str("address", addr).
+			Str("swagger_ui", fmt.Sprintf("https://%s/swagger/index.html", addr)).
+			Msg("Server started (TLS)")
+
+		srv := &http.Server{
+			Addr:      addr,
+			Handler:   mux,
+			TLSConfig: tlsCfg,
+		}
+		return srv.ListenAndServeTLS("", "")
+	}
+
 	log.Info().
 		Str("address", addr).
 		Str("swagger_ui", fmt.Sprintf("http://%s/swagger/index.html", addr)).

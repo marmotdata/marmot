@@ -20,6 +20,12 @@ import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
     icon="mdi:incognito"
   />
   <DocCard
+    title="TLS"
+    description="Set up custom TLS configuration"
+    href="/docs/Configure/tls"
+    icon="mdi:lock"
+  />
+  <DocCard
     title="Customisable Banner"
     description="Display announcements and notices to users"
     href="/docs/Configure/banner"
@@ -54,36 +60,39 @@ All configuration options can be set via environment variables using the `MARMOT
 
 Marmot requires PostgreSQL 14 or later. Ensure the database user has privileges to create tables and indexes.
 
-| Key | Description | Default | Environment Variable |
-| --- | --- | --- | --- |
-| `database.host` | PostgreSQL host | `localhost` | `MARMOT_DATABASE_HOST` |
-| `database.port` | PostgreSQL port | `5432` | `MARMOT_DATABASE_PORT` |
-| `database.user` | Database username | `postgres` | `MARMOT_DATABASE_USER` |
-| `database.password` | Database password | - | `MARMOT_DATABASE_PASSWORD` |
-| `database.name` | Database name | `marmot` | `MARMOT_DATABASE_NAME` |
-| `database.sslmode` | SSL mode (disable, require, verify-full) | `disable` | `MARMOT_DATABASE_SSLMODE` |
-| `database.maxConns` | Maximum open connections | `10` | `MARMOT_DATABASE_MAX_CONNS` |
-| `database.idleConns` | Minimum idle connections | `5` | `MARMOT_DATABASE_IDLE_CONNS` |
-| `database.connLifetime` | Connection lifetime in minutes | `30` | `MARMOT_DATABASE_CONN_LIFETIME` |
+| Key                     | Description                              | Default     | Environment Variable            |
+| ----------------------- | ---------------------------------------- | ----------- | ------------------------------- |
+| `database.host`         | PostgreSQL host                          | `localhost` | `MARMOT_DATABASE_HOST`          |
+| `database.port`         | PostgreSQL port                          | `5432`      | `MARMOT_DATABASE_PORT`          |
+| `database.user`         | Database username                        | `postgres`  | `MARMOT_DATABASE_USER`          |
+| `database.password`     | Database password                        | -           | `MARMOT_DATABASE_PASSWORD`      |
+| `database.name`         | Database name                            | `marmot`    | `MARMOT_DATABASE_NAME`          |
+| `database.sslmode`      | SSL mode (disable, require, verify-full) | `disable`   | `MARMOT_DATABASE_SSLMODE`       |
+| `database.maxConns`     | Maximum open connections                 | `10`        | `MARMOT_DATABASE_MAX_CONNS`     |
+| `database.idleConns`    | Minimum idle connections                 | `5`         | `MARMOT_DATABASE_IDLE_CONNS`    |
+| `database.connLifetime` | Connection lifetime in minutes           | `30`        | `MARMOT_DATABASE_CONN_LIFETIME` |
 
 ## Server
 
-| Key | Description | Default | Environment Variable |
-| --- | --- | --- | --- |
-| `server.host` | Bind address | `0.0.0.0` | `MARMOT_SERVER_HOST` |
-| `server.port` | Port number | `8080` | `MARMOT_SERVER_PORT` |
+| Key                       | Description                                    | Default   | Environment Variable             |
+| ------------------------- | ---------------------------------------------- | --------- | -------------------------------- |
+| `server.host`             | Bind address                                   | `0.0.0.0` | `MARMOT_SERVER_HOST`             |
+| `server.port`             | Port number                                    | `8080`    | `MARMOT_SERVER_PORT`             |
+| `server.tls.cert_path`    | Path to server TLS certificate                 | -         | `MARMOT_SERVER_TLS_CERT_PATH`    |
+| `server.tls.key_path`     | Path to server TLS private key                 | -         | `MARMOT_SERVER_TLS_KEY_PATH`     |
+| `server.tls.ca_cert_path` | Path to CA cert for client verification (mTLS) | -         | `MARMOT_SERVER_TLS_CA_CERT_PATH` |
 
 ## Logging
 
 Marmot uses structured logging. Set the format to `console` for human-readable output during development.
 
-| Key | Description | Default | Environment Variable |
-| --- | --- | --- | --- |
-| `logging.level` | Log level (debug, info, warn, error) | `info` | `MARMOT_LOGGING_LEVEL` |
-| `logging.format` | Output format (json, console) | `json` | `MARMOT_LOGGING_FORMAT` |
+| Key              | Description                          | Default | Environment Variable    |
+| ---------------- | ------------------------------------ | ------- | ----------------------- |
+| `logging.level`  | Log level (debug, info, warn, error) | `info`  | `MARMOT_LOGGING_LEVEL`  |
+| `logging.format` | Output format (json, console)        | `json`  | `MARMOT_LOGGING_FORMAT` |
 
 ## OpenLineage
 
-| Key | Description | Default | Environment Variable |
-| --- | --- | --- | --- |
-| `openlineage.auth.enabled` | Require authentication for the OpenLineage endpoint | `true` | `MARMOT_OPENLINEAGE_AUTH_ENABLED` |
+| Key                        | Description                                         | Default | Environment Variable              |
+| -------------------------- | --------------------------------------------------- | ------- | --------------------------------- |
+| `openlineage.auth.enabled` | Require authentication for the OpenLineage endpoint | `true`  | `MARMOT_OPENLINEAGE_AUTH_ENABLED` |

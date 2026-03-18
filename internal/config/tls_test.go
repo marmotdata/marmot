@@ -110,6 +110,62 @@ func TestTLSConfig_HTTPClient_PropagatesError(t *testing.T) {
 	require.Error(t, err)
 }
 
+func TestTLSConfig_ToServerTLSConfig_Nil(t *testing.T) {
+	var tc *TLSConfig
+	cfg, err := tc.ToServerTLSConfig()
+	require.NoError(t, err)
+	assert.Nil(t, cfg)
+}
+
+func TestTLSConfig_ToServerTLSConfig_ValidCertKey(t *testing.T) {
+	certPath, keyPath := writeTestClientCert(t)
+
+	tc := &TLSConfig{CertPath: certPath, KeyPath: keyPath}
+	cfg, err := tc.ToServerTLSConfig()
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	assert.Equal(t, uint16(tls.VersionTLS12), cfg.MinVersion)
+	assert.Len(t, cfg.Certificates, 1)
+	assert.Nil(t, cfg.ClientCAs)
+	assert.Equal(t, tls.NoClientCert, cfg.ClientAuth)
+}
+
+func TestTLSConfig_ToServerTLSConfig_WithCACert(t *testing.T) {
+	certPath, keyPath := writeTestClientCert(t)
+	caPath := writeTestCACert(t)
+
+	tc := &TLSConfig{CertPath: certPath, KeyPath: keyPath, CACertPath: caPath}
+	cfg, err := tc.ToServerTLSConfig()
+	require.NoError(t, err)
+	require.NotNil(t, cfg)
+	assert.NotNil(t, cfg.ClientCAs)
+	assert.Equal(t, tls.RequireAndVerifyClientCert, cfg.ClientAuth)
+}
+
+func TestTLSConfig_ToServerTLSConfig_InvalidCertKey(t *testing.T) {
+	dir := t.TempDir()
+	certPath := filepath.Join(dir, "cert.pem")
+	keyPath := filepath.Join(dir, "key.pem")
+	require.NoError(t, os.WriteFile(certPath, []byte("not a cert"), 0o600))
+	require.NoError(t, os.WriteFile(keyPath, []byte("not a key"), 0o600))
+
+	tc := &TLSConfig{CertPath: certPath, KeyPath: keyPath}
+	_, err := tc.ToServerTLSConfig()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "loading server cert/key")
+}
+
+func TestTLSConfig_ToServerTLSConfig_InvalidCACert(t *testing.T) {
+	certPath, keyPath := writeTestClientCert(t)
+	caPath := filepath.Join(t.TempDir(), "bad-ca.pem")
+	require.NoError(t, os.WriteFile(caPath, []byte("not a cert"), 0o600))
+
+	tc := &TLSConfig{CertPath: certPath, KeyPath: keyPath, CACertPath: caPath}
+	_, err := tc.ToServerTLSConfig()
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "failed to parse CA cert")
+}
+
 func writeTestCACert(t *testing.T) string {
 	t.Helper()
 

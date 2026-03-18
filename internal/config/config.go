@@ -63,6 +63,7 @@ type Config struct {
 		CustomResponseHeaders map[string]string `mapstructure:"customer_response_headers"`
 		EncryptionKey         string            `mapstructure:"encryption_key"`
 		AllowUnencrypted      bool              `mapstructure:"allow_unencrypted"`
+		TLS                   *TLSConfig        `mapstructure:"tls"`
 	} `mapstructure:"server"`
 
 	Metrics struct {
@@ -289,6 +290,10 @@ func loadConfig(configPath string) error {
 	v.BindEnv("server.root_url")
 	v.BindEnv("server.encryption_key")
 	v.BindEnv("server.allow_unencrypted")
+	v.BindEnv("server.tls.cert_path")
+	v.BindEnv("server.tls.key_path")
+	v.BindEnv("server.tls.ca_cert_path")
+	v.BindEnv("server.tls.insecure_skip_verify")
 
 	// Rate limit env vars
 	v.BindEnv("rate_limit.enabled")
@@ -475,6 +480,12 @@ func validate(cfg *Config) error {
 	}
 	if cfg.UI.Banner.Enabled && !validVariants[strings.ToLower(cfg.UI.Banner.Variant)] {
 		return fmt.Errorf("invalid banner variant: %s", cfg.UI.Banner.Variant)
+	}
+
+	if cfg.Server.TLS != nil {
+		if cfg.Server.TLS.CertPath == "" || cfg.Server.TLS.KeyPath == "" {
+			return fmt.Errorf("server.tls requires both cert_path and key_path")
+		}
 	}
 
 	if cfg.Pipelines.MaxWorkers < 1 {
