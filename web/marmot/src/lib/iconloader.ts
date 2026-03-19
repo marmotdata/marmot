@@ -7,6 +7,7 @@ import AirflowIcon from '~icons/logos/airflow-icon';
 import RedisIcon from '~icons/logos/redis';
 import PostgresqlIcon from '~icons/logos/postgresql';
 import DynamoDBIcon from '~icons/logos/aws-dynamodb';
+import LambdaIcon from '~icons/logos/aws-lambda';
 import KinesisIcon from '~icons/logos/aws-kinesis';
 import SnsIcon from '~icons/logos/aws-sns';
 import SqsIcon from '~icons/logos/aws-sqs';
@@ -39,6 +40,7 @@ import TableauIcon from '~icons/simple-icons/tableau';
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
 import CodeBracketIcon from '~icons/heroicons/code-bracket-16-solid';
+import BoltIcon from '~icons/heroicons/bolt-16-solid';
 import DatabaseOutlineIcon from '~icons/material-symbols/database-outline';
 import TableOutlineIcon from '~icons/material-symbols/table-outline';
 import ViewOutlineIcon from '~icons/material-symbols/view-list-outline';
@@ -88,6 +90,7 @@ export const providerIconMap: Record<
 	redis: { default: RedisIcon, displayName: 'Redis' },
 	postgresql: { default: PostgresqlIcon, displayName: 'PostgreSQL' },
 	dynamodb: { default: DynamoDBIcon, displayName: 'DynamoDB' },
+	lambda: { default: LambdaIcon, displayName: 'Lambda' },
 	kinesis: { default: KinesisIcon, displayName: 'Kinesis' },
 	sns: { default: SnsIcon, displayName: 'SNS' },
 	sqs: { default: SqsIcon, displayName: 'SQS' },
@@ -212,6 +215,11 @@ export const typeIconMap: Record<
 		default: CodeBracketIcon,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'Service'
+	},
+	function: {
+		default: BoltIcon,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Function'
 	},
 	database: {
 		default: DatabaseOutlineIcon,

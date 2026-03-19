@@ -26,6 +26,7 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dynamodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/gcs"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/kafka"
+	_ "github.com/marmotdata/marmot/internal/plugin/providers/lambda"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mongodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mysql"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/nats"

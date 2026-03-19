@@ -56,10 +56,22 @@ const plugins: Plugin[] = [
     icon: "simple-icons:dbt",
   },
   {
+    name: "DynamoDB",
+    description: "Discover tables from Amazon DynamoDB",
+    href: "/docs/Plugins/DynamoDB",
+    icon: "logos:aws-dynamodb",
+  },
+  {
     name: "Google Cloud Storage",
     description: "Discover buckets from Google Cloud Storage",
     href: "/docs/Plugins/Google%20Cloud%20Storage",
     icon: "logos:google-cloud",
+  },
+  {
+    name: "Lambda",
+    description: "Discover functions from AWS Lambda",
+    href: "/docs/Plugins/Lambda",
+    icon: "logos:aws-lambda",
   },
   {
     name: "Kafka",
