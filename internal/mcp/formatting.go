@@ -44,19 +44,32 @@ func FormatAssetCard(a *asset.Asset, marmotURL string) string {
 		parts = append(parts, fmt.Sprintf("🏷️  %s", strings.Join(a.Tags, " · ")))
 	}
 
-	// Key metadata
+	// Schema (columns and types)
+	if len(a.Schema) > 0 {
+		parts = append(parts, "")
+		parts = append(parts, "**Schema:**")
+		for col, colType := range a.Schema {
+			parts = append(parts, fmt.Sprintf("- `%s`: %s", col, colType))
+		}
+	}
+
+	// Query definition
+	if a.Query != nil && *a.Query != "" {
+		lang := "sql"
+		if a.QueryLanguage != nil && *a.QueryLanguage != "" {
+			lang = *a.QueryLanguage
+		}
+		parts = append(parts, "")
+		parts = append(parts, "**Query:**")
+		parts = append(parts, fmt.Sprintf("```%s\n%s\n```", lang, *a.Query))
+	}
+
+	// Metadata
 	if a.Metadata != nil && len(a.Metadata) > 0 {
 		parts = append(parts, "")
-		parts = append(parts, "**Key Properties:**")
-
-		// Show interesting metadata (limit to 5 most relevant)
-		count := 0
+		parts = append(parts, "**Metadata:**")
 		for key, value := range a.Metadata {
-			if count >= 5 {
-				break
-			}
 			parts = append(parts, fmt.Sprintf("- `%s`: %v", key, value))
-			count++
 		}
 	}
 

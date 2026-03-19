@@ -1,0 +1,107 @@
+---
+slug: ai-needs-a-source-of-truth
+title: "AI still needs tools. And those tools need a source of truth."
+authors:
+  - name: Charlie Haley
+    url: https://github.com/charlie-haley
+image: /img/ai-source-of-truth-banner.png
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<div style={{textAlign: 'center', marginBottom: '2rem'}}>
+  <img src="/img/ai-source-of-truth-banner.png" alt="AI Still Needs Tools" style={{maxWidth: '100%', borderRadius: '8px'}} />
+</div>
+
+If an LLM doesn't have context around your data landscape, it can't help you build new functionality and maintain your existing solutions. It doesn't matter how good the model is.
+
+<!-- truncate -->
+
+AI assistants are getting really good at writing code. However, a big problem is still understanding your data - what tables exist, who owns them, how they connect, what the business terms actually mean. And right now, most AI tools are completely blind to all of that.
+
+The capability to connect AI to external data sources already exists through [MCP (Model Context Protocol)](https://modelcontextprotocol.io). The hard part is having something on the other end that actually covers your entire data landscape.
+
+---
+
+## The problem
+
+AI is only as good as what it can access. In most organisations, data knowledge is scattered across Slack threads, stale Confluence pages and READMEs that were accurate months ago. When an AI queries these fragmented sources - or has no source at all - you get confident-sounding wrong answers. And a developer who gets a wrong answer will act on it.
+
+Now imagine asking an AI to build a new pipeline - a daily aggregation feeding a customer health dashboard. Without context, it won't know your orders live in Postgres, that there's already a Kafka topic streaming payment events, or that the data-eng team has naming conventions for dbt models. It'll hallucinate table names, guess at schemas and produce something that looks plausible but doesn't fit your stack. You'll spend more time fixing the output than writing it yourself.
+
+Give that same AI access to a catalog with real schemas, ownership and lineage - and the output is fundamentally different.
+
+<div style={{textAlign: 'center', margin: '2rem 0'}}>
+  <img src="/img/ai-source-of-truth-context.png" alt="AI assistant querying the Marmot catalog for table ownership, schema and query information" style={{maxWidth: '100%', borderRadius: '8px'}} />
+</div>
+
+---
+
+## This isn't theoretical
+
+OpenAI recently wrote about [building a bespoke in-house data agent](https://openai.com/index/inside-our-in-house-data-agent) to help their teams explore and reason over their own data platform. They have 600 petabytes of data across 70k datasets - and even they found that simply finding the right table was one of the most time-consuming parts of doing analysis. As they put it: "without context, even strong models can produce wrong results."
+
+Their solution was to build multiple layers of context on top of their data - schema metadata, table lineage, human annotations, institutional knowledge - so the agent could actually understand what it was looking at. Even the company building the most capable models in the world found that the model alone wasn't enough. They needed structured, queryable context about their data landscape. That's exactly what a data catalog gives you.
+
+---
+
+## Why vendor neutral matters
+
+Real data landscapes don't live in one place. You've got Postgres for application data, Kafka for event streaming, S3 for storage, dbt for transformations, Airflow orchestrating pipelines, BigQuery for analytics and Tableau for dashboards.
+
+A source of truth that only covers one vendor's ecosystem is a partial picture. It'll tell you about the BigQuery tables whilst completely missing the Kafka topics that feed them. If your catalog can't see your Postgres tables, your S3 buckets and your Airflow DAGs in the same place, your AI assistant can't either - and you end up relying on a disparate collection of MCP tools that don't mesh well together.
+
+<div style={{textAlign: 'center', margin: '2rem 0'}}>
+  <img src="/img/ai-source-of-truth-plugins.png" alt="Marmot's plugin ecosystem covering Postgres, Kafka, S3, BigQuery, dbt, Airflow and more" style={{maxWidth: '100%', borderRadius: '8px'}} />
+</div>
+
+---
+
+## Meeting developers where they work
+
+A catalog UI is great for exploring and browsing. But when a developer is authoring a new pipeline or debugging an existing one, they don't want to leave their IDE to look up who owns a table or what feeds a dashboard. AI assistants give them a way to query that same catalog without switching context. 
+
+It's just another interface to your catalog, one that fits into the workflow developers are already in. That also means the catalog's API matters just as much as its UI - if the metadata behind it is incomplete or stale, those same problems get surfaced right back into the developer's workflow. They end up spending more time correcting the AI's output than they saved by using it in the first place, or worse, they don't notice and ship it.
+
+---
+
+## In the real world
+
+You get paged at 2am. Revenue numbers on the executive dashboard look wrong. Without a catalog, you're searching Slack, opening stale Confluence pages that reference deprecated table names and pinging people who are asleep.
+
+With a catalog your AI assistant can query, the same incident plays out differently:
+
+- **"What tables feed the revenue dashboard?"** - you get the full lineage chain. BigQuery summary table, built by a dbt model pulling from production orders and subscriptions.
+- **"Who owns the orders pipeline?"** - Order Management team, along with their on-call contact.
+- **"What does ARR mean here?"** - Annual Recurring Revenue, calculated as the sum of active subscription values normalised to 12 months.
+
+<CalloutCard
+  title="Try Marmot with your AI assistant"
+  description="Connect Claude, Cursor or any MCP-compatible tool to your data catalog in minutes."
+  href="https://marmotdata.io/docs/MCP/"
+  buttonText="Set up MCP"
+  icon="mdi:robot"
+/>
+
+---
+
+## The source of truth is the bottleneck
+
+AI capabilities will keep improving and the protocols connecting AI to external data are maturing fast. The "how do I get AI to talk to my data?" problem is effectively solved.
+
+The bottleneck is the source of truth. If your AI tools have access to complete, accurate metadata about your data landscape, they become genuinely useful for building and maintaining pipelines. If they don't, you're just adding a layer of confident-sounding guesswork on top of incomplete information.
+
+A data catalog that covers your entire stack and exposes it through an API gives your AI tools something real to work with. 
+
+- **Live demo:** [demo.marmotdata.io](https://demo.marmotdata.io)
+- **Docs:** [marmotdata.io/docs](/docs)
+- **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)
+
+<CalloutCard
+  title="Join the Community"
+  description="Get help, share feedback and connect with other Marmot users on Discord."
+  href="https://discord.gg/TWCk7hVFN4"
+  buttonText="Join Discord"
+  variant="secondary"
+  icon="mdi:account-group"
+/>

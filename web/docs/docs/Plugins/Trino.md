@@ -36,7 +36,7 @@ The connecting user needs `SELECT` access to `system.metadata.catalogs`, `system
 
 ## AI Enrichment
 
-When your Trino instance has an [AI connector](https://trino.io/docs/current/connector/ai.html) configured, the plugin can automatically enrich discovered assets:
+When your Trino instance has [AI functions](https://trino.io/docs/current/functions/ai.html) configured, the plugin can automatically enrich discovered assets:
 
 - **Auto-generate descriptions** (`ai_generate_descriptions: true`) — Uses the AI connector's `ai_gen` function to produce one-sentence descriptions for tables that have no comment.
 - **Auto-classify tables** (`ai_classify_tables: true`) — Uses the AI connector's `ai_classify` function to assign a category label (e.g., `analytics`, `pii`, `financial`) to each table, added as a tag like `ai-category:pii`.
