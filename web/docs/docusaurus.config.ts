@@ -168,6 +168,10 @@ const config: Config = {
               label: "GitHub Discussions",
               href: "https://github.com/marmotdata/marmot/discussions",
             },
+            {
+              label: "Contact Us",
+              href: "mailto:charlie@marmotdata.io",
+            },
           ],
         },
         {
