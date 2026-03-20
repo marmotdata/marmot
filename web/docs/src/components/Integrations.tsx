@@ -50,7 +50,7 @@ const options: DeployOption[] = [
 
 export default function Integrations(): JSX.Element {
   return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
+    <section className="py-24 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900">
       <div className="max-w-5xl mx-auto">
         <div data-animate className="text-center mb-14">
           <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
@@ -61,14 +61,14 @@ export default function Integrations(): JSX.Element {
             code
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
           {options.map((opt, index) => (
             <a
               key={opt.title}
               href={opt.href}
               data-animate
               data-animate-delay={(index + 1).toString()}
-              className="group flex flex-col items-center text-center p-8 rounded-2xl border border-white/40 bg-white/60 backdrop-blur-md hover:bg-white/90 hover:border-earthy-terracotta-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 dark:bg-gray-800/50 dark:border-white/10 dark:hover:bg-gray-800/80 dark:hover:border-earthy-terracotta-700"
+              className="group flex flex-col items-center text-center p-5 sm:p-8 rounded-2xl border border-white/40 bg-white/60 backdrop-blur-md hover:bg-white/90 hover:border-earthy-terracotta-200 hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 dark:bg-gray-800/50 dark:border-white/10 dark:hover:bg-gray-800/80 dark:hover:border-earthy-terracotta-700"
             >
               <div className="mb-5 transition-transform duration-300 group-hover:scale-110">
                 {opt.icon}

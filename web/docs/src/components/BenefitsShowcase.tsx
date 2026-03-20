@@ -86,7 +86,7 @@ export function BenefitRow({
         reversed ? "lg:flex-row-reverse" : "lg:flex-row"
       } items-center gap-10 lg:gap-16`}
     >
-      <div data-animate className="w-full lg:w-3/5 flex-shrink-0">
+      <div data-animate className="w-full lg:w-1/2 flex-shrink-0">
         <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-gray-900/10 dark:shadow-black/30 image-glow">
           <img
             src={benefit.imageSrcLight}
@@ -101,7 +101,7 @@ export function BenefitRow({
         </div>
       </div>
 
-      <div data-animate className="w-full lg:w-2/5 space-y-5">
+      <div data-animate className="w-full lg:w-1/2 space-y-5">
         <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
           {benefit.title}
         </h3>
@@ -138,7 +138,7 @@ export default function BenefitsShowcase(): JSX.Element {
 
   return (
     <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <div className="space-y-24 lg:space-y-32">
           {benefits.map((benefit, index) => (
             <BenefitRow

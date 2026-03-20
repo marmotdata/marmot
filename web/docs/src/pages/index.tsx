@@ -66,11 +66,11 @@ export default function Home(): JSX.Element {
     >
       <div className="bg-earthy-brown-50 dark:bg-gray-900 min-h-screen overflow-hidden">
         <Hero />
+        <ArchitectureComparison />
         <BenefitSection index={0} />
         <BenefitSection index={1} />
         <QuickDeploy />
         <BenefitSection index={2} />
-        <ArchitectureComparison />
         <BenefitSection index={3} />
         <DataSources />
         <PerformanceProof />
