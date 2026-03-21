@@ -75,3 +75,15 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update server.json version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${VERSION}\"/g" server.json
+          cat server.json
+
+      - name: Publish to MCP Registry
+        run: |
+          npm install -g @anthropic-ai/mcp-publisher
+          mcp-publisher login --token "${{ secrets.GITHUB_TOKEN }}"
+          mcp-publisher publish

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.marmotdata/marmot",
+  "title": "Marmot Data Catalog",
+  "description": "Open-source data catalog. Search assets, explore lineage, and find ownership.",
+  "version": "0.0.0",
+  "repository": {
+    "url": "https://github.com/marmotdata/marmot",
+    "source": "github"
+  },
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://{marmot_host}/api/v1/mcp",
+      "variables": {
+        "marmot_host": {
+          "description": "Your Marmot instance hostname (e.g., marmot.example.com)",
+          "isRequired": true
+        }
+      },
+      "headers": [
+        {
+          "name": "X-API-Key",
+          "description": "Marmot API key (generate from Settings > API Keys)",
+          "isRequired": true,
+          "isSecret": true
+        }
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "registry_name": "ghcr",
+      "name": "ghcr.io/marmotdata/marmot",
+      "version": "0.0.0"
+    }
+  ]
+}
