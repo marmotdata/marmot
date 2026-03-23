@@ -8,12 +8,14 @@ import (
 )
 
 type Handler struct {
-	config *config.Config
+	config               *config.Config
+	encryptionConfigured bool
 }
 
-func NewHandler(config *config.Config) *Handler {
+func NewHandler(config *config.Config, encryptionConfigured bool) *Handler {
 	return &Handler{
-		config: config,
+		config:               config,
+		encryptionConfigured: encryptionConfigured,
 	}
 }
 
@@ -28,7 +30,8 @@ func (h *Handler) Routes() []common.Route {
 }
 
 type UIConfigResponse struct {
-	Banner BannerResponse `json:"banner"`
+	Banner               BannerResponse `json:"banner"`
+	EncryptionConfigured bool           `json:"encryption_configured"`
 }
 
 type BannerResponse struct {
@@ -54,6 +57,7 @@ func (h *Handler) getUIConfig(w http.ResponseWriter, r *http.Request) {
 			Message:     h.config.UI.Banner.Message,
 			ID:          h.config.UI.Banner.ID,
 		},
+		EncryptionConfigured: h.encryptionConfigured,
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)

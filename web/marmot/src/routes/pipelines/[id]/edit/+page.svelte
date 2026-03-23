@@ -2,7 +2,10 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
+	import { get } from 'svelte/store';
 	import { fetchApi } from '$lib/api';
+	import { encryptionConfigured } from '$lib/stores/encryption';
+	import { toasts } from '$lib/stores/toast';
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
@@ -281,6 +284,13 @@
 	}
 
 	onMount(async () => {
+		if (!get(encryptionConfigured)) {
+			toasts.error(
+				'Encryption key not configured. Run "marmot generate-encryption-key" to get started.'
+			);
+			goto('/runs');
+			return;
+		}
 		await fetchPlugins();
 		await fetchPipeline();
 		// Check if this is an AWS plugin and fetch credential status

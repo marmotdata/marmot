@@ -15,21 +15,23 @@ import (
 
 // Handler handles webhook API requests.
 type Handler struct {
-	webhookService *webhook.Service
-	teamService    *team.Service
-	userService    user.Service
-	authService    auth.Service
-	config         *config.Config
+	webhookService       *webhook.Service
+	teamService          *team.Service
+	userService          user.Service
+	authService          auth.Service
+	config               *config.Config
+	encryptionConfigured bool
 }
 
 // NewHandler creates a new webhook handler.
-func NewHandler(webhookService *webhook.Service, teamService *team.Service, userService user.Service, authService auth.Service, cfg *config.Config) *Handler {
+func NewHandler(webhookService *webhook.Service, teamService *team.Service, userService user.Service, authService auth.Service, cfg *config.Config, encryptionConfigured bool) *Handler {
 	return &Handler{
-		webhookService: webhookService,
-		teamService:    teamService,
-		userService:    userService,
-		authService:    authService,
-		config:         cfg,
+		webhookService:       webhookService,
+		teamService:          teamService,
+		userService:          userService,
+		authService:          authService,
+		config:               cfg,
+		encryptionConfigured: encryptionConfigured,
 	}
 }
 
@@ -54,6 +56,7 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				authMiddleware,
 				h.requireTeamManage(),
+				common.RequireEncryption(h.encryptionConfigured),
 			},
 		},
 		{
@@ -72,6 +75,7 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				authMiddleware,
 				h.requireTeamManage(),
+				common.RequireEncryption(h.encryptionConfigured),
 			},
 		},
 		{

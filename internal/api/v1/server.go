@@ -237,6 +237,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	scheduleSvc.SetBroadcaster(jobRunBroadcaster)
 
 	var scheduleEncryptor *crypto.Encryptor
+	encryptionConfigured := config.Server.EncryptionKey != "" || config.Server.AllowUnencrypted
 	if config.Server.EncryptionKey != "" {
 		var err error
 		scheduleEncryptor, err = runService.GetEncryptor(config)
@@ -247,9 +248,9 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	} else {
 		if !config.Server.AllowUnencrypted {
 			fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
-			fmt.Fprintln(os.Stderr, "⚠️  ENCRYPTION KEY REQUIRED")
+			fmt.Fprintln(os.Stderr, "⚠️  ENCRYPTION KEY NOT SET")
 			fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
-			fmt.Fprintln(os.Stderr, "Marmot requires an encryption key to protect sensitive pipeline credentials.")
+			fmt.Fprintln(os.Stderr, "Pipeline creation and editing is disabled until an encryption key is configured.")
 			fmt.Fprintln(os.Stderr, "")
 			fmt.Fprintln(os.Stderr, "To generate a key, run:")
 			fmt.Fprintln(os.Stderr, "  marmot generate-encryption-key")
@@ -259,22 +260,20 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 			fmt.Fprintln(os.Stderr, "")
 			fmt.Fprintln(os.Stderr, "Or to run WITHOUT encryption (NOT RECOMMENDED):")
 			fmt.Fprintln(os.Stderr, "  export MARMOT_SERVER_ALLOW_UNENCRYPTED=true")
-			fmt.Fprintln(os.Stderr, "")
-			fmt.Fprintln(os.Stderr, "⚠️  Running unencrypted means pipeline credentials will be stored")
-			fmt.Fprintln(os.Stderr, "    in PLAINTEXT in the database. This is a SECURITY RISK.")
 			fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
-			log.Fatal().Msg("Encryption key required")
+			log.Warn().Msg("Encryption key not set - pipeline creation/editing disabled")
+		} else {
+			fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
+			fmt.Fprintln(os.Stderr, "⚠️  WARNING: ENCRYPTION DISABLED")
+			fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
+			fmt.Fprintln(os.Stderr, "Pipeline credentials will be stored in PLAINTEXT in the database.")
+			fmt.Fprintln(os.Stderr, "This is a SECURITY RISK and should only be used for development.")
+			fmt.Fprintln(os.Stderr, "")
+			fmt.Fprintln(os.Stderr, "To enable encryption, run:")
+			fmt.Fprintln(os.Stderr, "  marmot generate-encryption-key")
+			fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
+			log.Warn().Msg("Encryption disabled - credentials stored in plaintext")
 		}
-		fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
-		fmt.Fprintln(os.Stderr, "⚠️  WARNING: ENCRYPTION DISABLED")
-		fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
-		fmt.Fprintln(os.Stderr, "Pipeline credentials will be stored in PLAINTEXT in the database.")
-		fmt.Fprintln(os.Stderr, "This is a SECURITY RISK and should only be used for development.")
-		fmt.Fprintln(os.Stderr, "")
-		fmt.Fprintln(os.Stderr, "To enable encryption, run:")
-		fmt.Fprintln(os.Stderr, "  marmot generate-encryption-key")
-		fmt.Fprintln(os.Stderr, "═══════════════════════════════════════════════════════════════")
-		log.Warn().Msg("Encryption disabled - credentials stored in plaintext")
 	}
 
 	pluginRegistry := plugin.GetRegistry()
@@ -438,12 +437,12 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		notificationsAPI.NewHandler(notificationSvc, userSvc, authSvc, config),
 		subscriptionsAPI.NewHandler(subscriptionSvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
-		webhooksAPI.NewHandler(webhookSvc, teamSvc, userSvc, authSvc, config),
+		webhooksAPI.NewHandler(webhookSvc, teamSvc, userSvc, authSvc, config, encryptionConfigured),
 		searchAPI.NewHandler(searchSvc, userSvc, authSvc, metricsService, config),
-		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config),
+		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config, encryptionConfigured),
 		websocket.NewHandler(wsHub, userSvc, authSvc, config),
 		plugins.NewHandler(),
-		ui.NewHandler(config),
+		ui.NewHandler(config, encryptionConfigured),
 	}
 
 	return server

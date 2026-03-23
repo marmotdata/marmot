@@ -1600,6 +1600,8 @@ definitions:
     properties:
       banner:
         $ref: '#/definitions/v1_ui.BannerResponse'
+      encryption_configured:
+        type: boolean
     type: object
   v1_users.CreateAPIKeyRequest:
     properties:

@@ -16,22 +16,24 @@ import (
 )
 
 type Handler struct {
-	service    *runs.ScheduleService
-	runService runs.Service
-	userSvc    user.Service
-	authSvc    auth.Service
-	encryptor  *crypto.Encryptor
-	config     *config.Config
+	service              *runs.ScheduleService
+	runService           runs.Service
+	userSvc              user.Service
+	authSvc              auth.Service
+	encryptor            *crypto.Encryptor
+	config               *config.Config
+	encryptionConfigured bool
 }
 
-func NewHandler(service *runs.ScheduleService, runService runs.Service, userSvc user.Service, authSvc auth.Service, encryptor *crypto.Encryptor, config *config.Config) *Handler {
+func NewHandler(service *runs.ScheduleService, runService runs.Service, userSvc user.Service, authSvc auth.Service, encryptor *crypto.Encryptor, config *config.Config, encryptionConfigured bool) *Handler {
 	return &Handler{
-		service:    service,
-		runService: runService,
-		userSvc:    userSvc,
-		authSvc:    authSvc,
-		encryptor:  encryptor,
-		config:     config,
+		service:              service,
+		runService:           runService,
+		userSvc:              userSvc,
+		authSvc:              authSvc,
+		encryptor:            encryptor,
+		config:               config,
+		encryptionConfigured: encryptionConfigured,
 	}
 }
 
@@ -53,6 +55,7 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userSvc, h.authSvc, h.config),
 				common.RequirePermission(h.userSvc, "ingestion", "manage"),
+				common.RequireEncryption(h.encryptionConfigured),
 			},
 		},
 		{
@@ -80,6 +83,7 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userSvc, h.authSvc, h.config),
 				common.RequirePermission(h.userSvc, "ingestion", "manage"),
+				common.RequireEncryption(h.encryptionConfigured),
 			},
 		},
 		{
@@ -98,6 +102,7 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userSvc, h.authSvc, h.config),
 				common.RequirePermission(h.userSvc, "ingestion", "manage"),
+				common.RequireEncryption(h.encryptionConfigured),
 			},
 		},
 		{

@@ -6869,6 +6869,9 @@ const docTemplate = `{
             "properties": {
                 "banner": {
                     "$ref": "#/definitions/v1_ui.BannerResponse"
+                },
+                "encryption_configured": {
+                    "type": "boolean"
                 }
             }
         },

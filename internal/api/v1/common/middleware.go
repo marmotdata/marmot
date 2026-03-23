@@ -151,6 +151,20 @@ func checkAnonymousPermission(userService user.Service, roleName, resourceType, 
 	return false, nil
 }
 
+// RequireEncryption middleware blocks requests when encryption is not configured
+func RequireEncryption(configured bool) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
+			if !configured {
+				RespondError(w, http.StatusServiceUnavailable,
+					"Encryption key not configured. Set MARMOT_SERVER_ENCRYPTION_KEY to enable this feature.")
+				return
+			}
+			next(w, r)
+		}
+	}
+}
+
 // GetAuthenticatedUser returns the current authenticated user
 func GetAuthenticatedUser(ctx context.Context) (*user.User, bool) {
 	user, ok := ctx.Value(UserContextKey).(*user.User)

@@ -8,6 +8,7 @@
 	import { fetchApi } from '$lib/api';
 	import UserIcon from '~icons/heroicons/user-16-solid';
 	import Icon from '@iconify/svelte';
+	import { encryptionConfigured } from '$lib/stores/encryption';
 	import Banner from '$lib/components/Banner.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import GlobalSearch from '$components/query/GlobalSearch.svelte';
@@ -145,6 +146,7 @@
 				if (response.ok) {
 					const data = await response.json();
 					bannerConfig = data.banner;
+					encryptionConfigured.set(data.encryption_configured ?? true);
 				}
 			} catch (error) {
 				console.error('Failed to fetch UI config:', error);

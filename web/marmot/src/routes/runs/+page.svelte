@@ -7,6 +7,7 @@
 	import { websocketService, type JobRunEvent } from '$lib/websocket';
 	import { auth } from '$lib/stores/auth';
 	import { toasts } from '$lib/stores/toast';
+	import { encryptionConfigured } from '$lib/stores/encryption';
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import IngestionRunCard from '$components/runs/IngestionRunCard.svelte';
@@ -611,6 +612,52 @@
 				</div>
 			</div>
 		{:else}
+			<!-- Encryption Warning -->
+			{#if !$encryptionConfigured}
+				<div
+					class="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg p-4"
+				>
+					<div class="flex items-start">
+						<IconifyIcon
+							icon="material-symbols:warning"
+							class="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0"
+						/>
+						<div class="ml-3">
+							<h3 class="text-sm font-medium text-amber-800 dark:text-amber-200">
+								Encryption key not configured
+							</h3>
+							<p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
+								Pipeline creation, editing, and triggering are disabled until an encryption key is
+								set.
+							</p>
+							<div class="mt-3 text-sm text-amber-700 dark:text-amber-300 space-y-2">
+								<p>To get started, install the CLI and generate a key:</p>
+								<div
+									class="bg-amber-100 dark:bg-amber-900/40 rounded-md px-3 py-2 font-mono text-xs space-y-1"
+								>
+									<p>curl -fsSL get.marmotdata.io | sh</p>
+									<p>marmot generate-encryption-key</p>
+								</div>
+								<p>
+									Then set <code
+										class="px-1 py-0.5 bg-amber-100 dark:bg-amber-900/40 rounded text-xs font-mono"
+										>MARMOT_SERVER_ENCRYPTION_KEY</code
+									>
+									and restart the server. See the
+									<a
+										href="https://marmotdata.io/docs/Deploy/"
+										target="_blank"
+										rel="noopener noreferrer"
+										class="underline font-medium hover:text-amber-900 dark:hover:text-amber-100"
+										>deploy docs</a
+									> for details.
+								</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			{/if}
+
 			<!-- Header Actions -->
 			{#if canManageIngestion}
 				<div class="flex justify-end items-center mb-6">
@@ -619,6 +666,7 @@
 						click={() => goto('/pipelines/new')}
 						icon="material-symbols:add"
 						text="Create Pipeline"
+						disabled={!$encryptionConfigured}
 					/>
 				</div>
 			{/if}
@@ -643,6 +691,7 @@
 							click={() => goto('/pipelines/new')}
 							icon="material-symbols:add"
 							text="Create Pipeline"
+							disabled={!$encryptionConfigured}
 						/>
 					{/if}
 				</div>
@@ -697,9 +746,11 @@
 							{#each pipelines as pipeline}
 								<ScheduleCard
 									schedule={pipeline}
-									onEdit={(s) => goto(`/pipelines/${s.id}/edit`)}
+									onEdit={$encryptionConfigured
+										? (s) => goto(`/pipelines/${s.id}/edit`)
+										: undefined}
 									onDelete={handleDeletePipeline}
-									onTrigger={handleTriggerPipeline}
+									onTrigger={$encryptionConfigured ? handleTriggerPipeline : undefined}
 									isRunning={runningPipelines.has(pipeline.id)}
 								/>
 							{/each}
