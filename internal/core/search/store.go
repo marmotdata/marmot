@@ -300,10 +300,10 @@ func (r *PostgresRepository) buildFuzzySearchQuery(searchQuery string, filter Fi
 
 	sqlQuery := fmt.Sprintf(`
 		SELECT type, entity_id, name, description, url_path,
-		       (similarity($%d, name) * 100.0)::real as rank,
+		       (word_similarity($%d, name) * 100.0)::real as rank,
 		       updated_at, asset_type, primary_provider, providers, tags, mrn, created_by, created_at
 		FROM search_index
-		WHERE name %% $%d
+		WHERE name %%> $%d
 		%s
 		ORDER BY rank DESC, updated_at DESC
 		LIMIT $%d OFFSET $%d

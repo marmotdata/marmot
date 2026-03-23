@@ -934,7 +934,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 		return nil, 0, AvailableFilters{}, fmt.Errorf("%w: %v", ErrInvalidQuery, err)
 	}
 
-	baseQuery := `SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets`
+	baseQuery := `SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets`
 	query, params, err := builder.BuildSQL(searchQuery, baseQuery)
 	if err != nil {
 		return nil, 0, AvailableFilters{}, fmt.Errorf("building query: %w", err)

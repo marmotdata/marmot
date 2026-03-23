@@ -76,7 +76,7 @@ func (b *Builder) BuildSQL(q *Query, baseQuery string) (string, []interface{}, e
 	// Then handle free text search
 	if q.FreeText != "" {
 		paramCount++
-		conditions = append(conditions, fmt.Sprintf("(search_text @@ websearch_to_tsquery('english', $%d) OR similarity(name, $%d) > 0.3)", paramCount, paramCount))
+		conditions = append(conditions, fmt.Sprintf("(search_text @@ websearch_to_tsquery('english', $%d) OR word_similarity($%d, name) > 0.3)", paramCount, paramCount))
 		params = append(params, q.FreeText)
 	}
 
@@ -265,7 +265,7 @@ func (b *Builder) buildFilterCondition(filter Filter, paramCount int) (string, [
 
 	// Handle special case for freetext
 	if filter.Field[0] == "freetext" {
-		condition = fmt.Sprintf("(search_text @@ websearch_to_tsquery('english', $%d) OR similarity(name, $%d) > 0.3)", paramCount, paramCount)
+		condition = fmt.Sprintf("(search_text @@ websearch_to_tsquery('english', $%d) OR word_similarity($%d, name) > 0.3)", paramCount, paramCount)
 		params = append(params, filter.Value)
 		return condition, params, paramCount, nil
 	}

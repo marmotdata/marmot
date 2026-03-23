@@ -21,110 +21,110 @@ func TestQueryParsing(t *testing.T) {
 		{
 			name:           "Exact metadata match",
 			searchQuery:    `@metadata.name: "{prod}_command_CreateOrder"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata @> $2::jsonb) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata @> $2::jsonb) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", `{"name":"{prod}_command_CreateOrder"}`},
 		},
 		{
 			name:           "Contains operator",
 			searchQuery:    `@metadata.name contains "CreateOrder"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "%CreateOrder%"},
 		},
 		{
 			name:           "Numeric comparison",
 			searchQuery:    `@metadata.partitions > 5`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'partitions')::numeric > $2::numeric) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE (metadata->>'partitions')::numeric > $2::numeric) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "5"},
 		},
 		{
 			name:           "Combined free text and metadata",
 			searchQuery:    `order @metadata.team: "logistics"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata @> $2::jsonb AND (search_text @@ websearch_to_tsquery('english', $3) OR similarity(name, $3) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata @> $2::jsonb AND (search_text @@ websearch_to_tsquery('english', $3) OR word_similarity($3, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", `{"team":"logistics"}`, "order"},
 		},
 		{
 			name:           "Complex AND condition",
 			searchQuery:    `@metadata.partitions > 5 AND @metadata.team: "orders"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'partitions')::numeric > $2::numeric AND metadata @> $3::jsonb) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE (metadata->>'partitions')::numeric > $2::numeric AND metadata @> $3::jsonb) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "5", `{"team":"orders"}`},
 		},
 		{
 			name:           "Complex_OR_condition",
 			searchQuery:    `@metadata.partitions < 3 OR @metadata.team: "orders"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE ((metadata->>'partitions')::numeric < $2::numeric) OR metadata @> $3::jsonb) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE ((metadata->>'partitions')::numeric < $2::numeric) OR metadata @> $3::jsonb) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "3", `{"team":"orders"}`},
 		},
 		{
 			name:           "Range query",
 			searchQuery:    `@metadata.partitions range [1 TO 10]`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'partitions')::numeric >= $2::numeric AND (metadata->>'partitions')::numeric <= $3::numeric) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE (metadata->>'partitions')::numeric >= $2::numeric AND (metadata->>'partitions')::numeric <= $3::numeric) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", float64(1), float64(10)},
 		},
 		{
 			name:           "NOT condition",
 			searchQuery:    `NOT @metadata.team: "orders"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE NOT (metadata @> $2::jsonb)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE NOT (metadata @> $2::jsonb)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", `{"team":"orders"}`},
 		},
 		{
 			name:           "Complex query with multiple conditions",
 			searchQuery:    `@metadata.partitions > 5 AND @metadata.team: "orders" order service`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'partitions')::numeric > $2::numeric AND metadata @> $3::jsonb AND (search_text @@ websearch_to_tsquery('english', $4) OR similarity(name, $4) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE (metadata->>'partitions')::numeric > $2::numeric AND metadata @> $3::jsonb AND (search_text @@ websearch_to_tsquery('english', $4) OR word_similarity($4, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "5", `{"team":"orders"}`, "order service"},
 		},
 		{
 			name:           "Free text before metadata filter",
 			searchQuery:    `testing service @metadata.team: "orders"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata @> $2::jsonb AND (search_text @@ websearch_to_tsquery('english', $3) OR similarity(name, $3) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata @> $2::jsonb AND (search_text @@ websearch_to_tsquery('english', $3) OR word_similarity($3, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", `{"team":"orders"}`, "testing service"},
 		},
 		{
 			name:           "Free text after metadata filter",
 			searchQuery:    `@metadata.team: "orders" testing service`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata @> $2::jsonb AND (search_text @@ websearch_to_tsquery('english', $3) OR similarity(name, $3) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata @> $2::jsonb AND (search_text @@ websearch_to_tsquery('english', $3) OR word_similarity($3, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", `{"team":"orders"}`, "testing service"},
 		},
 		{
 			name:           "Free text between metadata filters",
 			searchQuery:    `@metadata.team: "orders" critical service @metadata.status: "active"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata @> $2::jsonb AND metadata @> $3::jsonb AND (search_text @@ websearch_to_tsquery('english', $4) OR similarity(name, $4) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata @> $2::jsonb AND metadata @> $3::jsonb AND (search_text @@ websearch_to_tsquery('english', $4) OR word_similarity($4, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", `{"team":"orders"}`, `{"status":"active"}`, "critical service"},
 		},
 		// Wildcard queries
 		{
 			name:           "Simple wildcard in metadata",
 			searchQuery:    `@metadata.name: "order*"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "order%"},
 		},
 		{
 			name:           "Multiple wildcards in metadata",
 			searchQuery:    `@metadata.name: "ord*_serv*"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "ord%_serv%"},
 		},
 		{
 			name:           "Wildcard with free text",
 			searchQuery:    `critical @metadata.name: "ord*" service`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2 AND (search_text @@ websearch_to_tsquery('english', $3) OR similarity(name, $3) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2 AND (search_text @@ websearch_to_tsquery('english', $3) OR word_similarity($3, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "ord%", "service"},
 		},
 		{
 			name:           "Multiple_wildcards_with_boolean_operators",
 			searchQuery:    `@metadata.name: "ord*" AND @metadata.environment: "*prod*" OR @metadata.team: "dev*"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'name' ILIKE $2 AND metadata->>'environment' ILIKE $3) OR metadata->>'team' ILIKE $4) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE (metadata->>'name' ILIKE $2 AND metadata->>'environment' ILIKE $3) OR metadata->>'team' ILIKE $4) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "ord%", "%prod%", "dev%"},
 		},
 		{
 			name:           "Complex query with wildcards and free text",
 			searchQuery:    `critical @metadata.name: "ord*_service" AND @metadata.team: "dev*" production`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2 AND metadata->>'team' ILIKE $3 AND (search_text @@ websearch_to_tsquery('english', $4) OR similarity(name, $4) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE metadata->>'name' ILIKE $2 AND metadata->>'team' ILIKE $3 AND (search_text @@ websearch_to_tsquery('english', $4) OR word_similarity($4, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "ord%_service", "dev%", "production"},
 		},
 		{
 			name:           "NOT_operator_with_wildcards_and_free_text",
 			searchQuery:    `production NOT @metadata.environment: "*test*" @metadata.name: "api*"`,
-			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, similarity(name, $1) as name_similarity FROM assets WHERE (metadata->>'name' ILIKE $2) OR NOT (metadata->>'environment' ILIKE $3) AND (search_text @@ websearch_to_tsquery('english', $4) OR similarity(name, $4) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
+			expectedSQL:    `WITH search_results AS (SELECT *, ts_rank_cd(search_text, websearch_to_tsquery('english', $1), 32) as search_rank, word_similarity($1, name) as name_similarity FROM assets WHERE (metadata->>'name' ILIKE $2) OR NOT (metadata->>'environment' ILIKE $3) AND (search_text @@ websearch_to_tsquery('english', $4) OR word_similarity($4, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC`,
 			expectedParams: []interface{}{"", "api%", "%test%", "production"},
 		},
 	}
@@ -142,7 +142,7 @@ func TestQueryParsing(t *testing.T) {
                                 websearch_to_tsquery('english', $1),
                                 32
                             ) as search_rank,
-                            similarity(name, $1) as name_similarity
+                            word_similarity($1, name) as name_similarity
                         FROM assets`
 
 			sql, params, err := builder.BuildSQL(parsedQuery, baseQuery)

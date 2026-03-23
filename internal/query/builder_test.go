@@ -55,7 +55,7 @@ func TestBuildSQL(t *testing.T) {
 				FreeText: "search term",
 			},
 			baseQuery:      baseQuery,
-			expectedSQL:    "SELECT id, metadata FROM documents WHERE (search_text @@ websearch_to_tsquery('english', $2) OR similarity(name, $2) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC",
+			expectedSQL:    "SELECT id, metadata FROM documents WHERE (search_text @@ websearch_to_tsquery('english', $2) OR word_similarity($2, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC",
 			expectedParams: []interface{}{"", "search term"},
 		},
 		{
@@ -74,7 +74,7 @@ func TestBuildSQL(t *testing.T) {
 				FreeText: "search term",
 			},
 			baseQuery:      baseQuery,
-			expectedSQL:    "SELECT id, metadata FROM documents WHERE metadata @> $2::jsonb AND (search_text @@ websearch_to_tsquery('english', $3) OR similarity(name, $3) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC",
+			expectedSQL:    "SELECT id, metadata FROM documents WHERE metadata @> $2::jsonb AND (search_text @@ websearch_to_tsquery('english', $3) OR word_similarity($3, name) > 0.3)) SELECT * FROM search_results ORDER BY search_rank DESC",
 			expectedParams: []interface{}{"", `{"field1":"value1"}`, "search term"},
 		},
 	}
@@ -436,7 +436,7 @@ func TestBuildFilterCondition(t *testing.T) {
 				Operator: OpEquals,
 				Value:    "searchTerm",
 			},
-			expectedCond:     "(search_text @@ websearch_to_tsquery('english', $1) OR similarity(name, $1) > 0.3)",
+			expectedCond:     "(search_text @@ websearch_to_tsquery('english', $1) OR word_similarity($1, name) > 0.3)",
 			expectedParams:   []interface{}{"searchTerm"},
 			expectedStartIdx: 0,
 			expectedErr:      nil,
