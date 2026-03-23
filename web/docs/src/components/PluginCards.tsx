@@ -68,6 +68,13 @@ const plugins: Plugin[] = [
     icon: "logos:google-cloud",
   },
   {
+    name: "Iceberg",
+    description: "Discover namespaces, tables and views from Iceberg REST catalogs",
+    href: "/docs/Plugins/Iceberg",
+    icon: "iceberg",
+    useLocalIcon: true,
+  },
+  {
     name: "Lambda",
     description: "Discover functions from AWS Lambda",
     href: "/docs/Plugins/Lambda",

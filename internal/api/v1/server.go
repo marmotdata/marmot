@@ -25,6 +25,7 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dbt"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dynamodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/gcs"
+	_ "github.com/marmotdata/marmot/internal/plugin/providers/iceberg"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/kafka"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/lambda"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mongodb"
