@@ -12,6 +12,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.9
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.9
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.56.2
+	github.com/aws/aws-sdk-go-v2/service/glue v1.139.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.88.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.11

@@ -39,7 +39,7 @@ func TestSource_Validate(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name:      "missing URI",
+			name:      "missing URI defaults to REST and requires URI",
 			config:    plugin.RawPluginConfig{},
 			expectErr: true,
 		},
@@ -69,6 +69,48 @@ func TestSource_Validate(t *testing.T) {
 			},
 			expectErr: false,
 		},
+		{
+			name: "valid Glue config",
+			config: plugin.RawPluginConfig{
+				"catalog_type": "glue",
+				"credentials": map[string]interface{}{
+					"region": "us-east-1",
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "valid Glue config with catalog ID",
+			config: plugin.RawPluginConfig{
+				"catalog_type":    "glue",
+				"glue_catalog_id": "123456789012",
+				"credentials": map[string]interface{}{
+					"region": "us-east-1",
+				},
+			},
+			expectErr: false,
+		},
+		{
+			name: "Glue config does not require URI",
+			config: plugin.RawPluginConfig{
+				"catalog_type": "glue",
+			},
+			expectErr: false,
+		},
+		{
+			name: "REST config requires URI",
+			config: plugin.RawPluginConfig{
+				"catalog_type": "rest",
+			},
+			expectErr: true,
+		},
+		{
+			name: "invalid catalog_type",
+			config: plugin.RawPluginConfig{
+				"catalog_type": "hive",
+			},
+			expectErr: true,
+		},
 	}
 
 	for _, tt := range tests {
@@ -86,13 +128,48 @@ func TestSource_Validate(t *testing.T) {
 }
 
 func TestSource_ValidateStoresConfig(t *testing.T) {
-	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
-		"uri": "http://localhost:8181",
+	t.Run("REST config", func(t *testing.T) {
+		s := &Source{}
+		_, err := s.Validate(plugin.RawPluginConfig{
+			"uri": "http://localhost:8181",
+		})
+		require.NoError(t, err)
+		assert.NotNil(t, s.config)
+		assert.Equal(t, "http://localhost:8181", s.config.URI)
+		assert.Equal(t, "rest", s.config.CatalogType)
 	})
-	require.NoError(t, err)
-	assert.NotNil(t, s.config)
-	assert.Equal(t, "http://localhost:8181", s.config.URI)
+
+	t.Run("Glue config", func(t *testing.T) {
+		s := &Source{}
+		_, err := s.Validate(plugin.RawPluginConfig{
+			"catalog_type":    "glue",
+			"glue_catalog_id": "123456789012",
+		})
+		require.NoError(t, err)
+		assert.NotNil(t, s.config)
+		assert.Equal(t, "glue", s.config.CatalogType)
+		assert.Equal(t, "123456789012", s.config.GlueCatalogID)
+	})
+}
+
+func TestSource_ValidateDefaultCatalogType(t *testing.T) {
+	t.Run("defaults to rest", func(t *testing.T) {
+		s := &Source{}
+		_, err := s.Validate(plugin.RawPluginConfig{
+			"uri": "http://localhost:8181",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "rest", s.config.CatalogType)
+	})
+
+	t.Run("respects explicit glue", func(t *testing.T) {
+		s := &Source{}
+		_, err := s.Validate(plugin.RawPluginConfig{
+			"catalog_type": "glue",
+		})
+		require.NoError(t, err)
+		assert.Equal(t, "glue", s.config.CatalogType)
+	})
 }
 
 func TestSource_ValidateDefaultBoolFields(t *testing.T) {

@@ -168,3 +168,53 @@ func TestRemoveConfigFields_NoOpForUnknown(t *testing.T) {
 
 	assert.Len(t, spec, 3)
 }
+
+func TestGenerateConfigSpec_ShowWhenTag(t *testing.T) {
+	type TestConfig struct {
+		Mode     string `json:"mode" validate:"oneof=a b"`
+		FieldA   string `json:"field_a" show_when:"mode:a"`
+		FieldB   string `json:"field_b" show_when:"mode:b"`
+		FieldAll string `json:"field_all"`
+	}
+
+	spec := GenerateConfigSpec(TestConfig{})
+
+	require.Len(t, spec, 4)
+
+	// mode has no show_when
+	assert.Nil(t, spec[0].ShowWhen)
+
+	// field_a has show_when mode:a
+	require.NotNil(t, spec[1].ShowWhen)
+	assert.Equal(t, "mode", spec[1].ShowWhen.Field)
+	assert.Equal(t, "a", spec[1].ShowWhen.Value)
+
+	// field_b has show_when mode:b
+	require.NotNil(t, spec[2].ShowWhen)
+	assert.Equal(t, "mode", spec[2].ShowWhen.Field)
+	assert.Equal(t, "b", spec[2].ShowWhen.Value)
+
+	// field_all has no show_when
+	assert.Nil(t, spec[3].ShowWhen)
+}
+
+func TestCloneConfigSpec_ShowWhen(t *testing.T) {
+	spec := []ConfigField{
+		{
+			Name: "field_a",
+			Type: FieldTypeString,
+			ShowWhen: &ShowWhen{
+				Field: "mode",
+				Value: "a",
+			},
+		},
+	}
+
+	clone := CloneConfigSpec(spec)
+
+	// Mutate the clone
+	clone[0].ShowWhen.Field = "CHANGED"
+
+	// Original must be untouched
+	assert.Equal(t, "mode", spec[0].ShowWhen.Field)
+}

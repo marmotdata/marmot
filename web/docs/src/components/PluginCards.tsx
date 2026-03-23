@@ -68,8 +68,14 @@ const plugins: Plugin[] = [
     icon: "logos:google-cloud",
   },
   {
+    name: "Glue",
+    description: "Discover jobs, databases, tables and crawlers from AWS Glue",
+    href: "/docs/Plugins/Glue",
+    icon: "logos:aws-glue",
+  },
+  {
     name: "Iceberg",
-    description: "Discover namespaces, tables and views from Iceberg REST catalogs",
+    description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
     href: "/docs/Plugins/Iceberg",
     icon: "iceberg",
     useLocalIcon: true,
@@ -146,6 +152,12 @@ const plugins: Plugin[] = [
     description: "Discover queues from Amazon SQS",
     href: "/docs/Plugins/SQS",
     icon: "logos:aws-sqs",
+  },
+  {
+    name: "Trino",
+    description: "Discover catalogs, schemas, tables and views from Trino clusters",
+    href: "/docs/Plugins/Trino",
+    icon: "simple-icons:trino",
   },
 ];
 

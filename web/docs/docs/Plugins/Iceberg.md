@@ -1,6 +1,6 @@
 ---
 title: Iceberg
-description: This plugin discovers namespaces, tables, and views from Iceberg REST catalogs.
+description: This plugin discovers namespaces, tables and views from Iceberg catalogs (REST and AWS Glue).
 status: experimental
 ---
 
@@ -28,16 +28,87 @@ import { CalloutCard } from '@site/src/components/DocCard';
 />
 
 
+The Iceberg plugin discovers namespaces, tables and views from Iceberg catalogs. It supports both REST catalogs and AWS Glue Data Catalog as backends.
+
+## AWS Glue Catalog Permissions
+
+When using `catalog_type: "glue"`, the following IAM permissions are required:
+
+import { Collapsible } from "@site/src/components/Collapsible";
+
+<Collapsible
+  title="IAM Policy"
+  icon="mdi:shield-check"
+  policyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "glue:GetDatabases",
+          "glue:GetDatabase",
+          "glue:GetTables",
+          "glue:GetTable"
+        ],
+        Resource: "*"
+      },
+      {
+        Effect: "Allow",
+        Action: [
+          "s3:GetObject"
+        ],
+        Resource: "arn:aws:s3:::*/*",
+        Condition: {
+          StringLike: {
+            "s3:prefix": "*/metadata/*"
+          }
+        }
+      }
+    ]
+  }}
+  minimalPolicyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "glue:GetDatabases",
+          "glue:GetTables",
+          "glue:GetTable"
+        ],
+        Resource: "*"
+      },
+      {
+        Effect: "Allow",
+        Action: [
+          "s3:GetObject"
+        ],
+        Resource: "arn:aws:s3:::*/*"
+      }
+    ]
+  }}
+/>
+
+The `s3:GetObject` permission is needed because Glue's `LoadTable` reads Iceberg metadata files from S3.
+
+
 
 ## Example Configuration
 
 ```yaml
 
+# REST catalog (default)
 uri: "http://localhost:8181"
 warehouse: "my-warehouse"
 credential: "client-id:client-secret"
 tags:
   - "iceberg"
+
+# Glue catalog:
+# catalog_type: "glue"
+# credentials:
+#   region: "us-east-1"
+# glue_catalog_id: "123456789012"  # optional, defaults to caller's account
 
 ```
 
@@ -46,16 +117,21 @@ The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
+| catalog_type | string | false | Catalog backend type |
 | credential | string | false | Credential for OAuth2 client credentials authentication |
+| credentials | AWSCredentials | false | AWS credentials configuration |
 | external_links | []ExternalLink | false | External links to show on all assets |
 | filter | Filter | false | Filter discovered assets by name (regex) |
+| glue_catalog_id | string | false | AWS Glue Data Catalog ID (defaults to caller's account) |
 | include_namespaces | bool | false | Whether to discover namespaces as assets |
+| include_tags | []string | false | List of AWS tags to include as metadata. By default, all tags are included. |
 | include_views | bool | false | Whether to discover views |
 | prefix | string | false | Optional prefix for the REST catalog |
 | properties | map[string]string | false | Additional catalog properties |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
+| tags_to_metadata | bool | false | Convert AWS tags to Marmot metadata |
 | token | string | false | Bearer token for authentication |
-| uri | string | false | REST catalog URI |
+| uri | string | false | REST catalog URI (required for catalog_type=rest) |
 | warehouse | string | false | Warehouse identifier |
 
 ## Available Metadata

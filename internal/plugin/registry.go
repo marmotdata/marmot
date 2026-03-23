@@ -20,6 +20,11 @@ const (
 	FieldTypeObject      FieldType = "object"
 )
 
+type ShowWhen struct {
+	Field string `json:"field"`
+	Value string `json:"value"`
+}
+
 type ConfigField struct {
 	Name        string        `json:"name"`
 	Type        FieldType     `json:"type"`
@@ -33,6 +38,7 @@ type ConfigField struct {
 	Placeholder string        `json:"placeholder,omitempty"`
 	Fields      []ConfigField `json:"fields,omitempty"`
 	IsArray     bool          `json:"is_array,omitempty"`
+	ShowWhen    *ShowWhen     `json:"show_when,omitempty"`
 }
 
 type FieldOption struct {
@@ -139,6 +145,18 @@ func generateConfigSpecRecursive(configType interface{}, prefix string) []Config
 			if len(options) > 0 {
 				configField.Type = FieldTypeSelect
 				configField.Options = options
+			}
+		}
+
+		// Parse show_when tag for conditional field visibility
+		showWhenTag := field.Tag.Get("show_when")
+		if showWhenTag != "" {
+			parts := strings.SplitN(showWhenTag, ":", 2)
+			if len(parts) == 2 {
+				configField.ShowWhen = &ShowWhen{
+					Field: parts[0],
+					Value: parts[1],
+				}
 			}
 		}
 
@@ -282,6 +300,11 @@ func CloneConfigSpec(spec []ConfigField) []ConfigField {
 		if f.Validation != nil {
 			v := *f.Validation
 			clone[i].Validation = &v
+		}
+
+		if f.ShowWhen != nil {
+			sw := *f.ShowWhen
+			clone[i].ShowWhen = &sw
 		}
 
 		if len(f.Fields) > 0 {

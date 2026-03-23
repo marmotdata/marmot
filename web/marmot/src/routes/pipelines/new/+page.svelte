@@ -30,6 +30,7 @@
 			min?: number;
 			max?: number;
 		};
+		show_when?: { field: string; value: string };
 	}
 
 	interface Plugin {
@@ -438,10 +439,22 @@
 		return true;
 	}
 
-	function shouldHideField(field: ConfigField, configObj: Record<string, any>): boolean {
+	function shouldHideField(
+		field: ConfigField,
+		configObj: Record<string, any>,
+		rootConfig?: Record<string, any>
+	): boolean {
 		// If there's a sibling "use_default" field that's checked, hide all other fields
 		if (configObj.use_default === true && field.name !== 'use_default') {
 			return true;
+		}
+		// Check show_when condition against the root config (for top-level sibling fields)
+		if (field.show_when) {
+			const checkObj = rootConfig || configObj;
+			const currentValue = checkObj[field.show_when.field];
+			if (currentValue !== field.show_when.value) {
+				return true;
+			}
 		}
 		return false;
 	}
@@ -1040,7 +1053,7 @@
 												{#each field.fields as nestedField}
 													{@const nestedPath = `${fieldPath}.${nestedField.name}`}
 													{@const nestedConfigObj = configObj[field.name] || {}}
-													{#if !shouldHideField(nestedField, nestedConfigObj)}
+													{#if !shouldHideField(nestedField, nestedConfigObj, config)}
 														{@render renderField(
 															nestedField,
 															nestedPath,
@@ -1254,7 +1267,9 @@
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name)) as field}
-							{@render renderField(field, field.name, config, 0)}
+							{#if !shouldHideField(field, config)}
+								{@render renderField(field, field.name, config, 0)}
+							{/if}
 						{/each}
 					</div>
 				</div>

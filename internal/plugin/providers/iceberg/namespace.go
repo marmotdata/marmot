@@ -42,8 +42,10 @@ func (s *Source) listNamespacesRecursive(ctx context.Context, parent table.Ident
 			*assets = append(*assets, a)
 		}
 
-		if err := s.listNamespacesRecursive(ctx, ns, assets, nsMap); err != nil {
-			log.Warn().Err(err).Str("namespace", nsPath).Msg("Failed to list child namespaces")
+		if s.config.CatalogType != "glue" {
+			if err := s.listNamespacesRecursive(ctx, ns, assets, nsMap); err != nil {
+				log.Warn().Err(err).Str("namespace", nsPath).Msg("Failed to list child namespaces")
+			}
 		}
 	}
 
