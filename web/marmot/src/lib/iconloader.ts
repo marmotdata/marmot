@@ -424,7 +424,7 @@ export class IconLoader {
 	}
 
 	private async fetchIcon(name: string, isDark: boolean): Promise<IconResult> {
-		const formattedName = name.toLowerCase().replace(/_/g, '-');
+		const formattedName = name.toLowerCase().replace(/[\s_]/g, '-');
 
 		if (iconMap[formattedName]) {
 			if (isDark && iconMap[formattedName].dark) {
@@ -470,16 +470,25 @@ export class IconLoader {
 			}
 		}
 
-		try {
-			const regularUrl = `/images/asset-logos/${formattedName}.svg`;
-			const response = await fetch(regularUrl);
-			const responseClone = response.clone();
+		// Try exact formatted name, then without hyphens as fallback
+		const svgCandidates = [formattedName];
+		const dehyphenated = formattedName.replace(/-/g, '');
+		if (dehyphenated !== formattedName) {
+			svgCandidates.push(dehyphenated);
+		}
 
-			if (await isValidSvg(responseClone)) {
-				return regularUrl;
+		for (const candidate of svgCandidates) {
+			try {
+				const regularUrl = `/images/asset-logos/${candidate}.svg`;
+				const response = await fetch(regularUrl);
+				const responseClone = response.clone();
+
+				if (await isValidSvg(responseClone)) {
+					return regularUrl;
+				}
+			} catch (error) {
+				console.debug(`SVG not found for ${name}`);
 			}
-		} catch (error) {
-			console.debug(`SVG not found for ${name}`);
 		}
 
 		try {

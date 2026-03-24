@@ -7,6 +7,7 @@ require (
 	cloud.google.com/go/storage v1.60.0
 	github.com/Azure/azure-sdk-for-go/sdk/storage/azblob v1.6.4
 	github.com/ClickHouse/clickhouse-go/v2 v2.43.0
+	github.com/apache/arrow-go/v18 v18.5.2-0.20260220015023-a886a5722b87
 	github.com/apache/iceberg-go v0.5.0
 	github.com/aws/aws-sdk-go-v2 v1.41.4
 	github.com/aws/aws-sdk-go-v2/config v1.32.9
@@ -79,7 +80,6 @@ require (
 	github.com/Masterminds/sprig/v3 v3.3.0 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
-	github.com/apache/arrow-go/v18 v18.5.2-0.20260220015023-a886a5722b87 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
 	github.com/apache/thrift v0.22.0 // indirect
 	github.com/asyncapi/spec-json-schemas/v6 v6.11.1 // indirect

@@ -56,6 +56,13 @@ const plugins: Plugin[] = [
     icon: "simple-icons:dbt",
   },
   {
+    name: "Delta Lake",
+    description: "Discover tables from Delta Lake transaction logs on local filesystems",
+    href: "/docs/Plugins/Delta%20Lake",
+    icon: "deltalake",
+    useLocalIcon: true,
+  },
+  {
     name: "DynamoDB",
     description: "Discover tables from Amazon DynamoDB",
     href: "/docs/Plugins/DynamoDB",
