@@ -97,7 +97,9 @@
 	$: progress = total > 0 ? Math.round((indexed / total) * 100) : 0;
 </script>
 
-<div class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+<div
+	class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700"
+>
 	<div class="p-6">
 		<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Search Index</h3>
 
@@ -106,12 +108,15 @@
 				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700" />
 			</div>
 		{:else if !esConfigured}
-			<div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 text-yellow-700 dark:text-yellow-300">
+			<div
+				class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-4 text-yellow-700 dark:text-yellow-300"
+			>
 				Elasticsearch is not configured. Search reindexing is unavailable.
 			</div>
 		{:else}
 			<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-				Rebuild the search index from the database. This is useful if the search index has become out of sync.
+				Rebuild the search index from the database. This is useful if the search index has become
+				out of sync.
 			</p>
 
 			<button
@@ -141,20 +146,28 @@
 			{/if}
 
 			{#if status === 'completed'}
-				<div class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 text-green-700 dark:text-green-300">
-					Reindex complete: {indexed.toLocaleString()} documents indexed{errors > 0 ? `, ${errors} errors` : ''}.
+				<div
+					class="mt-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700 rounded-lg p-4 text-green-700 dark:text-green-300"
+				>
+					Reindex complete: {indexed.toLocaleString()} documents indexed{errors > 0
+						? `, ${errors} errors`
+						: ''}.
 				</div>
 			{/if}
 
 			{#if status === 'failed'}
-				<div class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300">
+				<div
+					class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300"
+				>
 					Reindex failed: {error}
 					{indexed > 0 ? ` (${indexed.toLocaleString()} documents indexed before failure)` : ''}
 				</div>
 			{/if}
 
 			{#if error && status !== 'failed'}
-				<div class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300">
+				<div
+					class="mt-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 rounded-lg p-4 text-red-700 dark:text-red-300"
+				>
 					{error}
 				</div>
 			{/if}
