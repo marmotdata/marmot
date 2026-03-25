@@ -19,6 +19,80 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/admin/search/reindex": {
+            "get": {
+                "description": "Check whether a search reindex is currently running and whether Elasticsearch is configured.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Get reindex status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_admin.ReindexStatusResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Trigger a full reindex from PostgreSQL to Elasticsearch. The reindex runs asynchronously in the background. Only one reindex can run at a time.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "admin"
+                ],
+                "summary": "Start search reindex",
+                "responses": {
+                    "202": {
+                        "description": "Accepted",
+                        "schema": {
+                            "$ref": "#/definitions/v1_admin.ReindexAcceptedResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "503": {
+                        "description": "Service Unavailable",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/ingestion/runs": {
             "get": {
                 "produces": [
@@ -3821,7 +3895,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/search.Response"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_search.Response"
                         }
                     },
                     "400": {
@@ -4972,6 +5046,29 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_marmotdata_marmot_internal_core_search.Response": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "$ref": "#/definitions/search.Facets"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/search.Result"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
         "glossary.GlossaryTerm": {
             "type": "object",
             "properties": {
@@ -5547,29 +5644,6 @@ const docTemplate = `{
                 }
             }
         },
-        "search.Response": {
-            "type": "object",
-            "properties": {
-                "facets": {
-                    "$ref": "#/definitions/search.Facets"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/search.Result"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
         "search.Result": {
             "type": "object",
             "properties": {
@@ -5827,6 +5901,30 @@ const docTemplate = `{
                 },
                 "user_id": {
                     "type": "string"
+                }
+            }
+        },
+        "v1_admin.ReindexAcceptedResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Reindex started"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "accepted"
+                }
+            }
+        },
+        "v1_admin.ReindexStatusResponse": {
+            "type": "object",
+            "properties": {
+                "es_configured": {
+                    "type": "boolean"
+                },
+                "running": {
+                    "type": "boolean"
                 }
             }
         },

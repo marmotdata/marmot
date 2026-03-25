@@ -2,13 +2,15 @@
 	import Sidebar from '$components/ui/Sidebar.svelte';
 	import UserManagement from '$components/user/UserManagement.svelte';
 	import TeamManagement from '$components/team/TeamManagement.svelte';
+	import SearchManagement from '$components/admin/SearchManagement.svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { onMount } from 'svelte';
 
 	const tabs = [
 		{ id: 'users', label: 'Users' },
-		{ id: 'teams', label: 'Teams' }
+		{ id: 'teams', label: 'Teams' },
+		{ id: 'system', label: 'System' }
 	];
 
 	$: activeTab = $page.url.searchParams.get('tab') || tabs[0]?.id;
@@ -32,6 +34,10 @@
 			{:else if activeTab === 'teams'}
 				<div class="animate-slide-down">
 					<TeamManagement />
+				</div>
+			{:else if activeTab === 'system'}
+				<div class="animate-slide-down">
+					<SearchManagement />
 				</div>
 			{/if}
 		</div>

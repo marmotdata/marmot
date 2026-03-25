@@ -7,6 +7,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -41,6 +42,7 @@ type Server struct {
 	userService     user.Service
 	teamService     TeamService
 	lineageService  lineage.Service
+	searchService   search.Service
 	config          *config.Config
 }
 
@@ -50,6 +52,7 @@ func NewServer(
 	userService user.Service,
 	teamService TeamService,
 	lineageService lineage.Service,
+	searchService search.Service,
 	config *config.Config,
 ) *Server {
 	return &Server{
@@ -58,6 +61,7 @@ func NewServer(
 		userService:     userService,
 		teamService:     teamService,
 		lineageService:  lineageService,
+		searchService:   searchService,
 		config:          config,
 	}
 }
@@ -83,6 +87,7 @@ func (s *Server) registerTools(server *mcpsdk.Server, user *user.User) {
 		userService:     s.userService,
 		teamService:     s.teamService,
 		lineageService:  s.lineageService,
+		searchService:   s.searchService,
 		user:            user,
 		config:          s.config,
 	}

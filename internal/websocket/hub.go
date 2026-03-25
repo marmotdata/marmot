@@ -2,6 +2,7 @@ package websocket
 
 import (
 	"context"
+	"encoding/json"
 	"time"
 
 	"github.com/centrifugal/centrifuge"
@@ -77,8 +78,8 @@ func (h *Hub) Start(ctx context.Context) {
 				Str("channel", event.Channel).
 				Msg("Client subscribing to channel")
 
-			// Allow subscription to job_runs channel
-			if event.Channel == "job_runs" {
+			// Allow subscription to known channels
+			if event.Channel == "job_runs" || event.Channel == "search_reindex" {
 				cb(centrifuge.SubscribeReply{}, nil)
 				log.Debug().
 					Str("client_id", client.ID()).
@@ -142,7 +143,7 @@ func (h *Hub) Broadcast(eventType EventType, payload map[string]interface{}) {
 		Timestamp: time.Now(),
 	}
 
-	data, err := event.MarshalJSON()
+	data, err := json.Marshal(event)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to marshal event")
 		return

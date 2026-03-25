@@ -94,15 +94,15 @@ type Config struct {
 	} `mapstructure:"logging"`
 
 	Auth struct {
-		Google   *OAuthProviderConfig `mapstructure:"google"`
+		Google      *OAuthProviderConfig `mapstructure:"google"`
 		GenericOIDC *OAuthProviderConfig `mapstructure:"generic_oidc"`
 		GitHub      *OAuthProviderConfig `mapstructure:"github"`
 		GitLab      *OAuthProviderConfig `mapstructure:"gitlab"`
-		Keycloak *OAuthProviderConfig `mapstructure:"keycloak"`
-		Okta     *OAuthProviderConfig `mapstructure:"okta"`
-		Slack    *OAuthProviderConfig `mapstructure:"slack"`
-		Auth0    *OAuthProviderConfig `mapstructure:"auth0"`
-		Anonymous AnonymousAuthConfig  `mapstructure:"anonymous"`
+		Keycloak    *OAuthProviderConfig `mapstructure:"keycloak"`
+		Okta        *OAuthProviderConfig `mapstructure:"okta"`
+		Slack       *OAuthProviderConfig `mapstructure:"slack"`
+		Auth0       *OAuthProviderConfig `mapstructure:"auth0"`
+		Anonymous   AnonymousAuthConfig  `mapstructure:"anonymous"`
 	} `mapstructure:"auth"`
 
 	OpenLineage struct {
@@ -118,7 +118,8 @@ type Config struct {
 	} `mapstructure:"ui"`
 
 	Search struct {
-		Timeout int `mapstructure:"timeout"` // seconds
+		Timeout       int                  `mapstructure:"timeout"` // seconds
+		Elasticsearch *ElasticsearchConfig `mapstructure:"elasticsearch"`
 	} `mapstructure:"search"`
 
 	Pipelines struct {
@@ -135,6 +136,21 @@ type BannerConfig struct {
 	Variant     string `mapstructure:"variant"`
 	Message     string `mapstructure:"message"`
 	ID          string `mapstructure:"id"`
+}
+
+// ElasticsearchConfig holds configuration for the optional Elasticsearch search backend.
+type ElasticsearchConfig struct {
+	Enabled        bool       `mapstructure:"enabled"`
+	Addresses      []string   `mapstructure:"addresses"`
+	Username       string     `mapstructure:"username"`
+	Password       string     `mapstructure:"password"`
+	Index          string     `mapstructure:"index"`
+	TLS            *TLSConfig `mapstructure:"tls"`
+	BulkSize       int        `mapstructure:"bulk_size"`
+	FlushInterval  int        `mapstructure:"flush_interval"` // milliseconds
+	ReindexOnStart bool       `mapstructure:"reindex_on_start"`
+	Shards         *int       `mapstructure:"shards"`
+	Replicas       *int       `mapstructure:"replicas"`
 }
 
 var (
@@ -313,6 +329,18 @@ func loadConfig(configPath string) error {
 
 	// Search env vars
 	v.BindEnv("search.timeout")
+	v.BindEnv("search.elasticsearch.enabled")
+	v.BindEnv("search.elasticsearch.addresses")
+	v.BindEnv("search.elasticsearch.username")
+	v.BindEnv("search.elasticsearch.password")
+	v.BindEnv("search.elasticsearch.index")
+	v.BindEnv("search.elasticsearch.bulk_size")
+	v.BindEnv("search.elasticsearch.flush_interval")
+	v.BindEnv("search.elasticsearch.reindex_on_start")
+	v.BindEnv("search.elasticsearch.tls.insecure_skip_verify")
+	v.BindEnv("search.elasticsearch.tls.ca_cert_path")
+	v.BindEnv("search.elasticsearch.tls.cert_path")
+	v.BindEnv("search.elasticsearch.tls.key_path")
 
 	// Set defaults
 	setDefaults(v)
@@ -427,6 +455,11 @@ func setDefaults(v *viper.Viper) {
 
 	// Search defaults
 	v.SetDefault("search.timeout", 10) // 10 seconds
+	v.SetDefault("search.elasticsearch.enabled", false)
+	v.SetDefault("search.elasticsearch.index", "marmot")
+	v.SetDefault("search.elasticsearch.bulk_size", 500)
+	v.SetDefault("search.elasticsearch.flush_interval", 1000)
+	v.SetDefault("search.elasticsearch.reindex_on_start", false)
 }
 
 // BuildDSN builds a PostgreSQL connection string from config

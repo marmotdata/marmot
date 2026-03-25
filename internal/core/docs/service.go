@@ -15,9 +15,15 @@ type MentionNotifier interface {
 	OnMention(ctx context.Context, mention Mention, pageID, pageTitle, entityType, entityID, mentionerID, mentionerName string)
 }
 
+// SearchObserver is notified when doc_pages content changes so the external search index can be updated.
+type SearchObserver interface {
+	OnDocChanged(ctx context.Context, entityType EntityType, entityID string)
+}
+
 type Service struct {
 	repo            Repository
 	mentionNotifier MentionNotifier
+	searchObserver  SearchObserver
 }
 
 func NewService(repo Repository) *Service {
@@ -27,6 +33,11 @@ func NewService(repo Repository) *Service {
 // SetMentionNotifier sets the notifier for user mentions.
 func (s *Service) SetMentionNotifier(notifier MentionNotifier) {
 	s.mentionNotifier = notifier
+}
+
+// SetSearchObserver sets the observer for search index updates.
+func (s *Service) SetSearchObserver(observer SearchObserver) {
+	s.searchObserver = observer
 }
 
 func (s *Service) CreatePage(ctx context.Context, entityType EntityType, entityID string, input CreatePageInput, createdBy *string) (*Page, error) {
@@ -46,7 +57,16 @@ func (s *Service) CreatePage(ctx context.Context, entityType EntityType, entityI
 		input.Title = "Untitled"
 	}
 
-	return s.repo.CreatePage(ctx, entityType, entityID, input, createdBy)
+	page, err := s.repo.CreatePage(ctx, entityType, entityID, input, createdBy)
+	if err != nil {
+		return nil, err
+	}
+
+	if s.searchObserver != nil {
+		s.searchObserver.OnDocChanged(ctx, entityType, entityID)
+	}
+
+	return page, nil
 }
 
 func (s *Service) GetPage(ctx context.Context, pageID string) (*Page, error) {
@@ -108,11 +128,33 @@ func (s *Service) UpdatePage(ctx context.Context, pageID string, input UpdatePag
 		}
 	}
 
+	if s.searchObserver != nil {
+		s.searchObserver.OnDocChanged(ctx, page.EntityType, page.EntityID)
+	}
+
 	return page, nil
 }
 
 func (s *Service) DeletePage(ctx context.Context, pageID string) error {
-	return s.repo.DeletePage(ctx, pageID)
+	var entityType EntityType
+	var entityID string
+	if s.searchObserver != nil {
+		var err error
+		entityType, entityID, err = s.repo.GetPageEntityInfo(ctx, pageID)
+		if err != nil {
+			return fmt.Errorf("getting page entity info: %w", err)
+		}
+	}
+
+	if err := s.repo.DeletePage(ctx, pageID); err != nil {
+		return err
+	}
+
+	if s.searchObserver != nil {
+		s.searchObserver.OnDocChanged(ctx, entityType, entityID)
+	}
+
+	return nil
 }
 
 func (s *Service) MovePage(ctx context.Context, pageID string, input MovePageInput) (*Page, error) {

@@ -86,12 +86,20 @@ type Service interface {
 	Search(ctx context.Context, filter SearchFilter) (*ListResult, error)
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
 	GetAncestors(ctx context.Context, termID string) ([]*GlossaryTerm, error)
+	SetSearchObserver(observer SearchObserver)
+}
+
+// SearchObserver is notified when glossary terms change.
+type SearchObserver interface {
+	OnEntityChanged(ctx context.Context, entityType, entityID string)
+	OnEntityDeleted(ctx context.Context, entityType, entityID string)
 }
 
 type service struct {
-	repo      Repository
-	validator *validator.Validate
-	metrics   MetricsClient
+	repo           Repository
+	validator      *validator.Validate
+	metrics        MetricsClient
+	searchObserver SearchObserver
 }
 
 type MetricsClient interface {
@@ -118,6 +126,11 @@ func WithMetrics(metrics MetricsClient) ServiceOption {
 	return func(s *service) {
 		s.metrics = metrics
 	}
+}
+
+// SetSearchObserver registers an observer for search index sync.
+func (s *service) SetSearchObserver(observer SearchObserver) {
+	s.searchObserver = observer
 }
 
 func (s *service) Create(ctx context.Context, input CreateTermInput) (*GlossaryTerm, error) {
@@ -151,6 +164,10 @@ func (s *service) Create(ctx context.Context, input CreateTermInput) (*GlossaryT
 
 	if err := s.repo.Create(ctx, term, input.Owners); err != nil {
 		return nil, err
+	}
+
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "glossary", term.ID)
 	}
 
 	return s.Get(ctx, term.ID)
@@ -228,6 +245,10 @@ func (s *service) Update(ctx context.Context, id string, input UpdateTermInput) 
 		return nil, err
 	}
 
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "glossary", id)
+	}
+
 	return s.Get(ctx, id)
 }
 
@@ -256,7 +277,15 @@ func (s *service) Delete(ctx context.Context, id string) error {
 	term.DeletedAt = &now
 	term.UpdatedAt = now
 
-	return s.repo.Update(ctx, term, nil)
+	if err := s.repo.Update(ctx, term, nil); err != nil {
+		return err
+	}
+
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityDeleted(ctx, "glossary", id)
+	}
+
+	return nil
 }
 
 func (s *service) List(ctx context.Context, offset, limit int) (*ListResult, error) {

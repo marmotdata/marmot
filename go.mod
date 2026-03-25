@@ -23,6 +23,7 @@ require (
 	github.com/charlie-haley/asyncapi-go v0.0.0-20260108213546-9782889bf371
 	github.com/confluentinc/confluent-kafka-go/v2 v2.13.0
 	github.com/coreos/go-oidc/v3 v3.17.0
+	github.com/elastic/go-elasticsearch/v8 v8.19.3
 	github.com/go-playground/validator/v10 v10.30.1
 	github.com/go-sql-driver/mysql v1.9.3
 	github.com/golang-jwt/jwt/v5 v5.3.1
@@ -111,6 +112,7 @@ require (
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.8.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.36.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect

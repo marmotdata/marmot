@@ -338,6 +338,21 @@ definitions:
       message:
         type: string
     type: object
+  github_com_marmotdata_marmot_internal_core_search.Response:
+    properties:
+      facets:
+        $ref: '#/definitions/search.Facets'
+      limit:
+        type: integer
+      offset:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/search.Result'
+        type: array
+      total:
+        type: integer
+    type: object
   glossary.GlossaryTerm:
     properties:
       created_at:
@@ -720,21 +735,6 @@ definitions:
           type: integer
         type: object
     type: object
-  search.Response:
-    properties:
-      facets:
-        $ref: '#/definitions/search.Facets'
-      limit:
-        type: integer
-      offset:
-        type: integer
-      results:
-        items:
-          $ref: '#/definitions/search.Result'
-        type: array
-      total:
-        type: integer
-    type: object
   search.Result:
     properties:
       description:
@@ -911,6 +911,22 @@ definitions:
         type: string
       user_id:
         type: string
+    type: object
+  v1_admin.ReindexAcceptedResponse:
+    properties:
+      message:
+        example: Reindex started
+        type: string
+      status:
+        example: accepted
+        type: string
+    type: object
+  v1_admin.ReindexStatusResponse:
+    properties:
+      es_configured:
+        type: boolean
+      running:
+        type: boolean
     type: object
   v1_assetrules.CreateRequest:
     properties:
@@ -1682,6 +1698,57 @@ info:
   title: Marmot API
   version: "0.1"
 paths:
+  /admin/search/reindex:
+    get:
+      description: Check whether a search reindex is currently running and whether
+        Elasticsearch is configured.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_admin.ReindexStatusResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get reindex status
+      tags:
+      - admin
+    post:
+      description: Trigger a full reindex from PostgreSQL to Elasticsearch. The reindex
+        runs asynchronously in the background. Only one reindex can run at a time.
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            $ref: '#/definitions/v1_admin.ReindexAcceptedResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "503":
+          description: Service Unavailable
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Start search reindex
+      tags:
+      - admin
   /api/v1/ingestion/runs:
     get:
       parameters:
@@ -4210,7 +4277,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/search.Response'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_search.Response'
         "400":
           description: Bad Request
           schema:

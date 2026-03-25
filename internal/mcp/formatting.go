@@ -339,7 +339,7 @@ func FormatNextActions(actions map[string]string) string {
 	return strings.Join(parts, "\n")
 }
 
-// Helper: Get icon for asset type
+// getAssetIcon returns an emoji icon for the given asset type.
 func getAssetIcon(assetType string) string {
 	icons := map[string]string{
 		"table":     "📊",
@@ -361,7 +361,7 @@ func getAssetIcon(assetType string) string {
 	return "📦" // default
 }
 
-// Helper: Escape markdown special characters
+// escapeMarkdown escapes markdown special characters in a string.
 func escapeMarkdown(s string) string {
 	replacer := strings.NewReplacer(
 		"[", "\\[",

@@ -65,6 +65,7 @@ type Service interface {
 	ListImages(ctx context.Context, dataProductID string) ([]*ProductImageMeta, error)
 
 	SetRuleObserver(observer RuleObserver)
+	SetSearchObserver(observer SearchObserver)
 }
 
 // RuleObserver is notified when rules are created, updated, or deleted.
@@ -74,10 +75,17 @@ type RuleObserver interface {
 	OnRuleDeleted(ctx context.Context, ruleID string) error
 }
 
+// SearchObserver is notified when data products change.
+type SearchObserver interface {
+	OnEntityChanged(ctx context.Context, entityType, entityID string)
+	OnEntityDeleted(ctx context.Context, entityType, entityID string)
+}
+
 type service struct {
-	repo         Repository
-	validator    *validator.Validate
-	ruleObserver RuleObserver
+	repo           Repository
+	validator      *validator.Validate
+	ruleObserver   RuleObserver
+	searchObserver SearchObserver
 }
 
 func NewService(repo Repository) Service {
@@ -89,6 +97,10 @@ func NewService(repo Repository) Service {
 
 func (s *service) SetRuleObserver(observer RuleObserver) {
 	s.ruleObserver = observer
+}
+
+func (s *service) SetSearchObserver(observer SearchObserver) {
+	s.searchObserver = observer
 }
 
 func (s *service) Create(ctx context.Context, input CreateInput) (*DataProduct, error) {
@@ -132,6 +144,10 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*DataProduct, 
 		}
 	}
 
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "data_product", dp.ID)
+	}
+
 	return s.Get(ctx, dp.ID)
 }
 
@@ -168,11 +184,21 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*Da
 		return nil, err
 	}
 
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "data_product", id)
+	}
+
 	return s.Get(ctx, id)
 }
 
 func (s *service) Delete(ctx context.Context, id string) error {
-	return s.repo.Delete(ctx, id)
+	if err := s.repo.Delete(ctx, id); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityDeleted(ctx, "data_product", id)
+	}
+	return nil
 }
 
 func (s *service) List(ctx context.Context, offset, limit int) (*ListResult, error) {

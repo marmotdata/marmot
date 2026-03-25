@@ -14,12 +14,30 @@ export type JobRunEvent = {
 	timestamp: string;
 };
 
+export type SearchReindexEvent = {
+	type:
+		| 'search_reindex_started'
+		| 'search_reindex_progress'
+		| 'search_reindex_completed'
+		| 'search_reindex_failed';
+	payload: {
+		indexed?: number;
+		errors?: number;
+		total?: number;
+		error?: string;
+	};
+	timestamp: string;
+};
+
 type EventCallback = (event: JobRunEvent) => void;
+type ReindexCallback = (event: SearchReindexEvent) => void;
 
 class WebSocketService {
 	private centrifuge: Centrifuge | null = null;
 	private jobRunsSubscription: Subscription | null = null;
+	private searchReindexSubscription: Subscription | null = null;
 	private callbacks: Set<EventCallback> = new Set();
+	private reindexCallbacks: Set<ReindexCallback> = new Set();
 	private isConnected = false;
 
 	constructor() {
@@ -54,6 +72,9 @@ class WebSocketService {
 		this.centrifuge.on('connected', () => {
 			this.isConnected = true;
 			this.subscribeToJobRuns();
+			if (this.reindexCallbacks.size > 0) {
+				this.subscribeToSearchReindex();
+			}
 		});
 
 		this.centrifuge.on('disconnected', () => {
@@ -86,6 +107,29 @@ class WebSocketService {
 		this.jobRunsSubscription.subscribe();
 	}
 
+	private subscribeToSearchReindex() {
+		if (!this.centrifuge || this.searchReindexSubscription) return;
+
+		this.searchReindexSubscription = this.centrifuge.newSubscription('search_reindex');
+
+		this.searchReindexSubscription.on('publication', (ctx) => {
+			try {
+				const event = ctx.data as SearchReindexEvent;
+				this.reindexCallbacks.forEach((callback) => {
+					try {
+						callback(event);
+					} catch {
+						// Silently ignore callback errors
+					}
+				});
+			} catch {
+				// Silently ignore processing errors
+			}
+		});
+
+		this.searchReindexSubscription.subscribe();
+	}
+
 	/**
 	 * Subscribe to job run events
 	 * Returns an unsubscribe function
@@ -98,9 +142,29 @@ class WebSocketService {
 	}
 
 	/**
+	 * Subscribe to search reindex events
+	 * Lazily subscribes to the search_reindex channel on first call.
+	 * Centrifuge handles pending subscriptions if not yet connected.
+	 * Returns an unsubscribe function
+	 */
+	public subscribeToReindex(callback: ReindexCallback): () => void {
+		this.reindexCallbacks.add(callback);
+		this.subscribeToSearchReindex();
+		return () => {
+			this.reindexCallbacks.delete(callback);
+		};
+	}
+
+	/**
 	 * Disconnect from websocket
 	 */
 	public disconnect() {
+		if (this.searchReindexSubscription) {
+			this.searchReindexSubscription.unsubscribe();
+			this.searchReindexSubscription.removeAllListeners();
+			this.searchReindexSubscription = null;
+		}
+
 		if (this.jobRunsSubscription) {
 			this.jobRunsSubscription.unsubscribe();
 			this.jobRunsSubscription.removeAllListeners();
@@ -114,6 +178,7 @@ class WebSocketService {
 
 		this.isConnected = false;
 		this.callbacks.clear();
+		this.reindexCallbacks.clear();
 	}
 
 	/**

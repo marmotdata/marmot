@@ -1,7 +1,6 @@
 package websocket
 
 import (
-	"encoding/json"
 	"time"
 )
 
@@ -16,6 +15,11 @@ const (
 	EventJobRunProgress  EventType = "job_run_progress"
 	EventJobRunCompleted EventType = "job_run_completed"
 	EventJobRunCancelled EventType = "job_run_cancelled"
+
+	EventSearchReindexStarted   EventType = "search_reindex_started"
+	EventSearchReindexProgress  EventType = "search_reindex_progress"
+	EventSearchReindexCompleted EventType = "search_reindex_completed"
+	EventSearchReindexFailed    EventType = "search_reindex_failed"
 )
 
 // Event represents a websocket event to broadcast
@@ -25,15 +29,3 @@ type Event struct {
 	Timestamp time.Time              `json:"timestamp"`
 }
 
-// MarshalJSON marshals the event to JSON
-func (e *Event) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
-		Type      EventType              `json:"type"`
-		Payload   map[string]interface{} `json:"payload"`
-		Timestamp time.Time              `json:"timestamp"`
-	}{
-		Type:      e.Type,
-		Payload:   e.Payload,
-		Timestamp: e.Timestamp,
-	})
-}

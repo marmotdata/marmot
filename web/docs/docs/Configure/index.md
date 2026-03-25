@@ -31,6 +31,12 @@ import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
     href="/docs/Configure/banner"
     icon="mdi:message-alert"
   />
+  <DocCard
+    title="Elasticsearch"
+    description="Enhance search with deep fuzzy matching across all fields"
+    href="/docs/Configure/elasticsearch"
+    icon="mdi:magnify"
+  />
 </DocCardGrid>
 
 ## Configuration File
@@ -90,6 +96,14 @@ Marmot uses structured logging. Set the format to `console` for human-readable o
 | ---------------- | ------------------------------------ | ------- | ----------------------- |
 | `logging.level`  | Log level (debug, info, warn, error) | `info`  | `MARMOT_LOGGING_LEVEL`  |
 | `logging.format` | Output format (json, console)        | `json`  | `MARMOT_LOGGING_FORMAT` |
+
+## Search
+
+| Key              | Description                              | Default | Environment Variable    |
+| ---------------- | ---------------------------------------- | ------- | ----------------------- |
+| `search.timeout` | Search query timeout in seconds          | `10`    | `MARMOT_SEARCH_TIMEOUT` |
+
+See [Elasticsearch](/docs/Configure/elasticsearch) for options related to the optional Elasticsearch search backend.
 
 ## OpenLineage
 

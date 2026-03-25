@@ -35,20 +35,21 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/nats"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/openapi"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/postgresql"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/redpanda"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/redis"
+	_ "github.com/marmotdata/marmot/internal/plugin/providers/redpanda"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/s3"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sns"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/sqs"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/trino"
 
 	"github.com/marmotdata/marmot/internal/api/auth"
+	adminAPI "github.com/marmotdata/marmot/internal/api/v1/admin"
+	assetrulesAPI "github.com/marmotdata/marmot/internal/api/v1/assetrules"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/dataproducts"
 	docsAPI "github.com/marmotdata/marmot/internal/api/v1/docs"
 	"github.com/marmotdata/marmot/internal/api/v1/glossary"
 	"github.com/marmotdata/marmot/internal/api/v1/lineage"
-	assetrulesAPI "github.com/marmotdata/marmot/internal/api/v1/assetrules"
 	mcpAPI "github.com/marmotdata/marmot/internal/api/v1/mcp"
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	notificationsAPI "github.com/marmotdata/marmot/internal/api/v1/notifications"
@@ -64,13 +65,13 @@ import (
 	"github.com/marmotdata/marmot/internal/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
+	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
 	dataproductService "github.com/marmotdata/marmot/internal/core/dataproduct"
 	docsService "github.com/marmotdata/marmot/internal/core/docs"
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
-	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
 	searchService "github.com/marmotdata/marmot/internal/core/search"
@@ -80,6 +81,7 @@ import (
 	webhookService "github.com/marmotdata/marmot/internal/core/webhook"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/marmotdata/marmot/internal/search/elasticsearch"
 	"github.com/marmotdata/marmot/internal/websocket"
 	"github.com/rs/zerolog/log"
 	httpSwagger "github.com/swaggo/http-swagger"
@@ -110,6 +112,10 @@ type Server struct {
 
 	// Webhook dispatcher
 	webhookDispatcher *webhookService.Dispatcher
+
+	// Elasticsearch
+	esIndexer   *elasticsearch.Client
+	syncService *searchService.IndexSyncService
 
 	handlers []interface{ Routes() []common.Route }
 }
@@ -410,17 +416,82 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	webhookSvc := webhookService.NewService(webhookRepo, scheduleEncryptor, webhookDispatcher)
 	notificationSvc.SetExternalNotifier(webhookSvc)
 
+	var finalSearchSvc searchService.Service = searchSvc
+	var esClient *elasticsearch.Client
+	var syncSvc *searchService.IndexSyncService
+	var reindexer *searchService.Reindexer
+
+	if esConfig := config.Search.Elasticsearch; esConfig != nil && esConfig.Enabled {
+		if len(esConfig.Addresses) > 0 {
+			var err error
+			esClient, err = elasticsearch.NewClient(esConfig)
+			if err != nil {
+				log.Error().Err(err).Msg("Failed to init Elasticsearch - using PostgreSQL only")
+			} else if !esClient.Healthy(context.Background()) {
+				log.Error().Msg("Elasticsearch unreachable at startup - using PostgreSQL only")
+				esClient.Close()
+				esClient = nil
+			} else {
+				timeout := time.Duration(config.Search.Timeout) * time.Second
+				if timeout <= 0 {
+					timeout = 10 * time.Second
+				}
+				finalSearchSvc = searchService.NewExternalSearchService(esClient, searchSvc, timeout)
+
+				if err := esClient.CreateIndex(context.Background()); err != nil {
+					log.Error().Err(err).Msg("Failed to create Elasticsearch index")
+				}
+
+				syncSvc = searchService.NewIndexSyncService(esClient, searchRepo)
+				syncSvc.Start(context.Background())
+
+				assetSvc.AddMembershipObserver(&assetSearchSyncAdapter{syncSvc: syncSvc})
+				assetSvc.SetNotificationObserver(&assetNotificationSearchAdapter{
+					syncSvc: syncSvc,
+					delegate: &assetChangeNotifier{
+						notificationSvc: notificationSvc,
+						teamSvc:         teamSvc,
+						lineageSvc:      lineageSvc,
+						assetSvc:        assetSvc,
+						subscriptionSvc: subscriptionSvc,
+					},
+				})
+
+				glossarySvc.SetSearchObserver(syncSvc)
+				teamSvc.SetSearchObserver(syncSvc)
+				dataProductSvc.SetSearchObserver(syncSvc)
+				docsSvc.SetSearchObserver(&docsSearchSyncAdapter{syncSvc: syncSvc, assetSvc: assetSvc})
+
+				reindexer = searchService.NewReindexer(esClient, searchRepo, esConfig.BulkSize)
+				reindexBroadcaster := websocket.NewSearchReindexBroadcaster(wsHub)
+				reindexer.SetBroadcaster(reindexBroadcaster)
+
+				if esConfig.ReindexOnStart {
+					go func() {
+						if err := reindexer.RunOnce(context.Background()); err != nil {
+							log.Error().Err(err).Msg("Failed to run startup reindex")
+						}
+					}()
+				}
+
+				log.Info().Strs("addresses", esConfig.Addresses).Msg("Elasticsearch search enabled")
+			}
+		}
+	}
+
 	server := &Server{
-		config:                    config,
-		metricsService:            metricsService,
-		wsHub:                     wsHub,
-		scheduler:                 scheduler,
-		membershipService:         membershipSvc,
-		membershipReconciler:      membershipReconciler,
+		config:                     config,
+		metricsService:             metricsService,
+		wsHub:                      wsHub,
+		scheduler:                  scheduler,
+		membershipService:          membershipSvc,
+		membershipReconciler:       membershipReconciler,
 		assetRuleMembershipService: assetRuleMemberSvc,
 		assetRuleReconciler:        assetRuleReconciler,
-		notificationService:       notificationSvc,
-		webhookDispatcher:         webhookDispatcher,
+		notificationService:        notificationSvc,
+		webhookDispatcher:          webhookDispatcher,
+		esIndexer:                  esClient,
+		syncService:                syncSvc,
 	}
 
 	server.handlers = []interface{ Routes() []common.Route }{
@@ -429,7 +500,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		users.NewHandler(userSvc, authSvc, config),
 		auth.NewHandler(authSvc, oauthManager, userSvc, config),
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
-		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, lineageSvc, authSvc, config),
+		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, lineageSvc, finalSearchSvc, authSvc, config),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
@@ -440,17 +511,24 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		subscriptionsAPI.NewHandler(subscriptionSvc, userSvc, authSvc, config),
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
 		webhooksAPI.NewHandler(webhookSvc, teamSvc, userSvc, authSvc, config, encryptionConfigured),
-		searchAPI.NewHandler(searchSvc, userSvc, authSvc, metricsService, config),
+		searchAPI.NewHandler(finalSearchSvc, userSvc, authSvc, metricsService, config),
 		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config, encryptionConfigured),
 		websocket.NewHandler(wsHub, userSvc, authSvc, config),
 		plugins.NewHandler(),
 		ui.NewHandler(config, encryptionConfigured),
+		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
 	}
 
 	return server
 }
 
 func (s *Server) Stop() {
+	if s.syncService != nil {
+		s.syncService.Stop()
+	}
+	if s.esIndexer != nil {
+		s.esIndexer.Close()
+	}
 	if s.membershipReconciler != nil {
 		s.membershipReconciler.Stop()
 	}
@@ -1119,6 +1197,56 @@ func (n *docsMentionNotifier) handleTeamMention(ctx context.Context, mention doc
 	} else {
 		log.Info().Str("team_id", team.ID).Str("page_id", pageID).Msg("Sent team mention notification")
 	}
+}
+
+// docsSearchSyncAdapter adapts IndexSyncService to docs.SearchObserver.
+type docsSearchSyncAdapter struct {
+	syncSvc  *searchService.IndexSyncService
+	assetSvc asset.Service
+}
+
+func (a *docsSearchSyncAdapter) OnDocChanged(ctx context.Context, entityType docsService.EntityType, entityID string) {
+	switch entityType {
+	case docsService.EntityTypeAsset:
+		asst, err := a.assetSvc.GetByMRN(ctx, entityID)
+		if err != nil || asst == nil {
+			log.Warn().Err(err).Str("entity_id", entityID).Msg("Failed to resolve asset for search sync")
+			return
+		}
+		a.syncSvc.SyncAsset(ctx, asst.ID)
+	default:
+		a.syncSvc.OnEntityChanged(ctx, string(entityType), entityID)
+	}
+}
+
+// assetSearchSyncAdapter adapts IndexSyncService to asset.MembershipObserver.
+type assetSearchSyncAdapter struct {
+	syncSvc *searchService.IndexSyncService
+}
+
+func (a *assetSearchSyncAdapter) OnAssetCreated(ctx context.Context, asst *asset.Asset) {
+	a.syncSvc.SyncAsset(ctx, asst.ID)
+}
+
+func (a *assetSearchSyncAdapter) OnAssetDeleted(ctx context.Context, assetID string) error {
+	a.syncSvc.DeleteAsset(ctx, assetID)
+	return nil
+}
+
+// assetNotificationSearchAdapter wraps NotificationObserver to also sync changes to ES.
+type assetNotificationSearchAdapter struct {
+	syncSvc  *searchService.IndexSyncService
+	delegate asset.NotificationObserver
+}
+
+func (a *assetNotificationSearchAdapter) OnAssetUpdated(ctx context.Context, asst *asset.Asset, changeType string, changedFields []string) {
+	a.syncSvc.SyncAsset(ctx, asst.ID)
+	a.delegate.OnAssetUpdated(ctx, asst, changeType, changedFields)
+}
+
+func (a *assetNotificationSearchAdapter) OnAssetDeleted(ctx context.Context, asst *asset.Asset) {
+	a.syncSvc.DeleteAsset(ctx, asst.ID)
+	a.delegate.OnAssetDeleted(ctx, asst)
 }
 
 type responseWriter struct {

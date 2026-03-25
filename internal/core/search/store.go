@@ -3,6 +3,7 @@ package search
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -758,6 +759,102 @@ func (r *PostgresRepository) GetMetadata(ctx context.Context, resultType ResultT
 	}
 
 	return result, nil
+}
+
+// GetSearchDocument reads a single row from the search_index table.
+func (r *PostgresRepository) GetSearchDocument(ctx context.Context, entityType, entityID string) (*SearchDocument, error) {
+	var doc SearchDocument
+	err := r.db.QueryRow(ctx, `
+		SELECT si.type, si.entity_id, si.name, si.description, si.url_path,
+		       si.asset_type, si.primary_provider, si.providers, si.tags,
+		       si.mrn, si.created_by, si.created_at, si.updated_at, si.metadata,
+		       (SELECT STRING_AGG(dp.title || E'\n' || COALESCE(dp.content, ''), E'\n\n' ORDER BY dp.position)
+		        FROM doc_pages dp
+		        WHERE dp.entity_type = si.type
+		          AND dp.entity_id = CASE WHEN si.type = 'asset' THEN si.mrn ELSE si.entity_id END) AS documentation
+		FROM search_index si
+		WHERE si.type = $1 AND si.entity_id = $2
+	`, entityType, entityID).Scan(
+		&doc.Type, &doc.EntityID, &doc.Name, &doc.Description, &doc.URLPath,
+		&doc.AssetType, &doc.PrimaryProvider, &doc.Providers, &doc.Tags,
+		&doc.MRN, &doc.CreatedBy, &doc.CreatedAt, &doc.UpdatedAt, &doc.Metadata,
+		&doc.Documentation,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("getting search document: %w", err)
+	}
+	return &doc, nil
+}
+
+// ScanSearchDocuments reads search_index rows using keyset pagination.
+// Pass empty strings for afterType/afterID to start from the beginning.
+func (r *PostgresRepository) ScanSearchDocuments(ctx context.Context, afterType, afterID string, limit int) ([]SearchDocument, error) {
+	var rows pgx.Rows
+	var err error
+
+	if afterType == "" && afterID == "" {
+		rows, err = r.db.Query(ctx, `
+			SELECT si.type, si.entity_id, si.name, si.description, si.url_path,
+			       si.asset_type, si.primary_provider, si.providers, si.tags,
+			       si.mrn, si.created_by, si.created_at, si.updated_at, si.metadata,
+			       (SELECT STRING_AGG(dp.title || E'\n' || COALESCE(dp.content, ''), E'\n\n' ORDER BY dp.position)
+			        FROM doc_pages dp
+			        WHERE dp.entity_type = si.type
+			          AND dp.entity_id = CASE WHEN si.type = 'asset' THEN si.mrn ELSE si.entity_id END) AS documentation
+			FROM search_index si
+			ORDER BY si.type, si.entity_id
+			LIMIT $1
+		`, limit)
+	} else {
+		rows, err = r.db.Query(ctx, `
+			SELECT si.type, si.entity_id, si.name, si.description, si.url_path,
+			       si.asset_type, si.primary_provider, si.providers, si.tags,
+			       si.mrn, si.created_by, si.created_at, si.updated_at, si.metadata,
+			       (SELECT STRING_AGG(dp.title || E'\n' || COALESCE(dp.content, ''), E'\n\n' ORDER BY dp.position)
+			        FROM doc_pages dp
+			        WHERE dp.entity_type = si.type
+			          AND dp.entity_id = CASE WHEN si.type = 'asset' THEN si.mrn ELSE si.entity_id END) AS documentation
+			FROM search_index si
+			WHERE (si.type, si.entity_id) > ($1, $2)
+			ORDER BY si.type, si.entity_id
+			LIMIT $3
+		`, afterType, afterID, limit)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("scanning search documents: %w", err)
+	}
+	defer rows.Close()
+
+	var docs []SearchDocument
+	for rows.Next() {
+		var doc SearchDocument
+		if err := rows.Scan(
+			&doc.Type, &doc.EntityID, &doc.Name, &doc.Description, &doc.URLPath,
+			&doc.AssetType, &doc.PrimaryProvider, &doc.Providers, &doc.Tags,
+			&doc.MRN, &doc.CreatedBy, &doc.CreatedAt, &doc.UpdatedAt, &doc.Metadata,
+			&doc.Documentation,
+		); err != nil {
+			return nil, fmt.Errorf("scanning search document row: %w", err)
+		}
+		docs = append(docs, doc)
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+	return docs, nil
+}
+
+// CountSearchDocuments returns the total number of rows in search_index.
+func (r *PostgresRepository) CountSearchDocuments(ctx context.Context) (int, error) {
+	var count int
+	err := r.db.QueryRow(ctx, `SELECT COUNT(*) FROM search_index`).Scan(&count)
+	if err != nil {
+		return 0, fmt.Errorf("counting search documents: %w", err)
+	}
+	return count, nil
 }
 
 // resultTypesToStrings converts ResultType slice to string slice for SQL.

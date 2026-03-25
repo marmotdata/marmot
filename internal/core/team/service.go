@@ -84,9 +84,16 @@ type MembershipNotifier interface {
 	OnMemberAdded(ctx context.Context, teamID, teamName, userID, role string)
 }
 
+// SearchObserver is notified when teams change.
+type SearchObserver interface {
+	OnEntityChanged(ctx context.Context, entityType, entityID string)
+	OnEntityDeleted(ctx context.Context, entityType, entityID string)
+}
+
 type Service struct {
-	repo                 Repository
-	membershipNotifier   MembershipNotifier
+	repo               Repository
+	membershipNotifier MembershipNotifier
+	searchObserver     SearchObserver
 }
 
 func NewService(repo Repository) *Service {
@@ -96,6 +103,11 @@ func NewService(repo Repository) *Service {
 // SetMembershipNotifier sets the notifier for membership changes.
 func (s *Service) SetMembershipNotifier(notifier MembershipNotifier) {
 	s.membershipNotifier = notifier
+}
+
+// SetSearchObserver registers an observer for search index sync.
+func (s *Service) SetSearchObserver(observer SearchObserver) {
+	s.searchObserver = observer
 }
 
 func (s *Service) CreateTeam(ctx context.Context, name, description, createdBy string) (*Team, error) {
@@ -108,6 +120,10 @@ func (s *Service) CreateTeam(ctx context.Context, name, description, createdBy s
 
 	if err := s.repo.CreateTeam(ctx, team); err != nil {
 		return nil, err
+	}
+
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "team", team.ID)
 	}
 
 	return team, nil
@@ -126,15 +142,33 @@ func (s *Service) FindSimilarTeamNames(ctx context.Context, searchTerm string, l
 }
 
 func (s *Service) UpdateTeam(ctx context.Context, id, name, description string) error {
-	return s.repo.UpdateTeam(ctx, id, name, description)
+	if err := s.repo.UpdateTeam(ctx, id, name, description); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "team", id)
+	}
+	return nil
 }
 
 func (s *Service) UpdateTeamFields(ctx context.Context, id string, name, description *string, metadata map[string]interface{}, tags []string) error {
-	return s.repo.UpdateTeamFields(ctx, id, name, description, metadata, tags)
+	if err := s.repo.UpdateTeamFields(ctx, id, name, description, metadata, tags); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "team", id)
+	}
+	return nil
 }
 
 func (s *Service) DeleteTeam(ctx context.Context, id string) error {
-	return s.repo.DeleteTeam(ctx, id)
+	if err := s.repo.DeleteTeam(ctx, id); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityDeleted(ctx, "team", id)
+	}
+	return nil
 }
 
 func (s *Service) ListTeams(ctx context.Context, limit, offset int) ([]*Team, int, error) {

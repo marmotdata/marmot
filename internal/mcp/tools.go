@@ -11,6 +11,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/rs/zerolog/log"
@@ -23,6 +24,7 @@ type ToolContext struct {
 	userService     user.Service
 	teamService     TeamService
 	lineageService  lineage.Service
+	searchService   search.Service
 	user            *user.User
 	config          *config.Config
 }
@@ -166,6 +168,87 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 		query = ""
 	}
 
+	log.Debug().
+		Str("query", args.Query).
+		Str("normalized_query", query).
+		Interface("types", args.Types).
+		Interface("providers", args.Providers).
+		Interface("tags", args.Tags).
+		Int("limit", args.Limit).
+		Bool("es_enabled", tc.searchService != nil).
+		Msg("MCP discover_data search request")
+
+	// Use ES-backed search for text queries when available and no metadata_filters
+	// (metadata_filters require full asset objects which ES results don't have)
+	if tc.searchService != nil && query != "" && len(args.MetadataFilters) == 0 {
+		return tc.searchAssetsES(ctx, args, query)
+	}
+
+	return tc.searchAssetsPG(ctx, args, query)
+}
+
+func (tc *ToolContext) searchAssetsES(ctx context.Context, args DiscoverDataInput, query string) (*mcpsdk.CallToolResult, any, error) {
+	filter := search.Filter{
+		Query:      query,
+		Types:      []search.ResultType{search.ResultTypeAsset},
+		AssetTypes: args.Types,
+		Providers:  args.Providers,
+		Tags:       args.Tags,
+		Limit:      args.Limit,
+		Offset:     args.Offset,
+	}
+
+	resp, err := tc.searchService.Search(ctx, filter)
+	if err != nil {
+		return tc.errorWithGuidance(
+			"Search failed",
+			fmt.Sprintf("Error: %v", err),
+			map[string]string{
+				"Try simpler query": `{"query": "orders"}`,
+			},
+		), nil, nil
+	}
+
+	assets := searchResultsToAssets(resp.Results)
+	total := resp.Total
+
+	formatted := FormatAssetList(assets, total, tc.config.Server.RootURL)
+	formatted += "\n\n" + FormatSearchSummary(total, len(assets), nil)
+
+	var nextActions map[string]string
+	switch {
+	case len(assets) == 0:
+		nextActions = map[string]string{
+			"Broaden search":  "Remove filters or try a different query",
+			"List all assets": `{"limit": 50}`,
+		}
+	case total > args.Offset+len(assets):
+		nextActions = map[string]string{
+			"Get next page":     fmt.Sprintf(`{"query": "%s", "offset": %d, "limit": %d}`, query, args.Offset+args.Limit, args.Limit),
+			"Get asset details": `{"id": "asset-id"}`,
+		}
+		if len(args.Types) > 0 {
+			nextActions["Get next page"] = fmt.Sprintf(`{"types": %s, "query": "%s", "offset": %d, "limit": %d}`, formatJSON(args.Types), query, args.Offset+args.Limit, args.Limit)
+		}
+	default:
+		nextActions = map[string]string{
+			"Get full details": `{"id": "asset-id"}`,
+			"Find who owns":    `Use find_ownership tool`,
+		}
+	}
+
+	formatted += "\n\n" + FormatNextActions(nextActions)
+
+	return &mcpsdk.CallToolResult{
+		Content: []mcpsdk.Content{
+			&mcpsdk.TextContent{
+				Text: formatted,
+			},
+		},
+	}, nil, nil
+}
+
+func (tc *ToolContext) searchAssetsPG(ctx context.Context, args DiscoverDataInput, query string) (*mcpsdk.CallToolResult, any, error) {
 	filter := asset.SearchFilter{
 		Query:        query,
 		Types:        args.Types,
@@ -175,15 +258,6 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 		Offset:       args.Offset,
 		IncludeStubs: true,
 	}
-
-	log.Debug().
-		Str("query", args.Query).
-		Str("normalized_query", query).
-		Interface("types", args.Types).
-		Interface("providers", args.Providers).
-		Interface("tags", args.Tags).
-		Int("limit", args.Limit).
-		Msg("MCP discover_data search request")
 
 	assets, total, availableFilters, err := tc.assetService.Search(ctx, filter, true)
 	if err != nil {
@@ -254,6 +328,40 @@ func (tc *ToolContext) searchAssets(ctx context.Context, args DiscoverDataInput)
 			},
 		},
 	}, nil, nil
+}
+
+// searchResultsToAssets converts search.Result objects into lightweight asset.Asset
+// structs suitable for FormatAssetList rendering.
+func searchResultsToAssets(results []*search.Result) []*asset.Asset {
+	assets := make([]*asset.Asset, 0, len(results))
+	for _, r := range results {
+		a := &asset.Asset{
+			ID:          r.ID,
+			Name:        &r.Name,
+			Description: r.Description,
+		}
+
+		if t, ok := r.Metadata["type"].(string); ok {
+			a.Type = t
+		}
+		if mrn, ok := r.Metadata["mrn"].(string); ok {
+			a.MRN = &mrn
+		}
+		if providers, ok := r.Metadata["providers"].([]string); ok {
+			a.Providers = providers
+		}
+		// Handle []interface{} from JSON unmarshalling
+		if providers, ok := r.Metadata["providers"].([]interface{}); ok {
+			for _, p := range providers {
+				if s, ok := p.(string); ok {
+					a.Providers = append(a.Providers, s)
+				}
+			}
+		}
+
+		assets = append(assets, a)
+	}
+	return assets
 }
 
 func (tc *ToolContext) findOwnership(

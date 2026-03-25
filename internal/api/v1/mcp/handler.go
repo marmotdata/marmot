@@ -8,6 +8,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/mcp"
@@ -26,12 +27,13 @@ func NewHandler(
 	userService user.Service,
 	teamService *team.Service,
 	lineageService lineage.Service,
+	searchService search.Service,
 	authService auth.Service,
 	config *config.Config,
 ) *Handler {
 	teamAdapter := &teamServiceAdapter{teamService: teamService}
 	return &Handler{
-		mcpServer:   mcp.NewServer(assetService, glossaryService, userService, teamAdapter, lineageService, config),
+		mcpServer:   mcp.NewServer(assetService, glossaryService, userService, teamAdapter, lineageService, searchService, config),
 		userService: userService,
 		authService: authService,
 		config:      config,
