@@ -1,4 +1,4 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate lint frontend-build actionlint frontend-lint frontend-typecheck fix
+.PHONY: swagger build run test clean dev release docker-build dev-deps generate lint frontend-build actionlint frontend-lint frontend-typecheck fix api-client
 
 # Build variables
 BINARY_NAME=marmot
@@ -27,7 +27,7 @@ release: clean swagger frontend-build
 test:
 	go test -v ./...
 
-e2e-test: build test e2e-client
+e2e-test: build test api-client
 	cd test/e2e && go test -v -timeout 1h ./...
 
 clean:
@@ -63,9 +63,10 @@ dev-deps:
 	go install github.com/swaggo/swag/cmd/swag@latest
 	go install github.com/rhysd/actionlint/cmd/actionlint@latest
 
-e2e-client: swagger
-	rm -rf test/e2e/internal/client/*
-	cd test/e2e && swagger generate client -f ../../docs/swagger.yaml -A marmot --target internal/client
+api-client: swagger
+	rm -rf client/client client/models
+	swagger generate client -f docs/swagger.yaml -A marmot --target client
+	cd client && go mod tidy
 
 chart-test:
 	docker run ${DOCKER_ARGS} --user root --entrypoint /bin/sh --rm -v $(CURDIR):/charts -w /charts helmunittest/helm-unittest:3.17.3-0.8.2 /charts/.github/test.sh

@@ -425,13 +425,14 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		if len(esConfig.Addresses) > 0 {
 			var err error
 			esClient, err = elasticsearch.NewClient(esConfig)
-			if err != nil {
+			switch {
+			case err != nil:
 				log.Error().Err(err).Msg("Failed to init Elasticsearch - using PostgreSQL only")
-			} else if !esClient.Healthy(context.Background()) {
+			case !esClient.Healthy(context.Background()):
 				log.Error().Msg("Elasticsearch unreachable at startup - using PostgreSQL only")
 				esClient.Close()
 				esClient = nil
-			} else {
+			default:
 				timeout := time.Duration(config.Search.Timeout) * time.Second
 				if timeout <= 0 {
 					timeout = 10 * time.Second

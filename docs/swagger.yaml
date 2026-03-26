@@ -767,6 +767,89 @@ definitions:
     - ResultTypeGlossary
     - ResultTypeTeam
     - ResultTypeDataProduct
+  team.Owner:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      profile_picture:
+        type: string
+      type:
+        type: string
+      username:
+        type: string
+    type: object
+  team.SSOTeamMapping:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      member_role:
+        type: string
+      provider:
+        type: string
+      sso_group_name:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  team.Team:
+    properties:
+      created_at:
+        type: string
+      created_by:
+        type: string
+      created_via_sso:
+        type: boolean
+      description:
+        type: string
+      id:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      sso_provider:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  team.TeamMemberWithUser:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      joined_at:
+        type: string
+      name:
+        type: string
+      profile_picture:
+        type: string
+      role:
+        type: string
+      source:
+        type: string
+      sso_provider:
+        type: string
+      team_id:
+        type: string
+      user_id:
+        type: string
+      username:
+        type: string
+    type: object
   user.APIKey:
     properties:
       created_at:
@@ -1598,6 +1681,96 @@ definitions:
         type: array
       valid:
         type: boolean
+    type: object
+  v1_teams.AddMemberRequest:
+    properties:
+      role:
+        type: string
+      user_id:
+        type: string
+    type: object
+  v1_teams.CreateSSOMappingRequest:
+    properties:
+      member_role:
+        type: string
+      provider:
+        type: string
+      sso_group_name:
+        type: string
+      team_id:
+        type: string
+    type: object
+  v1_teams.CreateTeamRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  v1_teams.ListMembersResponse:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/team.TeamMemberWithUser'
+        type: array
+    type: object
+  v1_teams.ListSSOMappingsResponse:
+    properties:
+      mappings:
+        items:
+          $ref: '#/definitions/team.SSOTeamMapping'
+        type: array
+    type: object
+  v1_teams.ListTeamsResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      teams:
+        items:
+          $ref: '#/definitions/team.Team'
+        type: array
+      total:
+        type: integer
+    type: object
+  v1_teams.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  v1_teams.SearchOwnersResponse:
+    properties:
+      owners:
+        items:
+          $ref: '#/definitions/team.Owner'
+        type: array
+    type: object
+  v1_teams.UpdateMemberRoleRequest:
+    properties:
+      role:
+        type: string
+    type: object
+  v1_teams.UpdateSSOMappingRequest:
+    properties:
+      member_role:
+        type: string
+      team_id:
+        type: string
+    type: object
+  v1_teams.UpdateTeamRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
     type: object
   v1_ui.BannerResponse:
     properties:
@@ -3904,6 +4077,40 @@ paths:
       summary: Get direct lineage by ID
       tags:
       - lineage
+  /owners/search:
+    get:
+      consumes:
+      - application/json
+      description: Search for asset owners (users and teams)
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        required: true
+        type: string
+      - default: 20
+        description: Maximum number of results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.SearchOwnersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Search owners
+      tags:
+      - owners
   /pipelines/{pipelineName}:
     delete:
       description: Delete all resources ever created by a pipeline (across all sources)
@@ -4289,6 +4496,507 @@ paths:
       summary: Unified search
       tags:
       - search
+  /sso/team-mappings:
+    get:
+      consumes:
+      - application/json
+      description: Get a list of SSO group to team mappings
+      parameters:
+      - description: Filter by SSO provider
+        in: query
+        name: provider
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.ListSSOMappingsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List SSO team mappings
+      tags:
+      - sso
+    post:
+      consumes:
+      - application/json
+      description: Create a new SSO group to team mapping
+      parameters:
+      - description: SSO mapping creation request
+        in: body
+        name: mapping
+        required: true
+        schema:
+          $ref: '#/definitions/v1_teams.CreateSSOMappingRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/team.SSOTeamMapping'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Create an SSO team mapping
+      tags:
+      - sso
+  /sso/team-mappings/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete an SSO team mapping by its ID
+      parameters:
+      - description: SSO mapping ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Delete an SSO team mapping
+      tags:
+      - sso
+    get:
+      consumes:
+      - application/json
+      description: Get an SSO team mapping by its ID
+      parameters:
+      - description: SSO mapping ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/team.SSOTeamMapping'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get an SSO team mapping
+      tags:
+      - sso
+    put:
+      consumes:
+      - application/json
+      description: Update an SSO team mapping by its ID
+      parameters:
+      - description: SSO mapping ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: SSO mapping update request
+        in: body
+        name: mapping
+        required: true
+        schema:
+          $ref: '#/definitions/v1_teams.UpdateSSOMappingRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Update an SSO team mapping
+      tags:
+      - sso
+  /teams:
+    get:
+      consumes:
+      - application/json
+      description: Get a paginated list of teams
+      parameters:
+      - default: 50
+        description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.ListTeamsResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List teams
+      tags:
+      - teams
+    post:
+      consumes:
+      - application/json
+      description: Create a new team
+      parameters:
+      - description: Team creation request
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/v1_teams.CreateTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/team.Team'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Create a team
+      tags:
+      - teams
+  /teams/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete a team by its ID
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.MessageResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Delete a team
+      tags:
+      - teams
+    get:
+      consumes:
+      - application/json
+      description: Get a team by its ID
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/team.Team'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get a team
+      tags:
+      - teams
+    put:
+      consumes:
+      - application/json
+      description: Update a team's fields by its ID
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Team update request
+        in: body
+        name: team
+        required: true
+        schema:
+          $ref: '#/definitions/v1_teams.UpdateTeamRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Update a team
+      tags:
+      - teams
+  /teams/{id}/members:
+    get:
+      consumes:
+      - application/json
+      description: Get the members of a team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.ListMembersResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List team members
+      tags:
+      - teams
+    post:
+      consumes:
+      - application/json
+      description: Add a user as a member of a team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Member addition request
+        in: body
+        name: member
+        required: true
+        schema:
+          $ref: '#/definitions/v1_teams.AddMemberRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/v1_teams.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "403":
+          description: Forbidden
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Add a team member
+      tags:
+      - teams
+  /teams/{id}/members/{userId}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a user from a team
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Remove a team member
+      tags:
+      - teams
+  /teams/{id}/members/{userId}/convert-to-manual:
+    post:
+      consumes:
+      - application/json
+      description: Convert an SSO-managed team member to a manually managed member
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.MessageResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Convert member to manual
+      tags:
+      - teams
+  /teams/{id}/members/{userId}/role:
+    put:
+      consumes:
+      - application/json
+      description: Update the role of a team member
+      parameters:
+      - description: Team ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: User ID
+        in: path
+        name: userId
+        required: true
+        type: string
+      - description: Role update request
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/v1_teams.UpdateMemberRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_teams.MessageResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Update member role
+      tags:
+      - teams
   /ui/config:
     get:
       description: Get UI configuration including banner settings

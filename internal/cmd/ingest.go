@@ -53,8 +53,6 @@ const (
 
 var (
 	configFile string
-	host       string
-	apiKey     string
 	quiet      bool
 	destroy    bool
 )
@@ -165,8 +163,6 @@ type DestroyRunResponse struct {
 
 func init() {
 	ingestCmd.Flags().StringVarP(&configFile, "config", "c", "", "Path to ingestion config file (required)")
-	ingestCmd.Flags().StringVarP(&host, "host", "H", "http://localhost:8080", "Marmot API host")
-	ingestCmd.Flags().StringVarP(&apiKey, "api-key", "k", "", "API key for authentication")
 	ingestCmd.Flags().BoolVarP(&quiet, "quiet", "q", true, "Hide info logs, show errors only")
 	ingestCmd.Flags().BoolVarP(&destroy, "destroy", "d", false, "Delete all resources for this pipeline (requires confirmation)")
 	ingestCmd.MarkFlagRequired("config")
@@ -301,7 +297,7 @@ func runIngestion(ctx context.Context) error {
 		return fmt.Errorf("pipeline name is required")
 	}
 
-	client := newAPIClient(host, apiKey)
+	client := newAPIClient(getHost(), getAPIKey())
 
 	if destroy {
 		return runDestroy(ctx, config, client)

@@ -2,6 +2,8 @@ module github.com/marmotdata/marmot/tests/e2e
 
 go 1.25.0
 
+require github.com/marmotdata/marmot/client v0.0.0
+
 require (
 	github.com/aws/aws-sdk-go-v2 v1.37.0
 	github.com/aws/aws-sdk-go-v2/config v1.29.1
@@ -99,3 +101,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gotest.tools/v3 v3.5.1 // indirect
 )
+
+replace github.com/marmotdata/marmot/client => ../../client
