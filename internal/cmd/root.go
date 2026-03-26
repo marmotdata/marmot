@@ -44,9 +44,9 @@ func init() {
 	rootCmd.PersistentFlags().StringVar(&globalAPIKey, "api-key", "", "API key for authentication")
 	rootCmd.PersistentFlags().StringVarP(&globalOutput, "output", "o", "", "Output format: table, json, yaml (default: table)")
 
-	viper.BindPFlag("host", rootCmd.PersistentFlags().Lookup("host"))
-	viper.BindPFlag("api_key", rootCmd.PersistentFlags().Lookup("api-key"))
-	viper.BindPFlag("output", rootCmd.PersistentFlags().Lookup("output"))
+	_ = viper.BindPFlag("host", rootCmd.PersistentFlags().Lookup("host"))
+	_ = viper.BindPFlag("api_key", rootCmd.PersistentFlags().Lookup("api-key"))
+	_ = viper.BindPFlag("output", rootCmd.PersistentFlags().Lookup("output"))
 
 	viper.SetDefault("host", "http://localhost:8080")
 	viper.SetDefault("output", "table")
@@ -57,9 +57,9 @@ func initConfig() {
 	viper.AutomaticEnv()
 
 	// Map env var names: MARMOT_HOST, MARMOT_API_KEY, MARMOT_OUTPUT
-	viper.BindEnv("host", "MARMOT_HOST")
-	viper.BindEnv("api_key", "MARMOT_API_KEY")
-	viper.BindEnv("output", "MARMOT_OUTPUT")
+	_ = viper.BindEnv("host", "MARMOT_HOST")
+	_ = viper.BindEnv("api_key", "MARMOT_API_KEY")
+	_ = viper.BindEnv("output", "MARMOT_OUTPUT")
 
 	// Config file: ~/.config/marmot/config.yaml
 	configDir, err := os.UserConfigDir()
@@ -68,7 +68,7 @@ func initConfig() {
 		viper.AddConfigPath(configPath)
 		viper.SetConfigName("config")
 		viper.SetConfigType("yaml")
-		viper.ReadInConfig() // Ignore error — config file is optional
+		_ = viper.ReadInConfig() // config file is optional
 	}
 }
 

@@ -37,9 +37,9 @@ func (t *Table) Render(w io.Writer) {
 	tw := tablewriter.NewTable(w)
 	tw.Header(toAny(t.headers)...)
 	for _, row := range t.rows {
-		tw.Append(toAny(row)...)
+		_ = tw.Append(toAny(row)...)
 	}
-	tw.Render()
+	_ = tw.Render()
 
 	if t.footer != "" {
 		fmt.Fprintf(w, "\n%s\n", t.footer)

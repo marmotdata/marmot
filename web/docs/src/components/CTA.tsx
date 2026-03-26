@@ -10,7 +10,7 @@ export default function CTA(): JSX.Element {
           data-animate
           className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight"
         >
-          Ready to get started?
+          Ready to give your AI the context it needs?
         </h2>
         <p
           data-animate

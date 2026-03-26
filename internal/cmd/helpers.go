@@ -17,14 +17,6 @@ func formatAssetName(a *models.AssetAsset) string {
 	return fmt.Sprintf("(%s)", a.ID)
 }
 
-// deref safely dereferences a string pointer.
-func deref(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
-
 // int64Ptr returns a pointer to an int64 value.
 func int64Ptr(v int) *int64 {
 	i := int64(v)

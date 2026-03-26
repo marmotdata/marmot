@@ -366,6 +366,48 @@ html[data-theme="dark"] .gradient-text {
   animation: flow 0.5s linear infinite;
 }
 
+@keyframes flowPulse {
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+.animate-flow-glow {
+  animation: flowPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes hubPulse {
+  0%,
+  100% {
+    box-shadow: 0 4px 12px rgba(210, 90, 48, 0.06);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(210, 90, 48, 0.15);
+  }
+}
+
+html[data-theme="dark"] .hub-pulse {
+  animation: hubPulseDark 2.5s ease-in-out infinite;
+}
+
+.hub-pulse {
+  animation: hubPulse 2.5s ease-in-out infinite;
+}
+
+@keyframes hubPulseDark {
+  0%,
+  100% {
+    box-shadow: 0 4px 12px rgba(247, 136, 94, 0.06);
+  }
+  50% {
+    box-shadow: 0 4px 24px rgba(247, 136, 94, 0.18);
+  }
+}
+
 /* ============================================
    Scroll Animations
    ============================================ */
@@ -994,4 +1036,174 @@ html[data-theme="dark"] .section-divider {
     rgba(247, 136, 94, 0.15) 50%,
     transparent 100%
   );
+}
+
+/* ============================================
+   MCP Chat Animation
+   ============================================ */
+
+.chat-window {
+  display: flex;
+  flex-direction: column;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    transparent 0%,
+    black 12%,
+    black 88%,
+    transparent 100%
+  );
+}
+
+.chat-messages {
+  overflow: visible;
+}
+
+/* Message base — hidden until animated */
+.chat-msg {
+  max-width: 82%;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.875rem;
+}
+
+/* When JS is ready to animate, hide messages until animation reveals them */
+.chat-animated .chat-msg {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Dots hidden by default */
+.chat-msg .chat-dots {
+  display: none;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.125rem 0;
+}
+
+/* Typing state: compact bubble with dots, content hidden */
+.chat-animated .chat-msg-typing {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chat-msg-typing .chat-content {
+  display: none;
+}
+
+.chat-msg-typing .chat-dots {
+  display: flex;
+}
+
+/* Visible state: content shown, dots gone */
+.chat-animated .chat-msg-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.chat-msg-visible .chat-dots {
+  display: none;
+}
+
+/* User messages */
+.chat-msg-user {
+  margin-left: auto;
+  background: rgba(210, 90, 48, 0.09);
+  color: #78401e;
+  border-bottom-right-radius: 0.25rem;
+}
+
+html[data-theme="dark"] .chat-msg-user {
+  background: rgba(247, 136, 94, 0.1);
+  color: #e8a886;
+}
+
+/* Assistant messages */
+.chat-msg-assistant {
+  margin-right: auto;
+  background: rgba(0, 0, 0, 0.035);
+  color: #4b5563;
+  border-bottom-left-radius: 0.25rem;
+}
+
+html[data-theme="dark"] .chat-msg-assistant {
+  background: rgba(255, 255, 255, 0.05);
+  color: #c9cdd4;
+}
+
+/* Tool badge */
+.chat-tool-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  margin-bottom: 0.25rem;
+  background: rgba(210, 90, 48, 0.07);
+  color: #b3785a;
+}
+
+html[data-theme="dark"] .chat-tool-badge {
+  background: rgba(247, 136, 94, 0.1);
+  color: #c4956e;
+}
+
+/* Typing dots */
+.typing-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #c4b5a8;
+  animation: typingBounce 1.4s ease-in-out infinite;
+}
+
+html[data-theme="dark"] .typing-dot {
+  background: #5a5a5a;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typingBounce {
+  0%, 60%, 100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Reduced motion: show all messages immediately, no typing */
+@media (prefers-reduced-motion: reduce) {
+  .chat-animated .chat-msg {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .chat-msg .chat-dots {
+    display: none !important;
+  }
+}
+
+/* Mobile: wider bubbles */
+@media (max-width: 640px) {
+  .chat-msg {
+    max-width: 90%;
+  }
 }

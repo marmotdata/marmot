@@ -41,7 +41,7 @@ generate:
 	go generate ./...
 
 lint: frontend-lint
-	golangci-lint run --config=./.github/.golangci.yaml ./... -v
+	$$(go env GOPATH)/bin/golangci-lint run --config=./.github/.golangci.yaml ./... -v
 
 frontend-lint:
 	cd web/marmot && pnpm install && pnpm run lint

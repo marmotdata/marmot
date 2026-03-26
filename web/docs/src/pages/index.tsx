@@ -1,27 +1,13 @@
 import React, { useEffect } from "react";
 import Layout from "@theme/Layout";
 import Hero from "../components/Hero";
-import { benefits, BenefitRow } from "../components/BenefitsShowcase";
+import BenefitsShowcase from "../components/BenefitsShowcase";
 import QuickDeploy from "../components/QuickDeploy";
 import ArchitectureComparison from "../components/ArchitectureComparison";
 import DataSources from "../components/DataSources";
-import Integrations from "../components/Integrations";
 import PerformanceProof from "../components/PerformanceProof";
+import MCPShowcase from "../components/MCPShowcase";
 import CTA from "../components/CTA";
-
-function BenefitSection({
-  index,
-}: {
-  index: number;
-}) {
-  return (
-    <section className="py-16 lg:py-24 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
-      <div className="max-w-7xl mx-auto">
-        <BenefitRow benefit={benefits[index]} reversed={index % 2 !== 0} />
-      </div>
-    </section>
-  );
-}
 
 export default function Home(): JSX.Element {
   useEffect(() => {
@@ -29,11 +15,6 @@ export default function Home(): JSX.Element {
     if (logo) {
       logo.style.display = "none";
     }
-
-    benefits.forEach((b) => {
-      new Image().src = b.imageSrcLight;
-      new Image().src = b.imageSrcDark;
-    });
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -61,20 +42,17 @@ export default function Home(): JSX.Element {
 
   return (
     <Layout
-      title={`Discover any data asset across your entire org in seconds`}
-      description="Discover any data asset across your entire org in seconds"
+      title="The Open Source Context Layer for AI"
+      description="The open-source context layer for AI. Catalog your tables, topics, queues, and APIs — then expose real metadata to AI agents through MCP."
     >
       <div className="bg-earthy-brown-50 dark:bg-gray-900 min-h-screen overflow-hidden">
         <Hero />
+        <BenefitsShowcase />
+        <MCPShowcase />
         <ArchitectureComparison />
-        <BenefitSection index={0} />
-        <BenefitSection index={1} />
         <QuickDeploy />
-        <BenefitSection index={2} />
-        <BenefitSection index={3} />
         <DataSources />
         <PerformanceProof />
-        <Integrations />
         <CTA />
       </div>
     </Layout>

@@ -1,152 +1,128 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Icon } from "@iconify/react";
+import IconAPI from "~icons/material-symbols/api-rounded";
+import IconTerminal from "~icons/material-symbols/terminal";
 
-interface Benefit {
-  icon: string;
-  title: string;
-  description: string;
-  features: string[];
-  imageSrcLight: string;
-  imageSrcDark: string;
-  imageAlt: string;
-}
-
-const benefits: Benefit[] = [
+const capabilities = [
   {
     icon: "mdi:magnify",
-    title: "Search everything",
+    title: "Discover",
     description:
-      "Find exactly what you're looking for with a powerful query language that works across all your data assets.",
-    features: [
-      "Full-text search across all metadata",
-      "Powerful built-in query language",
-      "Save and share search queries",
-    ],
-    imageSrcLight: "/img/search-light.png",
-    imageSrcDark: "/img/search-dark.png",
-    imageAlt: "Marmot search interface showing filters and search results",
+      "One place for AI and engineers to find every table, topic, queue and API.",
   },
   {
     icon: "mdi:graph-outline",
-    title: "Track lineage",
+    title: "Understand",
     description:
-      "Understand dependencies and assess impact before making changes. Built-in support for OpenLineage.",
-    features: [
-      "Impact analysis for data changes",
-      "Data flow visualization",
-      "OpenLineage support",
-    ],
-    imageSrcLight: "/img/lineage-light.png",
-    imageSrcDark: "/img/lineage-dark.png",
-    imageAlt: "Interactive lineage graph showing data flow and dependencies",
+      "Trace how data flows and what depends on what with lineage.",
   },
   {
-    icon: "mdi:database-outline",
-    title: "Rich metadata",
+    icon: "mdi:tag-text-outline",
+    title: "Contextualize",
     description:
-      "Store comprehensive metadata for any asset type. From tables and topics to APIs and dashboards.",
-    features: [
-      "Rich metadata for any asset type",
-      "Custom fields and properties",
-      "Comprehensive documentation",
-    ],
-    imageSrcLight: "/img/home-light.png",
-    imageSrcDark: "/img/home-dark.png",
-    imageAlt: "Asset detail page showing rich metadata and documentation",
+      "Ownership, business definitions and custom fields that give AI the full picture.",
   },
   {
-    icon: "mdi:account-group",
-    title: "Team collaboration",
+    icon: "mdi:share-variant-outline",
+    title: "Share",
     description:
-      "Assign ownership, document business context, and create glossaries. Keep your team aligned.",
-    features: [
-      "Team ownership management",
-      "Business glossaries",
-      "Centralised documentation",
-    ],
-    imageSrcLight: "/img/team-light.png",
-    imageSrcDark: "/img/team-dark.png",
-    imageAlt:
-      "Team management interface showing ownership and collaboration features",
+      "Expose certified context through MCP, the API and the UI.",
   },
 ];
 
-export { benefits };
+const populateMethods = [
+  {
+    title: "Terraform",
+    href: "/docs/populating/terraform",
+    icon: (
+      <img
+        src="/img/terraform.svg"
+        alt="Terraform"
+        className="w-6 h-6 object-contain"
+      />
+    ),
+  },
+  {
+    title: "Pulumi",
+    href: "/docs/populating/pulumi",
+    icon: (
+      <img
+        src="/img/pulumi.svg"
+        alt="Pulumi"
+        className="w-6 h-6 object-contain"
+      />
+    ),
+  },
+  {
+    title: "API",
+    href: "/docs/populating/api",
+    icon: <IconAPI className="w-6 h-6" />,
+  },
+  {
+    title: "CLI",
+    href: "/docs/populating/cli",
+    icon: <IconTerminal className="w-6 h-6" />,
+  },
+];
 
-export function BenefitRow({
-  benefit,
-  reversed,
-}: {
-  benefit: Benefit;
-  reversed: boolean;
-}) {
+export default function BenefitsShowcase(): JSX.Element {
   return (
-    <div
-      className={`flex flex-col ${
-        reversed ? "lg:flex-row-reverse" : "lg:flex-row"
-      } items-center gap-10 lg:gap-16`}
-    >
-      <div data-animate className="w-full lg:w-1/2 flex-shrink-0">
-        <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-gray-900/10 dark:shadow-black/30 image-glow">
-          <img
-            src={benefit.imageSrcLight}
-            alt={benefit.imageAlt}
-            className="block w-full h-auto dark:hidden"
-          />
-          <img
-            src={benefit.imageSrcDark}
-            alt={benefit.imageAlt}
-            className="block w-full h-auto hidden dark:block"
-          />
+    <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
+      <div className="max-w-5xl mx-auto">
+        <div data-animate className="text-center mb-8">
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
+            Context for AI and engineers
+          </h2>
+          <p className="text-base text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
+            Catalog every data asset, enrich it with the context that matters
+            and make it accessible to your team and your AI tools.
+          </p>
         </div>
-      </div>
 
-      <div data-animate className="w-full lg:w-1/2 space-y-5">
-        <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white tracking-tight">
-          {benefit.title}
-        </h3>
-        <p className="text-base leading-relaxed text-gray-500 dark:text-gray-400">
-          {benefit.description}
-        </p>
-        <div className="space-y-3 pt-2">
-          {benefit.features.map((feature, index) => (
-            <div key={index} className="flex items-center gap-3">
-              <div className="flex-shrink-0 w-5 h-5 rounded-md bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 flex items-center justify-center">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          {capabilities.map((cap, index) => (
+            <div
+              key={cap.title}
+              data-animate
+              data-animate-delay={String(index + 1)}
+              className="rounded-xl p-4 bg-earthy-brown-50/60 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/40"
+            >
+              <div className="w-8 h-8 rounded-lg bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 flex items-center justify-center mb-3">
                 <Icon
-                  icon="mdi:check"
-                  className="w-3.5 h-3.5 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+                  icon={cap.icon}
+                  className="w-4 h-4 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
                 />
               </div>
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                {feature}
-              </span>
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">
+                {cap.title}
+              </h3>
+              <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                {cap.description}
+              </p>
             </div>
           ))}
         </div>
-      </div>
-    </div>
-  );
-}
 
-export default function BenefitsShowcase(): JSX.Element {
-  useEffect(() => {
-    benefits.forEach((b) => {
-      new Image().src = b.imageSrcLight;
-      new Image().src = b.imageSrcDark;
-    });
-  }, []);
-
-  return (
-    <section className="py-24 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
-      <div className="max-w-6xl mx-auto">
-        <div className="space-y-24 lg:space-y-32">
-          {benefits.map((benefit, index) => (
-            <BenefitRow
-              key={benefit.title}
-              benefit={benefit}
-              reversed={index % 2 !== 0}
-            />
-          ))}
+        <div data-animate data-animate-delay="5">
+          <p className="text-center text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-widest mb-4">
+            Populate with
+          </p>
+          <div className="flex items-center justify-center gap-3 sm:gap-4">
+            {populateMethods.map((method) => (
+              <a
+                key={method.title}
+                href={method.href}
+                className="group flex items-center gap-2 px-4 py-2 rounded-lg border border-gray-100 dark:border-gray-700/50 bg-gray-50/80 dark:bg-gray-900/40 hover:border-earthy-terracotta-200 dark:hover:border-earthy-terracotta-700 hover:shadow-sm transition-all duration-200"
+              >
+                <span className="transition-transform duration-200 group-hover:scale-110">
+                  {method.icon}
+                </span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {method.title}
+                </span>
+              </a>
+            ))}
+          </div>
         </div>
       </div>
     </section>

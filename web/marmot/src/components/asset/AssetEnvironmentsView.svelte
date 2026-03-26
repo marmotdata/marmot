@@ -144,7 +144,7 @@
 					<div
 						class="border-t border-gray-200 dark:border-gray-700 transform origin-top transition-all duration-200 ease-in-out"
 					>
-						<MetadataView metadata={env.metadata} standalone={false} />
+						<MetadataView metadata={env.metadata} standalone={false} readOnly={true} />
 					</div>
 				{/if}
 			</div>
