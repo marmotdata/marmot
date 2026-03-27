@@ -1089,7 +1089,7 @@ html[data-theme="dark"] .section-divider {
 }
 
 /* Typing state: compact bubble with dots, content hidden */
-.chat-animated .chat-msg-typing {
+.chat-animated .chat-msg.chat-msg-typing {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1098,12 +1098,12 @@ html[data-theme="dark"] .section-divider {
   display: none;
 }
 
-.chat-msg-typing .chat-dots {
+.chat-msg.chat-msg-typing .chat-dots {
   display: flex;
 }
 
 /* Visible state: content shown, dots gone */
-.chat-animated .chat-msg-visible {
+.chat-animated .chat-msg.chat-msg-visible {
   opacity: 1;
   transform: translateY(0);
 }

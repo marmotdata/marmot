@@ -54,6 +54,7 @@ const consumerGroups: FlowGroup[] = [
       { label: "REST API", icon: "mdi:api" },
       { label: "CLI", icon: "mdi:console" },
       { label: "Slack", icon: "simple-icons:slack" },
+      { label: "UI", icon: "mdi:monitor-dashboard" },
     ],
   },
 ];
@@ -188,16 +189,8 @@ export default function Hero(): JSX.Element {
   }, []);
 
   return (
-    <header className="relative pt-8 pb-16 sm:pt-12 sm:pb-20 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 gradient-mesh-hero overflow-hidden">
+    <header className="relative pt-24 pb-16 sm:pt-28 sm:pb-20 px-4 sm:px-6 lg:px-8 bg-earthy-brown-50 dark:bg-gray-900 gradient-mesh-hero overflow-hidden">
       <div className="relative max-w-5xl mx-auto text-center">
-        <div data-animate data-animate-delay="1">
-          <img
-            src="/img/marmot.svg"
-            alt="Marmot logo"
-            className="max-w-[6rem] sm:max-w-[7rem] mx-auto mb-6 drop-shadow-md"
-          />
-        </div>
-
         <h1
           data-animate
           data-animate-delay="2"

@@ -85,18 +85,18 @@ export default function BenefitsShowcase(): JSX.Element {
               key={cap.title}
               data-animate
               data-animate-delay={String(index + 1)}
-              className="rounded-xl p-4 bg-earthy-brown-50/60 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/40"
+              className="rounded-xl p-5 bg-earthy-brown-50/60 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/40"
             >
-              <div className="w-8 h-8 rounded-lg bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 flex items-center justify-center mb-3">
+              <div className="w-10 h-10 rounded-lg bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 flex items-center justify-center mb-4">
                 <Icon
                   icon={cap.icon}
-                  className="w-4 h-4 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+                  className="w-5 h-5 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
                 />
               </div>
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1.5">
                 {cap.title}
               </h3>
-              <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+              <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
                 {cap.description}
               </p>
             </div>

@@ -193,8 +193,6 @@ export default function MCPShowcase(): JSX.Element {
           {/* Right: chat */}
           <div
             ref={chatRef}
-            data-animate
-            data-animate-delay="2"
             className="chat-window lg:w-3/5 w-full"
           >
             <div className="chat-messages px-4 py-6 flex flex-col gap-3">
