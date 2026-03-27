@@ -82,6 +82,12 @@ With MCP, you can ask questions like:
     href="/docs/MCP/librechat"
     icon="mdi:chat"
   />
+  <DocCard
+    title="Skills"
+    description="Install the Marmot skill to give any AI agent catalog knowledge"
+    href="/docs/MCP/skills"
+    icon="mdi:brain"
+  />
 </DocCardGrid>
 
 ## Authentication

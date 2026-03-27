@@ -3,7 +3,7 @@
   "name": "io.github.marmotdata/marmot",
   "title": "Marmot Data Catalog",
   "description": "Open-source data catalog. Search assets, explore lineage, and find ownership.",
-  "version": "0.0.0",
+  "version": "0.8.0",
   "repository": {
     "url": "https://github.com/marmotdata/marmot",
     "source": "github"
@@ -26,13 +26,6 @@
           "isSecret": true
         }
       ]
-    }
-  ],
-  "packages": [
-    {
-      "registry_name": "ghcr",
-      "name": "ghcr.io/marmotdata/marmot",
-      "version": "0.0.0"
     }
   ]
 }
