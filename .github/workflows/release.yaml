@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   packages: write
+  id-token: write
 
 jobs:
   release:
@@ -82,8 +83,14 @@ jobs:
           sed -i "s/\"version\": \"[^\"]*\"/\"version\": \"${VERSION}\"/g" server.json
           cat server.json
 
-      - name: Publish to MCP Registry
+      - name: Install mcp-publisher
+        if: ${{ !contains(github.ref_name, 'preview') }}
         run: |
-          npm install -g @anthropic-ai/mcp-publisher
-          mcp-publisher login --token "${{ secrets.GITHUB_TOKEN }}"
+          curl -L "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          sudo mv mcp-publisher /usr/local/bin/
+
+      - name: Publish to MCP Registry
+        if: ${{ !contains(github.ref_name, 'preview') }}
+        run: |
+          mcp-publisher login github-oidc
           mcp-publisher publish
