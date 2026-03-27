@@ -22,7 +22,7 @@ const sourceGroups: FlowGroup[] = [
       { label: "Kafka", icon: "devicon:apachekafka", kafkaIcon: true },
       { label: "S3", icon: "logos:aws-s3" },
       { label: "dbt", icon: "simple-icons:dbt" },
-      { label: "Iceberg", icon: "simple-icons:apacheiceberg" },
+      { label: "Iceberg", iconImg: "/img/iceberg.svg" },
     ],
   },
   {

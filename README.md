@@ -3,9 +3,9 @@
 
 # Marmot
 
-**Discover any data asset across your entire org in seconds**
+**Discover any data asset in seconds. Then let your AI do the same.**
 
-_Open-source catalog for all your data assets. Search everything - tables, topics, queues, buckets, and more._
+_The open-source context layer for your AI. Catalog your tables, topics, queues and APIs then expose real metadata to your AI agents._
 
 [Documentation](https://marmotdata.io/docs/introduction) • [Live Demo](https://demo.marmotdata.io) • [Deploy](https://marmotdata.io/docs/Deploy) • [Community](https://discord.gg/TWCk7hVFN4)
 
@@ -13,17 +13,18 @@ _Open-source catalog for all your data assets. Search everything - tables, topic
 
 ## What is Marmot?
 
-Marmot is an **open-source data catalog** designed for teams who want powerful data discovery without enterprise complexity. Built with a focus on simplicity and speed, Marmot helps you catalog assets across your entire data stack - from databases and APIs to message queues and data pipelines.
+Marmot is an **open-source data catalog** designed for teams who want powerful data discovery without enterprise complexity. Catalog every data asset, enrich it with the context that matters and make it accessible to your team and your AI tools.
 
 Unlike traditional catalogs that require extensive infrastructure and configuration, Marmot ships as a **single binary** with an intuitive UI, making it easy to deploy and start cataloging in minutes.
 
-### Built for Modern Data Teams
+<div align="center">
+  <img alt="Marmot context layer showing plugins, integrations and AI agents" src="./web/docs/static/img/graph.png" style="max-height: 400px; width: auto;">
+</div>
 
-- **Deploy in Minutes**: Single binary, Docker, or Kubernetes - no complex setup required
-- **Powerful Search**: Powerful query language with full-text, metadata, and boolean operators
-- **Track Lineage**: Interactive dependency graphs to understand data flows and impact
-- **Flexible Integrations**: CLI, REST API, Terraform, and Pulumi - catalog assets your way
-- **Lightweight**: PostgreSQL-backed with minimal resource requirements
+- **Discover** - One place for AI and engineers to find every table, topic, queue and API
+- **Understand** - Trace how data flows and what depends on what with lineage
+- **Contextualize** - Ownership, business definitions and custom fields that give AI the full picture
+- **Share** - Expose certified context through MCP, the API and the UI
 
 ## Features
 
