@@ -5,7 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
-  node-forge: '>=1.3.2'
+  node-forge: '>=1.4.0'
   image-size: '>=1.4.0'
   webpack-dev-server: '>=4.16.0'
   estree-util-value-to-estree: '>=3.4.1'
@@ -14,17 +14,22 @@ overrides:
   '@babel/runtime': '>=7.27.1'
   '@babel/helpers': '>=7.27.1'
   glob: '>=10.5.0'
-  brace-expansion@1: '>=1.1.12'
-  brace-expansion@2: '>=2.0.2'
+  brace-expansion@^1: '>=1.1.12'
+  brace-expansion@^2: '>=2.0.2'
+  brace-expansion@^5: '>=5.0.5'
   brace-expansion: '>=2.0.2'
-  '@isaacs/brace-expansion': '>=5.0.1'
+  '@isaacs/brace-expansion': '>=5.0.5'
+  picomatch@^2: '>=2.3.2'
+  picomatch@^4: '>=4.0.4'
+  yaml@^1: '>=1.10.3'
+  yaml@^2: '>=2.8.3'
   minimatch: '>=10.2.3'
   on-headers: '>=1.1.0'
   compression: '>=1.8.1'
   mermaid: '>=11.10.0'
   cookie: '>=0.7.0'
   serialize-javascript: '>=7.0.3'
-  fast-xml-parser: '>=4.5.4'
+  fast-xml-parser: '>=5.5.7'
   svgo: '>=3.3.3'
   dompurify: '>=3.3.2'
   lodash: '>=4.17.23'
@@ -2751,8 +2756,8 @@ packages:
   fast-xml-builder@1.1.4:
     resolution: {integrity: sha512-f2jhpN4Eccy0/Uz9csxh3Nu6q4ErKxf0XIsasomfOihuSUa3/xw6w8dnOtCDgEItQFJG8KyXPzQXzcODDrrbOg==}
 
-  fast-xml-parser@5.5.6:
-    resolution: {integrity: sha512-3+fdZyBRVg29n4rXP0joHthhcHdPUHaIC16cuyyd1iLsuaO6Vea36MPrxgAzbZna8lhvZeRL8Bc9GP56/J9xEw==}
+  fast-xml-parser@5.5.9:
+    resolution: {integrity: sha512-jldvxr1MC6rtiZKgrFnDSvT8xuH+eJqxqOBThUVjYrxssYTo1avZLGql5l0a0BAERR01CadYzZ83kVEkbyDg+g==}
     hasBin: true
 
   fastq@1.19.1:
@@ -3833,8 +3838,8 @@ packages:
       encoding:
         optional: true
 
-  node-forge@1.3.3:
-    resolution: {integrity: sha512-rLvcdSyRCyouf6jcOIPe/BgwG/d7hKjzMKOas33/pHEr6gbq18IK9zV7DiPvzsz0oBJPme6qr6H6kGZuI9/DZg==}
+  node-forge@1.4.0:
+    resolution: {integrity: sha512-LarFH0+6VfriEhqMMcLX2F7SwSXeWwnEAJEsYm5QKWchiVYVvJyV9v7UDvUv+w5HO23ZpQTXDv/GxdDdMyOuoQ==}
     engines: {node: '>= 6.13.0'}
 
   node-readfiles@0.2.0:
@@ -4016,8 +4021,8 @@ packages:
     resolution: {integrity: sha512-RjhtfwJOxzcFmNOi6ltcbcu4Iu+FL3zEj83dk4kAS+fVpTxXLO1b38RvJgT/0QwvV/L3aY9TAnyv0EOqW4GoMQ==}
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
 
-  path-expression-matcher@1.1.3:
-    resolution: {integrity: sha512-qdVgY8KXmVdJZRSS1JdEPOKPdTiEK/pi0RkcT2sw1RhXxohdujUlJFPuS1TSkevZ9vzd3ZlL7ULl1MHGTApKzQ==}
+  path-expression-matcher@1.2.0:
+    resolution: {integrity: sha512-DwmPWeFn+tq7TiyJ2CxezCAirXjFxvaiD03npak3cRjlP9+OjTmSy1EpIrEbh+l6JgUundniloMLDQ/6VTdhLQ==}
     engines: {node: '>=14.0.0'}
 
   path-is-inside@1.0.2:
@@ -4059,12 +4064,12 @@ packages:
   picocolors@1.1.1:
     resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
 
-  picomatch@2.3.1:
-    resolution: {integrity: sha512-JU3teHTNjmE2VCGFzuY8EXzCDVwEqB2a8fsIvwaStHhAWJEeVd1o1QD80CU6+ZdEXXSLbSsuLwJjkCBWqRQUVA==}
-    engines: {node: '>=8.6'}
-
   picomatch@4.0.2:
     resolution: {integrity: sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==}
+    engines: {node: '>=12'}
+
+  picomatch@4.0.4:
+    resolution: {integrity: sha512-QP88BAKvMam/3NxH6vj2o21R6MjxZUAd6nlwAS/pnGvN9IVLocLHxGYIzFhg6fUQ+5th6P4dv4eW9jX3DSIj7A==}
     engines: {node: '>=12'}
 
   pify@2.3.0:
@@ -5090,8 +5095,8 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  strnum@2.2.0:
-    resolution: {integrity: sha512-Y7Bj8XyJxnPAORMZj/xltsfo55uOiyHcU2tnAVzHUnSJR/KsEX+9RoDeXEnsXtl/CX4fAcrt64gZ13aGaWPeBg==}
+  strnum@2.2.2:
+    resolution: {integrity: sha512-DnR90I+jtXNSTXWdwrEy9FakW7UX+qUZg28gj5fk2vxxl7uS/3bpI4fjFYVmdK9etptYBPNkpahuQnEwhwECqA==}
 
   style-to-js@1.1.16:
     resolution: {integrity: sha512-/Q6ld50hKYPH3d/r6nr117TZkHR0w0kGGIVfpG9N6D8NymRPM9RqCUv4pRpJ62E5DqOYx2AFpbZMyCPnjQCnOw==}
@@ -5571,12 +5576,13 @@ packages:
   yaml-ast-parser@0.0.43:
     resolution: {integrity: sha512-2PTINUwsRqSd+s8XxKaJWQlUuEMHJQyEuh2edBbW8KNJz0SJPwUSD2zRWqezFEdN7IzAgeuYHFUCF7o8zRdZ0A==}
 
-  yaml@1.10.2:
-    resolution: {integrity: sha512-r3vXyErRCYJ7wg28yvBY5VSoAF8ZvlcW9/BwUzEtUsjvX/DKs24dIkuwjtuprwJJHsbyUbLApepYTR1BN4uHrg==}
-    engines: {node: '>= 6'}
-
   yaml@2.8.0:
     resolution: {integrity: sha512-4lLa/EcQCB0cJkyts+FpIRx5G/llPxfP6VQU5KByHEhLxY3IJCH0f0Hy1MHI8sClTvsIb8qwRJ6R/ZdlDJ/leQ==}
+    engines: {node: '>= 14.6'}
+    hasBin: true
+
+  yaml@2.8.3:
+    resolution: {integrity: sha512-AvbaCLOO2Otw/lW5bmh9d/WEdcDFdQp2Z2ZUH3pX9U2ihyUY0nvLv7J6TrWowklRGPYbB/IuIMfYgxaCPg5Bpg==}
     engines: {node: '>= 14.6'}
     hasBin: true
 
@@ -8280,7 +8286,7 @@ snapshots:
   anymatch@3.1.3:
     dependencies:
       normalize-path: 3.0.0
-      picomatch: 2.3.1
+      picomatch: 4.0.2
 
   arg@5.0.2: {}
 
@@ -9244,13 +9250,13 @@ snapshots:
 
   fast-xml-builder@1.1.4:
     dependencies:
-      path-expression-matcher: 1.1.3
+      path-expression-matcher: 1.2.0
 
-  fast-xml-parser@5.5.6:
+  fast-xml-parser@5.5.9:
     dependencies:
       fast-xml-builder: 1.1.4
-      path-expression-matcher: 1.1.3
-      strnum: 2.2.0
+      path-expression-matcher: 1.2.0
+      strnum: 2.2.2
 
   fastq@1.19.1:
     dependencies:
@@ -9824,7 +9830,7 @@ snapshots:
       chalk: 4.1.2
       ci-info: 3.9.0
       graceful-fs: 4.2.11
-      picomatch: 2.3.1
+      picomatch: 4.0.2
 
   jest-worker@27.5.1:
     dependencies:
@@ -10504,7 +10510,7 @@ snapshots:
   micromatch@4.0.8:
     dependencies:
       braces: 3.0.3
-      picomatch: 2.3.1
+      picomatch: 4.0.2
 
   mime-db@1.33.0: {}
 
@@ -10618,7 +10624,7 @@ snapshots:
     dependencies:
       whatwg-url: 5.0.0
 
-  node-forge@1.3.3: {}
+  node-forge@1.4.0: {}
 
   node-readfiles@0.2.0:
     dependencies:
@@ -10658,14 +10664,14 @@ snapshots:
     dependencies:
       '@exodus/schemasafe': 1.3.0
       should: 13.2.3
-      yaml: 1.10.2
+      yaml: 2.8.0
 
   oas-resolver@2.5.6:
     dependencies:
       node-fetch-h2: 2.3.0
       oas-kit-common: 1.0.8
       reftools: 1.1.9
-      yaml: 1.10.2
+      yaml: 2.8.0
       yargs: 17.7.2
 
   oas-schema-walker@1.1.5: {}
@@ -10679,7 +10685,7 @@ snapshots:
       oas-schema-walker: 1.1.5
       reftools: 1.1.9
       should: 13.2.3
-      yaml: 1.10.2
+      yaml: 2.8.0
 
   object-assign@4.1.1: {}
 
@@ -10726,7 +10732,7 @@ snapshots:
   openapi-sampler@1.6.1:
     dependencies:
       '@types/json-schema': 7.0.15
-      fast-xml-parser: 5.5.6
+      fast-xml-parser: 5.5.9
       json-pointer: 0.6.2
 
   opener@1.5.2: {}
@@ -10819,7 +10825,7 @@ snapshots:
 
   path-exists@5.0.0: {}
 
-  path-expression-matcher@1.1.3: {}
+  path-expression-matcher@1.2.0: {}
 
   path-is-inside@1.0.2: {}
 
@@ -10850,9 +10856,9 @@ snapshots:
 
   picocolors@1.1.1: {}
 
-  picomatch@2.3.1: {}
-
   picomatch@4.0.2: {}
+
+  picomatch@4.0.4: {}
 
   pify@2.3.0: {}
 
@@ -11044,7 +11050,7 @@ snapshots:
   postcss-load-config@4.0.2(postcss@8.5.4):
     dependencies:
       lilconfig: 3.1.3
-      yaml: 2.8.0
+      yaml: 2.8.3
     optionalDependencies:
       postcss: 8.5.4
 
@@ -11517,7 +11523,7 @@ snapshots:
 
   readdirp@3.6.0:
     dependencies:
-      picomatch: 2.3.1
+      picomatch: 4.0.2
 
   recma-build-jsx@1.0.0:
     dependencies:
@@ -11801,7 +11807,7 @@ snapshots:
   selfsigned@2.4.1:
     dependencies:
       '@types/node-forge': 1.3.11
-      node-forge: 1.3.3
+      node-forge: 1.4.0
 
   semver-diff@4.0.0:
     dependencies:
@@ -12076,7 +12082,7 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  strnum@2.2.0: {}
+  strnum@2.2.2: {}
 
   style-to-js@1.1.16:
     dependencies:
@@ -12151,7 +12157,7 @@ snapshots:
       oas-schema-walker: 1.1.5
       oas-validator: 5.0.8
       reftools: 1.1.9
-      yaml: 1.10.2
+      yaml: 2.8.0
       yargs: 17.7.2
     transitivePeerDependencies:
       - encoding
@@ -12340,7 +12346,7 @@ snapshots:
   unplugin@2.3.5:
     dependencies:
       acorn: 8.14.1
-      picomatch: 4.0.2
+      picomatch: 4.0.4
       webpack-virtual-modules: 0.6.2
 
   update-browserslist-db@1.1.3(browserslist@4.25.0):
@@ -12620,9 +12626,9 @@ snapshots:
 
   yaml-ast-parser@0.0.43: {}
 
-  yaml@1.10.2: {}
-
   yaml@2.8.0: {}
+
+  yaml@2.8.3: {}
 
   yargs-parser@21.1.1: {}
 
