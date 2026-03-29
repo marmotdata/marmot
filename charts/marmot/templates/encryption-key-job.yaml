@@ -1,4 +1,4 @@
-{{- if and (not .Values.config.server.encryptionKey) (not .Values.config.server.encryptionKeySecretRef) .Values.config.server.autoGenerateEncryptionKey }}
+{{- if and (not .Values.config.server.encryptionKeySecretRef) .Values.config.server.autoGenerateEncryptionKey }}
 apiVersion: batch/v1
 kind: Job
 metadata:

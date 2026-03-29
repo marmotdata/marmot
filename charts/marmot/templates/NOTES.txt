@@ -22,7 +22,7 @@ To access Marmot:
 
 Default credentials: admin / admin
 
-{{- if and (not .Values.config.server.encryptionKey) (not .Values.config.server.encryptionKeySecretRef) .Values.config.server.autoGenerateEncryptionKey }}
+{{- if and (not .Values.config.server.encryptionKeySecretRef) .Values.config.server.autoGenerateEncryptionKey }}
 
 ═══════════════════════════════════════════════════════════════
 ⚠️  ENCRYPTION KEY AUTO-GENERATED
@@ -47,7 +47,7 @@ The secret will persist even if you uninstall this release.
 ═══════════════════════════════════════════════════════════════
 {{- end }}
 
-{{- if .Values.config.server.allowUnencrypted }}
+{{- if .Values.config.server.allow_unencrypted }}
 
 ═══════════════════════════════════════════════════════════════
 ⚠️  WARNING: ENCRYPTION DISABLED

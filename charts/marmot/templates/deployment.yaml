@@ -13,10 +13,11 @@ spec:
       {{- include "marmot.selectorLabels" . | nindent 6 }}
   template:
     metadata:
-      {{- with .Values.podAnnotations }}
       annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       labels:
         {{- include "marmot.labels" . | nindent 8 }}
         {{- with .Values.podLabels }}
@@ -40,6 +41,7 @@ spec:
           {{- end }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args: ["run", "--config", "/etc/marmot/config.yaml"]
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}
@@ -50,406 +52,110 @@ spec:
               protocol: TCP
             {{- end }}
           env:
-            # Server configuration
-            - name: MARMOT_SERVER_PORT
-              value: {{ .Values.config.server.port | quote }}
-            - name: MARMOT_SERVER_HOST
-              value: {{ .Values.config.server.host | quote }}
-            {{- if .Values.config.server.rootUrl }}
-            - name: MARMOT_SERVER_ROOT_URL
-              value: {{ .Values.config.server.rootUrl | quote }}
+            # ---- Encryption key (secret) ----
+            {{- if or .Values.config.server.encryptionKeySecretRef .Values.config.server.autoGenerateEncryptionKey }}
+            {{- if and .Values.config.server.autoGenerateEncryptionKey .Values.config.server.encryptionKeySecretRef }}
+            {{- fail "Cannot specify both config.server.autoGenerateEncryptionKey and config.server.encryptionKeySecretRef" }}
             {{- end }}
-            {{- if or .Values.config.server.encryptionKey .Values.config.server.encryptionKeySecretRef .Values.config.server.autoGenerateEncryptionKey }}
             - name: MARMOT_SERVER_ENCRYPTION_KEY
               {{- if .Values.config.server.encryptionKeySecretRef }}
-              {{- if and .Values.config.server.encryptionKey .Values.config.server.encryptionKeySecretRef }}
-              {{- fail "Cannot specify both config.server.encryptionKey and config.server.encryptionKeySecretRef" }}
-              {{- end }}
-              {{- if .Values.config.server.autoGenerateEncryptionKey }}
-              {{- fail "Cannot specify both config.server.autoGenerateEncryptionKey and config.server.encryptionKeySecretRef" }}
-              {{- end }}
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.config.server.encryptionKeySecretRef.name }}
                   key: {{ .Values.config.server.encryptionKeySecretRef.key }}
-              {{- else if .Values.config.server.encryptionKey }}
-              {{- if .Values.config.server.autoGenerateEncryptionKey }}
-              {{- fail "Cannot specify both config.server.autoGenerateEncryptionKey and config.server.encryptionKey" }}
-              {{- end }}
-              value: {{ .Values.config.server.encryptionKey | quote }}
-              {{- else if .Values.config.server.autoGenerateEncryptionKey }}
+              {{- else }}
               valueFrom:
                 secretKeyRef:
                   name: {{ include "marmot.fullname" . }}-encryption-key
                   key: encryption-key
               {{- end }}
             {{- end }}
-            - name: MARMOT_SERVER_ALLOW_UNENCRYPTED
-              value: {{ .Values.config.server.allowUnencrypted | quote }}
 
-            # Database configuration - use subchart values if enabled
+            # ---- Database subchart overrides (env vars take priority over config file) ----
+            {{- if .Values.cnpg.enabled }}
             - name: MARMOT_DATABASE_HOST
-              {{- if .Values.cnpg.enabled }}
               {{- if .Values.cnpg.pooler.enabled }}
               value: {{ include "marmot.fullname" . }}-pooler-rw
               {{- else }}
               value: {{ include "marmot.fullname" . }}-cnpg-rw
               {{- end }}
-              {{- else if .Values.postgresql.enabled }}
-              {{- if eq .Values.postgresql.architecture "replication" }}
+            - name: MARMOT_DATABASE_PORT
+              value: "5432"
+            - name: MARMOT_DATABASE_USER
+              value: {{ .Values.cnpg.username | default "marmot" | quote }}
+            - name: MARMOT_DATABASE_NAME
+              value: {{ .Values.cnpg.database | default "marmot" | quote }}
+            {{- else if .Values.postgresql.enabled }}
+            - name: MARMOT_DATABASE_HOST
+              {{- if eq (.Values.postgresql.architecture | default "standalone") "replication" }}
               value: {{ include "marmot.fullname" . }}-postgresql-primary
               {{- else }}
               value: {{ include "marmot.fullname" . }}-postgresql
               {{- end }}
-              {{- else }}
-              value: {{ .Values.config.database.host | quote }}
-              {{- end }}
             - name: MARMOT_DATABASE_PORT
-              {{- if or .Values.cnpg.enabled .Values.postgresql.enabled }}
               value: "5432"
-              {{- else }}
-              value: {{ .Values.config.database.port | quote }}
-              {{- end }}
             - name: MARMOT_DATABASE_USER
-              {{- if .Values.cnpg.enabled }}
-              value: {{ .Values.cnpg.username | default "marmot" | quote }}
-              {{- else if .Values.postgresql.enabled }}
               value: {{ .Values.postgresql.auth.username | quote }}
-              {{- else }}
-              value: {{ .Values.config.database.user | quote }}
-              {{- end }}
             - name: MARMOT_DATABASE_NAME
-              {{- if .Values.cnpg.enabled }}
-              value: {{ .Values.cnpg.database | default "marmot" | quote }}
-              {{- else if .Values.postgresql.enabled }}
               value: {{ .Values.postgresql.auth.database | quote }}
-              {{- else }}
-              value: {{ .Values.config.database.name | quote }}
-              {{- end }}
-            - name: MARMOT_DATABASE_SSLMODE
-              value: {{ .Values.config.database.sslmode | quote }}
-            - name: MARMOT_DATABASE_MAX_CONNS
-              value: {{ .Values.config.database.maxConns | quote }}
-            - name: MARMOT_DATABASE_IDLE_CONNS
-              value: {{ .Values.config.database.idleConns | quote }}
-            - name: MARMOT_DATABASE_CONN_LIFETIME
-              value: {{ .Values.config.database.connLifetime | quote }}
-            {{- if .Values.config.search }}
-            {{- if .Values.config.search.timeout }}
-            - name: MARMOT_SEARCH_TIMEOUT
-              value: {{ .Values.config.search.timeout | quote }}
             {{- end }}
-            {{- end }}
+
+            # ---- Database password (secret) ----
+            {{- if .Values.cnpg.enabled }}
             - name: MARMOT_DATABASE_PASSWORD
-              {{- if .Values.cnpg.enabled }}
               valueFrom:
                 secretKeyRef:
                   name: {{ include "marmot.fullname" . }}-cnpg-auth
                   key: password
-              {{- else if .Values.postgresql.enabled }}
+            {{- else if .Values.postgresql.enabled }}
+            - name: MARMOT_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ include "marmot.fullname" . }}-postgresql
                   key: password
-              {{- else if .Values.config.database.passwordSecretRef }}
-              {{- if and .Values.config.database.password .Values.config.database.passwordSecretRef }}
-              {{- fail "Cannot specify both config.database.password and config.database.passwordSecretRef" }}
-              {{- end }}
+            {{- else if .Values.config.database.passwordSecretRef }}
+            - name: MARMOT_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: {{ .Values.config.database.passwordSecretRef.name }}
                   key: {{ .Values.config.database.passwordSecretRef.key }}
-              {{- else }}
-              value: {{ .Values.config.database.password | quote }}
-              {{- end }}
-            
-            # Logging configuration
-            - name: MARMOT_LOGGING_LEVEL
-              value: {{ .Values.config.logging.level | quote }}
-            - name: MARMOT_LOGGING_FORMAT
-              value: {{ .Values.config.logging.format | quote }}
-            
-            # Metrics configuration
-            - name: MARMOT_METRICS_ENABLED
-              value: {{ .Values.config.metrics.enabled | quote }}
-            {{- if .Values.config.metrics.enabled }}
-            - name: MARMOT_METRICS_PORT
-              value: {{ .Values.config.metrics.port | quote }}
-            {{- if .Values.config.metrics.ownerMetadataFields }}
-            - name: MARMOT_METRICS_OWNER_METADATA_FIELDS
-              value: {{ .Values.config.metrics.ownerMetadataFields | join "," | quote }}
-            {{- end }}
-            {{- if .Values.config.metrics.schemas.excludedAssetTypes }}
-            - name: MARMOT_METRICS_SCHEMAS_EXCLUDED_ASSET_TYPES
-              value: {{ .Values.config.metrics.schemas.excludedAssetTypes | join "," | quote }}
-            {{- end }}
-            {{- if .Values.config.metrics.schemas.excludedProviders }}
-            - name: MARMOT_METRICS_SCHEMAS_EXCLUDED_PROVIDERS
-              value: {{ .Values.config.metrics.schemas.excludedProviders | join "," | quote }}
-            {{- end }}
             {{- end }}
 
-            # OpenLineage configuration
-            - name: MARMOT_OPENLINEAGE_AUTH_ENABLED
-              value: {{ .Values.config.openlineage.auth.enabled | quote }}
-
-            # Auth configuration
-            - name: MARMOT_AUTH_ANONYMOUS_ENABLED
-              value: {{ .Values.config.auth.anonymous.enabled | quote }}
-            - name: MARMOT_AUTH_ANONYMOUS_ROLE
-              value: {{ .Values.config.auth.anonymous.role | quote }}
-            
-            # OAuth provider configuration
-            {{- if and .Values.config.auth.providers .Values.config.auth.providers.okta .Values.config.auth.providers.okta.enabled }}
-            - name: MARMOT_AUTH_PROVIDERS_OKTA_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_PROVIDERS_OKTA_TYPE
-              value: {{ .Values.config.auth.providers.okta.type | quote }}
-            - name: MARMOT_AUTH_PROVIDERS_OKTA_NAME
-              value: {{ .Values.config.auth.providers.okta.name | quote }}
-            - name: MARMOT_AUTH_PROVIDERS_OKTA_CLIENT_ID
-              value: {{ .Values.config.auth.providers.okta.clientId | quote }}
-            - name: MARMOT_AUTH_PROVIDERS_OKTA_URL
-              value: {{ .Values.config.auth.providers.okta.url | quote }}
-            - name: MARMOT_AUTH_PROVIDERS_OKTA_REDIRECT_URL
-              value: {{ .Values.config.auth.providers.okta.redirectUrl | quote }}
-            - name: MARMOT_AUTH_PROVIDERS_OKTA_ALLOW_SIGNUP
-              value: {{ .Values.config.auth.providers.okta.allowSignup | quote }}
-            
-            # OAuth client secret - prefer secretRef, fallback to direct value
-            - name: MARMOT_AUTH_PROVIDERS_OKTA_CLIENT_SECRET
-              {{- if .Values.config.auth.providers.okta.clientSecretRef }}
-              {{- if and .Values.config.auth.providers.okta.clientSecret .Values.config.auth.providers.okta.clientSecretRef }}
-              {{- fail "Cannot specify both config.auth.providers.okta.clientSecret and config.auth.providers.okta.clientSecretRef" }}
-              {{- end }}
+            # ---- Elasticsearch password (secret) ----
+            {{- if and .Values.config.search .Values.config.search.elasticsearch }}
+            {{- if .Values.config.search.elasticsearch.passwordSecretRef }}
+            - name: MARMOT_SEARCH_ELASTICSEARCH_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.config.auth.providers.okta.clientSecretRef.name }}
-                  key: {{ .Values.config.auth.providers.okta.clientSecretRef.key }}
-              {{- else }}
-              value: {{ .Values.config.auth.providers.okta.clientSecret | quote }}
-              {{- end }}
+                  name: {{ .Values.config.search.elasticsearch.passwordSecretRef.name }}
+                  key: {{ .Values.config.search.elasticsearch.passwordSecretRef.key }}
+            {{- end }}
             {{- end }}
 
-            {{- if and .Values.config.auth.providers .Values.config.auth.providers.google .Values.config.auth.providers.google.enabled }}
-            - name: MARMOT_AUTH_GOOGLE_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_GOOGLE_CLIENT_ID
-              value: {{ .Values.config.auth.providers.google.clientId | quote }}
-            - name: MARMOT_AUTH_GOOGLE_REDIRECT_URL
-              value: {{ .Values.config.auth.providers.google.redirectUrl | quote }}
-            - name: MARMOT_AUTH_GOOGLE_ALLOW_SIGNUP
-              value: {{ .Values.config.auth.providers.google.allowSignup | quote }}
-            - name: MARMOT_AUTH_GOOGLE_CLIENT_SECRET
-              {{- if .Values.config.auth.providers.google.clientSecretRef }}
-              {{- if and .Values.config.auth.providers.google.clientSecret .Values.config.auth.providers.google.clientSecretRef }}
-              {{- fail "Cannot specify both config.auth.providers.google.clientSecret and config.auth.providers.google.clientSecretRef" }}
-              {{- end }}
+            # ---- Auth provider client secrets ----
+            {{- $providers := dict "okta" "OKTA" "google" "GOOGLE" "github" "GITHUB" "gitlab" "GITLAB" "keycloak" "KEYCLOAK" "slack" "SLACK" "auth0" "AUTH0" "generic_oidc" "GENERIC_OIDC" }}
+            {{- range $key, $envName := $providers }}
+            {{- $provider := index $.Values.config.auth $key | default dict }}
+            {{- if and $provider.enabled $provider.clientSecretRef }}
+            - name: MARMOT_AUTH_{{ $envName }}_CLIENT_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: {{ .Values.config.auth.providers.google.clientSecretRef.name }}
-                  key: {{ .Values.config.auth.providers.google.clientSecretRef.key }}
-              {{- else }}
-              value: {{ .Values.config.auth.providers.google.clientSecret | quote }}
-              {{- end }}
-            {{- end }}
-
-            {{- if and .Values.config.auth.providers .Values.config.auth.providers.github .Values.config.auth.providers.github.enabled }}
-            - name: MARMOT_AUTH_GITHUB_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_GITHUB_CLIENT_ID
-              value: {{ .Values.config.auth.providers.github.clientId | quote }}
-            - name: MARMOT_AUTH_GITHUB_REDIRECT_URL
-              value: {{ .Values.config.auth.providers.github.redirectUrl | quote }}
-            - name: MARMOT_AUTH_GITHUB_ALLOW_SIGNUP
-              value: {{ .Values.config.auth.providers.github.allowSignup | quote }}
-            - name: MARMOT_AUTH_GITHUB_CLIENT_SECRET
-              {{- if .Values.config.auth.providers.github.clientSecretRef }}
-              {{- if and .Values.config.auth.providers.github.clientSecret .Values.config.auth.providers.github.clientSecretRef }}
-              {{- fail "Cannot specify both config.auth.providers.github.clientSecret and config.auth.providers.github.clientSecretRef" }}
-              {{- end }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.config.auth.providers.github.clientSecretRef.name }}
-                  key: {{ .Values.config.auth.providers.github.clientSecretRef.key }}
-              {{- else }}
-              value: {{ .Values.config.auth.providers.github.clientSecret | quote }}
-              {{- end }}
-            {{- end }}
-
-            {{- if and .Values.config.auth.providers .Values.config.auth.providers.gitlab .Values.config.auth.providers.gitlab.enabled }}
-            - name: MARMOT_AUTH_GITLAB_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_GITLAB_CLIENT_ID
-              value: {{ .Values.config.auth.providers.gitlab.clientId | quote }}
-            - name: MARMOT_AUTH_GITLAB_URL
-              value: {{ .Values.config.auth.providers.gitlab.url | quote }}
-            - name: MARMOT_AUTH_GITLAB_REDIRECT_URL
-              value: {{ .Values.config.auth.providers.gitlab.redirectUrl | quote }}
-            - name: MARMOT_AUTH_GITLAB_ALLOW_SIGNUP
-              value: {{ .Values.config.auth.providers.gitlab.allowSignup | quote }}
-            - name: MARMOT_AUTH_GITLAB_CLIENT_SECRET
-              {{- if .Values.config.auth.providers.gitlab.clientSecretRef }}
-              {{- if and .Values.config.auth.providers.gitlab.clientSecret .Values.config.auth.providers.gitlab.clientSecretRef }}
-              {{- fail "Cannot specify both config.auth.providers.gitlab.clientSecret and config.auth.providers.gitlab.clientSecretRef" }}
-              {{- end }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.config.auth.providers.gitlab.clientSecretRef.name }}
-                  key: {{ .Values.config.auth.providers.gitlab.clientSecretRef.key }}
-              {{- else }}
-              value: {{ .Values.config.auth.providers.gitlab.clientSecret | quote }}
-              {{- end }}
-            {{- end }}
-
-            {{- if and .Values.config.auth.providers .Values.config.auth.providers.slack .Values.config.auth.providers.slack.enabled }}
-            - name: MARMOT_AUTH_SLACK_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_SLACK_CLIENT_ID
-              value: {{ .Values.config.auth.providers.slack.clientId | quote }}
-            - name: MARMOT_AUTH_SLACK_REDIRECT_URL
-              value: {{ .Values.config.auth.providers.slack.redirectUrl | quote }}
-            - name: MARMOT_AUTH_SLACK_ALLOW_SIGNUP
-              value: {{ .Values.config.auth.providers.slack.allowSignup | quote }}
-            - name: MARMOT_AUTH_SLACK_CLIENT_SECRET
-              {{- if .Values.config.auth.providers.slack.clientSecretRef }}
-              {{- if and .Values.config.auth.providers.slack.clientSecret .Values.config.auth.providers.slack.clientSecretRef }}
-              {{- fail "Cannot specify both config.auth.providers.slack.clientSecret and config.auth.providers.slack.clientSecretRef" }}
-              {{- end }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.config.auth.providers.slack.clientSecretRef.name }}
-                  key: {{ .Values.config.auth.providers.slack.clientSecretRef.key }}
-              {{- else }}
-              value: {{ .Values.config.auth.providers.slack.clientSecret | quote }}
-              {{- end }}
-            {{- end }}
-
-            {{- if and .Values.config.auth.providers .Values.config.auth.providers.auth0 .Values.config.auth.providers.auth0.enabled }}
-            - name: MARMOT_AUTH_AUTH0_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_AUTH0_CLIENT_ID
-              value: {{ .Values.config.auth.providers.auth0.clientId | quote }}
-            - name: MARMOT_AUTH_AUTH0_URL
-              value: {{ .Values.config.auth.providers.auth0.url | quote }}
-            - name: MARMOT_AUTH_AUTH0_REDIRECT_URL
-              value: {{ .Values.config.auth.providers.auth0.redirectUrl | quote }}
-            - name: MARMOT_AUTH_AUTH0_ALLOW_SIGNUP
-              value: {{ .Values.config.auth.providers.auth0.allowSignup | quote }}
-            - name: MARMOT_AUTH_AUTH0_CLIENT_SECRET
-              {{- if .Values.config.auth.providers.auth0.clientSecretRef }}
-              {{- if and .Values.config.auth.providers.auth0.clientSecret .Values.config.auth.providers.auth0.clientSecretRef }}
-              {{- fail "Cannot specify both config.auth.providers.auth0.clientSecret and config.auth.providers.auth0.clientSecretRef" }}
-              {{- end }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.config.auth.providers.auth0.clientSecretRef.name }}
-                  key: {{ .Values.config.auth.providers.auth0.clientSecretRef.key }}
-              {{- else }}
-              value: {{ .Values.config.auth.providers.auth0.clientSecret | quote }}
-              {{- end }}
-            {{- end }}
-
-            {{- if and .Values.config.auth.providers .Values.config.auth.providers.keycloak .Values.config.auth.providers.keycloak.enabled }}
-            - name: MARMOT_AUTH_KEYCLOAK_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_KEYCLOAK_CLIENT_ID
-              value: {{ .Values.config.auth.providers.keycloak.clientId | quote }}
-            - name: MARMOT_AUTH_KEYCLOAK_URL
-              value: {{ .Values.config.auth.providers.keycloak.url | quote }}
-            - name: MARMOT_AUTH_KEYCLOAK_REALM
-              value: {{ .Values.config.auth.providers.keycloak.realm | quote }}
-            - name: MARMOT_AUTH_KEYCLOAK_REDIRECT_URL
-              value: {{ .Values.config.auth.providers.keycloak.redirectUrl | quote }}
-            - name: MARMOT_AUTH_KEYCLOAK_ALLOW_SIGNUP
-              value: {{ .Values.config.auth.providers.keycloak.allowSignup | quote }}
-            - name: MARMOT_AUTH_KEYCLOAK_CLIENT_SECRET
-              {{- if .Values.config.auth.providers.keycloak.clientSecretRef }}
-              {{- if and .Values.config.auth.providers.keycloak.clientSecret .Values.config.auth.providers.keycloak.clientSecretRef }}
-              {{- fail "Cannot specify both config.auth.providers.keycloak.clientSecret and config.auth.providers.keycloak.clientSecretRef" }}
-              {{- end }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.config.auth.providers.keycloak.clientSecretRef.name }}
-                  key: {{ .Values.config.auth.providers.keycloak.clientSecretRef.key }}
-              {{- else }}
-              value: {{ .Values.config.auth.providers.keycloak.clientSecret | quote }}
-              {{- end }}
-            {{- if .Values.config.auth.providers.keycloak.teamSync }}
-            {{- if .Values.config.auth.providers.keycloak.teamSync.enabled }}
-            - name: MARMOT_AUTH_KEYCLOAK_TEAM_SYNC_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_KEYCLOAK_TEAM_SYNC_GROUP_CLAIM
-              value: {{ .Values.config.auth.providers.keycloak.teamSync.groupClaim | default "groups" | quote }}
-            {{- end }}
+                  name: {{ $provider.clientSecretRef.name }}
+                  key: {{ $provider.clientSecretRef.key }}
             {{- end }}
             {{- end }}
 
-            {{- if and .Values.config.auth.providers .Values.config.auth.providers.genericOidc .Values.config.auth.providers.genericOidc.enabled }}
-            - name: MARMOT_AUTH_GENERIC_OIDC_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_GENERIC_OIDC_CLIENT_ID
-              value: {{ .Values.config.auth.providers.genericOidc.clientId | quote }}
-            - name: MARMOT_AUTH_GENERIC_OIDC_URL
-              value: {{ .Values.config.auth.providers.genericOidc.url | quote }}
-            - name: MARMOT_AUTH_GENERIC_OIDC_REDIRECT_URL
-              value: {{ .Values.config.auth.providers.genericOidc.redirectUrl | quote }}
-            - name: MARMOT_AUTH_GENERIC_OIDC_ALLOW_SIGNUP
-              value: {{ .Values.config.auth.providers.genericOidc.allowSignup | quote }}
-            - name: MARMOT_AUTH_GENERIC_OIDC_CLIENT_SECRET
-              {{- if .Values.config.auth.providers.genericOidc.clientSecretRef }}
-              {{- if and .Values.config.auth.providers.genericOidc.clientSecret .Values.config.auth.providers.genericOidc.clientSecretRef }}
-              {{- fail "Cannot specify both config.auth.providers.genericOidc.clientSecret and config.auth.providers.genericOidc.clientSecretRef" }}
-              {{- end }}
-              valueFrom:
-                secretKeyRef:
-                  name: {{ .Values.config.auth.providers.genericOidc.clientSecretRef.name }}
-                  key: {{ .Values.config.auth.providers.genericOidc.clientSecretRef.key }}
-              {{- else }}
-              value: {{ .Values.config.auth.providers.genericOidc.clientSecret | quote }}
-              {{- end }}
-            {{- if .Values.config.auth.providers.genericOidc.teamSync }}
-            {{- if .Values.config.auth.providers.genericOidc.teamSync.enabled }}
-            - name: MARMOT_AUTH_GENERIC_OIDC_TEAM_SYNC_ENABLED
-              value: "true"
-            - name: MARMOT_AUTH_GENERIC_OIDC_TEAM_SYNC_GROUP_CLAIM
-              value: {{ .Values.config.auth.providers.genericOidc.teamSync.groupClaim | default "groups" | quote }}
-            {{- end }}
-            {{- end }}
-            {{- end }}
-
-            # Rate limit configuration
-            - name: MARMOT_RATE_LIMIT_ENABLED
-              value: {{ .Values.config.rateLimit.enabled | quote }}
-
-            # UI configuration
-            - name: MARMOT_UI_BANNER_ENABLED
-              value: {{ .Values.config.ui.banner.enabled | quote }}
-            {{- if .Values.config.ui.banner.enabled }}
-            - name: MARMOT_UI_BANNER_DISMISSIBLE
-              value: {{ .Values.config.ui.banner.dismissible | quote }}
-            - name: MARMOT_UI_BANNER_VARIANT
-              value: {{ .Values.config.ui.banner.variant | quote }}
-            - name: MARMOT_UI_BANNER_MESSAGE
-              value: {{ .Values.config.ui.banner.message | quote }}
-            - name: MARMOT_UI_BANNER_ID
-              value: {{ .Values.config.ui.banner.id | quote }}
-            {{- end }}
-
-            # Pipelines configuration
-            - name: MARMOT_PIPELINES_MAX_WORKERS
-              value: {{ .Values.config.pipelines.maxWorkers | quote }}
-            - name: MARMOT_PIPELINES_SCHEDULER_INTERVAL
-              value: {{ .Values.config.pipelines.schedulerInterval | quote }}
-            - name: MARMOT_PIPELINES_LEASE_EXPIRY
-              value: {{ .Values.config.pipelines.leaseExpiry | quote }}
-            - name: MARMOT_PIPELINES_CLAIM_EXPIRY
-              value: {{ .Values.config.pipelines.claimExpiry | quote }}
-
-            # Additional environment variables
+            # ---- Additional environment variables ----
             {{- range $key, $value := .Values.env }}
             - name: {{ $key }}
               value: {{ $value | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/marmot
+              readOnly: true
+            {{- with .Values.volumeMounts }}
+            {{- toYaml . | nindent 12 }}
             {{- end }}
           {{- with .Values.livenessProbe }}
           livenessProbe:
@@ -463,14 +169,13 @@ spec:
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.volumeMounts }}
-          volumeMounts:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-      {{- with .Values.volumes }}
       volumes:
+        - name: config
+          configMap:
+            name: {{ include "marmot.fullname" . }}-config
+        {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
-      {{- end }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

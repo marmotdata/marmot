@@ -1,0 +1,122 @@
+suite: test configmap
+templates:
+  - configmap.yaml
+tests:
+  - it: should render a ConfigMap
+    asserts:
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-marmot-config
+
+  - it: should include config.yaml data key
+    asserts:
+      - isNotNull:
+          path: data["config.yaml"]
+
+  - it: should include default server config
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "port: 8080"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "host: 0\\.0\\.0\\.0"
+
+  - it: should include default logging config
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "level: info"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "format: json"
+
+  - it: should include default database config
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "host: postgresql"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "sslmode: disable"
+
+  - it: should NOT include Helm-only keys in ConfigMap
+    asserts:
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "encryptionKeySecretRef"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "autoGenerateEncryptionKey"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "passwordSecretRef"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "clientSecretRef"
+
+  - it: should always use raw config.database values (subchart overrides are env vars)
+    set:
+      postgresql.enabled: true
+      postgresql.auth.username: "testuser"
+      postgresql.auth.database: "testdb"
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "host: postgresql"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "user: marmot"
+
+  - it: should include auth provider config without clientSecretRef
+    set:
+      config.auth.okta:
+        enabled: true
+        client_id: "my-client-id"
+        clientSecretRef:
+          name: "okta-secret"
+          key: "client-secret"
+        url: "https://test.okta.com"
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "client_id: my-client-id"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "clientSecretRef"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "okta-secret"
+
+  - it: should strip elasticsearch passwordSecretRef from ConfigMap
+    set:
+      config.search.elasticsearch:
+        enabled: true
+        addresses:
+          - "http://elasticsearch:9200"
+        username: "elastic"
+        passwordSecretRef:
+          name: "es-secret"
+          key: "password"
+        index: "marmot"
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "username: elastic"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "passwordSecretRef"
+      - notMatchRegex:
+          path: data["config.yaml"]
+          pattern: "es-secret"
+
+  - it: should include pipelines config
+    asserts:
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "max_workers: 10"
+      - matchRegex:
+          path: data["config.yaml"]
+          pattern: "scheduler_interval: 60"

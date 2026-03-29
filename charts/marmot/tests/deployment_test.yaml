@@ -1,50 +1,62 @@
 suite: test deployment
 templates:
   - deployment.yaml
+  - configmap.yaml
 tests:
   - it: should render deployment with default values
     asserts:
       - isKind:
           of: Deployment
+        template: deployment.yaml
       - equal:
           path: metadata.name
           value: RELEASE-NAME-marmot
+        template: deployment.yaml
       - equal:
           path: spec.template.spec.containers[0].ports[0].containerPort
           value: 8080
+        template: deployment.yaml
 
-  - it: should set correct environment variables
+  - it: should pass --config flag to the container
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].args
+          value: ["run", "--config", "/etc/marmot/config.yaml"]
+        template: deployment.yaml
+
+  - it: should mount the configmap volume
     asserts:
       - contains:
-          path: spec.template.spec.containers[0].env
+          path: spec.template.spec.containers[0].volumeMounts
           content:
-            name: MARMOT_SERVER_PORT
-            value: "8080"
+            name: config
+            mountPath: /etc/marmot
+            readOnly: true
+        template: deployment.yaml
       - contains:
-          path: spec.template.spec.containers[0].env
+          path: spec.template.spec.volumes
           content:
-            name: MARMOT_DATABASE_HOST
-            value: "postgresql"
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: MARMOT_LOGGING_LEVEL
-            value: "info"
+            name: config
+            configMap:
+              name: RELEASE-NAME-marmot-config
+        template: deployment.yaml
 
-  - it: should use external database configuration by default
+  - it: should include checksum annotation for config changes
     asserts:
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: MARMOT_DATABASE_HOST
-            value: "postgresql"
-      - contains:
-          path: spec.template.spec.containers[0].env
-          content:
-            name: MARMOT_DATABASE_USER
-            value: "marmot"
+      - isNotNull:
+          path: spec.template.metadata.annotations["checksum/config"]
+        template: deployment.yaml
 
-  - it: should use postgresql subchart when enabled
+  - it: should not set database password env var by default
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_PASSWORD
+          any: true
+        template: deployment.yaml
+
+  - it: should override database connection via env vars when postgresql subchart is enabled
     set:
       postgresql.enabled: true
       postgresql.auth.username: "testuser"
@@ -54,22 +66,20 @@ tests:
           path: spec.template.spec.containers[0].env
           content:
             name: MARMOT_DATABASE_HOST
-            value: "RELEASE-NAME-marmot-postgresql"
+            value: RELEASE-NAME-marmot-postgresql
+        template: deployment.yaml
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: MARMOT_DATABASE_USER
             value: "testuser"
+        template: deployment.yaml
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: MARMOT_DATABASE_NAME
             value: "testdb"
-
-  - it: should use password secret for postgresql subchart
-    set:
-      postgresql.enabled: true
-    asserts:
+        template: deployment.yaml
       - contains:
           path: spec.template.spec.containers[0].env
           content:
@@ -78,8 +88,29 @@ tests:
               secretKeyRef:
                 name: RELEASE-NAME-marmot-postgresql
                 key: password
+        template: deployment.yaml
 
-  - it: should use custom database password secret
+  - it: should override database connection via env vars when cnpg is enabled
+    set:
+      cnpg.enabled: true
+      cnpg.pooler.enabled: true
+      cnpg.username: "cnpguser"
+      cnpg.database: "cnpgdb"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_HOST
+            value: RELEASE-NAME-marmot-pooler-rw
+        template: deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_DATABASE_USER
+            value: "cnpguser"
+        template: deployment.yaml
+
+  - it: should use custom database passwordSecretRef
     set:
       config.database.passwordSecretRef:
         name: custom-secret
@@ -93,28 +124,75 @@ tests:
               secretKeyRef:
                 name: custom-secret
                 key: db-password
+        template: deployment.yaml
 
-  - it: should fail with both password and passwordSecretRef
+  - it: should inject auth client secret from clientSecretRef when provider is enabled
     set:
-      config.database.password: "plaintext"
-      config.database.passwordSecretRef:
-        name: secret
-        key: password
+      config.auth.github:
+        enabled: true
+        client_id: "test-id"
+        clientSecretRef:
+          name: github-secret
+          key: client-secret
     asserts:
-      - failedTemplate:
-          errorMessage: "Cannot specify both config.database.password and config.database.passwordSecretRef"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_AUTH_GITHUB_CLIENT_SECRET
+            valueFrom:
+              secretKeyRef:
+                name: github-secret
+                key: client-secret
+        template: deployment.yaml
+
+  - it: should not inject auth client secret env var without clientSecretRef
+    set:
+      config.auth.okta:
+        enabled: true
+        client_id: "test-id"
+        url: "https://test.okta.com"
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_AUTH_OKTA_CLIENT_SECRET
+          any: true
+        template: deployment.yaml
+
+  - it: should inject elasticsearch password from passwordSecretRef
+    set:
+      config.search.elasticsearch:
+        enabled: true
+        addresses:
+          - "http://elasticsearch:9200"
+        passwordSecretRef:
+          name: es-secret
+          key: password
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: MARMOT_SEARCH_ELASTICSEARCH_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: es-secret
+                key: password
+        template: deployment.yaml
 
   - it: should set security context
     asserts:
       - equal:
           path: spec.template.spec.containers[0].securityContext.runAsNonRoot
           value: true
+        template: deployment.yaml
       - equal:
           path: spec.template.spec.containers[0].securityContext.runAsUser
           value: 65534
+        template: deployment.yaml
       - equal:
           path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
           value: false
+        template: deployment.yaml
 
   - it: should set custom image tag
     set:
@@ -123,6 +201,7 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].image
           value: "ghcr.io/marmotdata/marmot:custom-tag"
+        template: deployment.yaml
 
   - it: should set custom resources
     set:
@@ -137,6 +216,8 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.limits.cpu
           value: 1000m
+        template: deployment.yaml
       - equal:
           path: spec.template.spec.containers[0].resources.requests.memory
           value: 256Mi
+        template: deployment.yaml

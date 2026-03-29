@@ -77,43 +77,67 @@ config:
   server:
     port: 8080
     host: "0.0.0.0"
-    rootUrl: ""
-    customResponseHeaders: {}
+    root_url: ""
+    customer_response_headers: {}
 
     # Encryption key for pipeline credentials
     # Option 1: Auto-generate (recommended for new deployments)
     autoGenerateEncryptionKey: true
-    # Option 2: Provide key directly (not recommended for production)
-    encryptionKey: ""
-    # Option 3: Reference existing secret (recommended for production)
+    # Option 2: Reference existing secret (recommended for production)
     # encryptionKeySecretRef:
     #   name: "marmot-encryption-secret"
     #   key: "encryption-key"
 
     # Allow running without encryption (NOT RECOMMENDED)
-    allowUnencrypted: false
+    allow_unencrypted: false
+
+    # TLS configuration for the server
+    # tls:
+    #   cert_path: "/path/to/cert.pem"
+    #   key_path: "/path/to/key.pem"
+    #   ca_cert_path: "/path/to/ca.pem"  # enables mutual TLS
+    #   insecure_skip_verify: false
 
   # Database configuration
   database:
-    # When postgresql.enabled is true, these are automatically populated
+    # When postgresql.enabled or cnpg.enabled, host/port/user/name are
+    # automatically overridden by the subchart values.
     host: "postgresql"
     port: 5432
     user: "marmot"
-    # Use either password OR passwordSecretRef (not both)
-    password: ""
     # passwordSecretRef:
     #   name: "marmot-database-secret"
     #   key: "password"
     name: "marmot"
     sslmode: "disable"
     # Connection pool settings
-    maxConns: 100
-    idleConns: 20
-    connLifetime: 30  # minutes
+    max_conns: 100
+    idle_conns: 20
+    conn_lifetime: 30 # minutes
 
   # Search configuration
   search:
-    timeout: 10  # seconds
+    timeout: 10 # seconds
+    # Elasticsearch backend (optional, uses built-in search by default)
+    # elasticsearch:
+    #   enabled: false
+    #   addresses:
+    #     - "http://elasticsearch:9200"
+    #   username: ""
+    #   passwordSecretRef:
+    #     name: "elasticsearch-secret"
+    #     key: "password"
+    #   index: "marmot"
+    #   bulk_size: 500
+    #   flush_interval: 1000       # milliseconds
+    #   reindex_on_start: false
+    #   shards: 1
+    #   replicas: 0
+    #   tls:
+    #     insecure_skip_verify: false
+    #     ca_cert_path: ""
+    #     cert_path: ""
+    #     key_path: ""
 
   # Logging configuration
   logging:
@@ -126,56 +150,79 @@ config:
       enabled: false
       role: "user"
 
-    # OAuth providers (e.g., Okta, Google, GitHub)
-    providers: {}
-      # okta:
-      #   enabled: true
-      #   type: "okta"
-      #   name: "Okta"
-      #   clientId: ""
-      #   clientSecret: ""
-      #   url: "https://your-org.okta.com"
-      #   scopes:
-      #     - "openid"
-      #     - "profile"
-      #     - "email"
-      # keycloak:
-      #   enabled: true
-      #   clientId: ""
-      #   clientSecret: ""
-      #   url: "https://keycloak.example.com"
-      #   realm: "your-realm"
-      #   redirectUrl: "https://marmot.example.com/api/v1/auth/callback/keycloak"
-      #   allowSignup: true
-      #   teamSync:
-      #     enabled: false
-      #     groupClaim: "groups"
-      # genericOidc:
-      #   enabled: true
-      #   clientId: ""
-      #   clientSecret: ""
-      #   url: "https://your-oidc-provider.example.com"
-      #   redirectUrl: "https://marmot.example.com/api/v1/auth/callback/generic_oidc"
-      #   allowSignup: true
-      #   teamSync:
-      #     enabled: false
-      #     groupClaim: "groups"
+    # OAuth providers — configured directly under auth to match the
+    # Marmot config struct (no "providers" wrapper).
+    #
+    # okta:
+    #   enabled: true
+    #   type: "okta"
+    #   name: "Okta"
+    #   client_id: ""
+    #   clientSecretRef:
+    #     name: "okta-secret"
+    #     key: "client-secret"
+    #   url: "https://your-org.okta.com"
+    #   redirect_url: ""
+    #   allow_signup: true
+    #   scopes:
+    #     - "openid"
+    #     - "profile"
+    #     - "email"
+    #   team_sync:
+    #     enabled: false
+    #     group:
+    #       claim: "groups"
+    #   group_mapping:
+    #     - group_name: "admins"
+    #       roles: ["admin"]
+    #   tls:
+    #     insecure_skip_verify: false
+    #     ca_cert_path: ""
+    #
+    # keycloak:
+    #   enabled: true
+    #   client_id: ""
+    #   clientSecretRef:
+    #     name: "keycloak-secret"
+    #     key: "client-secret"
+    #   url: "https://keycloak.example.com"
+    #   realm: "your-realm"
+    #   redirect_url: "https://marmot.example.com/api/v1/auth/callback/keycloak"
+    #   allow_signup: true
+    #   team_sync:
+    #     enabled: false
+    #     group:
+    #       claim: "groups"
+    #
+    # generic_oidc:
+    #   enabled: true
+    #   client_id: ""
+    #   clientSecretRef:
+    #     name: "oidc-secret"
+    #     key: "client-secret"
+    #   url: "https://your-oidc-provider.example.com"
+    #   redirect_url: "https://marmot.example.com/api/v1/auth/callback/generic_oidc"
+    #   allow_signup: true
+    #   team_sync:
+    #     enabled: false
+    #     group:
+    #       claim: "groups"
 
   # Metrics configuration
   metrics:
     enabled: false
     port: 9090
-    ownerMetadataFields:
+    owner_metadata_fields:
       - "owner"
       - "ownedBy"
       - "owningTeam"
     schemas:
-      excludedAssetTypes:
+      excluded_asset_types:
         - "Service"
-      excludedProviders: []
+      excluded_providers: []
 
   # Rate limiting
-  rateLimit:
+  rate_limit:
     enabled: false
 
   # UI configuration
@@ -183,16 +230,16 @@ config:
     banner:
       enabled: false
       dismissible: true
-      variant: "info"  # info, warning, error, success
+      variant: "info" # info, warning, error, success
       message: ""
       id: "banner-1"
 
   # Pipeline/ingestion configuration
   pipelines:
-    maxWorkers: 10
-    schedulerInterval: 60   # seconds
-    leaseExpiry: 300        # seconds
-    claimExpiry: 30         # seconds
+    max_workers: 10
+    scheduler_interval: 60 # seconds
+    lease_expiry: 300 # seconds
+    claim_expiry: 30 # seconds
 
   # OpenLineage configuration
   openlineage:

@@ -12,25 +12,72 @@
       "required": ["name", "key"],
       "additionalProperties": false
     },
+    "tlsConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "insecure_skip_verify": { "type": "boolean" },
+        "ca_cert_path": { "type": "string" },
+        "cert_path": { "type": "string" },
+        "key_path": { "type": "string" }
+      }
+    },
     "authProviderBase": {
       "type": "object",
       "properties": {
         "enabled": { "type": "boolean" },
-        "clientId": { "type": "string" },
-        "clientSecret": { "type": "string" },
+        "type": { "type": "string" },
+        "name": { "type": "string" },
+        "client_id": { "type": "string" },
         "clientSecretRef": { "$ref": "#/$defs/secretRef" },
         "url": { "type": "string" },
-        "redirectUrl": { "type": "string" },
-        "allowSignup": { "type": "boolean" }
+        "realm": { "type": "string" },
+        "redirect_url": { "type": "string" },
+        "allow_signup": { "type": "boolean" },
+        "scopes": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "group_mapping": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "group_name": { "type": "string" },
+              "roles": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "team_sync": { "$ref": "#/$defs/teamSyncConfig" },
+        "tls": { "$ref": "#/$defs/tlsConfig" }
       }
     },
-    "teamSyncSimple": {
+    "teamSyncConfig": {
       "type": "object",
+      "additionalProperties": false,
       "properties": {
         "enabled": { "type": "boolean" },
-        "groupClaim": { "type": "string" }
-      },
-      "additionalProperties": false
+        "strip_prefix": { "type": "string" },
+        "group": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "claim": { "type": "string" },
+            "filter": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "mode": { "type": "string" },
+                "pattern": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "properties": {
@@ -183,12 +230,12 @@
           "properties": {
             "port": { "type": "integer" },
             "host": { "type": "string" },
-            "rootUrl": { "type": "string" },
-            "customResponseHeaders": { "type": "object", "additionalProperties": { "type": "string" } },
+            "root_url": { "type": "string" },
+            "customer_response_headers": { "type": "object", "additionalProperties": { "type": "string" } },
             "autoGenerateEncryptionKey": { "type": "boolean" },
-            "encryptionKey": { "type": "string" },
             "encryptionKeySecretRef": { "$ref": "#/$defs/secretRef" },
-            "allowUnencrypted": { "type": "boolean" }
+            "allow_unencrypted": { "type": "boolean" },
+            "tls": { "$ref": "#/$defs/tlsConfig" }
           }
         },
         "database": {
@@ -198,20 +245,39 @@
             "host": { "type": "string" },
             "port": { "type": "integer" },
             "user": { "type": "string" },
-            "password": { "type": "string" },
             "passwordSecretRef": { "$ref": "#/$defs/secretRef" },
             "name": { "type": "string" },
             "sslmode": { "type": "string" },
-            "maxConns": { "type": "integer", "minimum": 1 },
-            "idleConns": { "type": "integer", "minimum": 0 },
-            "connLifetime": { "type": "integer", "minimum": 0 }
+            "max_conns": { "type": "integer", "minimum": 1 },
+            "idle_conns": { "type": "integer", "minimum": 0 },
+            "conn_lifetime": { "type": "integer", "minimum": 0 }
           }
         },
         "search": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "timeout": { "type": "integer", "minimum": 1 }
+            "timeout": { "type": "integer", "minimum": 1 },
+            "elasticsearch": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "enabled": { "type": "boolean" },
+                "addresses": {
+                  "type": "array",
+                  "items": { "type": "string" }
+                },
+                "username": { "type": "string" },
+                "passwordSecretRef": { "$ref": "#/$defs/secretRef" },
+                "index": { "type": "string" },
+                "tls": { "$ref": "#/$defs/tlsConfig" },
+                "bulk_size": { "type": "integer", "minimum": 1 },
+                "flush_interval": { "type": "integer", "minimum": 1 },
+                "reindex_on_start": { "type": "boolean" },
+                "shards": { "type": "integer", "minimum": 1 },
+                "replicas": { "type": "integer", "minimum": 0 }
+              }
+            }
           }
         },
         "logging": {
@@ -220,17 +286,16 @@
           "properties": {
             "level": {
               "type": "string",
-              "enum": ["debug", "info", "warn", "error"]
+              "enum": ["trace", "debug", "info", "warn", "error", "fatal", "panic"]
             },
             "format": {
               "type": "string",
-              "enum": ["json", "text"]
+              "enum": ["json", "console"]
             }
           }
         },
         "auth": {
           "type": "object",
-          "additionalProperties": false,
           "properties": {
             "anonymous": {
               "type": "object",
@@ -240,109 +305,14 @@
                 "role": { "type": "string" }
               }
             },
-            "openlineage": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "enabled": { "type": "boolean" }
-              }
-            },
-            "providers": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "okta": {
-                  "allOf": [
-                    { "$ref": "#/$defs/authProviderBase" },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "type": { "type": "string" },
-                        "name": { "type": "string" },
-                        "scopes": {
-                          "type": "array",
-                          "items": { "type": "string" }
-                        },
-                        "groupMapping": {
-                          "type": "array",
-                          "items": {
-                            "type": "object",
-                            "properties": {
-                              "groupName": { "type": "string" },
-                              "roles": {
-                                "type": "array",
-                                "items": { "type": "string" }
-                              }
-                            }
-                          }
-                        },
-                        "teamSync": {
-                          "type": "object",
-                          "properties": {
-                            "enabled": { "type": "boolean" },
-                            "stripPrefix": { "type": "string" },
-                            "group": {
-                              "type": "object",
-                              "properties": {
-                                "claim": { "type": "string" },
-                                "filter": {
-                                  "type": "object",
-                                  "properties": {
-                                    "mode": { "type": "string" },
-                                    "pattern": { "type": "string" }
-                                  },
-                                  "additionalProperties": false
-                                }
-                              },
-                              "additionalProperties": false
-                            }
-                          },
-                          "additionalProperties": false
-                        }
-                      }
-                    }
-                  ]
-                },
-                "google": { "$ref": "#/$defs/authProviderBase" },
-                "github": { "$ref": "#/$defs/authProviderBase" },
-                "gitlab": { "$ref": "#/$defs/authProviderBase" },
-                "slack": { "$ref": "#/$defs/authProviderBase" },
-                "auth0": {
-                  "allOf": [
-                    { "$ref": "#/$defs/authProviderBase" },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "url": { "type": "string" }
-                      }
-                    }
-                  ]
-                },
-                "keycloak": {
-                  "allOf": [
-                    { "$ref": "#/$defs/authProviderBase" },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "realm": { "type": "string" },
-                        "teamSync": { "$ref": "#/$defs/teamSyncSimple" }
-                      }
-                    }
-                  ]
-                },
-                "genericOidc": {
-                  "allOf": [
-                    { "$ref": "#/$defs/authProviderBase" },
-                    {
-                      "type": "object",
-                      "properties": {
-                        "teamSync": { "$ref": "#/$defs/teamSyncSimple" }
-                      }
-                    }
-                  ]
-                }
-              }
-            }
+            "okta": { "$ref": "#/$defs/authProviderBase" },
+            "google": { "$ref": "#/$defs/authProviderBase" },
+            "github": { "$ref": "#/$defs/authProviderBase" },
+            "gitlab": { "$ref": "#/$defs/authProviderBase" },
+            "slack": { "$ref": "#/$defs/authProviderBase" },
+            "auth0": { "$ref": "#/$defs/authProviderBase" },
+            "keycloak": { "$ref": "#/$defs/authProviderBase" },
+            "generic_oidc": { "$ref": "#/$defs/authProviderBase" }
           }
         },
         "openlineage": {
@@ -364,7 +334,7 @@
           "properties": {
             "enabled": { "type": "boolean" },
             "port": { "type": "integer" },
-            "ownerMetadataFields": {
+            "owner_metadata_fields": {
               "type": "array",
               "items": { "type": "string" }
             },
@@ -372,11 +342,11 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "excludedAssetTypes": {
+                "excluded_asset_types": {
                   "type": "array",
                   "items": { "type": "string" }
                 },
-                "excludedProviders": {
+                "excluded_providers": {
                   "type": "array",
                   "items": { "type": "string" }
                 }
@@ -384,7 +354,7 @@
             }
           }
         },
-        "rateLimit": {
+        "rate_limit": {
           "type": "object",
           "additionalProperties": false,
           "properties": {
@@ -415,10 +385,10 @@
           "type": "object",
           "additionalProperties": false,
           "properties": {
-            "maxWorkers": { "type": "integer", "minimum": 1 },
-            "schedulerInterval": { "type": "integer", "minimum": 1 },
-            "leaseExpiry": { "type": "integer", "minimum": 1 },
-            "claimExpiry": { "type": "integer", "minimum": 1 }
+            "max_workers": { "type": "integer", "minimum": 1 },
+            "scheduler_interval": { "type": "integer", "minimum": 1 },
+            "lease_expiry": { "type": "integer", "minimum": 1 },
+            "claim_expiry": { "type": "integer", "minimum": 1 }
           }
         }
       }
