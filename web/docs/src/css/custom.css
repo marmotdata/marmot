@@ -616,6 +616,10 @@ html[data-theme="dark"] .demo-button:hover {
   .navbar__item.navbar__link.demo-button {
     display: inline-flex !important;
   }
+
+  .navbar__item.header-github-link {
+    display: flex !important;
+  }
 }
 
 /* ============================================
