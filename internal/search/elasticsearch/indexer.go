@@ -245,23 +245,18 @@ func extractFacets(aggs map[string]types.Aggregate) *search.Facets {
 	}
 
 	extractBuckets := func(agg types.Aggregate) (keys []string, counts []int) {
-		m, ok := agg.(map[string]any)
+		sta, ok := agg.(*types.StringTermsAggregate)
 		if !ok {
 			return nil, nil
 		}
-		buckets, ok := m["buckets"].([]any)
+		buckets, ok := sta.Buckets.([]types.StringTermsBucket)
 		if !ok {
 			return nil, nil
 		}
-		for _, b := range buckets {
-			bucket, ok := b.(map[string]any)
-			if !ok {
-				continue
-			}
-			key, _ := bucket["key"].(string)
-			docCount, _ := bucket["doc_count"].(float64)
+		for _, bucket := range buckets {
+			key, _ := bucket.Key.(string)
 			keys = append(keys, key)
-			counts = append(counts, int(docCount))
+			counts = append(counts, int(bucket.DocCount))
 		}
 		return keys, counts
 	}

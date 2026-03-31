@@ -181,7 +181,7 @@
 			<div
 				class="absolute z-50 w-full mt-2 bg-white dark:bg-gray-800 rounded-lg shadow-xl border border-gray-200 dark:border-gray-700 max-h-96 overflow-y-auto"
 			>
-				{#each searchResults as result, index}
+				{#each searchResults as result, index (result.id)}
 					<button
 						type="button"
 						tabindex="-1"

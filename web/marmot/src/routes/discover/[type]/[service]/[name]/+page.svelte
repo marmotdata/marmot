@@ -404,7 +404,7 @@
 			</div>
 
 			<div class="flex-1 overflow-y-auto overflow-x-auto px-8">
-				<div class="pb-16 max-w-7xl mx-auto">
+				<div class="pb-16 {activeTab === 'lineage' ? '' : 'max-w-7xl mx-auto'}">
 					<div class="rounded-lg max-w-full overflow-x-auto">
 						{#if !asset}
 							<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">

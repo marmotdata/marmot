@@ -130,7 +130,7 @@ func (r *PostgresRepository) DeleteDirectLineage(ctx context.Context, edgeID str
 	}
 
 	_, err = tx.Exec(ctx, `
-        DELETE FROM lineage_events 
+        DELETE FROM lineage_events
         WHERE event_id = $1`,
 		eventID,
 	)
