@@ -248,11 +248,7 @@ func (r *PostgresRepository) ListWithCursor(ctx context.Context, filter Notifica
 	}
 	defer rows.Close()
 
-	prealloc := filter.Limit
-	if prealloc > 100 {
-		prealloc = 100
-	}
-	notifications := make([]*Notification, 0, prealloc)
+	notifications := make([]*Notification, 0)
 	for rows.Next() {
 		n := &Notification{}
 		var dataJSON []byte

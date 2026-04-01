@@ -176,7 +176,7 @@ func (s *Source) initConnection(ctx context.Context) error {
 
 	if s.config.Secure {
 		options.TLS = &tls.Config{
-			InsecureSkipVerify: false,
+			MinVersion: tls.VersionTLS12,
 		}
 	}
 

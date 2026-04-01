@@ -149,5 +149,5 @@ func (t *SingletonTask) tryExecute() {
 func GenerateLockID(name string) int64 {
 	h := fnv.New64a()
 	h.Write([]byte(name))
-	return int64(h.Sum64() & 0x7FFFFFFFFFFFFFFF)
+	return int64(h.Sum64() >> 1) //nolint:gosec // G115: top bit cleared by shift, result always fits int64
 }
