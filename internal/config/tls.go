@@ -24,7 +24,7 @@ func (t *TLSConfig) ToTLSConfig() (*tls.Config, error) {
 
 	tlsCfg := &tls.Config{
 		MinVersion:         tls.VersionTLS12,
-		InsecureSkipVerify: t.InsecureSkipVerify,
+		InsecureSkipVerify: t.InsecureSkipVerify, //nolint:gosec // G402: user-controlled TLS config
 	}
 
 	if t.CACertPath != "" {

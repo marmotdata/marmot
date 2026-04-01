@@ -9,6 +9,7 @@ package mongodb
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
@@ -85,10 +86,13 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("either host or connection_uri is required")
 	}
 
-	if config.SampleSize == -1 {
+	switch {
+	case config.SampleSize == -1:
 		s.sampleSize = 0
-	} else {
-		s.sampleSize = int32(config.SampleSize)
+	case config.SampleSize > math.MaxInt32:
+		s.sampleSize = math.MaxInt32
+	default:
+		s.sampleSize = int32(config.SampleSize) //nolint:gosec // G115: bounds checked above
 	}
 
 	s.config = config

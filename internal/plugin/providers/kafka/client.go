@@ -83,7 +83,7 @@ func (s *Source) initSchemaRegistry() error {
 	// Create custom HTTP client with TLS configuration if URL uses HTTPS
 	if s.config.SchemaRegistry.SkipVerify && (len(s.config.SchemaRegistry.URL) > 5 && s.config.SchemaRegistry.URL[:5] == "https") {
 		tlsConfig := &tls.Config{
-			InsecureSkipVerify: true,
+			InsecureSkipVerify: true, //nolint:gosec // G402: user opted into skipping schema registry TLS verification
 		}
 
 		transport := &http.Transport{

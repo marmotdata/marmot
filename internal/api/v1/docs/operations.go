@@ -287,6 +287,8 @@ func (h *Handler) listPageImages(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
 	pageID := r.PathValue("pageId")
 
+	r.Body = http.MaxBytesReader(w, r.Body, 8<<20)
+
 	var req UploadImageRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
@@ -356,6 +358,8 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 
 	// Set cache headers (images are immutable once created)
 	w.Header().Set("Content-Type", image.ContentType)
+	w.Header().Set("Content-Security-Policy", "default-src 'none'")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Length", strconv.Itoa(image.SizeBytes))
 	w.Header().Set("Cache-Control", "public, max-age=31536000, immutable")
 	w.Header().Set("ETag", `"`+imageID+`"`)
@@ -368,7 +372,7 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	_, _ = w.Write(image.Data)
+	_, _ = w.Write(image.Data) //nolint:gosec // G705: image is re-encoded on upload, served with CSP default-src 'none' and nosniff
 }
 
 func (h *Handler) deleteImage(w http.ResponseWriter, r *http.Request) {

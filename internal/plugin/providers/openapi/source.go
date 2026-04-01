@@ -87,7 +87,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 			return nil
 		}
 
-		data, err := os.ReadFile(path)
+		data, err := os.ReadFile(path) //nolint:gosec // G122: path is from filepath.Walk on operator-provided spec_path
 		if err != nil {
 			log.Warn().Err(err).Str("path", path).Msg("Failed to read OpenAPI file")
 			return nil

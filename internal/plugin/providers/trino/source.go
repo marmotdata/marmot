@@ -394,7 +394,7 @@ func (s *Source) discoverSchemas(ctx context.Context, catalog string) ([]string,
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf(
+	query := fmt.Sprintf( //nolint:gosec // G201: catalog is sanitized via quoteIdentifier
 		"SELECT schema_name FROM %s.information_schema.schemata WHERE schema_name NOT IN ('information_schema', 'system', 'pg_catalog')",
 		quoteIdentifier(catalog),
 	)
@@ -426,7 +426,7 @@ func (s *Source) discoverTables(ctx context.Context, catalog, schema string, inf
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf(
+	query := fmt.Sprintf( //nolint:gosec // G201: inputs sanitized via quoteIdentifier/escapeString
 		"SELECT table_name, table_type FROM %s.information_schema.tables WHERE table_schema = '%s'",
 		quoteIdentifier(catalog),
 		escapeString(schema),
@@ -461,7 +461,7 @@ func (s *Source) attachColumns(ctx context.Context, catalog, schema string, asse
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf(
+	query := fmt.Sprintf( //nolint:gosec // G201: inputs sanitized via quoteIdentifier/escapeString
 		`SELECT table_name, column_name, data_type, is_nullable, ordinal_position
 		 FROM %s.information_schema.columns
 		 WHERE table_schema = '%s'
@@ -522,7 +522,7 @@ func (s *Source) attachTableComments(ctx context.Context, catalog string, assets
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf(
+	query := fmt.Sprintf( //nolint:gosec // G201: input sanitized via escapeString
 		"SELECT schema_name, table_name, comment FROM system.metadata.table_comments WHERE catalog_name = '%s'",
 		escapeString(catalog),
 	)
@@ -660,7 +660,7 @@ func (s *Source) probeAICatalog(ctx context.Context) bool {
 	queryCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 	defer cancel()
 
-	query := fmt.Sprintf("SELECT %s.ai.ai_gen('test')", quoteIdentifier(s.config.AICatalog))
+	query := fmt.Sprintf("SELECT %s.ai.ai_gen('test')", quoteIdentifier(s.config.AICatalog)) //nolint:gosec // G201: input sanitized via quoteIdentifier
 	var result sql.NullString
 	if err := s.db.QueryRowContext(queryCtx, query).Scan(&result); err != nil {
 		log.Warn().Err(err).Str("catalog", s.config.AICatalog).Msg("AI catalog not available, skipping enrichment")
@@ -739,7 +739,7 @@ func (s *Source) aiGenerateDescription(ctx context.Context, schema, table, colum
 		escapeString(table), escapeString(schema), escapeString(columnSummary),
 	)
 
-	query := fmt.Sprintf(
+	query := fmt.Sprintf( //nolint:gosec // G201: inputs sanitized via quoteIdentifier/escapeString
 		"SELECT %s.ai.ai_gen('%s')",
 		quoteIdentifier(s.config.AICatalog),
 		escapeString(prompt),
@@ -771,7 +771,7 @@ func (s *Source) aiClassifyTable(ctx context.Context, table, columnSummary strin
 		escapeString(table), escapeString(columnSummary),
 	)
 
-	query := fmt.Sprintf(
+	query := fmt.Sprintf( //nolint:gosec // G201: inputs sanitized via quoteIdentifier/escapeString
 		"SELECT %s.ai.ai_classify('%s', %s)",
 		quoteIdentifier(s.config.AICatalog),
 		escapeString(prompt),
@@ -911,11 +911,13 @@ func buildColumnSummary(schema map[string]string) string {
 
 // quoteIdentifier wraps an identifier in double quotes for Trino SQL
 func quoteIdentifier(id string) string {
+	id = strings.ReplaceAll(id, "\x00", "")
 	return `"` + strings.ReplaceAll(id, `"`, `""`) + `"`
 }
 
 // escapeString escapes single quotes in strings for SQL literals
 func escapeString(s string) string {
+	s = strings.ReplaceAll(s, "\x00", "")
 	return strings.ReplaceAll(s, "'", "''")
 }
 

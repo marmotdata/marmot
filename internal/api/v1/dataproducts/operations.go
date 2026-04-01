@@ -581,7 +581,8 @@ func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse multipart form (max 10MB)
-	if err := r.ParseMultipartForm(10 << 20); err != nil {
+	r.Body = http.MaxBytesReader(w, r.Body, 10<<20)
+	if err := r.ParseMultipartForm(10 << 20); err != nil { //nolint:gosec // G120: body size limited by MaxBytesReader above
 		common.RespondError(w, http.StatusBadRequest, "Failed to parse form: "+err.Error())
 		return
 	}
@@ -685,9 +686,11 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type", image.ContentType)
+	w.Header().Set("Content-Security-Policy", "default-src 'none'")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Cache-Control", "public, max-age=3600") // Cache for 1 hour
 	w.Header().Set("ETag", etag)
-	_, _ = w.Write(image.Data)
+	_, _ = w.Write(image.Data) //nolint:gosec // G705: image is re-encoded on upload, served with CSP default-src 'none' and nosniff
 }
 
 // @Summary Delete product image

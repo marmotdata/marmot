@@ -162,7 +162,7 @@ func (s *Source) createClient() (*redis.Client, error) {
 
 	if s.config.TLS {
 		opts.TLSConfig = &tls.Config{
-			InsecureSkipVerify: s.config.TLSInsecure,
+			InsecureSkipVerify: s.config.TLSInsecure, //nolint:gosec // G402: user-controlled TLS config
 		}
 	}
 

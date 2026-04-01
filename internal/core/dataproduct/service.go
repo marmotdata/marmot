@@ -3,10 +3,12 @@ package dataproduct
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"regexp"
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
+	"github.com/marmotdata/marmot/internal/core/imageproc"
 	"github.com/marmotdata/marmot/internal/query"
 	"github.com/rs/zerolog/log"
 )
@@ -388,10 +390,24 @@ func (s *service) UploadImage(ctx context.Context, dataProductID string, purpose
 		return nil, fmt.Errorf("%w: allowed types are JPEG, PNG, GIF, WebP", ErrInvalidImageType)
 	}
 
+	// Verify actual content matches declared type
+	detectedType := http.DetectContentType(input.Data)
+	if !ValidImageTypes[detectedType] {
+		return nil, fmt.Errorf("%w: detected type %s", ErrInvalidImageType, detectedType)
+	}
+
 	// Validate image size
 	if len(input.Data) > MaxImageSizeBytes {
 		return nil, fmt.Errorf("%w: maximum size is 5MB", ErrImageTooLarge)
 	}
+
+	// Re-encode to strip non-image payloads and validate dimensions
+	sanitized, err := imageproc.SanitizeImage(input.Data, input.ContentType)
+	if err != nil {
+		return nil, fmt.Errorf("image sanitization failed: %w", err)
+	}
+	input.Data = sanitized.Data
+	input.ContentType = sanitized.ContentType
 
 	// Validate purpose
 	switch purpose {

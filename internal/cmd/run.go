@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"math"
 	"net/http"
 	"os"
 	"time"
@@ -72,7 +73,12 @@ func runMarmot(_ *cobra.Command) error {
 			metricsAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Metrics.Port)
 			log.Info().Str("address", metricsAddr).Msg("Metrics server started")
 
-			if err := http.ListenAndServe(metricsAddr, metricsMux); err != nil {
+			metricsSrv := &http.Server{
+				Addr:              metricsAddr,
+				Handler:           metricsMux,
+				ReadHeaderTimeout: 10 * time.Second,
+			}
+			if err := metricsSrv.ListenAndServe(); err != nil {
 				log.Error().Err(err).Msg("Metrics server failed")
 			}
 		}()
@@ -97,9 +103,10 @@ func runMarmot(_ *cobra.Command) error {
 			Msg("Server started (TLS)")
 
 		srv := &http.Server{
-			Addr:      addr,
-			Handler:   mux,
-			TLSConfig: tlsCfg,
+			Addr:              addr,
+			Handler:           mux,
+			TLSConfig:         tlsCfg,
+			ReadHeaderTimeout: 10 * time.Second,
 		}
 		return srv.ListenAndServeTLS("", "")
 	}
@@ -109,7 +116,12 @@ func runMarmot(_ *cobra.Command) error {
 		Str("swagger_ui", fmt.Sprintf("http://%s/swagger/index.html", addr)).
 		Msg("Server started")
 
-	return http.ListenAndServe(addr, mux)
+	srv := &http.Server{
+		Addr:              addr,
+		Handler:           mux,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+	return srv.ListenAndServe()
 }
 
 func initializeDatabase(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
@@ -118,8 +130,8 @@ func initializeDatabase(ctx context.Context, cfg *config.Config) (*pgxpool.Pool,
 		return nil, fmt.Errorf("parsing connection string: %w", err)
 	}
 
-	poolConfig.MaxConns = int32(cfg.Database.MaxConns)
-	poolConfig.MinConns = int32(cfg.Database.IdleConns)
+	poolConfig.MaxConns = safeInt32(cfg.Database.MaxConns)
+	poolConfig.MinConns = safeInt32(cfg.Database.IdleConns)
 	poolConfig.MaxConnLifetime = time.Duration(cfg.Database.ConnLifetime) * time.Minute
 
 	pool, err := pgxpool.NewWithConfig(ctx, poolConfig)
@@ -137,4 +149,14 @@ func initializeDatabase(ctx context.Context, cfg *config.Config) (*pgxpool.Pool,
 	}
 
 	return pool, nil
+}
+
+func safeInt32(v int) int32 {
+	if v > math.MaxInt32 {
+		return math.MaxInt32
+	}
+	if v < 0 {
+		return 0
+	}
+	return int32(v) //nolint:gosec // G115: bounds checked above
 }

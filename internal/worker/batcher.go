@@ -61,7 +61,7 @@ func NewBatchProcessor[T any](config BatchConfig[T]) *BatchProcessor[T] {
 
 // Start begins the batch processor.
 func (b *BatchProcessor[T]) Start(ctx context.Context) {
-	b.ctx, b.cancel = context.WithCancel(ctx)
+	b.ctx, b.cancel = context.WithCancel(ctx) //nolint:gosec // G118: cancel is called in Stop()
 
 	log.Info().
 		Str("processor", b.name).

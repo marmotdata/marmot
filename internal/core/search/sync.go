@@ -43,7 +43,7 @@ func NewIndexSyncService(indexer SearchIndexer, repo IndexRepository) *IndexSync
 
 // Start begins processing sync events.
 func (s *IndexSyncService) Start(ctx context.Context) {
-	s.ctx, s.cancel = context.WithCancel(ctx)
+	s.ctx, s.cancel = context.WithCancel(ctx) //nolint:gosec // G118: cancel is called in Stop()
 }
 
 // Stop stops processing sync events and waits for in-flight operations.
@@ -88,7 +88,7 @@ func (s *IndexSyncService) DeleteAsset(ctx context.Context, assetID string) {
 // HTTP request cancellation doesn't abort the index sync.
 func (s *IndexSyncService) syncEntity(_ context.Context, entityType, entityID string) {
 	s.wg.Add(1)
-	go func() {
+	go func() { //nolint:gosec // G118: intentionally detached from request context to avoid cancellation
 		defer s.wg.Done()
 
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)

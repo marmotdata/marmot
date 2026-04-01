@@ -817,7 +817,7 @@ func (n *assetChangeNotifier) OnAssetUpdated(ctx context.Context, a *asset.Asset
 	// If this is a schema change, also notify lineage neighbors' owners.
 	// Dispatched to a goroutine to avoid blocking the request path.
 	if changeType == notificationService.TypeSchemaChange && assetMRN != "" {
-		go n.notifyLineageNeighborsOfSchemaChange(context.Background(), assetMRN, assetName)
+		go n.notifyLineageNeighborsOfSchemaChange(context.Background(), assetMRN, assetName) //nolint:gosec // G118: intentionally detached from request context
 	}
 }
 

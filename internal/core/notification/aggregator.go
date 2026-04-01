@@ -45,7 +45,7 @@ func newAssetChangeAggregator(svc *Service, window, maxWait time.Duration) *asse
 }
 
 func (a *assetChangeAggregator) start(ctx context.Context) {
-	a.ctx, a.cancel = context.WithCancel(ctx)
+	a.ctx, a.cancel = context.WithCancel(ctx) //nolint:gosec // G118: cancel is called in stop()
 }
 
 func (a *assetChangeAggregator) stop() {

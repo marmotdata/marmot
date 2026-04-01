@@ -223,12 +223,16 @@ func (tc *ToolContext) searchAssetsES(ctx context.Context, args DiscoverDataInpu
 			"List all assets": `{"limit": 50}`,
 		}
 	case total > args.Offset+len(assets):
-		nextActions = map[string]string{
-			"Get next page":     fmt.Sprintf(`{"query": "%s", "offset": %d, "limit": %d}`, query, args.Offset+args.Limit, args.Limit),
-			"Get asset details": `{"id": "asset-id"}`,
+		nextPage := map[string]any{"offset": args.Offset + args.Limit, "limit": args.Limit}
+		if query != "" {
+			nextPage["query"] = query
 		}
 		if len(args.Types) > 0 {
-			nextActions["Get next page"] = fmt.Sprintf(`{"types": %s, "query": "%s", "offset": %d, "limit": %d}`, formatJSON(args.Types), query, args.Offset+args.Limit, args.Limit)
+			nextPage["types"] = args.Types
+		}
+		nextActions = map[string]string{
+			"Get next page":     formatJSON(nextPage),
+			"Get asset details": `{"id": "asset-id"}`,
 		}
 	default:
 		nextActions = map[string]string{
@@ -298,15 +302,16 @@ func (tc *ToolContext) searchAssetsPG(ctx context.Context, args DiscoverDataInpu
 			"List all assets": `{"limit": 50}`,
 		}
 	case total > args.Offset+len(assets):
-		nextActions = map[string]string{
-			"Get next page":     fmt.Sprintf(`{"offset": %d, "limit": %d}`, args.Offset+args.Limit, args.Limit),
-			"Get asset details": `{"id": "asset-id"}`,
-		}
+		nextPage := map[string]any{"offset": args.Offset + args.Limit, "limit": args.Limit}
 		if args.Query != "" {
-			nextActions["Get next page"] = fmt.Sprintf(`{"query": "%s", "offset": %d, "limit": %d}`, query, args.Offset+args.Limit, args.Limit)
+			nextPage["query"] = query
 		}
 		if len(args.Types) > 0 {
-			nextActions["Get next page"] = fmt.Sprintf(`{"types": %s, "offset": %d, "limit": %d}`, formatJSON(args.Types), args.Offset+args.Limit, args.Limit)
+			nextPage["types"] = args.Types
+		}
+		nextActions = map[string]string{
+			"Get next page":     formatJSON(nextPage),
+			"Get asset details": `{"id": "asset-id"}`,
 		}
 	default:
 		nextActions = map[string]string{

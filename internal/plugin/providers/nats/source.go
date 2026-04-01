@@ -124,7 +124,7 @@ func (s *Source) connect() (*nats.Conn, error) {
 
 	if s.config.TLS {
 		opts = append(opts, nats.Secure(&tls.Config{
-			InsecureSkipVerify: s.config.TLSInsecure,
+			InsecureSkipVerify: s.config.TLSInsecure, //nolint:gosec // G402: user-controlled TLS config
 		}))
 	}
 

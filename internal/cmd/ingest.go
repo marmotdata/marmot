@@ -262,7 +262,7 @@ func (c *apiClient) newRequest(ctx context.Context, method, path string, body in
 }
 
 func (c *apiClient) do(req *http.Request, v interface{}) error {
-	resp, err := c.client.Do(req)
+	resp, err := c.client.Do(req) //nolint:gosec // G704: URL is from operator-provided --server flag
 	if err != nil {
 		return err
 	}

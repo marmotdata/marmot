@@ -7,6 +7,9 @@ on:
     paths:
       - "charts/marmot/Chart.yaml"
 
+permissions:
+  contents: read
+
 jobs:
   release:
     runs-on: ubuntu-latest

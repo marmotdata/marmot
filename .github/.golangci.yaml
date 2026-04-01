@@ -2,6 +2,7 @@ version: "2"
 linters:
   enable:
     - gocritic
+    - gosec
   settings:
     errcheck:
       exclude-functions:
@@ -20,6 +21,15 @@ linters:
       - common-false-positives
       - legacy
       - std-error-handling
+    rules:
+      - linters:
+          - gosec
+        path: "_test\\.go"
+        text: "G101:"
+      - linters:
+          - gosec
+        path: "_test\\.go"
+        text: "G306:"
     paths:
       - third_party$
       - builtin$

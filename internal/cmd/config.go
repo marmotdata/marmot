@@ -106,14 +106,8 @@ var configListCmd = &cobra.Command{
 	Short: "List all configuration values",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Printf("host = %s\n", viper.GetString("host"))
-		apiKey := viper.GetString("api_key")
-		if apiKey != "" {
-			// Mask the API key for display
-			if len(apiKey) > 8 {
-				fmt.Printf("api_key = %s...%s\n", apiKey[:4], apiKey[len(apiKey)-4:])
-			} else {
-				fmt.Printf("api_key = ****\n")
-			}
+		if viper.GetString("api_key") != "" {
+			fmt.Printf("api_key = ****\n")
 		} else {
 			fmt.Printf("api_key = (not set)\n")
 		}

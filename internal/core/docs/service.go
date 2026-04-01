@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/marmotdata/marmot/internal/core/imageproc"
 	"github.com/rs/zerolog/log"
 )
 
@@ -188,6 +189,14 @@ func (s *Service) UploadImage(ctx context.Context, pageID string, input UploadIm
 	if !ValidImageTypes[detectedType] {
 		return nil, fmt.Errorf("%w: detected type %s", ErrInvalidImageType, detectedType)
 	}
+
+	// Re-encode to strip non-image payloads and validate dimensions
+	sanitized, err := imageproc.SanitizeImage(input.Data, input.ContentType)
+	if err != nil {
+		return nil, fmt.Errorf("image sanitization failed: %w", err)
+	}
+	input.Data = sanitized.Data
+	input.ContentType = sanitized.ContentType
 
 	page, err := s.repo.GetPage(ctx, pageID)
 	if err != nil {
