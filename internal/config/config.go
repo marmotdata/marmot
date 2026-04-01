@@ -60,7 +60,7 @@ type Config struct {
 		Port                  int               `mapstructure:"port"`
 		Host                  string            `mapstructure:"host"`
 		RootURL               string            `mapstructure:"root_url"`
-		CustomResponseHeaders map[string]string `mapstructure:"customer_response_headers"`
+		CustomResponseHeaders map[string]string `mapstructure:"custom_response_headers"`
 		EncryptionKey         string            `mapstructure:"encryption_key"`
 		AllowUnencrypted      bool              `mapstructure:"allow_unencrypted"`
 		TLS                   *TLSConfig        `mapstructure:"tls"`

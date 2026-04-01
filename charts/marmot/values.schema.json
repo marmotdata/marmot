@@ -231,7 +231,7 @@
             "port": { "type": "integer" },
             "host": { "type": "string" },
             "root_url": { "type": "string" },
-            "customer_response_headers": { "type": "object", "additionalProperties": { "type": "string" } },
+            "custom_response_headers": { "type": "object", "additionalProperties": { "type": "string" } },
             "autoGenerateEncryptionKey": { "type": "boolean" },
             "encryptionKeySecretRef": { "$ref": "#/$defs/secretRef" },
             "allow_unencrypted": { "type": "boolean" },

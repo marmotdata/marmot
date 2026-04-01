@@ -78,7 +78,7 @@ config:
     port: 8080
     host: "0.0.0.0"
     root_url: ""
-    customer_response_headers: {}
+    custom_response_headers: {}
 
     # Encryption key for pipeline credentials
     # Option 1: Auto-generate (recommended for new deployments)

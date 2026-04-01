@@ -55,6 +55,21 @@ const config: Config = {
         media: "(prefers-color-scheme: dark)",
       },
     },
+    {
+      tagName: "meta",
+      attributes: {
+        "http-equiv": "Content-Security-Policy",
+        content:
+          "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'",
+      },
+    },
+    {
+      tagName: "meta",
+      attributes: {
+        name: "referrer",
+        content: "strict-origin-when-cross-origin",
+      },
+    },
   ],
   plugins: [tailwindPlugin, unpluginIconsPlugin],
   presets: [

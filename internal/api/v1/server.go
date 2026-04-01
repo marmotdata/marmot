@@ -588,10 +588,6 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 		mux.HandleFunc(path, func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()
 
-			for key, value := range s.config.Server.CustomResponseHeaders {
-				w.Header().Set(key, value)
-			}
-
 			if r.Method == http.MethodOptions {
 				return
 			}

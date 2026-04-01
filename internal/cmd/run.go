@@ -91,6 +91,8 @@ func runMarmot(_ *cobra.Command) error {
 
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 
+	handler := securityHeaders(mux, cfg.Server.CustomResponseHeaders)
+
 	if cfg.Server.TLS != nil {
 		tlsCfg, err := cfg.Server.TLS.ToServerTLSConfig()
 		if err != nil {
@@ -104,7 +106,7 @@ func runMarmot(_ *cobra.Command) error {
 
 		srv := &http.Server{
 			Addr:              addr,
-			Handler:           mux,
+			Handler:           handler,
 			TLSConfig:         tlsCfg,
 			ReadHeaderTimeout: 10 * time.Second,
 		}
@@ -118,10 +120,27 @@ func runMarmot(_ *cobra.Command) error {
 
 	srv := &http.Server{
 		Addr:              addr,
-		Handler:           mux,
+		Handler:           handler,
 		ReadHeaderTimeout: 10 * time.Second,
 	}
 	return srv.ListenAndServe()
+}
+
+// securityHeaders wraps an http.Handler to set default security headers on every response.
+func securityHeaders(next http.Handler, custom map[string]string) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Security-Policy", "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-ancestors 'self'")
+		w.Header().Set("X-Frame-Options", "SAMEORIGIN")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+		w.Header().Set("Permissions-Policy", "camera=(), microphone=(), geolocation=()")
+
+		for key, value := range custom {
+			w.Header().Set(key, value)
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func initializeDatabase(ctx context.Context, cfg *config.Config) (*pgxpool.Pool, error) {
