@@ -106,7 +106,7 @@ const config: Config = {
     //TODO: replace with social card
     image: "img/marmot.svg",
     navbar: {
-      title: "Marmot",
+      title: "",
       logo: {
         alt: "Marmot Logo",
         src: "img/marmot.svg",
