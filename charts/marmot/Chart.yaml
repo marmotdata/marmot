@@ -1,9 +1,9 @@
 apiVersion: v2
 name: marmot
-description: Marmot is an open-source data catalog that helps teams discover, understand, and govern their data assets. It's designed for modern data ecosystems where data flows through multiple systems, formats, and teams.
+description: Marmot is an open-source data catalog that helps teams discover, understand, and govern their data assets. It's designed for modern data ecosystems where data flows through multiple systems, formats and teams.
 type: application
-version: 1.0.0
-appVersion: "0.8.0"
+version: 1.1.0
+appVersion: "0.8.1"
 icon: https://marmotdata.github.io/charts/marmot.png
 home: https://github.com/marmotdata/marmot
 sources:
