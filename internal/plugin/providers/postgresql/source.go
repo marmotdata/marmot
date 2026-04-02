@@ -355,7 +355,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
             JOIN pg_catalog.pg_namespace n ON n.oid = c.relnamespace
         WHERE
             c.relkind IN ('r', 'v', 'm')
-            AND (n.nspname NOT LIKE 'pg\\_%' OR NOT $1)
+            AND (n.nspname !~ '^pg_' OR NOT $1)
             AND n.nspname != 'information_schema'
         ORDER BY
             n.nspname, c.relname
