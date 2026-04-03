@@ -61,13 +61,14 @@
       "compression": ">=1.8.1",
       "mermaid": ">=11.10.0",
       "cookie": ">=0.7.0",
-      "serialize-javascript": ">=7.0.3",
+      "serialize-javascript": ">=7.0.5",
       "fast-xml-parser": ">=5.5.7",
       "svgo": ">=3.3.3",
       "dompurify": ">=3.3.2",
       "lodash": ">=4.18.1",
       "qs": ">=6.14.2",
       "ajv": ">=8.18.0",
+      "path-to-regexp": ">=0.1.13",
       "webpack": ">=5.104.1"
     }
   },
