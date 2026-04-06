@@ -68,8 +68,8 @@ const populateMethods = [
 export default function BenefitsShowcase(): JSX.Element {
   return (
     <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white dark:bg-gray-800">
-      <div className="max-w-5xl mx-auto">
-        <div data-animate className="text-center mb-8">
+      <div className="max-w-6xl mx-auto">
+        <div data-animate className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
             Context for AI and engineers
           </h2>
@@ -79,28 +79,45 @@ export default function BenefitsShowcase(): JSX.Element {
           </p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {capabilities.map((cap, index) => (
-            <div
-              key={cap.title}
-              data-animate
-              data-animate-delay={String(index + 1)}
-              className="rounded-xl p-5 bg-earthy-brown-50/60 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/40"
-            >
-              <div className="w-10 h-10 rounded-lg bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 flex items-center justify-center mb-4">
-                <Icon
-                  icon={cap.icon}
-                  className="w-5 h-5 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
-                />
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 mb-8 items-center">
+          <div className="lg:col-span-3">
+            <iframe
+              width="100%"
+              height="100%"
+              style={{ aspectRatio: '16 / 9', border: 'none' }}
+              className="rounded-xl shadow-lg"
+              src="https://www.youtube.com/embed/_JBcQGj_bFU"
+              title="Marmot Demo"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            ></iframe>
+          </div>
+
+          <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+            {capabilities.map((cap, index) => (
+              <div
+                key={cap.title}
+                data-animate
+                data-animate-delay={String(index + 1)}
+                className="rounded-xl p-4 bg-earthy-brown-50/60 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/40 flex items-start gap-3"
+              >
+                <div className="w-9 h-9 rounded-lg bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 flex items-center justify-center shrink-0">
+                  <Icon
+                    icon={cap.icon}
+                    className="w-4 h-4 text-earthy-terracotta-600 dark:text-earthy-terracotta-400"
+                  />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-0.5">
+                    {cap.title}
+                  </h3>
+                  <p className="text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+                    {cap.description}
+                  </p>
+                </div>
               </div>
-              <h3 className="text-base font-bold text-gray-900 dark:text-white mb-1.5">
-                {cap.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400">
-                {cap.description}
-              </p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
         <div data-animate data-animate-delay="5">
