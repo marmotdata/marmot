@@ -9,6 +9,7 @@ package postgresql
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"time"
@@ -457,6 +458,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			Providers:   []string{"PostgreSQL"},
 			Description: &assetDesc,
 			Metadata:    metadata,
+			Schema:      make(map[string]string),
 			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "PostgreSQL",
@@ -489,7 +491,12 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 
 				key := schemaName + "." + tableName
 				if columns, exists := columnInfoMap[key]; exists {
-					assets[i].Metadata["columns"] = columns
+					jsonBytes, err := json.Marshal(columns)
+					if err != nil {
+						log.Warn().Err(err).Str("table", key).Msg("Failed to marshal columns")
+						continue
+					}
+					assets[i].Schema["columns"] = string(jsonBytes)
 				}
 			}
 		}
