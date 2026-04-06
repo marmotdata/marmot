@@ -6,6 +6,10 @@ sidebar_position: 1
 
 Marmot is an open-source data catalog designed for teams who want powerful data discovery without enterprise complexity. Built with a focus on simplicity and speed, Marmot helps you catalog assets across your entire data stack - from databases and APIs to message queues and data pipelines.
 
+<div style={{maxWidth: '480px'}}>
+<iframe width="100%" style={{aspectRatio: '16 / 9', border: 'none', borderRadius: '12px'}} src="https://www.youtube.com/embed/_JBcQGj_bFU" title="Marmot Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
+</div>
+
 import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
 
 <CalloutCard
