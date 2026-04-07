@@ -75,7 +75,7 @@ export default function CTA(): JSX.Element {
         >
           Have questions?{" "}
           <a
-            href="mailto:charlie@marmotdata.io"
+            href="/pricing"
             className="text-earthy-terracotta-600 dark:text-earthy-terracotta-400 hover:underline"
           >
             Get in touch
