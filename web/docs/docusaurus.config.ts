@@ -122,8 +122,7 @@ const config: Config = {
       disableSwitch: false,
       respectPrefersColorScheme: true,
     },
-    //TODO: replace with social card
-    image: "img/marmot.svg",
+    image: "img/social-card.png",
     navbar: {
       title: "",
       logo: {
