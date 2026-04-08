@@ -11,11 +11,6 @@ import CTA from "../components/CTA";
 
 export default function Home(): JSX.Element {
   useEffect(() => {
-    const logo = document.querySelector(".navbar__logo") as HTMLElement;
-    if (logo) {
-      logo.style.display = "none";
-    }
-
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -32,10 +27,6 @@ export default function Home(): JSX.Element {
     });
 
     return () => {
-      const logo = document.querySelector(".navbar__logo") as HTMLElement;
-      if (logo) {
-        logo.style.display = "";
-      }
       observer.disconnect();
     };
   }, []);

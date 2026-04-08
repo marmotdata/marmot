@@ -127,8 +127,8 @@ const config: Config = {
     navbar: {
       title: "",
       logo: {
-        alt: "Marmot Logo",
-        src: "img/marmot.svg",
+        alt: "Marmot",
+        src: "img/marmot-text.svg",
       },
       items: [
         { to: "/docs/introduction", label: "Docs", position: "left" },
