@@ -242,7 +242,7 @@
 					<!-- Logo -->
 					<div class="flex items-center flex-shrink-0">
 						<a href="/" class="flex-shrink-0 hover:opacity-80 transition-opacity">
-							<img src="/images/marmot-text.svg" alt="Marmot" class="h-5 dark:invert" />
+							<img src="/images/marmot-text.svg" alt="Marmot" class="h-6 dark:invert" />
 						</a>
 					</div>
 
