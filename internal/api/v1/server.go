@@ -24,6 +24,7 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/confluent"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dbt"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/deltalake"
+	_ "github.com/marmotdata/marmot/internal/plugin/providers/duckdb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dynamodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/gcs"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/glue"

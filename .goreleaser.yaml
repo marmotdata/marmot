@@ -3,7 +3,7 @@ project_name: marmot
 
 env:
   - GO111MODULE=on
-  - CGO_ENABLED=0
+  - CGO_ENABLED=1
 
 before:
   hooks:
@@ -12,26 +12,82 @@ before:
     - make frontend-build
 
 builds:
-  - id: marmot
+  - id: marmot-linux-amd64
     main: ./cmd/main.go
     binary: marmot
+    goos: [linux]
+    goarch: [amd64]
     env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - darwin
-      - windows
-    goarch:
-      - amd64
-      - arm64
+      - CGO_ENABLED=1
+      - CC=x86_64-linux-gnu-gcc
+      - CXX=x86_64-linux-gnu-g++
     flags:
       - -tags=production
     ldflags:
       - -s -w
       - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
-    ignore:
-      - goos: windows
-        goarch: arm64
+      - -extldflags "-static"
+
+  - id: marmot-linux-arm64
+    main: ./cmd/main.go
+    binary: marmot
+    goos: [linux]
+    goarch: [arm64]
+    env:
+      - CGO_ENABLED=1
+      - CC=aarch64-linux-gnu-gcc
+      - CXX=aarch64-linux-gnu-g++
+    flags:
+      - -tags=production
+    ldflags:
+      - -s -w
+      - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
+      - -extldflags "-static"
+
+  - id: marmot-darwin-amd64
+    main: ./cmd/main.go
+    binary: marmot
+    goos: [darwin]
+    goarch: [amd64]
+    env:
+      - CGO_ENABLED=1
+      - CC=o64-clang
+      - CXX=o64-clang++
+    flags:
+      - -tags=production
+    ldflags:
+      - -s -w
+      - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
+
+  - id: marmot-darwin-arm64
+    main: ./cmd/main.go
+    binary: marmot
+    goos: [darwin]
+    goarch: [arm64]
+    env:
+      - CGO_ENABLED=1
+      - CC=oa64-clang
+      - CXX=oa64-clang++
+    flags:
+      - -tags=production
+    ldflags:
+      - -s -w
+      - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
+
+  - id: marmot-windows-amd64
+    main: ./cmd/main.go
+    binary: marmot
+    goos: [windows]
+    goarch: [amd64]
+    env:
+      - CGO_ENABLED=1
+      - CC=x86_64-w64-mingw32-gcc
+      - CXX=x86_64-w64-mingw32-g++
+    flags:
+      - -tags=production
+    ldflags:
+      - -s -w
+      - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
 
 archives:
   - id: marmot
@@ -52,6 +108,7 @@ dockers:
   - image_templates:
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-amd64"
       - "ghcr.io/marmotdata/marmot:latest-amd64"
+    ids: [marmot-linux-amd64]
     dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
@@ -66,6 +123,7 @@ dockers:
   - image_templates:
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-arm64"
       - "ghcr.io/marmotdata/marmot:latest-arm64"
+    ids: [marmot-linux-arm64]
     dockerfile: Dockerfile.goreleaser
     use: buildx
     build_flag_templates:
@@ -80,6 +138,7 @@ dockers:
   - image_templates:
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-distroless-amd64"
       - "ghcr.io/marmotdata/marmot:latest-distroless-amd64"
+    ids: [marmot-linux-amd64]
     dockerfile: Dockerfile.goreleaser.distroless
     use: buildx
     build_flag_templates:
@@ -94,6 +153,7 @@ dockers:
   - image_templates:
       - "ghcr.io/marmotdata/marmot:{{ .Version }}-distroless-arm64"
       - "ghcr.io/marmotdata/marmot:latest-distroless-arm64"
+    ids: [marmot-linux-arm64]
     dockerfile: Dockerfile.goreleaser.distroless
     use: buildx
     build_flag_templates:

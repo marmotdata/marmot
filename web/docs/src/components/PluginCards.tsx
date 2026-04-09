@@ -40,7 +40,7 @@ const plugins: Plugin[] = [
     name: "ClickHouse",
     description: "Discover databases, tables, and views from ClickHouse instances",
     href: "/docs/Plugins/ClickHouse",
-    icon: "simple-icons:clickhouse",
+    icon: "devicon:clickhouse",
   },
   {
     name: "Confluent Cloud",
@@ -53,7 +53,7 @@ const plugins: Plugin[] = [
     name: "DBT",
     description: "Ingest models, sources, seeds, and lineage from dbt projects",
     href: "/docs/Plugins/DBT",
-    icon: "simple-icons:dbt",
+    icon: "logos:dbt-icon",
   },
   {
     name: "Delta Lake",
@@ -61,6 +61,12 @@ const plugins: Plugin[] = [
     href: "/docs/Plugins/Delta%20Lake",
     icon: "deltalake",
     useLocalIcon: true,
+  },
+  {
+    name: "DuckDB",
+    description: "Discover schemas, tables, views, and relationships from DuckDB database files",
+    href: "/docs/Plugins/DuckDB",
+    icon: "devicon:duckdb",
   },
   {
     name: "DynamoDB",
@@ -121,7 +127,7 @@ const plugins: Plugin[] = [
     name: "OpenAPI",
     description: "Discover services and endpoints from OpenAPI v3 specifications",
     href: "/docs/Plugins/OpenAPI",
-    icon: "simple-icons:openapiinitiative",
+    icon: "devicon:openapi",
   },
   {
     name: "PostgreSQL",

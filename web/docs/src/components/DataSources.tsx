@@ -17,7 +17,7 @@ export default function DataSources(): JSX.Element {
     {
       name: "ClickHouse",
       href: "/docs/Plugins/ClickHouse",
-      icon: "simple-icons:clickhouse",
+      icon: "devicon:clickhouse",
     },
     {
       name: "BigQuery",
@@ -34,14 +34,14 @@ export default function DataSources(): JSX.Element {
       href: "/docs/Plugins/Airflow",
       icon: "logos:airflow-icon",
     },
-    { name: "dbt", href: "/docs/Plugins/DBT", icon: "simple-icons:dbt" },
+    { name: "dbt", href: "/docs/Plugins/DBT", icon: "logos:dbt-icon" },
     { name: "S3", href: "/docs/Plugins/S3", icon: "logos:aws-s3" },
-    { name: "SNS", href: "/docs/Plugins/SNS", icon: "logos:aws-sns" },
+    { name: "DuckDB", href: "/docs/Plugins/DuckDB", icon: "devicon:duckdb" },
     { name: "SQS", href: "/docs/Plugins/SQS", icon: "logos:aws-sqs" },
     {
       name: "OpenAPI",
       href: "/docs/Plugins/OpenAPI",
-      icon: "simple-icons:openapiinitiative",
+      icon: "devicon:openapi",
     },
   ];
 
