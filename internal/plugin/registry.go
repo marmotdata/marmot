@@ -39,6 +39,7 @@ type ConfigField struct {
 	Fields      []ConfigField `json:"fields,omitempty"`
 	IsArray     bool          `json:"is_array,omitempty"`
 	ShowWhen    *ShowWhen     `json:"show_when,omitempty"`
+	Hidden      bool          `json:"hidden,omitempty"`
 }
 
 type FieldOption struct {
@@ -109,6 +110,7 @@ func generateConfigSpecRecursive(configType interface{}, prefix string) []Config
 
 		description := field.Tag.Get("description")
 		sensitive := field.Tag.Get("sensitive") == "true"
+		hidden := field.Tag.Get("hidden") == "true"
 		defaultValue := field.Tag.Get("default")
 		validateTag := field.Tag.Get("validate")
 
@@ -133,6 +135,7 @@ func generateConfigSpecRecursive(configType interface{}, prefix string) []Config
 			Description: description,
 			Required:    required,
 			Sensitive:   sensitive,
+			Hidden:      hidden,
 		}
 
 		if defaultValue != "" {

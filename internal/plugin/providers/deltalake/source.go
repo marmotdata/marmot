@@ -19,8 +19,9 @@ import (
 
 // +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
-	TablePaths        []string `json:"table_paths" description:"Paths to Delta Lake table directories" validate:"required,min=1"`
+	plugin.BaseConfig        `json:",inline"`
+	*plugin.FileSourceConfig `json:",inline"`
+	TablePaths               []string `json:"table_paths" description:"Paths to Delta Lake table directories (local paths, s3://bucket/prefix or git::url)" validate:"required,min=1"`
 }
 
 // +marmot:example-config
@@ -47,6 +48,9 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	}
 
 	for _, p := range config.TablePaths {
+		if plugin.DetectSourceType(p) != "local" || (config.FileSourceConfig != nil && config.FileSourceConfig.SourceType != "" && config.FileSourceConfig.SourceType != "local") {
+			continue
+		}
 		deltaLogDir := filepath.Join(p, "_delta_log")
 		info, err := os.Stat(deltaLogDir)
 		if err != nil || !info.IsDir() {
@@ -67,9 +71,22 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	s.config = config
 
 	var allAssets []asset.Asset
+	var cleanups []func()
+	defer func() {
+		for _, fn := range cleanups {
+			fn()
+		}
+	}()
 
 	for _, tablePath := range config.TablePaths {
-		snapshot, err := readDeltaLog(tablePath)
+		localPath, cleanup, err := plugin.ResolveFilePath(ctx, config.FileSourceConfig, tablePath)
+		if err != nil {
+			log.Warn().Err(err).Str("path", tablePath).Msg("Failed to resolve Delta table path")
+			continue
+		}
+		cleanups = append(cleanups, cleanup)
+
+		snapshot, err := readDeltaLog(localPath)
 		if err != nil {
 			log.Warn().Err(err).Str("path", tablePath).Msg("Failed to read Delta table")
 			continue

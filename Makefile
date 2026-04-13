@@ -35,9 +35,8 @@ clean:
 	go clean
 
 generate:
-	# Cleanup old docs before generating
-	find web/docs/docs/Plugins -type f ! -name "index.md" ! -name "_category_.json" -delete
-	find web/docs/docs/Plugins -type d -empty -delete
+	# Cleanup old docs before generating (top-level files only, preserves subdirectories)
+	find web/docs/docs/Plugins -maxdepth 1 -type f ! -name "index.md" ! -name "_category_.json" -delete
 	go generate ./...
 
 lint: frontend-lint

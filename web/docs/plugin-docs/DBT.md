@@ -17,3 +17,9 @@ Generate `catalog.json` for column types and statistics:
 dbt docs generate
 ```
 :::
+
+## File Sources
+
+The `target_path` field accepts local paths, S3 URIs (`s3://bucket/prefix`) or Git URIs (`git::https://...`). For S3 and Git sources, the target directory is downloaded to a temporary location before discovery and cleaned up afterwards.
+
+See [File Sources](./Shared%20Configuration/File%20Sources.md) for the full list of supported backends, authentication options and configuration examples.

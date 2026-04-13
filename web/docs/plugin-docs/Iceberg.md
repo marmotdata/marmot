@@ -60,3 +60,7 @@ import { Collapsible } from "@site/src/components/Collapsible";
 />
 
 The `s3:GetObject` permission is needed because Glue's `LoadTable` reads Iceberg metadata files from S3.
+
+## AWS Configuration
+
+When using `catalog_type: "glue"`, see [AWS Configuration](./Shared%20Configuration/AWS%20Configuration.md) for the supported AWS configuration options.

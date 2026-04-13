@@ -16,7 +16,7 @@ import (
 )
 
 type AWSCredentials struct {
-	UseDefault     bool   `json:"use_default,omitempty" description:"Use AWS credentials from environment or default profile (recommended)"`
+	UseDefault     bool   `json:"use_default,omitempty" description:"Use AWS credentials from environment or default profile (recommended)" default:"true"`
 	ID             string `json:"id,omitempty" description:"AWS access key ID"`
 	Secret         string `json:"secret,omitempty" description:"AWS secret access key" sensitive:"true"`
 	Token          string `json:"token,omitempty" description:"AWS session token" sensitive:"true"`

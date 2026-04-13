@@ -32,6 +32,7 @@
 			max?: number;
 		};
 		show_when?: { field: string; value: string };
+		hidden?: boolean;
 	}
 
 	interface Plugin {
@@ -206,6 +207,22 @@
 		}
 	}
 
+	function cleanConfigForSubmit(
+		configObj: Record<string, any>,
+		fields: ConfigField[]
+	): Record<string, any> {
+		const cleaned = { ...configObj };
+		for (const field of fields) {
+			if (field.show_when) {
+				const currentValue = cleaned[field.show_when.field];
+				if (currentValue !== field.show_when.value) {
+					delete cleaned[field.name];
+				}
+			}
+		}
+		return cleaned;
+	}
+
 	async function handleSave() {
 		try {
 			saving = true;
@@ -214,11 +231,14 @@
 			// If no schedule, pipeline is manual-only and always enabled
 			// If schedule is provided, enabled depends on disableSchedule checkbox
 			const enabled = cronExpression.trim() === '' ? true : !disableSchedule;
+			const cleanedConfig = selectedPlugin?.config_spec
+				? cleanConfigForSubmit(config, selectedPlugin.config_spec)
+				: config;
 
 			const body = {
 				name,
 				plugin_id: selectedPluginId,
-				config,
+				config: cleanedConfig,
 				cron_expression: cronExpression,
 				enabled
 			};
@@ -296,6 +316,29 @@
 		return false;
 	}
 
+	function autoDetectSourceType() {
+		if (!configSpec) return;
+		const hasSourceType = configSpec.some((f) => f.name === 'source_type');
+		if (!hasSourceType) return;
+		// Scan all string values in config for s3:// or git:: prefixes
+		let detected = 'local';
+		for (const field of configSpec) {
+			if (field.hidden || field.type !== 'string') continue;
+			const val = config[field.name];
+			if (typeof val === 'string') {
+				if (val.startsWith('s3://')) {
+					detected = 's3';
+					break;
+				}
+				if (val.startsWith('git::')) {
+					detected = 'git';
+					break;
+				}
+			}
+		}
+		config.source_type = detected;
+	}
+
 	onMount(async () => {
 		if (!get(encryptionConfigured)) {
 			toasts.error(
@@ -306,6 +349,7 @@
 		}
 		await fetchPlugins();
 		await fetchPipeline();
+		autoDetectSourceType();
 		// Check if this is an AWS plugin and fetch credential status
 		if (
 			selectedPluginId &&
@@ -949,6 +993,7 @@
 													field.type === 'int' || field.type === 'number'
 														? Number(target.value)
 														: target.value;
+												autoDetectSourceType();
 											}}
 											placeholder={field.placeholder ||
 												(field.default ? String(field.default) : '')}
@@ -965,7 +1010,7 @@
 					{/snippet}
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name)) as field}
+						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden) as field}
 							{#if !shouldHideField(field, config)}
 								{@render renderField(field, field.name, config, 0)}
 							{/if}

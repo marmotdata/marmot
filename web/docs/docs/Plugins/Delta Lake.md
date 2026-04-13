@@ -48,7 +48,10 @@ The following configuration options are available:
 |----------|------|----------|-------------|
 | external_links | []ExternalLink | false | External links to show on all assets |
 | filter | Filter | false | Filter discovered assets by name (regex) |
-| table_paths | []string | false | Paths to Delta Lake table directories |
+| git_source | GitSourceConfig | false | Git repository file source configuration |
+| s3_source | S3SourceConfig | false | S3 file source configuration |
+| source_type | string | false | File source backend (auto-detected from path when empty) |
+| table_paths | []string | false | Paths to Delta Lake table directories (local paths, s3://bucket/prefix or git::url) |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 
 ## Available Metadata

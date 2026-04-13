@@ -32,6 +32,12 @@ The OpenAPI plugin discovers API specifications from OpenAPI v3 files. It create
 
 The plugin scans for `.json` and `.yaml` files and parses them as OpenAPI v3 specifications.
 
+## File Sources
+
+The `spec_path` field accepts local paths, S3 URIs (`s3://bucket/prefix`) or Git URIs (`git::https://...`). For S3 and Git sources, files are downloaded to a temporary directory before discovery and cleaned up afterwards.
+
+See [File Sources](./Shared%20Configuration/File%20Sources.md) for the full list of supported backends, authentication options and configuration examples.
+
 
 
 ## Example Configuration
@@ -52,7 +58,10 @@ The following configuration options are available:
 |----------|------|----------|-------------|
 | external_links | []ExternalLink | false | External links to show on all assets |
 | filter | Filter | false | Filter discovered assets by name (regex) |
-| spec_path | string | false | Path to the directory containing the OpenAPI specifications |
+| git_source | GitSourceConfig | false | Git repository file source configuration |
+| s3_source | S3SourceConfig | false | S3 file source configuration |
+| source_type | string | false | File source backend (auto-detected from path when empty) |
+| spec_path | string | false | Path to the directory containing the OpenAPI specifications (local path, s3://bucket/prefix or git::url) |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 
 ## Available Metadata

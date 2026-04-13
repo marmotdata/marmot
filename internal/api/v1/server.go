@@ -239,7 +239,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	scheduleRepo := runService.NewSchedulePostgresRepository(db)
 	scheduleSvc := runService.NewScheduleService(scheduleRepo)
 
-	wsHub := websocket.NewHub()
+	wsHub := websocket.NewHub(userSvc, authSvc, config)
 	wsHub.Start(context.Background())
 
 	jobRunBroadcaster := websocket.NewJobRunBroadcaster(wsHub)
@@ -515,7 +515,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		webhooksAPI.NewHandler(webhookSvc, teamSvc, userSvc, authSvc, config, encryptionConfigured),
 		searchAPI.NewHandler(finalSearchSvc, userSvc, authSvc, metricsService, config),
 		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config, encryptionConfigured),
-		websocket.NewHandler(wsHub, userSvc, authSvc, config),
+		websocket.NewHandler(wsHub, config),
 		plugins.NewHandler(),
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),

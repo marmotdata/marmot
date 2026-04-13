@@ -31,8 +31,9 @@ type Source struct {
 // Config for OpenAPI plugin
 // +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
-	SpecPath          string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications" validate:"required"`
+	plugin.BaseConfig        `json:",inline"`
+	*plugin.FileSourceConfig `json:",inline"`
+	SpecPath                 string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications (local path, s3://bucket/prefix or git::url)" validate:"required"`
 }
 
 const (
@@ -60,8 +61,10 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, err
 	}
 
-	if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("spec path does not exist: %s", config.SpecPath)
+	if plugin.DetectSourceType(config.SpecPath) == "local" && (config.FileSourceConfig == nil || config.FileSourceConfig.SourceType == "" || config.FileSourceConfig.SourceType == "local") {
+		if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
+			return nil, fmt.Errorf("spec path does not exist: %s", config.SpecPath)
+		}
 	}
 
 	return rawConfig, nil
@@ -74,11 +77,17 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	s.config = config
 
+	localPath, cleanup, err := plugin.ResolveFilePath(ctx, config.FileSourceConfig, config.SpecPath)
+	if err != nil {
+		return nil, fmt.Errorf("resolving file path: %w", err)
+	}
+	defer cleanup()
+
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
 	seenAssets := make(map[string]bool)
 
-	err = filepath.Walk(config.SpecPath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(localPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return err
 		}

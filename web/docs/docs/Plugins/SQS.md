@@ -63,6 +63,10 @@ import { Collapsible } from "@site/src/components/Collapsible";
   }}
 />
 
+## AWS Configuration
+
+See [AWS Configuration](./Shared%20Configuration/AWS%20Configuration.md) for the supported AWS configuration options.
+
 
 
 ## Example Configuration

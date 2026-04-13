@@ -25,9 +25,10 @@ import (
 // Config for DBT plugin
 // +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	plugin.BaseConfig        `json:",inline"`
+	*plugin.FileSourceConfig `json:",inline"`
 
-	TargetPath string `json:"target_path" description:"Path to DBT target directory containing manifest.json, catalog.json, etc." validate:"required"`
+	TargetPath string `json:"target_path" description:"Path to DBT target directory containing manifest.json, catalog.json, etc. (local path, s3://bucket/prefix or git::url)" validate:"required"`
 
 	ProjectName string `json:"project_name" description:"DBT project name" validate:"required"`
 	Environment string `json:"environment,omitempty" description:"Environment name (e.g., production, staging)" default:"production"`
@@ -206,6 +207,16 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 	s.config = config
+
+	localPath, cleanup, err := plugin.ResolveFilePath(ctx, config.FileSourceConfig, config.TargetPath)
+	if err != nil {
+		return nil, fmt.Errorf("resolving file path: %w", err)
+	}
+	defer cleanup()
+
+	origPath := s.config.TargetPath
+	s.config.TargetPath = localPath
+	defer func() { s.config.TargetPath = origPath }()
 
 	if err := s.loadArtifacts(ctx); err != nil {
 		return nil, fmt.Errorf("loading DBT artifacts: %w", err)

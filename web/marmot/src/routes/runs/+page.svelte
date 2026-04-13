@@ -298,7 +298,6 @@
 			const newSet = new Set(runningPipelines);
 			newSet.add(pipeline.id);
 			runningPipelines = newSet;
-			console.log('Manually triggered pipeline:', pipeline.id);
 
 			const response = await fetchApi(`/ingestion/schedules/${pipeline.id}/trigger`, {
 				method: 'POST'
@@ -421,8 +420,6 @@
 	}
 
 	function handleJobRunEvent(event: JobRunEvent) {
-		console.log('Received job run event:', event.type, event.payload);
-
 		const jobRun = event.payload;
 
 		// Update running pipelines status for pipelines tab
@@ -436,12 +433,6 @@
 				const newSet = new Set(runningPipelines);
 				newSet.add(jobRun.schedule_id);
 				runningPipelines = newSet;
-				console.log(
-					'Pipeline marked as running:',
-					jobRun.schedule_id,
-					'Total running:',
-					runningPipelines.size
-				);
 			} else if (
 				event.type === 'job_run_completed' ||
 				event.type === 'job_run_cancelled' ||
@@ -453,14 +444,6 @@
 				const newSet = new Set(runningPipelines);
 				newSet.delete(jobRun.schedule_id);
 				runningPipelines = newSet;
-				console.log(
-					'Pipeline completed:',
-					jobRun.schedule_id,
-					'Status:',
-					jobRun.status,
-					'Total running:',
-					runningPipelines.size
-				);
 
 				// Update the pipeline's last_run_status and last_run_at
 				pipelines = pipelines.map((p) =>
@@ -517,8 +500,6 @@
 	}
 
 	onMount(() => {
-		console.log('[Runs Page] Component mounted, active tab:', activeTab);
-
 		if (activeTab === 'history') {
 			fetchRuns();
 		} else if (activeTab === 'pipelines') {

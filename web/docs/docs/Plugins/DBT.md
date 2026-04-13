@@ -48,6 +48,12 @@ dbt docs generate
 ```
 :::
 
+## File Sources
+
+The `target_path` field accepts local paths, S3 URIs (`s3://bucket/prefix`) or Git URIs (`git::https://...`). For S3 and Git sources, the target directory is downloaded to a temporary location before discovery and cleaned up afterwards.
+
+See [File Sources](./Shared%20Configuration/File%20Sources.md) for the full list of supported backends, authentication options and configuration examples.
+
 
 
 ## Example Configuration
@@ -74,13 +80,16 @@ The following configuration options are available:
 | environment | string | false | Environment name (e.g., production, staging) |
 | external_links | []ExternalLink | false | External links to show on all assets |
 | filter | Filter | false | Filter discovered assets by name (regex) |
+| git_source | GitSourceConfig | false | Git repository file source configuration |
 | include_catalog | bool | false | Include catalog.json for table/column descriptions |
 | include_manifest | bool | false | Include manifest.json for model definitions |
 | include_run_results | bool | false | Include run_results.json for test results |
 | include_sources_json | bool | false | Include sources.json for source definitions |
 | project_name | string | false | DBT project name |
+| s3_source | S3SourceConfig | false | S3 file source configuration |
+| source_type | string | false | File source backend (auto-detected from path when empty) |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
-| target_path | string | false | Path to DBT target directory containing manifest.json, catalog.json, etc. |
+| target_path | string | false | Path to DBT target directory containing manifest.json, catalog.json, etc. (local path, s3://bucket/prefix or git::url) |
 
 ## Available Metadata
 

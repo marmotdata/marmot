@@ -1,5 +1,6 @@
 import { Centrifuge, type Subscription } from 'centrifuge';
 import { browser } from '$app/environment';
+import { auth } from '$lib/stores/auth';
 
 export type JobRunEvent = {
 	type:
@@ -47,22 +48,15 @@ class WebSocketService {
 	}
 
 	private connect() {
-		// In development, connect directly to the backend server
-		// In production, use the same host as the app
 		const isDev = import.meta.env.DEV;
 		const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
 
-		let wsUrl: string;
-		if (isDev) {
-			// Development: connect directly to backend on port 8080
-			wsUrl = 'ws://localhost:8080/api/v1/ingestion/ws';
-		} else {
-			// Production: use same host as app
-			wsUrl = `${protocol}//${window.location.host}/api/v1/ingestion/ws`;
-		}
+		const wsUrl = isDev
+			? 'ws://localhost:8080/api/v1/ingestion/ws'
+			: `${protocol}//${window.location.host}/api/v1/ingestion/ws`;
 
 		this.centrifuge = new Centrifuge(wsUrl, {
-			// Retry configuration for better resilience during startup
+			getToken: async () => auth.getToken() ?? '',
 			minReconnectDelay: 100,
 			maxReconnectDelay: 5000,
 			maxServerPingDelay: 10000,
@@ -85,7 +79,7 @@ class WebSocketService {
 	}
 
 	private subscribeToJobRuns() {
-		if (!this.centrifuge) return;
+		if (!this.centrifuge || this.jobRunsSubscription) return;
 
 		this.jobRunsSubscription = this.centrifuge.newSubscription('job_runs');
 

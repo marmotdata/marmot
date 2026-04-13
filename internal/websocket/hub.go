@@ -6,22 +6,28 @@ import (
 	"time"
 
 	"github.com/centrifugal/centrifuge"
+	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
 
 // Hub manages the centrifuge node and channels
 type Hub struct {
-	node   *centrifuge.Node
-	ctx    context.Context
-	cancel context.CancelFunc
+	node    *centrifuge.Node
+	userSvc user.Service
+	authSvc auth.Service
+	cfg     *config.Config
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
-// NewHub creates a new websocket hub using Centrifuge
-func NewHub() *Hub {
-	cfg := centrifuge.Config{
+// NewHub creates a new websocket hub using Centrifuge.
+func NewHub(userSvc user.Service, authSvc auth.Service, cfg *config.Config) *Hub {
+	centCfg := centrifuge.Config{
 		LogLevel: centrifuge.LogLevelInfo,
 		LogHandler: func(entry centrifuge.LogEntry) {
-			// Map centrifuge log levels to zerolog
 			switch entry.Level {
 			case centrifuge.LogLevelTrace, centrifuge.LogLevelDebug:
 				log.Debug().Str("component", "centrifuge").Msg(entry.Message)
@@ -35,34 +41,98 @@ func NewHub() *Hub {
 		},
 	}
 
-	node, err := centrifuge.New(cfg)
+	node, err := centrifuge.New(centCfg)
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to create centrifuge node")
 	}
 
 	return &Hub{
-		node: node,
+		node:    node,
+		userSvc: userSvc,
+		authSvc: authSvc,
+		cfg:     cfg,
 	}
+}
+
+func (h *Hub) requireIngestionView(ctx context.Context, userID string) error {
+	ok, err := h.userSvc.HasPermission(ctx, userID, "ingestion", "view")
+	if err != nil {
+		log.Debug().Err(err).Str("user_id", userID).Msg("WS: permission check failed")
+		return centrifuge.ErrorInternal
+	}
+	if !ok {
+		return centrifuge.ErrorPermissionDenied
+	}
+	return nil
 }
 
 // Start starts the hub
 func (h *Hub) Start(ctx context.Context) {
 	h.ctx, h.cancel = context.WithCancel(ctx)
 
-	// Set up connection handler
 	h.node.OnConnecting(func(ctx context.Context, event centrifuge.ConnectEvent) (centrifuge.ConnectReply, error) {
 		log.Debug().
 			Str("client_id", event.ClientID).
 			Str("transport", string(event.Transport.Name())).
+			Bool("has_token", event.Token != "").
 			Msg("Client connecting")
 
-		// Allow anonymous connections for now
-		// You can add authentication here if needed
-		return centrifuge.ConnectReply{
-			Credentials: &centrifuge.Credentials{
-				UserID: event.ClientID, // Use client ID as user ID for anonymous users
-			},
-		}, nil
+		if event.Token != "" {
+			if claims, err := h.authSvc.ValidateToken(ctx, event.Token); err == nil {
+				u, err := h.userSvc.Get(ctx, claims.Subject)
+				if err != nil {
+					log.Debug().Err(err).Msg("WS: failed to look up user from JWT subject")
+					return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
+				}
+				if !u.Active {
+					return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
+				}
+				if err := h.requireIngestionView(ctx, u.ID); err != nil {
+					return centrifuge.ConnectReply{}, err
+				}
+				return centrifuge.ConnectReply{
+					Credentials: &centrifuge.Credentials{UserID: u.ID},
+				}, nil
+			}
+
+			u, err := h.userSvc.ValidateAPIKey(ctx, event.Token)
+			if err != nil {
+				log.Debug().Err(err).Msg("WS: token is neither valid JWT nor API key")
+				return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
+			}
+			if !u.Active {
+				return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
+			}
+			if err := h.requireIngestionView(ctx, u.ID); err != nil {
+				return centrifuge.ConnectReply{}, err
+			}
+			return centrifuge.ConnectReply{
+				Credentials: &centrifuge.Credentials{UserID: u.ID},
+			}, nil
+		}
+
+		if h.cfg.Auth.Anonymous.Enabled {
+			anonUser := common.GetAnonymousUser(h.cfg.Auth.Anonymous.Role)
+			hasPerm, err := h.userSvc.GetPermissionsByRoleName(ctx, h.cfg.Auth.Anonymous.Role)
+			if err != nil {
+				return centrifuge.ConnectReply{}, centrifuge.ErrorInternal
+			}
+			allowed := false
+			for _, p := range hasPerm {
+				if p.ResourceType == "ingestion" && p.Action == "view" {
+					allowed = true
+					break
+				}
+			}
+			if !allowed {
+				return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
+			}
+			return centrifuge.ConnectReply{
+				Credentials: &centrifuge.Credentials{UserID: anonUser.ID},
+			}, nil
+		}
+
+		return centrifuge.ConnectReply{}, centrifuge.ErrorPermissionDenied
 	})
 
 	h.node.OnConnect(func(client *centrifuge.Client) {

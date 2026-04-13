@@ -28,42 +28,13 @@ import { CalloutCard } from '@site/src/components/DocCard';
 />
 
 
-The DuckDB plugin discovers schemas, tables, views and foreign key relationships from DuckDB database files. It extracts column details and table metrics like estimated sizes using DuckDB's built-in metadata functions.
+The DuckDB plugin discovers schemas, tables, views and foreign key relationships from DuckDB database files.
 
-## Connection Examples
+## File Sources
 
-import { Collapsible } from "@site/src/components/Collapsible";
+The `path` field accepts local paths, S3 URIs (`s3://bucket/key`) or Git URIs (`git::https://...`). For S3 and Git sources, the file is downloaded to a temporary directory before discovery and cleaned up afterwards.
 
-<Collapsible title="Local Database File" icon="devicon:duckdb">
-
-```yaml
-path: "/data/analytics.duckdb"
-include_columns: true
-enable_metrics: true
-discover_foreign_keys: true
-tags:
-  - "duckdb"
-  - "analytics"
-```
-
-</Collapsible>
-
-<Collapsible title="With Filters" icon="mdi:filter">
-
-```yaml
-path: "/data/analytics.duckdb"
-include_columns: true
-enable_metrics: true
-filter:
-  include:
-    - "^main\\..*"
-  exclude:
-    - ".*_temp$"
-tags:
-  - "duckdb"
-```
-
-</Collapsible>
+See [File Sources](./Shared%20Configuration/File%20Sources.md) for the full list of supported backends, authentication options and configuration examples.
 
 
 
@@ -97,8 +68,11 @@ The following configuration options are available:
 | exclude_system_schemas | bool | false | Whether to exclude system schemas (information_schema, pg_catalog) |
 | external_links | []ExternalLink | false | External links to show on all assets |
 | filter | Filter | false | Filter discovered assets by name (regex) |
+| git_source | GitSourceConfig | false | Git repository file source configuration |
 | include_columns | bool | false | Whether to include column information in table metadata |
-| path | string | false | Path to the DuckDB database file |
+| path | string | false | Path to the DuckDB database file (local path, s3://bucket/key or git::url) |
+| s3_source | S3SourceConfig | false | S3 file source configuration |
+| source_type | string | false | File source backend (auto-detected from path when empty) |
 | tags | TagsConfig | false | Tags to apply to discovered assets |
 
 ## Available Metadata

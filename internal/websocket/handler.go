@@ -7,27 +7,21 @@ import (
 	"github.com/centrifugal/centrifuge"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/config"
-	"github.com/marmotdata/marmot/internal/core/auth"
-	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
 
 // Handler handles websocket connections using Centrifuge
 type Handler struct {
 	hub       *Hub
-	userSvc   user.Service
-	authSvc   auth.Service
 	config    *config.Config
 	wsHandler http.Handler
 }
 
 // NewHandler creates a new websocket handler
-func NewHandler(hub *Hub, userSvc user.Service, authSvc auth.Service, config *config.Config) *Handler {
+func NewHandler(hub *Hub, config *config.Config) *Handler {
 	h := &Handler{
-		hub:     hub,
-		userSvc: userSvc,
-		authSvc: authSvc,
-		config:  config,
+		hub:    hub,
+		config: config,
 	}
 
 	// Create websocket handler once with proper origin checking
@@ -106,10 +100,7 @@ func (h *Handler) Routes() []common.Route {
 
 				h.wsHandler.ServeHTTP(w, r)
 			},
-			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userSvc, h.authSvc, h.config),
-				common.RequirePermission(h.userSvc, "ingestion", "view"),
-			},
+			Middleware: nil,
 		},
 	}
 }

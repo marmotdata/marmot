@@ -43,9 +43,10 @@ import (
 // Config for AsyncAPI plugin
 // +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	plugin.BaseConfig        `json:",inline"`
+	*plugin.FileSourceConfig `json:",inline"`
 
-	SpecPath    string `json:"spec_path" validate:"required" description:"Path to AsyncAPI spec file or directory containing specs"`
+	SpecPath    string `json:"spec_path" validate:"required" description:"Path to AsyncAPI spec file or directory containing specs (local path, s3://bucket/prefix or git::url)"`
 	Environment string `json:"environment,omitempty" description:"Environment name (e.g., production, staging)" default:"production"`
 
 	DiscoverServices bool `json:"discover_services" description:"Create service assets from AsyncAPI info" default:"true"`
@@ -89,8 +90,10 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, err
 	}
 
-	if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
-		return nil, fmt.Errorf("spec path does not exist: %s", config.SpecPath)
+	if plugin.DetectSourceType(config.SpecPath) == "local" && (config.FileSourceConfig == nil || config.FileSourceConfig.SourceType == "" || config.FileSourceConfig.SourceType == "local") {
+		if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
+			return nil, fmt.Errorf("spec path does not exist: %s", config.SpecPath)
+		}
 	}
 
 	s.config = config
@@ -104,12 +107,18 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 	}
 	s.config = config
 
+	localPath, cleanup, err := plugin.ResolveFilePath(ctx, config.FileSourceConfig, config.SpecPath)
+	if err != nil {
+		return nil, fmt.Errorf("resolving file path: %w", err)
+	}
+	defer cleanup()
+
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
 	seenAssets := make(map[string]struct{})
 	seenEdges := make(map[string]struct{})
 
-	err = filepath.Walk(config.SpecPath, func(path string, info os.FileInfo, err error) error {
+	err = filepath.Walk(localPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
 			return err
 		}

@@ -24,9 +24,10 @@ import (
 // Config for DuckDB plugin.
 // +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	plugin.BaseConfig        `json:",inline"`
+	*plugin.FileSourceConfig `json:",inline"`
 
-	Path string `json:"path" description:"Path to the DuckDB database file" validate:"required"`
+	Path string `json:"path" description:"Path to the DuckDB database file (local path, s3://bucket/key or git::url)" validate:"required"`
 
 	IncludeColumns       bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
 	EnableMetrics        bool `json:"enable_metrics" description:"Whether to include table metrics (row counts and sizes)" default:"true"`
@@ -90,6 +91,16 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
+
+	localPath, cleanup, err := plugin.ResolveFilePath(ctx, s.config.FileSourceConfig, s.config.Path)
+	if err != nil {
+		return nil, fmt.Errorf("resolving file path: %w", err)
+	}
+	defer cleanup()
+
+	origPath := s.config.Path
+	s.config.Path = localPath
+	defer func() { s.config.Path = origPath }()
 
 	if err := s.initConnection(ctx); err != nil {
 		return nil, fmt.Errorf("initialising database connection: %w", err)
