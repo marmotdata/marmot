@@ -2,9 +2,28 @@ import { defineConfig } from 'vite';
 import { sveltekit } from '@sveltejs/kit/vite';
 import Icons from 'unplugin-icons/vite';
 import { nodePolyfills } from 'vite-plugin-node-polyfills';
+import { generateIconBundle } from './scripts/generate-icon-bundle.mjs';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+function iconBundlePlugin() {
+	const root = dirname(fileURLToPath(import.meta.url));
+	return {
+		name: 'icon-bundle',
+		buildStart() {
+			generateIconBundle(root);
+		},
+		handleHotUpdate({ file }: { file: string }) {
+			if (file.endsWith('.svelte') && !file.includes('icon-bundle')) {
+				generateIconBundle(root);
+			}
+		}
+	};
+}
 
 export default defineConfig({
 	plugins: [
+		iconBundlePlugin(),
 		sveltekit(),
 		Icons({
 			compiler: 'svelte',

@@ -43,7 +43,7 @@ type GitSourceConfig struct {
 func ResolveFilePath(ctx context.Context, fsc *FileSourceConfig, path string) (string, func(), error) {
 	noop := func() {}
 
-	sourceType := "local"
+	var sourceType string
 	if fsc != nil && fsc.SourceType != "" {
 		sourceType = fsc.SourceType
 	} else {

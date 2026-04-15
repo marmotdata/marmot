@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '$lib/icon-bundle';
 	import { onMount } from 'svelte';
 	import '../app.css';
 	import { page } from '$app/stores';

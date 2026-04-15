@@ -69,7 +69,7 @@ jobs:
           echo "prev_tag=$PREV_TAG" >> "$GITHUB_OUTPUT"
           
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-cross-action@v5
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: "~> v2"
           args: release --clean

@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 // Extracts icon names from @iconify/json for local search in the IconPicker.
 // Run: node scripts/generate-icon-names.js
 
