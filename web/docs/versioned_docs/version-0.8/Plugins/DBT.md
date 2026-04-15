@@ -1,0 +1,159 @@
+---
+title: DBT
+description: This plugin ingests metadata from DBT (Data Build Tool) projects, including models, tests, and lineage.
+status: experimental
+---
+
+# DBT
+
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Lineage</span></div>
+</div>
+</div>
+
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
+
+The DBT plugin ingests metadata from dbt (Data Build Tool) projects, including models, sources, seeds, and lineage relationships. It reads dbt's generated artifacts to understand your data transformation layer and how it connects to your warehouse.
+
+## Prerequisites
+
+Before Marmot can ingest your dbt project, you need to generate the artifact files in your project's `target/` directory.
+
+:::warning[Required]
+Generate `manifest.json` by running:
+```bash
+dbt compile
+```
+:::
+
+:::tip[Recommended]
+Generate `catalog.json` for column types and statistics:
+```bash
+dbt docs generate
+```
+:::
+
+## File Sources
+
+The `target_path` field accepts local paths, S3 URIs (`s3://bucket/prefix`) or Git URIs (`git::https://...`). For S3 and Git sources, the target directory is downloaded to a temporary location before discovery and cleaned up afterwards.
+
+See [File Sources](./Shared%20Configuration/File%20Sources.md) for the full list of supported backends, authentication options and configuration examples.
+
+
+
+## Example Configuration
+
+```yaml
+
+target_path: "/path/to/dbt/project/target"
+project_name: "analytics"
+environment: "production"
+tags:
+  - "dbt"
+  - "analytics"
+
+```
+
+## Configuration
+The following configuration options are available:
+
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| discover_models | bool | false | Discover DBT models |
+| discover_sources | bool | false | Discover DBT sources |
+| discover_tests | bool | false | Discover DBT tests |
+| environment | string | false | Environment name (e.g., production, staging) |
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| git_source | GitSourceConfig | false | Git repository file source configuration |
+| include_catalog | bool | false | Include catalog.json for table/column descriptions |
+| include_manifest | bool | false | Include manifest.json for model definitions |
+| include_run_results | bool | false | Include run_results.json for test results |
+| include_sources_json | bool | false | Include sources.json for source definitions |
+| project_name | string | false | DBT project name |
+| s3_source | S3SourceConfig | false | S3 file source configuration |
+| source_type | string | false | File source backend (auto-detected from path when empty) |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
+| target_path | string | false | Path to DBT target directory containing manifest.json, catalog.json, etc. (local path, s3://bucket/prefix or git::url) |
+
+## Available Metadata
+
+The following metadata fields are available:
+
+| Field | Type | Description |
+|-------|------|-------------|
+| adapter_type | string | Database adapter type (postgres, snowflake, bigquery, etc) |
+| alias | string | Table alias if different from model name |
+| catalog_comment | string | Comment from database catalog |
+| column_comment | string | Column comment from database catalog |
+| column_description | string | Column description from DBT |
+| column_name | string | Column name |
+| column_tags | []string | Tags applied to this column |
+| config_enabled | bool | Whether model is enabled |
+| config_full_refresh | bool | Whether to perform full refresh |
+| config_materialized | string | Materialization strategy from config |
+| config_on_schema_change | string | Behavior when schema changes (append_new_columns, fail, ignore) |
+| config_persist_docs | bool | Whether to persist documentation to database |
+| config_tags | string | Tags from config |
+| data_type | string | Column data type |
+| database | string | Source database name |
+| database | string | Target database name |
+| database | string | Target database name |
+| dbt_materialized | string | Materialization type (table, view, incremental, ephemeral) |
+| dbt_original_path | string | Original path in the DBT project |
+| dbt_package | string | DBT package name |
+| dbt_package | string | DBT package name |
+| dbt_package | string | DBT package name |
+| dbt_path | string | Path to the model file |
+| dbt_unique_id | string | DBT's unique identifier for this source |
+| dbt_unique_id | string | DBT's unique identifier for this node |
+| dbt_unique_id | string | DBT's unique identifier for this seed |
+| dbt_version | string | DBT version used to generate this model |
+| environment | string | Deployment environment (dev, prod, etc) |
+| environment | string | Deployment environment |
+| environment | string | Deployment environment |
+| freshness_checked | bool | Whether freshness checks are configured |
+| fully_qualified_name | string | Fully qualified name (database.schema.table) |
+| fully_qualified_name | string | Fully qualified name (database.schema.table) |
+| fully_qualified_name | string | Fully qualified name (database.schema.table) |
+| identifier | string | Physical table identifier |
+| last_run_execution_time | float64 | Execution time of last run in seconds |
+| last_run_failures | int | Number of failures in last run |
+| last_run_message | string | Message from last DBT run |
+| last_run_status | string | Status of the last DBT run (success, error, skipped) |
+| loaded | bool | Whether source was loaded at time of DBT execution |
+| model_name | string | DBT model name |
+| owner | string | Table/view owner from database catalog |
+| project_name | string | DBT project name |
+| project_name | string | DBT project name |
+| project_name | string | DBT project name |
+| raw_sql | string | Raw SQL before compilation |
+| schema | string | Source schema name |
+| schema | string | Target schema name |
+| schema | string | Target schema name |
+| seed_path | string | Path to seed CSV file |
+| source_name | string | DBT source name |
+| stat_approximate_count | int64 | Approximate row count |
+| stat_bytes | int64 | Size in bytes |
+| stat_last_modified | string | Last modification timestamp |
+| stat_num_rows | int64 | Number of rows (alternative) |
+| stat_row_count | int64 | Number of rows |
+| stat_size | float64 | Table size |
+| table_name | string | Physical table/view name in database |
+| table_name | string | Source table name |
+| table_name | string | Seed table name |

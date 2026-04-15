@@ -9,6 +9,50 @@
 @tailwind utilities;
 
 /* ============================================
+   Sidebar Version Dropdown
+   ============================================ */
+
+.sidebar-version-dropdown {
+  padding: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.sidebar-version-dropdown select {
+  width: 100%;
+  padding: 0.375rem 0.625rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  font-family: inherit;
+  color: #4b5563;
+  background-color: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  appearance: auto;
+  transition: border-color 0.2s ease;
+}
+
+.sidebar-version-dropdown select:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+.sidebar-version-dropdown select:focus {
+  outline: none;
+  border-color: var(--ifm-color-primary);
+  box-shadow: 0 0 0 2px rgba(210, 90, 48, 0.1);
+}
+
+html[data-theme="dark"] .sidebar-version-dropdown select {
+  color: #d1d5db;
+  background-color: #374151;
+  border-color: #4b5563;
+}
+
+html[data-theme="dark"] .sidebar-version-dropdown select:hover {
+  border-color: var(--ifm-color-primary);
+}
+
+/* ============================================
    Font
    ============================================ */
 

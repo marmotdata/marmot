@@ -4,8 +4,20 @@ import type * as Redocusaurus from "redocusaurus";
 import tailwindPlugin from "./plugins/tailwind-config.cjs";
 import unpluginIconsPlugin from "./plugins/unplugin-icons.cjs";
 import { lightTheme, darkTheme } from "./src/theme/prismTheme";
+import * as fs from "fs";
+import * as path from "path";
 
 // This runs in Node.js - Don't use client-side code here (browser APIs, JSX...)
+
+// Load snapshotted doc versions (managed by CI on stable releases)
+let versions: string[] = [];
+try {
+  versions = JSON.parse(
+    fs.readFileSync(path.resolve(__dirname, "versions.json"), "utf-8"),
+  );
+} catch {
+  // No versions.json yet — only "Preview" docs exist
+}
 
 const config: Config = {
   title: "Marmot",
@@ -82,6 +94,16 @@ const config: Config = {
       {
         docs: {
           sidebarPath: "./sidebars.ts",
+          lastVersion: versions.length > 0 ? versions[0] : "current",
+          versions: {
+            current: {
+              label: "Preview",
+              banner: "unreleased",
+            },
+            ...(versions.length > 0
+              ? { [versions[0]]: { label: `${versions[0]} (latest)` } }
+              : {}),
+          },
         },
         blog: {
           showReadingTime: true,
