@@ -76,29 +76,10 @@ builds:
       - -s -w
       - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
 
-  - id: marmot-windows-amd64
-    main: ./cmd/main.go
-    binary: marmot
-    goos: [windows]
-    goarch: [amd64]
-    env:
-      - CGO_ENABLED=1
-      - CC=x86_64-w64-mingw32-gcc
-      - CXX=x86_64-w64-mingw32-g++
-    flags:
-      - -tags=production
-    ldflags:
-      - -s -w
-      - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
-      - -extldflags "-lpthread"
-
 archives:
   - id: marmot
     format: tar.gz
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
-    format_overrides:
-      - goos: windows
-        format: zip
     files:
       - README.md
       - LICENSE

@@ -65,9 +65,6 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build cross-compilation image
-        run: docker build -t goreleaser-cross-ucrt -f Dockerfile.goreleaser-cross .
-
       - name: Run GoReleaser
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +77,7 @@ jobs:
             -v "$PWD:/workspace" \
             -w /workspace \
             --entrypoint /bin/sh \
-            goreleaser-cross-ucrt -c \
+            ghcr.io/goreleaser/goreleaser-cross:v1.26.0 -c \
             'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=before'
 
       - name: Update server.json version
