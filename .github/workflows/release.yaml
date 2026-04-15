@@ -73,8 +73,8 @@ jobs:
             -e CGO_ENABLED=1 \
             -e GITHUB_TOKEN \
             -v /var/run/docker.sock:/var/run/docker.sock \
-            -v $HOME/.docker:/root/.docker \
-            -v $PWD:/workspace \
+            -v "$HOME/.docker:/root/.docker" \
+            -v "$PWD:/workspace" \
             -w /workspace \
             --entrypoint /bin/sh \
             ghcr.io/goreleaser/goreleaser-cross:v1.26.0 -c \
