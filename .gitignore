@@ -63,3 +63,5 @@ internal/staticfiles/build/
 .DS_Store
 
 testenv
+
+web/marmot/src/lib/icon-bundle.ts
