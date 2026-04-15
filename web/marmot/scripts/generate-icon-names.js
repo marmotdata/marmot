@@ -10,10 +10,10 @@ const sets = ['simple-icons', 'material-symbols'];
 
 const result = {};
 for (const set of sets) {
-	const data = JSON.parse(
-		readFileSync(join(__dirname, '../node_modules/@iconify/json/json', set + '.json'), 'utf8')
-	);
-	result[set] = Object.keys(data.icons).sort();
+  const data = JSON.parse(
+    readFileSync(join(__dirname, '../node_modules/@iconify/json/json', set + '.json'), 'utf8')
+  );
+  result[set] = Object.keys(data.icons).sort();
 }
 
 const total = Object.values(result).reduce((sum, arr) => sum + arr.length, 0);
@@ -25,5 +25,5 @@ export const iconNames: Record<string, string[]> = ${JSON.stringify(result)};
 
 writeFileSync(join(__dirname, '../src/lib/icon-names.generated.ts'), output);
 console.log(
-	`Generated ${total} icon names (${sets.map((s) => `${s}: ${result[s].length}`).join(', ')})`
+  `Generated ${total} icon names (${sets.map((s) => `${s}: ${result[s].length}`).join(', ')})`
 );

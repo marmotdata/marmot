@@ -14,14 +14,16 @@ type Handler struct {
 	runService  runs.Service
 	userService user.Service
 	authService auth.Service
+	scheduleSvc *runs.ScheduleService
 	config      *config.Config
 }
 
-func NewHandler(runService runs.Service, userService user.Service, authService auth.Service, config *config.Config) *Handler {
+func NewHandler(runService runs.Service, userService user.Service, authService auth.Service, scheduleSvc *runs.ScheduleService, config *config.Config) *Handler {
 	return &Handler{
 		runService:  runService,
 		userService: userService,
 		authService: authService,
+		scheduleSvc: scheduleSvc,
 		config:      config,
 	}
 }

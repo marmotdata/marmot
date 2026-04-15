@@ -11,6 +11,9 @@ import (
 var (
 	anonymousUser     *user.User
 	anonymousUserLock sync.RWMutex
+
+	operatorUser     *user.User
+	operatorUserOnce sync.Once
 )
 
 // GetAnonymousUser returns a singleton anonymous user with the specified role
@@ -57,4 +60,21 @@ func WithAnonymousContext(ctx context.Context, role string) context.Context {
 func GetAnonymousContext(ctx context.Context) (AnonymousContext, bool) {
 	val, ok := ctx.Value("anonymous_role").(AnonymousContext)
 	return val, ok
+}
+
+// GetOperatorUser returns a singleton system user for operator token authentication.
+// This user has admin role and is used by Job pods authenticating with the operator token.
+func GetOperatorUser() *user.User {
+	operatorUserOnce.Do(func() {
+		operatorUser = &user.User{
+			ID:       uuid.MustParse("00000000-0000-0000-0000-000000000001").String(),
+			Username: "operator",
+			Name:     "Marmot Operator",
+			Active:   true,
+			Roles: []user.Role{
+				{Name: "admin"},
+			},
+		}
+	})
+	return operatorUser
 }

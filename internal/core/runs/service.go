@@ -130,6 +130,7 @@ type Service interface {
 	ListRuns(ctx context.Context, pipelineName string, limit, offset int) ([]*plugin.Run, int, error)
 	ListRunsWithFilters(ctx context.Context, pipelines, statuses []string, limit, offset int) ([]*plugin.Run, int, []string, error)
 	GetRun(ctx context.Context, id string) (*plugin.Run, error)
+	GetByRunID(ctx context.Context, runID string) (*plugin.Run, error)
 	ListRunEntities(ctx context.Context, runID, entityType, status string, limit, offset int) ([]*RunEntity, int, error)
 	SetCompletionObserver(observer RunCompletionObserver)
 }
@@ -756,6 +757,13 @@ func (s *service) GetRun(ctx context.Context, id string) (*plugin.Run, error) {
 	}
 
 	return run, nil
+}
+
+func (s *service) GetByRunID(ctx context.Context, runID string) (*plugin.Run, error) {
+	if runID == "" {
+		return nil, fmt.Errorf("%w: run_id is required", ErrInvalidInput)
+	}
+	return s.repo.GetByRunID(ctx, runID)
 }
 
 func (s *service) ListRunEntities(ctx context.Context, runID, entityType, status string, limit, offset int) ([]*RunEntity, int, error) {

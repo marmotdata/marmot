@@ -81,6 +81,7 @@ import (
 	userService "github.com/marmotdata/marmot/internal/core/user"
 	webhookService "github.com/marmotdata/marmot/internal/core/webhook"
 	"github.com/marmotdata/marmot/internal/metrics"
+	operatorSync "github.com/marmotdata/marmot/internal/operator/sync"
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/search/elasticsearch"
 	"github.com/marmotdata/marmot/internal/websocket"
@@ -117,6 +118,9 @@ type Server struct {
 	// Elasticsearch
 	esIndexer   *elasticsearch.Client
 	syncService *searchService.IndexSyncService
+
+	// Operator Run CRD syncer
+	operatorSyncer *operatorSync.Syncer
 
 	handlers []interface{ Routes() []common.Route }
 }
@@ -496,6 +500,8 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		syncService:                syncSvc,
 	}
 
+	schedulesHandler := schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config, encryptionConfigured)
+
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
 		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, teamSvc, assetRuleSvc, config),
@@ -504,7 +510,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
 		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, lineageSvc, finalSearchSvc, authSvc, config),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
-		runs.NewHandler(runsSvc, userSvc, authSvc, config),
+		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
 		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config),
 		assetrulesAPI.NewHandler(assetRuleSvc, userSvc, authSvc, config),
@@ -514,17 +520,47 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		teams.NewHandler(teamSvc, userSvc, authSvc, config),
 		webhooksAPI.NewHandler(webhookSvc, teamSvc, userSvc, authSvc, config, encryptionConfigured),
 		searchAPI.NewHandler(finalSearchSvc, userSvc, authSvc, metricsService, config),
-		schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config, encryptionConfigured),
+		schedulesHandler,
 		websocket.NewHandler(wsHub, config),
 		plugins.NewHandler(),
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
 	}
 
+	// Set up K8s SA token auth and operator syncer if enabled
+	if config.Operator.Enabled {
+		k8sValidator, err := common.NewK8sTokenValidator()
+		if err != nil {
+			log.Warn().Err(err).Msg("K8s token validator not available - SA token auth disabled (not running in-cluster?)")
+		} else {
+			common.SetK8sTokenValidator(k8sValidator)
+			log.Info().
+				Str("namespace", config.Operator.Namespace).
+				Str("service_account", config.Operator.ServiceAccount).
+				Msg("K8s ServiceAccount token auth enabled")
+		}
+
+		syncer, err := operatorSync.NewSyncer(scheduleSvc, config.Operator.Namespace)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed to create operator syncer - operator integration disabled")
+		} else {
+			if err := syncer.Start(context.Background()); err != nil {
+				log.Error().Err(err).Msg("Failed to start operator syncer")
+			} else {
+				server.operatorSyncer = syncer
+				schedulesHandler.SetRunCRDTrigger(syncer)
+				log.Info().Msg("Operator integration enabled - syncing Run CRDs to schedules")
+			}
+		}
+	}
+
 	return server
 }
 
 func (s *Server) Stop() {
+	if s.operatorSyncer != nil {
+		s.operatorSyncer.Stop()
+	}
 	if s.syncService != nil {
 		s.syncService.Stop()
 	}
@@ -699,8 +735,9 @@ type runCompletionNotifier struct {
 }
 
 func (n *runCompletionNotifier) OnRunCompleted(ctx context.Context, run *plugin.Run) {
-	// Only send notifications for manual runs (not scheduled)
-	if run.CreatedBy == "scheduler" || run.CreatedBy == "system" {
+	// Skip notifications for system/synthetic users that have no DB entry
+	switch run.CreatedBy {
+	case "scheduler", "system", "operator", "anonymous":
 		return
 	}
 

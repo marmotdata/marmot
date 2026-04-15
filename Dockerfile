@@ -6,17 +6,18 @@ WORKDIR /app/web/marmot
 COPY web/marmot/package.json web/marmot/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY web/marmot/ ./
-RUN pnpm build
+RUN node scripts/generate-icon-bundle.mjs && pnpm build
 
 FROM golang:1.26 AS builder
 
 WORKDIR /app
 COPY go.mod go.sum ./
+COPY client/ client/
 RUN go mod download
 
 COPY . .
 COPY --from=frontend /app/web/marmot/build ./internal/staticfiles/build
-RUN CGO_ENABLED=1 go build -tags production -ldflags '-extldflags "-static"' -o marmot ./cmd/main.go
+RUN CGO_ENABLED=1 go build -tags production -ldflags '-s -w -extldflags "-static"' -o marmot ./cmd/main.go
 
 FROM alpine:3.23.3
 

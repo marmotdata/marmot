@@ -178,16 +178,18 @@ var ingestCmd = &cobra.Command{
 }
 
 type apiClient struct {
-	baseURL string
-	apiKey  string
-	client  *http.Client
+	baseURL   string
+	token     string
+	isSAToken bool
+	client    *http.Client
 }
 
-func newAPIClient(baseURL, apiKey string) *apiClient {
+func newAPIClient(baseURL, token string, isSAToken bool) *apiClient {
 	return &apiClient{
-		baseURL: baseURL,
-		apiKey:  apiKey,
-		client:  &http.Client{Timeout: httpTimeout},
+		baseURL:   baseURL,
+		token:     token,
+		isSAToken: isSAToken,
+		client:    &http.Client{Timeout: httpTimeout},
 	}
 }
 
@@ -257,7 +259,11 @@ func (c *apiClient) newRequest(ctx context.Context, method, path string, body in
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("X-API-Key", c.apiKey)
+	if c.isSAToken {
+		req.Header.Set("Authorization", "Bearer "+c.token)
+	} else if c.token != "" {
+		req.Header.Set("X-API-Key", c.token)
+	}
 	return req, nil
 }
 
@@ -297,7 +303,8 @@ func runIngestion(ctx context.Context) error {
 		return fmt.Errorf("pipeline name is required")
 	}
 
-	client := newAPIClient(getHost(), getAPIKey())
+	token, isSAToken := getAuthToken()
+	client := newAPIClient(getHost(), token, isSAToken)
 
 	if destroy {
 		return runDestroy(ctx, config, client)

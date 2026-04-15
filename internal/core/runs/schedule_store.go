@@ -35,18 +35,19 @@ var (
 )
 
 type Schedule struct {
-	ID             string                 `json:"id"`
-	Name           string                 `json:"name"`
-	PluginID       string                 `json:"plugin_id"`
-	Config         map[string]interface{} `json:"config"`
-	CronExpression string                 `json:"cron_expression"`
-	Enabled        bool                   `json:"enabled"`
-	LastRunAt      *time.Time             `json:"last_run_at,omitempty"`
-	LastRunStatus  *string                `json:"last_run_status,omitempty"`
-	NextRunAt      *time.Time             `json:"next_run_at,omitempty"`
-	CreatedBy      *string                `json:"created_by,omitempty"`
-	CreatedAt      time.Time              `json:"created_at"`
-	UpdatedAt      time.Time              `json:"updated_at"`
+	ID                 string                 `json:"id"`
+	Name               string                 `json:"name"`
+	PluginID           string                 `json:"plugin_id"`
+	Config             map[string]interface{} `json:"config"`
+	CronExpression     string                 `json:"cron_expression"`
+	Enabled            bool                   `json:"enabled"`
+	LastRunAt          *time.Time             `json:"last_run_at,omitempty"`
+	LastRunStatus      *string                `json:"last_run_status,omitempty"`
+	NextRunAt          *time.Time             `json:"next_run_at,omitempty"`
+	ManagedBy          *string                `json:"managed_by,omitempty"`
+	CreatedBy          *string                `json:"created_by,omitempty"`
+	CreatedAt          time.Time              `json:"created_at"`
+	UpdatedAt          time.Time              `json:"updated_at"`
 }
 
 type JobRun struct {
@@ -96,6 +97,7 @@ type ScheduleRepository interface {
 	UpdateScheduleNextRun(ctx context.Context, id string, nextRunAt time.Time) error
 	UpdateScheduleLastRun(ctx context.Context, id string, lastRunAt time.Time) error
 	GetSchedulesDueForRun(ctx context.Context, limit int) ([]*Schedule, error)
+	UpsertSchedule(ctx context.Context, schedule *Schedule) error
 
 	// Job run operations
 	CreateJobRun(ctx context.Context, run *JobRun) error
@@ -106,6 +108,7 @@ type ScheduleRepository interface {
 	UpdateJobRunStatus(ctx context.Context, id, status string) error
 	UpdateJobRunProgress(ctx context.Context, id string, assetsCreated, assetsUpdated, assetsDeleted, lineageCreated, documentationAdded int) error
 	SetJobRunPluginRunID(ctx context.Context, jobRunID, pluginRunID string) error
+	GetJobRunByPluginRunID(ctx context.Context, pluginRunID string) (*JobRun, error)
 	CompleteJobRun(ctx context.Context, id string, status string, errorMessage *string, assetsCreated, assetsUpdated, assetsDeleted, lineageCreated, documentationAdded int) error
 	ReleaseExpiredClaims(ctx context.Context, expiry time.Duration) (int, error)
 	CancelJobRun(ctx context.Context, id string) error
@@ -175,7 +178,7 @@ func (r *SchedulePostgresRepository) CreateSchedule(ctx context.Context, schedul
 
 func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string) (*Schedule, error) {
 	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, created_by, created_at, updated_at
+		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
 		FROM ingestion_schedules
 		WHERE id = $1`
 
@@ -190,6 +193,8 @@ func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string)
 		&schedule.Enabled,
 		&schedule.LastRunAt,
 		&schedule.NextRunAt,
+		&schedule.ManagedBy,
+
 		&schedule.CreatedBy,
 		&schedule.CreatedAt,
 		&schedule.UpdatedAt,
@@ -211,7 +216,7 @@ func (r *SchedulePostgresRepository) GetSchedule(ctx context.Context, id string)
 
 func (r *SchedulePostgresRepository) GetScheduleByName(ctx context.Context, name string) (*Schedule, error) {
 	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, created_by, created_at, updated_at
+		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
 		FROM ingestion_schedules
 		WHERE name = $1`
 
@@ -226,6 +231,8 @@ func (r *SchedulePostgresRepository) GetScheduleByName(ctx context.Context, name
 		&schedule.Enabled,
 		&schedule.LastRunAt,
 		&schedule.NextRunAt,
+		&schedule.ManagedBy,
+
 		&schedule.CreatedBy,
 		&schedule.CreatedAt,
 		&schedule.UpdatedAt,
@@ -313,7 +320,7 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 		listQuery = `
 			SELECT
 				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled,
-				s.last_run_at, s.next_run_at, s.created_by, s.created_at, s.updated_at,
+				s.last_run_at, s.next_run_at, s.managed_by, s.created_by, s.created_at, s.updated_at,
 				(
 					SELECT status
 					FROM ingestion_job_runs jr
@@ -331,7 +338,7 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 		listQuery = `
 			SELECT
 				s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled,
-				s.last_run_at, s.next_run_at, s.created_by, s.created_at, s.updated_at,
+				s.last_run_at, s.next_run_at, s.managed_by, s.created_by, s.created_at, s.updated_at,
 				(
 					SELECT status
 					FROM ingestion_job_runs jr
@@ -376,6 +383,8 @@ func (r *SchedulePostgresRepository) ListSchedules(ctx context.Context, enabled 
 			&schedule.Enabled,
 			&schedule.LastRunAt,
 			&schedule.NextRunAt,
+			&schedule.ManagedBy,
+	
 			&schedule.CreatedBy,
 			&schedule.CreatedAt,
 			&schedule.UpdatedAt,
@@ -435,9 +444,9 @@ func (r *SchedulePostgresRepository) UpdateScheduleLastRun(ctx context.Context, 
 
 func (r *SchedulePostgresRepository) GetSchedulesDueForRun(ctx context.Context, limit int) ([]*Schedule, error) {
 	query := `
-		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, created_by, created_at, updated_at
+		SELECT id, name, plugin_id, config, cron_expression, enabled, last_run_at, next_run_at, managed_by, created_by, created_at, updated_at
 		FROM ingestion_schedules
-		WHERE enabled = true AND next_run_at IS NOT NULL AND next_run_at <= NOW()
+		WHERE enabled = true AND managed_by IS NULL AND next_run_at IS NOT NULL AND next_run_at <= NOW()
 		ORDER BY next_run_at
 		LIMIT $1`
 
@@ -460,6 +469,8 @@ func (r *SchedulePostgresRepository) GetSchedulesDueForRun(ctx context.Context, 
 			&schedule.Enabled,
 			&schedule.LastRunAt,
 			&schedule.NextRunAt,
+			&schedule.ManagedBy,
+	
 			&schedule.CreatedBy,
 			&schedule.CreatedAt,
 			&schedule.UpdatedAt,
@@ -484,11 +495,11 @@ func (r *SchedulePostgresRepository) CreateJobRun(ctx context.Context, run *JobR
 	}
 
 	query := `
-		INSERT INTO ingestion_job_runs (schedule_id, status, created_by)
-		VALUES ($1, $2, $3)
+		INSERT INTO ingestion_job_runs (schedule_id, status, created_by, pipeline_name, source_name, plugin_run_id, started_at)
+		VALUES ($1, $2, NULLIF($3, ''), NULLIF($4, ''), NULLIF($5, ''), $6, $7)
 		RETURNING id, created_at, updated_at`
 
-	err := r.db.QueryRow(ctx, query, run.ScheduleID, run.Status, run.CreatedBy).Scan(
+	err := r.db.QueryRow(ctx, query, run.ScheduleID, run.Status, run.CreatedBy, run.PipelineName, run.SourceName, run.PluginRunID, run.StartedAt).Scan(
 		&run.ID,
 		&run.CreatedAt,
 		&run.UpdatedAt,
@@ -507,10 +518,10 @@ func (r *SchedulePostgresRepository) GetJobRun(ctx context.Context, id string) (
 			jr.id, jr.schedule_id, jr.plugin_run_id, jr.status, jr.claimed_by, jr.claimed_at, jr.started_at, jr.finished_at,
 			jr.log, jr.error_message, jr.assets_created, jr.assets_updated, jr.assets_deleted,
 			jr.lineage_created, jr.documentation_added, jr.created_at, jr.updated_at,
-			COALESCE(s.name, 'Manual Run') as pipeline_name,
-			COALESCE(s.plugin_id, '') as source_name,
+			COALESCE(jr.pipeline_name, s.name, 'Manual Run') as pipeline_name,
+			COALESCE(jr.source_name, s.plugin_id, '') as source_name,
 			COALESCE(s.config, '{}'::jsonb) as config,
-			COALESCE(u.username, '') as created_by
+			COALESCE(jr.created_by, u.username, '') as created_by
 		FROM ingestion_job_runs jr
 		LEFT JOIN ingestion_schedules s ON jr.schedule_id = s.id
 		LEFT JOIN users u ON s.created_by = u.id::text
@@ -644,10 +655,10 @@ func (r *SchedulePostgresRepository) ListJobRuns(ctx context.Context, scheduleID
 			jr.id, jr.schedule_id, jr.plugin_run_id, jr.status, jr.claimed_by, jr.claimed_at, jr.started_at, jr.finished_at,
 			jr.log, jr.error_message, jr.assets_created, jr.assets_updated, jr.assets_deleted,
 			jr.lineage_created, jr.documentation_added, jr.created_at, jr.updated_at,
-			COALESCE(s.name, 'Manual Run') as pipeline_name,
-			COALESCE(s.plugin_id, '') as source_name,
+			COALESCE(jr.pipeline_name, s.name, 'Manual Run') as pipeline_name,
+			COALESCE(jr.source_name, s.plugin_id, '') as source_name,
 			COALESCE(s.config, '{}'::jsonb) as config,
-			COALESCE(u.username, '') as created_by
+			COALESCE(jr.created_by, u.username, '') as created_by
 		FROM ingestion_job_runs jr
 		LEFT JOIN ingestion_schedules s ON jr.schedule_id = s.id
 		LEFT JOIN users u ON s.created_by = u.id::text
@@ -780,6 +791,65 @@ func (r *SchedulePostgresRepository) SetJobRunPluginRunID(ctx context.Context, j
 	return nil
 }
 
+func (r *SchedulePostgresRepository) GetJobRunByPluginRunID(ctx context.Context, pluginRunID string) (*JobRun, error) {
+	query := `
+		SELECT
+			jr.id, jr.schedule_id, jr.plugin_run_id, jr.status, jr.claimed_by, jr.claimed_at, jr.started_at, jr.finished_at,
+			jr.log, jr.error_message, jr.assets_created, jr.assets_updated, jr.assets_deleted,
+			jr.lineage_created, jr.documentation_added, jr.created_at, jr.updated_at,
+			COALESCE(jr.pipeline_name, s.name, 'Manual Run') as pipeline_name,
+			COALESCE(jr.source_name, s.plugin_id, '') as source_name,
+			COALESCE(s.config, '{}'::jsonb) as config,
+			COALESCE(jr.created_by, u.username, '') as created_by
+		FROM ingestion_job_runs jr
+		LEFT JOIN ingestion_schedules s ON jr.schedule_id = s.id
+		LEFT JOIN users u ON s.created_by = u.id::text
+		WHERE jr.plugin_run_id = $1`
+
+	run := &JobRun{}
+	var configJSON []byte
+	err := r.db.QueryRow(ctx, query, pluginRunID).Scan(
+		&run.ID,
+		&run.ScheduleID,
+		&run.PluginRunID,
+		&run.Status,
+		&run.ClaimedBy,
+		&run.ClaimedAt,
+		&run.StartedAt,
+		&run.FinishedAt,
+		&run.Log,
+		&run.ErrorMessage,
+		&run.AssetsCreated,
+		&run.AssetsUpdated,
+		&run.AssetsDeleted,
+		&run.LineageCreated,
+		&run.DocumentationAdded,
+		&run.CreatedAt,
+		&run.UpdatedAt,
+		&run.PipelineName,
+		&run.SourceName,
+		&configJSON,
+		&run.CreatedBy,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrJobRunNotFound
+		}
+		return nil, fmt.Errorf("failed to get job run by plugin run ID: %w", err)
+	}
+
+	run.RunID = run.ID
+
+	if err := json.Unmarshal(configJSON, &run.Config); err != nil {
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
+	}
+
+	r.maskJobRunConfig(run)
+
+	return run, nil
+}
+
 func (r *SchedulePostgresRepository) UpdateJobRunProgress(ctx context.Context, id string, assetsCreated, assetsUpdated, assetsDeleted, lineageCreated, documentationAdded int) error {
 	query := `
 		UPDATE ingestion_job_runs
@@ -886,6 +956,51 @@ func (r *SchedulePostgresRepository) CancelJobRun(ctx context.Context, id string
 			return ErrJobRunNotFound
 		}
 		return fmt.Errorf("failed to cancel job run: %w", err)
+	}
+
+	return nil
+}
+
+func (r *SchedulePostgresRepository) UpsertSchedule(ctx context.Context, schedule *Schedule) error {
+	if schedule.CronExpression != "" {
+		nextRun, err := validateCronExpression(schedule.CronExpression)
+		if err != nil {
+			return ErrInvalidCronExpression
+		}
+		schedule.NextRunAt = &nextRun
+	}
+
+	configJSON, err := json.Marshal(schedule.Config)
+	if err != nil {
+		return fmt.Errorf("marshaling config: %w", err)
+	}
+
+	query := `
+		INSERT INTO ingestion_schedules (name, plugin_id, config, cron_expression, enabled, next_run_at, managed_by, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+		ON CONFLICT (name) DO UPDATE SET
+			plugin_id = EXCLUDED.plugin_id,
+			config = EXCLUDED.config,
+			cron_expression = EXCLUDED.cron_expression,
+			enabled = EXCLUDED.enabled,
+			next_run_at = EXCLUDED.next_run_at,
+			managed_by = EXCLUDED.managed_by,
+			updated_at = NOW()
+		RETURNING id, managed_by, created_at, updated_at`
+
+	err = r.db.QueryRow(ctx, query,
+		schedule.Name,
+		schedule.PluginID,
+		configJSON,
+		schedule.CronExpression,
+		schedule.Enabled,
+		schedule.NextRunAt,
+		schedule.ManagedBy,
+		schedule.CreatedBy,
+	).Scan(&schedule.ID, &schedule.ManagedBy, &schedule.CreatedAt, &schedule.UpdatedAt)
+
+	if err != nil {
+		return fmt.Errorf("failed to upsert schedule: %w", err)
 	}
 
 	return nil

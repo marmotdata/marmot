@@ -19,3 +19,17 @@ rules:
   resourceNames: ["{{ include "marmot.fullname" . }}-encryption-key"]
   verbs: ["get", "update", "patch"]
 {{- end }}
+{{- if .Values.operator.enabled }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: {{ include "marmot.fullname" . }}-run-watcher
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: run-watcher
+rules:
+- apiGroups: ["runs.marmotdata.io"]
+  resources: ["runs"]
+  verbs: ["get", "list", "watch", "patch"]
+{{- end }}

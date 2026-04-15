@@ -1,4 +1,4 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate lint frontend-build actionlint frontend-lint frontend-typecheck fix api-client
+.PHONY: swagger build run test clean dev release docker-build dev-deps generate generate-operator lint frontend-build actionlint frontend-lint frontend-typecheck fix api-client
 
 # Build variables
 BINARY_NAME=marmot
@@ -16,7 +16,7 @@ dev: swagger build
 	MARMOT_LOGGING_LEVEL=debug ./bin/$(BINARY_NAME) run
 
 frontend-build:
-	cd web/marmot && pnpm install && pnpm build
+	cd web/marmot && pnpm install && node scripts/generate-icon-bundle.mjs && pnpm build
 	mkdir -p internal/staticfiles/build
 	cp -r web/marmot/build/* internal/staticfiles/build/
 
@@ -38,6 +38,12 @@ generate:
 	# Cleanup old docs before generating (top-level files only, preserves subdirectories)
 	find web/docs/docs/Plugins -maxdepth 1 -type f ! -name "index.md" ! -name "_category_.json" -delete
 	go generate ./...
+
+CONTROLLER_GEN ?= $$(go env GOPATH)/bin/controller-gen
+
+generate-operator:
+	$(CONTROLLER_GEN) object paths=./internal/operator/api/...
+	$(CONTROLLER_GEN) crd paths=./internal/operator/api/... output:crd:dir=charts/marmot/crds
 
 lint: frontend-lint
 	$$(go env GOPATH)/bin/golangci-lint run --config=./.github/.golangci.yaml ./... -v

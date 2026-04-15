@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
@@ -85,6 +86,21 @@ func getHost() string {
 // getAPIKey returns the resolved API key for commands that need it directly.
 func getAPIKey() string {
 	return viper.GetString("api_key")
+}
+
+const k8sSATokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+
+// getAuthToken returns the auth token and whether it's a K8s SA token (Bearer) vs API key.
+// It checks --api-key / MARMOT_API_KEY first, then falls back to the K8s SA token file.
+func getAuthToken() (token string, isSAToken bool) {
+	if key := getAPIKey(); key != "" {
+		return key, false
+	}
+	data, err := os.ReadFile(k8sSATokenPath)
+	if err != nil {
+		return "", false
+	}
+	return strings.TrimSpace(string(data)), true
 }
 
 // configDir returns the marmot config directory path.

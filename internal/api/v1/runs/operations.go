@@ -12,6 +12,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/runs"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/rs/zerolog/log"
 )
 
 type StartRunRequest struct {
@@ -135,10 +136,16 @@ func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	run, err := h.runService.StartRun(r.Context(), req.PipelineName, req.SourceName, usr.Name, req.Config)
+	run, err := h.runService.StartRun(r.Context(), req.PipelineName, req.SourceName, usr.Username, req.Config)
 	if err != nil {
 		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to start run: %v", err))
 		return
+	}
+
+	if h.scheduleSvc != nil {
+		if _, err := h.scheduleSvc.CreateCLIJobRun(r.Context(), req.PipelineName, req.SourceName, run.ID, usr.Username); err != nil {
+			log.Warn().Err(err).Msg("Failed to create job run for CLI ingestion")
+		}
 	}
 
 	common.RespondJSON(w, http.StatusOK, run)
@@ -163,6 +170,31 @@ func (h *Handler) completeRun(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to complete run: %v", err))
 		return
+	}
+
+	if h.scheduleSvc != nil {
+		pluginRun, err := h.runService.GetByRunID(r.Context(), req.RunID)
+		if err == nil {
+			jobRun, err := h.scheduleSvc.GetJobRunByPluginRunID(r.Context(), pluginRun.ID)
+			if err == nil {
+				success := req.Status == plugin.StatusCompleted
+				var errMsg *string
+				if req.Error != "" {
+					errMsg = &req.Error
+				}
+				ac, au, ad, lc, da := 0, 0, 0, 0, 0
+				if req.Summary != nil {
+					ac = req.Summary.AssetsCreated
+					au = req.Summary.AssetsUpdated
+					ad = req.Summary.AssetsDeleted
+					lc = req.Summary.LineageCreated
+					da = req.Summary.DocumentationAdded
+				}
+				if err := h.scheduleSvc.CompleteJobRun(r.Context(), jobRun.ID, success, errMsg, ac, au, ad, lc, da); err != nil {
+					log.Warn().Err(err).Msg("Failed to complete job run for CLI ingestion")
+				}
+			}
+		}
 	}
 
 	common.RespondJSON(w, http.StatusOK, map[string]string{"status": "completed"})

@@ -11,11 +11,21 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-// WithAuth middleware handles both API key and JWT authentication
+// globalK8sValidator is set once at server startup for SA token auth.
+var globalK8sValidator *K8sTokenValidator
+
+// SetK8sTokenValidator registers the K8s token validator for use by WithAuth.
+func SetK8sTokenValidator(v *K8sTokenValidator) {
+	globalK8sValidator = v
+}
+
+// WithAuth middleware handles API key, JWT, and K8s ServiceAccount token authentication.
 func WithAuth(userService user.Service, authService auth.Service, cfg *config.Config) func(http.HandlerFunc) http.HandlerFunc {
+	k8sValidator := globalK8sValidator
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			apiKey := r.Header.Get("X-API-Key")
+
 			if apiKey != "" {
 				user, err := userService.ValidateAPIKey(r.Context(), apiKey)
 				if err != nil {
@@ -35,6 +45,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 			if authHeader != "" && strings.HasPrefix(authHeader, "Bearer ") {
 				tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
+				// Try JWT validation first
 				claims, err := authService.ValidateToken(r.Context(), tokenString)
 				if err == nil {
 					user, err := userService.Get(r.Context(), claims.Subject)
@@ -53,6 +64,22 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 					return
 				}
 
+				// Try K8s ServiceAccount token validation
+				if k8sValidator != nil {
+					ns, sa, k8sErr := k8sValidator.Validate(r.Context(), tokenString)
+					if k8sErr == nil && sa == cfg.Operator.ServiceAccount && ns == cfg.Operator.Namespace {
+						log.Debug().
+							Str("namespace", ns).
+							Str("service_account", sa).
+							Str("endpoint", r.URL.Path).
+							Msg("Authenticated via K8s ServiceAccount token")
+						ctx := context.WithValue(r.Context(), UserContextKey, GetOperatorUser())
+						next(w, r.WithContext(ctx))
+						return
+					}
+				}
+
+				// Fall back to API key in Bearer header
 				user, err := userService.ValidateAPIKey(r.Context(), tokenString)
 				if err != nil {
 					log.Error().Err(err).

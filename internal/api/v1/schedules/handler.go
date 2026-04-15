@@ -1,6 +1,7 @@
 package schedules
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strconv"
@@ -15,6 +16,11 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+// RunCRDTrigger allows the handler to trigger operator-managed runs via the K8s API.
+type RunCRDTrigger interface {
+	TriggerRun(ctx context.Context, name string) error
+}
+
 type Handler struct {
 	service              *runs.ScheduleService
 	runService           runs.Service
@@ -23,6 +29,7 @@ type Handler struct {
 	encryptor            *crypto.Encryptor
 	config               *config.Config
 	encryptionConfigured bool
+	runCRDTrigger        RunCRDTrigger
 }
 
 func NewHandler(service *runs.ScheduleService, runService runs.Service, userSvc user.Service, authSvc auth.Service, encryptor *crypto.Encryptor, config *config.Config, encryptionConfigured bool) *Handler {
@@ -35,6 +42,11 @@ func NewHandler(service *runs.ScheduleService, runService runs.Service, userSvc 
 		config:               config,
 		encryptionConfigured: encryptionConfigured,
 	}
+}
+
+// SetRunCRDTrigger sets the K8s CRD trigger for operator-managed schedules.
+func (h *Handler) SetRunCRDTrigger(trigger RunCRDTrigger) {
+	h.runCRDTrigger = trigger
 }
 
 func (h *Handler) Routes() []common.Route {
@@ -580,7 +592,7 @@ func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := h.service.GetSchedule(r.Context(), id)
+	schedule, err := h.service.GetSchedule(r.Context(), id)
 	if err != nil {
 		if err == runs.ErrScheduleNotFound {
 			common.RespondError(w, http.StatusNotFound, "Schedule not found")
@@ -588,6 +600,21 @@ func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
 		}
 		log.Error().Err(err).Msg("Failed to get schedule")
 		common.RespondError(w, http.StatusInternalServerError, "Failed to get schedule")
+		return
+	}
+
+	// For operator-managed schedules, patch the Run CRD annotation via K8s API
+	if schedule.ManagedBy != nil && *schedule.ManagedBy != "" {
+		if h.runCRDTrigger == nil {
+			common.RespondError(w, http.StatusServiceUnavailable, "Operator integration not configured")
+			return
+		}
+		if err := h.runCRDTrigger.TriggerRun(r.Context(), schedule.Name); err != nil {
+			log.Error().Err(err).Str("schedule", schedule.Name).Msg("Failed to trigger operator-managed run")
+			common.RespondError(w, http.StatusInternalServerError, "Failed to trigger run")
+			return
+		}
+		common.RespondJSON(w, http.StatusAccepted, schedule)
 		return
 	}
 

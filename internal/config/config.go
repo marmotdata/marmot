@@ -128,6 +128,12 @@ type Config struct {
 		LeaseExpiry       int `mapstructure:"lease_expiry"`
 		ClaimExpiry       int `mapstructure:"claim_expiry"`
 	} `mapstructure:"pipelines"`
+
+	Operator struct {
+		Enabled        bool   `mapstructure:"enabled"`
+		Namespace      string `mapstructure:"namespace"`
+		ServiceAccount string `mapstructure:"service_account"`
+	} `mapstructure:"operator"`
 }
 
 type BannerConfig struct {
@@ -327,6 +333,11 @@ func loadConfig(configPath string) error {
 	v.BindEnv("pipelines.lease_expiry")
 	v.BindEnv("pipelines.claim_expiry")
 
+	// Operator env vars
+	v.BindEnv("operator.enabled")
+	v.BindEnv("operator.namespace")
+	v.BindEnv("operator.service_account")
+
 	// Search env vars
 	v.BindEnv("search.timeout")
 	v.BindEnv("search.elasticsearch.enabled")
@@ -452,6 +463,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("pipelines.scheduler_interval", 60)
 	v.SetDefault("pipelines.lease_expiry", 300)
 	v.SetDefault("pipelines.claim_expiry", 30)
+
+	// Operator defaults
+	v.SetDefault("operator.service_account", "marmot-ingest")
 
 	// Search defaults
 	v.SetDefault("search.timeout", 10) // 10 seconds

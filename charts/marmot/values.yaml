@@ -246,6 +246,43 @@ config:
     auth:
       enabled: true
 
+  # Operator config (for Marmot server-side awareness of operator features)
+  operator:
+    enabled: false
+    namespace: ""
+    service_account: "marmot-ingest"
+
+# Kubernetes operator for managing ingestion pipelines as CRDs
+operator:
+  enabled: false
+  replicas: 1
+  # Override image for operator (defaults to same as server)
+  image: {}
+  resources:
+    limits:
+      cpu: 500m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  leaderElect: true
+  watchNamespace: ""              # empty = all namespaces
+  metricsBindAddress: ":8090"
+  healthProbeBindAddress: ":8091"
+  marmot:
+    url: ""                       # auto-detected from service
+  # Default resources for ingestion Job pods (overridable per-CRD)
+  jobDefaults:
+    resources:
+      limits:
+        cpu: "1"
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+    backoffLimit: 3
+    activeDeadlineSeconds: 3600
+
 # Prometheus ServiceMonitor
 monitoring:
   serviceMonitor:

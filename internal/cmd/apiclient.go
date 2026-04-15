@@ -14,7 +14,6 @@ import (
 // newSwaggerClient creates a go-swagger Marmot client configured from viper.
 func newSwaggerClient() *apiclient.Marmot {
 	host := viper.GetString("host")
-	apiKey := viper.GetString("api_key")
 
 	u, err := url.Parse(host)
 	if err != nil {
@@ -33,8 +32,13 @@ func newSwaggerClient() *apiclient.Marmot {
 		WithSchemes([]string{scheme})
 
 	transport := httptransport.New(cfg.Host, cfg.BasePath, cfg.Schemes)
-	if apiKey != "" {
-		transport.DefaultAuthentication = httptransport.APIKeyAuth("X-API-Key", "header", apiKey)
+	token, isSAToken := getAuthToken()
+	if token != "" {
+		if isSAToken {
+			transport.DefaultAuthentication = httptransport.BearerToken(token)
+		} else {
+			transport.DefaultAuthentication = httptransport.APIKeyAuth("X-API-Key", "header", token)
+		}
 	}
 
 	return apiclient.New(transport, strfmt.Default)

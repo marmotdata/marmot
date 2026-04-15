@@ -438,7 +438,7 @@
 										variant="clear"
 										click={() => goToEntitiesPage(entitiesPage - 1)}
 										disabled={entitiesPage === 1}
-										icon="chevron-left"
+										icon="mdi:chevron-left"
 										text="Previous"
 									/>
 									<span class="text-xs text-gray-500 dark:text-gray-400 tabular-nums">
@@ -449,7 +449,7 @@
 										click={() => goToEntitiesPage(entitiesPage + 1)}
 										disabled={entitiesPage >= Math.ceil(entitiesTotal / entitiesLimit)}
 										text="Next"
-										icon="chevron-right"
+										icon="mdi:chevron-right"
 									/>
 								</div>
 							{/if}

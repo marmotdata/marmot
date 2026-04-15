@@ -166,8 +166,9 @@ func (s *service) Create(ctx context.Context, input CreateUserInput) (*User, err
 		return nil, fmt.Errorf("%w: username already taken", ErrAlreadyExists)
 	}
 
-	if input.Username == "anonymous" {
-		return nil, fmt.Errorf("%w: cannot create user with reserved username", ErrAlreadyExists)
+	switch input.Username {
+	case "anonymous", "operator", "scheduler", "system":
+		return nil, fmt.Errorf("%w: cannot create user with reserved username", ErrReservedUsername)
 	}
 
 	var passwordHash string

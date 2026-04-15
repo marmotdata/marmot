@@ -19,3 +19,21 @@ subjects:
   name: {{ include "marmot.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
 {{- end }}
+{{- if .Values.operator.enabled }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: {{ include "marmot.fullname" . }}-run-watcher
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: run-watcher
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "marmot.fullname" . }}-run-watcher
+subjects:
+- kind: ServiceAccount
+  name: {{ include "marmot.serviceAccountName" . }}
+  namespace: {{ .Release.Namespace }}
+{{- end }}

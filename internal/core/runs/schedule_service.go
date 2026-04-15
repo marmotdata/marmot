@@ -108,6 +108,24 @@ func (s *ScheduleService) UpdateScheduleLastRun(ctx context.Context, id string, 
 	return s.repo.UpdateScheduleLastRun(ctx, id, lastRunAt)
 }
 
+// SyncSchedule upserts a schedule by name, used by the operator to register pipelines.
+func (s *ScheduleService) SyncSchedule(ctx context.Context, name, pluginID string, config map[string]interface{}, cronExpression string, managedBy string) (*Schedule, error) {
+	schedule := &Schedule{
+		Name:           name,
+		PluginID:       pluginID,
+		Config:         config,
+		CronExpression: cronExpression,
+		Enabled:        true,
+		ManagedBy:      &managedBy,
+	}
+
+	if err := s.repo.UpsertSchedule(ctx, schedule); err != nil {
+		return nil, err
+	}
+
+	return schedule, nil
+}
+
 // Job run operations
 
 func (s *ScheduleService) CreateJobRun(ctx context.Context, scheduleID *string, triggeredBy string) (*JobRun, error) {
@@ -230,4 +248,32 @@ func (s *ScheduleService) GetJobRunPluginRunID(ctx context.Context, jobRunID str
 // SetJobRunPluginRunID sets the plugin run ID for a job run
 func (s *ScheduleService) SetJobRunPluginRunID(ctx context.Context, jobRunID, pluginRunID string) error {
 	return s.repo.SetJobRunPluginRunID(ctx, jobRunID, pluginRunID)
+}
+
+// CreateCLIJobRun creates a JobRun for a CLI-initiated ingestion run so it appears in the UI.
+func (s *ScheduleService) CreateCLIJobRun(ctx context.Context, pipelineName, sourceName, pluginRunID, createdBy string) (*JobRun, error) {
+	now := time.Now()
+	run := &JobRun{
+		ScheduleID:   nil,
+		Status:       JobStatusRunning,
+		StartedAt:    &now,
+		PipelineName: pipelineName,
+		SourceName:   sourceName,
+		PluginRunID:  &pluginRunID,
+		CreatedBy:    createdBy,
+	}
+
+	if err := s.repo.CreateJobRun(ctx, run); err != nil {
+		return nil, err
+	}
+
+	s.broadcaster.BroadcastJobRunCreated(run)
+	s.broadcaster.BroadcastJobRunStarted(run)
+
+	return run, nil
+}
+
+// GetJobRunByPluginRunID finds a job run by its associated plugin run ID.
+func (s *ScheduleService) GetJobRunByPluginRunID(ctx context.Context, pluginRunID string) (*JobRun, error) {
+	return s.repo.GetJobRunByPluginRunID(ctx, pluginRunID)
 }

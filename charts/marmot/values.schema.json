@@ -390,6 +390,15 @@
             "lease_expiry": { "type": "integer", "minimum": 1 },
             "claim_expiry": { "type": "integer", "minimum": 1 }
           }
+        },
+        "operator": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "namespace": { "type": "string" },
+            "service_account": { "type": "string" }
+          }
         }
       }
     },
@@ -417,6 +426,85 @@
         "enabled": { "type": "boolean" }
       },
       "additionalProperties": true
+    },
+    "operator": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "replicas": { "type": "integer", "minimum": 1 },
+        "image": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "repository": { "type": "string" },
+            "pullPolicy": {
+              "type": "string",
+              "enum": ["Always", "IfNotPresent", "Never"]
+            },
+            "tag": { "type": "string" }
+          }
+        },
+        "resources": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "limits": {
+              "type": "object",
+              "properties": {
+                "cpu": {},
+                "memory": {}
+              }
+            },
+            "requests": {
+              "type": "object",
+              "properties": {
+                "cpu": {},
+                "memory": {}
+              }
+            }
+          }
+        },
+        "leaderElect": { "type": "boolean" },
+        "watchNamespace": { "type": "string" },
+        "metricsBindAddress": { "type": "string" },
+        "healthProbeBindAddress": { "type": "string" },
+        "marmot": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "url": { "type": "string" }
+          }
+        },
+        "jobDefaults": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "resources": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "limits": {
+                  "type": "object",
+                  "properties": {
+                    "cpu": {},
+                    "memory": {}
+                  }
+                },
+                "requests": {
+                  "type": "object",
+                  "properties": {
+                    "cpu": {},
+                    "memory": {}
+                  }
+                }
+              }
+            },
+            "backoffLimit": { "type": "integer", "minimum": 0 },
+            "activeDeadlineSeconds": { "type": "integer", "minimum": 1 }
+          }
+        }
+      }
     },
     "cnpg": {
       "type": "object",
