@@ -1,0 +1,13 @@
+FROM ghcr.io/goreleaser/goreleaser-cross:v1.26.0
+
+# Install UCRT-targeting MinGW to match DuckDB's pre-built static libraries
+# https://github.com/duckdb/duckdb-go/issues/33
+RUN apt-get update && \
+    apt-get install -y p7zip-full && \
+    curl -fsSL -o /tmp/mingw.7z \
+      "https://github.com/niXman/mingw-builds-binaries/releases/download/14.2.0-rt_v12-rev0/x86_64-14.2.0-release-posix-seh-ucrt-rt_v12-rev0.7z" && \
+    7z x /tmp/mingw.7z -o/opt/ && \
+    ln -sf /opt/mingw64/bin/x86_64-w64-mingw32-gcc /usr/bin/x86_64-w64-mingw32-gcc && \
+    ln -sf /opt/mingw64/bin/x86_64-w64-mingw32-g++ /usr/bin/x86_64-w64-mingw32-g++ && \
+    rm /tmp/mingw.7z && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
