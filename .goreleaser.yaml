@@ -88,6 +88,7 @@ builds:
     ldflags:
       - -s -w
       - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
+      - -extldflags "-lpthread"
 
 archives:
   - id: marmot
