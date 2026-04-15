@@ -1,0 +1,100 @@
+{{- if .Values.operator.enabled }}
+---
+# ServiceAccount for the operator controller manager
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "marmot.fullname" . }}-operator
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+---
+# ServiceAccount for ingestion Job pods (authenticated via K8s TokenReview)
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ .Values.config.operator.service_account | default "marmot-ingest" }}
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ingest
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "marmot.fullname" . }}-operator
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+rules:
+  # Run CRDs
+  - apiGroups: ["runs.marmotdata.io"]
+    resources: ["runs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  - apiGroups: ["runs.marmotdata.io"]
+    resources: ["runs/status"]
+    verbs: ["get", "update", "patch"]
+  - apiGroups: ["runs.marmotdata.io"]
+    resources: ["runs/finalizers"]
+    verbs: ["update"]
+  # Jobs and CronJobs
+  - apiGroups: ["batch"]
+    resources: ["jobs", "cronjobs"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # ConfigMaps for pipeline configs
+  - apiGroups: [""]
+    resources: ["configmaps"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+  # Events
+  - apiGroups: [""]
+    resources: ["events"]
+    verbs: ["create", "patch"]
+  # Leader election
+  - apiGroups: ["coordination.k8s.io"]
+    resources: ["leases"]
+    verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "marmot.fullname" . }}-operator
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "marmot.fullname" . }}-operator
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "marmot.fullname" . }}-operator
+    namespace: {{ .Release.Namespace }}
+---
+# ClusterRole for TokenReview API access (used by Marmot server to validate SA tokens)
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "marmot.fullname" . }}-tokenreview
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+rules:
+  - apiGroups: ["authentication.k8s.io"]
+    resources: ["tokenreviews"]
+    verbs: ["create"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "marmot.fullname" . }}-tokenreview
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: server
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "marmot.fullname" . }}-tokenreview
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "marmot.serviceAccountName" . }}
+    namespace: {{ .Release.Namespace }}
+{{- end }}

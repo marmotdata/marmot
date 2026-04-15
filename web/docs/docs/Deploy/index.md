@@ -39,6 +39,12 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
     href="/docs/Deploy/CLI"
     icon="mdi:console"
   />
+  <DocCard
+    title="Kubernetes Operator"
+    description="Manage ingestion pipelines declaratively with the Run CRD"
+    href="/docs/next/Deploy/Operator"
+    icon="mdi:kubernetes"
+  />
 </DocCardGrid>
 
 ## Next Steps

@@ -1,0 +1,290 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.20.1
+  name: runs.runs.marmotdata.io
+spec:
+  group: runs.marmotdata.io
+  names:
+    kind: Run
+    listKind: RunList
+    plural: runs
+    singular: run
+  scope: Namespaced
+  versions:
+  - additionalPrinterColumns:
+    - jsonPath: .spec.schedule
+      name: Schedule
+      type: string
+    - jsonPath: .status.phase
+      name: Phase
+      type: string
+    - jsonPath: .status.lastRunTime
+      name: Last Run
+      type: date
+    - jsonPath: .spec.teardownOnDelete
+      name: Teardown
+      type: boolean
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
+    schema:
+      openAPIV3Schema:
+        description: |-
+          Run is the Schema for the runs API. It declares an ingestion pipeline
+          that the operator reconciles into K8s Jobs or CronJobs running `marmot ingest`.
+        properties:
+          apiVersion:
+            description: |-
+              APIVersion defines the versioned schema of this representation of an object.
+              Servers should convert recognized schemas to the latest internal value, and
+              may reject unrecognized values.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
+            type: string
+          kind:
+            description: |-
+              Kind is a string value representing the REST resource this object represents.
+              Servers may infer this from the endpoint the client submits requests to.
+              Cannot be updated.
+              In CamelCase.
+              More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: RunSpec defines the desired state of a Run.
+            properties:
+              activeDeadlineSeconds:
+                description: |-
+                  ActiveDeadlineSeconds specifies the duration in seconds relative to the
+                  startTime that the Job may be active before the system tries to terminate it.
+                format: int64
+                type: integer
+              backoffLimit:
+                default: 3
+                description: BackoffLimit specifies the number of retries before marking
+                  a Job as failed.
+                format: int32
+                type: integer
+              concurrencyPolicy:
+                default: Forbid
+                description: |-
+                  ConcurrencyPolicy specifies how to treat concurrent executions of a Job.
+                  Valid values are Allow, Forbid, Replace.
+                enum:
+                - Allow
+                - Forbid
+                - Replace
+                type: string
+              failedJobsHistoryLimit:
+                default: 1
+                description: FailedJobsHistoryLimit is the number of failed finished
+                  CronJobs to retain.
+                format: int32
+                type: integer
+              name:
+                description: Name is the pipeline name, identical to the CLI config
+                  "name" field.
+                type: string
+              podAnnotations:
+                additionalProperties:
+                  type: string
+                description: PodAnnotations are additional annotations applied to
+                  the pod template of the Job or CronJob.
+                type: object
+              podLabels:
+                additionalProperties:
+                  type: string
+                description: PodLabels are additional labels applied to the pod template
+                  of the Job or CronJob.
+                type: object
+              resources:
+                description: Resources overrides the container resource requirements
+                  for the ingestion Job pod.
+                properties:
+                  claims:
+                    description: |-
+                      Claims lists the names of resources, defined in spec.resourceClaims,
+                      that are used by this container.
+
+                      This field depends on the
+                      DynamicResourceAllocation feature gate.
+
+                      This field is immutable. It can only be set for containers.
+                    items:
+                      description: ResourceClaim references one entry in PodSpec.ResourceClaims.
+                      properties:
+                        name:
+                          description: |-
+                            Name must match the name of one entry in pod.spec.resourceClaims of
+                            the Pod where this field is used. It makes that resource available
+                            inside a container.
+                          type: string
+                        request:
+                          description: |-
+                            Request is the name chosen for a request in the referenced claim.
+                            If empty, everything from the claim is made available, otherwise
+                            only the result of this request.
+                          type: string
+                      required:
+                      - name
+                      type: object
+                    type: array
+                    x-kubernetes-list-map-keys:
+                    - name
+                    x-kubernetes-list-type: map
+                  limits:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: |-
+                      Limits describes the maximum amount of compute resources allowed.
+                      More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                    type: object
+                  requests:
+                    additionalProperties:
+                      anyOf:
+                      - type: integer
+                      - type: string
+                      pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                      x-kubernetes-int-or-string: true
+                    description: |-
+                      Requests describes the minimum amount of compute resources required.
+                      If Requests is omitted for a container, it defaults to Limits if that is explicitly specified,
+                      otherwise to an implementation-defined value. Requests cannot exceed Limits.
+                      More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+                    type: object
+                type: object
+              runs:
+                description: |-
+                  Runs is the list of source configurations, identical to CLI YAML format.
+                  Each entry maps a source name to its raw configuration.
+                items:
+                  x-kubernetes-preserve-unknown-fields: true
+                type: array
+              schedule:
+                description: Schedule is a cron expression. When set, a CronJob is
+                  created instead of a one-shot Job.
+                type: string
+              successfulJobsHistoryLimit:
+                default: 3
+                description: SuccessfulJobsHistoryLimit is the number of successful
+                  finished CronJobs to retain.
+                format: int32
+                type: integer
+              suspend:
+                description: |-
+                  Suspend tells the controller to suspend subsequent executions.
+                  Applies only when Schedule is set.
+                type: boolean
+              teardownOnDelete:
+                default: true
+                description: |-
+                  TeardownOnDelete controls whether all assets created by this pipeline are
+                  destroyed when the Run resource is deleted. Defaults to true.
+                type: boolean
+            required:
+            - name
+            - runs
+            type: object
+          status:
+            description: RunStatus defines the observed state of a Run.
+            properties:
+              active:
+                description: Active is the number of currently running Jobs.
+                format: int32
+                type: integer
+              conditions:
+                description: Conditions represent the latest available observations
+                  of the Run's state.
+                items:
+                  description: Condition contains details for one aspect of the current
+                    state of this API Resource.
+                  properties:
+                    lastTransitionTime:
+                      description: |-
+                        lastTransitionTime is the last time the condition transitioned from one status to another.
+                        This should be when the underlying condition changed.  If that is not known, then using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    message:
+                      description: |-
+                        message is a human readable message indicating details about the transition.
+                        This may be an empty string.
+                      maxLength: 32768
+                      type: string
+                    observedGeneration:
+                      description: |-
+                        observedGeneration represents the .metadata.generation that the condition was set based upon.
+                        For instance, if .metadata.generation is currently 12, but the .status.conditions[x].observedGeneration is 9, the condition is out of date
+                        with respect to the current state of the instance.
+                      format: int64
+                      minimum: 0
+                      type: integer
+                    reason:
+                      description: |-
+                        reason contains a programmatic identifier indicating the reason for the condition's last transition.
+                        Producers of specific condition types may define expected values and meanings for this field,
+                        and whether the values are considered a guaranteed API.
+                        The value should be a CamelCase string.
+                        This field may not be empty.
+                      maxLength: 1024
+                      minLength: 1
+                      pattern: ^[A-Za-z]([A-Za-z0-9_,:]*[A-Za-z0-9_])?$
+                      type: string
+                    status:
+                      description: status of the condition, one of True, False, Unknown.
+                      enum:
+                      - "True"
+                      - "False"
+                      - Unknown
+                      type: string
+                    type:
+                      description: type of condition in CamelCase or in foo.example.com/CamelCase.
+                      maxLength: 316
+                      pattern: ^([a-z0-9]([-a-z0-9]*[a-z0-9])?(\.[a-z0-9]([-a-z0-9]*[a-z0-9])?)*/)?(([A-Za-z0-9][-A-Za-z0-9_.]*)?[A-Za-z0-9])$
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - message
+                  - reason
+                  - status
+                  - type
+                  type: object
+                type: array
+              lastRunTime:
+                description: LastRunTime is the last time a Job was started (scheduled
+                  or manually triggered).
+                format: date-time
+                type: string
+              lastSuccessfulTime:
+                description: LastSuccessfulTime is the last time a Job completed successfully.
+                format: date-time
+                type: string
+              observedGeneration:
+                description: ObservedGeneration reflects the generation of the most
+                  recently observed Run spec.
+                format: int64
+                type: integer
+              phase:
+                description: Phase is the high-level summary of the Run state.
+                enum:
+                - Idle
+                - Scheduled
+                - Running
+                - Succeeded
+                - Failed
+                - Suspended
+                type: string
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

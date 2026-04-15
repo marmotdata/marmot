@@ -1,0 +1,94 @@
+{{- if .Values.operator.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "marmot.fullname" . }}-operator
+  labels:
+    {{- include "marmot.labels" . | nindent 4 }}
+    app.kubernetes.io/component: operator
+spec:
+  replicas: {{ .Values.operator.replicas }}
+  selector:
+    matchLabels:
+      {{- include "marmot.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: operator
+  template:
+    metadata:
+      labels:
+        {{- include "marmot.labels" . | nindent 8 }}
+        app.kubernetes.io/component: operator
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "marmot.fullname" . }}-operator
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+      containers:
+        - name: operator
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
+            readOnlyRootFilesystem: true
+          {{- if .Values.operator.image.repository }}
+          image: "{{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag | default .Chart.AppVersion }}"
+          {{- else }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          {{- end }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - operator
+            - --metrics-bind-address={{ .Values.operator.metricsBindAddress | default ":8090" }}
+            - --health-probe-bind-address={{ .Values.operator.healthProbeBindAddress | default ":8091" }}
+            - --leader-elect={{ .Values.operator.leaderElect }}
+            {{- if .Values.operator.watchNamespace }}
+            - --namespace={{ .Values.operator.watchNamespace }}
+            {{- end }}
+            - --marmot-url={{ .Values.operator.marmot.url | default (printf "http://%s:%v" (include "marmot.fullname" .) .Values.service.port) }}
+            - --ingest-service-account={{ .Values.config.operator.service_account | default "marmot-ingest" }}
+            {{- if .Values.operator.image.repository }}
+            - --image={{ .Values.operator.image.repository }}:{{ .Values.operator.image.tag | default .Chart.AppVersion }}
+            {{- else }}
+            - --image={{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}
+            {{- end }}
+          ports:
+            - name: metrics
+              containerPort: 8090
+              protocol: TCP
+            - name: health
+              containerPort: 8091
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: health
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: health
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          {{- with .Values.operator.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
