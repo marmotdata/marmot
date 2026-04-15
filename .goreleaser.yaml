@@ -22,7 +22,7 @@ builds:
       - CC=x86_64-linux-gnu-gcc
       - CXX=x86_64-linux-gnu-g++
     flags:
-      - -tags=production
+      - -tags=production,netgo,osusergo
     ldflags:
       - -s -w
       - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
@@ -38,7 +38,7 @@ builds:
       - CC=aarch64-linux-gnu-gcc
       - CXX=aarch64-linux-gnu-g++
     flags:
-      - -tags=production
+      - -tags=production,netgo,osusergo
     ldflags:
       - -s -w
       - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
@@ -53,6 +53,7 @@ builds:
       - CGO_ENABLED=1
       - CC=o64-clang
       - CXX=o64-clang++
+      - MACOSX_DEPLOYMENT_TARGET=11.0
     flags:
       - -tags=production
     ldflags:
@@ -68,6 +69,7 @@ builds:
       - CGO_ENABLED=1
       - CC=oa64-clang
       - CXX=oa64-clang++
+      - MACOSX_DEPLOYMENT_TARGET=11.0
     flags:
       - -tags=production
     ldflags:
@@ -88,7 +90,7 @@ builds:
     ldflags:
       - -s -w
       - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
-      - -extldflags "-lpthread"
+      - -extldflags "-lpthread -lucrt"
 
 archives:
   - id: marmot
