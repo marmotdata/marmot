@@ -101,7 +101,7 @@ const config: Config = {
               banner: "unreleased",
             },
             ...(versions.length > 0
-              ? { [versions[0]]: { label: `${versions[0]} (latest)` } }
+              ? { [versions[0]]: { label: versions[0] } }
               : {}),
           },
         },
@@ -150,6 +150,7 @@ const config: Config = {
       logo: {
         alt: "Marmot",
         src: "img/marmot-text.svg",
+        srcDark: "img/marmot-text-light.svg",
       },
       items: [
         { to: "/docs/introduction", label: "Docs", position: "left" },
