@@ -90,7 +90,7 @@ builds:
     ldflags:
       - -s -w
       - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
-      - -extldflags "-lpthread -lucrt"
+      - -extldflags "-lpthread -lucrt -lstdc++"
 
 archives:
   - id: marmot
