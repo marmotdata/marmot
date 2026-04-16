@@ -85,10 +85,6 @@ spec:
                   CronJobs to retain.
                 format: int32
                 type: integer
-              name:
-                description: Name is the pipeline name, identical to the CLI config
-                  "name" field.
-                type: string
               podAnnotations:
                 additionalProperties:
                   type: string
@@ -190,7 +186,6 @@ spec:
                   destroyed when the Run resource is deleted. Defaults to true.
                 type: boolean
             required:
-            - name
             - runs
             type: object
           status:

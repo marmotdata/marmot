@@ -53,7 +53,6 @@ func newTestRun(name, namespace string, schedule string) *runsv1alpha1.Run {
 			Generation: 1,
 		},
 		Spec: runsv1alpha1.RunSpec{
-			Name: name,
 			Runs: []apiextensionsv1.JSON{
 				mustJSON(map[string]interface{}{
 					"postgresql": map[string]interface{}{

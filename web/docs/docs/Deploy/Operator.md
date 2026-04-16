@@ -45,7 +45,6 @@ kind: Run
 metadata:
   name: my-pipeline
 spec:
-  name: my-pipeline
   schedule: "0 */6 * * *"
   runs:
     - postgresql:
@@ -54,6 +53,8 @@ spec:
         database: "production"
         user: "readonly"
 ```
+
+The resource's `metadata.name` is used as the pipeline name for tracking ingestion state.
 
 ```bash
 kubectl apply -f my-pipeline.yaml
@@ -132,7 +133,6 @@ With `teardownOnDelete: true` (the default), deleting a Run removes all assets t
 
 | Field                        | Type                                                                                                                      | Default  | Description                                                     |
 | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------- |
-| `name`                       | string                                                                                                                    | required | Pipeline name, used to track ingestion state                    |
 | `runs`                       | array                                                                                                                     | required | Source configurations, same format as CLI YAML                  |
 | `schedule`                   | string                                                                                                                    |          | Cron expression. When set, creates a CronJob instead of a Job   |
 | `suspend`                    | boolean                                                                                                                   | `false`  | Pause scheduled executions. Only applies when `schedule` is set |

@@ -9,10 +9,6 @@ import (
 
 // RunSpec defines the desired state of a Run.
 type RunSpec struct {
-	// Name is the pipeline name, identical to the CLI config "name" field.
-	// +kubebuilder:validation:Required
-	Name string `json:"name"`
-
 	// Runs is the list of source configurations, identical to CLI YAML format.
 	// Each entry maps a source name to its raw configuration.
 	// +kubebuilder:validation:Required

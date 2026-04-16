@@ -204,13 +204,13 @@ func renderPipelineYAML(run *runsv1alpha1.Run) string {
 		Runs []map[string]interface{} `json:"runs"`
 	}
 	cfg := pipelineConfig{
-		Name: run.Spec.Name,
+		Name: run.Name,
 		Runs: runs,
 	}
 
 	data, err := yamlMarshal(cfg)
 	if err != nil {
-		return fmt.Sprintf("name: %s\nruns: []\n", run.Spec.Name)
+		return fmt.Sprintf("name: %s\nruns: []\n", run.Name)
 	}
 	return string(data)
 }

@@ -155,20 +155,16 @@ func (s *Syncer) findRunByPipelineName(ctx context.Context, pipelineName string)
 
 	for i := range list.Items {
 		item := &list.Items[i]
-		specName, _, _ := unstructured.NestedString(item.Object, "spec", "name")
-		if specName == pipelineName {
+		if item.GetName() == pipelineName {
 			return item, nil
 		}
 	}
 
-	return nil, fmt.Errorf("Run CRD with spec.name=%q not found", pipelineName)
+	return nil, fmt.Errorf("Run CRD %q not found", pipelineName)
 }
 
 func (s *Syncer) syncRun(ctx context.Context, u *unstructured.Unstructured) error {
-	specName, _, _ := unstructured.NestedString(u.Object, "spec", "name")
-	if specName == "" {
-		specName = u.GetName()
-	}
+	pipelineName := u.GetName()
 
 	schedule, _, _ := unstructured.NestedString(u.Object, "spec", "schedule")
 
@@ -209,22 +205,19 @@ func (s *Syncer) syncRun(ctx context.Context, u *unstructured.Unstructured) erro
 	}
 
 	managedBy := "operator"
-	_, err := s.scheduleSvc.SyncSchedule(ctx, specName, pluginID, config, schedule, managedBy)
+	_, err := s.scheduleSvc.SyncSchedule(ctx, pipelineName, pluginID, config, schedule, managedBy)
 	if err != nil {
-		return fmt.Errorf("syncing schedule for Run %q: %w", specName, err)
+		return fmt.Errorf("syncing schedule for Run %q: %w", pipelineName, err)
 	}
 
-	log.Debug().Str("run", u.GetName()).Str("pipeline", specName).Str("plugin", pluginID).Msg("Synced Run CRD to schedule")
+	log.Debug().Str("run", pipelineName).Str("plugin", pluginID).Msg("Synced Run CRD to schedule")
 	return nil
 }
 
 func (s *Syncer) deleteSchedule(ctx context.Context, u *unstructured.Unstructured) error {
-	specName, _, _ := unstructured.NestedString(u.Object, "spec", "name")
-	if specName == "" {
-		specName = u.GetName()
-	}
+	pipelineName := u.GetName()
 
-	schedule, err := s.scheduleSvc.GetScheduleByName(ctx, specName)
+	schedule, err := s.scheduleSvc.GetScheduleByName(ctx, pipelineName)
 	if err != nil {
 		if errors.Is(err, runs.ErrScheduleNotFound) {
 			return nil // Already gone
@@ -235,9 +228,9 @@ func (s *Syncer) deleteSchedule(ctx context.Context, u *unstructured.Unstructure
 	// Only delete if it's operator-managed
 	if schedule.ManagedBy != nil && *schedule.ManagedBy == "operator" {
 		if err := s.scheduleSvc.DeleteSchedule(ctx, schedule.ID); err != nil {
-			return fmt.Errorf("deleting schedule %q: %w", specName, err)
+			return fmt.Errorf("deleting schedule %q: %w", pipelineName, err)
 		}
-		log.Info().Str("pipeline", specName).Msg("Deleted operator-managed schedule")
+		log.Info().Str("pipeline", pipelineName).Msg("Deleted operator-managed schedule")
 	}
 
 	return nil
