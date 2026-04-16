@@ -34,3 +34,20 @@ export async function fetchApi(endpoint: string, options: FetchApiOptions = {}) 
 
 	return response;
 }
+
+export interface AssetPreviewResponse {
+	column_names: string[];
+	rows: any[][];
+	total_rows?: number;
+}
+
+export async function fetchAssetPreview(assetId: string): Promise<AssetPreviewResponse> {
+	const response = await fetchApi(`/assets/preview/${assetId}`);
+	if (!response.ok) {
+		const errorData = await response.json();
+		const error: any = new Error(errorData.error || 'Failed to fetch preview');
+		error.status = response.status;
+		throw error;
+	}
+	return await response.json();
+}

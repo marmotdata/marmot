@@ -440,12 +440,16 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 
 	assetsCreated := 0
 	assetsUpdated := 0
+	assetMRNs := make([]string, 0, len(response.Assets))
 	for _, ar := range response.Assets {
 		switch ar.Status {
 		case StatusCreated:
 			assetsCreated++
 		case StatusUpdated:
 			assetsUpdated++
+		}
+		if ar.MRN != "" {
+			assetMRNs = append(assetMRNs, ar.MRN)
 		}
 	}
 
@@ -497,6 +501,17 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		TotalEntities:      len(result.Assets) + len(result.Lineage) + len(result.Documentation),
 	}
 	_ = w.runsService.CompleteRun(ctx, pluginRun.RunID, plugin.StatusCompleted, summary, "")
+
+	// Link assets to this schedule for preview lookups (non-fatal if it fails)
+	if len(assetMRNs) > 0 {
+		if err := w.service.LinkAssetsByMRN(ctx, *run.ScheduleID, assetMRNs); err != nil {
+			log.Warn().
+				Err(err).
+				Str("run_id", run.ID).
+				Str("schedule_id", *run.ScheduleID).
+				Msg("Failed to link assets to schedule")
+		}
+	}
 
 	err = w.service.CompleteJobRun(
 		ctx,

@@ -576,6 +576,127 @@ func (s *Source) extractRequiredFields(fields bigquery.Schema) []string {
 	return required
 }
 
+// FetchSampleData implements the DataFetcher interface to retrieve sample data from a BigQuery table
+func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
+	if a == nil || a.Metadata == nil {
+		return nil, nil, fmt.Errorf("asset or asset metadata is nil")
+	}
+
+	parsedConfig, err := plugin.UnmarshalPluginConfig[Config](config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing plugin config: %w", err)
+	}
+	s.config = parsedConfig
+
+	dataset, _ := a.Metadata["dataset_id"].(string)
+	table, _ := a.Metadata["table_id"].(string)
+
+	if dataset == "" {
+		return nil, nil, fmt.Errorf("could not determine dataset from asset metadata")
+	}
+	if table == "" && a.Name != nil {
+		table = *a.Name
+	}
+	if table == "" {
+		return nil, nil, fmt.Errorf("could not determine table name from asset metadata")
+	}
+
+	fetchCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	if err := s.initClient(fetchCtx); err != nil {
+		return nil, nil, fmt.Errorf("connecting to BigQuery: %w", err)
+	}
+	defer s.closeClient()
+
+	tableID := fmt.Sprintf("%s.%s.%s", s.config.ProjectID, dataset, table)
+
+	query := fmt.Sprintf("SELECT * FROM `%s` LIMIT 20",
+		strings.ReplaceAll(tableID, "`", "``"))
+
+	q := s.client.Query(query)
+	q.Location = "US"
+
+	log.Debug().
+		Str("dataset", dataset).
+		Str("table", table).
+		Msg("Fetching sample data")
+
+	it, err := q.Read(fetchCtx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying table: %w", err)
+	}
+
+	var columnNames []string
+	var dataRows [][]interface{}
+
+	for {
+		row := make([]bigquery.Value, 0)
+		err := it.Next(&row)
+		if err == iterator.Done {
+			break
+		}
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to scan row, skipping")
+			continue
+		}
+
+		if len(columnNames) == 0 {
+			schema := it.Schema
+			for _, field := range schema {
+				columnNames = append(columnNames, field.Name)
+			}
+		}
+
+		// Convert values to JSON-friendly formats
+		convertedRow := make([]interface{}, len(row))
+		for i, val := range row {
+			convertedRow[i] = convertBigQueryValue(val)
+		}
+
+		dataRows = append(dataRows, convertedRow)
+	}
+
+	log.Debug().
+		Int("columns", len(columnNames)).
+		Int("rows", len(dataRows)).
+		Msg("Successfully fetched sample data")
+
+	return columnNames, dataRows, nil
+}
+
+// convertBigQueryValue converts BigQuery-specific types to JSON-friendly formats
+func convertBigQueryValue(val interface{}) interface{} {
+	if val == nil {
+		return nil
+	}
+
+	switch v := val.(type) {
+	case []byte:
+		// For binary types, convert to hex string
+		return fmt.Sprintf("0x%x", v)
+	case time.Time:
+		// Return time as ISO string
+		return v.Format(time.RFC3339)
+	case map[string]bigquery.Value:
+		// Convert struct/record types
+		converted := make(map[string]interface{})
+		for k, val := range v {
+			converted[k] = convertBigQueryValue(val)
+		}
+		return converted
+	case []bigquery.Value:
+		// Convert array types
+		converted := make([]interface{}, len(v))
+		for i, val := range v {
+			converted[i] = convertBigQueryValue(val)
+		}
+		return converted
+	default:
+		return val
+	}
+}
+
 func init() {
 	meta := plugin.PluginMeta{
 		ID:          "bigquery",

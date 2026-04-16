@@ -65,3 +65,5 @@ internal/staticfiles/build/
 testenv
 
 web/marmot/src/lib/icon-bundle.ts
+
+logs/

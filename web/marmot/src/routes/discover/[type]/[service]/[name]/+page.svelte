@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
-	import { fetchApi } from '$lib/api';
+	import { fetchApi, fetchAssetPreview, type AssetPreviewResponse } from '$lib/api';
 	import type { Asset, EnrichedExternalLink } from '$lib/assets/types';
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
 	import DocumentationSystem from '$components/docs/DocumentationSystem.svelte';
@@ -12,6 +12,7 @@
 	import AssetEnvironmentsView from '$components/asset/AssetEnvironmentsView.svelte';
 	import RunHistory from '$components/runs/RunHistory.svelte';
 	import CodeBlock from '$components/editor/CodeBlock.svelte';
+	import DataPreviewTable from '$components/asset/DataPreviewTable.svelte';
 	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
@@ -42,6 +43,10 @@
 	let userDescription = $state('');
 	let isEditingDescription = $state(false);
 	let savingDescription = $state(false);
+
+	let previewData: AssetPreviewResponse | null = $state(null);
+	let previewLoading = $state(false);
+	let previewError: string | null = $state(null);
 
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 
@@ -79,6 +84,12 @@
 
 	function handleBack() {
 		window.history.back();
+	}
+
+	function isTableAsset(asset: Asset | null): boolean {
+		if (!asset?.type) return false;
+		const tableKeywords = ['table', 'view', 'dataset'];
+		return tableKeywords.some((keyword) => asset.type.toLowerCase().includes(keyword));
 	}
 
 	function getIconName(asset: Asset): string {
@@ -182,6 +193,7 @@
 		{ id: 'documentation', label: 'Documentation', icon: 'material-symbols:description' },
 		{ id: 'metadata', label: 'Metadata', icon: 'material-symbols:data-object' },
 		{ id: 'query', label: 'Query', icon: 'material-symbols:code' },
+		{ id: 'preview', label: 'Preview', icon: 'material-symbols:preview' },
 		{ id: 'environments', label: 'Environments', icon: 'material-symbols:deployed-code' },
 		{ id: 'schema', label: 'Schema', icon: 'material-symbols:table' },
 		{ id: 'run-history', label: 'Run History', icon: 'material-symbols:history' },
@@ -196,6 +208,7 @@
 			)
 				return false;
 			if (tab.id === 'query' && !asset?.query) return false;
+			if (tab.id === 'preview' && !isTableAsset(asset)) return false;
 			if (tab.id === 'run-history' && !asset?.has_run_history) return false;
 			return true;
 		})
@@ -211,8 +224,37 @@
 		if (asset?.id) {
 			fetchOwners();
 			userDescription = asset.user_description || '';
+
+			// Fetch preview data if asset is a table
+			if (isTableAsset(asset)) {
+				fetchPreviewData();
+			}
 		}
 	});
+
+	async function fetchPreviewData() {
+		if (!asset?.id) return;
+
+		previewLoading = true;
+		previewError = null;
+		previewData = null;
+
+		try {
+			previewData = await fetchAssetPreview(asset.id);
+		} catch (err: any) {
+			let errorMsg = 'Failed to fetch preview data';
+			if (err.status === 403) {
+				errorMsg =
+					'You do not have permission to preview data. The "assets:preview" permission is required.';
+			} else if (err instanceof Error) {
+				errorMsg = err.message;
+			}
+			previewError = errorMsg;
+			console.error('Preview fetch error:', err);
+		} finally {
+			previewLoading = false;
+		}
+	}
 </script>
 
 <div class="h-full flex">
@@ -403,9 +445,13 @@
 				{/if}
 			</div>
 
-			<div class="flex-1 overflow-y-auto overflow-x-auto px-8">
-				<div class="pb-16 {activeTab === 'lineage' ? '' : 'max-w-7xl mx-auto'}">
-					<div class="rounded-lg max-w-full overflow-x-auto">
+			<div class="flex-1 overflow-y-auto {activeTab === 'preview' ? '' : 'overflow-x-auto'} px-8">
+				<div
+					class="pb-16 {activeTab === 'lineage' || activeTab === 'preview'
+						? ''
+						: 'max-w-7xl mx-auto'}"
+				>
+					<div class="rounded-lg max-w-full {activeTab === 'preview' ? '' : 'overflow-x-auto'}">
 						{#if !asset}
 							<div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
 								<p class="text-gray-500 dark:text-gray-400">Loading asset information...</p>
@@ -435,6 +481,13 @@
 									</div>
 								{/if}
 							</div>
+						{:else if activeTab === 'preview'}
+							<DataPreviewTable
+								columnNames={previewData?.column_names ?? []}
+								rows={previewData?.rows ?? []}
+								loading={previewLoading}
+								error={previewError}
+							/>
 						{:else if activeTab === 'environments'}
 							<div class="mt-6">
 								{#if asset.environments && Object.keys(asset.environments).length > 0}

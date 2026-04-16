@@ -12,6 +12,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"reflect"
+	"strings"
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
@@ -491,6 +493,118 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 	}
 
 	return statistics
+}
+
+
+// FetchSampleData implements the DataFetcher interface to retrieve sample data from a ClickHouse table.
+func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
+	if a == nil || a.Metadata == nil {
+		return nil, nil, fmt.Errorf("asset or asset metadata is nil")
+	}
+
+	parsedConfig, err := plugin.UnmarshalPluginConfig[Config](config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing plugin config: %w", err)
+	}
+	s.config = parsedConfig
+
+	database, _ := a.Metadata["database"].(string)
+	table, _ := a.Metadata["table_name"].(string)
+
+	if database == "" {
+		return nil, nil, fmt.Errorf("could not determine database from asset metadata")
+	}
+	if table == "" && a.Name != nil {
+		table = *a.Name
+	}
+	if table == "" {
+		return nil, nil, fmt.Errorf("could not determine table name from asset metadata")
+	}
+
+	fetchCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	if err := s.initConnection(fetchCtx); err != nil {
+		return nil, nil, fmt.Errorf("connecting to ClickHouse: %w", err)
+	}
+	defer s.closeConnection()
+
+	query := fmt.Sprintf("SELECT * FROM %s.%s LIMIT 20", //nolint:gosec // G201: inputs sanitized via quoteIdentifier
+		quoteIdentifier(database),
+		quoteIdentifier(table),
+	)
+
+	log.Debug().
+		Str("database", database).
+		Str("table", table).
+		Msg("Fetching sample data from ClickHouse")
+
+	rows, err := s.conn.Query(fetchCtx, query)
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying table: %w", err)
+	}
+	defer rows.Close()
+
+	colTypes := rows.ColumnTypes()
+
+	columnNames := make([]string, len(colTypes))
+	for i, ct := range colTypes {
+		columnNames[i] = ct.Name()
+	}
+
+	var dataRows [][]interface{}
+	for rows.Next() {
+		scanPtrs := make([]reflect.Value, len(colTypes))
+		scanDests := make([]interface{}, len(colTypes))
+		for i, ct := range colTypes {
+			ptr := reflect.New(ct.ScanType())
+			scanPtrs[i] = ptr
+			scanDests[i] = ptr.Interface()
+		}
+
+		if err := rows.Scan(scanDests...); err != nil {
+			log.Warn().Err(err).Msg("Failed to scan row, skipping")
+			continue
+		}
+
+		converted := make([]interface{}, len(colTypes))
+		for i, ptr := range scanPtrs {
+			converted[i] = convertClickHouseValue(ptr.Elem().Interface())
+		}
+		dataRows = append(dataRows, converted)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, nil, fmt.Errorf("iterating rows: %w", err)
+	}
+
+	log.Debug().
+		Int("columns", len(columnNames)).
+		Int("rows", len(dataRows)).
+		Msg("Successfully fetched sample data from ClickHouse")
+
+	return columnNames, dataRows, nil
+}
+
+// convertClickHouseValue converts ClickHouse-specific types to JSON-friendly formats.
+func convertClickHouseValue(val interface{}) interface{} {
+	if val == nil {
+		return nil
+	}
+	switch v := val.(type) {
+	case []byte:
+		return fmt.Sprintf("0x%x", v)
+	case time.Time:
+		return v.Format(time.RFC3339)
+	default:
+		return val
+	}
+}
+
+// quoteIdentifier wraps an identifier in backticks for ClickHouse SQL.
+func quoteIdentifier(id string) string {
+	id = strings.ReplaceAll(id, "\x00", "")
+	return "`" + strings.ReplaceAll(id, "`", "``") + "`"
 }
 
 func init() {
