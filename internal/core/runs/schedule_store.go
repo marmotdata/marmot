@@ -112,6 +112,10 @@ type ScheduleRepository interface {
 	CompleteJobRun(ctx context.Context, id string, status string, errorMessage *string, assetsCreated, assetsUpdated, assetsDeleted, lineageCreated, documentationAdded int) error
 	ReleaseExpiredClaims(ctx context.Context, expiry time.Duration) (int, error)
 	CancelJobRun(ctx context.Context, id string) error
+
+	// Asset-schedule associations
+	LinkAssetsByMRN(ctx context.Context, scheduleID string, assetMRNs []string) error
+	GetScheduleForAsset(ctx context.Context, assetID string) (*Schedule, error)
 }
 
 type SchedulePostgresRepository struct {
@@ -1030,4 +1034,68 @@ func (r *SchedulePostgresRepository) maskJobRunConfig(run *JobRun) {
 
 	// Mask sensitive fields using the ConfigSpec
 	run.Config = plugin.MaskSensitiveFieldsFromSpec(plugin.RawPluginConfig(run.Config), entry.Meta.ConfigSpec)
+}
+
+// LinkAssetsByMRN links assets (identified by MRN) to a schedule.
+// Resolves MRNs to asset IDs and upserts into asset_schedules table.
+func (r *SchedulePostgresRepository) LinkAssetsByMRN(ctx context.Context, scheduleID string, assetMRNs []string) error {
+	if len(assetMRNs) == 0 {
+		return nil
+	}
+
+	query := `
+		INSERT INTO asset_schedules (asset_id, schedule_id)
+		SELECT a.id, $1::uuid
+		FROM assets a
+		WHERE a.mrn = ANY($2)
+		ON CONFLICT (asset_id, schedule_id) DO UPDATE SET updated_at = NOW()`
+
+	_, err := r.db.Exec(ctx, query, scheduleID, assetMRNs)
+	if err != nil {
+		return fmt.Errorf("linking assets to schedule: %w", err)
+	}
+
+	return nil
+}
+
+// GetScheduleForAsset returns the most recently linked schedule for an asset.
+// Returns ErrScheduleNotFound if no schedule is associated with the asset.
+func (r *SchedulePostgresRepository) GetScheduleForAsset(ctx context.Context, assetID string) (*Schedule, error) {
+	query := `
+		SELECT s.id, s.name, s.plugin_id, s.config, s.cron_expression, s.enabled,
+		       s.last_run_at, s.next_run_at, s.created_by, s.created_at, s.updated_at
+		FROM ingestion_schedules s
+		JOIN asset_schedules asset_sched ON s.id = asset_sched.schedule_id
+		WHERE asset_sched.asset_id = $1
+		ORDER BY asset_sched.updated_at DESC
+		LIMIT 1`
+
+	schedule := &Schedule{}
+	var configJSON []byte
+	err := r.db.QueryRow(ctx, query, assetID).Scan(
+		&schedule.ID,
+		&schedule.Name,
+		&schedule.PluginID,
+		&configJSON,
+		&schedule.CronExpression,
+		&schedule.Enabled,
+		&schedule.LastRunAt,
+		&schedule.NextRunAt,
+		&schedule.CreatedBy,
+		&schedule.CreatedAt,
+		&schedule.UpdatedAt,
+	)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrScheduleNotFound
+		}
+		return nil, fmt.Errorf("getting schedule for asset: %w", err)
+	}
+
+	if err := json.Unmarshal(configJSON, &schedule.Config); err != nil {
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
+	}
+
+	return schedule, nil
 }

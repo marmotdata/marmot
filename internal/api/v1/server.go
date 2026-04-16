@@ -504,7 +504,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
-		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, teamSvc, assetRuleSvc, config),
+		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config),
 		users.NewHandler(userSvc, authSvc, config),
 		auth.NewHandler(authSvc, oauthManager, userSvc, config),
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
