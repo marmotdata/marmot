@@ -3,6 +3,7 @@ package controller
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	batchv1 "k8s.io/api/batch/v1"
@@ -254,15 +255,20 @@ func (r *RunReconciler) updateStatusFromCronJob(ctx context.Context, run *runsv1
 		return err
 	}
 
-	run.Status.Active = int32(len(cj.Status.Active))
+	active := len(cj.Status.Active)
+	if active > math.MaxInt32 {
+		active = math.MaxInt32
+	}
+	run.Status.Active = int32(active) //nolint:gosec // bounds-checked above
 	run.Status.LastRunTime = cj.Status.LastScheduleTime
 	run.Status.LastSuccessfulTime = cj.Status.LastSuccessfulTime
 
-	if run.Spec.Suspend != nil && *run.Spec.Suspend {
+	switch {
+	case run.Spec.Suspend != nil && *run.Spec.Suspend:
 		run.Status.Phase = runsv1alpha1.RunPhaseSuspended
-	} else if run.Status.Active > 0 {
+	case run.Status.Active > 0:
 		run.Status.Phase = runsv1alpha1.RunPhaseRunning
-	} else {
+	default:
 		run.Status.Phase = runsv1alpha1.RunPhaseScheduled
 	}
 

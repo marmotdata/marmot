@@ -13,80 +13,35 @@ _The open-source context layer for your AI. Catalog your tables, topics, queues 
 
 ## What is Marmot?
 
-Marmot is an **open-source data catalog** designed for teams who want powerful data discovery without enterprise complexity. Catalog every data asset, enrich it with the context that matters and make it accessible to your team and your AI tools.
+Marmot is an **open-source data catalog** for teams who want powerful data discovery without enterprise complexity. Catalog every data asset, enrich it with the context that matters and make it accessible to your team and your AI tools.
 
 Unlike traditional catalogs that require extensive infrastructure and configuration, Marmot ships as a **single binary** with an intuitive UI, making it easy to deploy and start cataloging in minutes.
 
 <div align="center">
-  <img alt="Marmot context layer showing plugins, integrations and AI agents" src="./web/docs/static/img/graph.png" style="max-height: 400px; width: auto;">
-</div>
 
-- **Discover** - One place for AI and engineers to find every table, topic, queue and API
-- **Understand** - Trace how data flows and what depends on what with lineage
-- **Contextualize** - Ownership, business definitions and custom fields that give AI the full picture
-- **Share** - Expose certified context through MCP, the API and the UI
+<a href="https://www.youtube.com/watch?v=_JBcQGj_bFU">
+  <img src="https://img.youtube.com/vi/_JBcQGj_bFU/maxresdefault.jpg" alt="Watch the Marmot demo on YouTube" width="480">
+</a>
+
+<p><a href="https://www.youtube.com/watch?v=_JBcQGj_bFU">▶ Watch the 2-minute demo</a></p>
+
+</div>
 
 ## Features
 
-### Search Everything
-
-Find any data asset across your entire organisation in seconds. Combine full-text search with structured queries using metadata filters, boolean logic, and comparison operators.
-
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/search-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./web/docs/static/img/search-light.png">
-    <img alt="Marmot search interface showing filters and search results" src="./web/docs/static/img/search-light.png" style="max-height: 400px; width: auto;">
-  </picture>
-</div>
-
----
-
-### Interactive Lineage Visualisation
-
-Trace data flows from source to destination with interactive dependency graphs. Understand upstream and downstream dependencies, identify bottlenecks, and analyse impact before making changes.
+- **Search everything**: Find any data asset in seconds with full-text search plus structured queries, boolean logic and metadata filters.
+- **Interactive lineage**: Trace data flows from source to destination and analyse impact before making changes.
+- **Metadata-first**: Store rich metadata for any asset type, from tables and topics to APIs and dashboards.
+- **Team collaboration**: Assign ownership, document business context and maintain shared glossaries.
+- **AI-ready**: Expose certified context through MCP, the API and the UI.
 
 <div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/lineage-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./web/docs/static/img/lineage-light.png">
-    <img alt="Interactive lineage graph showing data flow and dependencies" src="./web/docs/static/img/lineage-light.png" style="max-height: 400px; width: auto;">
-  </picture>
-</div>
-
----
-
-### Metadata-First Architecture
-
-Store rich metadata for any asset type. From tables and topics to APIs and dashboards.
-
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/home-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./web/docs/static/img/home-light.png">
-    <img alt="Asset detail page showing rich metadata and documentation" src="./web/docs/static/img/home-light.png" style="max-height: 400px; width: auto;">
-  </picture>
-</div>
-
----
-
-### Team Collaboration
-
-Assign ownership, document business context, and create glossaries. Keep your entire team aligned with centralised knowledge about your data assets.
-
-<div align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="./web/docs/static/img/team-dark.png">
-    <source media="(prefers-color-scheme: light)" srcset="./web/docs/static/img/team-light.png">
-    <img alt="Team management interface showing ownership and collaboration features" src="./web/docs/static/img/team-light.png" style="max-height: 400px; width: auto;">
-  </picture>
+  <img alt="Marmot context layer showing plugins, integrations and AI agents" src="./web/docs/static/img/graph.png" width="900">
 </div>
 
 ## Deploy
 
-**New to Marmot?** Follow the [Deploy](https://marmotdata.io/docs/Deploy) documentation for a guided setup.
-
-> **Interested in exploring Marmot?** Check out the [live demo](https://demo.marmotdata.io)
+**New to Marmot?** Follow the [Deploy](https://marmotdata.io/docs/Deploy) documentation for a guided setup, or try the [live demo](https://demo.marmotdata.io).
 
 ## Development
 
@@ -94,17 +49,11 @@ See [Local Development](https://marmotdata.io/docs/Develop/local-development) fo
 
 ## Community
 
-Join our [Discord community](https://discord.gg/TWCk7hVFN4) to:
-
-- Get help and support
-- Share feedback and ideas
-- Stay updated on new features
+Join our [Discord community](https://discord.gg/TWCk7hVFN4) for help, feedback and updates on new features.
 
 ## Contributing
 
 All types of contributions are encouraged and valued!
-
-**Ways to Contribute:**
 
 - Report bugs or suggest features via [GitHub Issues](https://github.com/your-org/marmot/issues)
 - Improve documentation

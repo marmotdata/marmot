@@ -65,7 +65,7 @@ func (s *Syncer) Start(ctx context.Context) error {
 
 	informer := factory.ForResource(runGVR).Informer()
 
-	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
+	if _, err := informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
 			u, ok := obj.(*unstructured.Unstructured)
 			if !ok {
@@ -100,7 +100,9 @@ func (s *Syncer) Start(ctx context.Context) error {
 				log.Error().Err(err).Str("name", u.GetName()).Msg("Failed to delete schedule for Run CRD")
 			}
 		},
-	})
+	}); err != nil {
+		return fmt.Errorf("adding event handler: %w", err)
+	}
 
 	go informer.Run(s.stopCh)
 

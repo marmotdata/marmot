@@ -88,7 +88,7 @@ func getAPIKey() string {
 	return viper.GetString("api_key")
 }
 
-const k8sSATokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token"
+const k8sSATokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token" //nolint:gosec
 
 // getAuthToken returns the auth token and whether it's a K8s SA token (Bearer) vs API key.
 // It checks --api-key / MARMOT_API_KEY first, then falls back to the K8s SA token file.
