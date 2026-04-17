@@ -142,6 +142,13 @@ type StatefulSource interface {
 	SupportsStatefulIngestion() bool
 }
 
+// DataFetcher is an optional interface that plugins can implement to support
+// data preview functionality. Plugins that can query/fetch sample data from
+// their data sources should implement this interface.
+type DataFetcher interface {
+	FetchSampleData(ctx context.Context, config RawPluginConfig, a *asset.Asset) (columnNames []string, rows [][]interface{}, err error)
+}
+
 // GetConfigType attempts to extract the config type from a source by unmarshaling into an empty interface and using reflection
 func GetConfigType(raw RawPluginConfig, source Source) interface{} {
 	validated, err := source.Validate(raw)

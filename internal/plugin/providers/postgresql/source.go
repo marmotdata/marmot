@@ -758,6 +758,134 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 	return statistics
 }
 
+// FetchSampleData implements the DataFetcher interface to retrieve sample data from a PostgreSQL table
+func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
+	if a == nil || a.Metadata == nil {
+		return nil, nil, fmt.Errorf("asset or asset metadata is nil")
+	}
+
+	parsedConfig, err := plugin.UnmarshalPluginConfig[Config](config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing plugin config: %w", err)
+	}
+	s.config = parsedConfig
+
+	database, _ := a.Metadata["database"].(string)
+	schema, _ := a.Metadata["schema"].(string)
+	table, _ := a.Metadata["table_name"].(string)
+
+	if database == "" {
+		return nil, nil, fmt.Errorf("could not determine database from asset metadata")
+	}
+	if table == "" && a.Name != nil {
+		table = *a.Name
+	}
+	if schema == "" {
+		return nil, nil, fmt.Errorf("could not determine schema from asset metadata")
+	}
+	if table == "" {
+		return nil, nil, fmt.Errorf("could not determine table name from asset metadata")
+	}
+
+	fetchCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	if err := s.initConnection(fetchCtx, database); err != nil {
+		return nil, nil, fmt.Errorf("connecting to database %s: %w", database, err)
+	}
+	defer s.closeConnection()
+
+	query := fmt.Sprintf(
+		"SELECT * FROM %s.%s LIMIT 20",
+		pgx.Identifier{schema}.Sanitize(),
+		pgx.Identifier{table}.Sanitize(),
+	)
+
+	log.Debug().
+		Str("database", database).
+		Str("schema", schema).
+		Str("table", table).
+		Msg("Fetching sample data")
+
+	rows, err := s.pool.Query(fetchCtx, query)
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying table: %w", err)
+	}
+	defer rows.Close()
+
+	fieldDescriptions := rows.FieldDescriptions()
+	columnNames := make([]string, len(fieldDescriptions))
+	for i, fd := range fieldDescriptions {
+		columnNames[i] = string(fd.Name)
+	}
+
+	var dataRows [][]interface{}
+	for rows.Next() {
+		values, err := rows.Values()
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to scan row, skipping")
+			continue
+		}
+		
+		// Convert pgx-specific types to JSON-friendly formats
+		convertedValues := make([]interface{}, len(values))
+		for i, val := range values {
+			convertedValues[i] = convertPgxValue(val)
+		}
+		
+		dataRows = append(dataRows, convertedValues)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, nil, fmt.Errorf("iterating rows: %w", err)
+	}
+
+	log.Debug().
+		Int("columns", len(columnNames)).
+		Int("rows", len(dataRows)).
+		Msg("Successfully fetched sample data")
+
+	return columnNames, dataRows, nil
+}
+
+// convertPgxValue converts PostgreSQL-specific types to JSON-friendly formats
+func convertPgxValue(val interface{}) interface{} {
+	if val == nil {
+		return nil
+	}
+
+	switch v := val.(type) {
+	case []byte:
+		// Convert byte arrays to hex string (for UUIDs, bytea, etc.)
+		// Try to parse as UUID first
+		if len(v) == 16 {
+			// Format as UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+			return fmt.Sprintf("%x-%x-%x-%x-%x", v[0:4], v[4:6], v[6:8], v[8:10], v[10:16])
+		}
+		// For other byte arrays, return as hex string
+		return fmt.Sprintf("\\x%x", v)
+	case [16]byte:
+		// UUID as fixed array
+		return fmt.Sprintf("%x-%x-%x-%x-%x", v[0:4], v[4:6], v[6:8], v[8:10], v[10:16])
+	case time.Time:
+		// Return time as ISO string
+		return v.Format(time.RFC3339)
+	case map[string]interface{}:
+		// JSON/JSONB already comes as map, keep as is
+		return v
+	case []interface{}:
+		// Arrays - convert each element
+		converted := make([]interface{}, len(v))
+		for i, item := range v {
+			converted[i] = convertPgxValue(item)
+		}
+		return converted
+	default:
+		// For other types, return as is
+		return val
+	}
+}
+
 func init() {
 	meta := plugin.PluginMeta{
 		ID:          "postgresql",
