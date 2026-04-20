@@ -51,7 +51,7 @@ func (h *Handler) getAssetPreview(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !isTableAsset(assetObj.Type) {
+	if !isQueryableAsset(assetObj.Type) {
 		common.RespondError(w, http.StatusNotImplemented, "preview not supported for this asset type")
 		return
 	}
@@ -135,17 +135,12 @@ func (h *Handler) getAssetPreview(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// isTableAsset checks if an asset type represents a table-like entity
-func isTableAsset(assetType string) bool {
-	if assetType == "" {
+// isQueryableAsset checks if an asset type represents a table-like entity
+func isQueryableAsset(assetType string) bool {
+	switch strings.ToLower(assetType) {
+	case "table", "view":
+		return true
+	default:
 		return false
 	}
-	tableKeywords := []string{"table", "view"}
-	lowerType := strings.ToLower(assetType)
-	for _, keyword := range tableKeywords {
-		if strings.Contains(lowerType, keyword) {
-			return true
-		}
-	}
-	return false
 }
