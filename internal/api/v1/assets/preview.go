@@ -119,7 +119,7 @@ func (h *Handler) getAssetPreview(w http.ResponseWriter, r *http.Request) {
 			Str("provider", providerName).
 			Msg("Failed to fetch sample data")
 
-		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("failed to fetch data: %v", err))
+		common.RespondError(w, http.StatusInternalServerError, "failed to fetch data")
 		return
 	}
 
