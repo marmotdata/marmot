@@ -630,12 +630,18 @@ func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginCon
 	query := fmt.Sprintf("SELECT * FROM `%s` LIMIT 20",
 		strings.ReplaceAll(tableID, "`", "``"))
 
+	datasetMeta, err := s.client.Dataset(dataset).Metadata(fetchCtx)
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting dataset metadata: %w", err)
+	}
+
 	q := s.client.Query(query)
-	q.Location = "US"
+	q.Location = datasetMeta.Location
 
 	log.Debug().
 		Str("dataset", dataset).
 		Str("table", table).
+		Str("location", q.Location).
 		Msg("Fetching sample data")
 
 	it, err := q.Read(fetchCtx)
