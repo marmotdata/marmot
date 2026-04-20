@@ -32,6 +32,7 @@ func (h *Handler) Routes() []common.Route {
 type UIConfigResponse struct {
 	Banner               BannerResponse `json:"banner"`
 	EncryptionConfigured bool           `json:"encryption_configured"`
+	AllowUnencrypted     bool           `json:"allow_unencrypted"`
 }
 
 type BannerResponse struct {
@@ -58,6 +59,7 @@ func (h *Handler) getUIConfig(w http.ResponseWriter, r *http.Request) {
 			ID:          h.config.UI.Banner.ID,
 		},
 		EncryptionConfigured: h.encryptionConfigured,
+		AllowUnencrypted:     h.config.Server.AllowUnencrypted,
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)

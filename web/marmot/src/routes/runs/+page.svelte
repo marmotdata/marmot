@@ -7,7 +7,7 @@
 	import { websocketService, type JobRunEvent } from '$lib/websocket';
 	import { auth } from '$lib/stores/auth';
 	import { toasts } from '$lib/stores/toast';
-	import { encryptionConfigured } from '$lib/stores/encryption';
+	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import IngestionRunCard from '$components/runs/IngestionRunCard.svelte';
@@ -593,8 +593,29 @@
 				</div>
 			</div>
 		{:else}
-			<!-- Encryption Warning -->
-			{#if !$encryptionConfigured}
+			<!-- Unencrypted Mode Warning -->
+			{#if $allowUnencrypted}
+				<div
+					class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
+				>
+					<div class="flex items-start">
+						<IconifyIcon
+							icon="material-symbols:warning"
+							class="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0"
+						/>
+						<div class="ml-3">
+							<h3 class="text-sm font-medium text-red-800 dark:text-red-200">
+								Unencrypted mode
+							</h3>
+							<p class="mt-1 text-sm text-red-700 dark:text-red-300">
+								Pipeline credentials are stored in plaintext. This should only be used for
+								development.
+							</p>
+						</div>
+					</div>
+				</div>
+			{:else if !$encryptionConfigured}
+				<!-- Encryption Key Not Configured Warning -->
 				<div
 					class="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800/50 rounded-lg p-4"
 				>

@@ -6396,6 +6396,9 @@ const docTemplate = `{
                 "last_run_status": {
                     "type": "string"
                 },
+                "managed_by": {
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -8037,6 +8040,9 @@ const docTemplate = `{
         "v1_ui.UIConfigResponse": {
             "type": "object",
             "properties": {
+                "allow_unencrypted": {
+                    "type": "boolean"
+                },
                 "banner": {
                     "$ref": "#/definitions/v1_ui.BannerResponse"
                 },

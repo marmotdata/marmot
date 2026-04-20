@@ -848,8 +848,6 @@ func (s *Source) attachDDL(ctx context.Context, catalog, schema string, assets [
 
 func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, info connectorInfo) asset.Asset {
 	metadata := map[string]interface{}{
-		"host":       s.config.Host,
-		"port":       s.config.Port,
 		"catalog":    catalog,
 		"schema":     schema,
 		"table_name": tableName,

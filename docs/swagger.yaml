@@ -700,6 +700,8 @@ definitions:
         type: string
       last_run_status:
         type: string
+      managed_by:
+        type: string
       name:
         type: string
       next_run_at:
@@ -1787,6 +1789,8 @@ definitions:
     type: object
   v1_ui.UIConfigResponse:
     properties:
+      allow_unencrypted:
+        type: boolean
       banner:
         $ref: '#/definitions/v1_ui.BannerResponse'
       encryption_configured:
