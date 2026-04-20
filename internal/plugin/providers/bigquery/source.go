@@ -63,15 +63,26 @@ const (
 	TableTypeExternal TableType = "EXTERNAL"
 )
 
-func (c *Config) ApplyDefaults() {
+func (c *Config) ApplyDefaults(rawConfig plugin.RawPluginConfig) {
 	if c.MaxConcurrentRequests == 0 {
 		c.MaxConcurrentRequests = 10
 	}
-	c.IncludeDatasets = true
-	c.IncludeTableStats = true
-	c.IncludeViews = true
-	c.IncludeExternalTables = true
-	c.ExcludeSystemDatasets = true
+
+	if _, exists := rawConfig["include_datasets"]; !exists {
+		c.IncludeDatasets = true
+	}
+	if _, exists := rawConfig["include_table_stats"]; !exists {
+		c.IncludeTableStats = true
+	}
+	if _, exists := rawConfig["include_views"]; !exists {
+		c.IncludeViews = true
+	}
+	if _, exists := rawConfig["include_external_tables"]; !exists {
+		c.IncludeExternalTables = true
+	}
+	if _, exists := rawConfig["exclude_system_datasets"]; !exists {
+		c.ExcludeSystemDatasets = true
+	}
 }
 
 func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
@@ -80,7 +91,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	config.ApplyDefaults()
+	config.ApplyDefaults(rawConfig)
 
 	if err := plugin.ValidateStruct(config); err != nil {
 		return nil, err
