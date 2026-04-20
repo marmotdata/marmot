@@ -25,7 +25,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/duckdb/duckdb-go/v2 v2.10501.0
 	github.com/elastic/go-elasticsearch/v8 v8.19.3
-	github.com/go-git/go-git/v5 v5.17.2
+	github.com/go-git/go-git/v5 v5.18.0
 	github.com/go-openapi/runtime v0.29.3
 	github.com/go-openapi/strfmt v0.26.1
 	github.com/go-playground/validator/v10 v10.30.1
@@ -33,7 +33,7 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgtype v1.14.4
-	github.com/jackc/pgx/v5 v5.8.0
+	github.com/jackc/pgx/v5 v5.9.0
 	github.com/jackc/tern/v2 v2.3.5
 	github.com/marmotdata/marmot/client v0.0.0-00010101000000-000000000000
 	github.com/modelcontextprotocol/go-sdk v1.4.1
