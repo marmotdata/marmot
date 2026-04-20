@@ -131,33 +131,38 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
 
-	if s.config.IncludeDatasets {
-		log.Debug().Msg("Starting dataset discovery")
-		datasetAssets, err := s.discoverDatasets(ctx)
-		if err != nil {
-			log.Warn().Err(err).Msg("Failed to discover datasets")
-		} else {
+	// Discover datasets
+	log.Debug().Msg("Starting dataset discovery")
+	datasetAssets, err := s.discoverDatasets(ctx)
+	if err != nil {
+		log.Warn().Err(err).Msg("Failed to discover datasets")
+	} else {
+		if s.config.IncludeDatasets {
 			assets = append(assets, datasetAssets...)
 			log.Debug().Int("count", len(datasetAssets)).Msg("Discovered datasets")
 		}
+	}
 
-		for _, datasetAsset := range datasetAssets {
-			if datasetAsset.Type != "Dataset" {
-				continue
-			}
+	// Discover tables in all datasets
+	for _, datasetAsset := range datasetAssets {
+		if datasetAsset.Type != "Dataset" {
+			continue
+		}
 
-			datasetID := *datasetAsset.Name
+		datasetID := *datasetAsset.Name
 
-			log.Debug().Str("dataset", datasetID).Msg("Starting table discovery")
-			tableAssets, err := s.discoverTables(ctx, datasetID)
-			if err != nil {
-				log.Warn().Err(err).Str("dataset", datasetID).Msg("Failed to discover tables")
-				continue
-			}
+		log.Debug().Str("dataset", datasetID).Msg("Starting table discovery")
+		tableAssets, err := s.discoverTables(ctx, datasetID)
+		if err != nil {
+			log.Warn().Err(err).Str("dataset", datasetID).Msg("Failed to discover tables")
+			continue
+		}
 
-			assets = append(assets, tableAssets...)
-			log.Debug().Int("count", len(tableAssets)).Str("dataset", datasetID).Msg("Discovered tables")
+		assets = append(assets, tableAssets...)
+		log.Debug().Int("count", len(tableAssets)).Str("dataset", datasetID).Msg("Discovered tables")
 
+		// Only create lineage if datasets are included
+		if s.config.IncludeDatasets {
 			for _, tableAsset := range tableAssets {
 				lineages = append(lineages, lineage.LineageEdge{
 					Source: *datasetAsset.MRN,
