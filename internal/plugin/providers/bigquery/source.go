@@ -136,11 +136,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	datasetAssets, err := s.discoverDatasets(ctx)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to discover datasets")
-	} else {
-		if s.config.IncludeDatasets {
-			assets = append(assets, datasetAssets...)
-			log.Debug().Int("count", len(datasetAssets)).Msg("Discovered datasets")
-		}
+	} else if s.config.IncludeDatasets {
+		assets = append(assets, datasetAssets...)
+		log.Debug().Int("count", len(datasetAssets)).Msg("Discovered datasets")
 	}
 
 	// Discover tables in all datasets
