@@ -431,7 +431,10 @@ func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginCon
 	defer s.closeConnection()
 
 	//nolint:gosec // G201: inputs sanitized via quoteIdentifier
-	query := fmt.Sprintf("SELECT * FROM `%s` LIMIT 20", strings.ReplaceAll(table, "`", "``"))
+	query := fmt.Sprintf("SELECT * FROM %s.%s LIMIT 20",
+		quoteIdentifier(database),
+		quoteIdentifier(table),
+	)
 
 	log.Debug().
 		Str("database", database).
@@ -482,6 +485,12 @@ func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginCon
 		Msg("Successfully fetched sample data")
 
 	return columnNames, dataRows, nil
+}
+
+// quoteIdentifier wraps an identifier in backticks for MySQL SQL.
+func quoteIdentifier(id string) string {
+	id = strings.ReplaceAll(id, "\x00", "")
+	return "`" + strings.ReplaceAll(id, "`", "``") + "`"
 }
 
 // convertMySQLValue converts MySQL-specific types to JSON-friendly formats
