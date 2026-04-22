@@ -1199,6 +1199,20 @@ definitions:
       period:
         type: string
     type: object
+  v1_assets.PreviewResponse:
+    properties:
+      column_names:
+        items:
+          type: string
+        type: array
+      rows:
+        items:
+          items: {}
+          type: array
+        type: array
+      total_rows:
+        type: integer
+    type: object
   v1_assets.RemoveTermRequest:
     properties:
       term_id:
@@ -1926,6 +1940,46 @@ paths:
       summary: Start search reindex
       tags:
       - admin
+  /api/v1/assets/preview/{id}:
+    get:
+      description: Fetches sample data from the asset's data source. Requires assets:preview
+        permission.
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_assets.PreviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "403":
+          description: Missing assets:preview permission
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "501":
+          description: Data preview not supported for this asset
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get preview data for an asset
+      tags:
+      - assets
   /api/v1/ingestion/runs:
     get:
       parameters:

@@ -58,6 +58,14 @@ func (s *ScheduleService) GetScheduleByName(ctx context.Context, name string) (*
 	return s.repo.GetScheduleByName(ctx, name)
 }
 
+func (s *ScheduleService) LinkAssetsByMRN(ctx context.Context, scheduleID string, assetMRNs []string) error {
+	return s.repo.LinkAssetsByMRN(ctx, scheduleID, assetMRNs)
+}
+
+func (s *ScheduleService) GetScheduleForAsset(ctx context.Context, assetID string) (*Schedule, error) {
+	return s.repo.GetScheduleForAsset(ctx, assetID)
+}
+
 func (s *ScheduleService) UpdateSchedule(ctx context.Context, id string, name, pluginID string, config map[string]interface{}, cronExpression string, enabled bool) (*Schedule, error) {
 	existing, err := s.repo.GetSchedule(ctx, id)
 	if err != nil {

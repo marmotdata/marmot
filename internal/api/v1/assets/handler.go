@@ -12,6 +12,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/runs"
 	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/metrics"
 )
 
@@ -22,8 +23,10 @@ type Handler struct {
 	authService      auth.Service
 	metricsService   *metrics.Service
 	runService       runs.Service
+	scheduleService  *runs.ScheduleService
 	teamService      *team.Service
 	assetRuleService assetrule.Service
+	encryptor        *crypto.Encryptor
 	config           *config.Config
 }
 
@@ -34,8 +37,10 @@ func NewHandler(
 	authService auth.Service,
 	metricsService *metrics.Service,
 	runService runs.Service,
+	scheduleService *runs.ScheduleService,
 	teamService *team.Service,
 	assetRuleService assetrule.Service,
+	encryptor *crypto.Encryptor,
 	config *config.Config,
 ) *Handler {
 	return &Handler{
@@ -45,8 +50,10 @@ func NewHandler(
 		authService:      authService,
 		metricsService:   metricsService,
 		runService:       runService,
+		scheduleService:  scheduleService,
 		teamService:      teamService,
 		assetRuleService: assetRuleService,
+		encryptor:        encryptor,
 		config:           config,
 	}
 }
@@ -87,6 +94,16 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/preview/{id}",
+			Method:  http.MethodGet,
+			Handler: h.getAssetPreview,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "preview"),
+				common.WithRateLimit(h.config, 30, 60), // 30 requests per 60 seconds
 			},
 		},
 		{

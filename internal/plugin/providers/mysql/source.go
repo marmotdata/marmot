@@ -12,6 +12,7 @@ import (
 	"fmt"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/marmotdata/marmot/internal/core/asset"
@@ -394,6 +395,124 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 	}
 
 	return lineages, nil
+}
+
+// FetchSampleData implements the DataFetcher interface to retrieve sample data from a MySQL table
+func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
+	if a == nil || a.Metadata == nil {
+		return nil, nil, fmt.Errorf("asset or asset metadata is nil")
+	}
+
+	parsedConfig, err := plugin.UnmarshalPluginConfig[Config](config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing plugin config: %w", err)
+	}
+	s.config = parsedConfig
+
+	database, _ := a.Metadata["database"].(string)
+	table, _ := a.Metadata["table_name"].(string)
+
+	if database == "" {
+		return nil, nil, fmt.Errorf("could not determine database from asset metadata")
+	}
+	if table == "" && a.Name != nil {
+		table = *a.Name
+	}
+	if table == "" {
+		return nil, nil, fmt.Errorf("could not determine table name from asset metadata")
+	}
+
+	fetchCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	if err := s.initConnection(fetchCtx, database); err != nil {
+		return nil, nil, fmt.Errorf("connecting to database %s: %w", database, err)
+	}
+	defer s.closeConnection()
+
+	//nolint:gosec // G201: inputs sanitized via quoteIdentifier
+	query := fmt.Sprintf("SELECT * FROM %s.%s LIMIT 20",
+		quoteIdentifier(database),
+		quoteIdentifier(table),
+	)
+
+	log.Debug().
+		Str("database", database).
+		Str("table", table).
+		Msg("Fetching sample data")
+
+	rows, err := s.db.QueryContext(fetchCtx, query)
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying table: %w", err)
+	}
+	defer rows.Close()
+
+	columnNames, err := rows.Columns()
+	if err != nil {
+		return nil, nil, fmt.Errorf("getting column names: %w", err)
+	}
+
+	var dataRows [][]interface{}
+	for rows.Next() {
+		// Create a slice of interface{} to scan into
+		values := make([]interface{}, len(columnNames))
+		valuePtrs := make([]interface{}, len(columnNames))
+		for i := range columnNames {
+			valuePtrs[i] = &values[i]
+		}
+
+		if err := rows.Scan(valuePtrs...); err != nil {
+			log.Warn().Err(err).Msg("Failed to scan row, skipping")
+			continue
+		}
+
+		// Convert MySQL-specific types to JSON-friendly formats
+		convertedValues := make([]interface{}, len(values))
+		for i, val := range values {
+			convertedValues[i] = convertMySQLValue(val)
+		}
+
+		dataRows = append(dataRows, convertedValues)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, nil, fmt.Errorf("iterating rows: %w", err)
+	}
+
+	log.Debug().
+		Int("columns", len(columnNames)).
+		Int("rows", len(dataRows)).
+		Msg("Successfully fetched sample data")
+
+	return columnNames, dataRows, nil
+}
+
+// quoteIdentifier wraps an identifier in backticks for MySQL SQL.
+func quoteIdentifier(id string) string {
+	id = strings.ReplaceAll(id, "\x00", "")
+	return "`" + strings.ReplaceAll(id, "`", "``") + "`"
+}
+
+// convertMySQLValue converts MySQL-specific types to JSON-friendly formats
+func convertMySQLValue(val interface{}) interface{} {
+	if val == nil {
+		return nil
+	}
+
+	switch v := val.(type) {
+	case []byte:
+		if utf8.Valid(v) {
+			return string(v)
+		}
+		// For actual binary data, convert to hex string
+		return fmt.Sprintf("0x%x", v)
+	case time.Time:
+		// Return time as ISO string
+		return v.Format(time.RFC3339)
+	default:
+		// For other types, return as is
+		return val
+	}
 }
 
 func init() {
