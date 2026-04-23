@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 // Client wraps the Elasticsearch client with connection lifecycle management.

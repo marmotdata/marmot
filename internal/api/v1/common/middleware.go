@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"

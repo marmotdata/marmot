@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/assetrule"

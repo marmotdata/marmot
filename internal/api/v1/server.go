@@ -63,7 +63,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/ui"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
 	webhooksAPI "github.com/marmotdata/marmot/internal/api/v1/webhooks"
-	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"

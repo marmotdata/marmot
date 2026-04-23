@@ -134,6 +134,12 @@ type Config struct {
 		Namespace      string `mapstructure:"namespace"`
 		ServiceAccount string `mapstructure:"service_account"`
 	} `mapstructure:"operator"`
+
+	Telemetry struct {
+		Enabled  bool   `mapstructure:"enabled"`
+		Endpoint string `mapstructure:"endpoint"`
+		Interval int    `mapstructure:"interval"` // seconds
+	} `mapstructure:"telemetry"`
 }
 
 type BannerConfig struct {
@@ -338,6 +344,11 @@ func loadConfig(configPath string) error {
 	v.BindEnv("operator.namespace")
 	v.BindEnv("operator.service_account")
 
+	// Telemetry env vars
+	v.BindEnv("telemetry.enabled")
+	v.BindEnv("telemetry.endpoint")
+	v.BindEnv("telemetry.interval")
+
 	// Search env vars
 	v.BindEnv("search.timeout")
 	v.BindEnv("search.elasticsearch.enabled")
@@ -466,6 +477,11 @@ func setDefaults(v *viper.Viper) {
 
 	// Operator defaults
 	v.SetDefault("operator.service_account", "marmot-ingest")
+
+	// Telemetry defaults
+	v.SetDefault("telemetry.enabled", true)
+	v.SetDefault("telemetry.endpoint", "https://telemetry.marmotdata.io/v1/ingest")
+	v.SetDefault("telemetry.interval", 86400) // 24h
 
 	// Search defaults
 	v.SetDefault("search.timeout", 10) // 10 seconds

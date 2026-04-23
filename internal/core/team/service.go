@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 type Team struct {

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/plugin"
 )

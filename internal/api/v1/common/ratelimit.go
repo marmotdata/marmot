@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/rs/zerolog/log"
 )
 

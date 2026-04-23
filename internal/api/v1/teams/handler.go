@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/internal/config"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"

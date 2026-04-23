@@ -391,6 +391,13 @@
             "claim_expiry": { "type": "integer", "minimum": 1 }
           }
         },
+        "telemetry": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "enabled": { "type": "boolean" }
+          }
+        },
         "operator": {
           "type": "object",
           "additionalProperties": false,

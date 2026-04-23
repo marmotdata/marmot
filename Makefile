@@ -13,7 +13,7 @@ build:
 	go build -o bin/$(BINARY_NAME) cmd/main.go
 
 dev: swagger build
-	MARMOT_LOGGING_LEVEL=debug MARMOT_SERVER_ALLOW_UNENCRYPTED=true ./bin/$(BINARY_NAME) run
+	MARMOT_LOGGING_LEVEL=debug MARMOT_SERVER_ALLOW_UNENCRYPTED=true MARMOT_TELEMETRY_ENABLED=false ./bin/$(BINARY_NAME) run
 
 frontend-build:
 	cd web/marmot && pnpm install && node scripts/generate-icon-bundle.mjs && pnpm build

@@ -246,6 +246,10 @@ config:
     auth:
       enabled: true
 
+  # Telemetry — anonymous usage data, disable with telemetry.enabled: false
+  telemetry:
+    enabled: true
+
   # Operator config (for Marmot server-side awareness of operator features)
   operator:
     enabled: false

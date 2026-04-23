@@ -10,9 +10,10 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	v1 "github.com/marmotdata/marmot/internal/api/v1"
-	"github.com/marmotdata/marmot/internal/config"
 	"github.com/marmotdata/marmot/internal/staticfiles"
 	"github.com/marmotdata/marmot/internal/store/postgres"
+	"github.com/marmotdata/marmot/internal/telemetry"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -60,6 +61,19 @@ func runMarmot(_ *cobra.Command) error {
 		return fmt.Errorf("Failed to initialize database: %v", err)
 	}
 	defer db.Close()
+
+	// Telemetry
+	if cfg.Telemetry.Enabled {
+		log.Info().Msg("Anonymous telemetry enabled — learn more: https://marmotdata.io/docs/configure/telemetry — disable with telemetry.enabled: false or MARMOT_TELEMETRY_ENABLED=false")
+	}
+	telemetryCfg := telemetry.CollectorConfig{
+		Enabled:  cfg.Telemetry.Enabled,
+		Endpoint: cfg.Telemetry.Endpoint,
+		Interval: time.Duration(cfg.Telemetry.Interval) * time.Second,
+		Version:  ServerVersion,
+	}
+	collector := telemetry.NewCollector(db, telemetryCfg)
+	go collector.Run(ctx)
 
 	mux := http.NewServeMux()
 	server := v1.New(cfg, db)
