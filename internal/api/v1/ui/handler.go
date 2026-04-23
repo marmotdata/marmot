@@ -33,6 +33,7 @@ type UIConfigResponse struct {
 	Banner               BannerResponse `json:"banner"`
 	EncryptionConfigured bool           `json:"encryption_configured"`
 	AllowUnencrypted     bool           `json:"allow_unencrypted"`
+	TablePreviewEnabled  bool           `json:"table_preview_enabled"`
 }
 
 type BannerResponse struct {
@@ -60,6 +61,7 @@ func (h *Handler) getUIConfig(w http.ResponseWriter, r *http.Request) {
 		},
 		EncryptionConfigured: h.encryptionConfigured,
 		AllowUnencrypted:     h.config.Server.AllowUnencrypted,
+		TablePreviewEnabled:  h.config.Experimental.TablePreview,
 	}
 
 	common.RespondJSON(w, http.StatusOK, response)

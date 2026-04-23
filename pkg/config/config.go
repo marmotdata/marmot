@@ -140,6 +140,10 @@ type Config struct {
 		Endpoint string `mapstructure:"endpoint"`
 		Interval int    `mapstructure:"interval"` // seconds
 	} `mapstructure:"telemetry"`
+
+	Experimental struct {
+		TablePreview bool `mapstructure:"table_preview"`
+	} `mapstructure:"experimental"`
 }
 
 type BannerConfig struct {
@@ -349,6 +353,9 @@ func loadConfig(configPath string) error {
 	v.BindEnv("telemetry.endpoint")
 	v.BindEnv("telemetry.interval")
 
+	// Experimental env vars
+	v.BindEnv("experimental.table_preview")
+
 	// Search env vars
 	v.BindEnv("search.timeout")
 	v.BindEnv("search.elasticsearch.enabled")
@@ -482,6 +489,9 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("telemetry.enabled", true)
 	v.SetDefault("telemetry.endpoint", "https://telemetry.marmotdata.io/v1/ingest")
 	v.SetDefault("telemetry.interval", 86400) // 24h
+
+	// Experimental defaults
+	v.SetDefault("experimental.table_preview", false)
 
 	// Search defaults
 	v.SetDefault("search.timeout", 10) // 10 seconds

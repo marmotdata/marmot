@@ -28,6 +28,7 @@ type Scheduler struct {
 	encryptor   *crypto.Encryptor
 	registry    *plugin.Registry
 	db          *pgxpool.Pool
+	linkAssets  bool
 
 	maxWorkers        int
 	schedulerInterval time.Duration
@@ -50,6 +51,7 @@ type SchedulerConfig struct {
 	SchedulerInterval time.Duration
 	LeaseExpiry       time.Duration
 	ClaimExpiry       time.Duration
+	LinkAssets         bool
 	DB                *pgxpool.Pool
 }
 
@@ -84,6 +86,7 @@ func NewScheduler(service *ScheduleService, runsService Service, encryptor *cryp
 		encryptor:         encryptor,
 		registry:          registry,
 		db:                config.DB,
+		linkAssets:        config.LinkAssets,
 		maxWorkers:        maxWorkers,
 		schedulerInterval: schedulerInterval,
 		leaseExpiry:       leaseExpiry,
@@ -173,7 +176,7 @@ func (s *Scheduler) jobDispatcher() {
 					s.activeWorkers.Add(-1)
 				}()
 
-				worker := newWorker(s.service, s.runsService, s.encryptor, s.registry)
+				worker := newWorker(s.service, s.runsService, s.encryptor, s.registry, s.linkAssets)
 				if err := worker.executeJob(s.ctx, j); err != nil {
 					log.Error().
 						Err(err).
@@ -287,14 +290,16 @@ type worker struct {
 	runsService Service
 	encryptor   *crypto.Encryptor
 	registry    *plugin.Registry
+	linkAssets  bool
 }
 
-func newWorker(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry) *worker {
+func newWorker(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry, linkAssets bool) *worker {
 	return &worker{
 		service:     service,
 		runsService: runsService,
 		encryptor:   encryptor,
 		registry:    registry,
+		linkAssets:  linkAssets,
 	}
 }
 
@@ -503,7 +508,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 	_ = w.runsService.CompleteRun(ctx, pluginRun.RunID, plugin.StatusCompleted, summary, "")
 
 	// Link assets to this schedule for preview lookups (non-fatal if it fails)
-	if len(assetMRNs) > 0 {
+	if w.linkAssets && len(assetMRNs) > 0 {
 		if err := w.service.LinkAssetsByMRN(ctx, *run.ScheduleID, assetMRNs); err != nil {
 			log.Warn().
 				Err(err).

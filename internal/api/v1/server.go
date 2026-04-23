@@ -296,6 +296,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		SchedulerInterval: time.Duration(config.Pipelines.SchedulerInterval) * time.Second,
 		LeaseExpiry:       time.Duration(config.Pipelines.LeaseExpiry) * time.Second,
 		ClaimExpiry:       time.Duration(config.Pipelines.ClaimExpiry) * time.Second,
+		LinkAssets:        config.Experimental.TablePreview,
 		DB:                db,
 	}
 	scheduler := runService.NewScheduler(scheduleSvc, runsSvc, scheduleEncryptor, pluginRegistry, schedulerConfig)

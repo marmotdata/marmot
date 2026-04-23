@@ -59,7 +59,7 @@ func NewHandler(
 }
 
 func (h *Handler) Routes() []common.Route {
-	return []common.Route{
+	routes := []common.Route{
 		{
 			Path:    "/api/v1/assets/",
 			Method:  http.MethodPost,
@@ -94,16 +94,6 @@ func (h *Handler) Routes() []common.Route {
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
-			},
-		},
-		{
-			Path:    "/api/v1/assets/preview/{id}",
-			Method:  http.MethodGet,
-			Handler: h.getAssetPreview,
-			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
-				common.WithAuth(h.userService, h.authService, h.config),
-				common.RequirePermission(h.userService, "assets", "preview"),
-				common.WithRateLimit(h.config, 30, 60), // 30 requests per 60 seconds
 			},
 		},
 		{
@@ -324,4 +314,19 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 	}
+
+	if h.config.Experimental.TablePreview {
+		routes = append(routes, common.Route{
+			Path:    "/api/v1/assets/preview/{id}",
+			Method:  http.MethodGet,
+			Handler: h.getAssetPreview,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "preview"),
+				common.WithRateLimit(h.config, 30, 60), // 30 requests per 60 seconds
+			},
+		})
+	}
+
+	return routes
 }

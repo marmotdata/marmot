@@ -21,6 +21,7 @@
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
 	import { auth } from '$lib/stores/auth';
+	import { tablePreviewEnabled } from '$lib/stores/features';
 
 	interface Owner {
 		id: string;
@@ -208,7 +209,7 @@
 			)
 				return false;
 			if (tab.id === 'query' && !asset?.query) return false;
-			if (tab.id === 'preview' && !isTableAsset(asset)) return false;
+			if (tab.id === 'preview' && (!isTableAsset(asset) || !$tablePreviewEnabled)) return false;
 			if (tab.id === 'run-history' && !asset?.has_run_history) return false;
 			return true;
 		})
@@ -225,8 +226,8 @@
 			fetchOwners();
 			userDescription = asset.user_description || '';
 
-			// Fetch preview data if asset is a table
-			if (isTableAsset(asset)) {
+			// Fetch preview data if asset is a table and preview is enabled
+			if (isTableAsset(asset) && $tablePreviewEnabled) {
 				fetchPreviewData();
 			}
 		}

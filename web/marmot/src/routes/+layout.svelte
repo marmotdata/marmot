@@ -10,6 +10,7 @@
 	import UserIcon from '~icons/heroicons/user-16-solid';
 	import Icon from '@iconify/svelte';
 	import { encryptionConfigured, allowUnencrypted } from '$lib/stores/encryption';
+	import { tablePreviewEnabled } from '$lib/stores/features';
 	import Banner from '$lib/components/Banner.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import GlobalSearch from '$components/query/GlobalSearch.svelte';
@@ -149,6 +150,7 @@
 					bannerConfig = data.banner;
 					encryptionConfigured.set(data.encryption_configured ?? true);
 					allowUnencrypted.set(data.allow_unencrypted ?? false);
+					tablePreviewEnabled.set(data.table_preview_enabled ?? false);
 				}
 			} catch (error) {
 				console.error('Failed to fetch UI config:', error);
