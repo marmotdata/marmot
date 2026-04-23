@@ -8128,6 +8128,9 @@ const docTemplate = `{
                 },
                 "encryption_configured": {
                     "type": "boolean"
+                },
+                "table_preview_enabled": {
+                    "type": "boolean"
                 }
             }
         },
