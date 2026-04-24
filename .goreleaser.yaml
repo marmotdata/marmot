@@ -25,7 +25,7 @@ builds:
       - -tags=production,netgo,osusergo
     ldflags:
       - -s -w
-      - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
+      - -X github.com/marmotdata/marmot/internal/cmd.Version={{.Version}}
       - -extldflags "-static"
 
   - id: marmot-linux-arm64
@@ -41,7 +41,7 @@ builds:
       - -tags=production,netgo,osusergo
     ldflags:
       - -s -w
-      - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
+      - -X github.com/marmotdata/marmot/internal/cmd.Version={{.Version}}
       - -extldflags "-static"
 
   - id: marmot-darwin-amd64
@@ -58,7 +58,7 @@ builds:
       - -tags=production
     ldflags:
       - -s -w
-      - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
+      - -X github.com/marmotdata/marmot/internal/cmd.Version={{.Version}}
 
   - id: marmot-darwin-arm64
     main: ./cmd/main.go
@@ -74,7 +74,7 @@ builds:
       - -tags=production
     ldflags:
       - -s -w
-      - -X github.com/marmotdata/marmot/cmd.Version={{.Version}}
+      - -X github.com/marmotdata/marmot/internal/cmd.Version={{.Version}}
 
 archives:
   - id: marmot

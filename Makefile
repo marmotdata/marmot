@@ -4,7 +4,7 @@
 BINARY_NAME=marmot
 GO_FILES=$(shell find . -name '*.go')
 VERSION ?= $(shell git describe --tags --always --dirty --match=v* 2> /dev/null || echo "v0.0.0")
-LDFLAGS_VERSION=-X "github.com/marmotdata/marmot/cmd.Version=$(VERSION)"
+LDFLAGS_VERSION=-X "github.com/marmotdata/marmot/internal/cmd.Version=$(VERSION)"
 
 swagger:
 	swag init -d internal/api --generalInfo v1/server.go --parseDependency --output docs

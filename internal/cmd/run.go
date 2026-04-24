@@ -70,7 +70,7 @@ func runMarmot(_ *cobra.Command) error {
 		Enabled:  cfg.Telemetry.Enabled,
 		Endpoint: cfg.Telemetry.Endpoint,
 		Interval: time.Duration(cfg.Telemetry.Interval) * time.Second,
-		Version:  ServerVersion,
+		Version:  Version,
 	}
 	collector := telemetry.NewCollector(db, telemetryCfg)
 	go collector.Run(ctx)

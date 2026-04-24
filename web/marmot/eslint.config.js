@@ -46,7 +46,9 @@ export default ts.config(
 			],
 			'no-empty': 'warn',
 			'no-case-declarations': 'warn',
-			'svelte/require-each-key': 'warn'
+			'svelte/require-each-key': 'warn',
+			'svelte/no-navigation-without-resolve': 'warn',
+			'svelte/prefer-svelte-reactivity': 'warn'
 		}
 	},
 	{

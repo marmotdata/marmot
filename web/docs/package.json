@@ -22,11 +22,11 @@
     "@docusaurus/theme-common": "3.9.2",
     "@giscus/react": "^3.1.0",
     "@iconify/react": "^6.0.2",
-    "@mdx-js/react": "^3.1.0",
+    "@mdx-js/react": "^3.1.1",
     "clsx": "^2.1.1",
     "prism-react-renderer": "^2.4.1",
-    "react": "^19.1.0",
-    "react-dom": "^19.1.0",
+    "react": "^19.2.5",
+    "react-dom": "^19.2.5",
     "redocusaurus": "^2.5.0",
     "tailwindcss": "3.4.14"
   },
@@ -34,13 +34,13 @@
     "@docusaurus/module-type-aliases": "3.9.2",
     "@docusaurus/tsconfig": "3.9.2",
     "@docusaurus/types": "3.9.2",
-    "@iconify/json": "^2.2.345",
-    "@tailwindcss/typography": "^0.5.16",
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.4",
-    "postcss-import": "^16.1.0",
+    "@iconify/json": "^2.2.466",
+    "@tailwindcss/typography": "^0.5.19",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.10",
+    "postcss-import": "^16.1.1",
     "typescript": "~5.8.3",
-    "unplugin-icons": "^22.1.0"
+    "unplugin-icons": "~22.1.0"
   },
   "pnpm": {
     "overrides": {
@@ -69,8 +69,9 @@
       "lodash": ">=4.18.1",
       "qs": ">=6.14.2",
       "ajv": ">=8.18.0",
-      "path-to-regexp": ">=0.1.13",
-      "webpack": ">=5.104.1"
+      "path-to-regexp": "~0.1.13",
+      "webpack": "~5.104.1",
+      "uuid": ">=9.0.1"
     }
   },
   "browserslist": {
