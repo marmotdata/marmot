@@ -111,10 +111,18 @@ jobs:
     needs: release
     if: ${{ !contains(github.ref_name, 'preview') }}
     steps:
+      - name: Generate Marmbot token
+        id: app-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ secrets.MARMBOT_APP_ID }}
+          private-key: ${{ secrets.MARMBOT_PRIVATE_KEY }}
+
       - name: Checkout main
         uses: actions/checkout@v5
         with:
           ref: main
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -148,8 +156,8 @@ jobs:
 
       - name: Commit versioned docs to main
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "marmbot[bot]"
+          git config user.email "${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com"
           git add web/docs/versioned_docs/ web/docs/versioned_sidebars/ web/docs/versions.json
           git diff --cached --quiet && echo "No new docs version to commit" && exit 0
           git commit -m "docs: snapshot version ${{ steps.version.outputs.minor }} for v${{ steps.version.outputs.full }}"
