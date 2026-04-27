@@ -105,7 +105,7 @@ func (s *Source) initClient() error {
 	if s.config.TLSSkipVerify || s.config.CACertPath != "" {
 		transport := http.DefaultTransport.(*http.Transport).Clone()
 		if transport.TLSClientConfig == nil {
-			transport.TLSClientConfig = &tls.Config{}
+			transport.TLSClientConfig = &tls.Config{MinVersion: tls.VersionTLS12}
 		}
 		transport.TLSClientConfig.InsecureSkipVerify = s.config.TLSSkipVerify //nolint:gosec // User-configured option
 

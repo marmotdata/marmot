@@ -31,10 +31,6 @@ operator:
 helm upgrade marmot marmotdata/marmot -f values.yaml
 ```
 
-This deploys the operator Deployment, its ServiceAccount, RBAC and the `Run` CRD.
-
----
-
 ## Creating a Run
 
 A `Run` resource defines an ingestion pipeline. The `spec.runs` array uses the same format as the [CLI configuration file](/docs/Populating/CLI#configuration-file).
@@ -60,10 +56,6 @@ The resource's `metadata.name` is used as the pipeline name for tracking ingesti
 kubectl apply -f my-pipeline.yaml
 ```
 
-Without a `schedule`, the operator creates a one-shot Job that runs immediately.
-
----
-
 ## Pod Labels and Annotations
 
 Use `podLabels` and `podAnnotations` to integrate ingestion pods with service meshes, observability tools or policy engines.
@@ -82,29 +74,6 @@ spec:
         region: "eu-west-1"
 ```
 
----
-
-## Status and Monitoring
-
-Check the state of your pipelines:
-
-```bash
-kubectl get runs
-```
-
-```
-NAME          SCHEDULE      PHASE       LAST RUN             TEARDOWN   AGE
-my-pipeline   0 */6 * * *   Succeeded   2025-01-15T12:00:00Z true       2d
-```
-
-For more detail:
-
-```bash
-kubectl describe run my-pipeline
-```
-
----
-
 ## Manual Triggers
 
 Trigger a scheduled pipeline outside its cron window by annotating the Run:
@@ -115,17 +84,9 @@ kubectl annotate run my-pipeline runs.marmotdata.io/trigger=true
 
 This creates a temporary Job that runs immediately and cleans up after 60 seconds.
 
----
-
 ## Teardown on Delete
 
 By default, deleting a Run resource runs `marmot ingest --destroy` to remove all assets that pipeline previously discovered from Marmot. Set `teardownOnDelete: false` if you want to keep existing assets after removing the Run.
-
-<TipBox variant="warning" title="Teardown Deletes Assets">
-With `teardownOnDelete: true` (the default), deleting a Run removes all assets that pipeline created. Make sure this is what you want before deleting a Run resource.
-</TipBox>
-
----
 
 ## Reference
 
