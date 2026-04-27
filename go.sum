@@ -753,6 +753,8 @@ github.com/opencontainers/image-spec v1.1.1 h1:y0fUlFfIZhPF1W537XOLg0/fcx6zcHCJw
 github.com/opencontainers/image-spec v1.1.1/go.mod h1:qpqAh3Dmcf36wStyyWU+kCeDgrGnAve2nCC8+7h8Q0M=
 github.com/opencontainers/runc v1.3.1 h1:c/yY0oh2wK7tzDuD56REnSxyU8ubh8hoAIOLGLrm4SM=
 github.com/opencontainers/runc v1.3.1/go.mod h1:9wbWt42gV+KRxKRVVugNP6D5+PQciRbenB4fLVsqGPs=
+github.com/opensearch-project/opensearch-go/v4 v4.6.0 h1:Ac8aLtDSmLEyOmv0r1qhQLw3b4vcUhE42NE9k+Z4cRc=
+github.com/opensearch-project/opensearch-go/v4 v4.6.0/go.mod h1:3iZtb4SNt3IzaxavKq0dURh1AmtVgYW71E4XqmYnIiQ=
 github.com/ory/dockertest/v3 v3.12.0 h1:3oV9d0sDzlSQfHtIaB5k6ghUCVMVLpAY8hwrqoCyRCw=
 github.com/ory/dockertest/v3 v3.12.0/go.mod h1:aKNDTva3cp8dwOWwb9cWuX84aH5akkxXRvO7KCwWVjE=
 github.com/paulmach/orb v0.12.0 h1:z+zOwjmG3MyEEqzv92UN49Lg1JFYx0L9GpGKNVDKk1s=

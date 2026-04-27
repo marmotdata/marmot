@@ -75,6 +75,12 @@ const plugins: Plugin[] = [
     icon: "logos:aws-dynamodb",
   },
   {
+    name: "Elasticsearch",
+    description: "Discover indices, data streams, and aliases from Elasticsearch clusters",
+    href: "/docs/Plugins/Elasticsearch",
+    icon: "logos:elasticsearch",
+  },
+  {
     name: "Google Cloud Storage",
     description: "Discover buckets from Google Cloud Storage",
     href: "/docs/Plugins/Google%20Cloud%20Storage",
@@ -122,6 +128,12 @@ const plugins: Plugin[] = [
     description: "Discover JetStream streams from NATS servers",
     href: "/docs/Plugins/NATS",
     icon: "devicon:nats",
+  },
+  {
+    name: "OpenSearch",
+    description: "Discover indices, data streams, and aliases from OpenSearch clusters",
+    href: "/docs/Plugins/OpenSearch",
+    icon: "logos:opensearch-icon",
   },
   {
     name: "OpenAPI",

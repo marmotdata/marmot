@@ -12,6 +12,7 @@ import KinesisIcon from '~icons/logos/aws-kinesis';
 import SnsIcon from '~icons/logos/aws-sns';
 import SqsIcon from '~icons/logos/aws-sqs';
 import ElasticsearchIcon from '~icons/logos/elasticsearch';
+import OpenSearchIcon from '~icons/logos/opensearch-icon';
 import MySqlIcon from '~icons/logos/mysql-icon';
 import MongoDBIcon from '~icons/logos/mongodb-icon';
 import S3Icon from '~icons/logos/aws-s3';
@@ -95,6 +96,7 @@ export const providerIconMap: Record<
 	sns: { default: SnsIcon, displayName: 'SNS' },
 	sqs: { default: SqsIcon, displayName: 'SQS' },
 	elasticsearch: { default: ElasticsearchIcon, displayName: 'Elasticsearch' },
+	opensearch: { default: OpenSearchIcon, displayName: 'OpenSearch' },
 	mysql: { default: MySqlIcon, displayName: 'MySQL' },
 	mongodb: { default: MongoDBIcon, displayName: 'MongoDB' },
 	s3: { default: S3Icon, displayName: 'S3' },
