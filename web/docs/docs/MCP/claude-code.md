@@ -4,9 +4,9 @@ Anthropic's CLI for Claude AI with native MCP support.
 
 ## Configuration
 
-### User-Level Configuration
+### Using an API Key
 
-Create or edit `~/.claude.json`:
+Create or edit `~/.claude.json` (user-level) or `.mcp.json` (project root):
 
 ```json
 {
@@ -22,9 +22,9 @@ Create or edit `~/.claude.json`:
 }
 ```
 
-### Project-Level Configuration
+### Using a Bearer Token
 
-Create `.mcp.json` in your project root:
+If you authenticate with `marmot login`, you can use the cached token instead of an API key:
 
 ```json
 {
@@ -33,7 +33,7 @@ Create `.mcp.json` in your project root:
       "type": "http",
       "url": "https://<your-marmot-server>/api/v1/mcp",
       "headers": {
-        "X-API-Key": "<your-api-key>"
+        "Authorization": "Bearer <your-token>"
       }
     }
   }

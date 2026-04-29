@@ -18,19 +18,20 @@ type RateLimitConfig struct {
 }
 
 type OAuthProviderConfig struct {
-	Enabled      bool             `mapstructure:"enabled"`
-	Type         string           `mapstructure:"type"`
-	Name         string           `mapstructure:"name"`
-	ClientID     string           `mapstructure:"client_id"`
-	ClientSecret string           `mapstructure:"client_secret"`
-	URL          string           `mapstructure:"url"`
-	Realm        string           `mapstructure:"realm"`
-	RedirectURL  string           `mapstructure:"redirect_url"`
-	Scopes       []string         `mapstructure:"scopes"`
-	AllowSignup  bool             `mapstructure:"allow_signup"`
-	GroupMapping []GroupMapConfig `mapstructure:"group_mapping"`
-	TeamSync     TeamSyncConfig   `mapstructure:"team_sync"`
-	TLS          *TLSConfig       `mapstructure:"tls"`
+	Enabled          bool             `mapstructure:"enabled"`
+	Type             string           `mapstructure:"type"`
+	Name             string           `mapstructure:"name"`
+	ClientID         string           `mapstructure:"client_id"`
+	ClientSecret     string           `mapstructure:"client_secret"`
+	URL              string           `mapstructure:"url"`
+	Realm            string           `mapstructure:"realm"`
+	RedirectURL      string           `mapstructure:"redirect_url"`
+	Scopes           []string         `mapstructure:"scopes"`
+	AllowSignup      bool             `mapstructure:"allow_signup"`
+	AllowedAudiences []string         `mapstructure:"allowed_audiences"`
+	GroupMapping     []GroupMapConfig `mapstructure:"group_mapping"`
+	TeamSync         TeamSyncConfig   `mapstructure:"team_sync"`
+	TLS              *TLSConfig       `mapstructure:"tls"`
 }
 
 type GroupMapConfig struct {

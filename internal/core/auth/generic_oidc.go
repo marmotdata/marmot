@@ -16,18 +16,20 @@ import (
 )
 
 type GenericOIDCProvider struct {
-	clientID     string
-	clientSecret string
-	redirectURL  string
-	name         string
-	config       *config.Config
-	userService  user.Service
-	authService  Service
-	teamService  *team.Service
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	oidcProvider *oidc.Provider
-	httpClient   *http.Client
+	clientID         string
+	clientSecret     string
+	redirectURL      string
+	issuerURL        string
+	name             string
+	config           *config.Config
+	userService      user.Service
+	authService      Service
+	teamService      *team.Service
+	verifier         *oidc.IDTokenVerifier
+	exchangeVerifier *oidc.IDTokenVerifier
+	oauthConfig      *oauth2.Config
+	oidcProvider     *oidc.Provider
+	httpClient       *http.Client
 }
 
 func NewGenericOIDCProvider(cfg *config.Config, userService user.Service, authService Service, teamService *team.Service) (*GenericOIDCProvider, error) {
@@ -47,6 +49,7 @@ func NewGenericOIDCProvider(cfg *config.Config, userService user.Service, authSe
 		clientID:     providerCfg.ClientID,
 		clientSecret: providerCfg.ClientSecret,
 		redirectURL:  cfg.Server.RootURL + "/auth/generic_oidc/callback",
+		issuerURL:    issuerURL,
 		name:         name,
 		config:       cfg,
 		userService:  userService,
@@ -83,6 +86,7 @@ func NewGenericOIDCProvider(cfg *config.Config, userService user.Service, authSe
 	p.verifier = p.oidcProvider.Verifier(&oidc.Config{
 		ClientID: p.clientID,
 	})
+	p.exchangeVerifier = newExchangeVerifier(p.oidcProvider)
 
 	return p, nil
 }
@@ -217,6 +221,45 @@ func (p *GenericOIDCProvider) getUserInfo(ctx context.Context, token *oauth2.Tok
 	}
 
 	return userInfo, nil
+}
+
+func (p *GenericOIDCProvider) ExchangeToken(ctx context.Context, rawIDToken string) (*user.User, error) {
+	cfg := p.config.Auth.GenericOIDC
+	var teamSync config.TeamSyncConfig
+	if cfg != nil {
+		teamSync = cfg.TeamSync
+	}
+	return exchangeIDToken(ctx, oidcExchangeParams{
+		providerType:     "generic_oidc",
+		providerName:     "Generic OIDC",
+		verifier:         p.exchangeVerifier,
+		allowedAudiences: exchangeAudiences(cfg),
+		httpClient:       p.httpClient,
+		userService:      p.userService,
+		teamService:      p.teamService,
+		teamSync:         teamSync,
+	}, rawIDToken)
+}
+
+func (p *GenericOIDCProvider) ExchangeAccessToken(ctx context.Context, accessToken string) (*user.User, error) {
+	cfg := p.config.Auth.GenericOIDC
+	var teamSync config.TeamSyncConfig
+	if cfg != nil {
+		teamSync = cfg.TeamSync
+	}
+	return exchangeViaUserinfo(ctx, userinfoExchangeParams{
+		providerType: "generic_oidc",
+		providerName: "Generic OIDC",
+		oidcProvider: p.oidcProvider,
+		httpClient:   p.httpClient,
+		userService:  p.userService,
+		teamService:  p.teamService,
+		teamSync:     teamSync,
+	}, accessToken)
+}
+
+func (p *GenericOIDCProvider) IssuerURL() string {
+	return p.issuerURL
 }
 
 func (p *GenericOIDCProvider) Name() string {

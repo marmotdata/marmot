@@ -7,14 +7,14 @@ This skill helps you interact with a Marmot data catalog. Marmot catalogs data a
 
 ## Setup
 
-The user needs the Marmot CLI installed and configured. If not already set up:
+The user needs the Marmot CLI installed and authenticated. If not already set up:
 
 ```bash
 curl -fsSL get.marmotdata.io | sh
-marmot config init
+marmot login https://marmot.example.com
 ```
 
-`config init` prompts for the host URL and API key. Alternatively, set environment variables:
+`marmot login` opens a browser for OAuth 2.0 PKCE authentication and caches the token locally. Alternatively, use an API key:
 
 ```bash
 export MARMOT_HOST=https://marmot.example.com
@@ -105,6 +105,17 @@ marmot runs entities <id>                 # entities processed in a run
 
 Filter with `--pipelines` and `--statuses`.
 
+### Authentication
+
+```bash
+marmot login                              # authenticate via browser (OAuth PKCE)
+marmot login https://marmot.example.com   # authenticate to a specific instance
+marmot logout                             # remove cached token
+marmot context list                       # list contexts (* = active)
+marmot context use <name>                 # switch active context
+marmot context delete <name>              # remove context and token
+```
+
 ### Users and API Keys
 
 ```bash
@@ -150,12 +161,12 @@ marmot admin reindex-status               # check progress
 marmot config init                        # interactive setup
 marmot config set <key> <value>           # set a config value
 marmot config get <key>                   # get a config value
-marmot config list                        # list all config values
+marmot config list                        # list all config values (incl. active context)
 ```
 
 ## REST API
 
-The Marmot API is available at `{host}/api/v1/`. Authenticate with the `X-API-Key` header.
+The Marmot API is available at `{host}/api/v1/`. Authenticate with either the `X-API-Key` header or `Authorization: Bearer <token>` (from `marmot login`).
 
 ### Key Endpoints
 
@@ -205,4 +216,4 @@ GET /api/v1/metrics/top-queries?start=2026-03-01T00:00:00Z&end=2026-03-26T00:00:
 - Asset IDs are UUIDs. Asset MRNs (Marmot Resource Names) look like `mrn://type/provider/name`.
 - Destructive commands (`delete`) prompt for confirmation. Pass `--yes` to skip in scripts.
 - All list commands support `--limit` and `--offset` for pagination.
-- When using the REST API directly, always include the `X-API-Key` header.
+- When using the REST API directly, authenticate with either `X-API-Key` or `Authorization: Bearer <token>` header.

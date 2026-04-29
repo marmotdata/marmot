@@ -78,9 +78,9 @@ func getPrinter() *output.Printer {
 	return output.NewPrinter(viper.GetString("output"), os.Stdout)
 }
 
-// getHost returns the resolved host for commands that need it directly.
+// getHost returns the resolved host: --host flag > active context > legacy config.
 func getHost() string {
-	return viper.GetString("host")
+	return resolveHost()
 }
 
 // getAPIKey returns the resolved API key for commands that need it directly.
@@ -90,9 +90,17 @@ func getAPIKey() string {
 
 const k8sSATokenPath = "/var/run/secrets/kubernetes.io/serviceaccount/token" //nolint:gosec
 
-// getAuthToken returns the auth token and whether it's a K8s SA token (Bearer) vs API key.
-// It checks --api-key / MARMOT_API_KEY first, then falls back to the K8s SA token file.
-func getAuthToken() (token string, isSAToken bool) {
+// getAuthToken returns the auth token and whether it should use Bearer auth.
+// Priority: --api-key flag > active context OAuth token > config/env API key > K8s SA token.
+func getAuthToken() (token string, isBearerToken bool) {
+	if globalAPIKey != "" {
+		return globalAPIKey, false
+	}
+	if ctx := currentContextName(); ctx != "" {
+		if cached, ok := getCachedToken(ctx); ok {
+			return cached, true
+		}
+	}
 	if key := getAPIKey(); key != "" {
 		return key, false
 	}

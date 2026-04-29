@@ -8,12 +8,11 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 	apiclient "github.com/marmotdata/marmot/client/client"
-	"github.com/spf13/viper"
 )
 
 // newSwaggerClient creates a go-swagger Marmot client configured from viper.
 func newSwaggerClient() *apiclient.Marmot {
-	host := viper.GetString("host")
+	host := getHost()
 
 	u, err := url.Parse(host)
 	if err != nil {

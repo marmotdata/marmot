@@ -291,6 +291,24 @@ definitions:
           type: string
         type: array
     type: object
+  auth.oauthErrorResponse:
+    properties:
+      error:
+        type: string
+      error_description:
+        type: string
+    type: object
+  auth.tokenExchangeResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      issued_token_type:
+        type: string
+      token_type:
+        type: string
+    type: object
   dataproduct.ImagePurpose:
     enum:
     - icon
@@ -1867,8 +1885,6 @@ definitions:
         type: string
       expires_in:
         type: integer
-      redirect_uri:
-        type: string
       requires_password_change:
         type: boolean
       token_type:
@@ -3677,10 +3693,6 @@ paths:
         name: provider
         required: true
         type: string
-      - description: Custom redirect URI for CLI login
-        in: query
-        name: redirect_uri
-        type: string
       produces:
       - application/json
       responses:
@@ -4137,6 +4149,40 @@ paths:
       summary: Get direct lineage by ID
       tags:
       - lineage
+  /oauth/token:
+    post:
+      consumes:
+      - application/x-www-form-urlencoded
+      description: Handles authorization_code grants (with PKCE) and token exchange
+        (RFC 8693).
+      parameters:
+      - description: authorization_code or urn:ietf:params:oauth:grant-type:token-exchange
+        in: formData
+        name: grant_type
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.tokenExchangeResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/auth.oauthErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/auth.oauthErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/auth.oauthErrorResponse'
+      summary: OAuth token endpoint
+      tags:
+      - auth
   /owners/search:
     get:
       consumes:
@@ -5314,10 +5360,6 @@ paths:
         required: true
         schema:
           $ref: '#/definitions/v1_users.LoginRequest'
-      - description: Custom redirect URI for CLI login
-        in: query
-        name: redirect_uri
-        type: string
       produces:
       - application/json
       responses:

@@ -46,6 +46,7 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/trino"
 
 	"github.com/marmotdata/marmot/internal/api/auth"
+	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
 	adminAPI "github.com/marmotdata/marmot/internal/api/v1/admin"
 	assetrulesAPI "github.com/marmotdata/marmot/internal/api/v1/assetrules"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
@@ -388,7 +389,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	}
 
 	if keycloakConfig := config.Auth.Keycloak; keycloakConfig != nil && keycloakConfig.Enabled {
-		if keycloakConfig.ClientID != "" && keycloakConfig.ClientSecret != "" && keycloakConfig.URL != "" && keycloakConfig.Realm != "" {
+		if keycloakConfig.ClientID != "" && keycloakConfig.URL != "" && keycloakConfig.Realm != "" {
 			keycloakProvider, err := authService.NewKeycloakProvider(config, userSvc, authSvc, teamSvc)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to initialize Keycloak provider")
@@ -412,6 +413,17 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 			log.Warn().Msg("Incomplete Auth0 configuration found - provider will not be initialized")
 		}
 	}
+
+	common.SetOAuthManager(oauthManager)
+
+	signingKey, signingKeyErr := authSvc.GetSigningKey(context.Background())
+	if signingKeyErr != nil {
+		log.Fatal().Err(signingKeyErr).Msg("Failed to get signing key for OAuth2 provider")
+	}
+	oauthFositeProvider := marmotOAuth2.NewProvider(signingKey)
+	authorizeSessionStore := marmotOAuth2.NewAuthorizeSessionStore()
+	oauthFositeProvider.Store.StartCleanup(context.Background(), 5*time.Minute)
+	authorizeSessionStore.StartCleanup(context.Background(), time.Minute)
 
 	// Webhook service for external notifications
 	webhookRepo := webhookService.NewPostgresRepository(db)
@@ -505,11 +517,14 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	schedulesHandler := schedulesAPI.NewHandler(scheduleSvc, runsSvc, userSvc, authSvc, scheduleEncryptor, config, encryptionConfigured)
 
+	authHandler := auth.NewHandler(authSvc, oauthManager, userSvc, config, oauthFositeProvider, authorizeSessionStore)
+	common.SetOAuthAuthorizeCompleter(authHandler)
+
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
 		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config),
 		users.NewHandler(userSvc, authSvc, config),
-		auth.NewHandler(authSvc, oauthManager, userSvc, config),
+		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
 		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, lineageSvc, finalSearchSvc, authSvc, config),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
@@ -609,7 +624,9 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 	for _, route := range routes {
 		path := route.Path
 		pathWithoutSlash := strings.TrimSuffix(path, "/")
-		pathWithSlash := pathWithoutSlash + "/"
+		// {$} makes the trailing-slash variant exact; without it, /auth/callback/
+		// becomes a subtree that conflicts with /auth/{provider}/callback/.
+		pathWithSlash := pathWithoutSlash + "/{$}"
 
 		routesByPath[pathWithoutSlash] = append(routesByPath[pathWithoutSlash], route)
 		routesByPath[pathWithSlash] = append(routesByPath[pathWithSlash], route)

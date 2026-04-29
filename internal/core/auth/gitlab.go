@@ -14,16 +14,17 @@ import (
 )
 
 type GitLabProvider struct {
-	clientID     string
-	clientSecret string
-	redirectURL  string
-	gitlabURL    string
-	config       *config.Config
-	userService  user.Service
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	oidcProvider *oidc.Provider
-	httpClient   *http.Client
+	clientID         string
+	clientSecret     string
+	redirectURL      string
+	gitlabURL        string
+	config           *config.Config
+	userService      user.Service
+	verifier         *oidc.IDTokenVerifier
+	exchangeVerifier *oidc.IDTokenVerifier
+	oauthConfig      *oauth2.Config
+	oidcProvider     *oidc.Provider
+	httpClient       *http.Client
 }
 
 func NewGitLabProvider(cfg *config.Config, userService user.Service) (*GitLabProvider, error) {
@@ -67,6 +68,7 @@ func NewGitLabProvider(cfg *config.Config, userService user.Service) (*GitLabPro
 	p.verifier = oidcProvider.Verifier(&oidc.Config{
 		ClientID: p.clientID,
 	})
+	p.exchangeVerifier = newExchangeVerifier(oidcProvider)
 
 	p.oauthConfig = &oauth2.Config{
 		ClientID:     p.clientID,
@@ -175,6 +177,31 @@ func (p *GitLabProvider) HandleCallback(ctx context.Context, code string) (*user
 	}
 
 	return usr, nil
+}
+
+func (p *GitLabProvider) ExchangeToken(ctx context.Context, rawIDToken string) (*user.User, error) {
+	return exchangeIDToken(ctx, oidcExchangeParams{
+		providerType:     "gitlab",
+		providerName:     "GitLab",
+		verifier:         p.exchangeVerifier,
+		allowedAudiences: exchangeAudiences(p.config.Auth.GitLab),
+		httpClient:       p.httpClient,
+		userService:      p.userService,
+	}, rawIDToken)
+}
+
+func (p *GitLabProvider) ExchangeAccessToken(ctx context.Context, accessToken string) (*user.User, error) {
+	return exchangeViaUserinfo(ctx, userinfoExchangeParams{
+		providerType: "gitlab",
+		providerName: "GitLab",
+		oidcProvider: p.oidcProvider,
+		httpClient:   p.httpClient,
+		userService:  p.userService,
+	}, accessToken)
+}
+
+func (p *GitLabProvider) IssuerURL() string {
+	return p.gitlabURL
 }
 
 func (p *GitLabProvider) Name() string {

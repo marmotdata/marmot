@@ -84,9 +84,25 @@ Marmot requires PostgreSQL 14 or later. Ensure the database user has privileges 
 | ------------------------- | ---------------------------------------------- | --------- | -------------------------------- |
 | `server.host`             | Bind address                                   | `0.0.0.0` | `MARMOT_SERVER_HOST`             |
 | `server.port`             | Port number                                    | `8080`    | `MARMOT_SERVER_PORT`             |
+| `server.root_url`         | Public URL of this Marmot instance             | -         | `MARMOT_SERVER_ROOT_URL`         |
 | `server.tls.cert_path`    | Path to server TLS certificate                 | -         | `MARMOT_SERVER_TLS_CERT_PATH`    |
 | `server.tls.key_path`     | Path to server TLS private key                 | -         | `MARMOT_SERVER_TLS_KEY_PATH`     |
 | `server.tls.ca_cert_path` | Path to CA cert for client verification (mTLS) | -         | `MARMOT_SERVER_TLS_CA_CERT_PATH` |
+
+:::info Root URL Required for Authentication
+`server.root_url` must be set when using OAuth/OIDC authentication or CLI login (`marmot login`). It is the URL that users access Marmot from (e.g. `https://marmot.example.com`). This is used to generate OAuth callback URLs and redirect users after authentication.
+
+```yaml
+server:
+  root_url: https://marmot.example.com
+```
+
+Or via environment variable:
+
+```bash
+export MARMOT_SERVER_ROOT_URL=https://marmot.example.com
+```
+:::
 
 ## Logging
 

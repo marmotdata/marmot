@@ -13,14 +13,15 @@ import (
 )
 
 type SlackProvider struct {
-	clientID     string
-	clientSecret string
-	redirectURL  string
-	config       *config.Config
-	userService  user.Service
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	oidcProvider *oidc.Provider
+	clientID         string
+	clientSecret     string
+	redirectURL      string
+	config           *config.Config
+	userService      user.Service
+	verifier         *oidc.IDTokenVerifier
+	exchangeVerifier *oidc.IDTokenVerifier
+	oauthConfig      *oauth2.Config
+	oidcProvider     *oidc.Provider
 }
 
 func NewSlackProvider(cfg *config.Config, userService user.Service) (*SlackProvider, error) {
@@ -47,6 +48,7 @@ func NewSlackProvider(cfg *config.Config, userService user.Service) (*SlackProvi
 	p.verifier = oidcProvider.Verifier(&oidc.Config{
 		ClientID: p.clientID,
 	})
+	p.exchangeVerifier = newExchangeVerifier(oidcProvider)
 
 	p.oauthConfig = &oauth2.Config{
 		ClientID:     p.clientID,
@@ -151,6 +153,29 @@ func (p *SlackProvider) HandleCallback(ctx context.Context, code string) (*user.
 	}
 
 	return usr, nil
+}
+
+func (p *SlackProvider) ExchangeToken(ctx context.Context, rawIDToken string) (*user.User, error) {
+	return exchangeIDToken(ctx, oidcExchangeParams{
+		providerType:     "slack",
+		providerName:     "Slack",
+		verifier:         p.exchangeVerifier,
+		allowedAudiences: exchangeAudiences(p.config.Auth.Slack),
+		userService:      p.userService,
+	}, rawIDToken)
+}
+
+func (p *SlackProvider) ExchangeAccessToken(ctx context.Context, accessToken string) (*user.User, error) {
+	return exchangeViaUserinfo(ctx, userinfoExchangeParams{
+		providerType: "slack",
+		providerName: "Slack",
+		oidcProvider: p.oidcProvider,
+		userService:  p.userService,
+	}, accessToken)
+}
+
+func (p *SlackProvider) IssuerURL() string {
+	return "https://slack.com"
 }
 
 func (p *SlackProvider) Name() string {

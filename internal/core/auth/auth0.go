@@ -15,17 +15,18 @@ import (
 )
 
 type Auth0Provider struct {
-	clientID     string
-	clientSecret string
-	redirectURL  string
-	config       *config.Config
-	userService  user.Service
-	authService  Service
-	teamService  *team.Service
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	oidcProvider *oidc.Provider
-	httpClient   *http.Client
+	clientID         string
+	clientSecret     string
+	redirectURL      string
+	config           *config.Config
+	userService      user.Service
+	authService      Service
+	teamService      *team.Service
+	verifier         *oidc.IDTokenVerifier
+	exchangeVerifier *oidc.IDTokenVerifier
+	oauthConfig      *oauth2.Config
+	oidcProvider     *oidc.Provider
+	httpClient       *http.Client
 }
 
 func NewAuth0Provider(cfg *config.Config, userService user.Service, authService Service, teamService *team.Service) (*Auth0Provider, error) {
@@ -73,6 +74,7 @@ func NewAuth0Provider(cfg *config.Config, userService user.Service, authService 
 	p.verifier = p.oidcProvider.Verifier(&oidc.Config{
 		ClientID: p.clientID,
 	})
+	p.exchangeVerifier = newExchangeVerifier(p.oidcProvider)
 
 	return p, nil
 }
@@ -207,6 +209,45 @@ func (p *Auth0Provider) getUserInfo(ctx context.Context, token *oauth2.Token) (m
 	}
 
 	return userInfo, nil
+}
+
+func (p *Auth0Provider) ExchangeToken(ctx context.Context, rawIDToken string) (*user.User, error) {
+	cfg := p.config.Auth.Auth0
+	var teamSync config.TeamSyncConfig
+	if cfg != nil {
+		teamSync = cfg.TeamSync
+	}
+	return exchangeIDToken(ctx, oidcExchangeParams{
+		providerType:     "auth0",
+		providerName:     "Auth0",
+		verifier:         p.exchangeVerifier,
+		allowedAudiences: exchangeAudiences(cfg),
+		httpClient:       p.httpClient,
+		userService:      p.userService,
+		teamService:      p.teamService,
+		teamSync:         teamSync,
+	}, rawIDToken)
+}
+
+func (p *Auth0Provider) ExchangeAccessToken(ctx context.Context, accessToken string) (*user.User, error) {
+	cfg := p.config.Auth.Auth0
+	var teamSync config.TeamSyncConfig
+	if cfg != nil {
+		teamSync = cfg.TeamSync
+	}
+	return exchangeViaUserinfo(ctx, userinfoExchangeParams{
+		providerType: "auth0",
+		providerName: "Auth0",
+		oidcProvider: p.oidcProvider,
+		httpClient:   p.httpClient,
+		userService:  p.userService,
+		teamService:  p.teamService,
+		teamSync:     teamSync,
+	}, accessToken)
+}
+
+func (p *Auth0Provider) IssuerURL() string {
+	return trimIssuer(p.config.Auth.Auth0.URL)
 }
 
 func (p *Auth0Provider) Name() string {

@@ -31,7 +31,13 @@ After creating the client, note:
 
 ## Configure Marmot
 
-Set the following environment variables:
+You must set `MARMOT_SERVER_ROOT_URL` to the public URL of your Marmot instance. This is used to build OAuth callback URLs.
+
+```bash
+export MARMOT_SERVER_ROOT_URL="https://marmot.example.com"
+```
+
+Then set the following environment variables:
 
 ```bash
 export MARMOT_AUTH_KEYCLOAK_ENABLED=true

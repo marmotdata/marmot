@@ -14,14 +14,15 @@ import (
 )
 
 type GoogleProvider struct {
-	clientID     string
-	clientSecret string
-	redirectURL  string
-	config       *config.Config
-	userService  user.Service
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	oidcProvider *oidc.Provider
+	clientID         string
+	clientSecret     string
+	redirectURL      string
+	config           *config.Config
+	userService      user.Service
+	verifier         *oidc.IDTokenVerifier
+	exchangeVerifier *oidc.IDTokenVerifier
+	oauthConfig      *oauth2.Config
+	oidcProvider     *oidc.Provider
 }
 
 func NewGoogleProvider(cfg *config.Config, userService user.Service) (*GoogleProvider, error) {
@@ -48,6 +49,7 @@ func NewGoogleProvider(cfg *config.Config, userService user.Service) (*GooglePro
 	p.verifier = oidcProvider.Verifier(&oidc.Config{
 		ClientID: p.clientID,
 	})
+	p.exchangeVerifier = newExchangeVerifier(oidcProvider)
 
 	p.oauthConfig = &oauth2.Config{
 		ClientID:     p.clientID,
@@ -152,6 +154,29 @@ func (p *GoogleProvider) HandleCallback(ctx context.Context, code string) (*user
 	}
 
 	return usr, nil
+}
+
+func (p *GoogleProvider) ExchangeToken(ctx context.Context, rawIDToken string) (*user.User, error) {
+	return exchangeIDToken(ctx, oidcExchangeParams{
+		providerType:     "google",
+		providerName:     "Google",
+		verifier:         p.exchangeVerifier,
+		allowedAudiences: exchangeAudiences(p.config.Auth.Google),
+		userService:      p.userService,
+	}, rawIDToken)
+}
+
+func (p *GoogleProvider) ExchangeAccessToken(ctx context.Context, accessToken string) (*user.User, error) {
+	return exchangeViaUserinfo(ctx, userinfoExchangeParams{
+		providerType: "google",
+		providerName: "Google",
+		oidcProvider: p.oidcProvider,
+		userService:  p.userService,
+	}, accessToken)
+}
+
+func (p *GoogleProvider) IssuerURL() string {
+	return "https://accounts.google.com"
 }
 
 func (p *GoogleProvider) Name() string {

@@ -171,7 +171,8 @@
 	}
 
 	$: if (browser && !checkingAnonymousMode && !manualNavigation) {
-		if ($auth && $page.url.pathname.startsWith('/login')) {
+		const isOAuthPending = $page.url.searchParams.has('oauth_pending');
+		if ($auth && $page.url.pathname.startsWith('/login') && !isOAuthPending) {
 			goto('/');
 		} else if (!$auth && !$page.url.pathname.startsWith('/login') && !$isAnonymousMode) {
 			goto('/login');

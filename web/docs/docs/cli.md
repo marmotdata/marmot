@@ -44,9 +44,78 @@ chmod +x marmot && sudo mv marmot /usr/local/bin/
 
 ---
 
+## Authentication
+
+The recommended way to authenticate is with `marmot login`, which opens a browser to sign in using your organisation's identity provider (Google, Okta, Keycloak, etc.) via OAuth 2.0 PKCE. API keys are still fully supported.
+
+### Browser Login (Recommended)
+
+```bash
+# First time — prompts for your Marmot URL, opens browser
+marmot login
+
+# Or pass the URL directly
+marmot login https://marmot.example.com
+```
+
+The token is cached locally at `~/.config/marmot/credentials.json` and used automatically by all subsequent commands. Tokens expire after 24 hours — just run `marmot login` again to re-authenticate.
+
+```bash
+# Remove cached token
+marmot logout
+```
+
+### API Keys
+
+API keys can still be used and always take priority over cached login tokens.
+
+```bash
+# Via flag
+marmot assets list --api-key mrmot_abc123
+
+# Via environment variable
+export MARMOT_API_KEY=mrmot_abc123
+```
+
+### Auth Priority
+
+When multiple credentials are available, the CLI uses the first one found:
+
+1. `--api-key` flag or `MARMOT_API_KEY` environment variable
+2. Cached OAuth token from `marmot login` (for the active context)
+3. Kubernetes service account token (auto-detected in-cluster)
+
+---
+
+## Contexts
+
+Contexts let you work with multiple Marmot instances (e.g. staging and production). A context is created automatically when you run `marmot login`.
+
+```bash
+# Login creates a context named after the hostname
+marmot login https://marmot.example.com
+# → Context "marmot.example.com" created and activated.
+
+marmot login https://staging.marmot.dev
+# → Context "staging.marmot.dev" created and activated.
+
+# List all contexts (* = active)
+marmot context list
+#   marmot.example.com   https://marmot.example.com   (token valid)
+# * staging.marmot.dev   https://staging.marmot.dev    (token valid)
+
+# Switch active context
+marmot context use marmot.example.com
+
+# Remove a context and its cached token
+marmot context delete staging.marmot.dev
+```
+
+---
+
 ## Configuration
 
-Before using CLI commands you need to tell Marmot where your server is and how to authenticate. There are three ways to do this, listed in order of precedence: CLI flags, environment variables and config file.
+You can also configure the CLI with flags, environment variables or a config file. These are checked in order of precedence.
 
 ### CLI Flags
 
@@ -74,6 +143,7 @@ This creates `~/.config/marmot/config.yaml` interactively. You can also use `mar
 | `host` | Marmot server URL | `http://localhost:8080` |
 | `api_key` | API key for authentication | (none) |
 | `output` | Default output format (`table`, `json`, `yaml`) | `table` |
+| `current_context` | Active context name | (none) |
 
 ---
 
@@ -90,6 +160,40 @@ marmot assets list -o json | jq '.assets[].name'
 ## Commands
 
 All list commands support `--limit` and `--offset` for pagination. Destructive commands prompt for confirmation unless `--yes` is passed. Run `marmot <command> --help` for full flag details.
+
+### marmot login
+
+```
+marmot login [url] [flags]
+```
+
+Authenticate with a Marmot instance via browser using OAuth 2.0 PKCE. If no URL is provided and no context is active, prompts for one. Creates a context automatically.
+
+| Flag | Description |
+| --- | --- |
+| `--force` | Re-authenticate even if a valid token exists |
+
+### marmot logout
+
+```
+marmot logout
+```
+
+Remove the cached authentication token for the active context.
+
+### marmot context
+
+```
+marmot context <list | use | delete>
+```
+
+Manage named contexts for switching between Marmot instances. Contexts are created automatically by `marmot login`.
+
+| Subcommand | Description |
+| --- | --- |
+| `list` | Show all contexts with token status |
+| `use <name>` | Switch active context |
+| `delete <name>` | Remove context and its cached token |
 
 ### marmot assets
 

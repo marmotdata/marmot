@@ -68,10 +68,10 @@ var configSetCmd = &cobra.Command{
 		value := args[1]
 
 		switch key {
-		case "host", "api_key", "output":
+		case "host", "api_key", "output", "current_context":
 			viper.Set(key, value)
 		default:
-			return fmt.Errorf("unknown config key: %s (valid keys: host, api_key, output)", key)
+			return fmt.Errorf("unknown config key: %s (valid keys: host, api_key, output, current_context)", key)
 		}
 
 		if err := writeConfig(); err != nil {
@@ -91,10 +91,10 @@ var configGetCmd = &cobra.Command{
 		key := args[0]
 
 		switch key {
-		case "host", "api_key", "output":
+		case "host", "api_key", "output", "current_context":
 			fmt.Println(viper.GetString(key))
 		default:
-			return fmt.Errorf("unknown config key: %s (valid keys: host, api_key, output)", key)
+			return fmt.Errorf("unknown config key: %s (valid keys: host, api_key, output, current_context)", key)
 		}
 
 		return nil
@@ -112,6 +112,9 @@ var configListCmd = &cobra.Command{
 			fmt.Printf("api_key = (not set)\n")
 		}
 		fmt.Printf("output = %s\n", viper.GetString("output"))
+		if ctx := viper.GetString("current_context"); ctx != "" {
+			fmt.Printf("current_context = %s\n", ctx)
+		}
 		return nil
 	},
 }

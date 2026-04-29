@@ -77,12 +77,28 @@ import { DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/compon
   />
 </FeatureGrid>
 
+## Prerequisites
+
+Before configuring any authentication provider, you must set `server.root_url` to the public URL of your Marmot instance. This is used to generate OAuth callback URLs.
+
+```yaml
+server:
+  root_url: https://marmot.example.com
+```
+
+Or via environment variable:
+
+```bash
+export MARMOT_SERVER_ROOT_URL=https://marmot.example.com
+```
+
 ## Setup Steps
 
 Each provider requires:
 
-1. **Create OAuth App** - Register an application in the provider's developer console
-2. **Configure Marmot** - Add credentials via environment variables or config file
-3. **Restart Marmot** - Changes take effect after restart
+1. **Set `server.root_url`** - The public URL users access Marmot from
+2. **Create OAuth App** - Register an application in the provider's developer console
+3. **Configure Marmot** - Add credentials via environment variables or config file
+4. **Restart Marmot** - Changes take effect after restart
 
 See individual provider guides above for detailed setup instructions.

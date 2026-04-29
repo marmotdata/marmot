@@ -2709,12 +2709,6 @@ const docTemplate = `{
                         "name": "provider",
                         "in": "path",
                         "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Custom redirect URI for CLI login",
-                        "name": "redirect_uri",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -3389,6 +3383,56 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth/token": {
+            "post": {
+                "description": "Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "OAuth token endpoint",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "authorization_code or urn:ietf:params:oauth:grant-type:token-exchange",
+                        "name": "grant_type",
+                        "in": "formData",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/auth.tokenExchangeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/auth.oauthErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/auth.oauthErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/auth.oauthErrorResponse"
                         }
                     }
                 }
@@ -5036,12 +5080,6 @@ const docTemplate = `{
                         "schema": {
                             "$ref": "#/definitions/v1_users.LoginRequest"
                         }
-                    },
-                    {
-                        "type": "string",
-                        "description": "Custom redirect URI for CLI login",
-                        "name": "redirect_uri",
-                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -5838,6 +5876,34 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "auth.oauthErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "error_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.tokenExchangeResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "issued_token_type": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
                 }
             }
         },
@@ -8215,9 +8281,6 @@ const docTemplate = `{
                 },
                 "expires_in": {
                     "type": "integer"
-                },
-                "redirect_uri": {
-                    "type": "string"
                 },
                 "requires_password_change": {
                     "type": "boolean"

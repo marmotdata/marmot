@@ -3,12 +3,6 @@
 	import { fetchApi } from '$lib/api';
 	import Button from '$components/ui/Button.svelte';
 
-	interface Props {
-		redirectUri?: string;
-	}
-
-	let { redirectUri = '' }: Props = $props();
-
 	let enabledProviders = $state<string[]>([]);
 	let loading = $state(true);
 	let error = $state('');
@@ -29,17 +23,7 @@
 	});
 
 	function handleOAuthLogin(provider: string) {
-		let url = `/auth/${provider}/login`;
-
-		if (redirectUri) {
-			url += `?redirect_uri=${encodeURIComponent(redirectUri)}`;
-		} else {
-			const currentPath = window.location.pathname + window.location.search;
-			const returnTo = encodeURIComponent(currentPath);
-			url += `?returnTo=${returnTo}`;
-		}
-
-		window.location.href = url;
+		window.location.href = `/auth/${provider}/login`;
 	}
 </script>
 

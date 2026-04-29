@@ -19,12 +19,66 @@
 	let passwordInput = $state<HTMLInputElement>();
 	let newPasswordInput = $state<HTMLInputElement>();
 	let confirmPasswordInput = $state<HTMLInputElement>();
-	let redirectUri = $state('');
+	let pendingConsent = $state<{ redirect_uri: string; client_id: string; scopes: string[] } | null>(
+		null
+	);
 
-	onMount(() => {
-		usernameInput?.focus();
-		redirectUri = $page.url.searchParams.get('redirect_uri') || '';
+	onMount(async () => {
+		if ($page.url.searchParams.has('oauth_pending')) {
+			await loadPendingConsent();
+		}
+		if (!pendingConsent) {
+			usernameInput?.focus();
+		}
 	});
+
+	async function loadPendingConsent() {
+		if (!auth.isAuthenticated()) {
+			return;
+		}
+		try {
+			const response = await fetch('/oauth/authorize/pending', { credentials: 'same-origin' });
+			if (response.ok) {
+				pendingConsent = await response.json();
+			}
+		} catch {}
+	}
+
+	async function handleConsentAllow() {
+		error = '';
+		loading = true;
+		try {
+			const token = auth.getToken();
+			const response = await fetch('/oauth/authorize/complete', {
+				method: 'POST',
+				headers: { Authorization: `Bearer ${token}` },
+				credentials: 'same-origin'
+			});
+			if (!response.ok) {
+				throw new Error('Failed to complete authorization');
+			}
+			const data = await response.json();
+			if (data.oauth_redirect) {
+				window.location.href = data.oauth_redirect;
+				return;
+			}
+			throw new Error('No redirect returned');
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Authorization failed';
+			loading = false;
+		}
+	}
+
+	async function handleConsentCancel() {
+		try {
+			await fetch('/oauth/authorize/cancel', {
+				method: 'POST',
+				credentials: 'same-origin'
+			});
+		} catch {}
+		pendingConsent = null;
+		goto('/');
+	}
 
 	function handleUsernameKeydown(event: KeyboardEvent) {
 		if (event.key === 'Enter' && username) {
@@ -55,12 +109,7 @@
 		loading = true;
 
 		try {
-			let url = '/api/v1/users/login';
-			if (redirectUri) {
-				url += `?redirect_uri=${encodeURIComponent(redirectUri)}`;
-			}
-
-			const response = await fetch(url, {
+			const response = await fetch('/api/v1/users/login', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
@@ -82,13 +131,15 @@
 			}
 
 			if (data.access_token) {
-				if (data.redirect_uri) {
-					window.location.href = `${data.redirect_uri}?token=${data.access_token}`;
-				} else {
-					auth.setToken(data.access_token);
-					const redirectTo = $page.url.searchParams.get('redirect') || '/';
-					goto(redirectTo);
+				auth.setToken(data.access_token);
+				if ($page.url.searchParams.has('oauth_pending')) {
+					await loadPendingConsent();
+					if (pendingConsent) {
+						return;
+					}
 				}
+				const redirectTo = $page.url.searchParams.get('redirect') || '/';
+				goto(redirectTo);
 			} else {
 				throw new Error('No token received from server');
 			}
@@ -161,9 +212,13 @@
 				<img src="/images/marmot.svg" alt="Marmot" class="h-20 w-20" />
 			</div>
 			<h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
-				{showPasswordChangeForm ? 'Change Password' : 'Sign In'}
+				{pendingConsent
+					? 'Authorize sign-in'
+					: showPasswordChangeForm
+						? 'Change Password'
+						: 'Sign In'}
 			</h1>
-			{#if showPasswordChangeForm}
+			{#if showPasswordChangeForm && !pendingConsent}
 				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					You must change your password before continuing
 				</p>
@@ -183,7 +238,38 @@
 				</div>
 			{/if}
 
-			{#if !showPasswordChangeForm}
+			{#if pendingConsent}
+				<div class="space-y-5">
+					<p class="text-sm text-gray-700 dark:text-gray-300">
+						An application is requesting permission to sign you in to Marmot. The authorization code
+						will be sent to:
+					</p>
+					<div
+						class="rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 px-4 py-3 font-mono text-sm break-all text-gray-900 dark:text-gray-100"
+					>
+						{pendingConsent.redirect_uri}
+					</div>
+					<p class="text-xs text-gray-500 dark:text-gray-400">
+						Only approve if you started this sign-in yourself (e.g. by running
+						<code>marmot login</code>). If you didn't, click Cancel.
+					</p>
+					<div class="space-y-3">
+						<Button
+							class="w-full justify-center"
+							{loading}
+							text="Authorize"
+							variant="filled"
+							click={handleConsentAllow}
+						/>
+						<Button
+							class="w-full justify-center"
+							text="Cancel"
+							variant="clear"
+							click={handleConsentCancel}
+						/>
+					</div>
+				</div>
+			{:else if !showPasswordChangeForm}
 				<form
 					onsubmit={(e) => {
 						e.preventDefault();
@@ -239,7 +325,7 @@
 					/>
 				</form>
 
-				<OAuthButtons {redirectUri} />
+				<OAuthButtons />
 			{:else}
 				<form
 					onsubmit={(e) => {

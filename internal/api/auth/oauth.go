@@ -16,7 +16,6 @@ import (
 // @Tags auth
 // @Produce json
 // @Param provider path string true "OAuth provider (okta, google, github, etc.)"
-// @Param redirect_uri query string false "Custom redirect URI for CLI login"
 // @Success 307 {string} string "Temporary Redirect"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -36,29 +35,17 @@ func (h *Handler) handleOAuthLogin(w http.ResponseWriter, r *http.Request) {
 
 	state := generateRandomState()
 
-	// Use Secure flag only for HTTPS requests
 	isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
 
 	http.SetCookie(w, &http.Cookie{
 		Name:     "oauth_state",
 		Value:    state,
+		Path:     "/auth",
 		MaxAge:   int(time.Hour.Seconds()),
 		Secure:   isSecure,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
-
-	redirectURI := r.URL.Query().Get("redirect_uri")
-	if redirectURI != "" {
-		http.SetCookie(w, &http.Cookie{
-			Name:     "oauth_redirect_uri",
-			Value:    redirectURI,
-			MaxAge:   int(time.Hour.Seconds()),
-			Secure:   isSecure,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		})
-	}
 
 	redirectURL := provider.GetAuthURL(state)
 	http.Redirect(w, r, redirectURL, http.StatusTemporaryRedirect)
@@ -119,24 +106,13 @@ func (h *Handler) handleOAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	redirectURICookie, err := r.Cookie("oauth_redirect_uri")
-	var frontendURL string
-	if err == nil && redirectURICookie.Value != "" {
-		isSecure := r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https"
-		http.SetCookie(w, &http.Cookie{
-			Name:     "oauth_redirect_uri",
-			Value:    "",
-			MaxAge:   -1,
-			Secure:   isSecure,
-			HttpOnly: true,
-			SameSite: http.SameSiteLaxMode,
-		})
-		frontendURL = redirectURICookie.Value + "?token=" + token
-	} else {
-		frontendURL = h.config.Server.RootURL + "/auth/callback?token=" + token
+	if err := h.issueLoginHandoff(w, r, token); err != nil {
+		log.Error().Err(err).Msg("Failed to issue login handoff")
+		common.RespondError(w, http.StatusInternalServerError, "Failed to complete login")
+		return
 	}
 
-	http.Redirect(w, r, frontendURL, http.StatusTemporaryRedirect)
+	http.Redirect(w, r, "/auth/callback", http.StatusTemporaryRedirect)
 }
 
 func generateRandomState() string {

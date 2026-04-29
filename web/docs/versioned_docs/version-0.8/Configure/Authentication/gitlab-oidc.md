@@ -28,9 +28,15 @@ After creating the application, note:
 
 ## Configure Marmot
 
+You must set `MARMOT_SERVER_ROOT_URL` to the public URL of your Marmot instance. This is used to build OAuth callback URLs.
+
+```bash
+export MARMOT_SERVER_ROOT_URL="https://marmot.example.com"
+```
+
 ### For GitLab.com
 
-Set the following environment variables:
+Then set the following environment variables:
 
 ```bash
 export MARMOT_AUTH_GITLAB_ENABLED=true

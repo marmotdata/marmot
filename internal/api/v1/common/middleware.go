@@ -2,12 +2,15 @@ package common
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/rs/zerolog/log"
 )
 
@@ -17,6 +20,29 @@ var globalK8sValidator *K8sTokenValidator
 // SetK8sTokenValidator registers the K8s token validator for use by WithAuth.
 func SetK8sTokenValidator(v *K8sTokenValidator) {
 	globalK8sValidator = v
+}
+
+var globalOAuthManager *auth.OAuthManager
+
+// SetOAuthManager registers the OAuthManager for OIDC token exchange in WithAuth.
+func SetOAuthManager(m *auth.OAuthManager) {
+	globalOAuthManager = m
+}
+
+// OAuthAuthorizeCompleter completes a pending OAuth authorise flow (PKCE) from the login endpoint.
+type OAuthAuthorizeCompleter interface {
+	HasPendingAuthorize(r *http.Request) bool
+	CompleteAuthorize(w http.ResponseWriter, r *http.Request, userID, username string) (string, error)
+}
+
+var globalOAuthAuthorizeCompleter OAuthAuthorizeCompleter
+
+func SetOAuthAuthorizeCompleter(c OAuthAuthorizeCompleter) {
+	globalOAuthAuthorizeCompleter = c
+}
+
+func GetOAuthAuthorizeCompleter() OAuthAuthorizeCompleter {
+	return globalOAuthAuthorizeCompleter
 }
 
 // WithAuth middleware handles API key, JWT, and K8s ServiceAccount token authentication.
@@ -33,6 +59,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 						Str("endpoint", r.URL.Path).
 						Str("method", r.Method).
 						Msg("Failed to validate API key")
+					setWWWAuthenticate(w, cfg)
 					RespondError(w, http.StatusUnauthorized, "Invalid API key")
 					return
 				}
@@ -50,11 +77,13 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				if err == nil {
 					user, err := userService.Get(r.Context(), claims.Subject)
 					if err != nil {
+						setWWWAuthenticate(w, cfg)
 						RespondError(w, http.StatusUnauthorized, "Invalid token")
 						return
 					}
 
 					if !user.Active {
+						setWWWAuthenticate(w, cfg)
 						RespondError(w, http.StatusUnauthorized, "User account is inactive")
 						return
 					}
@@ -79,6 +108,23 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 					}
 				}
 
+				if oauthMgr := globalOAuthManager; oauthMgr != nil {
+					if exchUser := tryOIDCExchange(r.Context(), oauthMgr, tokenString); exchUser != nil {
+						if !exchUser.Active {
+							setWWWAuthenticate(w, cfg)
+							RespondError(w, http.StatusUnauthorized, "User account is inactive")
+							return
+						}
+						log.Debug().
+							Str("user_id", exchUser.ID).
+							Str("endpoint", r.URL.Path).
+							Msg("Authenticated via OIDC token exchange")
+						ctx := context.WithValue(r.Context(), UserContextKey, exchUser)
+						next(w, r.WithContext(ctx))
+						return
+					}
+				}
+
 				// Fall back to API key in Bearer header
 				user, err := userService.ValidateAPIKey(r.Context(), tokenString)
 				if err != nil {
@@ -86,6 +132,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 						Str("endpoint", r.URL.Path).
 						Str("method", r.Method).
 						Msg("Failed to validate bearer token as JWT or API key")
+					setWWWAuthenticate(w, cfg)
 					RespondError(w, http.StatusUnauthorized, "Invalid token")
 					return
 				}
@@ -111,6 +158,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				return
 			}
 
+			setWWWAuthenticate(w, cfg)
 			RespondError(w, http.StatusUnauthorized, "Authentication required")
 		}
 	}
@@ -196,4 +244,82 @@ func RequireEncryption(configured bool) func(http.HandlerFunc) http.HandlerFunc 
 func GetAuthenticatedUser(ctx context.Context) (*user.User, bool) {
 	user, ok := ctx.Value(UserContextKey).(*user.User)
 	return user, ok
+}
+
+func setWWWAuthenticate(w http.ResponseWriter, cfg *config.Config) {
+	if cfg.Server.RootURL != "" {
+		w.Header().Set("WWW-Authenticate",
+			fmt.Sprintf(`Bearer resource_metadata="%s/.well-known/oauth-protected-resource"`,
+				cfg.Server.RootURL))
+	}
+}
+
+// tryOIDCExchange tries each registered OIDC provider: first via JWKS ID token
+// verification, then via UserInfo for access tokens.
+func tryOIDCExchange(ctx context.Context, oauthMgr *auth.OAuthManager, tokenString string) *user.User {
+	if !looksLikeOIDCToken(tokenString) {
+		return nil
+	}
+
+	for _, provider := range oauthMgr.GetProviders() {
+		te, ok := provider.(auth.TokenExchanger)
+		if !ok {
+			continue
+		}
+		usr, err := te.ExchangeToken(ctx, tokenString)
+		if err != nil {
+			log.Debug().Err(err).
+				Str("provider", provider.Type()).
+				Msg("OIDC ID token exchange failed, trying next")
+			continue
+		}
+		return usr
+	}
+
+	issuer := extractIssuer(tokenString)
+	for _, provider := range oauthMgr.GetProviders() {
+		if ip, ok := provider.(auth.IssuerProvider); ok && issuer != "" {
+			if ip.IssuerURL() != issuer {
+				continue
+			}
+		}
+		ate, ok := provider.(auth.AccessTokenExchanger)
+		if !ok {
+			continue
+		}
+		usr, err := ate.ExchangeAccessToken(ctx, tokenString)
+		if err != nil {
+			log.Debug().Err(err).
+				Str("provider", provider.Type()).
+				Msg("OIDC access token exchange via userinfo failed")
+			continue
+		}
+		return usr
+	}
+
+	return nil
+}
+
+// extractIssuer returns the iss claim from a JWT without verification.
+func extractIssuer(token string) string {
+	parts := strings.SplitN(token, ".", 3)
+	if len(parts) != 3 {
+		return ""
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return ""
+	}
+	var claims struct {
+		Issuer string `json:"iss"`
+	}
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return ""
+	}
+	return claims.Issuer
+}
+
+// looksLikeOIDCToken returns true for JWTs with an iss claim (Marmot's own JWTs have none).
+func looksLikeOIDCToken(token string) bool {
+	return extractIssuer(token) != ""
 }

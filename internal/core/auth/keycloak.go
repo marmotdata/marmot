@@ -16,17 +16,19 @@ import (
 )
 
 type KeycloakProvider struct {
-	clientID     string
-	clientSecret string
-	redirectURL  string
-	config       *config.Config
-	userService  user.Service
-	authService  Service
-	teamService  *team.Service
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	oidcProvider *oidc.Provider
-	httpClient   *http.Client
+	clientID         string
+	clientSecret     string
+	redirectURL      string
+	issuerURL        string
+	config           *config.Config
+	userService      user.Service
+	authService      Service
+	teamService      *team.Service
+	verifier         *oidc.IDTokenVerifier
+	exchangeVerifier *oidc.IDTokenVerifier
+	oauthConfig      *oauth2.Config
+	oidcProvider     *oidc.Provider
+	httpClient       *http.Client
 }
 
 func NewKeycloakProvider(cfg *config.Config, userService user.Service, authService Service, teamService *team.Service) (*KeycloakProvider, error) {
@@ -41,6 +43,7 @@ func NewKeycloakProvider(cfg *config.Config, userService user.Service, authServi
 		clientID:     providerCfg.ClientID,
 		clientSecret: providerCfg.ClientSecret,
 		redirectURL:  cfg.Server.RootURL + "/auth/keycloak/callback",
+		issuerURL:    issuerURL,
 		config:       cfg,
 		userService:  userService,
 		authService:  authService,
@@ -76,6 +79,7 @@ func NewKeycloakProvider(cfg *config.Config, userService user.Service, authServi
 	p.verifier = p.oidcProvider.Verifier(&oidc.Config{
 		ClientID: p.clientID,
 	})
+	p.exchangeVerifier = newExchangeVerifier(p.oidcProvider)
 
 	return p, nil
 }
@@ -210,6 +214,45 @@ func (p *KeycloakProvider) getUserInfo(ctx context.Context, token *oauth2.Token)
 	}
 
 	return userInfo, nil
+}
+
+func (p *KeycloakProvider) ExchangeToken(ctx context.Context, rawIDToken string) (*user.User, error) {
+	cfg := p.config.Auth.Keycloak
+	var teamSync config.TeamSyncConfig
+	if cfg != nil {
+		teamSync = cfg.TeamSync
+	}
+	return exchangeIDToken(ctx, oidcExchangeParams{
+		providerType:     "keycloak",
+		providerName:     "Keycloak",
+		verifier:         p.exchangeVerifier,
+		allowedAudiences: exchangeAudiences(cfg),
+		httpClient:       p.httpClient,
+		userService:      p.userService,
+		teamService:      p.teamService,
+		teamSync:         teamSync,
+	}, rawIDToken)
+}
+
+func (p *KeycloakProvider) ExchangeAccessToken(ctx context.Context, accessToken string) (*user.User, error) {
+	cfg := p.config.Auth.Keycloak
+	var teamSync config.TeamSyncConfig
+	if cfg != nil {
+		teamSync = cfg.TeamSync
+	}
+	return exchangeViaUserinfo(ctx, userinfoExchangeParams{
+		providerType: "keycloak",
+		providerName: "Keycloak",
+		oidcProvider: p.oidcProvider,
+		httpClient:   p.httpClient,
+		userService:  p.userService,
+		teamService:  p.teamService,
+		teamSync:     teamSync,
+	}, accessToken)
+}
+
+func (p *KeycloakProvider) IssuerURL() string {
+	return p.issuerURL
 }
 
 func (p *KeycloakProvider) Name() string {

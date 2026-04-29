@@ -16,17 +16,18 @@ import (
 
 // OktaProvider represents the OAuth provider for Okta.
 type OktaProvider struct {
-	clientID     string
-	clientSecret string
-	redirectURL  string
-	config       *config.Config
-	userService  user.Service
-	authService  Service
-	teamService  *team.Service
-	verifier     *oidc.IDTokenVerifier
-	oauthConfig  *oauth2.Config
-	oidcProvider *oidc.Provider
-	httpClient   *http.Client
+	clientID         string
+	clientSecret     string
+	redirectURL      string
+	config           *config.Config
+	userService      user.Service
+	authService      Service
+	teamService      *team.Service
+	verifier         *oidc.IDTokenVerifier
+	exchangeVerifier *oidc.IDTokenVerifier
+	oauthConfig      *oauth2.Config
+	oidcProvider     *oidc.Provider
+	httpClient       *http.Client
 }
 
 // NewOktaProvider creates a new OktaProvider.
@@ -75,6 +76,7 @@ func NewOktaProvider(cfg *config.Config, userService user.Service, authService S
 	p.verifier = p.oidcProvider.Verifier(&oidc.Config{
 		ClientID: p.clientID,
 	})
+	p.exchangeVerifier = newExchangeVerifier(p.oidcProvider)
 
 	return p, nil
 }
@@ -211,6 +213,45 @@ func (p *OktaProvider) getUserInfo(ctx context.Context, token *oauth2.Token) (ma
 	}
 
 	return userInfo, nil
+}
+
+func (p *OktaProvider) ExchangeToken(ctx context.Context, rawIDToken string) (*user.User, error) {
+	cfg := p.config.Auth.Okta
+	var teamSync config.TeamSyncConfig
+	if cfg != nil {
+		teamSync = cfg.TeamSync
+	}
+	return exchangeIDToken(ctx, oidcExchangeParams{
+		providerType:     "okta",
+		providerName:     "Okta",
+		verifier:         p.exchangeVerifier,
+		allowedAudiences: exchangeAudiences(cfg),
+		httpClient:       p.httpClient,
+		userService:      p.userService,
+		teamService:      p.teamService,
+		teamSync:         teamSync,
+	}, rawIDToken)
+}
+
+func (p *OktaProvider) ExchangeAccessToken(ctx context.Context, accessToken string) (*user.User, error) {
+	cfg := p.config.Auth.Okta
+	var teamSync config.TeamSyncConfig
+	if cfg != nil {
+		teamSync = cfg.TeamSync
+	}
+	return exchangeViaUserinfo(ctx, userinfoExchangeParams{
+		providerType: "okta",
+		providerName: "Okta",
+		oidcProvider: p.oidcProvider,
+		httpClient:   p.httpClient,
+		userService:  p.userService,
+		teamService:  p.teamService,
+		teamSync:     teamSync,
+	}, accessToken)
+}
+
+func (p *OktaProvider) IssuerURL() string {
+	return trimIssuer(p.config.Auth.Okta.URL)
 }
 
 // Name returns the name of the provider.
