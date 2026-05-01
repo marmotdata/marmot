@@ -1,0 +1,62 @@
+{
+  "name": "@marmotdata/sdk",
+  "version": "0.1.0",
+  "description": "TypeScript SDK for Marmot — read the catalog and self-document automation, agents, and pipelines.",
+  "license": "Apache-2.0",
+  "homepage": "https://marmot.run",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/marmotdata/marmot.git",
+    "directory": "sdk/ts"
+  },
+  "bugs": "https://github.com/marmotdata/marmot/issues",
+  "keywords": [
+    "marmot",
+    "catalog",
+    "data",
+    "lineage",
+    "agents",
+    "metadata"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "lint": "biome check src tests",
+    "format": "biome format --write src tests",
+    "typecheck": "tsc --noEmit",
+    "generate": "openapi-typescript ../../docs/.openapi3.yaml -o src/_gen/schema.ts"
+  },
+  "dependencies": {
+    "openapi-fetch": "^0.13.0",
+    "yaml": "^2.5.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.0",
+    "@types/node": "^22.0.0",
+    "openapi-typescript": "^7.4.0",
+    "tsup": "^8.3.0",
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

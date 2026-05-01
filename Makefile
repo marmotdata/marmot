@@ -1,6 +1,7 @@
 .PHONY: swagger build run test clean dev release docker-build dev-deps generate generate-operator lint frontend-build actionlint frontend-lint frontend-typecheck fix api-client \
 	sdk sdk-generate sdk-test sdk-build sdk-lint sdk-clean \
-	sdk-py sdk-py-deps sdk-py-install sdk-py-generate sdk-py-lint sdk-py-test sdk-py-build sdk-py-clean
+	sdk-py sdk-py-deps sdk-py-install sdk-py-generate sdk-py-lint sdk-py-test sdk-py-build sdk-py-clean \
+	sdk-ts sdk-ts-deps sdk-ts-install sdk-ts-generate sdk-ts-lint sdk-ts-test sdk-ts-build sdk-ts-clean
 
 # Build variables
 BINARY_NAME=marmot
@@ -75,14 +76,19 @@ api-client: swagger
 	swagger generate client -f docs/swagger.yaml -A marmot --target client
 	cd client && go mod tidy
 
-sdk: sdk-py
-sdk-generate: sdk-py-generate
-sdk-lint: sdk-py-lint
-sdk-test: sdk-py-test
-sdk-build: sdk-py-build
-sdk-clean: sdk-py-clean
+sdk: sdk-py sdk-ts
+sdk-generate: sdk-py-generate sdk-ts-generate
+sdk-lint: sdk-py-lint sdk-ts-lint
+sdk-test: sdk-py-test sdk-ts-test
+sdk-build: sdk-py-build sdk-ts-build
+sdk-clean: sdk-py-clean sdk-ts-clean
 
 SDK_PY_DIR := sdk/python
+SDK_TS_DIR := sdk/ts
+SDK_OPENAPI3 := docs/.openapi3.yaml
+
+$(SDK_OPENAPI3): docs/swagger.yaml
+	npx --yes swagger2openapi@7 docs/swagger.yaml --outfile $(SDK_OPENAPI3) --yaml
 
 sdk-py-deps:
 	@command -v uv >/dev/null 2>&1 || (echo "Installing uv..." && curl -LsSf https://astral.sh/uv/install.sh | sh)
@@ -90,16 +96,14 @@ sdk-py-deps:
 sdk-py-install: sdk-py-deps
 	cd $(SDK_PY_DIR) && uv sync --all-extras
 
-sdk-py-generate: swagger sdk-py-install
-	cd $(SDK_PY_DIR) && rm -rf src/marmot/_gen .openapi3.yaml && \
-		npx --yes swagger2openapi@7 ../../docs/swagger.yaml --outfile .openapi3.yaml --yaml && \
+sdk-py-generate: swagger sdk-py-install $(SDK_OPENAPI3)
+	cd $(SDK_PY_DIR) && rm -rf src/marmot/_gen && \
 		uv run openapi-python-client generate \
-			--path .openapi3.yaml \
+			--path ../../$(SDK_OPENAPI3) \
 			--config codegen.yaml \
 			--overwrite \
 			--meta none \
-			--output-path src/marmot/_gen && \
-		rm -f .openapi3.yaml
+			--output-path src/marmot/_gen
 
 sdk-py-lint: sdk-py-install
 	cd $(SDK_PY_DIR) && uv run ruff check . && uv run ruff format --check .
@@ -112,6 +116,28 @@ sdk-py-build: sdk-py-generate
 
 sdk-py-clean:
 	rm -rf $(SDK_PY_DIR)/src/marmot/_gen $(SDK_PY_DIR)/dist $(SDK_PY_DIR)/.venv
+
+sdk-ts-deps:
+	@command -v pnpm >/dev/null 2>&1 || (echo "pnpm not installed; install via 'npm i -g pnpm' or corepack" && exit 1)
+
+sdk-ts-install: sdk-ts-deps
+	cd $(SDK_TS_DIR) && pnpm install --frozen-lockfile=false
+
+sdk-ts-generate: swagger sdk-ts-install $(SDK_OPENAPI3)
+	cd $(SDK_TS_DIR) && rm -rf src/_gen && mkdir -p src/_gen && \
+		pnpm exec openapi-typescript ../../$(SDK_OPENAPI3) -o src/_gen/schema.ts
+
+sdk-ts-lint: sdk-ts-install
+	cd $(SDK_TS_DIR) && pnpm run lint
+
+sdk-ts-test: sdk-ts-generate
+	cd $(SDK_TS_DIR) && pnpm run test
+
+sdk-ts-build: sdk-ts-generate
+	cd $(SDK_TS_DIR) && pnpm run build
+
+sdk-ts-clean:
+	rm -rf $(SDK_TS_DIR)/src/_gen $(SDK_TS_DIR)/dist $(SDK_TS_DIR)/node_modules
 
 chart-test:
 	docker run ${DOCKER_ARGS} --user root --entrypoint /bin/sh --rm -v $(CURDIR):/charts -w /charts helmunittest/helm-unittest:3.17.3-0.8.2 /charts/.github/test.sh

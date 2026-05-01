@@ -1,0 +1,93 @@
+name: Release TypeScript SDK
+
+on:
+  push:
+    tags:
+      - "sdk-ts-v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Install swag
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Verify tag matches package.json version
+        if: startsWith(github.ref, 'refs/tags/sdk-ts-v')
+        run: |
+          tag_version="${GITHUB_REF_NAME#sdk-ts-v}"
+          pkg_version=$(node -p "require('./sdk/ts/package.json').version")
+          if [ "$tag_version" != "$pkg_version" ]; then
+            echo "Tag version ($tag_version) does not match package.json ($pkg_version)" >&2
+            exit 1
+          fi
+
+      - name: Build
+        run: make sdk-ts-build
+
+      - name: Pack
+        run: cd sdk/ts && pnpm pack --pack-destination ../../dist-ts
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-ts
+          path: dist-ts/
+
+  publish-npm:
+    name: Publish to npm
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/sdk-ts-v')
+    runs-on: ubuntu-latest
+    environment:
+      name: npm
+      url: https://www.npmjs.com/package/@marmotdata/sdk
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Install swag
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Build
+        run: make sdk-ts-build
+
+      - name: Publish via npm trusted publishing (OIDC)
+        run: cd sdk/ts && npm publish --provenance --access public
+        env:
+          NPM_CONFIG_PROVENANCE: "true"

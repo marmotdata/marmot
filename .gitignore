@@ -1,3 +1,5 @@
+docs/.openapi3.yaml
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
