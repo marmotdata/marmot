@@ -1,0 +1,8 @@
+# openapi-python-client configuration.
+#
+# Run via `make sdk-py-generate`. Output lands in src/marmot/_gen/ which is
+# gitignored — fresh clones must regenerate before running tests or building.
+
+package_name_override: _gen
+project_name_override: marmot_gen
+use_path_prefixes_for_title_model_names: false

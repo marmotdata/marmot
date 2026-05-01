@@ -75,15 +75,6 @@ api-client: swagger
 	swagger generate client -f docs/swagger.yaml -A marmot --target client
 	cd client && go mod tidy
 
-# =====================================================================
-# SDK targets
-#
-# Per-language: sdk-<lang>-{deps,install,generate,lint,test,build,clean}
-# Umbrellas:    sdk, sdk-{generate,lint,test,build,clean}
-# CI uses the per-language targets; humans use the umbrellas.
-# =====================================================================
-
-# Umbrellas (extend with sdk-go-* and sdk-ts-* once those SDKs land).
 sdk: sdk-py
 sdk-generate: sdk-py-generate
 sdk-lint: sdk-py-lint
@@ -91,28 +82,24 @@ sdk-test: sdk-py-test
 sdk-build: sdk-py-build
 sdk-clean: sdk-py-clean
 
-# --- Python SDK ---
 SDK_PY_DIR := sdk/python
 
-# Install uv if missing. Idempotent; CI runners with uv preinstalled skip the curl.
 sdk-py-deps:
 	@command -v uv >/dev/null 2>&1 || (echo "Installing uv..." && curl -LsSf https://astral.sh/uv/install.sh | sh)
 
-# Sync the SDK's own venv + dev deps. Run once before any other sdk-py target.
 sdk-py-install: sdk-py-deps
 	cd $(SDK_PY_DIR) && uv sync --all-extras
 
-# Regenerate the typed client from docs/swagger.yaml. Depends on swagger so
-# server-side changes flow through automatically. _gen/ is gitignored; CI must
-# regenerate before lint/test/build.
 sdk-py-generate: swagger sdk-py-install
-	cd $(SDK_PY_DIR) && rm -rf src/marmot/_gen && \
+	cd $(SDK_PY_DIR) && rm -rf src/marmot/_gen .openapi3.yaml && \
+		npx --yes swagger2openapi@7 ../../docs/swagger.yaml --outfile .openapi3.yaml --yaml && \
 		uv run openapi-python-client generate \
-			--path ../../docs/swagger.yaml \
+			--path .openapi3.yaml \
 			--config codegen.yaml \
 			--overwrite \
 			--meta none \
-			--output-path src/marmot/_gen
+			--output-path src/marmot/_gen && \
+		rm -f .openapi3.yaml
 
 sdk-py-lint: sdk-py-install
 	cd $(SDK_PY_DIR) && uv run ruff check . && uv run ruff format --check .

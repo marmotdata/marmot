@@ -1,0 +1,12 @@
+src/marmot/_gen/
+dist/
+build/
+*.egg-info/
+__pycache__/
+*.pyc
+.venv/
+.python-version
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.openapi3.yaml
