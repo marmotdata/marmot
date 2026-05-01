@@ -28,7 +28,7 @@ type TagRequest struct {
 // @Router /assets/{id}/tags [post]
 func (h *Handler) addTag(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/assets/tags/"), "/")
-	if len(parts) < 2 {
+	if len(parts) < 1 || parts[0] == "" {
 		common.RespondError(w, http.StatusBadRequest, "Invalid path")
 		return
 	}
@@ -75,7 +75,7 @@ func (h *Handler) addTag(w http.ResponseWriter, r *http.Request) {
 // @Router /assets/{id}/tags [delete]
 func (h *Handler) removeTag(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/assets/tags/"), "/")
-	if len(parts) < 2 {
+	if len(parts) < 1 || parts[0] == "" {
 		common.RespondError(w, http.StatusBadRequest, "Invalid path")
 		return
 	}

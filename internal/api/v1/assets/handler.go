@@ -127,7 +127,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets/qualified-name/",
+			Path:    "/api/v1/assets/qualified-name/{name}",
 			Method:  http.MethodGet,
 			Handler: h.getAssetByMRN,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
@@ -136,7 +136,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets/tags/",
+			Path:    "/api/v1/assets/tags/{id}",
 			Method:  http.MethodPost,
 			Handler: h.addTag,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
@@ -145,7 +145,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets/tags/",
+			Path:    "/api/v1/assets/tags/{id}",
 			Method:  http.MethodDelete,
 			Handler: h.removeTag,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
@@ -154,7 +154,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets/documentation/",
+			Path:    "/api/v1/assets/documentation/{mrn}",
 			Method:  http.MethodGet,
 			Handler: h.getAssetDocumentation,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
@@ -221,7 +221,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets/lookup/{type}/{name}",
+			Path:    "/api/v1/assets/lookup/{type}/{service}/{name}",
 			Method:  http.MethodGet,
 			Handler: h.lookupAsset,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
@@ -251,7 +251,7 @@ func (h *Handler) Routes() []common.Route {
 		},
 		// Term associations
 		{
-			Path:    "/api/v1/assets/terms/",
+			Path:    "/api/v1/assets/terms/{id}",
 			Method:  http.MethodPost,
 			Handler: h.addTerms,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
@@ -260,7 +260,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets/terms/",
+			Path:    "/api/v1/assets/terms/{id}",
 			Method:  http.MethodDelete,
 			Handler: h.removeTerm,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
@@ -269,7 +269,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/assets/terms/",
+			Path:    "/api/v1/assets/terms/{id}",
 			Method:  http.MethodGet,
 			Handler: h.getAssetTerms,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
