@@ -53,6 +53,15 @@ func (m *mockTokenExchangerProvider) ExchangeToken(ctx context.Context, rawIDTok
 	return m.exchangeFn(ctx, rawIDToken)
 }
 
+type mockAccessTokenExchangerProvider struct {
+	mockOAuthProvider
+	exchangeFn func(ctx context.Context, accessToken string) (*user.User, error)
+}
+
+func (m *mockAccessTokenExchangerProvider) ExchangeAccessToken(ctx context.Context, accessToken string) (*user.User, error) {
+	return m.exchangeFn(ctx, accessToken)
+}
+
 // --- helpers ---
 
 func makeJWT(iss string) string {
@@ -140,12 +149,12 @@ func TestTokenExchange_MissingSubjectToken(t *testing.T) {
 	}
 }
 
-func TestTokenExchange_WrongSubjectTokenType(t *testing.T) {
+func TestTokenExchange_UnsupportedSubjectTokenType(t *testing.T) {
 	h := newTestHandler(nil, nil)
 	form := url.Values{}
 	form.Set("grant_type", grantTypeTokenExchange)
 	form.Set("subject_token", "x.y.z")
-	form.Set("subject_token_type", "urn:ietf:params:oauth:token-type:access_token")
+	form.Set("subject_token_type", "urn:ietf:params:oauth:token-type:saml2")
 
 	req := httptest.NewRequest(http.MethodPost, "/oauth/token", strings.NewReader(form.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -252,6 +261,78 @@ func TestTokenExchange_NoOIDCProviders(t *testing.T) {
 
 	token := makeJWT("https://dev.okta.com")
 	rec := postExchange(h, makeExchangeForm(token, tokenTypeIDToken))
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+	resp := decodeOAuthError(t, rec)
+	if resp.Error != "invalid_grant" {
+		t.Fatalf("expected error 'invalid_grant', got %q", resp.Error)
+	}
+}
+
+func TestTokenExchange_AccessTokenSuccess(t *testing.T) {
+	testUser := &user.User{ID: "u1", Name: "Test"}
+	provider := &mockAccessTokenExchangerProvider{
+		mockOAuthProvider: mockOAuthProvider{name: "Okta", typ: "okta"},
+		exchangeFn:        func(_ context.Context, _ string) (*user.User, error) { return testUser, nil },
+	}
+	authSvc := &mockAuthService{
+		generateTokenFn: func(_ context.Context, _ *user.User, _ map[string]interface{}) (string, error) {
+			return "marmot-jwt-token", nil
+		},
+	}
+
+	h := newTestHandler(map[string]coreauth.OAuthProvider{"okta": provider}, authSvc)
+
+	rec := postExchange(h, makeExchangeForm("opaque-access-token", tokenTypeAccessToken))
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var resp tokenExchangeResponse
+	if err := json.NewDecoder(rec.Body).Decode(&resp); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if resp.AccessToken != "marmot-jwt-token" {
+		t.Fatalf("expected access_token 'marmot-jwt-token', got %q", resp.AccessToken)
+	}
+	if resp.IssuedTokenType != tokenTypeAccessToken {
+		t.Fatalf("expected issued_token_type %q, got %q", tokenTypeAccessToken, resp.IssuedTokenType)
+	}
+}
+
+func TestTokenExchange_AccessToken_AllProvidersFail(t *testing.T) {
+	provider := &mockAccessTokenExchangerProvider{
+		mockOAuthProvider: mockOAuthProvider{name: "Okta", typ: "okta"},
+		exchangeFn: func(_ context.Context, _ string) (*user.User, error) {
+			return nil, errors.New("userinfo request failed")
+		},
+	}
+	h := newTestHandler(map[string]coreauth.OAuthProvider{"okta": provider}, nil)
+
+	rec := postExchange(h, makeExchangeForm("opaque-access-token", tokenTypeAccessToken))
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+	resp := decodeOAuthError(t, rec)
+	if resp.Error != "invalid_grant" {
+		t.Fatalf("expected error 'invalid_grant', got %q", resp.Error)
+	}
+}
+
+// A provider that only implements TokenExchanger (not AccessTokenExchanger) must be
+// skipped on the access-token path; with no other providers, the request should 401.
+func TestTokenExchange_AccessToken_ProviderDoesNotImplement(t *testing.T) {
+	idOnlyProvider := &mockTokenExchangerProvider{
+		mockOAuthProvider: mockOAuthProvider{name: "Okta", typ: "okta"},
+		exchangeFn:        func(_ context.Context, _ string) (*user.User, error) { return &user.User{ID: "u1"}, nil },
+	}
+	h := newTestHandler(map[string]coreauth.OAuthProvider{"okta": idOnlyProvider}, nil)
+
+	rec := postExchange(h, makeExchangeForm("opaque-access-token", tokenTypeAccessToken))
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", rec.Code)

@@ -1,4 +1,6 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate generate-operator lint frontend-build actionlint frontend-lint frontend-typecheck fix api-client
+.PHONY: swagger build run test clean dev release docker-build dev-deps generate generate-operator lint frontend-build actionlint frontend-lint frontend-typecheck fix api-client \
+	sdk sdk-generate sdk-test sdk-build sdk-lint sdk-clean \
+	sdk-py sdk-py-deps sdk-py-install sdk-py-generate sdk-py-lint sdk-py-test sdk-py-build sdk-py-clean
 
 # Build variables
 BINARY_NAME=marmot
@@ -72,6 +74,57 @@ api-client: swagger
 	rm -rf client/client client/models
 	swagger generate client -f docs/swagger.yaml -A marmot --target client
 	cd client && go mod tidy
+
+# =====================================================================
+# SDK targets
+#
+# Per-language: sdk-<lang>-{deps,install,generate,lint,test,build,clean}
+# Umbrellas:    sdk, sdk-{generate,lint,test,build,clean}
+# CI uses the per-language targets; humans use the umbrellas.
+# =====================================================================
+
+# Umbrellas (extend with sdk-go-* and sdk-ts-* once those SDKs land).
+sdk: sdk-py
+sdk-generate: sdk-py-generate
+sdk-lint: sdk-py-lint
+sdk-test: sdk-py-test
+sdk-build: sdk-py-build
+sdk-clean: sdk-py-clean
+
+# --- Python SDK ---
+SDK_PY_DIR := sdk/python
+
+# Install uv if missing. Idempotent; CI runners with uv preinstalled skip the curl.
+sdk-py-deps:
+	@command -v uv >/dev/null 2>&1 || (echo "Installing uv..." && curl -LsSf https://astral.sh/uv/install.sh | sh)
+
+# Sync the SDK's own venv + dev deps. Run once before any other sdk-py target.
+sdk-py-install: sdk-py-deps
+	cd $(SDK_PY_DIR) && uv sync --all-extras
+
+# Regenerate the typed client from docs/swagger.yaml. Depends on swagger so
+# server-side changes flow through automatically. _gen/ is gitignored; CI must
+# regenerate before lint/test/build.
+sdk-py-generate: swagger sdk-py-install
+	cd $(SDK_PY_DIR) && rm -rf src/marmot/_gen && \
+		uv run openapi-python-client generate \
+			--path ../../docs/swagger.yaml \
+			--config codegen.yaml \
+			--overwrite \
+			--meta none \
+			--output-path src/marmot/_gen
+
+sdk-py-lint: sdk-py-install
+	cd $(SDK_PY_DIR) && uv run ruff check . && uv run ruff format --check .
+
+sdk-py-test: sdk-py-generate
+	cd $(SDK_PY_DIR) && uv run pytest
+
+sdk-py-build: sdk-py-generate
+	cd $(SDK_PY_DIR) && uv build
+
+sdk-py-clean:
+	rm -rf $(SDK_PY_DIR)/src/marmot/_gen $(SDK_PY_DIR)/dist $(SDK_PY_DIR)/.venv
 
 chart-test:
 	docker run ${DOCKER_ARGS} --user root --entrypoint /bin/sh --rm -v $(CURDIR):/charts -w /charts helmunittest/helm-unittest:3.17.3-0.8.2 /charts/.github/test.sh

@@ -4153,13 +4153,23 @@ paths:
     post:
       consumes:
       - application/x-www-form-urlencoded
-      description: Handles authorization_code grants (with PKCE) and token exchange
-        (RFC 8693).
+      description: |-
+        Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).
+        For token-exchange, supported subject_token_type values are
+        urn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token.
       parameters:
       - description: authorization_code or urn:ietf:params:oauth:grant-type:token-exchange
         in: formData
         name: grant_type
         required: true
+        type: string
+      - description: Token to exchange (token-exchange grant only)
+        in: formData
+        name: subject_token
+        type: string
+      - description: id_token or access_token URI (token-exchange grant only)
+        in: formData
+        name: subject_token_type
         type: string
       produces:
       - application/json

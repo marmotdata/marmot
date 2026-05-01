@@ -3390,7 +3390,7 @@ const docTemplate = `{
         },
         "/oauth/token": {
             "post": {
-                "description": "Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).",
+                "description": "Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).\nFor token-exchange, supported subject_token_type values are\nurn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token.",
                 "consumes": [
                     "application/x-www-form-urlencoded"
                 ],
@@ -3408,6 +3408,18 @@ const docTemplate = `{
                         "name": "grant_type",
                         "in": "formData",
                         "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token to exchange (token-exchange grant only)",
+                        "name": "subject_token",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "id_token or access_token URI (token-exchange grant only)",
+                        "name": "subject_token_type",
+                        "in": "formData"
                     }
                 ],
                 "responses": {

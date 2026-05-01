@@ -50,8 +50,29 @@ func TestHandleASMetadata(t *testing.T) {
 	if len(meta.ResponseTypesSupported) != 1 || meta.ResponseTypesSupported[0] != "code" {
 		t.Fatalf("expected response_types_supported=[code], got %v", meta.ResponseTypesSupported)
 	}
-	if len(meta.GrantTypesSupported) != 1 || meta.GrantTypesSupported[0] != "authorization_code" {
-		t.Fatalf("expected grant_types_supported=[authorization_code], got %v", meta.GrantTypesSupported)
+	wantGrants := map[string]bool{
+		"authorization_code":                                true,
+		"urn:ietf:params:oauth:grant-type:token-exchange":   true,
+	}
+	if len(meta.GrantTypesSupported) != len(wantGrants) {
+		t.Fatalf("expected %d grant types, got %v", len(wantGrants), meta.GrantTypesSupported)
+	}
+	for _, g := range meta.GrantTypesSupported {
+		if !wantGrants[g] {
+			t.Fatalf("unexpected grant type %q in %v", g, meta.GrantTypesSupported)
+		}
+	}
+	wantSubjectTypes := map[string]bool{
+		"urn:ietf:params:oauth:token-type:id_token":     true,
+		"urn:ietf:params:oauth:token-type:access_token": true,
+	}
+	if len(meta.SubjectTokenTypesSupported) != len(wantSubjectTypes) {
+		t.Fatalf("expected %d subject token types, got %v", len(wantSubjectTypes), meta.SubjectTokenTypesSupported)
+	}
+	for _, s := range meta.SubjectTokenTypesSupported {
+		if !wantSubjectTypes[s] {
+			t.Fatalf("unexpected subject_token_type %q in %v", s, meta.SubjectTokenTypesSupported)
+		}
 	}
 	if len(meta.CodeChallengeMethodsSupported) != 1 || meta.CodeChallengeMethodsSupported[0] != "S256" {
 		t.Fatalf("expected code_challenge_methods_supported=[S256], got %v", meta.CodeChallengeMethodsSupported)

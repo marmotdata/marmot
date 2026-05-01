@@ -8,6 +8,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	coreauth "github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/user"
 	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
 	fositeLib "github.com/ory/fosite"
 	"github.com/rs/zerolog/log"
@@ -47,14 +48,18 @@ func respondOAuthError(w http.ResponseWriter, status int, code, description stri
 //
 //	@Summary		OAuth token endpoint
 //	@Description	Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).
+//	@Description	For token-exchange, supported subject_token_type values are
+//	@Description	urn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token.
 //	@Tags			auth
 //	@Accept			application/x-www-form-urlencoded
 //	@Produce		json
-//	@Param			grant_type	formData	string	true	"authorization_code or urn:ietf:params:oauth:grant-type:token-exchange"
-//	@Success		200			{object}	tokenExchangeResponse
-//	@Failure		400			{object}	oauthErrorResponse
-//	@Failure		401			{object}	oauthErrorResponse
-//	@Failure		500			{object}	oauthErrorResponse
+//	@Param			grant_type			formData	string	true	"authorization_code or urn:ietf:params:oauth:grant-type:token-exchange"
+//	@Param			subject_token		formData	string	false	"Token to exchange (token-exchange grant only)"
+//	@Param			subject_token_type	formData	string	false	"id_token or access_token URI (token-exchange grant only)"
+//	@Success		200					{object}	tokenExchangeResponse
+//	@Failure		400					{object}	oauthErrorResponse
+//	@Failure		401					{object}	oauthErrorResponse
+//	@Failure		500					{object}	oauthErrorResponse
 //	@Router			/oauth/token [post]
 func (h *Handler) handleToken(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20) // 1 MB
@@ -127,13 +132,19 @@ func (h *Handler) handleTokenExchangeGrant(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if subjectTokenType != tokenTypeIDToken {
+	switch subjectTokenType {
+	case tokenTypeIDToken:
+		h.exchangeViaIDToken(w, r, subjectToken)
+	case tokenTypeAccessToken:
+		h.exchangeViaAccessToken(w, r, subjectToken)
+	default:
 		respondOAuthError(w, http.StatusBadRequest, "invalid_request",
-			fmt.Sprintf("subject_token_type must be %s", tokenTypeIDToken))
-		return
+			fmt.Sprintf("subject_token_type must be %s or %s", tokenTypeIDToken, tokenTypeAccessToken))
 	}
+}
 
-	// Try each registered OIDC provider; JWKS signature verification is authoritative.
+// exchangeViaIDToken validates an ID token against each provider's JWKS until one succeeds.
+func (h *Handler) exchangeViaIDToken(w http.ResponseWriter, r *http.Request, subjectToken string) {
 	for _, provider := range h.oauthManager.GetProviders() {
 		te, ok := provider.(coreauth.TokenExchanger)
 		if !ok {
@@ -143,25 +154,51 @@ func (h *Handler) handleTokenExchangeGrant(w http.ResponseWriter, r *http.Reques
 		if err != nil {
 			log.Debug().Err(err).
 				Str("provider", provider.Type()).
-				Msg("Token exchange attempt failed, trying next provider")
+				Msg("ID token exchange attempt failed, trying next provider")
 			continue
 		}
-
-		token, err := h.authService.GenerateToken(r.Context(), usr, nil)
-		if err != nil {
-			log.Error().Err(err).Msg("Failed to generate token")
-			respondOAuthError(w, http.StatusInternalServerError, "server_error", "Failed to generate token")
-			return
-		}
-
-		common.RespondJSON(w, http.StatusOK, tokenExchangeResponse{
-			AccessToken:     token,
-			IssuedTokenType: tokenTypeAccessToken,
-			TokenType:       "Bearer",
-		})
+		h.respondWithMarmotToken(w, r, usr)
 		return
 	}
 
 	respondOAuthError(w, http.StatusUnauthorized, "invalid_grant",
 		"No configured OIDC provider could verify the token")
+}
+
+// exchangeViaAccessToken validates an access token via each provider's UserInfo endpoint.
+func (h *Handler) exchangeViaAccessToken(w http.ResponseWriter, r *http.Request, subjectToken string) {
+	for _, provider := range h.oauthManager.GetProviders() {
+		ate, ok := provider.(coreauth.AccessTokenExchanger)
+		if !ok {
+			continue
+		}
+		usr, err := ate.ExchangeAccessToken(r.Context(), subjectToken)
+		if err != nil {
+			log.Debug().Err(err).
+				Str("provider", provider.Type()).
+				Msg("Access token exchange attempt failed, trying next provider")
+			continue
+		}
+		h.respondWithMarmotToken(w, r, usr)
+		return
+	}
+
+	respondOAuthError(w, http.StatusUnauthorized, "invalid_grant",
+		"No configured OIDC provider could verify the token")
+}
+
+// respondWithMarmotToken issues a Marmot JWT for the resolved user and writes the RFC 8693 response.
+func (h *Handler) respondWithMarmotToken(w http.ResponseWriter, r *http.Request, usr *user.User) {
+	token, err := h.authService.GenerateToken(r.Context(), usr, nil)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to generate token")
+		respondOAuthError(w, http.StatusInternalServerError, "server_error", "Failed to generate token")
+		return
+	}
+
+	common.RespondJSON(w, http.StatusOK, tokenExchangeResponse{
+		AccessToken:     token,
+		IssuedTokenType: tokenTypeAccessToken,
+		TokenType:       "Bearer",
+	})
 }
