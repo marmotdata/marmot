@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
 	import { onMount } from 'svelte';
+	import IconifyIcon from '@iconify/svelte';
 	import RunHistoryHistogram from './RunHistoryHistogram.svelte';
 
 	export let assetId: string;
@@ -36,18 +37,16 @@
 	$: pageSize = minimal ? 5 : 10;
 	$: totalPages = Math.ceil(total / pageSize);
 
-	function getEventTypeColor(eventType: string): string {
-		switch (eventType.toUpperCase()) {
-			case 'RUNNING':
-				return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300';
+	function statusKind(status: string): 'success' | 'error' | 'running' | 'other' {
+		switch (status.toUpperCase()) {
 			case 'COMPLETE':
-				return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300';
+				return 'success';
 			case 'FAIL':
-				return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300';
-			case 'ABORT':
-				return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+				return 'error';
+			case 'RUNNING':
+				return 'running';
 			default:
-				return 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-300';
+				return 'other';
 		}
 	}
 
@@ -70,19 +69,14 @@
 	}
 
 	function formatDurationMs(ms: number): string {
-		if (ms <= 0) return '-';
-
-		const seconds = Math.floor(ms / 1000);
+		if (ms <= 0) return '—';
+		if (ms < 1000) return `${ms}ms`;
+		const seconds = ms / 1000;
+		if (seconds < 60) return `${seconds.toFixed(2)}s`;
 		const minutes = Math.floor(seconds / 60);
 		const hours = Math.floor(minutes / 60);
-
-		if (hours > 0) {
-			return `${hours}h ${minutes % 60}m`;
-		} else if (minutes > 0) {
-			return `${minutes}m ${seconds % 60}s`;
-		} else {
-			return `${seconds}s`;
-		}
+		if (hours > 0) return `${hours}h ${minutes % 60}m`;
+		return `${minutes}m ${Math.floor(seconds) % 60}s`;
 	}
 
 	async function fetchRunHistory() {
@@ -133,7 +127,7 @@
 	}
 </script>
 
-<div class="space-y-6">
+<div class="space-y-4">
 	<RunHistoryHistogram {assetId} period="30d" minimal={true} />
 
 	{#if loading}
@@ -151,165 +145,135 @@
 			<p class="text-red-600 dark:text-red-400 {minimal ? 'text-sm' : ''}">{error}</p>
 		</div>
 	{:else if runHistory.length === 0}
-		<div class="text-center {minimal ? 'py-6' : 'py-12'}">
-			{#if !minimal}
-				<div class="text-gray-400 dark:text-gray-500 mb-4">
-					<svg class="mx-auto h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="1.5"
-							d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-						/>
-					</svg>
-				</div>
-			{/if}
-			<h3
-				class="text-lg font-medium text-gray-900 dark:text-gray-100 {minimal
-					? 'text-base mb-1'
-					: 'mb-2'}"
-			>
-				No Run History
-			</h3>
-			<p class="text-gray-500 dark:text-gray-400 {minimal ? 'text-sm' : ''}">
+		<div
+			class="rounded-xl border border-dashed border-gray-300 dark:border-gray-700 p-10 text-center"
+		>
+			<IconifyIcon
+				icon="material-symbols:history"
+				class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto"
+			/>
+			<h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No run history</h3>
+			<p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
 				This asset has no recorded job executions.
 			</p>
 		</div>
 	{:else}
-		<div>
-			{#if minimal}
-				<div class="flex justify-between items-center mb-3">
-					<h4 class="text-base font-medium text-gray-900 dark:text-gray-100">Recent Runs</h4>
+		<div
+			class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 overflow-hidden"
+		>
+			<div
+				class="px-5 py-3 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between"
+			>
+				<div class="text-sm font-medium text-gray-900 dark:text-gray-100">Recent runs</div>
+				{#if !minimal}
+					<div class="text-xs text-gray-500 dark:text-gray-400">
+						{(currentPage - 1) * pageSize + 1}–{Math.min(currentPage * pageSize, total)} of {total}
+					</div>
+				{:else if asset}
 					<a
 						href="/discover/{asset?.type?.toLowerCase()}/{encodeURIComponent(
 							asset?.name || ''
 						)}?tab=run-history"
-						class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400"
+						class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800"
 					>
-						View all runs →
+						View all →
 					</a>
-				</div>
-			{:else}
-				<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">Recent Runs</h3>
-
-				<div class="mb-4">
-					<p class="text-gray-600 dark:text-gray-400">
-						Showing {(currentPage - 1) * pageSize + 1} to {Math.min(currentPage * pageSize, total)} of
-						{total}
-						runs
-					</p>
-				</div>
-
-				{#if totalPages > 1}
-					<div class="flex gap-2 mb-4">
-						<button
-							onclick={() => goToPage(currentPage - 1)}
-							disabled={currentPage === 1}
-							class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
-						>
-							Previous
-						</button>
-						<button
-							onclick={() => goToPage(currentPage + 1)}
-							disabled={currentPage === totalPages}
-							class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
-						>
-							Next
-						</button>
-					</div>
 				{/if}
-			{/if}
-
-			<div class="space-y-3">
-				{#each runHistory as run}
-					<div
-						class="bg-earthy-brown-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 {minimal
-							? 'p-3'
-							: 'p-4'}"
-					>
-						<div class="flex items-center justify-between {minimal ? 'mb-1' : 'mb-3'}">
-							<div class="flex items-center space-x-3">
-								<h4
-									class="font-medium text-gray-900 dark:text-gray-100 {minimal
-										? 'text-sm'
-										: 'text-base'}"
-								>
-									{run.job_name}
-								</h4>
-								<span
-									class="inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full {getEventTypeColor(
-										run.status
-									)}"
-								>
-									{run.status}
-								</span>
-							</div>
-							<span class="text-sm text-gray-500 dark:text-gray-400 font-medium">
-								{run.duration_ms ? formatDurationMs(run.duration_ms) : '-'}
-							</span>
-						</div>
-
-						{#if minimal}
-							<div class="text-xs text-gray-500 dark:text-gray-400">
-								{run.start_time ? formatDateTime(run.start_time) : '-'}
-							</div>
-						{:else}
-							<div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-								<div>
-									<div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-										Namespace
-									</div>
-									<div class="text-gray-900 dark:text-gray-100">
-										{run.job_namespace}
-									</div>
-								</div>
-								<div>
-									<div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Type</div>
-									<div>
-										<span
-											class="inline-flex px-2.5 py-0.5 text-xs font-medium rounded-full {getTypeColor(
-												run.type
-											)}"
-										>
-											{run.type}
-										</span>
-									</div>
-								</div>
-								<div>
-									<div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-										Start Time
-									</div>
-									<div class="text-gray-900 dark:text-gray-100">
-										{run.start_time ? formatDateTime(run.start_time) : '-'}
-									</div>
-								</div>
-								<div>
-									<div class="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-										End Time
-									</div>
-									<div class="text-gray-900 dark:text-gray-100">
-										{run.end_time ? formatDateTime(run.end_time) : '-'}
-									</div>
-								</div>
-							</div>
-						{/if}
-					</div>
-				{/each}
 			</div>
 
+			<ul class="divide-y divide-gray-200 dark:divide-gray-700">
+				{#each runHistory as run}
+					{@const kind = statusKind(run.status)}
+					<li class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
+						<div class="flex items-center justify-between gap-4">
+							<div class="flex items-center gap-3 min-w-0">
+								{#if kind === 'success'}
+									<div
+										class="w-7 h-7 rounded-full bg-earthy-green-100 dark:bg-earthy-green-900/30 flex items-center justify-center flex-shrink-0"
+									>
+										<IconifyIcon
+											icon="material-symbols:check-rounded"
+											class="w-4 h-4 text-earthy-green-700 dark:text-earthy-green-500"
+										/>
+									</div>
+								{:else if kind === 'error'}
+									<div
+										class="w-7 h-7 rounded-full bg-red-50 dark:bg-red-900/30 flex items-center justify-center flex-shrink-0"
+									>
+										<IconifyIcon
+											icon="material-symbols:close-rounded"
+											class="w-4 h-4 text-red-600 dark:text-red-400"
+										/>
+									</div>
+								{:else if kind === 'running'}
+									<div
+										class="w-7 h-7 rounded-full bg-amber-50 dark:bg-amber-900/30 flex items-center justify-center flex-shrink-0"
+									>
+										<div
+											class="animate-spin h-3 w-3 border-2 border-amber-600 dark:border-amber-400 border-t-transparent rounded-full"
+										></div>
+									</div>
+								{:else}
+									<div
+										class="w-7 h-7 rounded-full bg-gray-50 dark:bg-gray-700 flex items-center justify-center flex-shrink-0"
+									>
+										<IconifyIcon
+											icon="material-symbols:radio-button-unchecked"
+											class="w-4 h-4 text-gray-400"
+										/>
+									</div>
+								{/if}
+								<div class="min-w-0">
+									<div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+										{run.job_name}
+									</div>
+									<div class="text-xs text-gray-500 dark:text-gray-400 truncate">
+										{run.start_time ? formatDateTime(run.start_time) : '—'}
+										{#if run.job_namespace}
+											· <span class="font-mono">{run.job_namespace}</span>
+										{/if}
+									</div>
+								</div>
+							</div>
+							<div
+								class="flex items-center gap-4 flex-shrink-0 text-xs text-gray-500 dark:text-gray-400"
+							>
+								{#if run.type}
+									<span
+										class="inline-flex px-2 py-0.5 text-[10px] font-medium rounded-full {getTypeColor(
+											run.type
+										)}"
+									>
+										{run.type}
+									</span>
+								{/if}
+								<div>
+									<span class="text-gray-400">duration </span>
+									<span class="text-gray-900 dark:text-gray-100 font-mono">
+										{run.duration_ms ? formatDurationMs(run.duration_ms) : '—'}
+									</span>
+								</div>
+							</div>
+						</div>
+					</li>
+				{/each}
+			</ul>
+
 			{#if !minimal && totalPages > 1}
-				<div class="flex gap-2 mt-4">
+				<div
+					class="px-5 py-3 border-t border-gray-200 dark:border-gray-700 flex items-center justify-end gap-2"
+				>
 					<button
 						onclick={() => goToPage(currentPage - 1)}
 						disabled={currentPage === 1}
-						class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
+						class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
 					>
 						Previous
 					</button>
 					<button
 						onclick={() => goToPage(currentPage + 1)}
 						disabled={currentPage === totalPages}
-						class="px-3 py-1.5 text-sm font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
+						class="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300 transition-colors"
 					>
 						Next
 					</button>

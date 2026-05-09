@@ -10,6 +10,8 @@
 	} from '@xyflow/svelte';
 	import CustomNode from '$components/lineage/CustomNode.svelte';
 	import CycleReturnNode from '$components/lineage/CycleReturnNode.svelte';
+	import AgentClusterNode from '$components/lineage/AgentClusterNode.svelte';
+	import AgentClusterExpandedNode from '$components/lineage/AgentClusterExpandedNode.svelte';
 	import CustomEdge from '$components/lineage/CustomEdge.svelte';
 
 	let {
@@ -26,7 +28,9 @@
 
 	const nodeTypes: NodeTypes = {
 		custom: CustomNode,
-		cycleReturn: CycleReturnNode
+		cycleReturn: CycleReturnNode,
+		agentCluster: AgentClusterNode,
+		agentClusterExpanded: AgentClusterExpandedNode
 	};
 
 	const edgeTypes: EdgeTypes = {
@@ -45,20 +49,25 @@
 		}
 	}
 
+	// Only refit the view when the *focal* asset changes (initial load or
+	// navigating to a different node). Cluster expand/collapse, depth tweaks,
+	// drags etc. all leave the focal id unchanged, so the user's current pan/
+	// zoom is preserved.
+	let lastFocalId: string | null = null;
 	$effect(() => {
-		if (nodes && nodes.length > 0) {
-			setTimeout(() => {
-				const currentNode = nodes.find((n) => n.data?.isCurrent === true);
-				if (currentNode) {
-					fitView({
-						nodes: [currentNode],
-						padding: 0.5,
-						duration: 800,
-						maxZoom: 1
-					});
-				}
-			}, 100);
-		}
+		if (!nodes || nodes.length === 0) return;
+		const focal = nodes.find((n) => n.data?.isCurrent === true);
+		if (!focal) return;
+		if (focal.id === lastFocalId) return;
+		lastFocalId = focal.id;
+		setTimeout(() => {
+			fitView({
+				nodes: [focal],
+				padding: 0.5,
+				duration: 800,
+				maxZoom: 1
+			});
+		}, 100);
 	});
 
 	let processedNodes = $derived(
@@ -87,7 +96,6 @@
 			handleNodeClick(event.node.id);
 		}
 	}}
-	fitView
 	minZoom={0.2}
 	maxZoom={1}
 	initialZoom={0.7}

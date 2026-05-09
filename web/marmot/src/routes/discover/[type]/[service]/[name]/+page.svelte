@@ -11,6 +11,8 @@
 	import SchemaEditor from '$components/schema/SchemaEditor.svelte';
 	import AssetEnvironmentsView from '$components/asset/AssetEnvironmentsView.svelte';
 	import RunHistory from '$components/runs/RunHistory.svelte';
+	import AgentSpecCard from '$components/asset/AgentSpecCard.svelte';
+	import AgentRunsView from '$components/asset/AgentRunsView.svelte';
 	import CodeBlock from '$components/editor/CodeBlock.svelte';
 	import DataPreviewTable from '$components/asset/DataPreviewTable.svelte';
 	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
@@ -190,9 +192,16 @@
 		}
 	}
 
+	function checkIsAgent(a: Asset | null): boolean {
+		if (!a?.type) return false;
+		return a.type.toLowerCase() === 'agent';
+	}
+	let isAgent = $derived(checkIsAgent(asset));
+
 	const allTabs: Tab[] = [
 		{ id: 'documentation', label: 'Documentation', icon: 'material-symbols:description' },
 		{ id: 'metadata', label: 'Metadata', icon: 'material-symbols:data-object' },
+		{ id: 'runs', label: 'Runs', icon: 'material-symbols:bolt-outline' },
 		{ id: 'query', label: 'Query', icon: 'material-symbols:code' },
 		{ id: 'preview', label: 'Preview', icon: 'material-symbols:preview' },
 		{ id: 'environments', label: 'Environments', icon: 'material-symbols:deployed-code' },
@@ -211,6 +220,7 @@
 			if (tab.id === 'query' && !asset?.query) return false;
 			if (tab.id === 'preview' && (!isTableAsset(asset) || !$tablePreviewEnabled)) return false;
 			if (tab.id === 'run-history' && !asset?.has_run_history) return false;
+			if (tab.id === 'runs' && !isAgent) return false;
 			return true;
 		})
 	);
@@ -459,13 +469,21 @@
 							</div>
 						{:else if activeTab === 'metadata'}
 							<div class="mt-6">
-								<MetadataView {asset} />
+								{#if isAgent}
+									<AgentSpecCard {asset} />
+								{:else}
+									<MetadataView {asset} />
+								{/if}
 								{#if asset.sources && Array.isArray(asset.sources) && asset.sources.length > 0}
 									<h3 class="pt-4 text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
 										Asset Sources
 									</h3>
 									<AssetSources sources={asset.sources} />
 								{/if}
+							</div>
+						{:else if activeTab === 'runs'}
+							<div class="mt-6">
+								<AgentRunsView {asset} />
 							</div>
 						{:else if activeTab === 'query'}
 							<div class="mt-6">

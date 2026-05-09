@@ -38,6 +38,10 @@ dev = [
     "pytest-httpx>=0.30",
     "ruff>=0.6",
     "openapi-python-client>=0.21",
+    "langchain-core>=0.3",
+]
+langchain = [
+    "langchain-core>=0.3",
 ]
 
 [tool.hatch.build.targets.wheel]

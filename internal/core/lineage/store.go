@@ -15,11 +15,22 @@ import (
 type Repository interface {
 	GetAssetLineage(ctx context.Context, assetID string, limit int, direction string) (*LineageResponse, error)
 	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string) (string, error)
+	BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
 	GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error)
 	GetImmediateNeighbors(ctx context.Context, assetMRN string, direction string) ([]string, error)
 	StoreRunHistory(ctx context.Context, entry *RunHistoryEntry) error
+}
+
+// ObservedEdge represents a runtime-observed lineage edge — typically emitted by
+// agent runs when the agent's tool calls touch a catalogued asset. Repeated
+// observations of the same (source, target, type) increment observation_count
+// and refresh last_seen_at instead of inserting duplicate rows.
+type ObservedEdge struct {
+	Source string
+	Target string
+	Type   string
 }
 
 type LineageResponse struct {
@@ -35,11 +46,14 @@ type LineageNode struct {
 }
 
 type LineageEdge struct {
-	ID     string `json:"id"`
-	Source string `json:"source"`
-	Target string `json:"target"`
-	Type   string `json:"type"`
-	JobMRN string `json:"job_mrn,omitempty"`
+	ID               string     `json:"id"`
+	Source           string     `json:"source"`
+	Target           string     `json:"target"`
+	Type             string     `json:"type"`
+	Origin           string     `json:"origin,omitempty"`
+	ObservationCount int        `json:"observation_count,omitempty"`
+	LastSeenAt       *time.Time `json:"last_seen_at,omitempty"`
+	JobMRN           string     `json:"job_mrn,omitempty"`
 }
 
 type PostgresRepository struct {
@@ -53,11 +67,14 @@ func NewPostgresRepository(db *pgxpool.Pool) Repository {
 func (r *PostgresRepository) GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error) {
 	query := `
         SELECT e.id, e.source_mrn, e.target_mrn, e.job_mrn,
-            CASE 
-                WHEN e.job_mrn IS NOT NULL THEN 'JOB'
-                WHEN a1.type = 'Service' OR a2.type = 'Service' THEN 'SERVICE'
-                ELSE 'DEFAULT'
-            END as type
+            COALESCE(e.type,
+                CASE
+                    WHEN e.job_mrn IS NOT NULL THEN 'JOB'
+                    WHEN a1.type = 'Service' OR a2.type = 'Service' THEN 'SERVICE'
+                    ELSE 'DEFAULT'
+                END
+            ) as type,
+            e.origin, e.observation_count, e.last_seen_at
         FROM lineage_edges e
         JOIN assets a1 ON e.source_mrn = a1.mrn
         JOIN assets a2 ON e.target_mrn = a2.mrn
@@ -72,6 +89,9 @@ func (r *PostgresRepository) GetDirectLineage(ctx context.Context, edgeID string
 		&edge.Target,
 		&jobMRN,
 		&edge.Type,
+		&edge.Origin,
+		&edge.ObservationCount,
+		&edge.LastSeenAt,
 	)
 	if err != nil {
 		if err == pgx.ErrNoRows {
@@ -206,9 +226,9 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 	}
 
 	_, err = tx.Exec(ctx, `
-        INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id)
-        VALUES ($1, $2, $3, $4)`,
-		edgeID, sourceMRN, targetMRN, eventID,
+        INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id, type, origin)
+        VALUES ($1, $2, $3, $4, $5, 'declared')`,
+		edgeID, sourceMRN, targetMRN, eventID, lineageType,
 	)
 	if err != nil {
 		return "", fmt.Errorf("inserting lineage edge: %w", err)
@@ -379,11 +399,16 @@ func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nod
 			e.source_mrn,
 			e.target_mrn,
 			e.job_mrn,
-			CASE 
-				WHEN e.job_mrn IS NOT NULL THEN 'JOB'
-				WHEN a1.type = 'Service' OR a2.type = 'Service' THEN 'SERVICE'
-				ELSE 'DEFAULT'
-			END as type
+			COALESCE(e.type,
+				CASE
+					WHEN e.job_mrn IS NOT NULL THEN 'JOB'
+					WHEN a1.type = 'Service' OR a2.type = 'Service' THEN 'SERVICE'
+					ELSE 'DEFAULT'
+				END
+			) as type,
+			e.origin,
+			e.observation_count,
+			e.last_seen_at
 		FROM lineage_edges e
 		JOIN assets a1 ON e.source_mrn = a1.mrn
 		JOIN assets a2 ON e.target_mrn = a2.mrn
@@ -398,7 +423,7 @@ func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nod
 	for rows.Next() {
 		var edge LineageEdge
 		var jobMRN *string
-		if err := rows.Scan(&edge.ID, &edge.Source, &edge.Target, &jobMRN, &edge.Type); err != nil {
+		if err := rows.Scan(&edge.ID, &edge.Source, &edge.Target, &jobMRN, &edge.Type, &edge.Origin, &edge.ObservationCount, &edge.LastSeenAt); err != nil {
 			return nil, fmt.Errorf("scanning edge: %w", err)
 		}
 		if jobMRN != nil {
@@ -506,6 +531,96 @@ func (r *PostgresRepository) StoreRunHistory(ctx context.Context, entry *RunHist
 	}
 
 	return nil
+}
+
+// BatchObservedLineage upserts a batch of runtime-observed edges in a single
+// transaction. For each edge, if (source, target, type) already exists with
+// origin='observed', observation_count is incremented and last_seen_at refreshed;
+// otherwise a fresh edge + event row is inserted. Caller must ensure both
+// asset MRNs exist; missing assets are skipped silently (best-effort runtime
+// telemetry should not fail an agent run because a tool returned a stale MRN).
+func (r *PostgresRepository) BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error {
+	if len(edges) == 0 {
+		return nil
+	}
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("starting transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	// Filter out edges where either side does not exist as a real asset.
+	mrns := make([]string, 0, len(edges)*2)
+	for _, e := range edges {
+		mrns = append(mrns, e.Source, e.Target)
+	}
+	rows, err := tx.Query(ctx, `SELECT mrn FROM assets WHERE mrn = ANY($1)`, mrns)
+	if err != nil {
+		return fmt.Errorf("checking asset existence: %w", err)
+	}
+	known := make(map[string]struct{})
+	for rows.Next() {
+		var m string
+		if err := rows.Scan(&m); err != nil {
+			rows.Close()
+			return fmt.Errorf("scanning asset mrn: %w", err)
+		}
+		known[m] = struct{}{}
+	}
+	rows.Close()
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterating asset rows: %w", err)
+	}
+
+	now := time.Now()
+	for _, e := range edges {
+		if e.Type == "" {
+			continue
+		}
+		if _, ok := known[e.Source]; !ok {
+			continue
+		}
+		if _, ok := known[e.Target]; !ok {
+			continue
+		}
+
+		eventID := uuid.New()
+		edgeID := uuid.New()
+		eventData, err := json.Marshal(map[string]interface{}{
+			"source": e.Source,
+			"target": e.Target,
+			"type":   e.Type,
+			"origin": "observed",
+		})
+		if err != nil {
+			return fmt.Errorf("marshaling event data: %w", err)
+		}
+
+		// Insert the event up-front. If the edge already exists we end up with
+		// a fresh event_id that is not pointed at; that is acceptable — events
+		// are an audit log and orphan rows are rare.
+		if _, err := tx.Exec(ctx, `
+            INSERT INTO lineage_events (event_id, event_time, event_type, event_data)
+            VALUES ($1, $2, $3, $4)`,
+			eventID, now, "OBSERVED", eventData,
+		); err != nil {
+			return fmt.Errorf("inserting lineage event: %w", err)
+		}
+
+		if _, err := tx.Exec(ctx, `
+            INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id, type, origin, observation_count, last_seen_at)
+            VALUES ($1, $2, $3, $4, $5, 'observed', 1, $6)
+            ON CONFLICT (source_mrn, target_mrn, type) WHERE origin = 'observed'
+            DO UPDATE SET observation_count = lineage_edges.observation_count + 1,
+                          last_seen_at = EXCLUDED.last_seen_at`,
+			edgeID, e.Source, e.Target, eventID, e.Type, now,
+		); err != nil {
+			return fmt.Errorf("upserting observed lineage edge: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *PostgresRepository) GetImmediateNeighbors(ctx context.Context, assetMRN string, direction string) ([]string, error) {
