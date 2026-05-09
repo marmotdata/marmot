@@ -1,0 +1,26 @@
+apiVersion: runs.marmotdata.io/v1alpha1
+kind: Run
+metadata:
+  name: example-pipeline
+spec:
+  teardownOnDelete: false
+  runs:
+    - postgresql:
+        host: postgres
+        port: 5432
+        database: marmot
+        user: marmot
+        password: marmot
+  schedule: "0 */6 * * *"
+  concurrencyPolicy: Forbid
+  backoffLimit: 3
+  activeDeadlineSeconds: 3600
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi
