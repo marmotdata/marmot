@@ -20,6 +20,7 @@ type LineageChangeObserver interface {
 type Service interface {
 	GetAssetLineage(ctx context.Context, assetID string, limit int, direction string) (*LineageResponse, error)
 	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string) (string, error)
+	BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
 	GetDirectLineage(ctx context.Context, edgeID string) (*LineageEdge, error)
@@ -120,6 +121,10 @@ func (s *service) DeleteDirectLineage(ctx context.Context, edgeID string) error 
 
 func (s *service) EdgeExists(ctx context.Context, source, target string) (bool, error) {
 	return s.repo.EdgeExists(ctx, source, target)
+}
+
+func (s *service) BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error {
+	return s.repo.BatchObservedLineage(ctx, edges)
 }
 
 func (s *service) GetImmediateNeighbors(ctx context.Context, assetMRN string, direction string) ([]string, error) {

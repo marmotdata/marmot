@@ -48,6 +48,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/auth"
 	marmotOAuth2 "github.com/marmotdata/marmot/internal/oauth2"
 	adminAPI "github.com/marmotdata/marmot/internal/api/v1/admin"
+	agentsAPI "github.com/marmotdata/marmot/internal/api/v1/agents"
 	assetrulesAPI "github.com/marmotdata/marmot/internal/api/v1/assetrules"
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/api/v1/dataproducts"
@@ -67,6 +68,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/users"
 	webhooksAPI "github.com/marmotdata/marmot/internal/api/v1/webhooks"
 	"github.com/marmotdata/marmot/pkg/config"
+	agentService "github.com/marmotdata/marmot/internal/core/agent"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
@@ -147,6 +149,8 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	assetSvc := asset.NewService(assetRepo)
 	userSvc := userService.NewService(userRepo)
 	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
+	agentRepo := agentService.NewPostgresRepository(db)
+	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
 	authSvc := authService.NewService(authRepo, userSvc)
 	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc, recorder)
@@ -543,6 +547,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		plugins.NewHandler(),
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
+		agentsAPI.NewHandler(agentSvc, userSvc, authSvc, config),
 	}
 
 	// Set up K8s SA token auth and operator syncer if enabled

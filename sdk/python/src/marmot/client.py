@@ -9,6 +9,7 @@ import httpx
 from marmot._http import Transport
 from marmot.auth import Credential, resolve
 from marmot.auth.workload import WorkloadIdentitySource
+from marmot.resources.agent_runs import AgentRunsResource
 from marmot.resources.assets import AssetsResource
 from marmot.resources.lineage import LineageResource
 from marmot.resources.search import SearchResource
@@ -37,6 +38,7 @@ class Client:
         )
         self.assets = AssetsResource(self._transport)
         self.lineage = LineageResource(self._transport)
+        self.agent_runs = AgentRunsResource(self._transport)
         self._search = SearchResource(self._transport)
 
     @property

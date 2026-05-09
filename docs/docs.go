@@ -93,6 +93,147 @@ const docTemplate = `{
                 }
             }
         },
+        "/agents/runs": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "agents"
+                ],
+                "summary": "Record agent run",
+                "parameters": [
+                    {
+                        "description": "Agent run record",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_agents.RecordRunRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/agent.Run"
+                        }
+                    }
+                }
+            }
+        },
+        "/agents/{asset_id}/activity": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "agents"
+                ],
+                "summary": "Agent activity",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Agent asset id",
+                        "name": "asset_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lookback window (e.g. 24h, 7d). Default 24h.",
+                        "name": "period",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_agents.ActivityResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/agents/{asset_id}/runs": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "agents"
+                ],
+                "summary": "List agent runs",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Agent asset id",
+                        "name": "asset_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lookback window (e.g. 24h, 7d). Default 24h.",
+                        "name": "period",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Max number of runs to return",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_agents.RunsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/agents/{asset_id}/stats": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "agents"
+                ],
+                "summary": "Agent stats",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Agent asset id",
+                        "name": "asset_id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Lookback window (e.g. 24h, 7d). Default 24h.",
+                        "name": "period",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/agent.Stats"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/assets/preview/{id}": {
             "get": {
                 "description": "Fetches sample data from the asset's data source. Requires assets:preview permission.",
@@ -5449,6 +5590,113 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "agent.Bucket": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "integer"
+                },
+                "hour": {
+                    "type": "string"
+                },
+                "success": {
+                    "type": "integer"
+                }
+            }
+        },
+        "agent.Run": {
+            "type": "object",
+            "properties": {
+                "agent_id": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "ended_at": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tokens_in": {
+                    "type": "integer"
+                },
+                "tokens_out": {
+                    "type": "integer"
+                },
+                "tool_calls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/agent.ToolCall"
+                    }
+                }
+            }
+        },
+        "agent.Stats": {
+            "type": "object",
+            "properties": {
+                "median_latency_ms": {
+                    "type": "integer"
+                },
+                "p95_latency_ms": {
+                    "type": "integer"
+                },
+                "run_count": {
+                    "type": "integer"
+                },
+                "success_rate": {
+                    "type": "number"
+                },
+                "tokens_in": {
+                    "type": "integer"
+                },
+                "tokens_out": {
+                    "type": "integer"
+                }
+            }
+        },
+        "agent.ToolCall": {
+            "type": "object",
+            "properties": {
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "ordinal": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_mrn": {
+                    "type": "string"
+                },
+                "tool_name": {
+                    "type": "string"
+                }
+            }
+        },
         "asset.Asset": {
             "type": "object",
             "properties": {
@@ -6141,6 +6389,15 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "job_mrn": {
+                    "type": "string"
+                },
+                "last_seen_at": {
+                    "type": "string"
+                },
+                "observation_count": {
+                    "type": "integer"
+                },
+                "origin": {
                     "type": "string"
                 },
                 "source": {
@@ -6997,6 +7254,95 @@ const docTemplate = `{
                 },
                 "running": {
                     "type": "boolean"
+                }
+            }
+        },
+        "v1_agents.ActivityResponse": {
+            "type": "object",
+            "properties": {
+                "buckets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/agent.Bucket"
+                    }
+                }
+            }
+        },
+        "v1_agents.RecordRunRequest": {
+            "type": "object",
+            "properties": {
+                "agent_mrn": {
+                    "type": "string"
+                },
+                "ended_at": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "observed_assets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tokens_in": {
+                    "type": "integer"
+                },
+                "tokens_out": {
+                    "type": "integer"
+                },
+                "tool_calls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_agents.ToolCallPayload"
+                    }
+                }
+            }
+        },
+        "v1_agents.RunsResponse": {
+            "type": "object",
+            "properties": {
+                "runs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/agent.Run"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_agents.ToolCallPayload": {
+            "type": "object",
+            "properties": {
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_mrn": {
+                    "type": "string"
+                },
+                "tool_name": {
+                    "type": "string"
                 }
             }
         },

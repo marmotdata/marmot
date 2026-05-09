@@ -1,5 +1,75 @@
 basePath: /api/v1
 definitions:
+  agent.Bucket:
+    properties:
+      error:
+        type: integer
+      hour:
+        type: string
+      success:
+        type: integer
+    type: object
+  agent.Run:
+    properties:
+      agent_id:
+        type: string
+      created_at:
+        type: string
+      duration_ms:
+        type: integer
+      ended_at:
+        type: string
+      error:
+        type: string
+      id:
+        type: string
+      model:
+        type: string
+      run_id:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      tokens_in:
+        type: integer
+      tokens_out:
+        type: integer
+      tool_calls:
+        items:
+          $ref: '#/definitions/agent.ToolCall'
+        type: array
+    type: object
+  agent.Stats:
+    properties:
+      median_latency_ms:
+        type: integer
+      p95_latency_ms:
+        type: integer
+      run_count:
+        type: integer
+      success_rate:
+        type: number
+      tokens_in:
+        type: integer
+      tokens_out:
+        type: integer
+    type: object
+  agent.ToolCall:
+    properties:
+      duration_ms:
+        type: integer
+      ordinal:
+        type: integer
+      started_at:
+        type: string
+      status:
+        type: string
+      target_mrn:
+        type: string
+      tool_name:
+        type: string
+    type: object
   asset.Asset:
     properties:
       created_at:
@@ -458,6 +528,12 @@ definitions:
       id:
         type: string
       job_mrn:
+        type: string
+      last_seen_at:
+        type: string
+      observation_count:
+        type: integer
+      origin:
         type: string
       source:
         type: string
@@ -1030,6 +1106,64 @@ definitions:
         type: boolean
       running:
         type: boolean
+    type: object
+  v1_agents.ActivityResponse:
+    properties:
+      buckets:
+        items:
+          $ref: '#/definitions/agent.Bucket'
+        type: array
+    type: object
+  v1_agents.RecordRunRequest:
+    properties:
+      agent_mrn:
+        type: string
+      ended_at:
+        type: string
+      error:
+        type: string
+      model:
+        type: string
+      observed_assets:
+        items:
+          type: string
+        type: array
+      run_id:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      tokens_in:
+        type: integer
+      tokens_out:
+        type: integer
+      tool_calls:
+        items:
+          $ref: '#/definitions/v1_agents.ToolCallPayload'
+        type: array
+    type: object
+  v1_agents.RunsResponse:
+    properties:
+      runs:
+        items:
+          $ref: '#/definitions/agent.Run'
+        type: array
+      total:
+        type: integer
+    type: object
+  v1_agents.ToolCallPayload:
+    properties:
+      duration_ms:
+        type: integer
+      started_at:
+        type: string
+      status:
+        type: string
+      target_mrn:
+        type: string
+      tool_name:
+        type: string
     type: object
   v1_assetrules.CreateRequest:
     properties:
@@ -1958,6 +2092,97 @@ paths:
       summary: Start search reindex
       tags:
       - admin
+  /agents/{asset_id}/activity:
+    get:
+      parameters:
+      - description: Agent asset id
+        in: path
+        name: asset_id
+        required: true
+        type: string
+      - description: Lookback window (e.g. 24h, 7d). Default 24h.
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_agents.ActivityResponse'
+      summary: Agent activity
+      tags:
+      - agents
+  /agents/{asset_id}/runs:
+    get:
+      parameters:
+      - description: Agent asset id
+        in: path
+        name: asset_id
+        required: true
+        type: string
+      - description: Lookback window (e.g. 24h, 7d). Default 24h.
+        in: query
+        name: period
+        type: string
+      - description: Max number of runs to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_agents.RunsResponse'
+      summary: List agent runs
+      tags:
+      - agents
+  /agents/{asset_id}/stats:
+    get:
+      parameters:
+      - description: Agent asset id
+        in: path
+        name: asset_id
+        required: true
+        type: string
+      - description: Lookback window (e.g. 24h, 7d). Default 24h.
+        in: query
+        name: period
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/agent.Stats'
+      summary: Agent stats
+      tags:
+      - agents
+  /agents/runs:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Agent run record
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/v1_agents.RecordRunRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/agent.Run'
+      summary: Record agent run
+      tags:
+      - agents
   /api/v1/assets/preview/{id}:
     get:
       description: Fetches sample data from the asset's data source. Requires assets:preview

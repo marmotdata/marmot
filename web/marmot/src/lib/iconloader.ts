@@ -37,6 +37,8 @@ import NatsIcon from '~icons/devicon/nats';
 import PulsarIcon from '~icons/devicon/pulsar';
 import RabbitMQIcon from '~icons/devicon/rabbitmq';
 import TableauIcon from '~icons/simple-icons/tableau';
+import LookerIcon from '~icons/logos/looker-icon';
+import LangChainIcon from '~icons/simple-icons/langchain';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -71,6 +73,9 @@ import SendOutline from '~icons/material-symbols/send-outline';
 import LinkOutline from '~icons/material-symbols/link';
 import DashboardOutline from '~icons/material-symbols/dashboard-outline';
 import StorageOutline from '~icons/material-symbols/storage';
+import RobotOutline from '~icons/material-symbols/robot-2-outline';
+import AlternateEmailRounded from '~icons/material-symbols/alternate-email-rounded';
+import ManageSearchRounded from '~icons/material-symbols/manage-search-rounded';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
 
@@ -190,7 +195,13 @@ export const providerIconMap: Record<
 	},
 	googlepubsub: { default: BigQueryIcon, displayName: 'Google Pub/Sub' },
 	'google-pubsub': { default: BigQueryIcon, displayName: 'Google Pub/Sub' },
-	tableau: { default: TableauIcon, class: 'text-[#E97627]', displayName: 'Tableau' }
+	tableau: { default: TableauIcon, class: 'text-[#E97627]', displayName: 'Tableau' },
+	looker: { default: LookerIcon, displayName: 'Looker' },
+	langchain: {
+		default: LangChainIcon,
+		class: 'text-[#1C3C3C] dark:text-gray-100',
+		displayName: 'LangChain'
+	}
 };
 
 // Type icons with display names
@@ -360,6 +371,21 @@ export const typeIconMap: Record<
 		default: Graph4,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'Pipeline'
+	},
+	agent: {
+		default: RobotOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Agent'
+	},
+	alias: {
+		default: AlternateEmailRounded,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Alias'
+	},
+	index: {
+		default: ManageSearchRounded,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Index'
 	}
 };
 

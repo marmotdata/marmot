@@ -58,10 +58,64 @@ interface TabItem {
 interface TabsProps {
   items: TabItem[];
   children: React.ReactNode;
+  /**
+   * Tabs that share a `groupId` synchronise within a single page — pick one
+   * tab and every other Tabs block on the same page with the same `groupId`
+   * follows. State resets on navigation; nothing is persisted to localStorage.
+   */
+  groupId?: string;
 }
 
-export function Tabs({ items, children }: TabsProps): JSX.Element {
-  const [activeTab, setActiveTab] = React.useState(items[0]?.value || "");
+interface TabSyncValue {
+  values: Record<string, string>;
+  setValue: (groupId: string, value: string) => void;
+}
+
+const TabSyncContext = React.createContext<TabSyncValue | null>(null);
+
+/**
+ * Provides shared tab state for any descendant `Tabs` blocks that pass a
+ * matching `groupId`. Pass `resetKey` (e.g. the current page pathname) to
+ * clear the shared state on navigation, so picks don't leak across pages.
+ */
+export function TabSyncProvider({
+  children,
+  resetKey,
+}: {
+  children?: React.ReactNode;
+  resetKey?: string;
+}): JSX.Element {
+  const [values, setValues] = React.useState<Record<string, string>>({});
+  React.useEffect(() => {
+    setValues({});
+  }, [resetKey]);
+  const setValue = React.useCallback((groupId: string, value: string) => {
+    setValues((prev) => (prev[groupId] === value ? prev : { ...prev, [groupId]: value }));
+  }, []);
+  const ctx = React.useMemo(() => ({ values, setValue }), [values, setValue]);
+  return <TabSyncContext.Provider value={ctx}>{children}</TabSyncContext.Provider>;
+}
+
+export function Tabs({ items, children, groupId }: TabsProps): JSX.Element {
+  const initial = items[0]?.value || "";
+  const ctx = React.useContext(TabSyncContext);
+  const [localActive, setLocalActive] = React.useState(initial);
+
+  const useShared = groupId !== undefined && ctx !== null;
+  const sharedActive = useShared ? ctx.values[groupId!] : undefined;
+  // Fall back to the first item if the shared value isn't present in this
+  // Tabs block (different groups can have different value sets).
+  const activeTab = useShared
+    ? items.some((i) => i.value === sharedActive)
+      ? (sharedActive as string)
+      : initial
+    : localActive;
+
+  const setActiveTab = (value: string) => {
+    if (useShared) ctx!.setValue(groupId!, value);
+    else setLocalActive(value);
+  };
+
   const childArray = React.Children.toArray(children);
 
   return (
