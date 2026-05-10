@@ -318,7 +318,6 @@ func (s *Source) createDAGAsset(dag DAG) asset.Asset {
 		Providers:   []string{"Airflow"},
 		Description: description,
 		Metadata:    cleanMetadata,
-		Tags:        s.config.Tags,
 		Sources: []asset.AssetSource{{
 			Name:       "Airflow",
 			LastSyncAt: time.Now(),
@@ -476,7 +475,6 @@ func (s *Source) createTaskAsset(dagID string, task Task) asset.Asset {
 		Type:      "Task",
 		Providers: []string{"Airflow"},
 		Metadata:  cleanMetadata,
-		Tags:      s.config.Tags,
 		Sources: []asset.AssetSource{{
 			Name:       "Airflow",
 			LastSyncAt: time.Now(),
@@ -579,7 +577,6 @@ func (s *Source) createDatasetAsset(dataset Dataset) asset.Asset {
 		Type:      assetType,
 		Providers: []string{provider},
 		Metadata:  cleanMetadata,
-		Tags:      s.config.Tags,
 		Sources: []asset.AssetSource{{
 			Name:       "Airflow",
 			LastSyncAt: time.Now(),

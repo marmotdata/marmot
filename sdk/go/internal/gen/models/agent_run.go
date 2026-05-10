@@ -14,7 +14,7 @@ import (
 
 // AgentRun agent run
 //
-// swagger:model AgentRun
+// swagger:model agent.Run
 type AgentRun struct {
 
 	// agent id
@@ -54,7 +54,7 @@ type AgentRun struct {
 	TokensOut int64 `json:"tokens_out,omitempty"`
 
 	// tool calls
-	ToolCalls []*ToolCall `json:"tool_calls"`
+	ToolCalls []*AgentToolCall `json:"tool_calls"`
 }
 
 // Validate validates this agent run

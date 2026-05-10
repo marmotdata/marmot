@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
+	"github.com/marmotdata/marmot/client/models"
 )
 
 // PostAssetsTagsIDReader is a Reader for the PostAssetsTagsID structure.
@@ -22,8 +22,8 @@ type PostAssetsTagsIDReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *PostAssetsTagsIDReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (any, error) {
 	switch response.Code() {
-	case 200:
-		result := NewPostAssetsTagsIDOK()
+	case 201:
+		result := NewPostAssetsTagsIDCreated()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -40,75 +40,79 @@ func (o *PostAssetsTagsIDReader) ReadResponse(response runtime.ClientResponse, c
 			return nil, err
 		}
 		return nil, result
+	case 500:
+		result := NewPostAssetsTagsIDInternalServerError()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		return nil, runtime.NewAPIError("[POST /assets/tags/{id}] PostAssetsTagsID", response, response.Code())
 	}
 }
 
-// NewPostAssetsTagsIDOK creates a PostAssetsTagsIDOK with default headers values
-func NewPostAssetsTagsIDOK() *PostAssetsTagsIDOK {
-	return &PostAssetsTagsIDOK{}
+// NewPostAssetsTagsIDCreated creates a PostAssetsTagsIDCreated with default headers values
+func NewPostAssetsTagsIDCreated() *PostAssetsTagsIDCreated {
+	return &PostAssetsTagsIDCreated{}
 }
 
 /*
-PostAssetsTagsIDOK describes a response with status code 200, with default header values.
+PostAssetsTagsIDCreated describes a response with status code 201, with default header values.
 
-OK
+Created
 */
-type PostAssetsTagsIDOK struct {
-	Payload *models.Asset
+type PostAssetsTagsIDCreated struct {
+	Payload []*models.GithubComMarmotdataMarmotInternalCoreTagTag
 }
 
-// IsSuccess returns true when this post assets tags Id o k response has a 2xx status code
-func (o *PostAssetsTagsIDOK) IsSuccess() bool {
+// IsSuccess returns true when this post assets tags Id created response has a 2xx status code
+func (o *PostAssetsTagsIDCreated) IsSuccess() bool {
 	return true
 }
 
-// IsRedirect returns true when this post assets tags Id o k response has a 3xx status code
-func (o *PostAssetsTagsIDOK) IsRedirect() bool {
+// IsRedirect returns true when this post assets tags Id created response has a 3xx status code
+func (o *PostAssetsTagsIDCreated) IsRedirect() bool {
 	return false
 }
 
-// IsClientError returns true when this post assets tags Id o k response has a 4xx status code
-func (o *PostAssetsTagsIDOK) IsClientError() bool {
+// IsClientError returns true when this post assets tags Id created response has a 4xx status code
+func (o *PostAssetsTagsIDCreated) IsClientError() bool {
 	return false
 }
 
-// IsServerError returns true when this post assets tags Id o k response has a 5xx status code
-func (o *PostAssetsTagsIDOK) IsServerError() bool {
+// IsServerError returns true when this post assets tags Id created response has a 5xx status code
+func (o *PostAssetsTagsIDCreated) IsServerError() bool {
 	return false
 }
 
-// IsCode returns true when this post assets tags Id o k response a status code equal to that given
-func (o *PostAssetsTagsIDOK) IsCode(code int) bool {
-	return code == 200
+// IsCode returns true when this post assets tags Id created response a status code equal to that given
+func (o *PostAssetsTagsIDCreated) IsCode(code int) bool {
+	return code == 201
 }
 
-// Code gets the status code for the post assets tags Id o k response
-func (o *PostAssetsTagsIDOK) Code() int {
-	return 200
+// Code gets the status code for the post assets tags Id created response
+func (o *PostAssetsTagsIDCreated) Code() int {
+	return 201
 }
 
-func (o *PostAssetsTagsIDOK) Error() string {
+func (o *PostAssetsTagsIDCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdOK %s", 200, payload)
+	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdCreated %s", 201, payload)
 }
 
-func (o *PostAssetsTagsIDOK) String() string {
+func (o *PostAssetsTagsIDCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdOK %s", 200, payload)
+	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdCreated %s", 201, payload)
 }
 
-func (o *PostAssetsTagsIDOK) GetPayload() *models.Asset {
+func (o *PostAssetsTagsIDCreated) GetPayload() []*models.GithubComMarmotdataMarmotInternalCoreTagTag {
 	return o.Payload
 }
 
-func (o *PostAssetsTagsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.Asset)
+func (o *PostAssetsTagsIDCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
 		return err
 	}
 
@@ -126,7 +130,7 @@ PostAssetsTagsIDBadRequest describes a response with status code 400, with defau
 Bad Request
 */
 type PostAssetsTagsIDBadRequest struct {
-	Payload *models.ErrorResponse
+	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
 }
 
 // IsSuccess returns true when this post assets tags Id bad request response has a 2xx status code
@@ -169,13 +173,13 @@ func (o *PostAssetsTagsIDBadRequest) String() string {
 	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdBadRequest %s", 400, payload)
 }
 
-func (o *PostAssetsTagsIDBadRequest) GetPayload() *models.ErrorResponse {
+func (o *PostAssetsTagsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAssetsTagsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ErrorResponse)
+	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +200,7 @@ PostAssetsTagsIDNotFound describes a response with status code 404, with default
 Not Found
 */
 type PostAssetsTagsIDNotFound struct {
-	Payload *models.ErrorResponse
+	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
 }
 
 // IsSuccess returns true when this post assets tags Id not found response has a 2xx status code
@@ -239,13 +243,83 @@ func (o *PostAssetsTagsIDNotFound) String() string {
 	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdNotFound %s", 404, payload)
 }
 
-func (o *PostAssetsTagsIDNotFound) GetPayload() *models.ErrorResponse {
+func (o *PostAssetsTagsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAssetsTagsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ErrorResponse)
+	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewPostAssetsTagsIDInternalServerError creates a PostAssetsTagsIDInternalServerError with default headers values
+func NewPostAssetsTagsIDInternalServerError() *PostAssetsTagsIDInternalServerError {
+	return &PostAssetsTagsIDInternalServerError{}
+}
+
+/*
+PostAssetsTagsIDInternalServerError describes a response with status code 500, with default header values.
+
+Internal Server Error
+*/
+type PostAssetsTagsIDInternalServerError struct {
+	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+}
+
+// IsSuccess returns true when this post assets tags Id internal server error response has a 2xx status code
+func (o *PostAssetsTagsIDInternalServerError) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this post assets tags Id internal server error response has a 3xx status code
+func (o *PostAssetsTagsIDInternalServerError) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this post assets tags Id internal server error response has a 4xx status code
+func (o *PostAssetsTagsIDInternalServerError) IsClientError() bool {
+	return false
+}
+
+// IsServerError returns true when this post assets tags Id internal server error response has a 5xx status code
+func (o *PostAssetsTagsIDInternalServerError) IsServerError() bool {
+	return true
+}
+
+// IsCode returns true when this post assets tags Id internal server error response a status code equal to that given
+func (o *PostAssetsTagsIDInternalServerError) IsCode(code int) bool {
+	return code == 500
+}
+
+// Code gets the status code for the post assets tags Id internal server error response
+func (o *PostAssetsTagsIDInternalServerError) Code() int {
+	return 500
+}
+
+func (o *PostAssetsTagsIDInternalServerError) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdInternalServerError %s", 500, payload)
+}
+
+func (o *PostAssetsTagsIDInternalServerError) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdInternalServerError %s", 500, payload)
+}
+
+func (o *PostAssetsTagsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+	return o.Payload
+}
+
+func (o *PostAssetsTagsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

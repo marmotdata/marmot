@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/solace"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 func (s *Source) createSolaceAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, opBinding *solace.OperationBinding) []asset.Asset {
@@ -79,7 +78,6 @@ func (s *Source) createSolaceQueue(doc *asyncapi3.Document, channelName string, 
 		metadata["binding_version"] = opBinding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -88,7 +86,6 @@ func (s *Source) createSolaceQueue(doc *asyncapi3.Document, channelName string, 
 		Providers:   []string{"Solace"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
@@ -141,7 +138,6 @@ func (s *Source) createSolaceTopicFromDest(doc *asyncapi3.Document, channelName 
 		metadata["binding_version"] = opBinding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -150,7 +146,6 @@ func (s *Source) createSolaceTopicFromDest(doc *asyncapi3.Document, channelName 
 		Providers:   []string{"Solace"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
@@ -206,7 +201,6 @@ func (s *Source) createSolaceGenericTopic(doc *asyncapi3.Document, channelName s
 		}
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -215,7 +209,6 @@ func (s *Source) createSolaceGenericTopic(doc *asyncapi3.Document, channelName s
 		Providers:   []string{"Solace"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),

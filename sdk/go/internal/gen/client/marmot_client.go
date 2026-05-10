@@ -7,25 +7,26 @@ import (
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/admin"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/agents"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/asset_rules"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/assets"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/auth"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/glossary"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/ingestion"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/lineage"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/metrics"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/owners"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/pipelines"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/plugins"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/products"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/runs"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/search"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/sso"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/teams"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/ui"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/users"
+	"github.com/marmotdata/marmot/client/client/admin"
+	"github.com/marmotdata/marmot/client/client/agents"
+	"github.com/marmotdata/marmot/client/client/asset_rules"
+	"github.com/marmotdata/marmot/client/client/assets"
+	"github.com/marmotdata/marmot/client/client/auth"
+	"github.com/marmotdata/marmot/client/client/glossary"
+	"github.com/marmotdata/marmot/client/client/ingestion"
+	"github.com/marmotdata/marmot/client/client/lineage"
+	"github.com/marmotdata/marmot/client/client/metrics"
+	"github.com/marmotdata/marmot/client/client/owners"
+	"github.com/marmotdata/marmot/client/client/pipelines"
+	"github.com/marmotdata/marmot/client/client/plugins"
+	"github.com/marmotdata/marmot/client/client/products"
+	"github.com/marmotdata/marmot/client/client/runs"
+	"github.com/marmotdata/marmot/client/client/search"
+	"github.com/marmotdata/marmot/client/client/sso"
+	"github.com/marmotdata/marmot/client/client/tags"
+	"github.com/marmotdata/marmot/client/client/teams"
+	"github.com/marmotdata/marmot/client/client/ui"
+	"github.com/marmotdata/marmot/client/client/users"
 )
 
 // Default marmot HTTP client.
@@ -86,6 +87,7 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *Marmot {
 	cli.Runs = runs.New(transport, formats)
 	cli.Search = search.New(transport, formats)
 	cli.Sso = sso.New(transport, formats)
+	cli.Tags = tags.New(transport, formats)
 	cli.Teams = teams.New(transport, formats)
 	cli.UI = ui.New(transport, formats)
 	cli.Users = users.New(transport, formats)
@@ -165,6 +167,8 @@ type Marmot struct {
 
 	Sso sso.ClientService
 
+	Tags tags.ClientService
+
 	Teams teams.ClientService
 
 	UI ui.ClientService
@@ -193,6 +197,7 @@ func (c *Marmot) SetTransport(transport runtime.ClientTransport) {
 	c.Runs.SetTransport(transport)
 	c.Search.SetTransport(transport)
 	c.Sso.SetTransport(transport)
+	c.Tags.SetTransport(transport)
 	c.Teams.SetTransport(transport)
 	c.UI.SetTransport(transport)
 	c.Users.SetTransport(transport)

@@ -6,6 +6,7 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/rs/zerolog/log"
 )
 
@@ -45,16 +46,18 @@ type service struct {
 	validator       *validator.Validate
 	metrics         MetricsClient
 	assetSvc        asset.Service
+	tagSvc          tag.Service
 	lineageObserver LineageChangeObserver
 }
 
 type ServiceOption func(*service)
 
-func NewService(repo Repository, assetSvc asset.Service, opts ...ServiceOption) Service {
+func NewService(repo Repository, assetSvc asset.Service, tagSvc tag.Service, opts ...ServiceOption) Service {
 	s := &service{
 		repo:      repo,
 		validator: validator.New(),
 		assetSvc:  assetSvc,
+		tagSvc:    tagSvc,
 	}
 
 	for _, opt := range opts {

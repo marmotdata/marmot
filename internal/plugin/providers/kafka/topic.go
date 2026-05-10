@@ -8,7 +8,6 @@ import (
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 	"github.com/twmb/franz-go/pkg/kmsg"
 )
@@ -77,7 +76,6 @@ func (s *Source) createTopicAsset(ctx context.Context, topic string) (asset.Asse
 
 	mrnValue := mrn.New("Topic", "Kafka", topic)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:      &topic,
@@ -86,7 +84,6 @@ func (s *Source) createTopicAsset(ctx context.Context, topic string) (asset.Asse
 		Providers: []string{"Kafka"},
 		Metadata:    metadata,
 		Schema:      schema,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Kafka",
 			LastSyncAt: time.Now(),

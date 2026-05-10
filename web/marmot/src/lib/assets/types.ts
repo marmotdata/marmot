@@ -1,3 +1,5 @@
+import type { Tag } from '$lib/tags/types';
+
 export interface AssetSource {
 	name: string;
 	last_sync_at: string;
@@ -31,7 +33,7 @@ export interface Asset {
 	providers: string[];
 	description?: string; // Technical description (from plugins)
 	user_description?: string; // User-provided notes
-	tags: string[];
+	tags: Tag[];
 	created_at: string;
 	updated_at: string;
 	created_by: string;

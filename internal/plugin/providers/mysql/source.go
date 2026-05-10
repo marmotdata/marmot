@@ -279,7 +279,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 
 		mrnValue := mrn.New(assetType, "MySQL", objectName)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
 			Name:        &objectName,
@@ -288,7 +287,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			Providers:   []string{"MySQL"},
 			Description: &assetDesc,
 			Metadata:    metadata,
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "MySQL",
 				LastSyncAt: time.Now(),

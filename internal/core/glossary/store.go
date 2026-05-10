@@ -10,6 +10,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/metrics"
 )
 
@@ -25,6 +26,11 @@ type Repository interface {
 	List(ctx context.Context, offset, limit int) (*ListResult, error)
 	Search(ctx context.Context, filter SearchFilter) (*ListResult, error)
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
+
+	ListGlossaryTermTags(ctx context.Context, termID string) ([]tag.Tag, error)
+	SetTags(ctx context.Context, termID string, tagIDs []string) error
+	AddTag(ctx context.Context, termID string, tagID string) error
+	RemoveTag(ctx context.Context, termID string, tagID string) error
 }
 
 type PostgresRepository struct {
@@ -119,13 +125,13 @@ func (r *PostgresRepository) Create(ctx context.Context, term *GlossaryTerm, own
 	query := `
 		INSERT INTO glossary_terms (
 			name, definition, description, parent_term_id,
-			metadata, tags, created_at, updated_at
-		) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+			metadata, created_at, updated_at
+		) VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`
 
 	err = tx.QueryRow(ctx, query,
 		term.Name, term.Definition, term.Description,
-		term.ParentTermID, metadataJSON, term.Tags,
+		term.ParentTermID, metadataJSON,
 		term.CreatedAt, term.UpdatedAt,
 	).Scan(&term.ID)
 
@@ -158,7 +164,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 
 	query := `
 		SELECT id, name, definition, description, parent_term_id,
-			   metadata, tags, created_at, updated_at, deleted_at
+			   metadata, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		WHERE id = $1`
 
@@ -168,7 +174,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 	err := r.db.QueryRow(ctx, query, id).Scan(
 		&term.ID, &term.Name, &term.Definition,
 		&term.Description, &term.ParentTermID,
-		&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
+		&metadataJSON, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 	)
 
 	duration := time.Since(start)
@@ -191,6 +197,12 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 	if err != nil {
 		r.recorder.RecordDBQuery(ctx, "glossary_get", duration, false)
 		return nil, fmt.Errorf("loading owners: %w", err)
+	}
+
+	term.Tags, err = r.loadTags(ctx, id)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "glossary_get", duration, false)
+		return nil, fmt.Errorf("loading tags: %w", err)
 	}
 
 	r.recorder.RecordDBQuery(ctx, "glossary_get", duration, true)
@@ -216,12 +228,12 @@ func (r *PostgresRepository) Update(ctx context.Context, term *GlossaryTerm, own
 	query := `
 		UPDATE glossary_terms
 		SET name = $1, definition = $2, description = $3, parent_term_id = $4,
-			metadata = $5, tags = $6, updated_at = $7, deleted_at = $8
-		WHERE id = $9`
+			metadata = $5, updated_at = $6, deleted_at = $7
+		WHERE id = $8`
 
 	result, err := tx.Exec(ctx, query,
 		term.Name, term.Definition, term.Description, term.ParentTermID,
-		metadataJSON, term.Tags, term.UpdatedAt, term.DeletedAt, term.ID,
+		metadataJSON, term.UpdatedAt, term.DeletedAt, term.ID,
 	)
 
 	duration := time.Since(start)
@@ -265,7 +277,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 
 	query := `
 		SELECT id, name, definition, description, parent_term_id,
-			   metadata, tags, created_at, updated_at, deleted_at
+			   metadata, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		WHERE deleted_at IS NULL
 		ORDER BY name ASC
@@ -286,7 +298,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 		if err := rows.Scan(
 			&term.ID, &term.Name, &term.Definition,
 			&term.Description, &term.ParentTermID,
-			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
+			&metadataJSON, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_list", time.Since(start), false)
 			return nil, fmt.Errorf("scanning glossary term: %w", err)
@@ -301,6 +313,12 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 		if err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_list", time.Since(start), false)
 			return nil, fmt.Errorf("loading owners for term %s: %w", term.ID, err)
+		}
+
+		term.Tags, err = r.loadTags(ctx, term.ID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "glossary_list", time.Since(start), false)
+			return nil, fmt.Errorf("loading tags for term %s: %w", term.ID, err)
 		}
 
 		terms = append(terms, &term)
@@ -363,7 +381,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 
 	query := fmt.Sprintf(`
 		SELECT id, name, definition, description, parent_term_id,
-			   metadata, tags, created_at, updated_at, deleted_at
+			   metadata, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		%s
 		ORDER BY name ASC
@@ -386,7 +404,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 		if err := rows.Scan(
 			&term.ID, &term.Name, &term.Definition,
 			&term.Description, &term.ParentTermID,
-			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
+			&metadataJSON, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_search", time.Since(start), false)
 			return nil, fmt.Errorf("scanning search result: %w", err)
@@ -402,6 +420,12 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 		if err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_search", time.Since(start), false)
 			return nil, fmt.Errorf("loading owners for term %s: %w", term.ID, err)
+		}
+
+		term.Tags, err = r.loadTags(ctx, term.ID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "glossary_search", time.Since(start), false)
+			return nil, fmt.Errorf("loading tags for term %s: %w", term.ID, err)
 		}
 
 		terms = append(terms, &term)
@@ -421,7 +445,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 
 	query := `
 		SELECT id, name, definition, description, parent_term_id,
-			   metadata, tags, created_at, updated_at, deleted_at
+			   metadata, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		WHERE parent_term_id = $1 AND deleted_at IS NULL
 		ORDER BY name ASC`
@@ -441,7 +465,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 		if err := rows.Scan(
 			&term.ID, &term.Name, &term.Definition,
 			&term.Description, &term.ParentTermID,
-			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
+			&metadataJSON, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "glossary_get_children", time.Since(start), false)
 			return nil, fmt.Errorf("scanning child term: %w", err)
@@ -459,6 +483,12 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 			return nil, fmt.Errorf("loading owners for term %s: %w", term.ID, err)
 		}
 
+		term.Tags, err = r.loadTags(ctx, term.ID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "glossary_get_children", time.Since(start), false)
+			return nil, fmt.Errorf("loading tags for term %s: %w", term.ID, err)
+		}
+
 		terms = append(terms, &term)
 	}
 
@@ -469,6 +499,110 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 
 	r.recorder.RecordDBQuery(ctx, "glossary_get_children", time.Since(start), true)
 	return terms, nil
+}
+
+func (r *PostgresRepository) loadTags(ctx context.Context, termID string) ([]tag.Tag, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT t.id, t.name, t.description, t.created_at, t.updated_at
+		FROM glossary_term_tags gtt
+		JOIN tags t ON t.id = gtt.tag_id
+		WHERE gtt.glossary_term_id = $1
+		ORDER BY t.name`,
+		termID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("loading term tags: %w", err)
+	}
+	defer rows.Close()
+
+	var tags []tag.Tag
+	for rows.Next() {
+		var t tag.Tag
+		if err := rows.Scan(&t.ID, &t.Name, &t.Description, &t.CreatedAt, &t.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scanning tag: %w", err)
+		}
+		tags = append(tags, t)
+	}
+	return tags, rows.Err()
+}
+
+func (r *PostgresRepository) ListGlossaryTermTags(ctx context.Context, termID string) ([]tag.Tag, error) {
+	return r.loadTags(ctx, termID)
+}
+
+func (r *PostgresRepository) SetTags(ctx context.Context, termID string, tagIDs []string) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var exists bool
+	err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM glossary_terms WHERE id = $1)`, termID).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("checking term existence: %w", err)
+	}
+	if !exists {
+		return ErrNotFound
+	}
+
+	// Diff and apply: only delete rows whose tag_id is no longer desired,
+	// then insert the desired set (existing rows kept untouched, preserving created_at).
+	if len(tagIDs) == 0 {
+		_, err = tx.Exec(ctx, `DELETE FROM glossary_term_tags WHERE glossary_term_id = $1`, termID)
+		if err != nil {
+			return fmt.Errorf("clearing term tags: %w", err)
+		}
+	} else {
+		_, err = tx.Exec(ctx,
+			`DELETE FROM glossary_term_tags WHERE glossary_term_id = $1 AND tag_id <> ALL($2::uuid[])`,
+			termID, tagIDs,
+		)
+		if err != nil {
+			return fmt.Errorf("pruning term tags: %w", err)
+		}
+
+		_, err = tx.Exec(ctx, `
+			INSERT INTO glossary_term_tags (glossary_term_id, tag_id)
+			SELECT $1, unnest($2::uuid[])
+			ON CONFLICT DO NOTHING`,
+			termID, tagIDs,
+		)
+		if err != nil {
+			return fmt.Errorf("inserting term tags: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (r *PostgresRepository) AddTag(ctx context.Context, termID string, tagID string) error {
+	_, err := r.db.Exec(ctx,
+		`INSERT INTO glossary_term_tags (glossary_term_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		termID, tagID,
+	)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+			return ErrNotFound
+		}
+		return fmt.Errorf("adding term tag: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresRepository) RemoveTag(ctx context.Context, termID string, tagID string) error {
+	result, err := r.db.Exec(ctx,
+		`DELETE FROM glossary_term_tags WHERE glossary_term_id = $1 AND tag_id = $2`,
+		termID, tagID,
+	)
+	if err != nil {
+		return fmt.Errorf("removing term tag: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 func joinConditions(conditions []string, separator string) string {

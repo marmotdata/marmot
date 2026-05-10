@@ -106,6 +106,38 @@ export function processField(
 ): Field[] {
 	const fields: Field[] = [];
 
+	// Determine if this field is a leaf (has no nested child fields).
+	// Records, arrays-of-records, and unions-containing-records are containers.
+	const _isLeafField = (() => {
+		if (fieldSchema.type === 'record' && fieldSchema.fields) return false;
+		if (
+			fieldSchema.type === 'array' &&
+			typeof fieldSchema.items === 'object' &&
+			fieldSchema.items.type === 'record' &&
+			fieldSchema.items.fields
+		)
+			return false;
+		if (
+			Array.isArray(fieldSchema.type) &&
+			fieldSchema.type.some(
+				(t: Record<string, unknown>) =>
+					typeof t === 'object' &&
+					t !== null &&
+					'type' in t &&
+					(t as { type: string }).type === 'record' &&
+					'fields' in t
+			)
+		)
+			return false;
+		if (
+			typeof fieldSchema.type === 'object' &&
+			fieldSchema.type?.type === 'record' &&
+			fieldSchema.type?.fields
+		)
+			return false;
+		return true;
+	})();
+
 	// Default field properties
 	const field: Field = {
 		name: fieldName,
@@ -114,7 +146,8 @@ export function processField(
 		required:
 			!Array.isArray(fieldSchema.type) || !(fieldSchema.type as AvroSchemaValue[]).includes('null'),
 		default: fieldSchema.default,
-		indentLevel: depth
+		indentLevel: depth,
+		isLeaf: _isLeafField
 	};
 
 	fields.push(field);
@@ -206,7 +239,8 @@ export function processAvroSchema(schema: unknown): Field[] {
 						type: 'record',
 						description: docMatch ? docMatch[1] : undefined,
 						required: true,
-						indentLevel: 0
+						indentLevel: 0,
+						isLeaf: false
 					});
 
 					for (let i = 0; i < lines.length; i++) {
@@ -226,7 +260,8 @@ export function processAvroSchema(schema: unknown): Field[] {
 								type: typeMatch ? typeMatch[1] : 'unknown',
 								description: fieldDocMatch ? fieldDocMatch[1].trim() : undefined,
 								required: true,
-								indentLevel: 1
+								indentLevel: 1,
+								isLeaf: true
 							});
 						}
 					}
@@ -266,7 +301,8 @@ export function processAvroSchema(schema: unknown): Field[] {
 				type: 'record',
 				description: avroSchema.doc,
 				required: true,
-				indentLevel: 0
+				indentLevel: 0,
+				isLeaf: false
 			});
 
 			avroSchema.fields.forEach((field: AvroSchemaObject) => {

@@ -113,15 +113,80 @@ func WithAcceptImageWebp(r *runtime.ClientOperation) {
 
 // ClientService is the interface for Client methods
 type ClientService interface {
+	DeleteProductsID(params *DeleteProductsIDParams, opts ...ClientOption) (*DeleteProductsIDOK, error)
+
 	DeleteProductsImagesIDPurpose(params *DeleteProductsImagesIDPurposeParams, opts ...ClientOption) (*DeleteProductsImagesIDPurposeOK, error)
+
+	DeleteProductsTagsID(params *DeleteProductsTagsIDParams, opts ...ClientOption) (*DeleteProductsTagsIDOK, error)
+
+	GetProductsID(params *GetProductsIDParams, opts ...ClientOption) (*GetProductsIDOK, error)
 
 	GetProductsImagesID(params *GetProductsImagesIDParams, opts ...ClientOption) (*GetProductsImagesIDOK, error)
 
 	GetProductsImagesIDPurpose(params *GetProductsImagesIDPurposeParams, writer io.Writer, opts ...ClientOption) (*GetProductsImagesIDPurposeOK, error)
 
+	GetProductsList(params *GetProductsListParams, opts ...ClientOption) (*GetProductsListOK, error)
+
+	GetProductsSearch(params *GetProductsSearchParams, opts ...ClientOption) (*GetProductsSearchOK, error)
+
+	GetProductsTagsID(params *GetProductsTagsIDParams, opts ...ClientOption) (*GetProductsTagsIDOK, error)
+
+	PostProducts(params *PostProductsParams, opts ...ClientOption) (*PostProductsCreated, error)
+
 	PostProductsImagesIDPurpose(params *PostProductsImagesIDPurposeParams, opts ...ClientOption) (*PostProductsImagesIDPurposeOK, error)
 
+	PostProductsTagsID(params *PostProductsTagsIDParams, opts ...ClientOption) (*PostProductsTagsIDCreated, error)
+
+	PutProductsID(params *PutProductsIDParams, opts ...ClientOption) (*PutProductsIDOK, error)
+
+	PutProductsTagsID(params *PutProductsTagsIDParams, opts ...ClientOption) (*PutProductsTagsIDOK, error)
+
 	SetTransport(transport runtime.ClientTransport)
+}
+
+/*
+DeleteProductsID deletes a data product
+
+Delete a data product from the system
+*/
+func (a *Client) DeleteProductsID(params *DeleteProductsIDParams, opts ...ClientOption) (*DeleteProductsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewDeleteProductsIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "DeleteProductsID",
+		Method:             "DELETE",
+		PathPattern:        "/products/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteProductsIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*DeleteProductsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DeleteProductsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
 }
 
 /*
@@ -166,6 +231,96 @@ func (a *Client) DeleteProductsImagesIDPurpose(params *DeleteProductsImagesIDPur
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for DeleteProductsImagesIDPurpose: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+DeleteProductsTagsID removes data product tag
+
+Remove a single tag association from a data product
+*/
+func (a *Client) DeleteProductsTagsID(params *DeleteProductsTagsIDParams, opts ...ClientOption) (*DeleteProductsTagsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewDeleteProductsTagsIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "DeleteProductsTagsID",
+		Method:             "DELETE",
+		PathPattern:        "/products/tags/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &DeleteProductsTagsIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*DeleteProductsTagsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for DeleteProductsTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+GetProductsID gets a data product
+
+Get detailed information about a specific data product
+*/
+func (a *Client) GetProductsID(params *GetProductsIDParams, opts ...ClientOption) (*GetProductsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetProductsIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetProductsID",
+		Method:             "GET",
+		PathPattern:        "/products/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetProductsIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetProductsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetProductsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -260,6 +415,186 @@ func (a *Client) GetProductsImagesIDPurpose(params *GetProductsImagesIDPurposePa
 }
 
 /*
+GetProductsList lists data products
+
+List all data products with pagination
+*/
+func (a *Client) GetProductsList(params *GetProductsListParams, opts ...ClientOption) (*GetProductsListOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetProductsListParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetProductsList",
+		Method:             "GET",
+		PathPattern:        "/products/list",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetProductsListReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetProductsListOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetProductsList: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+GetProductsSearch searches data products
+
+Search data products using query string and filters
+*/
+func (a *Client) GetProductsSearch(params *GetProductsSearchParams, opts ...ClientOption) (*GetProductsSearchOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetProductsSearchParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetProductsSearch",
+		Method:             "GET",
+		PathPattern:        "/products/search",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetProductsSearchReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetProductsSearchOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetProductsSearch: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+GetProductsTagsID lists data product tags
+
+Get all tags associated with a data product
+*/
+func (a *Client) GetProductsTagsID(params *GetProductsTagsIDParams, opts ...ClientOption) (*GetProductsTagsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetProductsTagsIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "GetProductsTagsID",
+		Method:             "GET",
+		PathPattern:        "/products/tags/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetProductsTagsIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetProductsTagsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetProductsTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+PostProducts creates a data product
+
+Create a new data product
+*/
+func (a *Client) PostProducts(params *PostProductsParams, opts ...ClientOption) (*PostProductsCreated, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostProductsParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostProducts",
+		Method:             "POST",
+		PathPattern:        "/products",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostProductsReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostProductsCreated)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PostProducts: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
 PostProductsImagesIDPurpose uploads product image
 
 Upload an icon or header image for a data product
@@ -301,6 +636,141 @@ func (a *Client) PostProductsImagesIDPurpose(params *PostProductsImagesIDPurpose
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for PostProductsImagesIDPurpose: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+PostProductsTagsID adds a tag to a data product
+
+Add a single tag association to a data product
+*/
+func (a *Client) PostProductsTagsID(params *PostProductsTagsIDParams, opts ...ClientOption) (*PostProductsTagsIDCreated, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPostProductsTagsIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PostProductsTagsID",
+		Method:             "POST",
+		PathPattern:        "/products/tags/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PostProductsTagsIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PostProductsTagsIDCreated)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PostProductsTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+PutProductsID updates a data product
+
+Update an existing data product
+*/
+func (a *Client) PutProductsID(params *PutProductsIDParams, opts ...ClientOption) (*PutProductsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutProductsIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PutProductsID",
+		Method:             "PUT",
+		PathPattern:        "/products/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutProductsIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PutProductsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PutProductsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+/*
+PutProductsTagsID replaces data product tags
+
+Atomically replace all tag associations for a data product
+*/
+func (a *Client) PutProductsTagsID(params *PutProductsTagsIDParams, opts ...ClientOption) (*PutProductsTagsIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewPutProductsTagsIDParams()
+	}
+	op := &runtime.ClientOperation{
+		ID:                 "PutProductsTagsID",
+		Method:             "PUT",
+		PathPattern:        "/products/tags/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &PutProductsTagsIDReader{formats: a.formats},
+		Context:            params.Context,
+		Client:             params.HTTPClient,
+	}
+	for _, opt := range opts {
+		opt(op)
+	}
+	result, err := a.transport.Submit(op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*PutProductsTagsIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for PutProductsTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

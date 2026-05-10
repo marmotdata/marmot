@@ -12,7 +12,7 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
+	"github.com/marmotdata/marmot/client/models"
 )
 
 // NewPostAssetsTagsIDParams creates a new PostAssetsTagsIDParams object,
@@ -60,17 +60,17 @@ PostAssetsTagsIDParams contains all the parameters to send to the API endpoint
 */
 type PostAssetsTagsIDParams struct {
 
+	/* Body.
+
+	   Tag ID to add
+	*/
+	Body *models.V1AssetsAddTagRequest
+
 	/* ID.
 
 	   Asset ID
 	*/
 	ID string
-
-	/* Tag.
-
-	   Tag to add
-	*/
-	Tag *models.TagRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -125,6 +125,17 @@ func (o *PostAssetsTagsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithBody adds the body to the post assets tags ID params
+func (o *PostAssetsTagsIDParams) WithBody(body *models.V1AssetsAddTagRequest) *PostAssetsTagsIDParams {
+	o.SetBody(body)
+	return o
+}
+
+// SetBody adds the body to the post assets tags ID params
+func (o *PostAssetsTagsIDParams) SetBody(body *models.V1AssetsAddTagRequest) {
+	o.Body = body
+}
+
 // WithID adds the id to the post assets tags ID params
 func (o *PostAssetsTagsIDParams) WithID(id string) *PostAssetsTagsIDParams {
 	o.SetID(id)
@@ -136,17 +147,6 @@ func (o *PostAssetsTagsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithTag adds the tag to the post assets tags ID params
-func (o *PostAssetsTagsIDParams) WithTag(tag *models.TagRequest) *PostAssetsTagsIDParams {
-	o.SetTag(tag)
-	return o
-}
-
-// SetTag adds the tag to the post assets tags ID params
-func (o *PostAssetsTagsIDParams) SetTag(tag *models.TagRequest) {
-	o.Tag = tag
-}
-
 // WriteToRequest writes these params to a swagger request
 func (o *PostAssetsTagsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -154,15 +154,15 @@ func (o *PostAssetsTagsIDParams) WriteToRequest(r runtime.ClientRequest, reg str
 		return err
 	}
 	var res []error
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
+	}
 
 	// path param id
 	if err := r.SetPathParam("id", o.ID); err != nil {
 		return err
-	}
-	if o.Tag != nil {
-		if err := r.SetBodyParam(o.Tag); err != nil {
-			return err
-		}
 	}
 
 	if len(res) > 0 {

@@ -7,14 +7,12 @@
 	import Icon from '$components/ui/Icon.svelte';
 	import Stepper from '$components/ui/Stepper.svelte';
 	import Step from '$components/ui/Step.svelte';
-	import TagsInput from '$components/shared/TagsInput.svelte';
 	import { providerIconMap, typeIconMap } from '$lib/iconloader';
 
 	let name = $state('');
 	let assetType = $state('');
 	let providers = $state<string[]>([]);
 	let userDescription = $state('');
-	let tags = $state<string[]>([]);
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 	let currentStep = $state(1);
@@ -229,10 +227,6 @@
 			if (userDescription.trim()) {
 				payload.user_description = userDescription.trim();
 			}
-			if (tags.length > 0) {
-				payload.tags = tags;
-			}
-
 			const response = await fetchApi('/assets/', {
 				method: 'POST',
 				body: JSON.stringify(payload)
@@ -629,17 +623,6 @@
 							Help others understand what this asset is used for
 						</p>
 					</div>
-
-					<!-- Tags -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Tags
-						</label>
-						<TagsInput bind:tags placeholder="Type a tag and press Enter..." />
-						<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-							Add tags for better organization and discovery
-						</p>
-					</div>
 				</div>
 			</div>
 
@@ -678,20 +661,7 @@
 							<dd class="font-medium text-gray-900 dark:text-gray-100">{userDescription}</dd>
 						</div>
 					{/if}
-					{#if tags.length > 0}
-						<div class="sm:col-span-2">
-							<dt class="text-gray-500 dark:text-gray-400">Tags</dt>
-							<dd class="flex flex-wrap gap-1.5 mt-1">
-								{#each tags as tag (tag)}
-									<span
-										class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-									>
-										{tag}
-									</span>
-								{/each}
-							</dd>
-						</div>
-					{/if}
+					ierzch
 				</dl>
 			</div>
 		{/if}

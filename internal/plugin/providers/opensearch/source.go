@@ -252,7 +252,6 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 		mrnValue := mrn.New("table", "opensearch", idx.Index)
 		name := idx.Index
 		description := fmt.Sprintf("OpenSearch index %s in cluster %s", idx.Index, clusterName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		a := asset.Asset{
 			Name:        &name,
@@ -261,7 +260,6 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 			Providers:   []string{"OpenSearch"},
 			MRN:         &mrnValue,
 			Metadata:    metadata,
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "OpenSearch",
 				LastSyncAt: time.Now(),
@@ -407,7 +405,6 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 		mrnValue := mrn.New("data-stream", "opensearch", ds.Name)
 		name := ds.Name
 		description := fmt.Sprintf("OpenSearch data stream %s in cluster %s", ds.Name, clusterName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
 			Name:        &name,
@@ -416,7 +413,6 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 			Providers:   []string{"OpenSearch"},
 			MRN:         &mrnValue,
 			Metadata:    metadata,
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "OpenSearch",
 				LastSyncAt: time.Now(),
@@ -496,7 +492,6 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 		mrnValue := mrn.New("alias", "opensearch", aliasName)
 		name := aliasName
 		description := fmt.Sprintf("OpenSearch alias %s in cluster %s", aliasName, clusterName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
 			Name:        &name,
@@ -505,7 +500,6 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 			Providers:   []string{"OpenSearch"},
 			MRN:         &mrnValue,
 			Metadata:    metadata,
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "OpenSearch",
 				LastSyncAt: time.Now(),

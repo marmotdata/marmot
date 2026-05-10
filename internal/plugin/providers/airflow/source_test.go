@@ -429,9 +429,6 @@ func TestCreateDAGAsset(t *testing.T) {
 	assert.Equal(t, "/opt/airflow/dags/test.py", asset.Metadata["file_path"])
 	assert.Equal(t, "0 0 * * *", asset.Metadata["schedule_interval"])
 	assert.Equal(t, "admin, analyst", asset.Metadata["owners"])
-
-	// Check tags (only config tags, not DAG tags from Airflow)
-	assert.Equal(t, []string{"test-tag"}, asset.Tags)
 }
 
 func TestCreateTaskAsset(t *testing.T) {
@@ -506,10 +503,6 @@ func TestCreateDatasetAsset(t *testing.T) {
 	assert.Equal(t, 2, asset.Metadata["consumer_count"])
 	assert.Equal(t, 1, asset.Metadata["producer_count"])
 	assert.Equal(t, "parquet", asset.Metadata["extra_format"])
-
-	// Check tags - only config tags, no hardcoded tags
-	assert.Contains(t, asset.Tags, "data-catalog")
-	assert.NotContains(t, asset.Tags, "airflow-dataset")
 }
 
 func TestCreateDatasetAsset_Kafka(t *testing.T) {

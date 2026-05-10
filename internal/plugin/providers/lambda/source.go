@@ -214,7 +214,6 @@ func (s *Source) createFunctionAsset(ctx context.Context, fn types.FunctionConfi
 
 	mrnValue := mrn.New("Function", "Lambda", functionName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:      &functionName,
@@ -222,7 +221,6 @@ func (s *Source) createFunctionAsset(ctx context.Context, fn types.FunctionConfi
 		Type:      "Function",
 		Providers: []string{"Lambda"},
 		Metadata:  metadata,
-		Tags:      processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Lambda",
 			LastSyncAt: time.Now(),

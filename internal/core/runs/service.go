@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
@@ -40,11 +41,13 @@ type CreateAssetInput struct {
 	Description   *string                `json:"description"`
 	Metadata      map[string]interface{} `json:"metadata"`
 	Schema        map[string]interface{} `json:"schema"`
-	Tags          []string               `json:"tags"`
 	Sources       []string               `json:"sources"`
 	ExternalLinks []map[string]string    `json:"external_links"`
 	Query         *string                `json:"query,omitempty"`
 	QueryLanguage *string                `json:"query_language,omitempty"`
+	// ProviderTags are tag names to attach: a union of plugin per-asset tags and config-level tags.
+	// Resolved to IDs and persisted by reconcileAssetTags after create/update.
+	ProviderTags  []string               `json:"tags,omitempty"`
 }
 
 type ProcessAssetsResponse struct {
@@ -143,16 +146,18 @@ type service struct {
 	repo               Repository
 	assetService       asset.Service
 	lineageService     lineage.Service
+	tagService         tag.Service
 	metricsRecorder    metrics.Recorder
 	validator          *validator.Validate
 	completionObserver RunCompletionObserver
 }
 
-func NewService(repo Repository, assetService asset.Service, lineageService lineage.Service, metricsRecorder metrics.Recorder) Service {
+func NewService(repo Repository, assetService asset.Service, lineageService lineage.Service, tagService tag.Service, metricsRecorder metrics.Recorder) Service {
 	return &service{
 		repo:            repo,
 		assetService:    assetService,
 		lineageService:  lineageService,
+		tagService:      tagService,
 		metricsRecorder: metricsRecorder,
 		validator:       validator.New(),
 	}
@@ -272,6 +277,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			}
 		}
 
+		var assetID string
 		if status == StatusCreated {
 			createInput := asset.CreateInput{
 				Name:          &ast.Name,
@@ -281,15 +287,17 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				Description:   ast.Description,
 				Metadata:      ast.Metadata,
 				Schema:        convertSchemaToStringMap(ast.Schema),
-				Tags:          ast.Tags,
 				ExternalLinks: convertToAssetExternalLinks(ast.ExternalLinks),
 				Query:         ast.Query,
 				QueryLanguage: ast.QueryLanguage,
 				CreatedBy:     run.CreatedBy,
 			}
-			if _, err := s.assetService.Create(ctx, createInput); err != nil {
+			created, err := s.assetService.Create(ctx, createInput)
+			if err != nil {
 				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to create asset")
 				status = StatusFailed
+			} else {
+				assetID = created.ID
 			}
 		} else if status == StatusUpdated {
 			updateInput := asset.UpdateInput{
@@ -299,7 +307,6 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				Description:      ast.Description,
 				Metadata:         ast.Metadata,
 				Schema:           convertSchemaToStringMap(ast.Schema),
-				Tags:             ast.Tags,
 				ExternalLinks:    convertToAssetExternalLinks(ast.ExternalLinks),
 				Query:            ast.Query,
 				QueryLanguage:    ast.QueryLanguage,
@@ -313,7 +320,15 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				if _, err := s.assetService.Update(ctx, existingAsset.ID, updateInput); err != nil {
 					log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to update asset")
 					status = StatusFailed
+				} else {
+					assetID = existingAsset.ID
 				}
+			}
+		}
+
+		if assetID != "" && len(ast.ProviderTags) > 0 {
+			if err := s.reconcileAssetTags(ctx, assetID, ast.ProviderTags); err != nil {
+				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to reconcile asset tags")
 			}
 		}
 
@@ -799,9 +814,9 @@ func (s *service) hashAsset(asset CreateAssetInput) string {
 		Description   *string                `json:"description"`
 		Metadata      map[string]interface{} `json:"metadata"`
 		Schema        map[string]interface{} `json:"schema"`
-		Tags          []string               `json:"tags"`
 		Sources       []string               `json:"sources"`
 		ExternalLinks []map[string]string    `json:"external_links"`
+		Tags          []string               `json:"tags"`
 	}{
 		Name:          asset.Name,
 		Type:          asset.Type,
@@ -809,9 +824,9 @@ func (s *service) hashAsset(asset CreateAssetInput) string {
 		Description:   asset.Description,
 		Metadata:      asset.Metadata,
 		Schema:        asset.Schema,
-		Tags:          asset.Tags,
 		Sources:       asset.Sources,
 		ExternalLinks: asset.ExternalLinks,
+		Tags:          asset.ProviderTags,
 	}
 
 	data, _ := json.Marshal(normalized)
@@ -851,4 +866,48 @@ func (s *service) ProcessRunHistory(ctx context.Context, runHistory []RunHistory
 	}
 
 	return stored, nil
+}
+
+// reconcileAssetTags resolves tag names to IDs (auto-creating missing ones) and adds
+// them to the asset. Existing tags are never removed — pipeline re-runs are additive-only,
+// so tags persist even if later dropped from the pipeline config.
+func (s *service) reconcileAssetTags(ctx context.Context, assetID string, names []string) error {
+	filtered := make([]string, 0, len(names))
+	for _, n := range names {
+		if n != "" {
+			filtered = append(filtered, n)
+		}
+	}
+	if len(filtered) == 0 {
+		return nil
+	}
+
+	providerTagIDs, err := s.tagService.ResolveNames(ctx, filtered)
+	if err != nil {
+		return fmt.Errorf("resolving tag names: %w", err)
+	}
+
+	// Fetch the tags already on the asset so we can merge rather than replace.
+	existingTags, err := s.assetService.ListAssetTags(ctx, assetID)
+	if err != nil {
+		return fmt.Errorf("listing existing asset tags: %w", err)
+	}
+
+	// Build the union: start with existing tag IDs, then add provider tag IDs.
+	seen := make(map[string]struct{}, len(existingTags)+len(providerTagIDs))
+	merged := make([]string, 0, len(existingTags)+len(providerTagIDs))
+	for _, t := range existingTags {
+		if _, ok := seen[t.ID]; !ok {
+			seen[t.ID] = struct{}{}
+			merged = append(merged, t.ID)
+		}
+	}
+	for _, id := range providerTagIDs {
+		if _, ok := seen[id]; !ok {
+			seen[id] = struct{}{}
+			merged = append(merged, id)
+		}
+	}
+
+	return s.assetService.SetTags(ctx, assetID, merged)
 }

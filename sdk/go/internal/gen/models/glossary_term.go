@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// GlossaryTerm glossary term
+// GlossaryGlossaryTerm glossary glossary term
 //
-// swagger:model GlossaryTerm
-type GlossaryTerm struct {
+// swagger:model glossary.GlossaryTerm
+type GlossaryGlossaryTerm struct {
 
 	// created at
 	CreatedAt string `json:"created_at,omitempty"`
@@ -45,17 +45,21 @@ type GlossaryTerm struct {
 	ParentTermID string `json:"parent_term_id,omitempty"`
 
 	// tags
-	Tags []string `json:"tags"`
+	Tags []*GithubComMarmotdataMarmotInternalCoreTagTag `json:"tags"`
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`
 }
 
-// Validate validates this glossary term
-func (m *GlossaryTerm) Validate(formats strfmt.Registry) error {
+// Validate validates this glossary glossary term
+func (m *GlossaryGlossaryTerm) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateOwners(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateTags(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -65,7 +69,7 @@ func (m *GlossaryTerm) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *GlossaryTerm) validateOwners(formats strfmt.Registry) error {
+func (m *GlossaryGlossaryTerm) validateOwners(formats strfmt.Registry) error {
 	if swag.IsZero(m.Owners) { // not required
 		return nil
 	}
@@ -95,11 +99,45 @@ func (m *GlossaryTerm) validateOwners(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this glossary term based on the context it is used
-func (m *GlossaryTerm) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+func (m *GlossaryGlossaryTerm) validateTags(formats strfmt.Registry) error {
+	if swag.IsZero(m.Tags) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.Tags); i++ {
+		if swag.IsZero(m.Tags[i]) { // not required
+			continue
+		}
+
+		if m.Tags[i] != nil {
+			if err := m.Tags[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("tags" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("tags" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+// ContextValidate validate this glossary glossary term based on the context it is used
+func (m *GlossaryGlossaryTerm) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateOwners(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateTags(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -109,7 +147,7 @@ func (m *GlossaryTerm) ContextValidate(ctx context.Context, formats strfmt.Regis
 	return nil
 }
 
-func (m *GlossaryTerm) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
+func (m *GlossaryGlossaryTerm) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Owners); i++ {
 
@@ -138,8 +176,37 @@ func (m *GlossaryTerm) contextValidateOwners(ctx context.Context, formats strfmt
 	return nil
 }
 
+func (m *GlossaryGlossaryTerm) contextValidateTags(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.Tags); i++ {
+
+		if m.Tags[i] != nil {
+
+			if swag.IsZero(m.Tags[i]) { // not required
+				return nil
+			}
+
+			if err := m.Tags[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("tags" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("tags" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 // MarshalBinary interface implementation
-func (m *GlossaryTerm) MarshalBinary() ([]byte, error) {
+func (m *GlossaryGlossaryTerm) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -147,8 +214,8 @@ func (m *GlossaryTerm) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *GlossaryTerm) UnmarshalBinary(b []byte) error {
-	var res GlossaryTerm
+func (m *GlossaryGlossaryTerm) UnmarshalBinary(b []byte) error {
+	var res GlossaryGlossaryTerm
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

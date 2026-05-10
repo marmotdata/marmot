@@ -132,7 +132,8 @@ export function processPatternProperties(
 			maxLength: schema.maxLength,
 			examples: schema.examples || (schema.example ? [schema.example] : undefined),
 			enum: schema.enum,
-			default: schema.default
+			default: schema.default,
+			isLeaf: !(schema.type === 'object' || schema.type === 'array')
 		});
 
 		const nestedFields = processSchemaRecursively(
@@ -166,7 +167,8 @@ export function processComposition(
 			type: 'anyOf',
 			description: fieldSchema.description || 'One or more of the following schemas',
 			required: false,
-			indentLevel: depth
+			indentLevel: depth,
+			isLeaf: false
 		});
 
 		fieldSchema.anyOf.forEach((schema: JsonSchemaObject, index: number) => {
@@ -195,7 +197,8 @@ export function processComposition(
 			type: 'oneOf',
 			description: fieldSchema.description || 'Exactly one of the following schemas',
 			required: false,
-			indentLevel: depth
+			indentLevel: depth,
+			isLeaf: false
 		});
 
 		fieldSchema.oneOf.forEach((schema: JsonSchemaObject, index: number) => {
@@ -261,7 +264,8 @@ export function processComposition(
 				type: 'allOf',
 				description: fieldSchema.description || 'All of the following schemas',
 				required: false,
-				indentLevel: depth
+				indentLevel: depth,
+				isLeaf: false
 			});
 		}
 	}
@@ -272,7 +276,8 @@ export function processComposition(
 			type: 'not',
 			description: fieldSchema.description || 'Must not match the following schema',
 			required: false,
-			indentLevel: depth
+			indentLevel: depth,
+			isLeaf: false
 		});
 
 		fields.push(
@@ -311,7 +316,8 @@ export function processSchemaRecursively(
 				type: `ref(${getSchemaNameFromRef(fieldSchema.$ref)})`,
 				description: fieldSchema.description,
 				required: false,
-				indentLevel: depth
+				indentLevel: depth,
+				isLeaf: true
 			});
 			return fields;
 		}
@@ -330,7 +336,8 @@ export function processSchemaRecursively(
 			required: false,
 			const: fieldSchema.const,
 			examples: fieldSchema.examples || (fieldSchema.example ? [fieldSchema.example] : undefined),
-			indentLevel: depth
+			indentLevel: depth,
+			isLeaf: true
 		});
 		return fields;
 	}
@@ -350,7 +357,8 @@ export function processSchemaRecursively(
 		maxLength: fieldSchema.maxLength,
 		examples: fieldSchema.examples || (fieldSchema.example ? [fieldSchema.example] : undefined),
 		const: fieldSchema.const,
-		indentLevel: depth
+		indentLevel: depth,
+		isLeaf: !(fieldSchema.type === 'object' || fieldSchema.type === 'array')
 	};
 
 	fields.push(field);
@@ -481,7 +489,8 @@ export function processJsonSchema(schemaSection: unknown): Field[] {
 						type: 'object',
 						description: descMatch ? descMatch[1].trim() : undefined,
 						required: true,
-						indentLevel: 0
+						indentLevel: 0,
+						isLeaf: false
 					});
 
 					let inProperties = false;
@@ -520,7 +529,8 @@ export function processJsonSchema(schemaSection: unknown): Field[] {
 									type: propertyType,
 									description: propertyDesc,
 									required: schemaSection.includes(`required:\n  - ${propertyName}`),
-									indentLevel: 1
+									indentLevel: 1,
+									isLeaf: true
 								});
 							}
 						}

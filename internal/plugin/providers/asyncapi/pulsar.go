@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/pulsar"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 func (s *Source) createPulsarTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *pulsar.ChannelBinding) asset.Asset {
@@ -74,7 +73,6 @@ func (s *Source) createPulsarTopic(doc *asyncapi3.Document, channelName string, 
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -83,7 +81,6 @@ func (s *Source) createPulsarTopic(doc *asyncapi3.Document, channelName string, 
 		Providers:   []string{"Pulsar"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),

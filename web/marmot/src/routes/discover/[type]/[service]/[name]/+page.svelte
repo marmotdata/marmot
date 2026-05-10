@@ -19,7 +19,9 @@
 	import Tabs, { type Tab } from '$components/ui/Tabs.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
-	import Tags from '$components/shared/Tags.svelte';
+	import TagPicker from '$components/shared/TagPicker.svelte';
+	import TagBadge from '$components/shared/TagBadge.svelte';
+	import { listAssetTags, replaceAssetTags } from '$lib/assets/api';
 	import ExternalLinks from '$components/shared/ExternalLinks.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
@@ -40,6 +42,7 @@
 	let loading = $state(true);
 	let error: string | null = $state(null);
 	let bladeCollapsed = $state(false);
+	let tagPickerAnchor = $state<DOMRect | null>(null);
 
 	let owners: Owner[] = $state([]);
 	let loadingOwners = $state(false);
@@ -71,6 +74,7 @@
 			}
 			const data = await response.json();
 			enrichedLinks = data.enriched_external_links || [];
+			data.tags = await listAssetTags(data.id).catch(() => []);
 			asset = data;
 		} catch (err) {
 			console.error('Error fetching asset:', err);
@@ -271,6 +275,13 @@
 			previewLoading = false;
 		}
 	}
+
+	async function handleSaveAssetTags(assetId: string, tagIds: string[]): Promise<void> {
+		await replaceAssetTags(assetId, tagIds);
+		if (asset) {
+			asset.tags = await listAssetTags(assetId).catch(() => []);
+		}
+	}
 </script>
 
 <div class="h-full flex">
@@ -398,11 +409,35 @@
 											>Tags</span
 										>
 									</div>
-									<Tags
-										tags={asset.tags ?? []}
-										endpoint="/assets"
-										id={asset.id}
-										canEdit={canManageAssets}
+									<!-- Show current tag badges -->
+									<div class="flex items-center gap-1.5 flex-wrap group">
+										{#each asset.tags ?? [] as tag (tag.name)}
+											<TagBadge name={tag.name} title={tag.description || tag.name} />
+										{/each}
+										{#if canManageAssets}
+											<button
+												onclick={(e) => {
+													tagPickerAnchor = (
+														e.currentTarget as HTMLElement
+													).getBoundingClientRect();
+												}}
+												class="flex-shrink-0 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+												title={(asset.tags ?? []).length === 0 ? 'Add tags' : 'Edit tags'}
+											>
+												<IconifyIcon icon="material-symbols:edit" class="w-3.5 h-3.5" />
+											</button>
+										{/if}
+									</div>
+									<TagPicker
+										anchorRect={tagPickerAnchor}
+										title={asset.name}
+										assignedTagIds={(asset.tags ?? []).map((t) => t.id)}
+										onSave={async (ids) => {
+											await handleSaveAssetTags(asset!.id, ids);
+										}}
+										onClose={() => {
+											tagPickerAnchor = null;
+										}}
 									/>
 								</div>
 								<div class="overflow-visible">

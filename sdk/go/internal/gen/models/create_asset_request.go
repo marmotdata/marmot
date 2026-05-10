@@ -44,9 +44,6 @@ type CreateAssetRequest struct {
 	// sources
 	Sources []*AssetSource `json:"sources"`
 
-	// tags
-	Tags []string `json:"tags"`
-
 	// type
 	// Required: true
 	Type *string `json:"type"`
