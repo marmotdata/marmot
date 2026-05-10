@@ -21,9 +21,17 @@ import { Steps, Step, Tabs, TabPanel, TipBox } from '@site/src/components/Steps'
 ## Installation
 
 <Tabs items={[
+{ label: "Homebrew", value: "brew", icon: "mdi:beer" },
 { label: "Automatic", value: "auto", icon: "mdi:download" },
 { label: "Manual", value: "manual", icon: "mdi:folder-download" }
 ]}>
+<TabPanel>
+
+```bash
+brew install marmot
+```
+
+</TabPanel>
 <TabPanel>
 
 ```bash
