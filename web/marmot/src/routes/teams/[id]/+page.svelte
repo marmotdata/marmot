@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import { Users, Lock, ArrowLeft, Shield, Database } from 'lucide-svelte';
@@ -72,19 +73,11 @@
 	let convertingUserId: string | null = null;
 
 	$: teamId = $page.params.id;
-	$: currentUserId = auth.getCurrentUserId();
-	$: memberOwners = members.map((m) => ({
-		id: m.user_id,
-		name: m.name,
-		type: 'user' as const,
-		username: m.username,
-		email: m.email,
-		profile_picture: m.profile_picture
-	}));
+	const currentUserId = auth.getCurrentUserId();
 	$: hasMoreAssets = assetsTotal > assetsOffset + assets.length;
 	$: currentPage = Math.floor(assetsOffset / assetsLimit) + 1;
 	$: totalPages = Math.ceil(assetsTotal / assetsLimit);
-	$: canManageTeams = auth.hasPermission('teams', 'manage');
+	const canManageTeams = auth.hasPermission('teams', 'manage');
 	$: isTeamOwner = members.some((m) => m.user_id === currentUserId && m.role === 'owner');
 	$: canEditTeam = canManageTeams || isTeamOwner;
 
@@ -245,7 +238,7 @@
 		}
 	}
 
-	async function removeMemberDirect(userId: string, source: string) {
+	async function removeMemberDirect(userId: string, _source: string) {
 		try {
 			removingMemberId = userId;
 			const response = await fetchApi(`/teams/${teamId}/members/${userId}`, {
@@ -515,7 +508,7 @@
 		<div class="border-b border-gray-200 dark:border-gray-700 mb-6">
 			<nav class="flex gap-6" aria-label="Team tabs">
 				<button
-					onclick={() => goto(`?tab=overview`, { replaceState: true })}
+					onclick={() => goto(resolve(`/teams/${teamId}?tab=overview`), { replaceState: true })}
 					class="pb-3 text-sm font-medium border-b-2 transition-colors {activeTab === 'overview'
 						? 'border-earthy-terracotta-700 text-earthy-terracotta-700 dark:border-earthy-terracotta-500 dark:text-earthy-terracotta-500'
 						: 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300'}"
@@ -524,7 +517,8 @@
 				</button>
 				{#if canEditTeam}
 					<button
-						onclick={() => goto(`?tab=integrations`, { replaceState: true })}
+						onclick={() =>
+							goto(resolve(`/teams/${teamId}?tab=integrations`), { replaceState: true })}
 						class="pb-3 text-sm font-medium border-b-2 transition-colors {activeTab ===
 						'integrations'
 							? 'border-earthy-terracotta-700 text-earthy-terracotta-700 dark:border-earthy-terracotta-500 dark:text-earthy-terracotta-500'
@@ -812,7 +806,9 @@
 						<div class="space-y-1">
 							{#each assets as asset (asset.id)}
 								<a
-									href={getAssetUrl(asset)}
+									href={getAssetUrl(asset) === '#'
+										? '#'
+										: resolve(getAssetUrl(asset) as `/${string}`)}
 									onclick={(e) => handleAssetClick(e, asset)}
 									class="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
 								>
@@ -888,7 +884,7 @@
 								Provider
 							</label>
 							<div class="grid grid-cols-3 gap-2">
-								{#each PROVIDER_OPTIONS as provider}
+								{#each PROVIDER_OPTIONS as provider (provider.value)}
 									<button
 										type="button"
 										onclick={() => (webhookForm.provider = provider.value)}
@@ -927,7 +923,7 @@
 								Notification Types
 							</legend>
 							<div class="grid grid-cols-2 md:grid-cols-3 gap-2">
-								{#each NOTIFICATION_TYPE_OPTIONS as { type, label, icon }}
+								{#each NOTIFICATION_TYPE_OPTIONS as { type, label, icon } (type)}
 									<label
 										class="flex items-center gap-2.5 px-3 py-2.5 rounded-lg border cursor-pointer transition-all {webhookForm.notification_types.includes(
 											type
@@ -1139,7 +1135,7 @@
 												</span>
 											</div>
 											<div class="flex items-center gap-1 mt-1.5 flex-wrap">
-												{#each webhook.notification_types as type}
+												{#each webhook.notification_types as type (type)}
 													<span
 														class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-300"
 													>

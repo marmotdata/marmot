@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
 	import { marked } from 'marked';
+	import { sanitizeHtml } from '$lib/sanitize';
 
 	marked.setOptions({
 		gfm: true,
@@ -46,7 +47,7 @@
 			<p class="text-red-500 dark:text-red-400">Failed to load documentation</p>
 		</div>
 	{:else if documentation.length}
-		{#each documentation as doc}
+		{#each documentation as doc (doc.source)}
 			<div class="mb-8 bg-white dark:bg-gray-800 rounded-lg shadow p-6">
 				<div class="mb-4 flex justify-between items-center">
 					<span class="text-sm text-gray-500 dark:text-gray-400">Source: {doc.source}</span>
@@ -55,7 +56,8 @@
 					</span>
 				</div>
 				<div>
-					{@html marked(doc.content)}
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via DOMPurify -->
+					{@html sanitizeHtml(marked(doc.content) as string)}
 				</div>
 			</div>
 		{/each}

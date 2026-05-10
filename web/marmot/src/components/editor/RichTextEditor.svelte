@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount, onDestroy, mount, unmount } from 'svelte';
-	import { Editor } from '@tiptap/core';
+	import { SvelteMap } from 'svelte/reactivity';
+	import { Editor, type Extensions } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
 	import Placeholder from '@tiptap/extension-placeholder';
 	import Link from '@tiptap/extension-link';
@@ -43,7 +44,7 @@
 	}
 
 	function createMentionSuggestion() {
-		let searchCache: Map<string, Array<MentionItem>> = new Map();
+		let searchCache: Map<string, Array<MentionItem>> = new SvelteMap();
 
 		const searchOwners = async (query: string) => {
 			if (searchCache.has(query)) {
@@ -198,7 +199,7 @@
 
 		const initialHtml = value ? (marked(preprocessMentions(value)) as string) : '';
 
-		const extensions: any[] = [
+		const extensions: Extensions = [
 			StarterKit.configure({
 				heading: {
 					levels: [1, 2, 3]
@@ -350,7 +351,9 @@
 		editor?.chain().focus().unsetLink().run();
 	}
 
-	$: isActive = (name: string, attrs?: any) => editor?.isActive(name, attrs) ?? false;
+	function isActive(name: string, attrs?: Record<string, unknown>): boolean {
+		return editor?.isActive(name, attrs) ?? false;
+	}
 </script>
 
 <div class="border border-gray-300 dark:border-gray-600 rounded-md {disabled ? 'opacity-50' : ''}">

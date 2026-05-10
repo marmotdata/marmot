@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { get } from 'svelte/store';
 	import { fetchApi } from '$lib/api';
@@ -20,7 +21,7 @@
 		label: string;
 		description: string;
 		required: boolean;
-		default?: any;
+		default?: unknown;
 		options?: { label: string; value: string }[];
 		sensitive: boolean;
 		placeholder?: string;
@@ -51,10 +52,18 @@
 	let name = $state('');
 	let cronExpression = $state('');
 	let disableSchedule = $state(false);
-	let config = $state<Record<string, any>>({});
+	interface PipelineConfig {
+		tags?: string[];
+		external_links?: { name: string; url: string }[];
+		filter?: { include?: string[]; exclude?: string[] };
+		source_type?: string;
+		use_default?: boolean;
+		[key: string]: unknown;
+	}
+
+	let config = $state<PipelineConfig>({});
 	let saving = $state(false);
 	let error = $state<string | null>(null);
-	let pluginSearchQuery = $state('');
 	let expandedSections = $state<Record<string, boolean>>({});
 	let awsCredentialStatus = $state<{
 		available: boolean;
@@ -97,25 +106,6 @@
 		selectedPluginId && ['s3', 'sns', 'sqs', 'dynamodb', 'kinesis'].includes(selectedPluginId)
 	);
 
-	let filteredPlugins = $derived(
-		plugins
-			.filter((plugin) => {
-				const searchLower = pluginSearchQuery.toLowerCase();
-				return (
-					plugin.name.toLowerCase().includes(searchLower) ||
-					plugin.description?.toLowerCase().includes(searchLower) ||
-					plugin.id.toLowerCase().includes(searchLower)
-				);
-			})
-			.sort((a, b) => a.name.localeCompare(b.name))
-	);
-
-	let displayedPlugins = $derived(
-		pluginSearchQuery ? filteredPlugins : filteredPlugins.slice(0, 5)
-	);
-
-	let hasMorePlugins = $derived(!pluginSearchQuery && filteredPlugins.length > 5);
-
 	async function fetchPlugins() {
 		try {
 			loadingPlugins = true;
@@ -145,7 +135,7 @@
 		}
 	}
 
-	function fillMissingDefaults(fields: ConfigField[], configObj: Record<string, any>) {
+	function fillMissingDefaults(fields: ConfigField[], configObj: Record<string, unknown>) {
 		for (const field of fields) {
 			if (field.type === 'object' && field.is_array) {
 				if (!configObj[field.name] || !Array.isArray(configObj[field.name])) {
@@ -155,7 +145,7 @@
 				if (!configObj[field.name]) {
 					configObj[field.name] = {};
 				}
-				fillMissingDefaults(field.fields, configObj[field.name]);
+				fillMissingDefaults(field.fields, configObj[field.name] as Record<string, unknown>);
 			} else if (field.type === 'multiselect') {
 				if (!configObj[field.name] || !Array.isArray(configObj[field.name])) {
 					configObj[field.name] = [];
@@ -208,10 +198,10 @@
 	}
 
 	function cleanConfigForSubmit(
-		configObj: Record<string, any>,
+		configObj: Record<string, unknown>,
 		fields: ConfigField[]
-	): Record<string, any> {
-		const cleaned = { ...configObj };
+	): Record<string, unknown> {
+		const cleaned: Record<string, unknown> = { ...configObj };
 		for (const field of fields) {
 			if (field.show_when) {
 				const currentValue = cleaned[field.show_when.field];
@@ -255,18 +245,12 @@
 			}
 
 			// Navigate back to runs page with pipelines tab
-			goto('/runs?tab=pipelines');
+			goto(resolve('/runs?tab=pipelines'));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to update pipeline';
 		} finally {
 			saving = false;
 		}
-	}
-
-	function handlePluginChange(pluginId: string) {
-		selectedPluginId = pluginId;
-		// Reset config when plugin changes
-		config = {};
 	}
 
 	function getFieldType(field: ConfigField): string {
@@ -298,8 +282,8 @@
 
 	function shouldHideField(
 		field: ConfigField,
-		configObj: Record<string, any>,
-		rootConfig?: Record<string, any>
+		configObj: Record<string, unknown>,
+		rootConfig?: Record<string, unknown>
 	): boolean {
 		// If there's a sibling "use_default" field that's checked, hide all other fields
 		if (configObj.use_default === true && field.name !== 'use_default') {
@@ -344,7 +328,7 @@
 			toasts.error(
 				'Encryption key not configured. Run "marmot generate-encryption-key" to get started.'
 			);
-			goto('/runs');
+			goto(resolve('/runs'));
 			return;
 		}
 		await fetchPlugins();
@@ -367,7 +351,7 @@
 			<div class="flex items-center justify-between">
 				<div class="flex items-center gap-4">
 					<button
-						onclick={() => goto('/runs?tab=pipelines')}
+						onclick={() => goto(resolve('/runs?tab=pipelines'))}
 						class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 					>
 						<IconifyIcon
@@ -438,7 +422,7 @@
 					{#if true}
 						{@const tagsValue = config.tags || []}
 						<div class="space-y-2">
-							{#each tagsValue as item, index}
+							{#each tagsValue as item, index (index)}
 								<div class="flex items-center gap-2">
 									<input
 										type="text"
@@ -498,7 +482,7 @@
 					{#if true}
 						{@const linksValue = config.external_links || []}
 						<div class="space-y-3">
-							{#each linksValue as item, index}
+							{#each linksValue as item, index (index)}
 								<div
 									class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-750/50"
 								>
@@ -711,7 +695,7 @@
 					{#snippet renderField(
 						field: ConfigField,
 						fieldPath: string,
-						configObj: Record<string, any>,
+						configObj: Record<string, unknown>,
 						depth: number = 0
 					)}
 						{#if field.type === 'object' && field.is_array && field.fields}
@@ -730,9 +714,9 @@
 										</p>
 									{/if}
 									{#if true}
-										{@const arrayValue = configObj[field.name] || []}
+										{@const arrayValue = (configObj[field.name] as Record<string, unknown>[]) || []}
 										<div class="space-y-3">
-											{#each arrayValue as item, index}
+											{#each arrayValue as item, index (index)}
 												<div
 													class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-750/50"
 												>
@@ -750,7 +734,7 @@
 														</button>
 													</div>
 													<div class="grid grid-cols-1 gap-3">
-														{#each field.fields as nestedField}
+														{#each field.fields as nestedField (nestedField.name)}
 															<div>
 																<label class="block">
 																	<span
@@ -794,7 +778,7 @@
 												type="button"
 												onclick={(e) => {
 													e.preventDefault();
-													const newItem: Record<string, any> = {};
+													const newItem: Record<string, unknown> = {};
 													// Initialize with default values
 													field.fields?.forEach((f) => {
 														newItem[f.name] = f.default || '';
@@ -844,9 +828,10 @@
 											class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-750/50"
 										>
 											<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-												{#each field.fields as nestedField}
+												{#each field.fields as nestedField (nestedField.name)}
 													{@const nestedPath = `${fieldPath}.${nestedField.name}`}
-													{@const nestedConfigObj = configObj[field.name] || {}}
+													{@const nestedConfigObj =
+														(configObj[field.name] as Record<string, unknown>) || {}}
 													{#if !shouldHideField(nestedField, nestedConfigObj, config)}
 														{@render renderField(
 															nestedField,
@@ -899,9 +884,9 @@
 										</p>
 									{/if}
 									{#if true}
-										{@const arrayValue = configObj[field.name] || []}
+										{@const arrayValue = (configObj[field.name] as string[]) || []}
 										<div class="space-y-2">
-											{#each arrayValue as item, index}
+											{#each arrayValue as item, index (index)}
 												<div class="flex items-center gap-2">
 													<input
 														type="text"
@@ -979,7 +964,7 @@
 											required={field.required}
 										>
 											<option value="">Select...</option>
-											{#each field.options as option}
+											{#each field.options as option (option.value)}
 												<option value={option.value}>{option.label}</option>
 											{/each}
 										</select>
@@ -1010,7 +995,7 @@
 					{/snippet}
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden) as field}
+						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden) as field (field.name)}
 							{#if !shouldHideField(field, config)}
 								{@render renderField(field, field.name, config, 0)}
 							{/if}
@@ -1071,7 +1056,7 @@
 													Next 5 runs:
 												</p>
 												<ul class="text-xs text-green-700 dark:text-green-400 space-y-0.5">
-													{#each cronNextRuns as run}
+													{#each cronNextRuns as run (run.getTime())}
 														<li class="font-mono">
 															{run.toLocaleString('en-US', {
 																weekday: 'short',
@@ -1187,7 +1172,7 @@
 										{#if true}
 											{@const includeValue = config.filter?.include || []}
 											<div class="space-y-2">
-												{#each includeValue as item, index}
+												{#each includeValue as item, index (index)}
 													<div class="flex items-center gap-1.5">
 														<span
 															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
@@ -1278,7 +1263,7 @@
 										{#if true}
 											{@const excludeValue = config.filter?.exclude || []}
 											<div class="space-y-2">
-												{#each excludeValue as item, index}
+												{#each excludeValue as item, index (index)}
 													<div class="flex items-center gap-1.5">
 														<span
 															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
@@ -1371,7 +1356,7 @@
 			<div class="flex items-center gap-3">
 				<Button
 					variant="clear"
-					click={() => goto('/runs?tab=pipelines')}
+					click={() => goto(resolve('/runs?tab=pipelines'))}
 					text="Cancel"
 					disabled={saving}
 				/>

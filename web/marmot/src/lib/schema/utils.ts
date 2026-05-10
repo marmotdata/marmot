@@ -8,7 +8,7 @@ import { processSqlColumnSchema, isSqlColumnSchema, validateSqlColumnSchema } fr
 /**
  * Format example (ensures JSON is properly parsed if it's a string)
  */
-export function formatExample(example: any): any {
+export function formatExample(example: unknown): unknown {
 	if (Array.isArray(example)) {
 		return example.length === 1 ? example[0] : example;
 	}
@@ -16,7 +16,7 @@ export function formatExample(example: any): any {
 	if (typeof example === 'string') {
 		try {
 			return JSON.parse(example);
-		} catch (e) {
+		} catch {
 			return example;
 		}
 	}
@@ -26,19 +26,19 @@ export function formatExample(example: any): any {
 /**
  * Parse a response into schema sections
  */
-export function parseSchemaResponse(response: any): SchemaSection[] {
+export function parseSchemaResponse(response: unknown): SchemaSection[] {
 	if (!response) return [];
 
 	const sections: SchemaSection[] = [];
 
 	if (typeof response === 'object') {
-		Object.entries(response).forEach(([name, schemaContent]) => {
+		Object.entries(response as Record<string, unknown>).forEach(([name, schemaContent]) => {
 			// Parse JSON strings that come from API responses
-			let parsedSchema = schemaContent;
+			let parsedSchema: unknown = schemaContent;
 			if (typeof schemaContent === 'string') {
 				try {
 					parsedSchema = JSON.parse(schemaContent);
-				} catch (e) {
+				} catch {
 					// Keep as string if it's not JSON (could be YAML, protobuf, etc.)
 					parsedSchema = schemaContent;
 				}
@@ -54,14 +54,14 @@ export function parseSchemaResponse(response: any): SchemaSection[] {
 	return sections.length > 0 ? sections : [{ name: 'schema', schema: response }];
 }
 
-export function isSchemaAvailable(schemaSection: any): boolean {
+export function isSchemaAvailable(schemaSection: unknown): boolean {
 	if (!schemaSection) return false;
 
 	if (typeof schemaSection === 'string') {
 		try {
 			const parsed = JSON.parse(schemaSection);
 			return isSchemaAvailable(parsed);
-		} catch (e) {
+		} catch {
 			// For non-JSON strings (YAML, Avro, Protobuf)
 			return isStringSchema(schemaSection);
 		}
@@ -114,7 +114,7 @@ function isStringSchema(str: string): boolean {
 	return false;
 }
 
-export function detectSchemaType(schemaSection: any): SchemaType {
+export function detectSchemaType(schemaSection: unknown): SchemaType {
 	if (!schemaSection) return 'json';
 
 	if (typeof schemaSection === 'string') {
@@ -159,29 +159,33 @@ export function detectSchemaType(schemaSection: any): SchemaType {
 	return 'json';
 }
 
-export function processSchema(schemaSection: any): SchemaProcessingResult {
+export function processSchema(schemaSection: unknown): SchemaProcessingResult {
 	if (!schemaSection) {
 		return { fields: [], example: null };
 	}
 
-	let processableSchema = schemaSection;
-	let example = null;
+	let processableSchema: unknown = schemaSection;
+	let example: unknown = null;
 
 	if (typeof schemaSection === 'string') {
 		try {
 			processableSchema = JSON.parse(schemaSection);
+			const parsed = processableSchema as Record<string, unknown>;
 
-			if (processableSchema.examples) {
-				example = formatExample(processableSchema.examples);
-			} else if (processableSchema.example) {
-				example = formatExample(processableSchema.example);
+			if (parsed.examples) {
+				example = formatExample(parsed.examples);
+			} else if (parsed.example) {
+				example = formatExample(parsed.example);
 			}
-		} catch (e) {}
+		} catch {
+			/* ignore */
+		}
 	} else if (typeof schemaSection === 'object' && schemaSection !== null) {
-		if (schemaSection.examples) {
-			example = formatExample(schemaSection.examples);
-		} else if (schemaSection.example) {
-			example = formatExample(schemaSection.example);
+		const obj = schemaSection as Record<string, unknown>;
+		if (obj.examples) {
+			example = formatExample(obj.examples);
+		} else if (obj.example) {
+			example = formatExample(obj.example);
 		}
 	}
 
@@ -224,10 +228,10 @@ export function processSchema(schemaSection: any): SchemaProcessingResult {
 /**
  * Validate a schema based on its type
  */
-export function validateSchema(schema: any): any[] {
+export function validateSchema(schema: unknown): unknown[] {
 	if (!schema) return [];
 
-	let cleanSchema = schema;
+	let cleanSchema: unknown = schema;
 
 	try {
 		if (typeof schema === 'string') {
@@ -248,29 +252,32 @@ export function validateSchema(schema: any): any[] {
 
 		if (typeof cleanSchema === 'object' && cleanSchema !== null) {
 			cleanSchema = JSON.parse(JSON.stringify(cleanSchema));
+			const obj = cleanSchema as Record<string, unknown>;
 
 			// Remove examples for validation
-			if (cleanSchema.example) delete cleanSchema.example;
-			if (cleanSchema.examples) delete cleanSchema.examples;
+			if (obj.example) delete obj.example;
+			if (obj.examples) delete obj.examples;
 
-			if (cleanSchema.properties) {
-				Object.keys(cleanSchema.properties).forEach((key) => {
-					if (cleanSchema.properties[key].example) {
-						delete cleanSchema.properties[key].example;
+			if (obj.properties && typeof obj.properties === 'object') {
+				const properties = obj.properties as Record<string, Record<string, unknown>>;
+				Object.keys(properties).forEach((key) => {
+					if (properties[key].example) {
+						delete properties[key].example;
 					}
-					if (cleanSchema.properties[key].examples) {
-						delete cleanSchema.properties[key].examples;
+					if (properties[key].examples) {
+						delete properties[key].examples;
 					}
 				});
 			}
 
-			if (cleanSchema.patternProperties) {
-				Object.keys(cleanSchema.patternProperties).forEach((pattern) => {
-					if (cleanSchema.patternProperties[pattern].example) {
-						delete cleanSchema.patternProperties[pattern].example;
+			if (obj.patternProperties && typeof obj.patternProperties === 'object') {
+				const patternProperties = obj.patternProperties as Record<string, Record<string, unknown>>;
+				Object.keys(patternProperties).forEach((pattern) => {
+					if (patternProperties[pattern].example) {
+						delete patternProperties[pattern].example;
 					}
-					if (cleanSchema.patternProperties[pattern].examples) {
-						delete cleanSchema.patternProperties[pattern].examples;
+					if (patternProperties[pattern].examples) {
+						delete patternProperties[pattern].examples;
 					}
 				});
 			}
@@ -305,7 +312,7 @@ export function prettyPrintSchema(schema: string): string {
 	try {
 		const parsed = JSON.parse(schema);
 		return JSON.stringify(parsed, null, 2);
-	} catch (e) {
+	} catch {
 		return schema;
 	}
 }

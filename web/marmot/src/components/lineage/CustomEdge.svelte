@@ -3,7 +3,6 @@
 	import IconifyIcon from '@iconify/svelte';
 
 	let {
-		id,
 		sourceX,
 		sourceY,
 		targetX,
@@ -12,7 +11,6 @@
 		targetPosition,
 		style = {},
 		markerEnd,
-		label,
 		data
 	} = $props();
 

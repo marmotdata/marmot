@@ -1,14 +1,14 @@
 export interface AssetSource {
 	name: string;
 	last_sync_at: string;
-	properties: Record<string, any>;
+	properties: Record<string, unknown>;
 	priority: number;
 }
 
 export interface Environment {
 	name: string;
 	path: string;
-	metadata: Record<string, any>;
+	metadata: Record<string, unknown>;
 }
 
 export interface ExternalLink {
@@ -35,8 +35,8 @@ export interface Asset {
 	created_at: string;
 	updated_at: string;
 	created_by: string;
-	metadata: Record<string, any>;
-	schema: Record<string, any>;
+	metadata: Record<string, unknown>;
+	schema: Record<string, unknown>;
 	parent_mrn?: string;
 	last_sync_at?: string;
 	has_run_history: boolean;
@@ -88,7 +88,7 @@ export interface AssetSummaryResponse {
 export interface MetadataFieldSuggestion {
 	field: string;
 	type: string;
-	example: any;
+	example: unknown;
 	count: number;
 }
 

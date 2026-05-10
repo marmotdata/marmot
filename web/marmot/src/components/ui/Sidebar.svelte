@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 
 	export let tabs: { id: string; label: string }[];
@@ -9,7 +10,7 @@
 	function handleTabChange(tabId: string) {
 		const newUrl = new URL($page.url);
 		newUrl.searchParams.set('tab', tabId);
-		goto(newUrl.toString());
+		goto(resolve((newUrl.pathname + newUrl.search) as `/${string}`));
 	}
 </script>
 
@@ -18,7 +19,7 @@
 		class="bg-earthy-brown-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
 	>
 		<nav class="space-y-1 p-2" aria-label="Admin navigation">
-			{#each tabs as tab}
+			{#each tabs as tab (tab.id)}
 				<button
 					class="w-full flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors {activeTab ===
 					tab.id

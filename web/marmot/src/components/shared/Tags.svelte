@@ -102,7 +102,7 @@
 
 <div class="space-y-2">
 	<div class="flex flex-wrap gap-1.5">
-		{#each tags as tag}
+		{#each tags as tag (tag)}
 			<span
 				class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
 			>

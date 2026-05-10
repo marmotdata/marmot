@@ -18,7 +18,11 @@
 	export let height: number = 300;
 
 	let svgElement: SVGElement;
-	let tooltipElement: HTMLDivElement;
+	let tooltipLabel = '';
+	let tooltipValue = '';
+	let tooltipVisible = false;
+	let tooltipX = 0;
+	let tooltipY = 0;
 
 	const margin = { top: 20, right: 20, bottom: 20, left: 20 };
 	const radius = Math.min(width, height) / 2 - Math.max(margin.top, margin.right);
@@ -80,20 +84,15 @@
 	}
 
 	function showTooltip(event: MouseEvent, data: ChartData) {
-		if (!tooltipElement) return;
-
-		tooltipElement.style.opacity = '1';
-		tooltipElement.style.left = `${event.pageX + 10}px`;
-		tooltipElement.style.top = `${event.pageY - 10}px`;
-		tooltipElement.innerHTML = `
-			<div class="font-semibold">${data.label}</div>
-			<div>Count: ${data.value.toLocaleString()}</div>
-		`;
+		tooltipX = event.pageX + 10;
+		tooltipY = event.pageY - 10;
+		tooltipLabel = data.label;
+		tooltipValue = `Count: ${data.value.toLocaleString()}`;
+		tooltipVisible = true;
 	}
 
 	function hideTooltip() {
-		if (!tooltipElement) return;
-		tooltipElement.style.opacity = '0';
+		tooltipVisible = false;
 	}
 
 	onMount(() => {
@@ -146,7 +145,11 @@
 </div>
 
 <div
-	bind:this={tooltipElement}
-	class="absolute bg-gray-900 text-white text-xs rounded px-2 py-1 pointer-events-none opacity-0 transition-opacity z-10"
-	style="transition: opacity 0.2s"
-></div>
+	class="absolute bg-gray-900 text-white text-xs rounded px-2 py-1 pointer-events-none z-10"
+	class:opacity-0={!tooltipVisible}
+	class:opacity-100={tooltipVisible}
+	style="transition: opacity 0.2s; left: {tooltipX}px; top: {tooltipY}px"
+>
+	<div class="font-semibold">{tooltipLabel}</div>
+	<div>{tooltipValue}</div>
+</div>

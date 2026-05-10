@@ -2,6 +2,7 @@
 	import { fetchApi } from '$lib/api';
 	import { writable, type Writable } from 'svelte/store';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
 	import type { DataProduct } from '$lib/dataproducts/types';
 	import ProductBlade from '$components/product/ProductBlade.svelte';
@@ -59,9 +60,10 @@
 
 			$recentProducts = sortedByRecent.slice(0, 4);
 			$allProducts = sortedByRecent;
-		} catch (e: any) {
-			const errorStatus = e.status || 500;
-			$error = { status: errorStatus, message: e.message };
+		} catch (e: unknown) {
+			const err = e as { status?: number; message?: string };
+			const errorStatus = err.status || 500;
+			$error = { status: errorStatus, message: err.message || 'Unknown error' };
 			console.error('Error fetching products:', e);
 		} finally {
 			$isLoading = false;
@@ -125,7 +127,7 @@
 			</div>
 			{#if canManageProducts}
 				<Button
-					click={() => goto('/products/new')}
+					click={() => goto(resolve('/products/new'))}
 					icon="material-symbols:add"
 					text="New Product"
 					variant="filled"
@@ -160,7 +162,7 @@
 				<div>
 					<div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-4"></div>
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-						{#each Array(4) as _}
+						{#each Array(4) as _, i (i)}
 							<div
 								class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 animate-pulse"
 							>
@@ -178,7 +180,7 @@
 				<!-- List Skeleton -->
 				<div>
 					<div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-4"></div>
-					{#each Array(5) as _}
+					{#each Array(5) as _, i (i)}
 						<div
 							class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-3 animate-pulse"
 						>
@@ -212,7 +214,7 @@
 				</p>
 				{#if canManageProducts}
 					<Button
-						click={() => goto('/products/new')}
+						click={() => goto(resolve('/products/new'))}
 						icon="material-symbols:add"
 						text="Create your first product"
 						variant="filled"
@@ -228,7 +230,7 @@
 					Recently Updated
 				</h2>
 				<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-					{#each $recentProducts as product}
+					{#each $recentProducts as product (product.id)}
 						<button
 							onclick={() => handleProductClick(product.id)}
 							class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-lg hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all group"
@@ -298,7 +300,7 @@
 				<div
 					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
 				>
-					{#each $allProducts as product, index}
+					{#each $allProducts as product, index (product.id)}
 						<button
 							onclick={() => handleProductClick(product.id)}
 							class="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group {index !==
@@ -339,7 +341,7 @@
 								</span>
 								{#if product.tags && product.tags.length > 0}
 									<div class="hidden sm:flex items-center gap-1">
-										{#each product.tags.slice(0, 2) as tag}
+										{#each product.tags.slice(0, 2) as tag (tag)}
 											<span
 												class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded"
 											>

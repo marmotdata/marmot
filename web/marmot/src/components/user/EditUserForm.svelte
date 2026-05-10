@@ -94,7 +94,7 @@
 			</h4>
 			<div class="flex flex-wrap gap-2">
 				{#if user.identities && user.identities.length > 0}
-					{#each user.identities as identity}
+					{#each user.identities as identity (identity.provider + (identity.provider_email ?? ''))}
 						<div
 							class="inline-flex items-center px-3 py-2 rounded-md text-sm font-medium bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200 border border-blue-200 dark:border-blue-800"
 						>
@@ -124,7 +124,7 @@
 				Roles
 			</h4>
 			<div class="space-y-2">
-				{#each user.roles as role}
+				{#each user.roles as role (role.name)}
 					<label
 						class="flex items-center p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
 					>

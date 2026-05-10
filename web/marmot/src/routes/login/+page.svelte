@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import Button from '$components/ui/Button.svelte';
 	import OAuthButtons from '$components/auth/OAuthButtons.svelte';
@@ -14,7 +15,11 @@
 	let error = $state('');
 	let loading = $state(false);
 	let showPasswordChangeForm = $state(false);
-	let loginData: any = $state(null);
+	interface LoginResponse {
+		access_token?: string;
+		requires_password_change?: boolean;
+	}
+	let loginData: LoginResponse | null = $state(null);
 	let usernameInput = $state<HTMLInputElement>();
 	let passwordInput = $state<HTMLInputElement>();
 	let newPasswordInput = $state<HTMLInputElement>();
@@ -41,7 +46,9 @@
 			if (response.ok) {
 				pendingConsent = await response.json();
 			}
-		} catch {}
+		} catch {
+			/* pending consent fetch failed; remain on login screen */
+		}
 	}
 
 	async function handleConsentAllow() {
@@ -75,9 +82,11 @@
 				method: 'POST',
 				credentials: 'same-origin'
 			});
-		} catch {}
+		} catch {
+			/* best-effort cancel */
+		}
 		pendingConsent = null;
-		goto('/');
+		goto(resolve('/'));
 	}
 
 	function handleUsernameKeydown(event: KeyboardEvent) {
@@ -138,8 +147,11 @@
 						return;
 					}
 				}
-				const redirectTo = $page.url.searchParams.get('redirect') || '/';
-				goto(redirectTo);
+				// Constrain redirect targets to in-app paths to keep open-redirect
+				// vectors closed and to satisfy resolve()'s internal-route contract.
+				const redirectParam = $page.url.searchParams.get('redirect');
+				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
+				goto(resolve(redirectTo));
 			} else {
 				throw new Error('No token received from server');
 			}
@@ -170,7 +182,7 @@
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
-					Authorization: `Bearer ${loginData.access_token}`
+					Authorization: `Bearer ${loginData?.access_token ?? ''}`
 				},
 				body: JSON.stringify({ new_password: newPassword })
 			});
@@ -183,8 +195,11 @@
 
 			if (passwordData.access_token) {
 				auth.setToken(passwordData.access_token);
-				const redirectTo = $page.url.searchParams.get('redirect') || '/';
-				goto(redirectTo);
+				// Constrain redirect targets to in-app paths to keep open-redirect
+				// vectors closed and to satisfy resolve()'s internal-route contract.
+				const redirectParam = $page.url.searchParams.get('redirect');
+				const redirectTo = redirectParam && redirectParam.startsWith('/') ? redirectParam : '/';
+				goto(resolve(redirectTo));
 			} else {
 				throw new Error('No token received from server');
 			}

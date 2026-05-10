@@ -2,6 +2,7 @@
 	import { fetchApi } from '$lib/api';
 	import { auth } from '$lib/stores/auth';
 	import { marked } from 'marked';
+	import { sanitizeHtml } from '$lib/sanitize';
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import RichTextEditor from '$components/editor/RichTextEditor.svelte';
@@ -114,7 +115,7 @@
 	}
 
 	function renderMarkdown(text: string): string {
-		return marked(text) as string;
+		return sanitizeHtml(marked(text) as string);
 	}
 </script>
 
@@ -130,7 +131,7 @@
 				<p class="text-red-500 dark:text-red-400">Failed to load documentation</p>
 			</div>
 		{:else if documentationSources.length > 0}
-			{#each documentationSources as doc}
+			{#each documentationSources as doc, i (i)}
 				<div
 					class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6"
 				>
@@ -143,6 +144,7 @@
 					<div
 						class="prose prose-gray dark:prose-invert max-w-none prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-a:text-earthy-terracotta-600 dark:prose-a:text-earthy-terracotta-400"
 					>
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via DOMPurify in renderMarkdown() -->
 						{@html renderMarkdown(doc.content)}
 					</div>
 				</div>
@@ -184,6 +186,7 @@
 				<div
 					class="prose prose-gray dark:prose-invert max-w-none prose-headings:text-gray-900 dark:prose-headings:text-gray-100 prose-p:text-gray-600 dark:prose-p:text-gray-300 prose-a:text-earthy-terracotta-600 dark:prose-a:text-earthy-terracotta-400"
 				>
+					<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via DOMPurify in renderMarkdown() -->
 					{@html renderMarkdown(content)}
 				</div>
 			{:else}

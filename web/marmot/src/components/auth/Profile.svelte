@@ -109,7 +109,7 @@
 			<div>
 				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">Assigned Roles</h4>
 				<div class="flex flex-wrap gap-2">
-					{#each user.roles as role}
+					{#each user.roles as role (role.name)}
 						<span
 							class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
 						>
@@ -123,8 +123,8 @@
 			<div>
 				<h4 class="text-sm font-medium text-gray-500 dark:text-gray-500 mb-2">Permissions</h4>
 				<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-					{#each user.roles as role}
-						{#each role.permissions as permission}
+					{#each user.roles as role (role.name)}
+						{#each role.permissions as permission (permission.name)}
 							<div class="bg-earthy-brown-100 dark:bg-gray-800 rounded-md p-3">
 								<div class="font-medium text-gray-900 dark:text-gray-100">{permission.name}</div>
 								<div class="text-sm text-gray-600 dark:text-gray-400">{permission.description}</div>

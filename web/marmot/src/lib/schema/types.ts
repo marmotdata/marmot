@@ -1,3 +1,11 @@
+export type JsonValue =
+	| string
+	| number
+	| boolean
+	| null
+	| JsonValue[]
+	| { [key: string]: JsonValue };
+
 export interface Field {
 	name: string;
 	type: string;
@@ -11,25 +19,25 @@ export interface Field {
 	};
 	$ref?: string;
 	indentLevel?: number;
-	enum?: any[];
-	default?: any;
+	enum?: unknown[];
+	default?: unknown;
 	pattern?: string;
 	minimum?: number;
 	maximum?: number;
 	minLength?: number;
 	maxLength?: number;
-	examples?: any[];
-	const?: any;
+	examples?: unknown[];
+	const?: unknown;
 }
 
 export interface SchemaSection {
 	name: string;
-	schema: any;
+	schema: unknown;
 }
 
 export interface SchemaProcessingResult {
 	fields: Field[];
-	example: any;
+	example: unknown;
 }
 
 export type SchemaType = 'json' | 'avro' | 'protobuf' | 'dbt' | 'sql';

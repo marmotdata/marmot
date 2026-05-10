@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
@@ -103,7 +104,26 @@
 		}
 	}
 
-	function transformQueriesData(rawData: any[]) {
+	interface QueryRow {
+		query?: string;
+		count: number;
+	}
+
+	interface AssetRow {
+		asset_id?: string;
+		asset_name?: string;
+		asset_type?: string;
+		asset_provider?: string;
+		count: number;
+	}
+
+	interface AssetClickItem {
+		asset_type?: string;
+		asset_name?: string;
+		asset_provider?: string;
+	}
+
+	function transformQueriesData(rawData: QueryRow[]) {
 		return rawData.map((item) => ({
 			id: item.query || '',
 			name: item.query || '',
@@ -112,7 +132,7 @@
 		}));
 	}
 
-	function transformAssetsData(rawData: any[]) {
+	function transformAssetsData(rawData: AssetRow[]) {
 		return rawData.map((item) => ({
 			id: item.asset_id || '',
 			name: item.asset_name || item.asset_id || '',
@@ -125,10 +145,12 @@
 		}));
 	}
 
-	function handleAssetClick(item: any) {
+	function handleAssetClick(item: AssetClickItem) {
 		if (item.asset_type && item.asset_name && item.asset_provider) {
 			goto(
-				`/discover/${encodeURIComponent(item.asset_type)}/${encodeURIComponent(item.asset_provider)}/${encodeURIComponent(item.asset_name)}`
+				resolve(
+					`/discover/${encodeURIComponent(item.asset_type)}/${encodeURIComponent(item.asset_provider)}/${encodeURIComponent(item.asset_name)}`
+				)
 			);
 		}
 	}
@@ -201,7 +223,7 @@
 					class="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
 				>
 					<div class="py-1">
-						{#each timeRanges as timeRange}
+						{#each timeRanges as timeRange (timeRange.value)}
 							<button
 								class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center justify-between {selectedTimeRange.value ===
 								timeRange.value

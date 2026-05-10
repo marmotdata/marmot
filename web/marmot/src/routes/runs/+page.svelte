@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
+	import { SvelteSet, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { fetchApi } from '$lib/api';
 	import { websocketService, type JobRunEvent } from '$lib/websocket';
@@ -23,13 +25,6 @@
 	let wsCheckInterval: ReturnType<typeof setInterval> | null = null;
 
 	type Tab = 'history' | 'pipelines';
-
-	interface IngestionRunSummary {
-		assets_created: number;
-		assets_updated: number;
-		assets_deleted: number;
-		errors: number;
-	}
 
 	interface IngestionRun {
 		id: string;
@@ -60,7 +55,7 @@
 		id: string;
 		name: string;
 		plugin_id: string;
-		config: any;
+		config: Record<string, unknown>;
 		cron_expression: string;
 		enabled: boolean;
 		last_run_at?: string;
@@ -104,7 +99,7 @@
 	let confirmModalCheckboxChecked = $state(false);
 	let confirmModalAction = $state<((checkboxValue?: boolean) => void) | null>(null);
 
-	let runningPipelines = $state<Set<string>>(new Set());
+	let runningPipelines: SvelteSet<string> = new SvelteSet();
 
 	let totalPages = $derived(Math.ceil(total / pageSize));
 	let offset = $derived((currentPage - 1) * pageSize);
@@ -161,7 +156,7 @@
 			url.searchParams.set('tab', 'history');
 			fetchRuns();
 		}
-		goto(url.toString(), { replaceState: true, noScroll: true });
+		goto(resolve(`/runs${url.search}`), { replaceState: true, noScroll: true });
 	}
 
 	function updateUrl() {
@@ -181,7 +176,7 @@
 			url.searchParams.delete('statuses');
 		}
 
-		goto(url.toString(), { replaceState: true, noScroll: true });
+		goto(resolve(`/runs${url.search}`), { replaceState: true, noScroll: true });
 	}
 
 	async function fetchRuns(showLoading: boolean = true) {
@@ -191,7 +186,7 @@
 			}
 			error = null;
 
-			const params = new URLSearchParams({
+			const params = new SvelteURLSearchParams({
 				limit: pageSize.toString(),
 				offset: offset.toString()
 			});
@@ -249,13 +244,13 @@
 		showRunModal = true;
 		const url = new URL($page.url);
 		url.searchParams.set('run', run.id);
-		goto(url.toString(), { replaceState: true, noScroll: true });
+		goto(resolve(`/runs${url.search}`), { replaceState: true, noScroll: true });
 	}
 
 	function handleModalClose() {
 		const url = new URL($page.url);
 		url.searchParams.delete('run');
-		goto(url.toString(), { replaceState: true, noScroll: true });
+		goto(resolve(`/runs${url.search}`), { replaceState: true, noScroll: true });
 		showRunModal = false;
 	}
 
@@ -294,10 +289,8 @@
 
 	async function handleTriggerPipeline(pipeline: Pipeline) {
 		try {
-			// Add to running set immediately - create new Set for reactivity
-			const newSet = new Set(runningPipelines);
-			newSet.add(pipeline.id);
-			runningPipelines = newSet;
+			// Add to running set immediately - SvelteSet is reactive on mutation
+			runningPipelines.add(pipeline.id);
 
 			const response = await fetchApi(`/ingestion/schedules/${pipeline.id}/trigger`, {
 				method: 'POST'
@@ -305,10 +298,8 @@
 
 			if (!response.ok) {
 				const data = await response.json();
-				// Remove from running set on error - create new Set for reactivity
-				const errorSet = new Set(runningPipelines);
-				errorSet.delete(pipeline.id);
-				runningPipelines = errorSet;
+				// Remove from running set on error
+				runningPipelines.delete(pipeline.id);
 				throw new Error(data.error || 'Failed to trigger pipeline');
 			}
 
@@ -345,9 +336,7 @@
 
 				// If run is no longer running or we've exceeded max attempts, stop polling
 				if (latestRun && latestRun.status !== 'running') {
-					const newSet = new Set(runningPipelines);
-					newSet.delete(pipelineId);
-					runningPipelines = newSet;
+					runningPipelines.delete(pipelineId);
 
 					// Show completion toast
 					if (latestRun.status === 'succeeded') {
@@ -366,16 +355,12 @@
 					setTimeout(poll, pollInterval);
 				} else {
 					// Max attempts reached or pipeline removed from running set
-					const newSet = new Set(runningPipelines);
-					newSet.delete(pipelineId);
-					runningPipelines = newSet;
+					runningPipelines.delete(pipelineId);
 				}
 			} catch (err) {
 				console.error('Error polling pipeline status:', err);
 				// Stop polling on error
-				const newSet = new Set(runningPipelines);
-				newSet.delete(pipelineId);
-				runningPipelines = newSet;
+				runningPipelines.delete(pipelineId);
 			}
 		};
 
@@ -429,10 +414,8 @@
 				event.type === 'job_run_claimed' ||
 				(event.type === 'job_run_created' && jobRun.status === 'running')
 			) {
-				// Add to running set - create new Set to trigger reactivity in Svelte 5
-				const newSet = new Set(runningPipelines);
-				newSet.add(jobRun.schedule_id);
-				runningPipelines = newSet;
+				// Add to running set - SvelteSet is reactive on mutation
+				runningPipelines.add(jobRun.schedule_id);
 			} else if (
 				event.type === 'job_run_completed' ||
 				event.type === 'job_run_cancelled' ||
@@ -440,10 +423,8 @@
 				jobRun.status === 'failed' ||
 				jobRun.status === 'cancelled'
 			) {
-				// Remove from running set - create new Set to trigger reactivity in Svelte 5
-				const newSet = new Set(runningPipelines);
-				newSet.delete(jobRun.schedule_id);
-				runningPipelines = newSet;
+				// Remove from running set - SvelteSet is reactive on mutation
+				runningPipelines.delete(jobRun.schedule_id);
 
 				// Update the pipeline's last_run_status and last_run_at
 				pipelines = pipelines.map((p) =>
@@ -475,7 +456,7 @@
 			case 'job_run_started':
 			case 'job_run_progress':
 			case 'job_run_completed':
-			case 'job_run_cancelled':
+			case 'job_run_cancelled': {
 				// Update existing run
 				const index = runs.findIndex((r) => r.id === jobRun.id);
 				if (index !== -1) {
@@ -491,6 +472,7 @@
 					}, 1000);
 				}
 				break;
+			}
 		}
 
 		// Update selected run if it's the one being shown
@@ -663,7 +645,7 @@
 				<div class="flex justify-end items-center mb-6">
 					<Button
 						variant="filled"
-						click={() => goto('/pipelines/new')}
+						click={() => goto(resolve('/pipelines/new'))}
 						icon="material-symbols:add"
 						text="Create Pipeline"
 						disabled={!$encryptionConfigured}
@@ -688,7 +670,7 @@
 					{#if canManageIngestion}
 						<Button
 							variant="filled"
-							click={() => goto('/pipelines/new')}
+							click={() => goto(resolve('/pipelines/new'))}
 							icon="material-symbols:add"
 							text="Create Pipeline"
 							disabled={!$encryptionConfigured}
@@ -743,11 +725,11 @@
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-							{#each pipelines as pipeline}
+							{#each pipelines as pipeline (pipeline.id)}
 								<ScheduleCard
 									schedule={pipeline}
 									onEdit={$encryptionConfigured
-										? (s) => goto(`/pipelines/${s.id}/edit`)
+										? (s) => goto(resolve(`/pipelines/${s.id}/edit`))
 										: undefined}
 									onDelete={handleDeletePipeline}
 									onTrigger={$encryptionConfigured ? handleTriggerPipeline : undefined}
@@ -831,7 +813,7 @@
 							<div
 								class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-700 shadow-lg max-h-60 rounded-md py-1 text-base ring-1 ring-black ring-opacity-5 overflow-auto"
 							>
-								{#each availableStatuses as status}
+								{#each availableStatuses as status (status)}
 									<div
 										class="cursor-default select-none relative py-2 pl-3 pr-9 hover:bg-gray-100 dark:hover:bg-gray-600"
 										onclick={() => handleStatusToggle(status)}
@@ -944,7 +926,7 @@
 				</div>
 
 				<div class="grid gap-4 mb-6">
-					{#each runs as run}
+					{#each runs as run (run.id)}
 						<IngestionRunCard {run} onClick={() => handleRunClick(run)} />
 					{/each}
 				</div>

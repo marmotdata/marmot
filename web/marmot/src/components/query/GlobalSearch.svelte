@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import Icon from '@iconify/svelte';
 	import AssetIcon from '$lib/components/AssetIcon.svelte';
@@ -15,7 +16,7 @@
 		id: string;
 		name: string;
 		description?: string;
-		metadata?: Record<string, any>;
+		metadata?: Record<string, unknown>;
 		url: string;
 	}
 
@@ -32,9 +33,12 @@
 	let selectedIndex = -1;
 	let debounceTimer: ReturnType<typeof setTimeout>;
 
-	$: searchQuery = initialQuery;
+	$: if (initialQuery !== searchQuery) {
+		searchQuery = initialQuery;
+		scheduleSearch();
+	}
 
-	$: {
+	function scheduleSearch() {
 		clearTimeout(debounceTimer);
 		if (searchQuery.trim()) {
 			debounceTimer = setTimeout(() => {
@@ -75,7 +79,7 @@
 	function handleSubmit(event: Event) {
 		event.preventDefault();
 		if (searchQuery.trim()) {
-			goto(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+			goto(resolve(`/search?q=${encodeURIComponent(searchQuery.trim())}`));
 			if (onNavigate) {
 				onNavigate();
 			}
@@ -115,7 +119,7 @@
 	}
 
 	function navigateToResult(result: SearchResult) {
-		goto(result.url);
+		goto(resolve(result.url));
 		if (onNavigate) {
 			onNavigate();
 		}
@@ -166,6 +170,7 @@
 		<input
 			bind:this={inputElement}
 			bind:value={searchQuery}
+			on:input={scheduleSearch}
 			on:keydown={handleKeydown}
 			on:focus={() => searchQuery && (showResults = true)}
 			type="text"

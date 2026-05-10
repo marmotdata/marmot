@@ -42,14 +42,14 @@
 
 	let clickOutsideHandler: (event: MouseEvent) => void;
 
-	function debounce<T extends (...args: any[]) => any>(
+	function debounce<T extends (...args: unknown[]) => unknown>(
 		fn: T,
 		delay: number
 	): (...args: Parameters<T>) => Promise<ReturnType<T>> {
 		return (...args: Parameters<T>) => {
 			return new Promise((resolve) => {
 				clearTimeout(debounceTimer);
-				debounceTimer = setTimeout(() => resolve(fn(...args)), delay);
+				debounceTimer = setTimeout(() => resolve(fn(...args) as ReturnType<T>), delay);
 			});
 		};
 	}
@@ -174,7 +174,6 @@
 		for (const match of simpleFieldMatches) {
 			if (match.index !== undefined && match.index < position) {
 				const fieldEnd = match.index + match[0].length;
-				const afterField = value.substring(fieldEnd);
 				// Only consider this match if cursor is within reasonable range
 				if (position <= fieldEnd + 50) {
 					currentSimpleMatch = match;
@@ -688,7 +687,7 @@
 	{:else}
 		<div class="relative">
 			<div bind:this={overlayDiv} class="syntax-highlight-overlay" aria-hidden="true">
-				{#each getHighlightedText(value) as part}
+				{#each getHighlightedText(value) as part, i (i)}
 					<span class={part.class}>{part.text}</span>
 				{/each}
 			</div>
@@ -715,7 +714,7 @@
 				suggestionStartPos
 			).top}px; min-width: 200px; width: auto; max-width: 400px;"
 		>
-			{#each suggestions as suggestion, i}
+			{#each suggestions as suggestion, i (i)}
 				<button
 					class="w-full px-3 py-2 text-left hover:bg-earthy-brown-100 text-sm text-gray-900 first:rounded-t-lg last:rounded-b-lg break-words whitespace-normal {i ===
 					selectedIndex

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { resolve } from '$app/paths';
 	import Icon from '@iconify/svelte';
 
 	export let enabled: boolean = false;
@@ -11,7 +12,7 @@
 
 	let visible = false;
 
-	$: variantClasses = {
+	const variantClasses = {
 		info: 'bg-gradient-to-r from-blue-50 to-blue-100 dark:from-blue-950/40 dark:to-blue-900/40 border-blue-300 dark:border-blue-700 text-blue-900 dark:text-blue-50',
 		warning:
 			'bg-gradient-to-r from-yellow-50 to-yellow-100 dark:from-yellow-950/40 dark:to-yellow-900/40 border-yellow-300 dark:border-yellow-700 text-yellow-900 dark:text-yellow-50',
@@ -21,14 +22,14 @@
 			'bg-gradient-to-r from-green-50 to-green-100 dark:from-green-950/40 dark:to-green-900/40 border-green-300 dark:border-green-700 text-green-900 dark:text-green-50'
 	};
 
-	$: iconMap = {
+	const iconMap = {
 		info: 'material-symbols:info-outline',
 		warning: 'material-symbols:warning-outline',
 		error: 'material-symbols:error-outline',
 		success: 'material-symbols:check-circle-outline'
 	};
 
-	$: linkColorClasses = {
+	const linkColorClasses = {
 		info: 'text-blue-800 dark:text-blue-200 hover:text-blue-950 dark:hover:text-blue-100 font-semibold',
 		warning:
 			'text-yellow-800 dark:text-yellow-200 hover:text-yellow-950 dark:hover:text-yellow-100 font-semibold',
@@ -105,16 +106,29 @@
 						<Icon icon={iconMap[variant]} class="w-5 h-5" />
 					</div>
 					<div class="text-sm font-medium text-center">
-						{#each messageParts as part}
+						{#each messageParts as part, i (i)}
 							{#if part.type === 'link'}
-								<a
-									href={part.url}
-									class="underline underline-offset-2 transition-colors {linkColorClasses[variant]}"
-									target={part.url?.startsWith('http') ? '_blank' : undefined}
-									rel={part.url?.startsWith('http') ? 'noopener noreferrer' : undefined}
-								>
-									{part.content}
-								</a>
+								{#if part.url?.startsWith('http')}
+									<a
+										href={part.url}
+										class="underline underline-offset-2 transition-colors {linkColorClasses[
+											variant
+										]}"
+										target="_blank"
+										rel="external noopener noreferrer"
+									>
+										{part.content}
+									</a>
+								{:else}
+									<a
+										href={resolve(part.url ?? '/')}
+										class="underline underline-offset-2 transition-colors {linkColorClasses[
+											variant
+										]}"
+									>
+										{part.content}
+									</a>
+								{/if}
 							{:else}
 								<span>{part.content}</span>
 							{/if}

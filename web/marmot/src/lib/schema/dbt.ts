@@ -16,7 +16,7 @@ export interface DbtColumn {
 /**
  * Check if the schema is a dbt column array format
  */
-export function isDbtSchema(schemaSection: any): boolean {
+export function isDbtSchema(schemaSection: unknown): boolean {
 	if (!schemaSection) return false;
 
 	// Must be an array
@@ -30,13 +30,13 @@ export function isDbtSchema(schemaSection: any): boolean {
 	if (typeof first !== 'object' || first === null) return false;
 
 	// dbt columns have 'name' and optionally 'type' and 'description'
-	return typeof first.name === 'string';
+	return typeof (first as { name?: unknown }).name === 'string';
 }
 
 /**
  * Process dbt column array into Field[] for display
  */
-export function processDbtSchema(schemaSection: any): Field[] {
+export function processDbtSchema(schemaSection: unknown): Field[] {
 	if (!schemaSection || !Array.isArray(schemaSection)) return [];
 
 	const fields: Field[] = [];
@@ -60,21 +60,22 @@ export function processDbtSchema(schemaSection: any): Field[] {
 /**
  * Validate dbt schema - basic structure check
  */
-export function validateDbtSchema(schema: any): any[] {
+export function validateDbtSchema(schema: unknown): { message: string }[] {
 	if (!schema) return [];
 
 	if (!Array.isArray(schema)) {
 		return [{ message: 'dbt schema must be an array of columns' }];
 	}
 
-	const errors: any[] = [];
+	const errors: { message: string }[] = [];
 
 	schema.forEach((col, index) => {
 		if (typeof col !== 'object' || col === null) {
 			errors.push({ message: `Column at index ${index} is not an object` });
 			return;
 		}
-		if (typeof col.name !== 'string' || col.name.trim() === '') {
+		const name = (col as { name?: unknown }).name;
+		if (typeof name !== 'string' || name.trim() === '') {
 			errors.push({ message: `Column at index ${index} is missing a valid 'name' field` });
 		}
 	});

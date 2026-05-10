@@ -1,9 +1,23 @@
 <script lang="ts">
+	import { resolve } from '$app/paths';
 	import Icon from '$components/ui/Icon.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import Arrow from '$components/ui/Arrow.svelte';
 
-	export let node: any;
+	interface LineageNode {
+		id: string;
+		type: string;
+		asset: {
+			mrn?: string;
+			description?: string;
+			tags?: string[];
+			providers?: string[];
+			provider?: string;
+			metadata?: Record<string, unknown>;
+		};
+	}
+
+	export let node: LineageNode;
 	export let expanded: boolean;
 	export let onClick: () => void;
 	export let maxMetadataDepth = 1;
@@ -25,7 +39,7 @@
 	<!-- Compact Mode -->
 	<div class="rounded border border-gray-200 dark:border-gray-700">
 		<a
-			href={getAssetUrl()}
+			href={getAssetUrl() === '#' ? '#' : resolve(getAssetUrl() as `/${string}`)}
 			class="flex items-center gap-2 p-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
 		>
 			<Icon
@@ -77,7 +91,7 @@
 			</div>
 			<div class="flex items-center gap-2 flex-shrink-0 ml-4">
 				<a
-					href={getAssetUrl()}
+					href={getAssetUrl() === '#' ? '#' : resolve(getAssetUrl() as `/${string}`)}
 					class="inline-flex items-center text-sm text-gray-600 dark:text-gray-400 hover:text-earthy-terracotta-700 whitespace-nowrap"
 					on:click|stopPropagation
 				>
@@ -108,7 +122,7 @@
 					<div class="mt-3">
 						<h5 class="text-sm font-medium text-gray-900 dark:text-gray-100">Tags</h5>
 						<div class="mt-1 flex flex-wrap gap-2">
-							{#each node.asset.tags as tag}
+							{#each node.asset.tags as tag (tag)}
 								<span
 									class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full"
 									>{tag}</span

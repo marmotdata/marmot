@@ -3,10 +3,11 @@
 	import { onMount, afterUpdate } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
-	import type { DataProduct, Owner, ResolvedAssetsResponse } from '$lib/dataproducts/types';
+	import { resolve } from '$app/paths';
+	import { SvelteMap } from 'svelte/reactivity';
+	import type { DataProduct, ResolvedAssetsResponse } from '$lib/dataproducts/types';
 	import type { Asset } from '$lib/assets/types';
 	import Button from '$components/ui/Button.svelte';
-	import Tags from '$components/shared/Tags.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import AssetIcon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
@@ -27,21 +28,24 @@
 
 	// Asset preview
 	let resolvedAssets: ResolvedAssetsResponse | null = null;
-	let assetDetails = new Map<string, Asset>();
+	let assetDetails = new SvelteMap<string, Asset>();
 	let loadingAssets = false;
 
-	$: canManage = auth.hasPermission('assets', 'manage');
+	const canManage = auth.hasPermission('assets', 'manage');
 	$: isVisible = product != null;
 	$: fullViewUrl = product ? `/products/${product.id}` : '';
 
-	$: if (product?.id !== currentProductId) {
-		currentProductId = product?.id || null;
+	function syncProductChange(productId: string | null) {
+		if (productId === currentProductId) return;
+		currentProductId = productId;
 		resolvedAssets = null;
-		assetDetails = new Map();
-		if (product?.id) {
+		assetDetails = new SvelteMap();
+		if (productId) {
 			fetchResolvedAssets();
 		}
 	}
+
+	$: syncProductChange(product?.id ?? null);
 
 	function formatDate(dateString: string): string {
 		return new Date(dateString).toLocaleString();
@@ -68,7 +72,7 @@
 	}
 
 	async function loadAssetDetails(assetIds: string[]) {
-		const newDetails = new Map<string, Asset>();
+		const newDetails = new SvelteMap<string, Asset>();
 		for (const assetId of assetIds) {
 			try {
 				const response = await fetchApi(`/assets/${assetId}`);
@@ -132,7 +136,7 @@
 			showDeleteModal = false;
 
 			if (staticPlacement) {
-				goto('/products');
+				goto(resolve('/products'));
 			} else {
 				onClose();
 				window.location.reload();
@@ -213,7 +217,7 @@
 						<!-- Product Header -->
 						{#if !staticPlacement}
 							<a
-								href={fullViewUrl}
+								href={fullViewUrl ? resolve(fullViewUrl) : '#'}
 								class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all"
 							>
 								<div class="flex items-start gap-3 mb-3">
@@ -261,7 +265,7 @@
 										</div>
 										<div class="flex flex-wrap gap-1">
 											{#if product.tags && product.tags.length > 0}
-												{#each product.tags.slice(0, 5) as tag}
+												{#each product.tags.slice(0, 5) as tag (tag)}
 													<span
 														class="inline-flex items-center gap-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded"
 													>
@@ -338,11 +342,12 @@
 									</div>
 								{:else}
 									<div class="space-y-2">
-										{#each resolvedAssets.all_assets.slice(0, 5) as assetId}
+										{#each resolvedAssets.all_assets.slice(0, 5) as assetId (assetId)}
 											{@const asset = assetDetails.get(assetId)}
 											{#if asset}
+												{@const assetUrl = getAssetUrl(asset)}
 												<a
-													href={getAssetUrl(asset)}
+													href={assetUrl === '#' ? '#' : resolve(assetUrl)}
 													class="flex items-center gap-2 p-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
 												>
 													<AssetIcon name={getIconType(asset)} size="sm" showLabel={false} />
@@ -366,7 +371,7 @@
 									</div>
 									{#if resolvedAssets.total > 5}
 										<a
-											href="{fullViewUrl}?tab=assets"
+											href={resolve(`${fullViewUrl}?tab=assets`)}
 											class="mt-3 inline-flex items-center gap-1 text-xs text-earthy-terracotta-600 hover:text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
 										>
 											View all {resolvedAssets.total} assets
@@ -389,7 +394,7 @@
 									</span>
 								</div>
 								<div class="space-y-2">
-									{#each product.rules.slice(0, 3) as rule}
+									{#each product.rules.slice(0, 3) as rule (rule.name)}
 										<div
 											class="p-2 rounded-lg bg-gray-50 dark:bg-gray-700/50 flex items-center justify-between"
 										>
@@ -411,7 +416,7 @@
 								</div>
 								{#if product.rules.length > 3}
 									<a
-										href="{fullViewUrl}?tab=rules"
+										href={resolve(`${fullViewUrl}?tab=rules`)}
 										class="mt-3 inline-flex items-center gap-1 text-xs text-earthy-terracotta-600 hover:text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
 									>
 										View all {product.rules.length} rules

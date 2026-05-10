@@ -2,6 +2,7 @@
 	import { marked } from 'marked';
 	import { onMount, afterUpdate } from 'svelte';
 	import Prism from 'prismjs';
+	import { sanitizeHtml } from '$lib/sanitize';
 	import 'prism-themes/themes/prism-one-dark.css';
 	import 'prismjs/components/prism-json';
 	import 'prismjs/components/prism-sql';
@@ -19,7 +20,7 @@
 
 	$: {
 		if (content) {
-			renderedHtml = marked(content) as string;
+			renderedHtml = sanitizeHtml(marked(content) as string);
 		} else {
 			renderedHtml = '';
 		}
@@ -42,6 +43,7 @@
 </script>
 
 <div bind:this={containerElement} class="prose prose-sm dark:prose-invert max-w-none {className}">
+	<!-- eslint-disable-next-line svelte/no-at-html-tags -- sanitized via DOMPurify in the reactive block above -->
 	{@html renderedHtml}
 </div>
 

@@ -1,8 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { fetchApi } from '$lib/api';
 
-	let roles: any[] = [];
+	interface Role {
+		id: string;
+		name: string;
+		description: string;
+		permissions: unknown[];
+	}
+
+	let roles: Role[] = [];
 	let loading = false;
 	let error: string | null = null;
 	let editingRoleId: string | null = null;
@@ -143,7 +149,7 @@
 					<tbody
 						class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:bg-gray-900 dark:bg-gray-900 dark:bg-gray-900"
 					>
-						{#each roles as role}
+						{#each roles as role (role.id)}
 							<tr
 								class="hover:bg-earthy-brown-100 dark:bg-gray-800 dark:bg-gray-800 dark:bg-gray-900 transition-colors"
 							>

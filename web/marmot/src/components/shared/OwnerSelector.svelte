@@ -2,7 +2,7 @@
 	import { fetchApi } from '$lib/api';
 	import Icon from '@iconify/svelte';
 	import { onMount } from 'svelte';
-	import { Users, User } from 'lucide-svelte';
+	import { Users } from 'lucide-svelte';
 	import Avatar from '$components/user/Avatar.svelte';
 	import { createKeyboardNavigationState } from '$lib/keyboard';
 
@@ -144,10 +144,6 @@
 		searchQuery = '';
 		searchResults = [];
 		focusedIndex = -1;
-	}
-
-	function getOwnerInitial(owner: Owner): string {
-		return owner.name.charAt(0).toUpperCase();
 	}
 
 	function handleOwnerClick(owner: Owner) {

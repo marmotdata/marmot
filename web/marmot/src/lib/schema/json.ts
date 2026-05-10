@@ -10,18 +10,50 @@ const ajv = new Ajv({
 });
 addFormats(ajv);
 
-export function resolveRef(ref: string, rootSchema: any): any {
+export interface JsonSchemaObject {
+	$ref?: string;
+	$schema?: string;
+	type?: string | string[];
+	format?: string;
+	description?: string;
+	title?: string;
+	properties?: Record<string, JsonSchemaObject>;
+	patternProperties?: Record<string, JsonSchemaObject>;
+	required?: string[];
+	items?: JsonSchemaObject;
+	enum?: unknown[];
+	default?: unknown;
+	const?: unknown;
+	example?: unknown;
+	examples?: unknown[];
+	pattern?: string;
+	minimum?: number;
+	maximum?: number;
+	minLength?: number;
+	maxLength?: number;
+	anyOf?: JsonSchemaObject[];
+	oneOf?: JsonSchemaObject[];
+	allOf?: JsonSchemaObject[];
+	not?: JsonSchemaObject;
+	[key: string]: unknown;
+}
+
+function isJsonSchemaObject(value: unknown): value is JsonSchemaObject {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+export function resolveRef(ref: string, rootSchema: JsonSchemaObject): JsonSchemaObject | null {
 	if (!ref?.startsWith('#/')) return null;
 
 	const parts = ref.substring(2).split('/');
-	let current = rootSchema;
+	let current: unknown = rootSchema;
 
 	for (const part of parts) {
-		if (!current[part]) return null;
-		current = current[part];
+		if (!isJsonSchemaObject(current) || !(part in current)) return null;
+		current = (current as Record<string, unknown>)[part];
 	}
 
-	return current;
+	return isJsonSchemaObject(current) ? current : null;
 }
 
 export function getSchemaNameFromRef(ref: string): string {
@@ -29,7 +61,7 @@ export function getSchemaNameFromRef(ref: string): string {
 	return ref.split('/').pop() || 'unknown';
 }
 
-export function getFieldType(fieldSchema: any): string {
+export function getFieldType(fieldSchema: JsonSchemaObject | null | undefined): string {
 	if (!fieldSchema) return 'unknown';
 
 	if (fieldSchema.$ref) {
@@ -72,8 +104,8 @@ export function getFieldType(fieldSchema: any): string {
 }
 
 export function processPatternProperties(
-	patternProperties: any,
-	rootSchema: any = {},
+	patternProperties: Record<string, JsonSchemaObject> | undefined,
+	rootSchema: JsonSchemaObject = {},
 	depth = 0,
 	parentPath = ''
 ): Field[] {
@@ -84,7 +116,7 @@ export function processPatternProperties(
 	}
 
 	Object.entries(patternProperties).forEach(([pattern, schemaValue]) => {
-		const schema = schemaValue as any;
+		const schema = schemaValue as JsonSchemaObject;
 		const fullPath = parentPath ? `${parentPath}.{pattern: ${pattern}}` : `{pattern: ${pattern}}`;
 		fields.push({
 			name: fullPath,
@@ -120,8 +152,8 @@ export function processPatternProperties(
 
 export function processComposition(
 	fieldName: string,
-	fieldSchema: any,
-	rootSchema: any = {},
+	fieldSchema: JsonSchemaObject,
+	rootSchema: JsonSchemaObject = {},
 	depth = 0,
 	parentPath = ''
 ): Field[] {
@@ -137,11 +169,11 @@ export function processComposition(
 			indentLevel: depth
 		});
 
-		fieldSchema.anyOf.forEach((schema: any, index: number) => {
+		fieldSchema.anyOf.forEach((schema: JsonSchemaObject, index: number) => {
 			const optionName = schema.title || schema.description || `Option ${index + 1}`;
 
 			if (!schema.properties && !schema.type && fieldSchema.properties) {
-				const mergedSchema = {
+				const mergedSchema: JsonSchemaObject = {
 					type: 'object',
 					properties: fieldSchema.properties,
 					required: schema.required || []
@@ -166,11 +198,11 @@ export function processComposition(
 			indentLevel: depth
 		});
 
-		fieldSchema.oneOf.forEach((schema: any, index: number) => {
+		fieldSchema.oneOf.forEach((schema: JsonSchemaObject, index: number) => {
 			const optionName = schema.title || schema.description || `Option ${index + 1}`;
 
 			if (!schema.properties && !schema.type && fieldSchema.properties) {
-				const mergedSchema = {
+				const mergedSchema: JsonSchemaObject = {
 					type: 'object',
 					properties: fieldSchema.properties,
 					required: schema.required || []
@@ -187,23 +219,28 @@ export function processComposition(
 	}
 
 	if (fieldSchema.allOf) {
-		const mergedSchema: { type: string; properties: Record<string, any>; required: string[] } = {
+		const mergedSchema: {
+			type: string;
+			properties: Record<string, JsonSchemaObject>;
+			required: string[];
+		} = {
 			type: 'object',
 			properties: {},
 			required: []
 		};
 
-		fieldSchema.allOf.forEach((schema: any) => {
-			if (schema.$ref) {
-				const resolved = resolveRef(schema.$ref, rootSchema);
-				if (resolved) schema = resolved;
+		fieldSchema.allOf.forEach((schema: JsonSchemaObject) => {
+			let current = schema;
+			if (current.$ref) {
+				const resolved = resolveRef(current.$ref, rootSchema);
+				if (resolved) current = resolved;
 			}
 
-			if (schema.properties) {
-				Object.assign(mergedSchema.properties, schema.properties);
+			if (current.properties) {
+				Object.assign(mergedSchema.properties, current.properties);
 			}
-			if (schema.required) {
-				mergedSchema.required.push(...schema.required);
+			if (current.required) {
+				mergedSchema.required.push(...current.required);
 			}
 		});
 
@@ -254,8 +291,8 @@ export function processComposition(
 
 export function processSchemaRecursively(
 	fieldName: string,
-	fieldSchema: any,
-	rootSchema: any = {},
+	fieldSchema: JsonSchemaObject,
+	rootSchema: JsonSchemaObject = {},
 	depth = 0,
 	parentPath = ''
 ): Field[] {
@@ -348,7 +385,7 @@ export function processSchemaRecursively(
 	if (fieldSchema.type === 'array' && fieldSchema.items) {
 		if (fieldSchema.items.type === 'object' && fieldSchema.items.properties) {
 			Object.entries(fieldSchema.items.properties).forEach(([name, schema]) => {
-				const isRequired = (fieldSchema.items.required || []).includes(name);
+				const isRequired = (fieldSchema.items?.required || []).includes(name);
 				const nestedFields = processSchemaRecursively(
 					name,
 					schema,
@@ -380,9 +417,9 @@ export function processSchemaRecursively(
 
 export function processField(
 	fieldName: string,
-	fieldSchema: any,
+	fieldSchema: JsonSchemaObject,
 	required: string[] = [],
-	rootSchema: any = {},
+	rootSchema: JsonSchemaObject = {},
 	depth = 0
 ): Field[] {
 	if (!fieldSchema) return [];
@@ -409,7 +446,7 @@ export function processField(
 	}
 }
 
-export function extractExamples(schema: any): any {
+export function extractExamples(schema: JsonSchemaObject): unknown {
 	if (schema.examples && Array.isArray(schema.examples)) {
 		return schema.examples.length === 1 ? schema.examples[0] : schema.examples;
 	}
@@ -421,11 +458,11 @@ export function extractExamples(schema: any): any {
 	return null;
 }
 
-export function processJsonSchema(schemaSection: any): Field[] {
+export function processJsonSchema(schemaSection: unknown): Field[] {
 	if (!schemaSection) return [];
 
 	try {
-		let schema: any;
+		let schema: JsonSchemaObject;
 
 		if (typeof schemaSection === 'string') {
 			if (
@@ -490,7 +527,7 @@ export function processJsonSchema(schemaSection: any): Field[] {
 					}
 
 					return fields;
-				} catch (e) {
+				} catch {
 					return [
 						{
 							name: 'root',
@@ -503,7 +540,7 @@ export function processJsonSchema(schemaSection: any): Field[] {
 
 			try {
 				schema = JSON.parse(schemaSection);
-			} catch (e) {
+			} catch {
 				return [
 					{
 						name: 'root',
@@ -513,7 +550,7 @@ export function processJsonSchema(schemaSection: any): Field[] {
 				];
 			}
 		} else {
-			schema = schemaSection;
+			schema = schemaSection as JsonSchemaObject;
 		}
 
 		const fields: Field[] = [];
@@ -560,7 +597,7 @@ export function processJsonSchema(schemaSection: any): Field[] {
 	}
 }
 
-export function validateJsonSchema(schema: any): any[] {
+export function validateJsonSchema(schema: unknown): { message: string }[] {
 	if (!schema) return [];
 
 	try {
@@ -593,16 +630,21 @@ export function validateJsonSchema(schema: any): any[] {
 	}
 }
 
-export function isJsonSchema(schemaSection: any): boolean {
+export function isJsonSchema(schemaSection: unknown): boolean {
 	if (!schemaSection) return false;
 
-	if (schemaSection.$schema?.includes('json-schema')) {
+	if (
+		isJsonSchemaObject(schemaSection) &&
+		typeof schemaSection.$schema === 'string' &&
+		schemaSection.$schema.includes('json-schema')
+	) {
 		return true;
 	}
 
 	if (
 		typeof schemaSection === 'object' &&
 		schemaSection !== null &&
+		isJsonSchemaObject(schemaSection) &&
 		(schemaSection.properties ||
 			schemaSection.patternProperties ||
 			schemaSection.type === 'object' ||
@@ -620,7 +662,7 @@ export function isJsonSchema(schemaSection: any): boolean {
 		if (schemaCopy.examples) delete schemaCopy.examples;
 		ajv.compile(schemaCopy);
 		return true;
-	} catch (error) {
+	} catch {
 		return false;
 	}
 }

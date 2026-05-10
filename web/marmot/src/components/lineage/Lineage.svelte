@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
 	import { onMount, untrack } from 'svelte';
+	import { SvelteSet, SvelteMap } from 'svelte/reactivity';
 	import type { Asset } from '$lib/assets/types';
-	import type { LineageResponse } from '$lib/lineage/types';
+	import type { LineageNode, LineageResponse } from '$lib/lineage/types';
 	import { page } from '$app/stores';
 	import { SvelteFlowProvider, type Node, type Edge } from '@xyflow/svelte';
 	import '@xyflow/svelte/dist/style.css';
@@ -40,7 +41,7 @@
 	let nodes = $state.raw<Node[]>([]);
 	let edges = $state.raw<Edge[]>([]);
 
-	function getNodeIconType(node: any): string {
+	function getNodeIconType(node: LineageNode): string {
 		if (
 			node.asset.providers &&
 			Array.isArray(node.asset.providers) &&
@@ -86,10 +87,10 @@
 	}
 
 	function findBackEdges(edgeArray: Edge[]): Set<string> {
-		const graph = new Map<string, string[]>();
-		const visited = new Set<string>();
-		const recursionStack = new Set<string>();
-		const backEdges = new Set<string>();
+		const graph = new SvelteMap<string, string[]>();
+		const visited = new SvelteSet<string>();
+		const recursionStack = new SvelteSet<string>();
+		const backEdges = new SvelteSet<string>();
 
 		edgeArray.forEach((edge) => {
 			if (!graph.has(edge.source)) graph.set(edge.source, []);
@@ -138,7 +139,7 @@
 		// dagre-layout purposes, edges that touch a child get redirected to its
 		// parent so the parent container's placement reflects all incoming
 		// lineage of its members.
-		const childToParent = new Map<string, string>();
+		const childToParent = new SvelteMap<string, string>();
 		for (const n of nodeArray) {
 			const parentId = (n as Node & { parentId?: string }).parentId;
 			if (parentId) childToParent.set(n.id, parentId);
@@ -191,7 +192,7 @@
 	}
 
 	function generateElements(data: LineageResponse) {
-		const connections = new Map<string, { hasUpstream: boolean; hasDownstream: boolean }>();
+		const connections = new SvelteMap<string, { hasUpstream: boolean; hasDownstream: boolean }>();
 		const edgeArray = data.edges || [];
 
 		if (edgeArray.length === 0) {
@@ -225,7 +226,7 @@
 		}
 
 		const backEdges = findBackEdges(edgeArray);
-		const cycleReturnNodes = new Map<string, Node>();
+		const cycleReturnNodes = new SvelteMap<string, Node>();
 		const modifiedEdges: Edge[] = [];
 
 		edgeArray.forEach((edge) => {
@@ -306,7 +307,7 @@
 		// surviving edge to the focal asset — otherwise nodes pulled in by
 		// observed-only relationships render as orphans.
 		const focalId = currentAsset.mrn || currentAsset.id;
-		const reachable = new Set<string>([focalId]);
+		const reachable = new SvelteSet<string>([focalId]);
 		modifiedEdges.forEach((edge) => {
 			reachable.add(edge.source);
 			reachable.add(edge.target);
@@ -388,13 +389,11 @@
 	// Cluster keys (provider::type) the user has clicked to expand. Expanded
 	// clusters render their member nodes individually instead of collapsing
 	// into a single cluster card.
-	let expandedClusters = $state(new Set<string>());
+	let expandedClusters = new SvelteSet<string>();
 
 	function toggleClusterExpansion(clusterKey: string) {
-		const next = new Set(expandedClusters);
-		if (next.has(clusterKey)) next.delete(clusterKey);
-		else next.add(clusterKey);
-		expandedClusters = next;
+		if (expandedClusters.has(clusterKey)) expandedClusters.delete(clusterKey);
+		else expandedClusters.add(clusterKey);
 		if (lineageData) {
 			const elements = generateElements(lineageData);
 			nodes = elements.nodes;
@@ -404,7 +403,7 @@
 
 	function collapseAllClusters() {
 		if (expandedClusters.size === 0) return;
-		expandedClusters = new Set();
+		expandedClusters.clear();
 		if (lineageData) {
 			const elements = generateElements(lineageData);
 			nodes = elements.nodes;
@@ -419,13 +418,13 @@
 		focalId: string
 	): { nodes: Node[]; edges: Edge[] } {
 		// Map nodeId → original asset (for provider/type lookup)
-		const assetById = new Map<string, LineageResponse['nodes'][number]>();
+		const assetById = new SvelteMap<string, LineageResponse['nodes'][number]>();
 		for (const n of data.nodes) assetById.set(n.id, n);
 
 		// Identify nodes that are *only* connected to the focal via observed edges.
 		// Nodes with any declared edge stay as-is.
-		const declaredCounterparts = new Set<string>();
-		const observedCounterparts = new Map<string, number>(); // node id → max observation_count
+		const declaredCounterparts = new SvelteSet<string>();
+		const observedCounterparts = new SvelteMap<string, number>(); // node id → max observation_count
 		for (const edge of edges) {
 			if (edge.source !== focalId && edge.target !== focalId) continue;
 			const other = edge.source === focalId ? edge.target : edge.source;
@@ -439,7 +438,7 @@
 		}
 
 		// Group purely-observed neighbours by (provider, type)
-		const groups = new Map<string, string[]>();
+		const groups = new SvelteMap<string, string[]>();
 		for (const [nodeId] of observedCounterparts) {
 			if (declaredCounterparts.has(nodeId)) continue;
 			const asset = assetById.get(nodeId)?.asset;
@@ -453,15 +452,15 @@
 		const topLevelOut: Node[] = []; // cluster cards / containers
 		const childOut: Node[] = []; // member nodes, when their cluster is expanded
 		const clusterEdges: Edge[] = []; // synthetic cluster→focal edges
-		const removedTopLevel = new Set<string>(); // member ids removed from top-level layout
+		const removedTopLevel = new SvelteSet<string>(); // member ids removed from top-level layout
 		// Members of a COLLAPSED cluster — their incoming edges get redirected
 		// onto the cluster card (so upstream chains terminate cleanly there
 		// instead of leaving floating branches).
-		const memberToCollapsedCluster = new Map<string, string>();
+		const memberToCollapsedCluster = new SvelteMap<string, string>();
 		// Members of an EXPANDED cluster — kept as individual nodes but reparented
 		// inside the container. Their edges stay targeted at the member; dagre
 		// just routes through the parent for layout.
-		const expandedMemberSet = new Set<string>();
+		const expandedMemberSet = new SvelteSet<string>();
 
 		for (const [key, memberIds] of groups) {
 			if (memberIds.length < CLUSTER_THRESHOLD) continue;
@@ -586,7 +585,7 @@
 		//   - For collapsed-cluster members: redirect that endpoint onto the cluster.
 		//   - For expanded-cluster members: keep targeting the member; SvelteFlow
 		//     will route the edge to the child node inside the container.
-		const seenRedirected = new Set<string>();
+		const seenRedirected = new SvelteSet<string>();
 		const keptEdges: Edge[] = [];
 		for (const e of edges) {
 			const srcCol = memberToCollapsedCluster.get(e.source);
@@ -909,7 +908,7 @@
 				</span>
 				<span
 					class="w-3.5 h-3.5 inline-flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-semibold text-gray-500 dark:text-gray-400 cursor-help"
-					title={'Runtime-observed access — captured from real execution, not declared data flow.'}
+					title="Runtime-observed access — captured from real execution, not declared data flow."
 				>
 					?
 				</span>

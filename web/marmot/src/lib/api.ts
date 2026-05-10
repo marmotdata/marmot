@@ -1,5 +1,6 @@
 import { auth } from './stores/auth';
 import { goto } from '$app/navigation';
+import { resolve } from '$app/paths';
 
 interface FetchApiOptions extends RequestInit {
 	skipAuth?: boolean;
@@ -28,7 +29,7 @@ export async function fetchApi(endpoint: string, options: FetchApiOptions = {}) 
 
 	if (response.status === 401 && !skipAuth) {
 		auth.clearToken();
-		goto('/login');
+		goto(resolve('/login'));
 		throw new Error('Unauthorized');
 	}
 
@@ -37,15 +38,19 @@ export async function fetchApi(endpoint: string, options: FetchApiOptions = {}) 
 
 export interface AssetPreviewResponse {
 	column_names: string[];
-	rows: any[][];
+	rows: unknown[][];
 	total_rows?: number;
+}
+
+interface ApiError extends Error {
+	status?: number;
 }
 
 export async function fetchAssetPreview(assetId: string): Promise<AssetPreviewResponse> {
 	const response = await fetchApi(`/assets/preview/${assetId}`);
 	if (!response.ok) {
 		const errorData = await response.json();
-		const error: any = new Error(errorData.error || 'Failed to fetch preview');
+		const error: ApiError = new Error(errorData.error || 'Failed to fetch preview');
 		error.status = response.status;
 		throw error;
 	}

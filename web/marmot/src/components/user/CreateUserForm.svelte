@@ -135,7 +135,7 @@
 				bind:value={newUser.role_names[0]}
 				class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 focus:border-transparent"
 			>
-				{#each roles as role}
+				{#each roles as role (role)}
 					<option value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
 				{/each}
 			</select>

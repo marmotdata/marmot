@@ -112,6 +112,9 @@ importers:
       d3:
         specifier: ^7.9.0
         version: 7.9.0
+      dompurify:
+        specifier: '>=3.3.2'
+        version: 3.4.1
       emoji-picker-element:
         specifier: ^1.29.1
         version: 1.29.1

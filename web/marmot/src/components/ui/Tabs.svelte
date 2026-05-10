@@ -25,7 +25,7 @@
 
 <div class="border-b border-gray-200 dark:border-gray-700">
 	<div class="flex gap-6" role="tablist" aria-label="Tabs">
-		{#each tabs as tab}
+		{#each tabs as tab (tab.id)}
 			<button
 				onclick={() => handleTabClick(tab.id)}
 				role="tab"

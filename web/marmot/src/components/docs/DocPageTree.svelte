@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Icon from '@iconify/svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import type { Page } from '$lib/docs/types';
 	import { createEventDispatcher } from 'svelte';
 
@@ -14,7 +15,7 @@
 		delete: { page: Page };
 	}>();
 
-	let expandedPages: Set<string> = new Set();
+	let expandedPages: SvelteSet<string> = new SvelteSet();
 
 	function toggleExpanded(pageId: string) {
 		if (expandedPages.has(pageId)) {
@@ -36,13 +37,6 @@
 	function handleDelete(page: Page, event: Event) {
 		event.stopPropagation();
 		dispatch('delete', { page });
-	}
-
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric'
-		});
 	}
 </script>
 

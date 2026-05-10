@@ -68,6 +68,7 @@
 		"croner": "^9.1.0",
 		"cronstrue": "^3.14.0",
 		"d3": "^7.9.0",
+		"dompurify": ">=3.3.2",
 		"emoji-picker-element": "^1.29.1",
 		"hast-util-to-html": "^9.0.5",
 		"js-yaml": "^4.1.1",

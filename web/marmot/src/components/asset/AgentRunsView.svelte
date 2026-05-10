@@ -216,7 +216,7 @@
 				</div>
 			{:else}
 				<ul class="divide-y divide-gray-200 dark:divide-gray-700">
-					{#each runs as run}
+					{#each runs as run (run.run_id)}
 						<li class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
 							<div class="flex items-center justify-between gap-4">
 								<div class="flex items-center gap-3 min-w-0">
@@ -269,7 +269,7 @@
 							</div>
 							{#if run.tool_calls && run.tool_calls.length > 0}
 								<div class="mt-3 pl-10 flex items-center gap-1 flex-wrap">
-									{#each run.tool_calls as call, i}
+									{#each run.tool_calls as call, i (call.ordinal)}
 										<span
 											class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono {call.status ===
 											'error'

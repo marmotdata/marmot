@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
@@ -247,7 +248,7 @@
 			const type = encodeURIComponent(data.type.toLowerCase());
 			const provider = encodeURIComponent(data.providers[0].toLowerCase());
 			const assetName = encodeURIComponent(data.name);
-			goto(`/discover/${type}/${provider}/${assetName}`);
+			goto(resolve(`/discover/${type}/${provider}/${assetName}`));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to create asset';
 		} finally {
@@ -294,7 +295,7 @@
 		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 			<div class="flex items-center gap-4">
 				<button
-					onclick={() => goto('/discover')}
+					onclick={() => goto(resolve('/discover'))}
 					class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 				>
 					<IconifyIcon
@@ -348,7 +349,7 @@
 						assets from your data sources.
 					</p>
 					<a
-						href="/runs?tab=pipelines"
+						href={resolve('/runs?tab=pipelines')}
 						class="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg shadow-sm transition-all hover:shadow-md"
 					>
 						<IconifyIcon icon="material-symbols:rocket-launch" class="h-4 w-4" />
@@ -662,7 +663,7 @@
 					<div class="sm:col-span-2">
 						<dt class="text-gray-500 dark:text-gray-400">Providers</dt>
 						<dd class="flex flex-wrap gap-1.5 mt-1">
-							{#each providers as provider}
+							{#each providers as provider (provider)}
 								<span
 									class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
 								>
@@ -681,7 +682,7 @@
 						<div class="sm:col-span-2">
 							<dt class="text-gray-500 dark:text-gray-400">Tags</dt>
 							<dd class="flex flex-wrap gap-1.5 mt-1">
-								{#each tags as tag}
+								{#each tags as tag (tag)}
 									<span
 										class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
 									>
@@ -708,7 +709,7 @@
 						text="Previous"
 					/>
 				{:else}
-					<Button variant="clear" click={() => goto('/discover')} text="Cancel" />
+					<Button variant="clear" click={() => goto(resolve('/discover'))} text="Cancel" />
 				{/if}
 			</div>
 			<div class="flex items-center gap-3">

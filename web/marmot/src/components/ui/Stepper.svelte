@@ -58,7 +58,7 @@
 
 <!-- Stepper UI -->
 <div class="flex items-center justify-between">
-	{#each steps as step, index}
+	{#each steps as step, index (index)}
 		{@const stepNumber = index + 1}
 		<div class="flex items-center {index < steps.length - 1 ? 'flex-1' : ''}">
 			<button

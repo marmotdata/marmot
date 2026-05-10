@@ -10,16 +10,15 @@
 		asset = undefined,
 		metadata: metadataProp = $bindable(undefined),
 		readOnly = false,
-		maxDepth = 1,
+		maxDepth: _maxDepth = 1,
 		maxCharLength = undefined,
-		showDetailsLink = undefined,
 		endpoint = undefined,
 		id = undefined,
 		permissionResource = undefined,
 		permissionAction = undefined
 	}: {
 		asset?: Asset;
-		metadata?: Record<string, any>;
+		metadata?: Record<string, unknown>;
 		readOnly?: boolean;
 		maxDepth?: number;
 		maxCharLength?: number;
@@ -62,7 +61,7 @@
 	});
 
 	// Use provided metadata or asset metadata
-	let metadata = $state<Record<string, any>>(metadataProp || asset?.metadata || {});
+	let metadata = $state<Record<string, unknown>>(metadataProp || asset?.metadata || {});
 
 	let showAddRow = $state(false);
 	let editingKey = $state<string | null>(null);
@@ -82,15 +81,15 @@
 		}
 	});
 
-	function isObject(value: any): boolean {
+	function isObject(value: unknown): boolean {
 		return typeof value === 'object' && value !== null && !Array.isArray(value);
 	}
 
-	function isArray(value: any): boolean {
+	function isArray(value: unknown): boolean {
 		return Array.isArray(value);
 	}
 
-	function getValueClass(value: any): string {
+	function getValueClass(value: unknown): string {
 		if (typeof value === 'boolean') {
 			return value
 				? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200'
@@ -107,7 +106,7 @@
 		expandedDetails[key] = !expandedDetails[key];
 	}
 
-	async function saveMetadata(updatedMetadata: Record<string, any>) {
+	async function saveMetadata(updatedMetadata: Record<string, unknown>) {
 		const entityId = id || asset?.id;
 		const apiEndpoint = endpoint || (asset ? '/assets' : null);
 
@@ -185,7 +184,7 @@
 		keyToDelete = null;
 	}
 
-	function parseValue(value: string): any {
+	function parseValue(value: string): unknown {
 		if (!value.trim()) return '';
 		try {
 			return JSON.parse(value);
@@ -194,7 +193,7 @@
 		}
 	}
 
-	function formatValue(value: any): string {
+	function formatValue(value: unknown): string {
 		if (typeof value === 'object') {
 			return JSON.stringify(value);
 		}
@@ -206,7 +205,7 @@
 		return value.slice(0, maxCharLength) + '...';
 	}
 
-	function startEditing(key: string, value: any) {
+	function startEditing(key: string, value: unknown) {
 		editingKey = key;
 		editingValue = formatValue(value);
 	}
@@ -222,16 +221,6 @@
 		newValue = '';
 	}
 
-	function renderValue(value: any, depth: number = 0): any {
-		// For read-only mode, render nested objects more nicely
-		if (isReadOnly && depth < maxDepth) {
-			if (isObject(value)) {
-				return Object.entries(value);
-			}
-		}
-		return value;
-	}
-
 	const metadataEntries = $derived(Object.entries(metadata));
 </script>
 
@@ -243,7 +232,7 @@
 				<p class="text-sm text-gray-500 dark:text-gray-400">No configuration data</p>
 			</div>
 		{:else}
-			{#each metadataEntries as [key, value]}
+			{#each metadataEntries as [key, value] (key)}
 				<div class="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-2 last:pb-0">
 					<div class="flex items-start gap-2">
 						<dt
@@ -271,7 +260,7 @@
 								</details>
 							{:else if isArray(value)}
 								<div class="flex flex-wrap gap-1">
-									{#each value as item, i}
+									{#each value as item, i (i)}
 										{#if i < 5}
 											<span
 												class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded"
@@ -332,7 +321,7 @@
 							</tr>
 						</thead>
 						<tbody>
-							{#each metadataEntries as [key, value]}
+							{#each metadataEntries as [key, value] (key)}
 								<tr
 									class="group border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors"
 								>
@@ -407,7 +396,7 @@
 											</details>
 										{:else if isArray(value)}
 											<div class="flex flex-wrap gap-1.5">
-												{#each value as item}
+												{#each value as item, i (i)}
 													<span
 														class="px-2 py-0.5 text-xs bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 rounded"
 													>

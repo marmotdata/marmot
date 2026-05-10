@@ -40,7 +40,7 @@ export interface DataProduct {
 	id: string;
 	name: string;
 	description?: string;
-	metadata: Record<string, any>;
+	metadata: Record<string, unknown>;
 	tags: string[];
 	owners: Owner[];
 	rules: Rule[];
@@ -67,7 +67,7 @@ export interface ProductImageMeta {
 export interface CreateDataProductInput {
 	name: string;
 	description?: string;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 	tags?: string[];
 	owners: OwnerInput[];
 	rules?: RuleInput[];
@@ -76,7 +76,7 @@ export interface CreateDataProductInput {
 export interface UpdateDataProductInput {
 	name?: string;
 	description?: string;
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 	tags?: string[];
 	owners?: OwnerInput[];
 }

@@ -4,6 +4,7 @@
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import { Users, Lock, Trash2 } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import type { Team } from '$lib/teams/types';
 
@@ -44,7 +45,7 @@
 	}
 
 	function goToTeamPage(teamId: string) {
-		goto(`/teams/${teamId}`);
+		goto(resolve(`/teams/${teamId}`));
 	}
 
 	$: totalPages = Math.ceil(totalTeams / limit);

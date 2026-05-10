@@ -42,8 +42,8 @@ export function getFieldType(
 /**
  * Maps Protobuf types to field constraints
  */
-export function getFieldConstraints(field: protobufjs.Field): any {
-	const constraints: any = {};
+export function getFieldConstraints(field: protobufjs.Field): Record<string, unknown> {
+	const constraints: Record<string, unknown> = {};
 
 	// Add type-specific constraints based on protobuf rules
 	switch (field.type) {
@@ -142,7 +142,7 @@ export function processMessageField(
 /**
  * Process the complete Protobuf schema
  */
-export function processProtobufSchema(schema: any): Field[] {
+export function processProtobufSchema(schema: unknown): Field[] {
 	if (!schema) return [];
 
 	try {
@@ -203,34 +203,10 @@ export function processProtobufSchema(schema: any): Field[] {
 }
 
 /**
- * Get all message types from the root
- */
-function getAllMessageTypes(root: protobufjs.Root): protobufjs.Type[] {
-	const messageTypes: protobufjs.Type[] = [];
-
-	function traverseNamespace(ns: protobufjs.NamespaceBase) {
-		// Add all message types in this namespace
-		Object.values(ns.nested || {}).forEach((obj) => {
-			if (obj instanceof protobufjs.Type) {
-				messageTypes.push(obj);
-			}
-
-			// Recursively traverse nested namespaces
-			if (obj instanceof protobufjs.Namespace) {
-				traverseNamespace(obj);
-			}
-		});
-	}
-
-	traverseNamespace(root);
-	return messageTypes;
-}
-
-/**
  * Validate a Protobuf schema using protobufjs
  * Returns array of validation errors
  */
-export function validateProtobufSchema(schema: any): any[] {
+export function validateProtobufSchema(schema: unknown): { message: string }[] {
 	if (!schema) return [];
 
 	try {
@@ -248,24 +224,28 @@ export function validateProtobufSchema(schema: any): any[] {
 /**
  * Determines if the given schema is a Protobuf schema
  */
-export function isProtobufSchema(schema: any): boolean {
+export function isProtobufSchema(schema: unknown): boolean {
 	if (!schema) return false;
 
-	// Check for common Protobuf schema properties
-	if (schema.syntax && (schema.syntax === 'proto2' || schema.syntax === 'proto3')) {
-		return true;
-	}
+	if (typeof schema === 'object' && schema !== null) {
+		const obj = schema as { syntax?: string; nested?: Record<string, unknown> };
 
-	if (
-		schema.nested &&
-		Object.values(schema.nested).some(
-			(obj) =>
-				typeof obj === 'object' &&
-				obj !== null &&
-				('fields' in obj || 'values' in obj || 'methods' in obj)
-		)
-	) {
-		return true;
+		// Check for common Protobuf schema properties
+		if (obj.syntax && (obj.syntax === 'proto2' || obj.syntax === 'proto3')) {
+			return true;
+		}
+
+		if (
+			obj.nested &&
+			Object.values(obj.nested).some(
+				(item) =>
+					typeof item === 'object' &&
+					item !== null &&
+					('fields' in item || 'values' in item || 'methods' in item)
+			)
+		) {
+			return true;
+		}
 	}
 
 	// Try to parse with protobufjs
@@ -274,10 +254,10 @@ export function isProtobufSchema(schema: any): boolean {
 			protobufjs.parse(schema);
 		} else {
 			const root = new protobufjs.Root();
-			root.addJSON(schema);
+			root.addJSON(schema as protobufjs.INamespace);
 		}
 		return true;
-	} catch (error) {
+	} catch {
 		return false;
 	}
 }

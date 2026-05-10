@@ -52,13 +52,6 @@
 			command({ id: item.id, label: item.name, type: item.type });
 		}
 	}
-
-	function getDisplayName(item: MentionItem): string {
-		if (item.type === 'user' && item.username) {
-			return `@${item.username}`;
-		}
-		return item.name;
-	}
 </script>
 
 <div

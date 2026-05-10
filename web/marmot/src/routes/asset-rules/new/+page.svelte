@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import Stepper from '$components/ui/Stepper.svelte';
 	import Step from '$components/ui/Step.svelte';
 	import QueryBuilder from '$components/query/QueryBuilder.svelte';
 	import ExternalLinks from '$components/shared/ExternalLinks.svelte';
-	import { auth } from '$lib/stores/auth';
 	import { createAssetRule, previewAssetRule } from '$lib/assetrules/api';
 	import type { ExternalLink, CreateAssetRuleInput } from '$lib/assetrules/types';
 	import { searchTerms } from '$lib/glossary/api';
@@ -37,7 +37,6 @@
 	let previewing = $state(false);
 	let previewCount = $state<number | null>(null);
 
-	let canManage = $derived(auth.hasPermission('assets', 'manage'));
 	let canProceedFromStep1 = $derived(name.trim() !== '');
 
 	function canNavigateToStep(stepNumber: number): boolean {
@@ -104,8 +103,8 @@
 				limit: 100
 			});
 			previewCount = result.asset_count;
-		} catch (e: any) {
-			error = e.message || 'Failed to preview rule';
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to preview rule';
 		} finally {
 			previewing = false;
 		}
@@ -143,9 +142,9 @@
 				is_enabled: true
 			};
 			const created = await createAssetRule(input);
-			goto(`/asset-rules/${created.id}`);
-		} catch (e: any) {
-			error = e.message || 'Failed to create asset rule';
+			goto(resolve(`/asset-rules/${created.id}`));
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to create asset rule';
 		} finally {
 			saving = false;
 		}
@@ -162,7 +161,7 @@
 		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 			<div class="flex items-center gap-4">
 				<button
-					onclick={() => goto('/asset-rules')}
+					onclick={() => goto(resolve('/asset-rules'))}
 					aria-label="Back to asset rules"
 					class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 				>
@@ -291,7 +290,7 @@
 
 					{#if selectedTerms.length > 0}
 						<div class="space-y-2 mb-4">
-							{#each selectedTerms as term}
+							{#each selectedTerms as term (term.id)}
 								<div
 									class="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30"
 								>
@@ -345,7 +344,7 @@
 								{#if isSearchingTerms}
 									<div class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">Searching...</div>
 								{:else}
-									{#each termSearchResults as term}
+									{#each termSearchResults as term (term.id)}
 										<button
 											onclick={() => addTerm(term)}
 											class="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
@@ -424,7 +423,7 @@
 						text="Previous"
 					/>
 				{:else}
-					<Button variant="clear" click={() => goto('/asset-rules')} text="Cancel" />
+					<Button variant="clear" click={() => goto(resolve('/asset-rules'))} text="Cancel" />
 				{/if}
 			</div>
 			<div>

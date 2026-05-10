@@ -14,8 +14,8 @@
 
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 
-	// Schema state - just store as Record<string, any> like the asset
-	let schemas = $state<Record<string, any>>({});
+	// Schema state - just store as Record<string, unknown> like the asset
+	let schemas = $state<Record<string, unknown>>({});
 	let showAddSchema = $state(false);
 	let editingKey = $state<string | null>(null);
 	let activeTab = $state<string>('');
@@ -42,7 +42,7 @@
 		}
 	});
 
-	async function saveSchemas(updatedSchemas: Record<string, any>) {
+	async function saveSchemas(updatedSchemas: Record<string, unknown>) {
 		if (!asset?.id) return;
 
 		saving = true;
@@ -211,7 +211,7 @@
 							New Schema
 						</button>
 					{/if}
-					{#each Object.keys(schemas) as schemaKey}
+					{#each Object.keys(schemas) as schemaKey (schemaKey)}
 						<button
 							class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab ===
 								schemaKey && !showAddSchema

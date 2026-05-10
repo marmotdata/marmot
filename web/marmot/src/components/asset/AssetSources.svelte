@@ -2,9 +2,10 @@
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import Arrow from '$components/ui/Arrow.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	export let sources = [];
-	let expandedSources = new Set();
+	let expandedSources = new SvelteSet();
 
 	function toggleSource(name) {
 		if (expandedSources.has(name)) {

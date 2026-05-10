@@ -2,10 +2,12 @@
 	import { fetchApi } from '$lib/api';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Icon from '@iconify/svelte';
 	import GettingStarted from '$components/ui/GettingStarted.svelte';
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
 	import IconComponent from '$components/ui/Icon.svelte';
+	import type { Asset } from '$lib/assets/types';
 
 	interface QuickStat {
 		label: string;
@@ -40,8 +42,13 @@
 		count: number;
 	}
 
+	interface AssetTypeSummary {
+		count?: number;
+		service?: string;
+	}
+
 	interface AssetSummaryResponse {
-		types: { [key: string]: any };
+		types: { [key: string]: AssetTypeSummary };
 		providers: { [key: string]: number };
 		tags: { [key: string]: number };
 	}
@@ -64,10 +71,10 @@
 	let isLoading = $state(true);
 	let hasLoadedOnce = $state(false);
 	let userProfile = $state<UserProfile | null>(null);
-	let selectedAsset = $state<any>(null);
+	let selectedAsset = $state<RecentAsset | PopularAsset | null>(null);
 
 	let totalAssets = $derived(
-		Object.values(summary.types).reduce((sum, type: any) => sum + (type.count || 0), 0)
+		Object.values(summary.types).reduce((sum, type) => sum + (type.count || 0), 0)
 	);
 
 	let quickStats = $derived<QuickStat[]>([
@@ -124,7 +131,7 @@
 
 	let topAssetTypes = $derived(
 		Object.entries(summary.types)
-			.map(([type, data]: [string, any]) => ({
+			.map(([type, data]) => ({
 				type,
 				count: data.count || 0,
 				service: data.service
@@ -234,7 +241,7 @@
 		selectedAsset = asset;
 	}
 
-	function getAssetUrl(asset: RecentAsset | PopularAsset): string {
+	function getAssetPath(asset: RecentAsset | PopularAsset): string | null {
 		// Extract type, service, and full name from MRN
 		let mrn = '';
 		if ('mrn' in asset && asset.mrn) {
@@ -258,7 +265,7 @@
 
 		// Parse MRN: mrn://type/service/full.qualified.name
 		const mrnParts = mrn.replace('mrn://', '').split('/');
-		if (mrnParts.length < 3) return '#';
+		if (mrnParts.length < 3) return null;
 		const type = mrnParts[0];
 		const service = mrnParts[1];
 		const fullName = mrnParts.slice(2).join('/');
@@ -266,19 +273,20 @@
 	}
 
 	function navigateToAsset(asset: RecentAsset | PopularAsset) {
-		goto(getAssetUrl(asset));
+		const path = getAssetPath(asset);
+		if (path) goto(resolve(path));
 	}
 
 	function navigateToType(type: string) {
-		goto(`/discover?types=${encodeURIComponent(type)}`);
+		goto(resolve(`/discover?types=${encodeURIComponent(type)}`));
 	}
 
 	function navigateToProvider(provider: string) {
-		goto(`/discover?providers=${encodeURIComponent(provider)}`);
+		goto(resolve(`/discover?providers=${encodeURIComponent(provider)}`));
 	}
 
 	function navigateToTag(tag: string) {
-		goto(`/discover?tags=${encodeURIComponent(tag)}`);
+		goto(resolve(`/discover?tags=${encodeURIComponent(tag)}`));
 	}
 
 	function getColorClasses(color: string) {
@@ -333,7 +341,7 @@
 
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-			{#each quickStats as stat}
+			{#each quickStats as stat (stat.label)}
 				<div class="glass-card rounded-xl p-6">
 					<div class="flex items-center justify-between mb-2">
 						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
@@ -352,14 +360,9 @@
 
 		<!-- Quick Actions -->
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-			{#each quickActions as action}
+			{#each quickActions as action (action.title)}
 				{@const colors = getColorClasses(action.color)}
-				<a
-					href={action.href}
-					target={action.href.startsWith('http') ? '_blank' : undefined}
-					rel={action.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-					class="group glass-card-interactive rounded-xl p-5"
-				>
+				<a href={resolve(action.href)} class="group glass-card-interactive rounded-xl p-5">
 					<div class="flex items-start gap-4">
 						<div
 							class="flex-shrink-0 w-10 h-10 {colors.bg} rounded-lg flex items-center justify-center"
@@ -390,14 +393,14 @@
 						<div class="flex items-center justify-between mb-4">
 							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Most Viewed</h2>
 							<a
-								href="/metrics"
+								href={resolve('/metrics')}
 								class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
 							>
 								See all →
 							</a>
 						</div>
 						<div class="glass-card rounded-xl divide-y divide-gray-200 dark:divide-gray-700">
-							{#each popularAssets as asset}
+							{#each popularAssets as asset (asset.asset_id)}
 								<button
 									onclick={() => navigateToAsset(asset)}
 									class="w-full flex items-center gap-4 p-4 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group"
@@ -436,7 +439,7 @@
 						<div class="flex items-center justify-between mb-4">
 							<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">Your Assets</h2>
 							<a
-								href="/discover"
+								href={resolve('/discover')}
 								class="text-sm text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-400 font-medium"
 							>
 								View all →
@@ -445,9 +448,10 @@
 						<div class="glass-card rounded-xl">
 							{#if userAssets.length > 0}
 								<div class="divide-y divide-gray-200 dark:divide-gray-700">
-									{#each userAssets as asset}
+									{#each userAssets as asset (asset.id)}
+										{@const assetPath = getAssetPath(asset)}
 										<a
-											href={getAssetUrl(asset)}
+											href={assetPath ? resolve(assetPath) : '#'}
 											onclick={(e) => {
 												e.preventDefault();
 												handleAssetClick(asset);
@@ -507,7 +511,7 @@
 								Top Asset Types
 							</h3>
 							<div class="space-y-3">
-								{#each topAssetTypes as item}
+								{#each topAssetTypes as item (item.type)}
 									<button
 										onclick={() => navigateToType(item.type)}
 										class="w-full flex items-center justify-between group"
@@ -543,7 +547,7 @@
 								Top Data Sources
 							</h3>
 							<div class="space-y-3">
-								{#each topProviders as item}
+								{#each topProviders as item (item.provider)}
 									<button
 										onclick={() => navigateToProvider(item.provider)}
 										class="w-full flex items-center justify-between group"
@@ -588,7 +592,7 @@
 					<h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Popular Tags</h2>
 					<div class="glass-card rounded-xl p-6">
 						<div class="flex flex-wrap gap-2">
-							{#each topTags as item}
+							{#each topTags as item (item.tag)}
 								<button
 									onclick={() => navigateToTag(item.tag)}
 									class="inline-flex items-center gap-2 px-3 py-1.5 bg-gray-100 dark:bg-gray-700 hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/20 rounded-full transition-colors group"
@@ -632,7 +636,7 @@
 
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-			{#each quickStats as stat}
+			{#each quickStats as stat (stat.label)}
 				<div class="glass-card rounded-xl p-6">
 					<div class="flex items-center justify-between mb-2">
 						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
@@ -651,14 +655,9 @@
 
 		<!-- Quick Actions -->
 		<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-			{#each quickActions as action}
+			{#each quickActions as action (action.title)}
 				{@const colors = getColorClasses(action.color)}
-				<a
-					href={action.href}
-					target={action.href.startsWith('http') ? '_blank' : undefined}
-					rel={action.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-					class="group glass-card-interactive rounded-xl p-5"
-				>
+				<a href={resolve(action.href)} class="group glass-card-interactive rounded-xl p-5">
 					<div class="flex items-start gap-4">
 						<div
 							class="flex-shrink-0 w-10 h-10 {colors.bg} rounded-lg flex items-center justify-center"
@@ -690,5 +689,6 @@
 </div>
 
 {#if selectedAsset}
-	<AssetBlade asset={selectedAsset} onClose={() => (selectedAsset = null)} />
+	{@const bladeAsset = selectedAsset as unknown as Asset}
+	<AssetBlade asset={bladeAsset} onClose={() => (selectedAsset = null)} />
 {/if}

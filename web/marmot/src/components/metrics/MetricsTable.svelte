@@ -10,7 +10,7 @@
 		count: number;
 		icon?: string;
 		clickable?: boolean;
-		[key: string]: any;
+		[key: string]: unknown;
 	}
 
 	export let startDate: string;
@@ -25,7 +25,7 @@
 	export let countLabel: string;
 	export let limit: number = 10;
 	export let onItemClick: ((item: MetricItem) => void) | null = null;
-	export let transformData: ((rawData: any[]) => MetricItem[]) | null = null;
+	export let transformData: ((rawData: unknown[]) => MetricItem[]) | null = null;
 
 	let items: MetricItem[] = [];
 	let loading = true;
@@ -123,7 +123,7 @@
 			</div>
 		{:else}
 			<div class="space-y-1">
-				{#each items as item, index}
+				{#each items as item, index (item.id ?? index)}
 					<div
 						class="flex items-center justify-between p-2 bg-earthy-brown-50 dark:bg-gray-700/50 rounded-md {onItemClick &&
 						item.clickable !== false

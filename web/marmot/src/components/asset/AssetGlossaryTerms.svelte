@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
+	import { resolve } from '$app/paths';
 	import type { Asset, AssetTerm, GlossaryTerm } from '$lib/assets/types';
 	import { auth } from '$lib/stores/auth';
 
@@ -131,10 +132,10 @@
 
 		{#if terms.length > 0 || showTermPicker}
 			<div class="space-y-2.5">
-				{#each terms as term}
+				{#each terms as term (term.term_id)}
 					<div class="rounded border border-gray-200 dark:border-gray-700">
 						<a
-							href="/glossary/{term.term_id}"
+							href={resolve(`/glossary/${term.term_id}`)}
 							class="flex items-start gap-2 p-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors group"
 						>
 							<div class="flex-1 min-w-0">
@@ -253,7 +254,7 @@
 							</div>
 						{:else if availableTerms.length > 0}
 							<div class="space-y-1.5 max-h-48 overflow-y-auto">
-								{#each availableTerms as availableTerm}
+								{#each availableTerms as availableTerm (availableTerm.id)}
 									{@const alreadyAdded = terms.some((t) => t.term_id === availableTerm.id)}
 									<button
 										onclick={() => !alreadyAdded && addTerm(availableTerm.id)}

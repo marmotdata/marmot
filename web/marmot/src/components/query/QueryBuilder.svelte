@@ -52,7 +52,6 @@
 	let showFieldSuggestions = $state(false);
 	let activeFieldIndex: number | null = $state(null);
 	let selectedSuggestionIndex = $state(-1);
-	let inputElement: HTMLInputElement | null = $state(null);
 	let dropdownPosition = $state({ top: 0, left: 0, width: 0 });
 
 	// Value suggestions state
@@ -61,7 +60,6 @@
 	let valueSuggestions: { value: string }[] = $state([]);
 	let allValueSuggestions: { value: string }[] = $state([]); // Store all fetched values
 	let selectedValueIndex = $state(-1);
-	let valueInputElement: HTMLInputElement | null = $state(null);
 	let valueDropdownPosition = $state({ top: 0, left: 0, width: 0 });
 	let valueFetchCache: { [key: string]: { value: string }[] } = {};
 
@@ -128,10 +126,13 @@
 	];
 
 	// Metadata fields fetched from API
+	interface MetadataFieldEntry {
+		field: string;
+	}
 	let metadataFields = $state<
 		{ value: string; label: string; description: string; category: string }[]
 	>([]);
-	let metadataFieldsCache: any[] | null = null;
+	let metadataFieldsCache: MetadataFieldEntry[] | null = null;
 
 	// Computed allFields that combines simple fields with fetched metadata fields
 	let allFields = $derived([...simpleFields, ...metadataFields]);
@@ -153,7 +154,7 @@
 	async function fetchMetadataFields() {
 		// Use cache if available
 		if (metadataFieldsCache && metadataFieldsCache.length > 0) {
-			metadataFields = metadataFieldsCache.map((f: any) => ({
+			metadataFields = metadataFieldsCache.map((f) => ({
 				value: `metadata.${f.field}`,
 				label: `@metadata.${f.field}`,
 				description: f.field,
@@ -170,10 +171,10 @@
 				return;
 			}
 
-			const data = await response.json();
+			const data: unknown = await response.json();
 			if (Array.isArray(data) && data.length > 0) {
-				metadataFieldsCache = data;
-				metadataFields = data.map((f: any) => ({
+				metadataFieldsCache = data as MetadataFieldEntry[];
+				metadataFields = (data as MetadataFieldEntry[]).map((f) => ({
 					value: `metadata.${f.field}`,
 					label: `@metadata.${f.field}`,
 					description: f.field,
@@ -308,7 +309,6 @@
 		activeFieldIndex = index;
 		showFieldSuggestions = true;
 		selectedSuggestionIndex = -1;
-		inputElement = element;
 		updateDropdownPosition(element);
 	}
 
@@ -411,24 +411,35 @@
 				return [];
 			}
 
-			const data = await response.json();
+			const data: unknown = await response.json();
 
 			// Handle different response formats
+			interface ValueEntry {
+				value: unknown;
+			}
+			const isValueEntry = (d: unknown): d is ValueEntry =>
+				typeof d === 'object' &&
+				d !== null &&
+				'value' in d &&
+				(d as { value: unknown }).value !== null &&
+				(d as { value: unknown }).value !== undefined;
+
 			let suggestions: { value: string }[] = [];
 			if (Array.isArray(data)) {
-				suggestions = data
-					.filter((d: any) => d && d.value !== null && d.value !== undefined)
-					.map((d: any) => ({ value: String(d.value) }));
+				suggestions = (data as unknown[])
+					.filter(isValueEntry)
+					.map((d) => ({ value: String(d.value) }));
 			} else if (data && typeof data === 'object') {
+				const obj = data as { values?: unknown; suggestions?: unknown };
 				// If it's an object with a nested array, try to extract it
-				if (Array.isArray(data.values)) {
-					suggestions = data.values
-						.filter((d: any) => d && d.value !== null && d.value !== undefined)
-						.map((d: any) => ({ value: String(d.value) }));
-				} else if (Array.isArray(data.suggestions)) {
-					suggestions = data.suggestions
-						.filter((d: any) => d && d.value !== null && d.value !== undefined)
-						.map((d: any) => ({ value: String(d.value) }));
+				if (Array.isArray(obj.values)) {
+					suggestions = (obj.values as unknown[])
+						.filter(isValueEntry)
+						.map((d) => ({ value: String(d.value) }));
+				} else if (Array.isArray(obj.suggestions)) {
+					suggestions = (obj.suggestions as unknown[])
+						.filter(isValueEntry)
+						.map((d) => ({ value: String(d.value) }));
 				}
 			}
 
@@ -445,7 +456,6 @@
 		if (!filter.field) return;
 
 		activeValueIndex = index;
-		valueInputElement = element;
 		updateValueDropdownPosition(element);
 
 		const fieldName = filter.field.replace(/^(@)?metadata\./, '');
@@ -721,7 +731,7 @@
 											bind:value={filter.booleanOp}
 											class="px-2 py-2 text-xs font-semibold border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-600 transition-all"
 										>
-											{#each booleanOperators as op}
+											{#each booleanOperators as op (op)}
 												<option value={op}>{op}</option>
 											{/each}
 										</select>
@@ -830,7 +840,7 @@
 													>Simple Fields</span
 												>
 											</div>
-											{#each simpleFiltered as field, idx}
+											{#each simpleFiltered as field, idx (field.value)}
 												{@const globalIdx = idx}
 												<button
 													onclick={() => selectField(currentIndex, field.value)}
@@ -861,7 +871,7 @@
 													>Metadata Fields</span
 												>
 											</div>
-											{#each metadataFiltered as field, idx}
+											{#each metadataFiltered as field, idx (field.value)}
 												{@const globalIdx = simpleFiltered.length + idx}
 												<button
 													onclick={() => selectField(currentIndex, field.value)}
@@ -896,7 +906,7 @@
 											No suggestions found
 										</div>
 									{:else}
-										{#each valueSuggestions as suggestion, idx}
+										{#each valueSuggestions as suggestion, idx (suggestion.value)}
 											<button
 												onclick={() => selectValue(activeValueIndex, suggestion.value)}
 												class="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-gray-100 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0 {selectedValueIndex ===
@@ -916,7 +926,7 @@
 									class="fixed z-[9999] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl max-h-60 overflow-auto"
 									style="left: {operatorDropdownPosition.left}px; top: {operatorDropdownPosition.top}px; width: {operatorDropdownPosition.width}px;"
 								>
-									{#each operators as op, idx}
+									{#each operators as op, idx (op.value)}
 										<button
 											onclick={() => selectOperator(activeOperatorIndex, op.value)}
 											class="w-full text-left px-3 py-2 text-sm text-gray-900 dark:text-gray-100 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0 {selectedOperatorIndex ===

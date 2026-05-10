@@ -43,15 +43,15 @@
 
 	onMount(fetchUsers);
 
-	$: {
-		if (userQuery !== undefined) {
-			if (searchTimer) clearTimeout(searchTimer);
-			searchTimer = setTimeout(() => {
-				offset = 0;
-				fetchUsers();
-			}, 300);
-		}
+	function scheduleSearch() {
+		if (searchTimer) clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => {
+			offset = 0;
+			fetchUsers();
+		}, 300);
 	}
+
+	$: if (userQuery !== undefined) scheduleSearch();
 
 	async function handleUserUpdated(updatedUser: User) {
 		users = users.map((u) => (u.id === updatedUser.id ? updatedUser : u));

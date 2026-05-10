@@ -35,9 +35,9 @@
 	}
 
 	function getMetadataPreview(
-		metadata: Record<string, any>,
+		metadata: Record<string, unknown>,
 		limit: number = 4
-	): Array<[string, string | number | boolean | any[]]> {
+	): Array<[string, unknown]> {
 		return Object.entries(metadata)
 			.sort((a, b) => {
 				// Sort by uniqueness score (higher score = more unique = comes first)
@@ -47,16 +47,7 @@
 			.map(([key, value]) => [key, value]);
 	}
 
-	function getValueClass(value: any): string {
-		if (typeof value === 'boolean') {
-			return value ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
-		}
-		if (typeof value === 'number') return 'bg-blue-100 text-blue-800';
-		if (Array.isArray(value)) return 'bg-earthy-terracotta-100 text-earthy-terracotta-700';
-		return 'bg-gray-100 text-gray-800 dark:text-gray-200';
-	}
-
-	function formatValue(value: any): string {
+	function formatValue(value: unknown): string {
 		if (typeof value === 'object' && value !== null) {
 			return Array.isArray(value) ? value.join(', ') : JSON.stringify(value);
 		}
@@ -70,7 +61,7 @@
 			<p class="text-gray-500 dark:text-gray-400 italic">No environments available</p>
 		</div>
 	{:else}
-		{#each Object.entries(environments) as [key, env]}
+		{#each Object.entries(environments) as [key, env] (key)}
 			<div
 				class="bg-earthy-brown-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
 			>
@@ -122,7 +113,7 @@
 					</div>
 					{#if !expandedEnvironments[key]}
 						<div class="mt-3 flex flex-wrap items-center gap-2">
-							{#each getMetadataPreview(env.metadata) as [metaKey, metaValue]}
+							{#each getMetadataPreview(env.metadata) as [metaKey, metaValue] (metaKey)}
 								<div class="inline-flex items-center gap-1.5 text-xs">
 									<span class="font-medium text-gray-600 dark:text-gray-400" title={metaKey}>
 										{metaKey}:

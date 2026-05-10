@@ -205,7 +205,7 @@
 			{dropdownOnTop ? 'bottom-full mb-1' : 'top-full mt-1'}"
 		>
 			<div class="p-2 space-y-0.5">
-				{#each notificationTypes as { type, label }}
+				{#each notificationTypes as { type, label } (type)}
 					<button
 						type="button"
 						onclick={() => toggleType(type)}

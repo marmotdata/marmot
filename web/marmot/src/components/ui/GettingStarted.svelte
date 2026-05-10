@@ -93,11 +93,11 @@
 
 		{#if showSteps && !condensed}
 			<div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto mb-8">
-				{#each methods as method}
+				{#each methods as method (method.url)}
 					<a
 						href={method.url}
 						target="_blank"
-						rel="noopener noreferrer"
+						rel="external noopener noreferrer"
 						class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:border-earthy-terracotta-500 dark:hover:border-earthy-terracotta-600 hover:shadow-md transition-all group text-center"
 					>
 						<div

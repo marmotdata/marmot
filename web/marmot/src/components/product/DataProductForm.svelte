@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { SvelteMap, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { fetchApi } from '$lib/api';
 	import type { Owner, RuleInput } from '$lib/dataproducts/types';
 	import type { Asset } from '$lib/assets/types';
@@ -27,8 +29,8 @@
 		initialMetadata = {},
 		initialRules = [],
 		initialManualAssetIds = [],
-		initialAssetDetails = new Map(),
-		existingRuleIds = new Map(),
+		initialAssetDetails = new SvelteMap(),
+		existingRuleIds = new SvelteMap(),
 		resolvedAssets = { manual: [], dynamic: [], all: [] }
 	}: {
 		mode?: FormMode;
@@ -38,11 +40,11 @@
 		initialDocumentation?: string;
 		initialOwners?: Owner[];
 		initialTags?: string[];
-		initialMetadata?: Record<string, any>;
+		initialMetadata?: Record<string, unknown>;
 		initialRules?: RuleInput[];
 		initialManualAssetIds?: string[];
-		initialAssetDetails?: Map<string, Asset>;
-		existingRuleIds?: Map<number, string>;
+		initialAssetDetails?: SvelteMap<string, Asset>;
+		existingRuleIds?: SvelteMap<number, string>;
 		resolvedAssets?: { manual: string[]; dynamic: string[]; all: string[] };
 	} = $props();
 
@@ -56,21 +58,34 @@
 	let documentation = $state(initialDocumentation);
 	let owners = $state<Owner[]>(initialOwners);
 	let tags = $state<string[]>(initialTags);
-	let metadata = $state<Record<string, any>>(initialMetadata);
+	let metadata = $state<Record<string, unknown>>(initialMetadata);
 
 	// Assets state
 	let manualAssetIds = $state<string[]>(initialManualAssetIds);
 	let assetSearchQuery = $state('');
 	let assetSearchResults = $state<Asset[]>([]);
 	let isSearchingAssets = $state(false);
-	let assetDetails = $state<Map<string, Asset>>(initialAssetDetails);
+	let assetDetails = $state<SvelteMap<string, Asset>>(initialAssetDetails);
 
 	// Rules state
+	interface PreviewResult {
+		id?: string;
+		name: string;
+		type: string;
+		description?: string;
+		metadata?: {
+			mrn?: string;
+			type?: string;
+			providers?: string[];
+			[key: string]: unknown;
+		};
+	}
+
 	let rules = $state<RuleInput[]>(initialRules);
 	let showRuleForm = $state(false);
 	let editingRuleIndex = $state<number | null>(null);
 	let ruleForm = $state<RuleInput>(getEmptyRuleForm());
-	let rulePreviewResults = $state<any[]>([]);
+	let rulePreviewResults = $state<PreviewResult[]>([]);
 	let rulePreviewTotal = $state(0);
 	let isPreviewLoading = $state(false);
 
@@ -159,7 +174,7 @@
 		if (!manualAssetIds.includes(asset.id)) {
 			manualAssetIds = [...manualAssetIds, asset.id];
 			assetDetails.set(asset.id, asset);
-			assetDetails = new Map(assetDetails);
+			assetDetails = new SvelteMap(assetDetails);
 		}
 	}
 
@@ -217,7 +232,7 @@
 		}
 
 		try {
-			const params = new URLSearchParams({
+			const params = new SvelteURLSearchParams({
 				q: query,
 				limit: '10'
 			});
@@ -231,7 +246,7 @@
 			}
 
 			const data = await response.json();
-			rulePreviewResults = (data.results || []).filter((r: any) => r.type === 'asset');
+			rulePreviewResults = (data.results || []).filter((r: PreviewResult) => r.type === 'asset');
 			rulePreviewTotal = data.total || rulePreviewResults.length;
 		} catch (err) {
 			console.error('Failed to preview rule:', err);
@@ -240,7 +255,7 @@
 		}
 	}
 
-	function getPreviewIconType(result: any): string {
+	function getPreviewIconType(result: PreviewResult): string {
 		const metadata = result.metadata;
 		if (
 			metadata?.providers &&
@@ -252,7 +267,7 @@
 		return metadata?.type || 'unknown';
 	}
 
-	function getPreviewAssetUrl(result: any): string {
+	function getPreviewAssetUrl(result: PreviewResult): string {
 		const metadata = result.metadata;
 		if (!metadata?.mrn) return '#';
 		const mrnParts = metadata.mrn.replace('mrn://', '').split('/');
@@ -340,14 +355,14 @@
 			});
 		}
 
-		goto(`/products/${created.id}`);
+		goto(resolve(`/products/${created.id}`));
 	}
 
 	async function handleUpdate() {
 		if (!productId) throw new Error('Product ID is required for updates');
 
 		// Update the data product
-		const updateBody: any = {
+		const updateBody: Record<string, unknown> = {
 			name: name.trim(),
 			description: description.trim() || null,
 			documentation: documentation.trim() || null,
@@ -422,7 +437,7 @@
 			});
 		}
 
-		goto('/products');
+		goto(resolve('/products'));
 	}
 
 	let searchDebounceTimer: ReturnType<typeof setTimeout>;
@@ -453,7 +468,7 @@
 		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 			<div class="flex items-center gap-4">
 				<button
-					onclick={() => goto('/products')}
+					onclick={() => goto(resolve('/products'))}
 					class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 				>
 					<IconifyIcon
@@ -654,7 +669,7 @@
 						<div
 							class="mt-2 border border-gray-200 dark:border-gray-700 rounded-lg max-h-64 overflow-y-auto"
 						>
-							{#each assetSearchResults as asset}
+							{#each assetSearchResults as asset (asset.id)}
 								<button
 									type="button"
 									onclick={() => addAsset(asset)}
@@ -693,7 +708,7 @@
 							{mode === 'edit' ? 'Manual Assets' : 'Selected Assets'} ({manualAssetIds.length})
 						</h4>
 						<div class="space-y-2">
-							{#each manualAssetIds as assetId}
+							{#each manualAssetIds as assetId (assetId)}
 								{@const asset = assetDetails.get(assetId)}
 								<div
 									class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
@@ -837,7 +852,7 @@
 							<!-- Preview Results -->
 							{#if isPreviewLoading}
 								<div class="space-y-2">
-									{#each Array(3) as _}
+									{#each Array(3) as _, i (i)}
 										<div
 											class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 animate-pulse"
 										>
@@ -867,9 +882,11 @@
 										{/if}
 									</div>
 									<div class="space-y-2 max-h-80 overflow-y-auto">
-										{#each rulePreviewResults as result}
+										{#each rulePreviewResults as result, i (result.metadata?.mrn ?? i)}
 											<a
-												href={getPreviewAssetUrl(result)}
+												href={getPreviewAssetUrl(result) === '#'
+													? '#'
+													: resolve(getPreviewAssetUrl(result) as `/${string}`)}
 												target="_blank"
 												class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all group"
 											>
@@ -942,7 +959,7 @@
 				<!-- Rules List -->
 				{#if rules.length > 0 && !showRuleForm}
 					<div class="space-y-3">
-						{#each rules as rule, index}
+						{#each rules as rule, index (rule.id ?? index)}
 							<div
 								class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 hover:shadow-md transition-shadow"
 							>
@@ -1037,7 +1054,7 @@
 						text="Previous"
 					/>
 				{:else}
-					<Button variant="clear" click={() => goto('/products')} text="Cancel" />
+					<Button variant="clear" click={() => goto(resolve('/products'))} text="Cancel" />
 				{/if}
 			</div>
 			<div class="flex items-center gap-3">

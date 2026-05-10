@@ -4,6 +4,7 @@
 	import { notifications, type Notification } from '$lib/stores/notifications';
 	import { formatRelativeTime } from '$lib/utils/format';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 
 	let filter: 'all' | 'unread' | 'read' = 'all';
 
@@ -115,11 +116,15 @@
 		}
 
 		if (notification.data?.link) {
-			goto(notification.data.link as string);
+			goto(resolve(notification.data.link as `/${string}`));
 		} else if (notification.data?.asset_mrn) {
-			goto(`/discover/${encodeURIComponent(notification.data.asset_mrn as string)}`);
+			goto(
+				resolve(
+					`/discover/${encodeURIComponent(notification.data.asset_mrn as string)}` as `/${string}`
+				)
+			);
 		} else if (notification.data?.team_id) {
-			goto(`/teams/${notification.data.team_id}`);
+			goto(resolve(`/teams/${notification.data.team_id}` as `/${string}`));
 		}
 	}
 

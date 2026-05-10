@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CodeBlock from '$components/editor/CodeBlock.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import {
 		parseSchemaResponse,
 		processSchema,
@@ -8,19 +9,22 @@
 	} from '$lib/schema/utils';
 	import type { SchemaSection, Field } from '$lib/schema/types';
 
-	let { schema = undefined, showRawSchema = false }: { schema?: any; showRawSchema?: boolean } =
+	type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
+	type SchemaValidationError = { message?: string } & Record<string, JsonValue>;
+
+	let { schema = undefined, showRawSchema = false }: { schema?: unknown; showRawSchema?: boolean } =
 		$props();
 	let activeTab = $state('');
 	let schemaSections = $state<SchemaSection[]>([]);
-	let processedSchemas = $state<Record<string, { fields: Field[]; example: any }>>({});
-	let validationErrors = $state<Record<string, any[]>>({});
-	let expandedFields = $state(new Set<string>());
+	let processedSchemas = $state<Record<string, { fields: Field[]; example: unknown }>>({});
+	let validationErrors = $state<Record<string, SchemaValidationError[]>>({});
+	let expandedFields = new SvelteSet<string>();
 
 	$effect(() => {
 		if (schema && schema !== null && schema !== undefined) {
 			const sections = parseSchemaResponse(schema);
-			const processed: Record<string, { fields: Field[]; example: any }> = {};
-			const errors: Record<string, any[]> = {};
+			const processed: Record<string, { fields: Field[]; example: unknown }> = {};
+			const errors: Record<string, SchemaValidationError[]> = {};
 
 			sections.forEach((section) => {
 				processed[section.name] = processSchema(section.schema);
@@ -47,14 +51,12 @@
 
 	function setActiveTab(tabName: string) {
 		activeTab = tabName;
-		expandedFields = new Set();
+		expandedFields.clear();
 	}
 
 	function toggleFieldExpansion(fieldPath: string) {
-		const newExpanded = new Set(expandedFields);
-
-		if (newExpanded.has(fieldPath)) {
-			newExpanded.delete(fieldPath);
+		if (expandedFields.has(fieldPath)) {
+			expandedFields.delete(fieldPath);
 
 			const descendants = activeFields.filter((field) => {
 				const parentField = activeFields.find((f) => f.name === fieldPath);
@@ -67,13 +69,11 @@
 			});
 
 			descendants.forEach((descendant) => {
-				newExpanded.delete(descendant.name);
+				expandedFields.delete(descendant.name);
 			});
 		} else {
-			newExpanded.add(fieldPath);
+			expandedFields.add(fieldPath);
 		}
-
-		expandedFields = newExpanded;
 	}
 
 	function isFieldExpanded(fieldPath: string): boolean {
@@ -154,19 +154,24 @@
 		);
 	}
 
-	function getSchemaExamples(schema: any): any[] {
-		if (!schema) return [];
+	function getSchemaExamples(schema: unknown): unknown[] {
+		if (!schema || typeof schema !== 'object') return [];
 
-		const examples: any[] = [];
+		const examples: unknown[] = [];
+		const schemaObj = schema as { example?: unknown; allOf?: unknown };
 
-		if (schema.example !== undefined) {
-			examples.push(schema.example);
+		if (schemaObj.example !== undefined) {
+			examples.push(schemaObj.example);
 		}
 
-		if (schema.allOf) {
-			schema.allOf.forEach((subSchema: any) => {
-				if (subSchema?.example !== undefined) {
-					examples.push(subSchema.example);
+		if (Array.isArray(schemaObj.allOf)) {
+			schemaObj.allOf.forEach((subSchema: unknown) => {
+				if (
+					subSchema &&
+					typeof subSchema === 'object' &&
+					(subSchema as { example?: unknown }).example !== undefined
+				) {
+					examples.push((subSchema as { example?: unknown }).example);
 				}
 			});
 		}
@@ -195,7 +200,7 @@
 <div class="space-y-6 overflow-x-auto">
 	{#if showSchemaTabs}
 		<div class="flex flex-wrap gap-2">
-			{#each schemaSections as section}
+			{#each schemaSections as section (section.name)}
 				<button
 					class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors {activeTab ===
 					section.name
@@ -235,7 +240,7 @@
 						</h3>
 						<div class="mt-2 text-sm text-yellow-700 dark:text-yellow-300">
 							<ul class="list-disc pl-5 space-y-1">
-								{#each activeErrors.slice(0, 3) as error}
+								{#each activeErrors.slice(0, 3) as error, i (i)}
 									<li>{error.message || JSON.stringify(error)}</li>
 								{/each}
 								{#if activeErrors.length > 3}
@@ -264,7 +269,7 @@
 					class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm overflow-hidden"
 				>
 					<div class="divide-y divide-gray-100 dark:divide-gray-700">
-						{#each visibleFields as field}
+						{#each visibleFields as field (field.name)}
 							{@const fieldPath = field.name}
 							{@const hasChildFields = hasChildren(field, activeFields)}
 							{@const isExpanded = isFieldExpanded(fieldPath)}
@@ -281,7 +286,7 @@
 								<div class="flex items-start relative">
 									{#if indentLevel > 0}
 										<div class="absolute left-0 top-0 bottom-0 flex">
-											{#each Array(indentLevel) as _, level}
+											{#each Array(indentLevel) as _, level (level)}
 												<div class="w-8 flex justify-center relative">
 													<div
 														class="w-px bg-gray-200 dark:bg-gray-700 absolute top-0 bottom-0"
@@ -432,7 +437,7 @@
 																<div
 																	class="absolute z-10 invisible group-hover:visible bg-gray-900 dark:bg-gray-700 text-white text-xs rounded px-3 py-2 mt-1 left-0 min-w-max max-w-sm shadow-lg"
 																>
-																	{#each field.enum as value}
+																	{#each field.enum as value, i (i)}
 																		<div class="py-0.5">{value}</div>
 																	{/each}
 																</div>
@@ -459,7 +464,7 @@
 				{/if}
 
 				{#if schemaExamples.length > 1}
-					{#each schemaExamples.slice(1) as example, i}
+					{#each schemaExamples.slice(1) as example, i (i)}
 						<div class="mt-4">
 							<CodeBlock code={JSON.stringify(example, null, 2)} />
 						</div>

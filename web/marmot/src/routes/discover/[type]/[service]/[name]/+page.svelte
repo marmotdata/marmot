@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchApi, fetchAssetPreview, type AssetPreviewResponse } from '$lib/api';
 	import type { Asset, EnrichedExternalLink } from '$lib/assets/types';
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
@@ -82,7 +83,7 @@
 	function setActiveTab(tab: string) {
 		const url = new URL(window.location.href);
 		url.searchParams.set('tab', tab);
-		goto(url.toString(), { replaceState: true });
+		goto(resolve(`${url.pathname}${url.search}${url.hash}`), { replaceState: true });
 	}
 
 	function handleBack() {
@@ -252,9 +253,13 @@
 
 		try {
 			previewData = await fetchAssetPreview(asset.id);
-		} catch (err: any) {
+		} catch (err) {
 			let errorMsg = 'Failed to fetch preview data';
-			if (err.status === 403) {
+			const status =
+				typeof err === 'object' && err !== null && 'status' in err
+					? (err as { status?: number }).status
+					: undefined;
+			if (status === 403) {
 				errorMsg =
 					'You do not have permission to preview data. The "assets:preview" permission is required.';
 			} else if (err instanceof Error) {

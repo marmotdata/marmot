@@ -16,6 +16,8 @@
 	import IconifyIcon from '@iconify/svelte';
 	import { auth } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	interface Owner {
 		id: string;
@@ -39,15 +41,15 @@
 	let isDeleting = false;
 	let deleteError = '';
 
-	$: canManageAssets = auth.hasPermission('assets', 'manage');
+	const canManageAssets = auth.hasPermission('assets', 'manage');
 
 	$: isRunHistoryTab = $page.url.searchParams.get('tab') === 'run-history';
 	$: shouldHideRunHistory = staticPlacement && isRunHistoryTab;
 
-	$: if (asset?.id !== currentAssetId) {
+	function handleAssetChanged() {
 		currentAssetId = asset?.id || null;
 		lineage = null;
-		expandedAssets = new Set<string>();
+		expandedAssets = new SvelteSet<string>();
 		owners = [];
 		if (asset?.id) {
 			fetchOwners();
@@ -74,7 +76,7 @@
 
 	let loadingLineage = false;
 	let lineageError: string | null = null;
-	let expandedAssets = new Set<string>();
+	let expandedAssets: SvelteSet<string> = new SvelteSet<string>();
 	let owners: Owner[] = [];
 	let loadingOwners = false;
 
@@ -89,10 +91,6 @@
 			expandedAssets.add(id);
 		}
 		expandedAssets = expandedAssets;
-	}
-
-	function getNodeName(mrn: string): string {
-		return mrn.split('/').pop() || mrn;
 	}
 
 	async function fetchLineage() {
@@ -148,6 +146,9 @@
 	});
 
 	afterUpdate(() => {
+		if (asset?.id !== currentAssetId) {
+			handleAssetChanged();
+		}
 		if (mounted && asset?.id && !lineage && !loadingLineage) {
 			fetchLineage();
 		}
@@ -173,7 +174,7 @@
 
 			// Close the blade and redirect to assets list
 			if (staticPlacement) {
-				goto('/discover');
+				goto(resolve('/discover'));
 			} else {
 				onClose();
 				// Trigger a page refresh to update the asset list
@@ -255,7 +256,7 @@
 						<!-- Asset Header - only show in non-static mode -->
 						{#if !staticPlacement}
 							<a
-								href={`${fullViewUrl}`}
+								href={resolve(`${fullViewUrl}` as `/${string}`)}
 								class="block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all"
 							>
 								<div class="flex items-start gap-3 mb-3">
@@ -402,7 +403,7 @@
 												Upstream
 											</h4>
 											<div class="space-y-2">
-												{#each filteredLineage.nodes.filter((n) => n.depth < 0) as node}
+												{#each filteredLineage.nodes.filter((n) => n.depth < 0) as node (node.id)}
 													<LineageViewNode
 														{node}
 														expanded={expandedAssets.has(node.id)}
@@ -423,7 +424,7 @@
 												Downstream
 											</h4>
 											<div class="space-y-2">
-												{#each filteredLineage.nodes.filter((n) => n.depth > 0) as node}
+												{#each filteredLineage.nodes.filter((n) => n.depth > 0) as node (node.id)}
 													<LineageViewNode
 														{node}
 														expanded={expandedAssets.has(node.id)}

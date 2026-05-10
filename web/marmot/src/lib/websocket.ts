@@ -11,7 +11,7 @@ export type JobRunEvent = {
 		| 'job_run_progress'
 		| 'job_run_completed'
 		| 'job_run_cancelled';
-	payload: any;
+	payload: Record<string, unknown>;
 	timestamp: string;
 };
 

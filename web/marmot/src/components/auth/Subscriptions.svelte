@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
 	import IconifyIcon from '@iconify/svelte';
 
@@ -55,12 +56,6 @@
 			// ignore
 		}
 	}
-
-	function getAssetLink(mrn: string): string {
-		if (!mrn) return '#';
-		const path = mrn.replace('mrn://', '');
-		return `/discover/${path}`;
-	}
 </script>
 
 <div>
@@ -93,7 +88,9 @@
 					<div class="flex items-center gap-3 min-w-0">
 						<div class="min-w-0">
 							<a
-								href={getAssetLink(sub.asset_mrn)}
+								href={sub.asset_mrn
+									? resolve(`/discover/${sub.asset_mrn.replace('mrn://', '')}` as never)
+									: '#'}
 								class="text-sm font-medium text-gray-900 dark:text-gray-100 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-400 truncate block"
 							>
 								{sub.asset_name || 'Unknown Asset'}
@@ -107,7 +104,7 @@
 									</span>
 								{/if}
 								<div class="flex flex-wrap gap-1">
-									{#each sub.notification_types as type}
+									{#each sub.notification_types as type (type)}
 										<span
 											class="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20 text-earthy-terracotta-700 dark:text-earthy-terracotta-400"
 										>

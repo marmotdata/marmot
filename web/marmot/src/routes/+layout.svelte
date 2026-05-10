@@ -5,6 +5,7 @@
 	import { page } from '$app/stores';
 	import { auth, isAnonymousMode } from '$lib/stores/auth';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
 	import { fetchApi } from '$lib/api';
 	import UserIcon from '~icons/heroicons/user-16-solid';
@@ -173,9 +174,9 @@
 	$: if (browser && !checkingAnonymousMode && !manualNavigation) {
 		const isOAuthPending = $page.url.searchParams.has('oauth_pending');
 		if ($auth && $page.url.pathname.startsWith('/login') && !isOAuthPending) {
-			goto('/');
+			goto(resolve('/'));
 		} else if (!$auth && !$page.url.pathname.startsWith('/login') && !$isAnonymousMode) {
-			goto('/login');
+			goto(resolve('/login'));
 		}
 	}
 
@@ -203,7 +204,7 @@
 
 	function handleLogin() {
 		withManualNav(() => {
-			goto('/login');
+			goto(resolve('/login'));
 		});
 	}
 
@@ -246,7 +247,7 @@
 				<div class="flex items-center justify-between h-16 gap-6">
 					<!-- Logo -->
 					<div class="flex items-center flex-shrink-0">
-						<a href="/" class="flex-shrink-0 hover:opacity-80 transition-opacity">
+						<a href={resolve('/')} class="flex-shrink-0 hover:opacity-80 transition-opacity">
 							<img src="/images/marmot-text.svg" alt="Marmot" class="h-6 dark:invert" />
 						</a>
 					</div>
@@ -260,7 +261,7 @@
 							<Icon icon="material-symbols:search" class="w-4 h-4 text-gray-500 dark:text-white" />
 							<span class="flex-1 text-left truncate font-mono">
 								{#if currentSearchQuery}
-									{#each getHighlightedText(currentSearchQuery) as part}
+									{#each getHighlightedText(currentSearchQuery) as part, i (i)}
 										<span class={part.class}>{part.text}</span>
 									{/each}
 								{:else}
@@ -287,7 +288,7 @@
 						</button>
 
 						<a
-							href="/discover"
+							href={resolve('/discover')}
 							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
 								'/discover'
 							)
@@ -301,7 +302,7 @@
 						</a>
 
 						<a
-							href="/runs"
+							href={resolve('/runs')}
 							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
 								'/runs'
 							)
@@ -315,7 +316,7 @@
 						</a>
 
 						<a
-							href="/metrics"
+							href={resolve('/metrics')}
 							class="inline-flex items-center text-sm font-medium whitespace-nowrap focus:outline-none transition-colors px-4 py-2 rounded-md {$page.url.pathname.startsWith(
 								'/metrics'
 							)
@@ -358,7 +359,7 @@
 									role="menu"
 								>
 									<a
-										href="/glossary"
+										href={resolve('/glossary')}
 										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
 											'/glossary'
 										)
@@ -370,7 +371,7 @@
 										Glossary
 									</a>
 									<a
-										href="/products"
+										href={resolve('/products')}
 										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
 											'/products'
 										)
@@ -382,7 +383,7 @@
 										Data Products
 									</a>
 									<a
-										href="/asset-rules"
+										href={resolve('/asset-rules')}
 										class="flex items-center gap-2 px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 {$page.url.pathname.startsWith(
 											'/asset-rules'
 										)
@@ -437,13 +438,13 @@
 									{#if $auth}
 										<!-- User is authenticated -->
 										<a
-											href="/profile"
+											href={resolve('/profile')}
 											class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 											role="menuitem">Profile</a
 										>
 										{#if isAdmin}
 											<a
-												href="/admin"
+												href={resolve('/admin')}
 												class="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
 												role="menuitem">Admin</a
 											>

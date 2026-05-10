@@ -3,7 +3,9 @@
 	import { writable, type Writable } from 'svelte/store';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import type { Asset } from '$lib/assets/types';
 	import type { DataProduct } from '$lib/dataproducts/types';
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
@@ -17,12 +19,25 @@
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 	import SubscribeButton from '$components/asset/SubscribeButton.svelte';
 
+	interface SearchResultMetadata {
+		type?: string;
+		mrn?: string;
+		tags?: string[];
+		created_by?: string;
+		created_at?: string;
+		icon_url?: string;
+		asset_count?: number;
+		owner_count?: number;
+		providers?: string[];
+		[key: string]: unknown;
+	}
+
 	interface SearchResult {
 		type: 'asset' | 'glossary' | 'team' | 'data_product';
 		id: string;
 		name: string;
 		description?: string;
-		metadata?: Record<string, any>;
+		metadata?: SearchResultMetadata;
 		url: string;
 		rank: number;
 		updated_at?: string;
@@ -59,11 +74,6 @@
 	const isLoading: Writable<boolean> = writable(true);
 	const error: Writable<{ status: number; message: string } | null> = writable(null);
 
-	interface Subscription {
-		id: string;
-		notification_types: string[];
-	}
-
 	let currentPage = $state(1);
 	const itemsPerPage = 20;
 	let selectedAsset = $state<Asset | null>(null);
@@ -74,7 +84,6 @@
 	let selectedTypes = $state<string[]>([]);
 	let selectedProviders = $state<string[]>([]);
 	let selectedTags = $state<string[]>([]);
-	let subscriptionsMap = $state<Record<string, Subscription>>({});
 	let canManageAssets = $derived(auth.hasPermission('assets', 'manage'));
 	let filtersExpanded = $state(true);
 	let queryBuilderExpanded = $state(false);
@@ -115,11 +124,12 @@
 		}
 	});
 
-	function getIconType(asset: any): string {
+	function getIconType(asset: SearchResultMetadata | undefined): string {
+		if (!asset) return '';
 		if (asset.providers && Array.isArray(asset.providers) && asset.providers.length === 1) {
 			return asset.providers[0];
 		}
-		return asset.type;
+		return asset.type ?? '';
 	}
 
 	async function fetchResults() {
@@ -127,7 +137,7 @@
 		$error = null;
 
 		try {
-			const queryParams = new URLSearchParams({
+			const queryParams = new SvelteURLSearchParams({
 				limit: itemsPerPage.toString(),
 				offset: ((currentPage - 1) * itemsPerPage).toString()
 			});
@@ -168,33 +178,10 @@
 				providers: data.facets?.providers || [],
 				tags: data.facets?.tags || []
 			};
-
-			if (auth.getToken() && $results.length > 0) {
-				const assetIds = $results.filter((r) => r.type === 'asset').map((r) => r.id);
-
-				if (assetIds.length > 0) {
-					try {
-						const subsResponse = await fetchApi('/subscriptions/list', {
-							method: 'POST',
-							body: JSON.stringify({ asset_ids: assetIds })
-						});
-						if (subsResponse.ok) {
-							const subsData = await subsResponse.json();
-							subscriptionsMap = subsData.subscriptions || {};
-						}
-					} catch (subErr) {
-						console.error('Error fetching subscriptions:', subErr);
-						subscriptionsMap = {};
-					}
-				} else {
-					subscriptionsMap = {};
-				}
-			} else {
-				subscriptionsMap = {};
-			}
-		} catch (e: any) {
-			const errorStatus = e.status || 500;
-			$error = { status: errorStatus, message: e.message };
+		} catch (e: unknown) {
+			const err = e as { status?: number; message?: string };
+			const errorStatus = err.status || 500;
+			$error = { status: errorStatus, message: err.message || 'Unknown error' };
 			console.error('Error fetching results:', e);
 		} finally {
 			$isLoading = false;
@@ -215,16 +202,6 @@
 		}, 300);
 	}
 
-	function handleSearchSubmit() {
-		if (searchTimeout) {
-			clearTimeout(searchTimeout);
-		}
-
-		currentPage = 1;
-		updateURL();
-		fetchResults();
-	}
-
 	function handleRunQuery(query: string) {
 		if (searchTimeout) {
 			clearTimeout(searchTimeout);
@@ -237,7 +214,7 @@
 	}
 
 	function updateURL() {
-		const params = new URLSearchParams();
+		const params = new SvelteURLSearchParams();
 
 		if (searchQuery) params.append('q', searchQuery);
 		if (selectedKinds.length) params.append('kind', selectedKinds.join(','));
@@ -247,7 +224,12 @@
 		if (currentPage > 1) params.append('page', currentPage.toString());
 
 		skipNextUrlEffect = true;
-		goto(`?${params.toString()}`, { replaceState: true, noScroll: true, keepFocus: true });
+		const queryString = params.toString();
+		goto(resolve(queryString ? `/discover?${queryString}` : '/discover'), {
+			replaceState: true,
+			noScroll: true,
+			keepFocus: true
+		});
 	}
 
 	function handleFilterChange() {
@@ -343,7 +325,7 @@
 	}
 
 	function navigateToResult(result: SearchResult) {
-		goto(result.url);
+		goto(resolve(result.url as `/${string}`));
 	}
 
 	function getTagColor(type: string): string {
@@ -476,7 +458,7 @@
 								>
 									Kind
 								</h3>
-								{#each ['asset', 'data_product', 'glossary', 'team'] as kind}
+								{#each ['asset', 'data_product', 'glossary', 'team'] as kind (kind)}
 									<label class="flex items-center justify-between mb-2">
 										<div class="flex items-center">
 											<input
@@ -512,7 +494,7 @@
 										>
 											Type
 										</h3>
-										{#each $facets.asset_types as { value, count }}
+										{#each $facets.asset_types as { value, count } (value)}
 											<label class="flex items-center justify-between mb-2">
 												<div class="flex items-center">
 													<input
@@ -544,7 +526,7 @@
 										>
 											Providers
 										</h3>
-										{#each $facets.providers as { value, count }}
+										{#each $facets.providers as { value, count } (value)}
 											<label class="flex items-center justify-between mb-2">
 												<div class="flex items-center">
 													<input
@@ -576,7 +558,7 @@
 										>
 											Tags
 										</h3>
-										{#each $facets.tags as { value, count }}
+										{#each $facets.tags as { value, count } (value)}
 											<label class="flex items-center justify-between mb-2 gap-2">
 												<div class="flex items-center min-w-0">
 													<input
@@ -663,7 +645,7 @@
 								</button>
 							</div>
 							<div class="flex flex-wrap gap-1.5">
-								{#each selectedTypes as type}
+								{#each selectedTypes as type (type)}
 									<span
 										class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
 									>
@@ -693,7 +675,7 @@
 									</span>
 								{/each}
 
-								{#each selectedProviders as provider}
+								{#each selectedProviders as provider (provider)}
 									<span
 										class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
 									>
@@ -723,7 +705,7 @@
 									</span>
 								{/each}
 
-								{#each selectedTags as tag}
+								{#each selectedTags as tag (tag)}
 									<span
 										class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-white dark:bg-earthy-terracotta-900/40 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 border border-earthy-terracotta-300 dark:border-earthy-terracotta-800"
 									>
@@ -822,7 +804,7 @@
 					<!-- Results List -->
 					<div class="space-y-2">
 						{#if $isLoading}
-							{#each Array(itemsPerPage) as _}
+							{#each Array(itemsPerPage) as _, i (i)}
 								<div
 									class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3 animate-pulse shadow-sm"
 								>
@@ -835,7 +817,7 @@
 									</div>
 									<div class="h-3 bg-gray-200 dark:bg-gray-600 rounded w-3/4 mb-1.5"></div>
 									<div class="flex gap-1.5">
-										{#each Array(3) as _}
+										{#each Array(3) as _, j (j)}
 											<div class="h-5 bg-gray-200 dark:bg-gray-600 rounded w-14"></div>
 										{/each}
 									</div>
@@ -860,7 +842,7 @@
 								</div>
 							{/if}
 						{:else}
-							{#each $results as result}
+							{#each $results as result (result.id)}
 								{#if result.type === 'asset'}
 									<!-- Asset card -->
 									<div
@@ -888,9 +870,9 @@
 											</div>
 											<div class="flex items-center gap-1.5 flex-shrink-0">
 												<button
-													onclick={(e) => handleTypeClick(result.metadata?.type, e)}
+													onclick={(e) => handleTypeClick(result.metadata?.type ?? '', e)}
 													class="text-xs {getTagColor(
-														result.metadata?.type
+														result.metadata?.type ?? ''
 													)} px-2 py-0.5 rounded hover:opacity-80 transition-opacity font-medium"
 												>
 													{result.metadata?.type?.replace(/_/g, ' ')}
@@ -906,7 +888,7 @@
 
 										{#if result.metadata?.tags && result.metadata.tags.length > 0}
 											<div class="flex flex-wrap gap-1 mb-2">
-												{#each result.metadata.tags.slice(0, 3) as tag}
+												{#each result.metadata.tags.slice(0, 3) as tag (tag)}
 													<button
 														onclick={(e) => handleTagClick(tag, e)}
 														class="inline-flex items-center gap-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded hover:bg-earthy-terracotta-100 dark:hover:bg-earthy-terracotta-900/30 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-700 transition-colors"
@@ -1009,7 +991,7 @@
 
 										{#if result.metadata?.tags && result.metadata.tags.length > 0}
 											<div class="flex flex-wrap gap-1 mb-2">
-												{#each result.metadata.tags.slice(0, 3) as tag}
+												{#each result.metadata.tags.slice(0, 3) as tag (tag)}
 													<span
 														class="inline-flex items-center gap-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded"
 													>

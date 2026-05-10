@@ -127,7 +127,7 @@
 {#if links.length > 0 || ruleManagedLinks.length > 0 || canEdit}
 	<div class="space-y-2">
 		<div class="flex gap-1.5 items-center flex-wrap">
-			{#each links as link, i}
+			{#each links as link, i (i)}
 				<div class="relative group">
 					<Button
 						icon={link.icon || 'material-symbols:link'}
@@ -153,7 +153,7 @@
 				</div>
 			{/each}
 
-			{#each ruleManagedLinks as ruleLink}
+			{#each ruleManagedLinks as ruleLink (ruleLink.url)}
 				<Button
 					icon={ruleLink.icon || 'material-symbols:link'}
 					text={ruleLink.name}

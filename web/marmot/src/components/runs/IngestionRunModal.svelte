@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
+	import { resolve } from '$app/paths';
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
@@ -24,7 +25,7 @@
 		started_at: string;
 		finished_at?: string;
 		error_message?: string;
-		config?: any;
+		config?: Record<string, unknown>;
 		summary?: IngestionRunSummary;
 		created_by: string;
 	}
@@ -154,12 +155,12 @@
 		}
 	}
 
-	function getAssetUrl(entity: RunEntity): string {
-		if (entity.entity_type !== 'asset' || !entity.entity_mrn) return '';
+	function getAssetUrl(entity: RunEntity): `/${string}` {
+		if (entity.entity_type !== 'asset' || !entity.entity_mrn) return '/discover';
 
 		// Parse MRN: mrn://type/service/full.qualified.name
 		const mrnParts = entity.entity_mrn.replace('mrn://', '').split('/');
-		if (mrnParts.length < 3) return '';
+		if (mrnParts.length < 3) return '/discover';
 		const type = mrnParts[0];
 		const service = mrnParts[1];
 		const fullName = mrnParts.slice(2).join('/');
@@ -498,7 +499,7 @@
 										<tbody
 											class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700"
 										>
-											{#each entities as entity}
+											{#each entities as entity (entity.id)}
 												<tr class="hover:bg-gray-50 dark:hover:bg-gray-750">
 													<td class="px-3 py-2">
 														<div class="max-w-xs flex items-center space-x-2">
@@ -516,7 +517,7 @@
 															</div>
 															{#if shouldShowAssetLink(entity)}
 																<a
-																	href={getAssetUrl(entity)}
+																	href={resolve(getAssetUrl(entity))}
 																	target="_blank"
 																	class="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
 																	title="View asset"

@@ -1,12 +1,18 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
 	import { onMount } from 'svelte';
+	import { resolve } from '$app/paths';
 	import IconifyIcon from '@iconify/svelte';
 	import RunHistoryHistogram from './RunHistoryHistogram.svelte';
 
+	interface AssetRef {
+		type?: string;
+		name?: string;
+	}
+
 	export let assetId: string;
 	export let minimal = false;
-	export let asset: any = null;
+	export let asset: AssetRef | null = null;
 
 	interface RunHistoryEntry {
 		id: string;
@@ -171,9 +177,9 @@
 					</div>
 				{:else if asset}
 					<a
-						href="/discover/{asset?.type?.toLowerCase()}/{encodeURIComponent(
-							asset?.name || ''
-						)}?tab=run-history"
+						href={resolve(
+							`/discover/${asset?.type?.toLowerCase()}/${encodeURIComponent(asset?.name || '')}?tab=run-history`
+						)}
 						class="text-xs text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800"
 					>
 						View all →
@@ -182,7 +188,7 @@
 			</div>
 
 			<ul class="divide-y divide-gray-200 dark:divide-gray-700">
-				{#each runHistory as run}
+				{#each runHistory as run (run.id)}
 					{@const kind = statusKind(run.status)}
 					<li class="px-5 py-4 hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors">
 						<div class="flex items-center justify-between gap-4">

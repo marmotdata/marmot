@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { get } from 'svelte/store';
 	import { fetchApi } from '$lib/api';
 	import { encryptionConfigured } from '$lib/stores/encryption';
@@ -19,7 +20,7 @@
 		label: string;
 		description: string;
 		required: boolean;
-		default?: any;
+		default?: unknown;
 		options?: { label: string; value: string }[];
 		sensitive: boolean;
 		placeholder?: string;
@@ -49,7 +50,23 @@
 	let name = $state('');
 	let cronExpression = $state('');
 	let disableSchedule = $state(false);
-	let config = $state<Record<string, any>>({
+	type ConfigValue =
+		| string
+		| number
+		| boolean
+		| null
+		| undefined
+		| ConfigValue[]
+		| { [key: string]: ConfigValue };
+	interface PipelineConfig {
+		tags?: string[];
+		external_links?: { name: string; url: string }[];
+		filter?: { include?: string[]; exclude?: string[] };
+		credentials?: Record<string, ConfigValue>;
+		source_type?: string;
+		[key: string]: ConfigValue | undefined;
+	}
+	let config = $state<PipelineConfig>({
 		tags: [],
 		external_links: [],
 		filter: { include: [], exclude: [] }
@@ -181,7 +198,7 @@
 				throw new Error(data.error || 'Failed to create pipeline');
 			}
 
-			goto('/runs?tab=pipelines');
+			goto(resolve('/runs?tab=pipelines'));
 		} catch (err) {
 			error = err instanceof Error ? err.message : 'Failed to create pipeline';
 		} finally {
@@ -189,17 +206,21 @@
 		}
 	}
 
-	function initializeConfigDefaults(fields: ConfigField[], configObj: Record<string, any> = {}) {
+	function initializeConfigDefaults(
+		fields: ConfigField[],
+		configObj: Record<string, ConfigValue> = {}
+	) {
 		for (const field of fields) {
 			if (field.type === 'object' && field.is_array) {
 				configObj[field.name] = [];
 			} else if (field.type === 'object' && field.fields) {
-				configObj[field.name] = {};
-				initializeConfigDefaults(field.fields, configObj[field.name]);
+				const nested: Record<string, ConfigValue> = {};
+				configObj[field.name] = nested;
+				initializeConfigDefaults(field.fields, nested);
 			} else if (field.type === 'multiselect') {
 				configObj[field.name] = [];
 			} else if (field.default !== undefined && field.default !== null) {
-				configObj[field.name] = field.default;
+				configObj[field.name] = field.default as ConfigValue;
 			}
 		}
 		return configObj;
@@ -262,31 +283,6 @@
 		}
 	}
 
-	function getNestedValue(obj: any, path: string): any {
-		const keys = path.split('.');
-		let current = obj;
-		for (const key of keys) {
-			if (current === undefined || current === null) return undefined;
-			current = current[key];
-		}
-		return current;
-	}
-
-	function setNestedValue(obj: any, path: string, value: any) {
-		const keys = path.split('.');
-		let current = obj;
-
-		for (let i = 0; i < keys.length - 1; i++) {
-			const key = keys[i];
-			if (!(key in current) || typeof current[key] !== 'object') {
-				current[key] = {};
-			}
-			current = current[key];
-		}
-
-		current[keys[keys.length - 1]] = value;
-	}
-
 	function clearFieldError(fieldName: string) {
 		const newErrors = { ...fieldErrors };
 		delete newErrors[fieldName];
@@ -295,9 +291,9 @@
 	}
 
 	function cleanConfigForSubmit(
-		configObj: Record<string, any>,
+		configObj: Record<string, ConfigValue>,
 		fields: ConfigField[]
-	): Record<string, any> {
+	): Record<string, ConfigValue> {
 		const cleaned = { ...configObj };
 		for (const field of fields) {
 			if (field.show_when) {
@@ -465,8 +461,8 @@
 
 	function shouldHideField(
 		field: ConfigField,
-		configObj: Record<string, any>,
-		rootConfig?: Record<string, any>
+		configObj: Record<string, ConfigValue>,
+		rootConfig?: Record<string, ConfigValue>
 	): boolean {
 		// If there's a sibling "use_default" field that's checked, hide all other fields
 		if (configObj.use_default === true && field.name !== 'use_default') {
@@ -511,7 +507,7 @@
 			toasts.error(
 				'Encryption key not configured. Run "marmot generate-encryption-key" to get started.'
 			);
-			goto('/runs');
+			goto(resolve('/runs'));
 			return;
 		}
 		fetchPlugins();
@@ -524,7 +520,7 @@
 		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 			<div class="flex items-center gap-4">
 				<button
-					onclick={() => goto('/runs?tab=pipelines')}
+					onclick={() => goto(resolve('/runs?tab=pipelines'))}
 					class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
 				>
 					<IconifyIcon
@@ -617,7 +613,7 @@
 					{#if true}
 						{@const tagsValue = config.tags || []}
 						<div class="space-y-2">
-							{#each tagsValue as item, index}
+							{#each tagsValue as item, index (index)}
 								<div class="flex items-center gap-2">
 									<input
 										type="text"
@@ -677,7 +673,7 @@
 					{#if true}
 						{@const linksValue = config.external_links || []}
 						<div class="space-y-3">
-							{#each linksValue as item, index}
+							{#each linksValue as item, index (index)}
 								<div
 									class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-750/50"
 								>
@@ -805,7 +801,7 @@
 						role="listbox"
 						aria-label="Available plugins"
 					>
-						{#each displayedPlugins as plugin}
+						{#each displayedPlugins as plugin (plugin.id)}
 							<button
 								type="button"
 								onclick={() => handlePluginChange(plugin.id)}
@@ -948,7 +944,7 @@
 					{#snippet renderField(
 						field: ConfigField,
 						fieldPath: string,
-						configObj: Record<string, any>,
+						configObj: Record<string, ConfigValue>,
 						depth: number = 0
 					)}
 						{#if field.type === 'object' && field.is_array && field.fields}
@@ -967,9 +963,10 @@
 										</p>
 									{/if}
 									{#if true}
-										{@const arrayValue = configObj[field.name] || []}
+										{@const arrayValue =
+											(configObj[field.name] as Record<string, ConfigValue>[] | undefined) || []}
 										<div class="space-y-3">
-											{#each arrayValue as item, index}
+											{#each arrayValue as item, index (index)}
 												<div
 													class="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-gray-50/50 dark:bg-gray-750/50"
 												>
@@ -988,7 +985,7 @@
 														</button>
 													</div>
 													<div class="grid grid-cols-1 gap-3">
-														{#each field.fields as nestedField}
+														{#each field.fields as nestedField (nestedField.name)}
 															{@const nestedItemPath = `${fieldPath}[${index}].${nestedField.name}`}
 															<div>
 																<label class="block">
@@ -1003,7 +1000,7 @@
 																	<input
 																		type={getFieldType(nestedField)}
 																		bind:value={item[nestedField.name]}
-																		oninput={(e) => {
+																		oninput={() => {
 																			configObj[field.name] = [...arrayValue];
 																			clearFieldError(nestedItemPath);
 																		}}
@@ -1037,10 +1034,10 @@
 												type="button"
 												onclick={(e) => {
 													e.preventDefault();
-													const newItem: Record<string, any> = {};
+													const newItem: Record<string, ConfigValue> = {};
 													// Initialize with default values
 													field.fields?.forEach((f) => {
-														newItem[f.name] = f.default || '';
+														newItem[f.name] = (f.default as ConfigValue) || '';
 													});
 													arrayValue.push(newItem);
 													configObj[field.name] = [...arrayValue];
@@ -1097,9 +1094,11 @@
 											class="px-4 pb-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-750/50"
 										>
 											<div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-												{#each field.fields as nestedField}
+												{#each field.fields as nestedField (nestedField.name)}
 													{@const nestedPath = `${fieldPath}.${nestedField.name}`}
-													{@const nestedConfigObj = configObj[field.name] || {}}
+													{@const nestedConfigObj =
+														(configObj[field.name] as Record<string, ConfigValue> | undefined) ||
+														{}}
 													{#if !shouldHideField(nestedField, nestedConfigObj, config)}
 														{@render renderField(
 															nestedField,
@@ -1126,8 +1125,11 @@
 								>
 									<input
 										type="checkbox"
-										bind:checked={configObj[field.name]}
-										onchange={() => clearFieldError(fieldPath)}
+										checked={configObj[field.name] === true}
+										onchange={(e) => {
+											configObj[field.name] = (e.currentTarget as HTMLInputElement).checked;
+											clearFieldError(fieldPath);
+										}}
 										class="h-4 w-4 mt-0.5 text-earthy-terracotta-700 focus:ring-earthy-terracotta-600 border-gray-300 rounded"
 									/>
 									<div class="ml-3 flex-1">
@@ -1167,10 +1169,9 @@
 										</p>
 									{/if}
 									{#if true}
-										{@const arrayValue = configObj[field.name] || []}
-										{@const newItemKey = `${fieldPath}_new_item`}
+										{@const arrayValue = (configObj[field.name] as string[] | undefined) || []}
 										<div class="space-y-2">
-											{#each arrayValue as item, index}
+											{#each arrayValue as item, index (index)}
 												<div class="flex items-center gap-2">
 													<input
 														type="text"
@@ -1270,7 +1271,7 @@
 											required={field.required}
 										>
 											<option value="">Select...</option>
-											{#each field.options as option}
+											{#each field.options as option (option.value)}
 												<option value={option.value}>{option.label}</option>
 											{/each}
 										</select>
@@ -1314,7 +1315,7 @@
 					{/snippet}
 
 					<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden) as field}
+						{#each configSpec.filter((f) => !['tags', 'external_links', 'filter'].includes(f.name) && !f.hidden) as field (field.name)}
 							{#if !shouldHideField(field, config)}
 								{@render renderField(field, field.name, config, 0)}
 							{/if}
@@ -1398,7 +1399,7 @@
 													Next 5 runs:
 												</p>
 												<ul class="text-xs text-green-700 dark:text-green-400 space-y-0.5">
-													{#each cronNextRuns as run}
+													{#each cronNextRuns as run, i (i)}
 														<li class="font-mono">
 															{run.toLocaleString('en-US', {
 																weekday: 'short',
@@ -1514,7 +1515,7 @@
 										{#if true}
 											{@const includeValue = config.filter?.include || []}
 											<div class="space-y-2">
-												{#each includeValue as item, index}
+												{#each includeValue as item, index (index)}
 													<div class="flex items-center gap-1.5">
 														<span
 															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
@@ -1605,7 +1606,7 @@
 										{#if true}
 											{@const excludeValue = config.filter?.exclude || []}
 											<div class="space-y-2">
-												{#each excludeValue as item, index}
+												{#each excludeValue as item, index (index)}
 													<div class="flex items-center gap-1.5">
 														<span
 															class="text-gray-400 dark:text-gray-500 font-mono text-sm select-none"
@@ -1697,7 +1698,11 @@
 						text="Previous"
 					/>
 				{:else}
-					<Button variant="clear" click={() => goto('/runs?tab=pipelines')} text="Cancel" />
+					<Button
+						variant="clear"
+						click={() => goto(resolve('/runs?tab=pipelines'))}
+						text="Cancel"
+					/>
 				{/if}
 			</div>
 			<div class="flex items-center gap-3">

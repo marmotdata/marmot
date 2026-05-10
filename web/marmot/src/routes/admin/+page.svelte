@@ -5,6 +5,7 @@
 	import SearchManagement from '$components/admin/SearchManagement.svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { onMount } from 'svelte';
 
 	const tabs = [
@@ -17,7 +18,7 @@
 
 	onMount(() => {
 		if (!$page.url.searchParams.has('tab')) {
-			goto(`?tab=${tabs[0]?.id}`, { replaceState: true });
+			goto(resolve(`/admin?tab=${tabs[0]?.id}` as `/${string}`), { replaceState: true });
 		}
 	});
 </script>

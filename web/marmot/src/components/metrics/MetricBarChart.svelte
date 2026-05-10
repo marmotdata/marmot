@@ -57,7 +57,7 @@
 		</div>
 	{:else}
 		<div class="space-y-4">
-			{#each limitedData as item, index}
+			{#each limitedData as item, index (item.label)}
 				<div class="w-full">
 					<div class="flex items-center">
 						<!-- Bar that scales with container -->

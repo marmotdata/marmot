@@ -195,7 +195,7 @@
 						<p class="text-xs text-gray-400 text-center py-4">Searching...</p>
 					{:else if searchResults.length > 0}
 						<div class="grid grid-cols-6 gap-1">
-							{#each searchResults as result}
+							{#each searchResults as result (`${result.prefix}:${result.name}`)}
 								{@const fullId = `${result.prefix}:${result.name}`}
 								<button
 									type="button"
@@ -214,13 +214,13 @@
 						<p class="text-xs text-gray-400 text-center py-4">No icons found</p>
 					{/if}
 				{:else}
-					{#each commonIcons as category}
+					{#each commonIcons as category (category.label)}
 						<div class="mb-2 last:mb-0">
 							<p class="text-[10px] font-medium text-gray-400 uppercase tracking-wide mb-1 px-0.5">
 								{category.label}
 							</p>
 							<div class="grid grid-cols-6 gap-1">
-								{#each category.icons as icon}
+								{#each category.icons as icon (icon.id)}
 									<button
 										type="button"
 										onclick={() => selectIcon(icon.id)}

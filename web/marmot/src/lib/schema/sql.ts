@@ -8,17 +8,35 @@ import type { Field } from './types';
  * ]
  */
 
+interface SqlColumn {
+	column_name?: unknown;
+	data_type?: unknown;
+	is_nullable?: unknown;
+	is_primary_key?: unknown;
+	is_sorting_key?: unknown;
+	comment?: unknown;
+	default_expression?: unknown;
+}
+
+interface SchemaValidationError {
+	message: string;
+}
+
+function isObject(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null;
+}
+
 /**
  * Check if the schema is a native SQL column array format.
  * Differentiates from dbt by checking for `column_name` instead of `name`.
  */
-export function isSqlColumnSchema(schemaSection: any): boolean {
+export function isSqlColumnSchema(schemaSection: unknown): boolean {
 	if (!schemaSection) return false;
 	if (!Array.isArray(schemaSection)) return false;
 	if (schemaSection.length === 0) return false;
 
 	const first = schemaSection[0];
-	if (typeof first !== 'object' || first === null) return false;
+	if (!isObject(first)) return false;
 
 	return typeof first.column_name === 'string' && typeof first.data_type === 'string';
 }
@@ -27,13 +45,15 @@ export function isSqlColumnSchema(schemaSection: any): boolean {
  * Process native SQL column array into Field[] for display.
  * Handles both Trino and ClickHouse column formats.
  */
-export function processSqlColumnSchema(schemaSection: any): Field[] {
+export function processSqlColumnSchema(schemaSection: unknown): Field[] {
 	if (!schemaSection || !Array.isArray(schemaSection)) return [];
 
 	const fields: Field[] = [];
 
-	for (const col of schemaSection) {
-		if (!col || typeof col.column_name !== 'string') continue;
+	for (const item of schemaSection) {
+		if (!isObject(item)) continue;
+		const col = item as SqlColumn;
+		if (typeof col.column_name !== 'string') continue;
 
 		// Build description from comment + key annotations
 		const descParts: string[] = [];
@@ -56,7 +76,7 @@ export function processSqlColumnSchema(schemaSection: any): Field[] {
 
 		fields.push({
 			name: col.column_name,
-			type: col.data_type || 'unknown',
+			type: typeof col.data_type === 'string' ? col.data_type : 'unknown',
 			description: descParts.length > 0 ? descParts.join(' · ') : undefined,
 			required,
 			default: col.default_expression,
@@ -70,21 +90,22 @@ export function processSqlColumnSchema(schemaSection: any): Field[] {
 /**
  * Validate SQL column schema - basic structure check
  */
-export function validateSqlColumnSchema(schema: any): any[] {
+export function validateSqlColumnSchema(schema: unknown): SchemaValidationError[] {
 	if (!schema) return [];
 
 	if (!Array.isArray(schema)) {
 		return [{ message: 'SQL column schema must be an array of columns' }];
 	}
 
-	const errors: any[] = [];
+	const errors: SchemaValidationError[] = [];
 
-	schema.forEach((col: any, index: number) => {
-		if (typeof col !== 'object' || col === null) {
+	schema.forEach((col: unknown, index: number) => {
+		if (!isObject(col)) {
 			errors.push({ message: `Column at index ${index} is not an object` });
 			return;
 		}
-		if (typeof col.column_name !== 'string' || col.column_name.trim() === '') {
+		const name = (col as SqlColumn).column_name;
+		if (typeof name !== 'string' || name.trim() === '') {
 			errors.push({ message: `Column at index ${index} is missing a valid 'column_name' field` });
 		}
 	});

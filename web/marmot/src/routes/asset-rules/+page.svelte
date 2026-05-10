@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { browser } from '$app/environment';
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
@@ -38,8 +39,8 @@
 
 			recentRules = sortedByRecent.slice(0, 4);
 			rules = sortedByRecent;
-		} catch (e: any) {
-			error = e.message || 'Failed to load asset rules';
+		} catch (e: unknown) {
+			error = e instanceof Error ? e.message : 'Failed to load asset rules';
 		} finally {
 			isLoading = false;
 		}
@@ -91,7 +92,7 @@
 			</div>
 			{#if canManage}
 				<Button
-					click={() => goto('/asset-rules/new')}
+					click={() => goto(resolve('/asset-rules/new'))}
 					icon="material-symbols:add"
 					text="New Asset Rule"
 					variant="filled"
@@ -112,7 +113,7 @@
 				<div>
 					<div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-4"></div>
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-						{#each Array(4) as _}
+						{#each Array(4) as _, i (i)}
 							<div
 								class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 animate-pulse"
 							>
@@ -130,7 +131,7 @@
 				<!-- List Skeleton -->
 				<div>
 					<div class="h-5 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-4"></div>
-					{#each Array(5) as _}
+					{#each Array(5) as _, i (i)}
 						<div
 							class="bg-white dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700 p-3 animate-pulse"
 						>
@@ -164,7 +165,7 @@
 				</p>
 				{#if canManage}
 					<Button
-						click={() => goto('/asset-rules/new')}
+						click={() => goto(resolve('/asset-rules/new'))}
 						icon="material-symbols:add"
 						text="Create your first asset rule"
 						variant="filled"
@@ -181,9 +182,9 @@
 						Recently Updated
 					</h2>
 					<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-						{#each recentRules as rule}
+						{#each recentRules as rule (rule.id)}
 							<button
-								onclick={() => goto(`/asset-rules/${rule.id}`)}
+								onclick={() => goto(resolve(`/asset-rules/${rule.id}`))}
 								class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 text-left hover:shadow-lg hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all group"
 							>
 								<div
@@ -281,9 +282,9 @@
 					<div
 						class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden"
 					>
-						{#each rules as rule, index}
+						{#each rules as rule, index (rule.id)}
 							<button
-								onclick={() => goto(`/asset-rules/${rule.id}`)}
+								onclick={() => goto(resolve(`/asset-rules/${rule.id}`))}
 								class="w-full flex items-center gap-4 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors group {index !==
 								rules.length - 1
 									? 'border-b border-gray-100 dark:border-gray-700'

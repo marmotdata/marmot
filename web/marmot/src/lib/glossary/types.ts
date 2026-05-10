@@ -14,7 +14,7 @@ export interface GlossaryTerm {
 	description?: string;
 	parent_term_id?: string;
 	owners: Owner[];
-	metadata: Record<string, any>;
+	metadata: Record<string, unknown>;
 	tags: string[];
 	created_at: string;
 	updated_at: string;
@@ -32,17 +32,17 @@ export interface CreateTermInput {
 	description?: string;
 	parent_term_id?: string;
 	owners?: OwnerInput[];
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 	tags?: string[];
 }
 
 export interface UpdateTermInput {
 	name?: string;
 	definition?: string;
-	description?: string;
+	description?: string | null;
 	parent_term_id?: string;
 	owners?: OwnerInput[];
-	metadata?: Record<string, any>;
+	metadata?: Record<string, unknown>;
 	tags?: string[];
 }
 

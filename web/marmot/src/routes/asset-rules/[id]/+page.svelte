@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
+	import { SvelteMap } from 'svelte/reactivity';
 	import IconifyIcon from '@iconify/svelte';
 	import Button from '$components/ui/Button.svelte';
 	import ConfirmModal from '$components/ui/ConfirmModal.svelte';
@@ -53,10 +55,10 @@
 	function setActiveTab(tab: string) {
 		const url = new URL(window.location.href);
 		url.searchParams.set('tab', tab);
-		goto(url.toString(), { replaceState: true });
+		goto(resolve(`${url.pathname}${url.search}${url.hash}`), { replaceState: true });
 	}
 	let assetIds = $state<string[]>([]);
-	let assetDetails = $state<Map<string, Asset>>(new Map());
+	let assetDetails = new SvelteMap<string, Asset>();
 	let assetsTotal = $state(0);
 	let isLoadingAssets = $state(false);
 	let currentPage = $state(1);
@@ -99,8 +101,8 @@
 		try {
 			rule = await getAssetRule(ruleId);
 			await populateForm(rule);
-		} catch (e: any) {
-			loadError = e.message || 'Failed to load asset rule';
+		} catch (e) {
+			loadError = e instanceof Error ? e.message : 'Failed to load asset rule';
 		} finally {
 			isLoading = false;
 		}
@@ -112,18 +114,18 @@
 			const result = await getAssetRuleAssets(ruleId, (currentPage - 1) * PAGE_SIZE, PAGE_SIZE);
 			assetIds = result.asset_ids || [];
 			assetsTotal = result.total || 0;
-			const newDetails = new Map(assetDetails);
 			for (const id of assetIds) {
-				if (!newDetails.has(id)) {
+				if (!assetDetails.has(id)) {
 					try {
 						const resp = await fetchApi(`/assets/${id}`);
 						if (resp.ok) {
-							newDetails.set(id, await resp.json());
+							assetDetails.set(id, await resp.json());
 						}
-					} catch {}
+					} catch {
+						/* asset fetch failed; skip */
+					}
 				}
 			}
-			assetDetails = newDetails;
 		} catch (e) {
 			console.error('Failed to load assets:', e);
 		} finally {
@@ -177,8 +179,8 @@
 				limit: 100
 			});
 			previewCount = result.asset_count;
-		} catch (e: any) {
-			error = e.message || 'Failed to preview rule';
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to preview rule';
 		} finally {
 			previewing = false;
 		}
@@ -210,8 +212,8 @@
 			};
 			rule = await updateAssetRule(ruleId, input);
 			await populateForm(rule);
-		} catch (e: any) {
-			error = e.message || 'Failed to update asset rule';
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to update asset rule';
 		} finally {
 			saving = false;
 		}
@@ -220,17 +222,17 @@
 	async function handleDelete() {
 		try {
 			await deleteAssetRule(ruleId);
-			goto('/asset-rules');
-		} catch (e: any) {
-			error = e.message || 'Failed to delete asset rule';
+			goto(resolve('/asset-rules'));
+		} catch (e) {
+			error = e instanceof Error ? e.message : 'Failed to delete asset rule';
 			showDeleteModal = false;
 		}
 	}
 
-	function getAssetUrl(asset: Asset): string {
-		if (!asset.mrn) return '#';
+	function getAssetPath(asset: Asset): string | null {
+		if (!asset.mrn) return null;
 		const mrnParts = asset.mrn.replace('mrn://', '').split('/');
-		if (mrnParts.length < 3) return '#';
+		if (mrnParts.length < 3) return null;
 		return `/discover/${encodeURIComponent(mrnParts[0])}/${encodeURIComponent(mrnParts[1])}/${encodeURIComponent(mrnParts.slice(2).join('/'))}`;
 	}
 
@@ -273,7 +275,7 @@
 	<div class="max-w-7xl mx-auto px-8 py-8">
 		<div class="mb-6">
 			<button
-				onclick={() => goto('/asset-rules')}
+				onclick={() => goto(resolve('/asset-rules'))}
 				class="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
 			>
 				<IconifyIcon icon="mdi:arrow-left" class="w-5 h-5 mr-1" />
@@ -293,7 +295,11 @@
 			>
 				<IconifyIcon icon="material-symbols:error" class="h-12 w-12 text-red-400 mx-auto mb-3" />
 				<p class="text-sm text-red-600 dark:text-red-300 mb-4">{loadError}</p>
-				<Button click={() => goto('/asset-rules')} text="Back to Asset Rules" variant="clear" />
+				<Button
+					click={() => goto(resolve('/asset-rules'))}
+					text="Back to Asset Rules"
+					variant="clear"
+				/>
 			</div>
 		{:else if rule}
 			<!-- Header -->
@@ -486,7 +492,7 @@
 
 							{#if selectedTerms.length > 0}
 								<div class="space-y-2">
-									{#each selectedTerms as term}
+									{#each selectedTerms as term (term.id)}
 										<div
 											class="flex items-center justify-between p-3 rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30"
 										>
@@ -547,7 +553,7 @@
 													Searching...
 												</div>
 											{:else}
-												{#each termSearchResults as term}
+												{#each termSearchResults as term (term.id)}
 													<button
 														onclick={() => addTerm(term)}
 														class="w-full text-left px-4 py-2.5 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-b border-gray-100 dark:border-gray-700 last:border-b-0"
@@ -577,7 +583,7 @@
 					{#if isLoadingAssets}
 						<!-- Skeleton loading grid -->
 						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{#each Array(6) as _}
+							{#each Array(6) as _, i (i)}
 								<div
 									class="bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 p-4 animate-pulse"
 								>
@@ -609,13 +615,14 @@
 					{:else}
 						<!-- Assets Grid -->
 						<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-							{#each assetIds as assetId}
+							{#each assetIds as assetId (assetId)}
 								{@const asset = assetDetails.get(assetId)}
+								{@const assetPath = asset ? getAssetPath(asset) : null}
 								<div
 									class="group flex flex-col bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 hover:shadow-md transition-all overflow-hidden"
 								>
 									{#if asset}
-										<a href={getAssetUrl(asset)} class="flex-1 p-4">
+										<a href={assetPath ? resolve(assetPath) : '#'} class="flex-1 p-4">
 											<div class="flex items-start gap-3">
 												<div
 													class="flex-shrink-0 p-2 bg-gray-100 dark:bg-gray-700 rounded-lg group-hover:bg-earthy-terracotta-50 dark:group-hover:bg-earthy-terracotta-900/20 transition-colors"

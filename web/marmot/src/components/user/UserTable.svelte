@@ -4,7 +4,7 @@
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import EditUserForm from './EditUserForm.svelte';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
-	import { Lock, User as UserIcon, Mail } from 'lucide-svelte';
+	import { Lock, Mail } from 'lucide-svelte';
 
 	export let users = [];
 	export let editingUserId = null;
@@ -15,7 +15,7 @@
 	let showDeleteModal = false;
 	let userToDelete = null;
 
-	$: currentUserId = auth.getCurrentUserId();
+	const currentUserId = auth.getCurrentUserId();
 
 	async function handleDelete() {
 		if (!userToDelete) return;
@@ -82,7 +82,7 @@
 			</tr>
 		</thead>
 		<tbody class="divide-y divide-earthy-brown-100 bg-earthy-brown-50 dark:bg-gray-900">
-			{#each users as user}
+			{#each users as user (user.id)}
 				<tr class="hover:bg-earthy-brown-100 dark:hover:bg-gray-800 transition-colors">
 					{#if editingUserId === user.id}
 						<td colspan="6">
@@ -103,7 +103,7 @@
 						<td class="px-6 py-4 whitespace-nowrap">
 							{#if user.identities && user.identities.length > 0}
 								<div class="flex flex-wrap gap-1">
-									{#each user.identities as identity}
+									{#each user.identities as identity (identity.provider)}
 										<span
 											class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
 										>
@@ -123,7 +123,7 @@
 						</td>
 						<td class="px-6 py-4 whitespace-nowrap">
 							<div class="flex flex-wrap gap-1">
-								{#each user.roles as role}
+								{#each user.roles as role (role.name)}
 									<span
 										class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
 										>{role.name}</span

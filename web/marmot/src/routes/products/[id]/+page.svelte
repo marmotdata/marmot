@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/stores';
 	import { onMount } from 'svelte';
+	import { SvelteMap, SvelteURLSearchParams } from 'svelte/reactivity';
 	import { fetchApi } from '$lib/api';
 	import type {
 		DataProduct,
@@ -31,7 +33,7 @@
 
 	let product = $state<DataProduct | null>(null);
 	let resolvedAssets = $state<ResolvedAssetsResponse | null>(null);
-	let assetDetails = $state<Map<string, Asset>>(new Map());
+	let assetDetails: SvelteMap<string, Asset> = new SvelteMap();
 
 	let isLoading = $state(true);
 	let loadError = $state<string | null>(null);
@@ -51,7 +53,24 @@
 	let ruleError = $state<string | null>(null);
 	let deletingRuleId = $state<string | null>(null);
 	let isPreviewLoading = $state(false);
-	let rulePreviewResults = $state<any[]>([]);
+
+	interface PreviewResultMetadata {
+		mrn?: string;
+		type?: string;
+		providers?: string[];
+		[key: string]: unknown;
+	}
+
+	interface PreviewResult {
+		id: string;
+		type: string;
+		name: string;
+		description?: string;
+		url?: string;
+		metadata?: PreviewResultMetadata;
+	}
+
+	let rulePreviewResults = $state<PreviewResult[]>([]);
 	let rulePreviewTotal = $state(0);
 
 	let showDeleteRuleModal = $state(false);
@@ -98,7 +117,7 @@
 	function setActiveTab(tab: string) {
 		const url = new URL(window.location.href);
 		url.searchParams.set('tab', tab);
-		goto(url.toString(), { replaceState: true });
+		goto(resolve((url.pathname + url.search) as `/${string}`), { replaceState: true });
 	}
 
 	function handleBack() {
@@ -157,20 +176,18 @@
 	}
 
 	async function loadAssetDetails(assetIds: string[]) {
-		const newDetails = new Map(assetDetails);
 		for (const assetId of assetIds) {
-			if (newDetails.has(assetId)) continue; // Skip already loaded
+			if (assetDetails.has(assetId)) continue; // Skip already loaded
 			try {
 				const response = await fetchApi(`/assets/${assetId}`);
 				if (response.ok) {
 					const asset = await response.json();
-					newDetails.set(assetId, asset);
+					assetDetails.set(assetId, asset);
 				}
 			} catch (err) {
 				console.error(`Failed to load asset ${assetId}:`, err);
 			}
 		}
-		assetDetails = newDetails;
 	}
 
 	async function handleAssetPageChange(page: number) {
@@ -188,10 +205,10 @@
 		}
 	}
 
-	function getAssetUrl(asset: Asset): string {
-		if (!asset.mrn) return '#';
+	function getAssetUrl(asset: Asset): `/${string}` {
+		if (!asset.mrn) return '/discover';
 		const mrnParts = asset.mrn.replace('mrn://', '').split('/');
-		if (mrnParts.length < 3) return '#';
+		if (mrnParts.length < 3) return '/discover';
 		const type = mrnParts[0];
 		const service = mrnParts[1];
 		const fullName = mrnParts.slice(2).join('/');
@@ -203,16 +220,6 @@
 			return asset.providers[0];
 		}
 		return asset.type || 'unknown';
-	}
-
-	function formatDate(dateString: string): string {
-		return new Date(dateString).toLocaleDateString('en-US', {
-			month: 'short',
-			day: 'numeric',
-			year: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
 	}
 
 	function openAddRuleForm() {
@@ -255,7 +262,7 @@
 		}
 
 		try {
-			const params = new URLSearchParams({
+			const params = new SvelteURLSearchParams({
 				q: query,
 				limit: '10'
 			});
@@ -269,7 +276,9 @@
 			}
 
 			const data = await response.json();
-			rulePreviewResults = (data.results || []).filter((r: any) => r.type === 'asset');
+			rulePreviewResults = ((data.results as PreviewResult[]) || []).filter(
+				(r) => r.type === 'asset'
+			);
 			rulePreviewTotal = data.total || rulePreviewResults.length;
 		} catch (err) {
 			console.error('Failed to preview rule:', err);
@@ -278,7 +287,7 @@
 		}
 	}
 
-	function getPreviewIconType(result: any): string {
+	function getPreviewIconType(result: PreviewResult): string {
 		const metadata = result.metadata;
 		if (
 			metadata?.providers &&
@@ -290,11 +299,11 @@
 		return metadata?.type || 'unknown';
 	}
 
-	function getPreviewAssetUrl(result: any): string {
+	function getPreviewAssetUrl(result: PreviewResult): `/${string}` {
 		const mrn = result.metadata?.mrn || '';
-		if (!mrn) return '#';
+		if (!mrn) return '/discover';
 		const mrnParts = mrn.replace('mrn://', '').split('/');
-		if (mrnParts.length < 3) return '#';
+		if (mrnParts.length < 3) return '/discover';
 		const type = mrnParts[0];
 		const service = mrnParts[1];
 		const fullName = mrnParts.slice(2).join('/');
@@ -434,17 +443,22 @@
 					const data = await response.json();
 					// Filter out assets already in the product
 					const existingIds = new Set(resolvedAssets?.all_assets || []);
-					assetSearchResults = (data.results || [])
-						.filter((r: any) => r.type === 'asset' && !existingIds.has(r.id))
-						.map((r: any) => ({
-							id: r.id,
-							name: r.name,
-							mrn:
-								r.metadata?.mrn || r.url?.replace('/discover/', 'mrn://').replace(/\//g, '/') || '',
-							type: r.metadata?.type || 'unknown',
-							providers: r.metadata?.providers || [],
-							description: r.description
-						}));
+					assetSearchResults = ((data.results as PreviewResult[]) || [])
+						.filter((r) => r.type === 'asset' && !existingIds.has(r.id))
+						.map(
+							(r) =>
+								({
+									id: r.id,
+									name: r.name,
+									mrn:
+										r.metadata?.mrn ||
+										r.url?.replace('/discover/', 'mrn://').replace(/\//g, '/') ||
+										'',
+									type: r.metadata?.type || 'unknown',
+									providers: r.metadata?.providers || [],
+									description: r.description
+								}) as Asset
+						);
 				}
 			} catch (err) {
 				console.error('Failed to search assets:', err);
@@ -595,7 +609,11 @@
 				<IconifyIcon icon="material-symbols:error" class="h-12 w-12 text-red-400 mx-auto mb-3" />
 				<h3 class="text-lg font-medium text-red-800 dark:text-red-200 mb-2">Failed to Load</h3>
 				<p class="text-sm text-red-600 dark:text-red-300 mb-4">{loadError}</p>
-				<Button click={() => goto('/products')} text="Back to Data Products" variant="clear" />
+				<Button
+					click={() => goto(resolve('/products'))}
+					text="Back to Data Products"
+					variant="clear"
+				/>
 			</div>
 		</div>
 	{:else if product}
@@ -816,7 +834,7 @@
 												class="mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden shadow-sm"
 												role="listbox"
 											>
-												{#each assetSearchResults as asset, index}
+												{#each assetSearchResults as asset, index (asset.id)}
 													<div
 														class="flex items-center gap-3 p-3 border-b border-gray-100 dark:border-gray-700 last:border-b-0 transition-colors cursor-pointer {index ===
 														selectedAssetIndex
@@ -868,7 +886,7 @@
 								{#if isLoadingAssets && !resolvedAssets}
 									<!-- Skeleton loading grid -->
 									<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-										{#each Array(6) as _}
+										{#each Array(6) as _, i (i)}
 											<div
 												class="bg-gray-50 dark:bg-gray-700/50 rounded-xl border border-gray-200 dark:border-gray-600 p-4 animate-pulse"
 											>
@@ -910,14 +928,14 @@
 
 									<!-- Assets Grid -->
 									<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-										{#each paginatedAssetIds as assetId}
+										{#each paginatedAssetIds as assetId (assetId)}
 											{@const asset = assetDetails.get(assetId)}
 											{@const isManual = resolvedAssets.manual_assets.includes(assetId)}
 											<div
 												class="group flex flex-col bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 hover:shadow-md transition-all overflow-hidden"
 											>
 												{#if asset}
-													<a href={getAssetUrl(asset)} class="flex-1 p-4">
+													<a href={resolve(getAssetUrl(asset))} class="flex-1 p-4">
 														<!-- Header with icon and name -->
 														<div class="flex items-start gap-3">
 															<div
@@ -1132,7 +1150,7 @@
 												<!-- Preview Results -->
 												{#if isPreviewLoading}
 													<div class="space-y-2">
-														{#each Array(3) as _}
+														{#each Array(3) as _, i (i)}
 															<div
 																class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600 p-3 animate-pulse"
 															>
@@ -1168,9 +1186,9 @@
 															{/if}
 														</div>
 														<div class="space-y-2 max-h-64 overflow-y-auto">
-															{#each rulePreviewResults as result}
+															{#each rulePreviewResults as result (result.id)}
 																<a
-																	href={getPreviewAssetUrl(result)}
+																	href={resolve(getPreviewAssetUrl(result))}
 																	target="_blank"
 																	class="block bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-600 p-3 hover:shadow-md hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-700 transition-all group"
 																>
@@ -1261,7 +1279,7 @@
 
 									{#if product.rules && product.rules.length > 0}
 										<div class="space-y-3">
-											{#each product.rules as rule}
+											{#each product.rules as rule (rule.id)}
 												<div
 													class="p-4 rounded-lg border border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/30"
 												>

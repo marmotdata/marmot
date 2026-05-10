@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy, mount, unmount } from 'svelte';
+	import { SvelteMap } from 'svelte/reactivity';
 	import { Editor, textblockTypeInputRule } from '@tiptap/core';
 	import StarterKit from '@tiptap/starter-kit';
 	import Placeholder from '@tiptap/extension-placeholder';
@@ -61,7 +62,7 @@
 
 	function createMentionSuggestion() {
 		// Cache for debounced search results
-		let searchCache: Map<string, Array<MentionItem>> = new Map();
+		let searchCache: SvelteMap<string, Array<MentionItem>> = new SvelteMap();
 
 		// Debounced search function - searches both users and teams
 		const searchOwners = async (query: string) => {

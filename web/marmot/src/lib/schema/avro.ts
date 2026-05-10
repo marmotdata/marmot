@@ -1,6 +1,25 @@
 import type { Field } from './types';
 import avsc from 'avsc';
 
+type AvroSchemaValue = string | AvroSchemaObject | AvroSchemaValue[] | null | undefined;
+
+interface AvroSchemaObject {
+	type?: AvroSchemaValue;
+	name?: string;
+	namespace?: string;
+	doc?: string;
+	fields?: AvroSchemaObject[];
+	items?: AvroSchemaValue;
+	values?: AvroSchemaValue;
+	symbols?: string[];
+	default?: unknown;
+	[key: string]: unknown;
+}
+
+function isObject(value: unknown): value is AvroSchemaObject {
+	return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
 /**
  * Resolves an Avro schema reference/namespace
  */
@@ -11,17 +30,18 @@ export function resolveNamespace(namespace: string, name: string): string {
 /**
  * Determines the field type from an Avro schema
  */
-export function getFieldType(fieldSchema: any): string {
+export function getFieldType(fieldSchema: AvroSchemaObject | null | undefined): string {
 	if (!fieldSchema) return 'unknown';
 
 	// Handle union types (array of types)
 	if (Array.isArray(fieldSchema.type)) {
 		// Filter out null type for optional fields
-		const types = fieldSchema.type.filter((t: any) => t !== 'null');
+		const types = fieldSchema.type.filter((t) => t !== 'null');
 		if (types.length === 1) {
-			return types[0];
+			const t = types[0];
+			return typeof t === 'string' ? t : 'complex';
 		}
-		return types.join(' | ');
+		return types.map((t) => (typeof t === 'string' ? t : 'complex')).join(' | ');
 	}
 
 	// Handle primitive types
@@ -29,11 +49,11 @@ export function getFieldType(fieldSchema: any): string {
 		if (fieldSchema.type === 'array' && fieldSchema.items) {
 			if (typeof fieldSchema.items === 'string') {
 				return `array<${fieldSchema.items}>`;
-			} else if (fieldSchema.items.type) {
+			} else if (isObject(fieldSchema.items) && fieldSchema.items.type) {
 				if (fieldSchema.items.type === 'record') {
-					return `array<${fieldSchema.items.name}>`;
+					return `array<${fieldSchema.items.name ?? ''}>`;
 				}
-				return `array<${fieldSchema.items.type}>`;
+				return `array<${String(fieldSchema.items.type)}>`;
 			}
 		}
 
@@ -45,28 +65,29 @@ export function getFieldType(fieldSchema: any): string {
 	}
 
 	// Handle complex types (record, enum, fixed, etc.)
-	if (typeof fieldSchema.type === 'object') {
-		if (fieldSchema.type.type === 'record') {
-			return fieldSchema.type.name;
+	if (isObject(fieldSchema.type)) {
+		const inner = fieldSchema.type;
+		if (inner.type === 'record') {
+			return inner.name ?? 'record';
 		}
-		if (fieldSchema.type.type === 'enum') {
+		if (inner.type === 'enum') {
 			return 'enum';
 		}
-		if (fieldSchema.type.type === 'fixed') {
+		if (inner.type === 'fixed') {
 			return 'fixed';
 		}
-		if (fieldSchema.type.type === 'array') {
-			if (typeof fieldSchema.type.items === 'string') {
-				return `array<${fieldSchema.type.items}>`;
-			} else if (fieldSchema.type.items.type) {
-				return `array<${fieldSchema.type.items.type}>`;
+		if (inner.type === 'array') {
+			if (typeof inner.items === 'string') {
+				return `array<${inner.items}>`;
+			} else if (isObject(inner.items) && inner.items.type) {
+				return `array<${String(inner.items.type)}>`;
 			}
 		}
-		if (fieldSchema.type.type === 'map') {
-			if (typeof fieldSchema.type.values === 'string') {
-				return `map<${fieldSchema.type.values}>`;
-			} else if (fieldSchema.type.values.type) {
-				return `map<${fieldSchema.type.values.type}>`;
+		if (inner.type === 'map') {
+			if (typeof inner.values === 'string') {
+				return `map<${inner.values}>`;
+			} else if (isObject(inner.values) && inner.values.type) {
+				return `map<${String(inner.values.type)}>`;
 			}
 		}
 	}
@@ -79,7 +100,7 @@ export function getFieldType(fieldSchema: any): string {
  */
 export function processField(
 	fieldName: string,
-	fieldSchema: any,
+	fieldSchema: AvroSchemaObject,
 	namespace: string = '',
 	depth: number = 0
 ): Field[] {
@@ -90,7 +111,8 @@ export function processField(
 		name: fieldName,
 		type: getFieldType(fieldSchema),
 		description: fieldSchema.doc,
-		required: !Array.isArray(fieldSchema.type) || !fieldSchema.type.includes('null'),
+		required:
+			!Array.isArray(fieldSchema.type) || !(fieldSchema.type as AvroSchemaValue[]).includes('null'),
 		default: fieldSchema.default,
 		indentLevel: depth
 	};
@@ -99,17 +121,22 @@ export function processField(
 
 	// Process nested record fields
 	if (fieldSchema.type === 'record' && fieldSchema.fields) {
-		const recordNamespace = resolveNamespace(namespace, fieldSchema.name);
-		fieldSchema.fields.forEach((nestedField: any) => {
-			fields.push(...processField(nestedField.name, nestedField, recordNamespace, depth + 1));
+		const recordNamespace = resolveNamespace(namespace, fieldSchema.name ?? '');
+		fieldSchema.fields.forEach((nestedField: AvroSchemaObject) => {
+			fields.push(...processField(nestedField.name ?? '', nestedField, recordNamespace, depth + 1));
 		});
 	}
 	// Process array items if they are records
-	else if (fieldSchema.type === 'array' && typeof fieldSchema.items === 'object') {
+	else if (fieldSchema.type === 'array' && isObject(fieldSchema.items)) {
 		if (fieldSchema.items.type === 'record' && fieldSchema.items.fields) {
-			fieldSchema.items.fields.forEach((nestedField: any) => {
+			fieldSchema.items.fields.forEach((nestedField: AvroSchemaObject) => {
 				fields.push(
-					...processField(`${fieldName}[].${nestedField.name}`, nestedField, namespace, depth + 1)
+					...processField(
+						`${fieldName}[].${nestedField.name ?? ''}`,
+						nestedField,
+						namespace,
+						depth + 1
+					)
 				);
 			});
 		}
@@ -117,27 +144,38 @@ export function processField(
 	// Process union types (arrays in Avro)
 	else if (Array.isArray(fieldSchema.type)) {
 		// Look for record types in union
-		fieldSchema.type.forEach((unionType: any) => {
-			if (typeof unionType === 'object' && unionType.type === 'record' && unionType.fields) {
-				unionType.fields.forEach((nestedField: any) => {
+		fieldSchema.type.forEach((unionType) => {
+			if (isObject(unionType) && unionType.type === 'record' && unionType.fields) {
+				unionType.fields.forEach((nestedField: AvroSchemaObject) => {
 					fields.push(
-						...processField(`${fieldName}.${nestedField.name}`, nestedField, namespace, depth + 1)
+						...processField(
+							`${fieldName}.${nestedField.name ?? ''}`,
+							nestedField,
+							namespace,
+							depth + 1
+						)
 					);
 				});
 			}
 		});
 	}
 	// Process nested record type objects
-	else if (typeof fieldSchema.type === 'object') {
-		if (fieldSchema.type.type === 'record' && fieldSchema.type.fields) {
-			fieldSchema.type.fields.forEach((nestedField: any) => {
+	else if (isObject(fieldSchema.type)) {
+		const inner = fieldSchema.type;
+		if (inner.type === 'record' && inner.fields) {
+			inner.fields.forEach((nestedField: AvroSchemaObject) => {
 				fields.push(
-					...processField(`${fieldName}.${nestedField.name}`, nestedField, namespace, depth + 1)
+					...processField(
+						`${fieldName}.${nestedField.name ?? ''}`,
+						nestedField,
+						namespace,
+						depth + 1
+					)
 				);
 			});
-		} else if (fieldSchema.type.type === 'enum' && fieldSchema.type.symbols) {
+		} else if (inner.type === 'enum' && inner.symbols) {
 			// Add enum values as a property
-			field.enum = fieldSchema.type.symbols;
+			field.enum = inner.symbols;
 		}
 	}
 
@@ -147,11 +185,11 @@ export function processField(
 /**
  * Process the complete Avro schema
  */
-export function processAvroSchema(schema: any): Field[] {
+export function processAvroSchema(schema: unknown): Field[] {
 	if (!schema) return [];
 
 	try {
-		let avroSchema: any;
+		let avroSchema: AvroSchemaObject;
 
 		if (typeof schema === 'string') {
 			if (schema.includes('type: record') && schema.includes('fields:')) {
@@ -160,9 +198,7 @@ export function processAvroSchema(schema: any): Field[] {
 					const lines = schema.split('\n');
 
 					const nameMatch = schema.match(/name:\s*([\w.]+)/);
-					const namespaceMatch = schema.match(/namespace:\s*([\w.]+)/);
 					const name = nameMatch ? nameMatch[1] : 'root';
-					const namespace = namespaceMatch ? namespaceMatch[1] : '';
 
 					const docMatch = schema.match(/doc:\s*(.+)/);
 					fields.push({
@@ -173,9 +209,6 @@ export function processAvroSchema(schema: any): Field[] {
 						indentLevel: 0
 					});
 
-					const currentIndent = 0;
-					const currentField = null;
-
 					for (let i = 0; i < lines.length; i++) {
 						const line = lines[i];
 
@@ -183,7 +216,7 @@ export function processAvroSchema(schema: any): Field[] {
 							const fieldNameMatch = line.match(/name:\s*(\w+)/);
 							const fieldName = fieldNameMatch ? fieldNameMatch[1] : 'unknown';
 							const typeMatch = lines[i + 1]?.match(/type:\s*(\w+|\[.*\])/);
-							const docMatch = lines
+							const fieldDocMatch = lines
 								.slice(i, i + 3)
 								.join(' ')
 								.match(/doc:\s*(.+?)(\s+\w+:|$)/);
@@ -191,7 +224,7 @@ export function processAvroSchema(schema: any): Field[] {
 							fields.push({
 								name: fieldName,
 								type: typeMatch ? typeMatch[1] : 'unknown',
-								description: docMatch ? docMatch[1].trim() : undefined,
+								description: fieldDocMatch ? fieldDocMatch[1].trim() : undefined,
 								required: true,
 								indentLevel: 1
 							});
@@ -199,7 +232,7 @@ export function processAvroSchema(schema: any): Field[] {
 					}
 
 					return fields;
-				} catch (e) {
+				} catch {
 					return [
 						{
 							name: 'root',
@@ -212,7 +245,7 @@ export function processAvroSchema(schema: any): Field[] {
 
 			try {
 				avroSchema = JSON.parse(schema);
-			} catch (e) {
+			} catch {
 				return [
 					{
 						name: 'root',
@@ -222,7 +255,7 @@ export function processAvroSchema(schema: any): Field[] {
 				];
 			}
 		} else {
-			avroSchema = schema;
+			avroSchema = schema as AvroSchemaObject;
 		}
 
 		const fields: Field[] = [];
@@ -236,8 +269,8 @@ export function processAvroSchema(schema: any): Field[] {
 				indentLevel: 0
 			});
 
-			avroSchema.fields.forEach((field: any) => {
-				fields.push(...processField(field.name, field, avroSchema.namespace, 1));
+			avroSchema.fields.forEach((field: AvroSchemaObject) => {
+				fields.push(...processField(field.name ?? '', field, avroSchema.namespace ?? '', 1));
 			});
 		}
 
@@ -270,7 +303,7 @@ export function prettyPrintSchema(schema: string): string {
 	try {
 		const parsed = JSON.parse(schema);
 		return JSON.stringify(parsed, null, 2);
-	} catch (e) {
+	} catch {
 		// Not valid JSON, return as is
 		return schema;
 	}
@@ -280,12 +313,12 @@ export function prettyPrintSchema(schema: string): string {
  * Validate an Avro schema using avsc
  * Returns array of validation errors
  */
-export function validateAvroSchema(schema: any): any[] {
+export function validateAvroSchema(schema: unknown): { message: string }[] {
 	if (!schema) return [];
 
 	try {
 		// Use avsc to parse and validate the schema
-		avsc.Type.forSchema(schema);
+		avsc.Type.forSchema(schema as avsc.Schema);
 		return [];
 	} catch (error) {
 		return [{ message: error instanceof Error ? error.message : String(error) }];
@@ -295,19 +328,24 @@ export function validateAvroSchema(schema: any): any[] {
 /**
  * Determines if the given schema is an Avro schema
  */
-export function isAvroSchema(schema: any): boolean {
+export function isAvroSchema(schema: unknown): boolean {
 	if (!schema) return false;
 
 	// Check for common Avro schema properties
-	if (schema.type === 'record' && schema.fields && Array.isArray(schema.fields)) {
+	if (
+		isObject(schema) &&
+		schema.type === 'record' &&
+		schema.fields &&
+		Array.isArray(schema.fields)
+	) {
 		return true;
 	}
 
 	// Try to parse with avsc
 	try {
-		avsc.Type.forSchema(schema);
+		avsc.Type.forSchema(schema as avsc.Schema);
 		return true;
-	} catch (error) {
+	} catch {
 		return false;
 	}
 }

@@ -1,7 +1,7 @@
 <script lang="ts">
 	interface Props {
 		columnNames: string[];
-		rows: any[][];
+		rows: unknown[][];
 		loading?: boolean;
 		error?: string | null;
 	}
@@ -79,7 +79,7 @@
 			<table class="w-full divide-y divide-gray-200 dark:divide-gray-700">
 				<thead class="bg-gray-100 dark:bg-gray-700 sticky top-0 z-10">
 					<tr>
-						{#each columnNames as columnName, index}
+						{#each columnNames as columnName, index (index)}
 							<th
 								class="px-4 py-2 text-left text-xs font-medium text-gray-700 dark:text-gray-300 uppercase tracking-wider whitespace-nowrap relative border-r border-gray-200 dark:border-gray-700"
 								style="width: {columnWidths[index]}px; min-width: {columnWidths[
@@ -100,13 +100,13 @@
 					</tr>
 				</thead>
 				<tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-					{#each rows as row, rowIndex}
+					{#each rows as row, rowIndex (rowIndex)}
 						<tr
 							class="{rowIndex % 2 === 0
 								? 'bg-white dark:bg-gray-900'
 								: 'bg-gray-50 dark:bg-gray-800'} hover:bg-gray-50 dark:hover:bg-gray-700"
 						>
-							{#each row as cell, cellIndex}
+							{#each row as cell, cellIndex (cellIndex)}
 								<td
 									class="px-4 py-2 text-sm text-gray-900 dark:text-gray-100 whitespace-nowrap overflow-hidden text-ellipsis border-r border-gray-200 dark:border-gray-700"
 									style="width: {columnWidths[cellIndex]}px; min-width: {columnWidths[

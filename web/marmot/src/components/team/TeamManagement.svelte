@@ -41,14 +41,12 @@
 
 	onMount(fetchTeams);
 
-	$: {
-		if (teamQuery !== undefined) {
-			if (searchTimer) clearTimeout(searchTimer);
-			searchTimer = setTimeout(() => {
-				offset = 0;
-				fetchTeams();
-			}, 300);
-		}
+	function handleQueryInput() {
+		if (searchTimer) clearTimeout(searchTimer);
+		searchTimer = setTimeout(() => {
+			offset = 0;
+			fetchTeams();
+		}, 300);
 	}
 
 	async function handleTeamDeleted(teamId: string) {
@@ -67,6 +65,7 @@
 					type="text"
 					placeholder="Search teams..."
 					bind:value={teamQuery}
+					on:input={handleQueryInput}
 					class="w-full px-4 py-2 rounded-md border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-transparent"
 				/>
 			</div>

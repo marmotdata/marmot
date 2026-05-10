@@ -29,26 +29,26 @@ export default ts.config(
 	},
 	{
 		rules: {
-			'@typescript-eslint/no-explicit-any': 'warn',
-			'svelte/no-at-html-tags': 'warn',
-			'svelte/infinite-reactive-loop': 'warn',
-			'svelte/no-immutable-reactive-statements': 'warn',
-			'svelte/no-dom-manipulating': 'warn',
+			'@typescript-eslint/no-explicit-any': 'error',
+			'svelte/no-at-html-tags': 'error',
+			'svelte/infinite-reactive-loop': 'error',
+			'svelte/no-immutable-reactive-statements': 'error',
+			'svelte/no-dom-manipulating': 'error',
 			'svelte/prefer-writable-derived': 'off',
-			'svelte/no-reactive-functions': 'warn',
+			'svelte/no-reactive-functions': 'error',
 			'@typescript-eslint/no-unused-vars': [
-				'warn',
+				'error',
 				{
 					argsIgnorePattern: '^_',
 					varsIgnorePattern: '^_',
 					caughtErrorsIgnorePattern: '^_|^e$|^err|^error'
 				}
 			],
-			'no-empty': 'warn',
-			'no-case-declarations': 'warn',
-			'svelte/require-each-key': 'warn',
-			'svelte/no-navigation-without-resolve': 'warn',
-			'svelte/prefer-svelte-reactivity': 'warn'
+			'no-empty': 'error',
+			'no-case-declarations': 'error',
+			'svelte/require-each-key': 'error',
+			'svelte/no-navigation-without-resolve': 'error',
+			'svelte/prefer-svelte-reactivity': 'error'
 		}
 	},
 	{

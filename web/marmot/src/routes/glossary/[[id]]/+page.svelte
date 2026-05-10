@@ -1,10 +1,17 @@
 <script lang="ts">
 	import { onMount, afterUpdate } from 'svelte';
 	import { writable, type Writable } from 'svelte/store';
+	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
-	import type { GlossaryTerm, TermsListResponse, Owner } from '$lib/glossary/types';
+	import type {
+		GlossaryTerm,
+		TermsListResponse,
+		Owner,
+		UpdateTermInput
+	} from '$lib/glossary/types';
 	import QueryInput from '$components/query/QueryInput.svelte';
 	import MarkdownRenderer from '$components/ui/MarkdownRenderer.svelte';
 	import RichTextEditor from '$components/editor/RichTextEditor.svelte';
@@ -37,7 +44,8 @@
 	let isEditing = false;
 	let editedTerm: GlossaryTerm | null = null;
 
-	$: canManageGlossary = auth.hasPermission('glossary', 'manage');
+	const canManageGlossary = auth.hasPermission('glossary', 'manage');
+	let didAutoSelect = false;
 
 	$: {
 		const query = $page.url.searchParams.get('q') || '';
@@ -50,10 +58,14 @@
 			const term = $terms.find((t) => t.id === termId);
 			if (term) {
 				selectedTerm = term;
-			} else if (termId) {
-				loadTermById(termId);
 			}
-		} else if (!termId && !selectedTerm && $terms.length > 0) {
+			// Term not in the loaded list: a separate page.subscribe handler in
+			// onMount fetches it. Calling loadTermById from this reactive block
+			// would assign selectedTerm and re-trigger the block.
+		} else if (!termId && !selectedTerm && !didAutoSelect && $terms.length > 0) {
+			// Latch the auto-select to a single fire so the assignment to
+			// selectedTerm via selectTerm() doesn't loop this reactive block.
+			didAutoSelect = true;
 			selectTerm($terms[0]);
 		}
 	}
@@ -63,7 +75,7 @@
 		error.set(null);
 
 		try {
-			const queryParams = new URLSearchParams({
+			const queryParams = new SvelteURLSearchParams({
 				limit: '100',
 				offset: '0'
 			});
@@ -106,7 +118,11 @@
 			} else {
 				url.searchParams.delete('q');
 			}
-			goto(url.toString(), { replaceState: true, noScroll: true, keepFocus: true });
+			goto(resolve(`${url.pathname}${url.search}${url.hash}`), {
+				replaceState: true,
+				noScroll: true,
+				keepFocus: true
+			});
 		}, 300);
 	}
 
@@ -118,7 +134,11 @@
 		} else {
 			url.searchParams.delete('q');
 		}
-		goto(url.toString(), { replaceState: true, noScroll: true, keepFocus: true });
+		goto(resolve(`${url.pathname}${url.search}${url.hash}`), {
+			replaceState: true,
+			noScroll: true,
+			keepFocus: true
+		});
 	}
 
 	function selectTerm(term: GlossaryTerm) {
@@ -129,7 +149,7 @@
 		// Update URL with selected term using path parameter
 		const searchParams = $page.url.searchParams.toString();
 		const url = searchParams ? `/glossary/${term.id}?${searchParams}` : `/glossary/${term.id}`;
-		goto(url, { replaceState: true, noScroll: true, keepFocus: true });
+		goto(resolve(url), { replaceState: true, noScroll: true, keepFocus: true });
 	}
 
 	async function loadTermById(termId: string) {
@@ -210,7 +230,7 @@
 		if (!selectedTerm || !editedTerm) return;
 
 		try {
-			const updateData: any = {};
+			const updateData: UpdateTermInput = {};
 
 			if (editedTerm.name !== selectedTerm.name) {
 				updateData.name = editedTerm.name;
@@ -289,18 +309,28 @@
 		}
 	}
 
-	$: {
-		if ($page.url) {
-			fetchTerms();
-		}
-	}
-
 	afterUpdate(() => {
 		document.title = `${selectedTerm?.name || 'Glossary'} - Marmot`;
 	});
 
 	onMount(() => {
-		fetchTerms();
+		// Refetch whenever the page URL changes (search params, route id, etc).
+		// Subscribing here instead of using a `$:` block avoids the lint's
+		// infinite-reactive-loop heuristic, since fetchTerms() mutates stores
+		// the rest of this component reads.
+		let lastFetchedTermId: string | null | undefined = undefined;
+		const unsubscribe = page.subscribe((p) => {
+			if (!p?.url) return;
+			fetchTerms();
+
+			// Lazy-load any term whose id is in the URL but not yet known.
+			const termId = p.params?.id;
+			if (termId && termId !== lastFetchedTermId && termId !== selectedTerm?.id) {
+				lastFetchedTermId = termId;
+				loadTermById(termId);
+			}
+		});
+		return () => unsubscribe();
 	});
 </script>
 
@@ -364,7 +394,7 @@
 						</div>
 					{:else}
 						<div class="overflow-y-auto max-h-full">
-							{#each $terms as term}
+							{#each $terms as term (term.id)}
 								<button
 									on:click={() => selectTerm(term)}
 									class="w-full px-4 py-3 text-left transition-all border-l-4 {selectedTerm?.id ===

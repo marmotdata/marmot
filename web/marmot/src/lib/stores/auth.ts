@@ -108,12 +108,13 @@ function createAuthStore() {
 }
 
 interface JwtPayload {
+	sub?: string;
 	roles?: string[];
 	permissions?: string[];
 	preferences?: {
 		theme?: string;
 	};
-	[key: string]: any;
+	[key: string]: unknown;
 }
 
 function parseJwt(token: string): JwtPayload | null {

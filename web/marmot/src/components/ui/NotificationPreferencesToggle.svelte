@@ -86,7 +86,7 @@
 </script>
 
 <div class="space-y-1">
-	{#each notificationTypes as { type, label, description, icon }}
+	{#each notificationTypes as { type, label, description, icon } (type)}
 		<div class="flex items-center justify-between py-2">
 			<div class="flex items-center gap-3">
 				<Icon {icon} class="w-5 h-5 text-gray-400 dark:text-gray-500" />
