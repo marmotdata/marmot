@@ -11,6 +11,7 @@
 		targetPosition,
 		style = {},
 		markerEnd,
+		label,
 		data
 	} = $props();
 
