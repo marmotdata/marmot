@@ -383,6 +383,15 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 			sources[j] = source.Name
 		}
 
+		// Merge per-asset provider tags (from DiscoveryResult.AssetTags) with config-level tags.
+		var providerTags []string
+		if a.MRN != nil {
+			providerTags = append(providerTags, result.AssetTags[*a.MRN]...)
+		}
+		if baseConfig, err := plugin.UnmarshalPluginConfig[plugin.BaseConfig](validatedConfig); err == nil && len(baseConfig.Tags) > 0 {
+			providerTags = append(providerTags, plugin.InterpolateTags(baseConfig.Tags, a.Metadata)...)
+		}
+
 		assetsInput = append(assetsInput, CreateAssetInput{
 			Name:          name,
 			MRN:           a.MRN,
@@ -391,11 +400,11 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 			Description:   a.Description,
 			Metadata:      a.Metadata,
 			Schema:        schema,
-			Tags:          a.Tags,
 			Sources:       sources,
 			ExternalLinks: convertAssetExternalLinks(a.ExternalLinks),
 			Query:         a.Query,
 			QueryLanguage: a.QueryLanguage,
+			ProviderTags:  providerTags,
 		})
 	}
 

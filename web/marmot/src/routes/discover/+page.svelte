@@ -7,6 +7,7 @@
 	import { browser } from '$app/environment';
 	import { SvelteURLSearchParams } from 'svelte/reactivity';
 	import type { Asset } from '$lib/assets/types';
+	import { listAssetTags } from '$lib/assets/api';
 	import type { DataProduct } from '$lib/dataproducts/types';
 	import AssetBlade from '$components/asset/AssetBlade.svelte';
 	import ProductBlade from '$components/product/ProductBlade.svelte';
@@ -297,6 +298,7 @@
 			const response = await fetchApi(`/assets/${assetId}`);
 			if (response.ok) {
 				const asset: Asset = await response.json();
+				asset.tags = await listAssetTags(assetId).catch(() => []);
 				selectedAsset = asset;
 			} else {
 				console.error('Failed to load asset');

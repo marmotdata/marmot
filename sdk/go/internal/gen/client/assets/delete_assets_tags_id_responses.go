@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
+	"github.com/marmotdata/marmot/client/models"
 )
 
 // DeleteAssetsTagsIDReader is a Reader for the DeleteAssetsTagsID structure.
@@ -22,8 +22,8 @@ type DeleteAssetsTagsIDReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *DeleteAssetsTagsIDReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (any, error) {
 	switch response.Code() {
-	case 200:
-		result := NewDeleteAssetsTagsIDOK()
+	case 204:
+		result := NewDeleteAssetsTagsIDNoContent()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -40,77 +40,69 @@ func (o *DeleteAssetsTagsIDReader) ReadResponse(response runtime.ClientResponse,
 			return nil, err
 		}
 		return nil, result
+	case 500:
+		result := NewDeleteAssetsTagsIDInternalServerError()
+		if err := result.readResponse(response, consumer, o.formats); err != nil {
+			return nil, err
+		}
+		return nil, result
 	default:
 		return nil, runtime.NewAPIError("[DELETE /assets/tags/{id}] DeleteAssetsTagsID", response, response.Code())
 	}
 }
 
-// NewDeleteAssetsTagsIDOK creates a DeleteAssetsTagsIDOK with default headers values
-func NewDeleteAssetsTagsIDOK() *DeleteAssetsTagsIDOK {
-	return &DeleteAssetsTagsIDOK{}
+// NewDeleteAssetsTagsIDNoContent creates a DeleteAssetsTagsIDNoContent with default headers values
+func NewDeleteAssetsTagsIDNoContent() *DeleteAssetsTagsIDNoContent {
+	return &DeleteAssetsTagsIDNoContent{}
 }
 
 /*
-DeleteAssetsTagsIDOK describes a response with status code 200, with default header values.
+DeleteAssetsTagsIDNoContent describes a response with status code 204, with default header values.
 
-OK
+No Content
 */
-type DeleteAssetsTagsIDOK struct {
-	Payload *models.Asset
+type DeleteAssetsTagsIDNoContent struct {
 }
 
-// IsSuccess returns true when this delete assets tags Id o k response has a 2xx status code
-func (o *DeleteAssetsTagsIDOK) IsSuccess() bool {
+// IsSuccess returns true when this delete assets tags Id no content response has a 2xx status code
+func (o *DeleteAssetsTagsIDNoContent) IsSuccess() bool {
 	return true
 }
 
-// IsRedirect returns true when this delete assets tags Id o k response has a 3xx status code
-func (o *DeleteAssetsTagsIDOK) IsRedirect() bool {
+// IsRedirect returns true when this delete assets tags Id no content response has a 3xx status code
+func (o *DeleteAssetsTagsIDNoContent) IsRedirect() bool {
 	return false
 }
 
-// IsClientError returns true when this delete assets tags Id o k response has a 4xx status code
-func (o *DeleteAssetsTagsIDOK) IsClientError() bool {
+// IsClientError returns true when this delete assets tags Id no content response has a 4xx status code
+func (o *DeleteAssetsTagsIDNoContent) IsClientError() bool {
 	return false
 }
 
-// IsServerError returns true when this delete assets tags Id o k response has a 5xx status code
-func (o *DeleteAssetsTagsIDOK) IsServerError() bool {
+// IsServerError returns true when this delete assets tags Id no content response has a 5xx status code
+func (o *DeleteAssetsTagsIDNoContent) IsServerError() bool {
 	return false
 }
 
-// IsCode returns true when this delete assets tags Id o k response a status code equal to that given
-func (o *DeleteAssetsTagsIDOK) IsCode(code int) bool {
-	return code == 200
+// IsCode returns true when this delete assets tags Id no content response a status code equal to that given
+func (o *DeleteAssetsTagsIDNoContent) IsCode(code int) bool {
+	return code == 204
 }
 
-// Code gets the status code for the delete assets tags Id o k response
-func (o *DeleteAssetsTagsIDOK) Code() int {
-	return 200
+// Code gets the status code for the delete assets tags Id no content response
+func (o *DeleteAssetsTagsIDNoContent) Code() int {
+	return 204
 }
 
-func (o *DeleteAssetsTagsIDOK) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdOK %s", 200, payload)
+func (o *DeleteAssetsTagsIDNoContent) Error() string {
+	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdNoContent", 204)
 }
 
-func (o *DeleteAssetsTagsIDOK) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdOK %s", 200, payload)
+func (o *DeleteAssetsTagsIDNoContent) String() string {
+	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdNoContent", 204)
 }
 
-func (o *DeleteAssetsTagsIDOK) GetPayload() *models.Asset {
-	return o.Payload
-}
-
-func (o *DeleteAssetsTagsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.Asset)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
-		return err
-	}
+func (o *DeleteAssetsTagsIDNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	return nil
 }
@@ -126,7 +118,7 @@ DeleteAssetsTagsIDBadRequest describes a response with status code 400, with def
 Bad Request
 */
 type DeleteAssetsTagsIDBadRequest struct {
-	Payload *models.ErrorResponse
+	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
 }
 
 // IsSuccess returns true when this delete assets tags Id bad request response has a 2xx status code
@@ -169,13 +161,13 @@ func (o *DeleteAssetsTagsIDBadRequest) String() string {
 	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdBadRequest %s", 400, payload)
 }
 
-func (o *DeleteAssetsTagsIDBadRequest) GetPayload() *models.ErrorResponse {
+func (o *DeleteAssetsTagsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetsTagsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ErrorResponse)
+	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +188,7 @@ DeleteAssetsTagsIDNotFound describes a response with status code 404, with defau
 Not Found
 */
 type DeleteAssetsTagsIDNotFound struct {
-	Payload *models.ErrorResponse
+	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
 }
 
 // IsSuccess returns true when this delete assets tags Id not found response has a 2xx status code
@@ -239,13 +231,83 @@ func (o *DeleteAssetsTagsIDNotFound) String() string {
 	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdNotFound %s", 404, payload)
 }
 
-func (o *DeleteAssetsTagsIDNotFound) GetPayload() *models.ErrorResponse {
+func (o *DeleteAssetsTagsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetsTagsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ErrorResponse)
+	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+
+	// response payload
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+		return err
+	}
+
+	return nil
+}
+
+// NewDeleteAssetsTagsIDInternalServerError creates a DeleteAssetsTagsIDInternalServerError with default headers values
+func NewDeleteAssetsTagsIDInternalServerError() *DeleteAssetsTagsIDInternalServerError {
+	return &DeleteAssetsTagsIDInternalServerError{}
+}
+
+/*
+DeleteAssetsTagsIDInternalServerError describes a response with status code 500, with default header values.
+
+Internal Server Error
+*/
+type DeleteAssetsTagsIDInternalServerError struct {
+	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+}
+
+// IsSuccess returns true when this delete assets tags Id internal server error response has a 2xx status code
+func (o *DeleteAssetsTagsIDInternalServerError) IsSuccess() bool {
+	return false
+}
+
+// IsRedirect returns true when this delete assets tags Id internal server error response has a 3xx status code
+func (o *DeleteAssetsTagsIDInternalServerError) IsRedirect() bool {
+	return false
+}
+
+// IsClientError returns true when this delete assets tags Id internal server error response has a 4xx status code
+func (o *DeleteAssetsTagsIDInternalServerError) IsClientError() bool {
+	return false
+}
+
+// IsServerError returns true when this delete assets tags Id internal server error response has a 5xx status code
+func (o *DeleteAssetsTagsIDInternalServerError) IsServerError() bool {
+	return true
+}
+
+// IsCode returns true when this delete assets tags Id internal server error response a status code equal to that given
+func (o *DeleteAssetsTagsIDInternalServerError) IsCode(code int) bool {
+	return code == 500
+}
+
+// Code gets the status code for the delete assets tags Id internal server error response
+func (o *DeleteAssetsTagsIDInternalServerError) Code() int {
+	return 500
+}
+
+func (o *DeleteAssetsTagsIDInternalServerError) Error() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdInternalServerError %s", 500, payload)
+}
+
+func (o *DeleteAssetsTagsIDInternalServerError) String() string {
+	payload, _ := json.Marshal(o.Payload)
+	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdInternalServerError %s", 500, payload)
+}
+
+func (o *DeleteAssetsTagsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+	return o.Payload
+}
+
+func (o *DeleteAssetsTagsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

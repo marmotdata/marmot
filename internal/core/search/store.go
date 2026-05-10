@@ -386,7 +386,7 @@ func (r *PostgresRepository) buildFilterClauses(filter Filter, parsedQuery *quer
 
 	if len(filter.Tags) > 0 {
 		paramCount++
-		whereClauses = append(whereClauses, fmt.Sprintf("tags && $%d", paramCount))
+		whereClauses = append(whereClauses, fmt.Sprintf("EXISTS (SELECT 1 FROM assets_tags at JOIN tags t ON t.id = at.tag_id WHERE at.asset_id = search_index.entity_id AND t.name = ANY($%d))", paramCount))
 		params = append(params, filter.Tags)
 	}
 
@@ -617,7 +617,7 @@ func (r *PostgresRepository) buildListingFacetWhereClause(filter Filter) (string
 
 	if len(filter.Tags) > 0 {
 		paramCount++
-		whereClauses = append(whereClauses, fmt.Sprintf("tags && $%d", paramCount))
+		whereClauses = append(whereClauses, fmt.Sprintf("EXISTS (SELECT 1 FROM assets_tags at JOIN tags t ON t.id = at.tag_id WHERE at.asset_id = search_index.entity_id AND t.name = ANY($%d))", paramCount))
 		params = append(params, filter.Tags)
 	}
 

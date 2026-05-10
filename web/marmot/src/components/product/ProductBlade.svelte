@@ -8,6 +8,7 @@
 	import type { DataProduct, ResolvedAssetsResponse } from '$lib/dataproducts/types';
 	import type { Asset } from '$lib/assets/types';
 	import Button from '$components/ui/Button.svelte';
+	import TagBadge from '$components/shared/TagBadge.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import AssetIcon from '$components/ui/Icon.svelte';
 	import IconifyIcon from '@iconify/svelte';
@@ -265,12 +266,8 @@
 										</div>
 										<div class="flex flex-wrap gap-1">
 											{#if product.tags && product.tags.length > 0}
-												{#each product.tags.slice(0, 5) as tag (tag)}
-													<span
-														class="inline-flex items-center gap-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 px-1.5 py-0.5 rounded"
-													>
-														{tag}
-													</span>
+												{#each product.tags.slice(0, 5) as tag (tag.name)}
+													<TagBadge name={tag.name} />
 												{/each}
 												{#if product.tags.length > 5}
 													<span class="text-xs text-gray-500">+{product.tags.length - 5}</span>

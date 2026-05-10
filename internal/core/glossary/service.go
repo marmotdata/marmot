@@ -7,6 +7,7 @@ import (
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
+	"github.com/marmotdata/marmot/internal/core/tag"
 )
 
 type Owner struct {
@@ -26,7 +27,7 @@ type GlossaryTerm struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []Owner                `json:"owners"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-	Tags         []string               `json:"tags,omitempty"`
+	Tags         []tag.Tag              `json:"tags,omitempty"`
 	CreatedAt    time.Time              `json:"created_at"`
 	UpdatedAt    time.Time              `json:"updated_at"`
 	DeletedAt    *time.Time             `json:"deleted_at,omitempty"`
@@ -87,6 +88,11 @@ type Service interface {
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
 	GetAncestors(ctx context.Context, termID string) ([]*GlossaryTerm, error)
 	SetSearchObserver(observer SearchObserver)
+
+	ListGlossaryTermTags(ctx context.Context, id string) ([]tag.Tag, error)
+	SetTermTags(ctx context.Context, id string, tagIDs []string) error
+	AddTermTag(ctx context.Context, id string, tagID string) error
+	RemoveTermTag(ctx context.Context, id string, tagID string) error
 }
 
 // SearchObserver is notified when glossary terms change.
@@ -100,19 +106,16 @@ type service struct {
 	validator      *validator.Validate
 	metrics        MetricsClient
 	searchObserver SearchObserver
-}
-
-type MetricsClient interface {
-	Count(name string, value int64, tags ...string)
-	Timing(name string, value time.Duration, tags ...string)
+	tagService     tag.Service
 }
 
 type ServiceOption func(*service)
 
-func NewService(repo Repository, opts ...ServiceOption) Service {
+func NewService(repo Repository, tagSvc tag.Service, opts ...ServiceOption) Service {
 	s := &service{
-		repo:      repo,
-		validator: validator.New(),
+		repo:       repo,
+		validator:  validator.New(),
+		tagService: tagSvc,
 	}
 
 	for _, opt := range opts {
@@ -120,6 +123,11 @@ func NewService(repo Repository, opts ...ServiceOption) Service {
 	}
 
 	return s
+}
+
+type MetricsClient interface {
+	Count(name string, value int64, tags ...string)
+	Timing(name string, value time.Duration, tags ...string)
 }
 
 func WithMetrics(metrics MetricsClient) ServiceOption {
@@ -157,13 +165,22 @@ func (s *service) Create(ctx context.Context, input CreateTermInput) (*GlossaryT
 		Description:  input.Description,
 		ParentTermID: input.ParentTermID,
 		Metadata:     input.Metadata,
-		Tags:         input.Tags,
 		CreatedAt:    time.Now().UTC(),
 		UpdatedAt:    time.Now().UTC(),
 	}
 
 	if err := s.repo.Create(ctx, term, input.Owners); err != nil {
 		return nil, err
+	}
+
+	if len(input.Tags) > 0 {
+		tagIDs, err := s.tagService.ResolveNames(ctx, input.Tags)
+		if err != nil {
+			return nil, fmt.Errorf("resolving tags: %w", err)
+		}
+		if err := s.repo.SetTags(ctx, term.ID, tagIDs); err != nil {
+			return nil, fmt.Errorf("setting tags: %w", err)
+		}
 	}
 
 	if s.searchObserver != nil {
@@ -208,9 +225,6 @@ func (s *service) Update(ctx context.Context, id string, input UpdateTermInput) 
 	if input.Metadata != nil {
 		existing.Metadata = input.Metadata
 	}
-	if input.Tags != nil {
-		existing.Tags = input.Tags
-	}
 
 	if input.ParentTermID != nil {
 		if *input.ParentTermID == "" {
@@ -243,6 +257,22 @@ func (s *service) Update(ctx context.Context, id string, input UpdateTermInput) 
 
 	if err := s.repo.Update(ctx, existing, input.Owners); err != nil {
 		return nil, err
+	}
+
+	if input.Tags != nil {
+		if len(input.Tags) > 0 {
+			tagIDs, err := s.tagService.ResolveNames(ctx, input.Tags)
+			if err != nil {
+				return nil, fmt.Errorf("resolving tags: %w", err)
+			}
+			if err := s.repo.SetTags(ctx, id, tagIDs); err != nil {
+				return nil, fmt.Errorf("setting tags: %w", err)
+			}
+		} else {
+			if err := s.repo.SetTags(ctx, id, []string{}); err != nil {
+				return nil, fmt.Errorf("clearing tags: %w", err)
+			}
+		}
 	}
 
 	if s.searchObserver != nil {
@@ -285,6 +315,40 @@ func (s *service) Delete(ctx context.Context, id string) error {
 		s.searchObserver.OnEntityDeleted(ctx, "glossary", id)
 	}
 
+	return nil
+}
+
+func (s *service) ListGlossaryTermTags(ctx context.Context, id string) ([]tag.Tag, error) {
+	return s.repo.ListGlossaryTermTags(ctx, id)
+}
+
+func (s *service) SetTermTags(ctx context.Context, id string, tagIDs []string) error {
+	if err := s.repo.SetTags(ctx, id, tagIDs); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "glossary", id)
+	}
+	return nil
+}
+
+func (s *service) AddTermTag(ctx context.Context, id string, tagID string) error {
+	if err := s.repo.AddTag(ctx, id, tagID); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "glossary", id)
+	}
+	return nil
+}
+
+func (s *service) RemoveTermTag(ctx context.Context, id string, tagID string) error {
+	if err := s.repo.RemoveTag(ctx, id, tagID); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "glossary", id)
+	}
 	return nil
 }
 

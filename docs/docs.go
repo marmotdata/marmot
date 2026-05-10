@@ -33,19 +33,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ReindexStatusResponse"
+                            "$ref": "#/definitions/v1_admin.ReindexStatusResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -63,31 +63,31 @@ const docTemplate = `{
                     "202": {
                         "description": "Accepted",
                         "schema": {
-                            "$ref": "#/definitions/ReindexAcceptedResponse"
+                            "$ref": "#/definitions/v1_admin.ReindexAcceptedResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "503": {
                         "description": "Service Unavailable",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -112,7 +112,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/RecordRunRequest"
+                            "$ref": "#/definitions/v1_agents.RecordRunRequest"
                         }
                     }
                 ],
@@ -120,7 +120,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/AgentRun"
+                            "$ref": "#/definitions/agent.Run"
                         }
                     }
                 }
@@ -154,7 +154,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ActivityResponse"
+                            "$ref": "#/definitions/v1_agents.ActivityResponse"
                         }
                     }
                 }
@@ -194,7 +194,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/RunsResponse"
+                            "$ref": "#/definitions/v1_agents.RunsResponse"
                         }
                     }
                 }
@@ -228,7 +228,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Stats"
+                            "$ref": "#/definitions/agent.Stats"
                         }
                     }
                 }
@@ -257,37 +257,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PreviewResponse"
+                            "$ref": "#/definitions/v1_assets.PreviewResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Missing assets:preview permission",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "501": {
                         "description": "Data preview not supported for this asset",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -332,19 +332,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ListJobRunsResponse"
+                            "$ref": "#/definitions/v1_schedules.ListJobRunsResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -372,25 +372,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/JobRun"
+                            "$ref": "#/definitions/runs.JobRun"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -418,19 +418,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -477,19 +477,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -528,19 +528,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ListSchedulesResponse"
+                            "$ref": "#/definitions/v1_schedules.ListSchedulesResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -563,7 +563,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateScheduleRequest"
+                            "$ref": "#/definitions/v1_schedules.CreateScheduleRequest"
                         }
                     }
                 ],
@@ -571,25 +571,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/Schedule"
+                            "$ref": "#/definitions/runs.Schedule"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -617,25 +617,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Schedule"
+                            "$ref": "#/definitions/runs.Schedule"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -665,7 +665,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateScheduleRequest"
+                            "$ref": "#/definitions/v1_schedules.UpdateScheduleRequest"
                         }
                     }
                 ],
@@ -673,31 +673,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Schedule"
+                            "$ref": "#/definitions/runs.Schedule"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -723,19 +723,19 @@ const docTemplate = `{
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -760,25 +760,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/JobRun"
+                            "$ref": "#/definitions/runs.JobRun"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -803,7 +803,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/ValidateConfigRequest"
+                            "$ref": "#/definitions/v1_schedules.ValidateConfigRequest"
                         }
                     }
                 ],
@@ -811,19 +811,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ValidateConfigResponse"
+                            "$ref": "#/definitions/v1_schedules.ValidateConfigResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -849,7 +849,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/RunEvent"
+                            "$ref": "#/definitions/lineage.RunEvent"
                         }
                     }
                 ],
@@ -860,13 +860,291 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics": {
+            "get": {
+                "description": "Get aggregated metrics for dashboard display",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get metrics for UI",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start time (ISO 8601)",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (ISO 8601)",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "collectionFormat": "csv",
+                        "description": "Filter by metric names",
+                        "name": "metric_names",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "avg",
+                            "sum",
+                            "max",
+                            "min"
+                        ],
+                        "type": "string",
+                        "default": "avg",
+                        "description": "Aggregation type",
+                        "name": "aggregation",
+                        "in": "query"
+                    },
+                    {
+                        "enum": [
+                            "1m",
+                            "5m",
+                            "1h",
+                            "1d"
+                        ],
+                        "type": "string",
+                        "description": "Time bucket size",
+                        "name": "bucket_size",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_metrics.GetMetricsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/by-owner": {
+            "get": {
+                "description": "Get asset counts grouped by owner",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get assets by owner",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_metrics.AssetsByOwnerResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/by-provider": {
+            "get": {
+                "description": "Get asset counts grouped by provider",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get assets by provider",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_metrics.AssetsByProviderResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/by-type": {
+            "get": {
+                "description": "Get asset counts grouped by type",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get assets by type",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_metrics.AssetsByTypeResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/total": {
+            "get": {
+                "description": "Get the total number of assets",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get total assets count",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_metrics.TotalAssetsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/assets/with-schemas": {
+            "get": {
+                "description": "Get the count of assets that have schemas defined",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get assets with schemas count",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/v1_metrics.AssetsWithSchemasResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/top-assets": {
+            "get": {
+                "description": "Get the most viewed assets",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get top viewed assets",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start time (ISO 8601)",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (ISO 8601)",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/metrics.AssetCount"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/metrics/top-queries": {
+            "get": {
+                "description": "Get the most popular search queries",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "metrics"
+                ],
+                "summary": "Get top search queries",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Start time (ISO 8601)",
+                        "name": "start",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "End time (ISO 8601)",
+                        "name": "end",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of results",
+                        "name": "limit",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/metrics.QueryCount"
+                            }
                         }
                     }
                 }
@@ -886,7 +1164,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AWSCredentialStatus"
+                            "$ref": "#/definitions/plugin.AWSCredentialStatus"
                         }
                     }
                 }
@@ -912,7 +1190,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateAssetRuleRequest"
+                            "$ref": "#/definitions/v1_assetrules.CreateRequest"
                         }
                     }
                 ],
@@ -920,25 +1198,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/AssetRule"
+                            "$ref": "#/definitions/assetrule.AssetRule"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -988,13 +1266,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1030,13 +1308,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AssetRuleListResult"
+                            "$ref": "#/definitions/assetrule.ListResult"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1062,7 +1340,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/PreviewRequest"
+                            "$ref": "#/definitions/v1_assetrules.PreviewRequest"
                         }
                     }
                 ],
@@ -1070,19 +1348,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/RulePreview"
+                            "$ref": "#/definitions/assetrule.RulePreview"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1124,13 +1402,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AssetRuleListResult"
+                            "$ref": "#/definitions/assetrule.ListResult"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1159,19 +1437,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AssetRule"
+                            "$ref": "#/definitions/assetrule.AssetRule"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1202,7 +1480,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateAssetRuleRequest"
+                            "$ref": "#/definitions/v1_assetrules.UpdateRequest"
                         }
                     }
                 ],
@@ -1210,31 +1488,31 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AssetRule"
+                            "$ref": "#/definitions/assetrule.AssetRule"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1261,13 +1539,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1293,7 +1571,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateAssetRequest"
+                            "$ref": "#/definitions/v1_assets.CreateRequest"
                         }
                     }
                 ],
@@ -1301,25 +1579,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/Asset"
+                            "$ref": "#/definitions/asset.Asset"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1369,7 +1647,117 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/assets/column-tags/{id}": {
+            "put": {
+                "description": "Atomically replace the tag set assigned to one column. Tags already attached are preserved.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Replace tags for a single column on an asset",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Column path and tag IDs to assign",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_assets.ReplaceColumnTagsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete one (column_path, tag_id) assignment for an asset.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Remove a single tag from a column",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Column path and tag ID to remove",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_assets.RemoveColumnTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1395,7 +1783,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/DocumentationCreateRequest"
+                            "$ref": "#/definitions/v1_assets.DocumentationCreateRequest"
                         }
                     }
                 ],
@@ -1403,19 +1791,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Documentation"
+                            "$ref": "#/definitions/assetdocs.Documentation"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1441,7 +1829,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/BatchDocumentationRequest"
+                            "$ref": "#/definitions/v1_assets.BatchDocumentationRequest"
                         }
                     }
                 ],
@@ -1449,19 +1837,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/BatchDocumentationResponse"
+                            "$ref": "#/definitions/v1_assets.BatchDocumentationResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1493,20 +1881,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/Documentation"
+                                "$ref": "#/definitions/assetdocs.Documentation"
                             }
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1549,19 +1937,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Asset"
+                            "$ref": "#/definitions/asset.Asset"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1599,20 +1987,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/Asset"
+                                "$ref": "#/definitions/asset.Asset"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1648,19 +2036,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AssetSearchResponse"
+                            "$ref": "#/definitions/v1_assets.SearchResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1692,19 +2080,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Asset"
+                            "$ref": "#/definitions/asset.Asset"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1786,19 +2174,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AssetSearchResponse"
+                            "$ref": "#/definitions/v1_assets.SearchResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1820,14 +2208,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/MetadataFieldSuggestion"
+                                "$ref": "#/definitions/asset.MetadataFieldSuggestion"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1871,20 +2259,20 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/MetadataValueSuggestion"
+                                "$ref": "#/definitions/asset.MetadataValueSuggestion"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1928,7 +2316,7 @@ const docTemplate = `{
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -1951,132 +2339,28 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AssetSummaryResponse"
+                            "$ref": "#/definitions/v1_assets.AssetSummaryResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
             }
         },
         "/assets/tags/{id}": {
-            "post": {
-                "description": "Add a new tag to an existing asset",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Add tag to asset",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Asset ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Tag to add",
-                        "name": "tag",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/TagRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/Asset"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            },
-            "delete": {
-                "description": "Remove a tag from an existing asset",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Remove tag from asset",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Asset ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "description": "Tag to remove",
-                        "name": "tag",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/TagRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/Asset"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/assets/terms/{id}": {
             "get": {
-                "description": "Retrieve all glossary terms associated with an asset",
+                "description": "Get all tags associated with an asset",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "assets"
                 ],
-                "summary": "Get asset's glossary terms",
+                "summary": "List asset tags",
                 "parameters": [
                     {
                         "type": "string",
@@ -2092,20 +2376,86 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/AssetTerm"
+                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
                             }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Atomically replace all tag associations for an asset",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Replace all tags on an asset",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tag IDs to assign",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_assets.ReplaceTagsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
             },
             "post": {
-                "description": "Associate one or more glossary terms with an asset",
+                "description": "Add a single tag association to an asset",
                 "consumes": [
                     "application/json"
                 ],
@@ -2115,7 +2465,7 @@ const docTemplate = `{
                 "tags": [
                     "assets"
                 ],
-                "summary": "Add glossary terms to asset",
+                "summary": "Add a tag to an asset",
                 "parameters": [
                     {
                         "type": "string",
@@ -2125,41 +2475,47 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Term IDs to add",
-                        "name": "terms",
+                        "description": "Tag ID to add",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/AddTermsRequest"
+                            "$ref": "#/definitions/v1_assets.AddTagRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
+                    "201": {
+                        "description": "Created",
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/AssetTerm"
+                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
             },
             "delete": {
-                "description": "Remove a glossary term association from an asset",
+                "description": "Remove a single tag association from an asset",
                 "consumes": [
                     "application/json"
                 ],
@@ -2169,7 +2525,7 @@ const docTemplate = `{
                 "tags": [
                     "assets"
                 ],
-                "summary": "Remove glossary term from asset",
+                "summary": "Remove a tag from an asset",
                 "parameters": [
                     {
                         "type": "string",
@@ -2179,35 +2535,35 @@ const docTemplate = `{
                         "required": true
                     },
                     {
-                        "description": "Term ID to remove",
-                        "name": "term",
+                        "description": "Tag ID to remove",
+                        "name": "body",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/RemoveTermRequest"
+                            "$ref": "#/definitions/v1_assets.RemoveTagRequest"
                         }
                     }
                 ],
                 "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/AssetTerm"
-                            }
-                        }
+                    "204": {
+                        "description": "No Content"
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2239,19 +2595,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Asset"
+                            "$ref": "#/definitions/asset.Asset"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2282,7 +2638,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateAssetRequest"
+                            "$ref": "#/definitions/v1_assets.UpdateRequest"
                         }
                     }
                 ],
@@ -2290,25 +2646,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Asset"
+                            "$ref": "#/definitions/asset.Asset"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2341,19 +2697,19 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2396,25 +2752,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/RunHistoryResponse"
+                            "$ref": "#/definitions/v1_assets.RunHistoryResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2450,25 +2806,171 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/HistogramResponse"
+                            "$ref": "#/definitions/v1_assets.HistogramResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/assets/{id}/terms": {
+            "get": {
+                "description": "Retrieve all glossary terms associated with an asset",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get asset's glossary terms",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/asset.AssetTerm"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Associate one or more glossary terms with an asset",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Add glossary terms to asset",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Term IDs to add",
+                        "name": "terms",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_assets.AddTermsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/asset.AssetTerm"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a glossary term association from an asset",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Remove glossary term from asset",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Term ID to remove",
+                        "name": "term",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_assets.RemoveTermRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/asset.AssetTerm"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2488,7 +2990,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/AuthConfig"
+                            "$ref": "#/definitions/auth.AuthConfig"
                         }
                     }
                 }
@@ -2537,19 +3039,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2584,13 +3086,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2616,7 +3118,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateTermRequest"
+                            "$ref": "#/definitions/v1_glossary.CreateTermRequest"
                         }
                     }
                 ],
@@ -2624,31 +3126,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/GlossaryTerm"
+                            "$ref": "#/definitions/glossary.GlossaryTerm"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2684,19 +3186,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2732,19 +3234,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2780,13 +3282,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/GlossaryListResult"
+                            "$ref": "#/definitions/glossary.ListResult"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2834,19 +3336,246 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/GlossaryListResult"
+                            "$ref": "#/definitions/glossary.ListResult"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/glossary/tags/{id}": {
+            "get": {
+                "description": "Get all tags associated with a glossary term",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "List glossary term tags",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Atomically replace all tag associations for a glossary term",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Replace glossary term tags",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tag IDs to assign",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_glossary.ReplaceTermTagsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/glossary.GlossaryTerm"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add a single tag association to a glossary term",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Add a tag to a glossary term",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tag ID to add",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_glossary.AddTermTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a single tag association from a glossary term",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "glossary"
+                ],
+                "summary": "Remove glossary term tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Glossary Term ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tag ID to remove",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_glossary.RemoveTermTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2875,25 +3604,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/GlossaryTerm"
+                            "$ref": "#/definitions/glossary.GlossaryTerm"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2924,7 +3653,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateTermRequest"
+                            "$ref": "#/definitions/v1_glossary.UpdateTermRequest"
                         }
                     }
                 ],
@@ -2932,25 +3661,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/GlossaryTerm"
+                            "$ref": "#/definitions/glossary.GlossaryTerm"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -2986,19 +3715,19 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3050,25 +3779,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/LineageResponse"
+                            "$ref": "#/definitions/lineage.LineageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3096,7 +3825,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/LineageEdge"
+                                "$ref": "#/definitions/lineage.LineageEdge"
                             }
                         }
                     }
@@ -3107,14 +3836,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/BatchLineageResult"
+                                "$ref": "#/definitions/v1_lineage.BatchLineageResult"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3140,7 +3869,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/LineageEdge"
+                            "$ref": "#/definitions/lineage.LineageEdge"
                         }
                     }
                 ],
@@ -3148,19 +3877,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/LineageEdge"
+                            "$ref": "#/definitions/lineage.LineageEdge"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3193,19 +3922,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/LineageEdge"
+                            "$ref": "#/definitions/lineage.LineageEdge"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3239,291 +3968,13 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/metrics": {
-            "get": {
-                "description": "Get aggregated metrics for dashboard display",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "metrics"
-                ],
-                "summary": "Get metrics for UI",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start time (ISO 8601)",
-                        "name": "start",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "End time (ISO 8601)",
-                        "name": "end",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "collectionFormat": "csv",
-                        "description": "Filter by metric names",
-                        "name": "metric_names",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "avg",
-                            "sum",
-                            "max",
-                            "min"
-                        ],
-                        "type": "string",
-                        "default": "avg",
-                        "description": "Aggregation type",
-                        "name": "aggregation",
-                        "in": "query"
-                    },
-                    {
-                        "enum": [
-                            "1m",
-                            "5m",
-                            "1h",
-                            "1d"
-                        ],
-                        "type": "string",
-                        "description": "Time bucket size",
-                        "name": "bucket_size",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/GetMetricsResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/metrics/assets/by-owner": {
-            "get": {
-                "description": "Get asset counts grouped by owner",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "metrics"
-                ],
-                "summary": "Get assets by owner",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/AssetsByOwnerResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/metrics/assets/by-provider": {
-            "get": {
-                "description": "Get asset counts grouped by provider",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "metrics"
-                ],
-                "summary": "Get assets by provider",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/AssetsByProviderResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/metrics/assets/by-type": {
-            "get": {
-                "description": "Get asset counts grouped by type",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "metrics"
-                ],
-                "summary": "Get assets by type",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/AssetsByTypeResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/metrics/assets/total": {
-            "get": {
-                "description": "Get the total number of assets",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "metrics"
-                ],
-                "summary": "Get total assets count",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/TotalAssetsResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/metrics/assets/with-schemas": {
-            "get": {
-                "description": "Get the count of assets that have schemas defined",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "metrics"
-                ],
-                "summary": "Get assets with schemas count",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/AssetsWithSchemasResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/metrics/top-assets": {
-            "get": {
-                "description": "Get the most viewed assets",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "metrics"
-                ],
-                "summary": "Get top viewed assets",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start time (ISO 8601)",
-                        "name": "start",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "End time (ISO 8601)",
-                        "name": "end",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Number of results",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/AssetCount"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/metrics/top-queries": {
-            "get": {
-                "description": "Get the most popular search queries",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "metrics"
-                ],
-                "summary": "Get top search queries",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Start time (ISO 8601)",
-                        "name": "start",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "End time (ISO 8601)",
-                        "name": "end",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Number of results",
-                        "name": "limit",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/definitions/QueryCount"
-                            }
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3567,25 +4018,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TokenExchangeResponse"
+                            "$ref": "#/definitions/auth.tokenExchangeResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/OAuthErrorResponse"
+                            "$ref": "#/definitions/auth.oauthErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/OAuthErrorResponse"
+                            "$ref": "#/definitions/auth.oauthErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/OAuthErrorResponse"
+                            "$ref": "#/definitions/auth.oauthErrorResponse"
                         }
                     }
                 }
@@ -3624,19 +4075,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/SearchOwnersResponse"
+                            "$ref": "#/definitions/v1_teams.SearchOwnersResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3665,7 +4116,59 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/DestroyRunResponse"
+                            "$ref": "#/definitions/v1_runs.DestroyRunResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/products": {
+            "post": {
+                "description": "Create a new data product",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Create a data product",
+                "parameters": [
+                    {
+                        "description": "Data product creation request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_dataproducts.CreateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/dataproduct.DataProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3701,13 +4204,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3752,13 +4255,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3802,25 +4305,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ProductImageMeta"
+                            "$ref": "#/definitions/dataproduct.ProductImageMeta"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3863,13 +4366,493 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/list": {
+            "get": {
+                "description": "List all data products with pagination",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "List data products",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Number of items to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dataproduct.ListResult"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/search": {
+            "get": {
+                "description": "Search data products using query string and filters",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Search data products",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Search query",
+                        "name": "q",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Filter by tags (comma-separated)",
+                        "name": "tags",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items to return",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dataproduct.ListResult"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/tags/{id}": {
+            "get": {
+                "description": "Get all tags associated with a data product",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "List data product tags",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Atomically replace all tag associations for a data product",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Replace data product tags",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tag IDs to assign",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_dataproducts.ReplaceProductTagsRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dataproduct.DataProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Add a single tag association to a data product",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Add a tag to a data product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tag ID to add",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_dataproducts.AddProductTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Remove a single tag association from a data product",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Remove data product tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Tag ID to remove",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_dataproducts.RemoveProductTagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/products/{id}": {
+            "get": {
+                "description": "Get detailed information about a specific data product",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Get a data product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dataproduct.DataProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update an existing data product",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "products"
+                ],
+                "summary": "Update a data product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Data product update request",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_dataproducts.UpdateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/dataproduct.DataProduct"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a data product from the system",
+                "tags": [
+                    "products"
+                ],
+                "summary": "Delete a data product",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Data Product ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -3934,7 +4917,7 @@ const docTemplate = `{
                                 "runs": {
                                     "type": "array",
                                     "items": {
-                                        "$ref": "#/definitions/PluginRun"
+                                        "$ref": "#/definitions/plugin.Run"
                                     }
                                 },
                                 "total": {
@@ -3966,7 +4949,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/BatchCreateRequest"
+                            "$ref": "#/definitions/v1_runs.BatchCreateRequest"
                         }
                     }
                 ],
@@ -3974,7 +4957,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/BatchCreateResponse"
+                            "$ref": "#/definitions/v1_runs.BatchCreateResponse"
                         }
                     }
                 }
@@ -4020,7 +5003,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CompleteRunRequest"
+                            "$ref": "#/definitions/v1_runs.CompleteRunRequest"
                         }
                     }
                 ],
@@ -4057,7 +5040,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/StartRunRequest"
+                            "$ref": "#/definitions/v1_runs.StartRunRequest"
                         }
                     }
                 ],
@@ -4065,7 +5048,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PluginRun"
+                            "$ref": "#/definitions/plugin.Run"
                         }
                     }
                 }
@@ -4094,7 +5077,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/PluginRun"
+                            "$ref": "#/definitions/plugin.Run"
                         }
                     }
                 }
@@ -4149,7 +5132,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/RunEntitiesResponse"
+                            "$ref": "#/definitions/v1_runs.RunEntitiesResponse"
                         }
                     }
                 }
@@ -4202,19 +5185,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/SearchResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_search.Response"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4245,13 +5228,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ListSSOMappingsResponse"
+                            "$ref": "#/definitions/v1_teams.ListSSOMappingsResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4275,7 +5258,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateSSOMappingRequest"
+                            "$ref": "#/definitions/v1_teams.CreateSSOMappingRequest"
                         }
                     }
                 ],
@@ -4283,25 +5266,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/SSOTeamMapping"
+                            "$ref": "#/definitions/team.SSOTeamMapping"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4333,19 +5316,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/SSOTeamMapping"
+                            "$ref": "#/definitions/team.SSOTeamMapping"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4376,7 +5359,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateSSOMappingRequest"
+                            "$ref": "#/definitions/v1_teams.UpdateSSOMappingRequest"
                         }
                     }
                 ],
@@ -4384,25 +5367,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/MessageResponse"
+                            "$ref": "#/definitions/v1_teams.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4432,19 +5415,247 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/MessageResponse"
+                            "$ref": "#/definitions/v1_teams.MessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags": {
+            "get": {
+                "description": "Retrieve a list of all tags in the catalog",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "List all tags",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new tag in the catalog",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Create a tag",
+                "parameters": [
+                    {
+                        "description": "Tag to create",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_tags.TagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/tags/{id}": {
+            "get": {
+                "description": "Retrieve a single tag by its ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Get a tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tag ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "put": {
+                "description": "Update an existing tag's name or description",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Update a tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tag ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Updated tag fields",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/v1_tags.TagRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Delete a tag from the catalog (removes all associations)",
+                "tags": [
+                    "tags"
+                ],
+                "summary": "Delete a tag",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Tag ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4483,13 +5694,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ListTeamsResponse"
+                            "$ref": "#/definitions/v1_teams.ListTeamsResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4513,7 +5724,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateTeamRequest"
+                            "$ref": "#/definitions/v1_teams.CreateTeamRequest"
                         }
                     }
                 ],
@@ -4521,25 +5732,25 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/Team"
+                            "$ref": "#/definitions/team.Team"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4571,19 +5782,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/Team"
+                            "$ref": "#/definitions/team.Team"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4614,7 +5825,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateTeamRequest"
+                            "$ref": "#/definitions/v1_teams.UpdateTeamRequest"
                         }
                     }
                 ],
@@ -4622,37 +5833,37 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/MessageResponse"
+                            "$ref": "#/definitions/v1_teams.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4682,25 +5893,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/MessageResponse"
+                            "$ref": "#/definitions/v1_teams.MessageResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4732,13 +5943,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ListMembersResponse"
+                            "$ref": "#/definitions/v1_teams.ListMembersResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4769,7 +5980,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/AddMemberRequest"
+                            "$ref": "#/definitions/v1_teams.AddMemberRequest"
                         }
                     }
                 ],
@@ -4777,31 +5988,31 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/MessageResponse"
+                            "$ref": "#/definitions/v1_teams.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "403": {
                         "description": "Forbidden",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4840,19 +6051,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/MessageResponse"
+                            "$ref": "#/definitions/v1_teams.MessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4891,19 +6102,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/MessageResponse"
+                            "$ref": "#/definitions/v1_teams.MessageResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4943,7 +6154,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateMemberRoleRequest"
+                            "$ref": "#/definitions/v1_teams.UpdateMemberRoleRequest"
                         }
                     }
                 ],
@@ -4951,25 +6162,25 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/MessageResponse"
+                            "$ref": "#/definitions/v1_teams.MessageResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -4989,7 +6200,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/UIConfigResponse"
+                            "$ref": "#/definitions/v1_ui.UIConfigResponse"
                         }
                     }
                 }
@@ -5050,13 +6261,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/ListUsersResponse"
+                            "$ref": "#/definitions/v1_users.ListUsersResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5080,7 +6291,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateUserInput"
+                            "$ref": "#/definitions/user.CreateUserInput"
                         }
                     }
                 ],
@@ -5088,19 +6299,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "409": {
                         "description": "Conflict",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5125,14 +6336,14 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/APIKey"
+                                "$ref": "#/definitions/user.APIKey"
                             }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5156,7 +6367,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateAPIKeyRequest"
+                            "$ref": "#/definitions/v1_users.CreateAPIKeyRequest"
                         }
                     }
                 ],
@@ -5164,13 +6375,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/APIKey"
+                            "$ref": "#/definitions/user.APIKey"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5205,7 +6416,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5231,7 +6442,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/LoginRequest"
+                            "$ref": "#/definitions/v1_users.LoginRequest"
                         }
                     }
                 ],
@@ -5239,19 +6450,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TokenResponse"
+                            "$ref": "#/definitions/v1_users.TokenResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5279,13 +6490,13 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5311,7 +6522,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/OAuthLinkRequest"
+                            "$ref": "#/definitions/v1_users.OAuthLinkRequest"
                         }
                     }
                 ],
@@ -5322,7 +6533,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5364,7 +6575,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5402,7 +6613,7 @@ const docTemplate = `{
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5428,7 +6639,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdatePasswordRequest"
+                            "$ref": "#/definitions/v1_users.UpdatePasswordRequest"
                         }
                     }
                 ],
@@ -5436,19 +6647,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/TokenResponse"
+                            "$ref": "#/definitions/v1_users.TokenResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "401": {
                         "description": "Unauthorized",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5480,19 +6691,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5523,7 +6734,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UpdateUserInput"
+                            "$ref": "#/definitions/user.UpdateUserInput"
                         }
                     }
                 ],
@@ -5531,19 +6742,19 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/User"
+                            "$ref": "#/definitions/user.User"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5576,13 +6787,13 @@ const docTemplate = `{
                     "404": {
                         "description": "Not Found",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
+                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse"
                         }
                     }
                 }
@@ -5590,87 +6801,21 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "APIKey": {
+        "agent.Bucket": {
             "type": "object",
             "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "expires_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "key": {
-                    "type": "string"
-                },
-                "last_used_at": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "AWSCredentialStatus": {
-            "type": "object",
-            "properties": {
-                "available": {
-                    "type": "boolean"
-                },
                 "error": {
+                    "type": "integer"
+                },
+                "hour": {
                     "type": "string"
                 },
-                "sources": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
+                "success": {
+                    "type": "integer"
                 }
             }
         },
-        "ActivityResponse": {
-            "type": "object",
-            "properties": {
-                "buckets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Bucket"
-                    }
-                }
-            }
-        },
-        "AddMemberRequest": {
-            "type": "object",
-            "properties": {
-                "role": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "AddTermsRequest": {
-            "type": "object",
-            "required": [
-                "term_ids"
-            ],
-            "properties": {
-                "term_ids": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "AgentRun": {
+        "agent.Run": {
             "type": "object",
             "properties": {
                 "agent_id": {
@@ -5712,41 +6857,58 @@ const docTemplate = `{
                 "tool_calls": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ToolCall"
+                        "$ref": "#/definitions/agent.ToolCall"
                     }
                 }
             }
         },
-        "AggregatedMetric": {
+        "agent.Stats": {
             "type": "object",
             "properties": {
-                "aggregation_type": {
-                    "type": "string"
-                },
-                "bucket_end": {
-                    "type": "string"
-                },
-                "bucket_size": {
+                "median_latency_ms": {
                     "type": "integer"
                 },
-                "bucket_start": {
-                    "type": "string"
+                "p95_latency_ms": {
+                    "type": "integer"
                 },
-                "labels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
+                "run_count": {
+                    "type": "integer"
                 },
-                "name": {
-                    "type": "string"
-                },
-                "value": {
+                "success_rate": {
                     "type": "number"
+                },
+                "tokens_in": {
+                    "type": "integer"
+                },
+                "tokens_out": {
+                    "type": "integer"
                 }
             }
         },
-        "Asset": {
+        "agent.ToolCall": {
+            "type": "object",
+            "properties": {
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "ordinal": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_mrn": {
+                    "type": "string"
+                },
+                "tool_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "asset.Asset": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -5761,13 +6923,13 @@ const docTemplate = `{
                 "environments": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/Environment"
+                        "$ref": "#/definitions/asset.Environment"
                     }
                 },
                 "external_links": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/AssetExternalLink"
+                        "$ref": "#/definitions/asset.ExternalLink"
                     }
                 },
                 "has_run_history": {
@@ -5816,13 +6978,7 @@ const docTemplate = `{
                 "sources": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/AssetSource"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/asset.AssetSource"
                     }
                 },
                 "type": {
@@ -5836,157 +6992,7 @@ const docTemplate = `{
                 }
             }
         },
-        "AssetCount": {
-            "type": "object",
-            "properties": {
-                "asset_id": {
-                    "type": "string"
-                },
-                "asset_name": {
-                    "type": "string"
-                },
-                "asset_provider": {
-                    "type": "string"
-                },
-                "asset_type": {
-                    "type": "string"
-                },
-                "count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "AssetExternalLink": {
-            "type": "object",
-            "properties": {
-                "icon": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "AssetRule": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "is_enabled": {
-                    "type": "boolean"
-                },
-                "last_reconciled_at": {
-                    "type": "string"
-                },
-                "links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AssetRuleExternalLink"
-                    }
-                },
-                "membership_count": {
-                    "type": "integer"
-                },
-                "metadata_field": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "pattern_type": {
-                    "type": "string"
-                },
-                "pattern_value": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "integer"
-                },
-                "query_expression": {
-                    "type": "string"
-                },
-                "reconciliation_hash": {
-                    "type": "string"
-                },
-                "rule_type": {
-                    "$ref": "#/definitions/RuleType"
-                },
-                "term_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "AssetRuleExternalLink": {
-            "type": "object",
-            "properties": {
-                "icon": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "AssetRuleListResult": {
-            "type": "object",
-            "properties": {
-                "asset_rules": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AssetRule"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "AssetSearchResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Asset"
-                    }
-                },
-                "filters": {
-                    "$ref": "#/definitions/AvailableFilters"
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "AssetSource": {
+        "asset.AssetSource": {
             "type": "object",
             "properties": {
                 "last_sync_at": {
@@ -6004,30 +7010,7 @@ const docTemplate = `{
                 }
             }
         },
-        "AssetSummaryResponse": {
-            "type": "object",
-            "properties": {
-                "providers": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "tags": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "types": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/AssetTypeSummary"
-                    }
-                }
-            }
-        },
-        "AssetTerm": {
+        "asset.AssetTerm": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -6054,88 +7037,10 @@ const docTemplate = `{
                 }
             }
         },
-        "AssetTypeSummary": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "service": {
-                    "type": "string"
-                }
-            }
-        },
-        "AssetsByOwnerResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer",
-                        "format": "int64"
-                    }
-                }
-            }
-        },
-        "AssetsByProviderResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer",
-                        "format": "int64"
-                    }
-                }
-            }
-        },
-        "AssetsByTypeResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer",
-                        "format": "int64"
-                    }
-                }
-            }
-        },
-        "AssetsWithSchemasResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "percentage": {
-                    "type": "number"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "AuthConfig": {
-            "type": "object",
-            "properties": {
-                "enabled_providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "AvailableFilters": {
+        "asset.AvailableFilters": {
             "type": "object",
             "properties": {
                 "providers": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "tags": {
                     "type": "object",
                     "additionalProperties": {
                         "type": "integer"
@@ -6149,338 +7054,130 @@ const docTemplate = `{
                 }
             }
         },
-        "BannerResponse": {
+        "asset.Environment": {
             "type": "object",
             "properties": {
-                "dismissible": {
-                    "type": "boolean"
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
                 },
-                "enabled": {
-                    "type": "boolean"
+                "name": {
+                    "type": "string"
+                },
+                "path": {
+                    "type": "string"
+                }
+            }
+        },
+        "asset.ExternalLink": {
+            "type": "object",
+            "properties": {
+                "icon": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "asset.HistogramBucket": {
+            "type": "object",
+            "properties": {
+                "abort": {
+                    "type": "integer"
+                },
+                "complete": {
+                    "type": "integer"
+                },
+                "date": {
+                    "type": "string"
+                },
+                "fail": {
+                    "type": "integer"
+                },
+                "other": {
+                    "type": "integer"
+                },
+                "running": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "asset.MetadataFieldSuggestion": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "example": {},
+                "field": {
+                    "type": "string"
+                },
+                "path_parts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                },
+                "types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "asset.MetadataValueSuggestion": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "example": {
+                    "$ref": "#/definitions/asset.Asset"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "asset.RunHistory": {
+            "type": "object",
+            "properties": {
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "end_time": {
+                    "type": "string"
+                },
+                "event_time": {
+                    "type": "string"
                 },
                 "id": {
                     "type": "string"
                 },
-                "message": {
+                "job_name": {
                     "type": "string"
                 },
-                "variant": {
-                    "type": "string"
-                }
-            }
-        },
-        "BatchAssetResult": {
-            "type": "object",
-            "properties": {
-                "asset": {},
-                "error": {
-                    "type": "string"
-                },
-                "mrn": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "provider": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "BatchCreateRequest": {
-            "type": "object",
-            "required": [
-                "assets",
-                "pipeline_name",
-                "run_id",
-                "source_name"
-            ],
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/RunCreateAssetRequest"
-                    }
-                },
-                "config": {
-                    "$ref": "#/definitions/RawPluginConfig"
-                },
-                "documentation": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/CreateDocRequest"
-                    }
-                },
-                "lineage": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/CreateLineageRequest"
-                    }
-                },
-                "pipeline_name": {
+                "job_namespace": {
                     "type": "string"
                 },
                 "run_id": {
                     "type": "string"
                 },
-                "source_name": {
-                    "type": "string"
-                },
-                "statistics": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/CreateStatRequest"
-                    }
-                }
-            }
-        },
-        "BatchCreateResponse": {
-            "type": "object",
-            "properties": {
-                "assets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/BatchAssetResult"
-                    }
-                },
-                "documentation": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/DocumentationResult"
-                    }
-                },
-                "lineage": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/LineageResult"
-                    }
-                },
-                "stale_entities_removed": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "BatchDocumentationRequest": {
-            "type": "object",
-            "required": [
-                "documentation"
-            ],
-            "properties": {
-                "documentation": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "$ref": "#/definitions/Documentation"
-                    }
-                }
-            }
-        },
-        "BatchDocumentationResponse": {
-            "type": "object",
-            "properties": {
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/BatchDocumentationResult"
-                    }
-                }
-            }
-        },
-        "BatchDocumentationResult": {
-            "type": "object",
-            "properties": {
-                "documentation": {
-                    "$ref": "#/definitions/Documentation"
-                },
-                "error": {
+                "start_time": {
                     "type": "string"
                 },
                 "status": {
-                    "type": "string"
-                }
-            }
-        },
-        "BatchLineageResult": {
-            "type": "object",
-            "properties": {
-                "edge": {
-                    "$ref": "#/definitions/LineageEdge"
-                },
-                "status": {
-                    "description": "\"created\", \"duplicate\", or \"existing\"",
-                    "type": "string"
-                }
-            }
-        },
-        "Bucket": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "integer"
-                },
-                "hour": {
-                    "type": "string"
-                },
-                "success": {
-                    "type": "integer"
-                }
-            }
-        },
-        "CompleteRunRequest": {
-            "type": "object",
-            "required": [
-                "run_id",
-                "status"
-            ],
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "run_id": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/RunStatus"
-                },
-                "summary": {
-                    "$ref": "#/definitions/RunSummary"
-                }
-            }
-        },
-        "CreateAPIKeyRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "expires_in_days": {
-                    "type": "integer"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "CreateAssetRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "providers",
-                "type"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "environments": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/Environment"
-                    }
-                },
-                "external_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AssetExternalLink"
-                    }
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "schema": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "sources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AssetSource"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "CreateAssetRuleRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "is_enabled": {
-                    "type": "boolean"
-                },
-                "links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AssetRuleExternalLink"
-                    }
-                },
-                "metadata_field": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "pattern_type": {
-                    "type": "string"
-                },
-                "pattern_value": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "integer"
-                },
-                "query_expression": {
-                    "type": "string"
-                },
-                "rule_type": {
-                    "type": "string"
-                },
-                "term_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "CreateDocRequest": {
-            "type": "object",
-            "properties": {
-                "asset_mrn": {
-                    "type": "string"
-                },
-                "content": {
                     "type": "string"
                 },
                 "type": {
@@ -6488,205 +7185,7 @@ const docTemplate = `{
                 }
             }
         },
-        "CreateLineageRequest": {
-            "type": "object",
-            "properties": {
-                "source": {
-                    "type": "string"
-                },
-                "target": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "CreateSSOMappingRequest": {
-            "type": "object",
-            "properties": {
-                "member_role": {
-                    "type": "string"
-                },
-                "provider": {
-                    "type": "string"
-                },
-                "sso_group_name": {
-                    "type": "string"
-                },
-                "team_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "CreateScheduleRequest": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "cron_expression": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "plugin_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "CreateStatRequest": {
-            "type": "object",
-            "required": [
-                "asset_mrn",
-                "metric_name",
-                "value"
-            ],
-            "properties": {
-                "asset_mrn": {
-                    "type": "string"
-                },
-                "metric_name": {
-                    "type": "string"
-                },
-                "value": {
-                    "type": "number"
-                }
-            }
-        },
-        "CreateTeamRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                }
-            }
-        },
-        "CreateTermRequest": {
-            "type": "object",
-            "required": [
-                "definition",
-                "name"
-            ],
-            "properties": {
-                "definition": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "owners": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/OwnerRequest"
-                    }
-                },
-                "parent_term_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "CreateUserInput": {
-            "type": "object",
-            "required": [
-                "name",
-                "role_names",
-                "username"
-            ],
-            "properties": {
-                "name": {
-                    "type": "string"
-                },
-                "oauth_provider": {
-                    "type": "string"
-                },
-                "oauth_provider_data": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "oauth_provider_id": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string",
-                    "minLength": 8
-                },
-                "profile_picture": {
-                    "type": "string"
-                },
-                "role_names": {
-                    "type": "array",
-                    "minItems": 1,
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "username": {
-                    "type": "string",
-                    "maxLength": 255,
-                    "minLength": 3
-                }
-            }
-        },
-        "Dataset": {
-            "type": "object",
-            "properties": {
-                "facets": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "inputFacets": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "namespace": {
-                    "type": "string"
-                },
-                "outputFacets": {
-                    "type": "object",
-                    "additionalProperties": true
-                }
-            }
-        },
-        "DestroyRunResponse": {
-            "type": "object",
-            "properties": {
-                "assets_deleted": {
-                    "type": "integer"
-                },
-                "deleted_entity_mrns": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "documentation_deleted": {
-                    "type": "integer"
-                },
-                "lineage_deleted": {
-                    "type": "integer"
-                }
-            }
-        },
-        "Documentation": {
+        "assetdocs.Documentation": {
             "type": "object",
             "properties": {
                 "content": {
@@ -6715,155 +7214,92 @@ const docTemplate = `{
                 }
             }
         },
-        "DocumentationCreateRequest": {
-            "type": "object",
-            "required": [
-                "content",
-                "mrn",
-                "source"
-            ],
-            "properties": {
-                "content": {
-                    "type": "string"
-                },
-                "mrn": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                }
-            }
-        },
-        "DocumentationResult": {
+        "assetrule.AssetRule": {
             "type": "object",
             "properties": {
-                "asset_mrn": {
+                "created_at": {
                     "type": "string"
                 },
-                "error": {
+                "created_by": {
                     "type": "string"
                 },
-                "status": {
+                "description": {
                     "type": "string"
                 },
-                "type": {
+                "id": {
                     "type": "string"
-                }
-            }
-        },
-        "Environment": {
-            "type": "object",
-            "properties": {
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "last_reconciled_at": {
+                    "type": "string"
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/assetrule.ExternalLink"
+                    }
+                },
+                "membership_count": {
+                    "type": "integer"
+                },
+                "metadata_field": {
+                    "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
-                "path": {
+                "pattern_type": {
                     "type": "string"
-                }
-            }
-        },
-        "ErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
+                },
+                "pattern_value": {
                     "type": "string"
-                }
-            }
-        },
-        "FacetValue": {
-            "type": "object",
-            "properties": {
-                "count": {
+                },
+                "priority": {
                     "type": "integer"
                 },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "Facets": {
-            "type": "object",
-            "properties": {
-                "asset_types": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/FacetValue"
-                    }
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/FacetValue"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/FacetValue"
-                    }
-                },
-                "types": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "GetMetricsRequest": {
-            "type": "object",
-            "properties": {
-                "aggregation": {
+                "query_expression": {
                     "type": "string"
                 },
-                "bucket_size": {
+                "reconciliation_hash": {
                     "type": "string"
                 },
-                "end": {
-                    "type": "string"
+                "rule_type": {
+                    "$ref": "#/definitions/enrichment.RuleType"
                 },
-                "labels": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "metric_names": {
+                "term_ids": {
                     "type": "array",
                     "items": {
                         "type": "string"
                     }
                 },
-                "start": {
+                "updated_at": {
                     "type": "string"
                 }
             }
         },
-        "GetMetricsResponse": {
+        "assetrule.ExternalLink": {
             "type": "object",
             "properties": {
-                "metrics": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AggregatedMetric"
-                    }
+                "icon": {
+                    "type": "string"
                 },
-                "query": {
-                    "$ref": "#/definitions/GetMetricsRequest"
+                "name": {
+                    "type": "string"
+                },
+                "url": {
+                    "type": "string"
                 }
             }
         },
-        "GlossaryListResult": {
+        "assetrule.ListResult": {
             "type": "object",
             "properties": {
-                "terms": {
+                "asset_rules": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/GlossaryTerm"
+                        "$ref": "#/definitions/assetrule.AssetRule"
                     }
                 },
                 "total": {
@@ -6871,7 +7307,148 @@ const docTemplate = `{
                 }
             }
         },
-        "GlossaryOwner": {
+        "assetrule.RulePreview": {
+            "type": "object",
+            "properties": {
+                "asset_count": {
+                    "type": "integer"
+                },
+                "asset_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "errors": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "auth.AuthConfig": {
+            "type": "object",
+            "properties": {
+                "enabled_providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "auth.oauthErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "error_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "auth.tokenExchangeResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "issued_token_type": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "dataproduct.DataProduct": {
+            "type": "object",
+            "properties": {
+                "asset_count": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "manual_asset_count": {
+                    "type": "integer"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dataproduct.Owner"
+                    }
+                },
+                "rule_asset_count": {
+                    "type": "integer"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dataproduct.Rule"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dataproduct.ImagePurpose": {
+            "type": "string",
+            "enum": [
+                "icon",
+                "header"
+            ],
+            "x-enum-varnames": [
+                "ImagePurposeIcon",
+                "ImagePurposeHeader"
+            ]
+        },
+        "dataproduct.ListResult": {
+            "type": "object",
+            "properties": {
+                "data_products": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dataproduct.DataProduct"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "dataproduct.Owner": {
             "type": "object",
             "properties": {
                 "email": {
@@ -6887,16 +7464,174 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
-                    "description": "\"user\" or \"team\"",
                     "type": "string"
                 },
                 "username": {
-                    "description": "Only for user owners",
                     "type": "string"
                 }
             }
         },
-        "GlossaryTerm": {
+        "dataproduct.ProductImageMeta": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "data_product_id": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "$ref": "#/definitions/dataproduct.ImagePurpose"
+                },
+                "size_bytes": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
+        "dataproduct.Rule": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "data_product_id": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "matched_asset_count": {
+                    "type": "integer"
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "$ref": "#/definitions/dataproduct.RuleType"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "dataproduct.RuleType": {
+            "type": "string",
+            "enum": [
+                "query",
+                "metadata_match"
+            ],
+            "x-enum-varnames": [
+                "RuleTypeQuery",
+                "RuleTypeMetadataMatch"
+            ]
+        },
+        "enrichment.RuleType": {
+            "type": "string",
+            "enum": [
+                "query",
+                "metadata_match"
+            ],
+            "x-enum-varnames": [
+                "RuleTypeQuery",
+                "RuleTypeMetadataMatch"
+            ]
+        },
+        "github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_marmotdata_marmot_internal_api_v1_common.ValidationError": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_marmotdata_marmot_internal_core_search.Response": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "$ref": "#/definitions/search.Facets"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/search.Result"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_marmotdata_marmot_internal_core_tag.Tag": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "glossary.GlossaryTerm": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -6924,7 +7659,7 @@ const docTemplate = `{
                 "owners": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/GlossaryOwner"
+                        "$ref": "#/definitions/glossary.Owner"
                     }
                 },
                 "parent_term_id": {
@@ -6933,7 +7668,7 @@ const docTemplate = `{
                 "tags": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
                     }
                 },
                 "updated_at": {
@@ -6941,58 +7676,69 @@ const docTemplate = `{
                 }
             }
         },
-        "HistogramBucket": {
+        "glossary.ListResult": {
             "type": "object",
             "properties": {
-                "abort": {
-                    "type": "integer"
-                },
-                "complete": {
-                    "type": "integer"
-                },
-                "date": {
-                    "type": "string"
-                },
-                "fail": {
-                    "type": "integer"
-                },
-                "other": {
-                    "type": "integer"
-                },
-                "running": {
-                    "type": "integer"
+                "terms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/glossary.GlossaryTerm"
+                    }
                 },
                 "total": {
                     "type": "integer"
                 }
             }
         },
-        "HistogramResponse": {
+        "glossary.Owner": {
             "type": "object",
             "properties": {
-                "buckets": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/HistogramBucket"
-                    }
+                "email": {
+                    "type": "string"
                 },
-                "period": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "type": {
+                    "description": "\"user\" or \"team\"",
+                    "type": "string"
+                },
+                "username": {
+                    "description": "Only for user owners",
                     "type": "string"
                 }
             }
         },
-        "ImagePurpose": {
-            "type": "string",
-            "enum": [
-                "icon",
-                "header"
-            ],
-            "x-enum-varnames": [
-                "ImagePurposeIcon",
-                "ImagePurposeHeader"
-            ]
+        "lineage.Dataset": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "inputFacets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "namespace": {
+                    "type": "string"
+                },
+                "outputFacets": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
         },
-        "Job": {
+        "lineage.Job": {
             "type": "object",
             "properties": {
                 "facets": {
@@ -7007,7 +7753,286 @@ const docTemplate = `{
                 }
             }
         },
-        "JobRun": {
+        "lineage.LineageEdge": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "job_mrn": {
+                    "type": "string"
+                },
+                "last_seen_at": {
+                    "type": "string"
+                },
+                "observation_count": {
+                    "type": "integer"
+                },
+                "origin": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "lineage.LineageNode": {
+            "type": "object",
+            "properties": {
+                "asset": {
+                    "$ref": "#/definitions/asset.Asset"
+                },
+                "depth": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "lineage.LineageResponse": {
+            "type": "object",
+            "properties": {
+                "edges": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lineage.LineageEdge"
+                    }
+                },
+                "nodes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lineage.LineageNode"
+                    }
+                }
+            }
+        },
+        "lineage.Run": {
+            "type": "object",
+            "properties": {
+                "facets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "runId": {
+                    "type": "string"
+                }
+            }
+        },
+        "lineage.RunEvent": {
+            "type": "object",
+            "properties": {
+                "eventTime": {
+                    "type": "string"
+                },
+                "eventType": {
+                    "type": "string"
+                },
+                "inputs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lineage.Dataset"
+                    }
+                },
+                "job": {
+                    "$ref": "#/definitions/lineage.Job"
+                },
+                "outputs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/lineage.Dataset"
+                    }
+                },
+                "producer": {
+                    "type": "string"
+                },
+                "run": {
+                    "$ref": "#/definitions/lineage.Run"
+                },
+                "schemaURL": {
+                    "type": "string"
+                }
+            }
+        },
+        "metrics.AggregatedMetric": {
+            "type": "object",
+            "properties": {
+                "aggregation_type": {
+                    "type": "string"
+                },
+                "bucket_end": {
+                    "type": "string"
+                },
+                "bucket_size": {
+                    "type": "integer"
+                },
+                "bucket_start": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "metrics.AssetCount": {
+            "type": "object",
+            "properties": {
+                "asset_id": {
+                    "type": "string"
+                },
+                "asset_name": {
+                    "type": "string"
+                },
+                "asset_provider": {
+                    "type": "string"
+                },
+                "asset_type": {
+                    "type": "string"
+                },
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "metrics.QueryCount": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "query": {
+                    "type": "string"
+                },
+                "query_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "plugin.AWSCredentialStatus": {
+            "type": "object",
+            "properties": {
+                "available": {
+                    "type": "boolean"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "plugin.RawPluginConfig": {
+            "type": "object",
+            "additionalProperties": true
+        },
+        "plugin.Run": {
+            "type": "object",
+            "properties": {
+                "completed_at": {
+                    "type": "string"
+                },
+                "config": {
+                    "$ref": "#/definitions/plugin.RawPluginConfig"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "error_message": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "pipeline_name": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "source_name": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/plugin.RunStatus"
+                },
+                "summary": {
+                    "$ref": "#/definitions/plugin.RunSummary"
+                }
+            }
+        },
+        "plugin.RunStatus": {
+            "type": "string",
+            "enum": [
+                "running",
+                "completed",
+                "failed",
+                "cancelled"
+            ],
+            "x-enum-varnames": [
+                "StatusRunning",
+                "StatusCompleted",
+                "StatusFailed",
+                "StatusCancelled"
+            ]
+        },
+        "plugin.RunSummary": {
+            "type": "object",
+            "properties": {
+                "assets_created": {
+                    "type": "integer"
+                },
+                "assets_deleted": {
+                    "type": "integer"
+                },
+                "assets_updated": {
+                    "type": "integer"
+                },
+                "documentation_added": {
+                    "type": "integer"
+                },
+                "duration_seconds": {
+                    "type": "integer"
+                },
+                "errors_count": {
+                    "type": "integer"
+                },
+                "lineage_created": {
+                    "type": "integer"
+                },
+                "lineage_updated": {
+                    "type": "integer"
+                },
+                "total_entities": {
+                    "type": "integer"
+                }
+            }
+        },
+        "runs.JobRun": {
             "type": "object",
             "properties": {
                 "assets_created": {
@@ -7079,715 +8104,7 @@ const docTemplate = `{
                 }
             }
         },
-        "LineageEdge": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "job_mrn": {
-                    "type": "string"
-                },
-                "last_seen_at": {
-                    "type": "string"
-                },
-                "observation_count": {
-                    "type": "integer"
-                },
-                "origin": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "target": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "LineageNode": {
-            "type": "object",
-            "properties": {
-                "asset": {
-                    "$ref": "#/definitions/Asset"
-                },
-                "depth": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "LineageResponse": {
-            "type": "object",
-            "properties": {
-                "edges": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/LineageEdge"
-                    }
-                },
-                "nodes": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/LineageNode"
-                    }
-                }
-            }
-        },
-        "LineageResult": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "source": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "target": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "LineageRun": {
-            "type": "object",
-            "properties": {
-                "facets": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "runId": {
-                    "type": "string"
-                }
-            }
-        },
-        "ListJobRunsResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "runs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/JobRun"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ListMembersResponse": {
-            "type": "object",
-            "properties": {
-                "members": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/TeamMemberWithUser"
-                    }
-                }
-            }
-        },
-        "ListSSOMappingsResponse": {
-            "type": "object",
-            "properties": {
-                "mappings": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/SSOTeamMapping"
-                    }
-                }
-            }
-        },
-        "ListSchedulesResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "schedules": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Schedule"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ListTeamsResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "teams": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Team"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ListUsersResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                },
-                "users": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/User"
-                    }
-                }
-            }
-        },
-        "LoginRequest": {
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "password": {
-                    "type": "string"
-                },
-                "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "MessageResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string"
-                }
-            }
-        },
-        "MetadataFieldSuggestion": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "example": {},
-                "field": {
-                    "type": "string"
-                },
-                "path_parts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "type": {
-                    "type": "string"
-                },
-                "types": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "MetadataValueSuggestion": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "example": {
-                    "$ref": "#/definitions/Asset"
-                },
-                "value": {
-                    "type": "string"
-                }
-            }
-        },
-        "OAuthErrorResponse": {
-            "type": "object",
-            "properties": {
-                "error": {
-                    "type": "string"
-                },
-                "error_description": {
-                    "type": "string"
-                }
-            }
-        },
-        "OAuthLinkRequest": {
-            "type": "object",
-            "required": [
-                "provider",
-                "provider_user_id",
-                "user_id",
-                "user_info"
-            ],
-            "properties": {
-                "provider": {
-                    "type": "string"
-                },
-                "provider_user_id": {
-                    "type": "string"
-                },
-                "user_id": {
-                    "type": "string"
-                },
-                "user_info": {
-                    "type": "object",
-                    "additionalProperties": true
-                }
-            }
-        },
-        "OwnerRequest": {
-            "type": "object",
-            "required": [
-                "id",
-                "type"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "user",
-                        "team"
-                    ]
-                }
-            }
-        },
-        "Permission": {
-            "type": "object",
-            "properties": {
-                "action": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "resource_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "PluginRun": {
-            "type": "object",
-            "properties": {
-                "completed_at": {
-                    "type": "string"
-                },
-                "config": {
-                    "$ref": "#/definitions/RawPluginConfig"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "error_message": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "pipeline_name": {
-                    "type": "string"
-                },
-                "run_id": {
-                    "type": "string"
-                },
-                "source_name": {
-                    "type": "string"
-                },
-                "started_at": {
-                    "type": "string"
-                },
-                "status": {
-                    "$ref": "#/definitions/RunStatus"
-                },
-                "summary": {
-                    "$ref": "#/definitions/RunSummary"
-                }
-            }
-        },
-        "PreviewRequest": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "metadata_field": {
-                    "type": "string"
-                },
-                "pattern_type": {
-                    "type": "string"
-                },
-                "pattern_value": {
-                    "type": "string"
-                },
-                "query_expression": {
-                    "type": "string"
-                },
-                "rule_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "PreviewResponse": {
-            "type": "object",
-            "properties": {
-                "column_names": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "rows": {
-                    "type": "array",
-                    "items": {
-                        "type": "array",
-                        "items": {}
-                    }
-                },
-                "total_rows": {
-                    "type": "integer"
-                }
-            }
-        },
-        "ProductImageMeta": {
-            "type": "object",
-            "properties": {
-                "content_type": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "data_product_id": {
-                    "type": "string"
-                },
-                "filename": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "purpose": {
-                    "$ref": "#/definitions/ImagePurpose"
-                },
-                "size_bytes": {
-                    "type": "integer"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "QueryCount": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "query": {
-                    "type": "string"
-                },
-                "query_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "RawPluginConfig": {
-            "type": "object",
-            "additionalProperties": true
-        },
-        "RecordRunRequest": {
-            "type": "object",
-            "properties": {
-                "agent_mrn": {
-                    "type": "string"
-                },
-                "ended_at": {
-                    "type": "string"
-                },
-                "error": {
-                    "type": "string"
-                },
-                "model": {
-                    "type": "string"
-                },
-                "observed_assets": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "run_id": {
-                    "type": "string"
-                },
-                "started_at": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "tokens_in": {
-                    "type": "integer"
-                },
-                "tokens_out": {
-                    "type": "integer"
-                },
-                "tool_calls": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/ToolCallPayload"
-                    }
-                }
-            }
-        },
-        "ReindexAcceptedResponse": {
-            "type": "object",
-            "properties": {
-                "message": {
-                    "type": "string",
-                    "example": "Reindex started"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "accepted"
-                }
-            }
-        },
-        "ReindexStatusResponse": {
-            "type": "object",
-            "properties": {
-                "es_configured": {
-                    "type": "boolean"
-                },
-                "running": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "RemoveTermRequest": {
-            "type": "object",
-            "required": [
-                "term_id"
-            ],
-            "properties": {
-                "term_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "Result": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "rank": {
-                    "type": "number"
-                },
-                "type": {
-                    "$ref": "#/definitions/ResultType"
-                },
-                "updated_at": {
-                    "type": "string"
-                },
-                "url": {
-                    "type": "string"
-                }
-            }
-        },
-        "ResultType": {
-            "type": "string",
-            "enum": [
-                "asset",
-                "glossary",
-                "team",
-                "data_product"
-            ],
-            "x-enum-varnames": [
-                "ResultTypeAsset",
-                "ResultTypeGlossary",
-                "ResultTypeTeam",
-                "ResultTypeDataProduct"
-            ]
-        },
-        "Role": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "permissions": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Permission"
-                    }
-                }
-            }
-        },
-        "RulePreview": {
-            "type": "object",
-            "properties": {
-                "asset_count": {
-                    "type": "integer"
-                },
-                "asset_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "errors": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "RuleType": {
-            "type": "string",
-            "enum": [
-                "query",
-                "metadata_match"
-            ],
-            "x-enum-varnames": [
-                "RuleTypeQuery",
-                "RuleTypeMetadataMatch"
-            ]
-        },
-        "RunCreateAssetRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "external_links": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "additionalProperties": {
-                            "type": "string"
-                        }
-                    }
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "schema": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "sources": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "RunEntitiesResponse": {
-            "type": "object",
-            "properties": {
-                "entities": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/RunEntity"
-                    }
-                },
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "RunEntity": {
+        "runs.RunEntity": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -7816,184 +8133,7 @@ const docTemplate = `{
                 }
             }
         },
-        "RunEvent": {
-            "type": "object",
-            "properties": {
-                "eventTime": {
-                    "type": "string"
-                },
-                "eventType": {
-                    "type": "string"
-                },
-                "inputs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Dataset"
-                    }
-                },
-                "job": {
-                    "$ref": "#/definitions/Job"
-                },
-                "outputs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Dataset"
-                    }
-                },
-                "producer": {
-                    "type": "string"
-                },
-                "run": {
-                    "$ref": "#/definitions/LineageRun"
-                },
-                "schemaURL": {
-                    "type": "string"
-                }
-            }
-        },
-        "RunHistory": {
-            "type": "object",
-            "properties": {
-                "duration_ms": {
-                    "type": "integer"
-                },
-                "end_time": {
-                    "type": "string"
-                },
-                "event_time": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "job_name": {
-                    "type": "string"
-                },
-                "job_namespace": {
-                    "type": "string"
-                },
-                "run_id": {
-                    "type": "string"
-                },
-                "start_time": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                }
-            }
-        },
-        "RunHistoryResponse": {
-            "type": "object",
-            "properties": {
-                "limit": {
-                    "type": "integer"
-                },
-                "offset": {
-                    "type": "integer"
-                },
-                "run_history": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/RunHistory"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "RunStatus": {
-            "type": "string",
-            "enum": [
-                "running",
-                "completed",
-                "failed",
-                "cancelled"
-            ],
-            "x-enum-varnames": [
-                "StatusRunning",
-                "StatusCompleted",
-                "StatusFailed",
-                "StatusCancelled"
-            ]
-        },
-        "RunSummary": {
-            "type": "object",
-            "properties": {
-                "assets_created": {
-                    "type": "integer"
-                },
-                "assets_deleted": {
-                    "type": "integer"
-                },
-                "assets_updated": {
-                    "type": "integer"
-                },
-                "documentation_added": {
-                    "type": "integer"
-                },
-                "duration_seconds": {
-                    "type": "integer"
-                },
-                "errors_count": {
-                    "type": "integer"
-                },
-                "lineage_created": {
-                    "type": "integer"
-                },
-                "lineage_updated": {
-                    "type": "integer"
-                },
-                "total_entities": {
-                    "type": "integer"
-                }
-            }
-        },
-        "RunsResponse": {
-            "type": "object",
-            "properties": {
-                "runs": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AgentRun"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "SSOTeamMapping": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "member_role": {
-                    "type": "string"
-                },
-                "provider": {
-                    "type": "string"
-                },
-                "sso_group_name": {
-                    "type": "string"
-                },
-                "team_id": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "Schedule": {
+        "runs.Schedule": {
             "type": "object",
             "properties": {
                 "config": {
@@ -8038,93 +8178,141 @@ const docTemplate = `{
                 }
             }
         },
-        "SearchOwnersResponse": {
+        "search.FacetValue": {
             "type": "object",
             "properties": {
-                "owners": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/TeamOwner"
-                    }
-                }
-            }
-        },
-        "SearchResponse": {
-            "type": "object",
-            "properties": {
-                "facets": {
-                    "$ref": "#/definitions/Facets"
-                },
-                "limit": {
+                "count": {
                     "type": "integer"
                 },
-                "offset": {
-                    "type": "integer"
-                },
-                "results": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/Result"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
-        "StartRunRequest": {
-            "type": "object",
-            "required": [
-                "pipeline_name",
-                "source_name"
-            ],
-            "properties": {
-                "config": {
-                    "$ref": "#/definitions/RawPluginConfig"
-                },
-                "pipeline_name": {
-                    "type": "string"
-                },
-                "source_name": {
+                "value": {
                     "type": "string"
                 }
             }
         },
-        "Stats": {
+        "search.Facets": {
             "type": "object",
             "properties": {
-                "median_latency_ms": {
-                    "type": "integer"
+                "asset_types": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/search.FacetValue"
+                    }
                 },
-                "p95_latency_ms": {
-                    "type": "integer"
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/search.FacetValue"
+                    }
                 },
-                "run_count": {
-                    "type": "integer"
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/search.FacetValue"
+                    }
                 },
-                "success_rate": {
+                "types": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "search.Result": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "rank": {
                     "type": "number"
                 },
-                "tokens_in": {
-                    "type": "integer"
+                "type": {
+                    "$ref": "#/definitions/search.ResultType"
                 },
-                "tokens_out": {
-                    "type": "integer"
-                }
-            }
-        },
-        "TagRequest": {
-            "type": "object",
-            "required": [
-                "tag"
-            ],
-            "properties": {
-                "tag": {
+                "updated_at": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
         },
-        "Team": {
+        "search.ResultType": {
+            "type": "string",
+            "enum": [
+                "asset",
+                "glossary",
+                "team",
+                "data_product"
+            ],
+            "x-enum-varnames": [
+                "ResultTypeAsset",
+                "ResultTypeGlossary",
+                "ResultTypeTeam",
+                "ResultTypeDataProduct"
+            ]
+        },
+        "team.Owner": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "team.SSOTeamMapping": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "member_role": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "sso_group_name": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "team.Team": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -8163,7 +8351,7 @@ const docTemplate = `{
                 }
             }
         },
-        "TeamMemberWithUser": {
+        "team.TeamMemberWithUser": {
             "type": "object",
             "properties": {
                 "email": {
@@ -8201,10 +8389,81 @@ const docTemplate = `{
                 }
             }
         },
-        "TeamOwner": {
+        "user.APIKey": {
             "type": "object",
             "properties": {
-                "email": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "last_used_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "user.CreateUserInput": {
+            "type": "object",
+            "required": [
+                "name",
+                "role_names",
+                "username"
+            ],
+            "properties": {
+                "name": {
+                    "type": "string"
+                },
+                "oauth_provider": {
+                    "type": "string"
+                },
+                "oauth_provider_data": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "oauth_provider_id": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string",
+                    "minLength": 8
+                },
+                "profile_picture": {
+                    "type": "string"
+                },
+                "role_names": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "username": {
+                    "type": "string",
+                    "maxLength": 255,
+                    "minLength": 3
+                }
+            }
+        },
+        "user.Permission": {
+            "type": "object",
+            "properties": {
+                "action": {
+                    "type": "string"
+                },
+                "description": {
                     "type": "string"
                 },
                 "id": {
@@ -8213,321 +8472,32 @@ const docTemplate = `{
                 "name": {
                     "type": "string"
                 },
-                "profile_picture": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string"
-                },
-                "username": {
+                "resource_type": {
                     "type": "string"
                 }
             }
         },
-        "TokenExchangeResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_in": {
-                    "type": "integer"
-                },
-                "issued_token_type": {
-                    "type": "string"
-                },
-                "token_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "TokenResponse": {
-            "type": "object",
-            "properties": {
-                "access_token": {
-                    "type": "string"
-                },
-                "expires_in": {
-                    "type": "integer"
-                },
-                "requires_password_change": {
-                    "type": "boolean"
-                },
-                "token_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "ToolCall": {
-            "type": "object",
-            "properties": {
-                "duration_ms": {
-                    "type": "integer"
-                },
-                "ordinal": {
-                    "type": "integer"
-                },
-                "started_at": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "target_mrn": {
-                    "type": "string"
-                },
-                "tool_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "ToolCallPayload": {
-            "type": "object",
-            "properties": {
-                "duration_ms": {
-                    "type": "integer"
-                },
-                "started_at": {
-                    "type": "string"
-                },
-                "status": {
-                    "type": "string"
-                },
-                "target_mrn": {
-                    "type": "string"
-                },
-                "tool_name": {
-                    "type": "string"
-                }
-            }
-        },
-        "TotalAssetsResponse": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                }
-            }
-        },
-        "UIConfigResponse": {
-            "type": "object",
-            "properties": {
-                "allow_unencrypted": {
-                    "type": "boolean"
-                },
-                "banner": {
-                    "$ref": "#/definitions/BannerResponse"
-                },
-                "encryption_configured": {
-                    "type": "boolean"
-                },
-                "table_preview_enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "UpdateAssetRequest": {
+        "user.Role": {
             "type": "object",
             "properties": {
                 "description": {
                     "type": "string"
                 },
-                "environments": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "$ref": "#/definitions/Environment"
-                    }
-                },
-                "external_links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AssetExternalLink"
-                    }
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "providers": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "schema": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "string"
-                    }
-                },
-                "sources": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AssetSource"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "type": {
-                    "type": "string"
-                },
-                "user_description": {
-                    "type": "string"
-                }
-            }
-        },
-        "UpdateAssetRuleRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "is_enabled": {
-                    "type": "boolean"
-                },
-                "links": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/AssetRuleExternalLink"
-                    }
-                },
-                "metadata_field": {
+                "id": {
                     "type": "string"
                 },
                 "name": {
                     "type": "string"
                 },
-                "pattern_type": {
-                    "type": "string"
-                },
-                "pattern_value": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "integer"
-                },
-                "query_expression": {
-                    "type": "string"
-                },
-                "rule_type": {
-                    "type": "string"
-                },
-                "term_ids": {
+                "permissions": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/user.Permission"
                     }
                 }
             }
         },
-        "UpdateMemberRoleRequest": {
-            "type": "object",
-            "properties": {
-                "role": {
-                    "type": "string"
-                }
-            }
-        },
-        "UpdatePasswordRequest": {
-            "type": "object",
-            "required": [
-                "new_password"
-            ],
-            "properties": {
-                "new_password": {
-                    "type": "string",
-                    "minLength": 8
-                }
-            }
-        },
-        "UpdateSSOMappingRequest": {
-            "type": "object",
-            "properties": {
-                "member_role": {
-                    "type": "string"
-                },
-                "team_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "UpdateScheduleRequest": {
-            "type": "object",
-            "properties": {
-                "config": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "cron_expression": {
-                    "type": "string"
-                },
-                "enabled": {
-                    "type": "boolean"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "plugin_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "UpdateTeamRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "UpdateTermRequest": {
-            "type": "object",
-            "properties": {
-                "definition": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "owners": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/OwnerRequest"
-                    }
-                },
-                "parent_term_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "UpdateUserInput": {
+        "user.UpdateUserInput": {
             "type": "object",
             "properties": {
                 "active": {
@@ -8559,7 +8529,7 @@ const docTemplate = `{
                 }
             }
         },
-        "User": {
+        "user.User": {
             "type": "object",
             "properties": {
                 "active": {
@@ -8574,7 +8544,7 @@ const docTemplate = `{
                 "identities": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/UserIdentity"
+                        "$ref": "#/definitions/user.UserIdentity"
                     }
                 },
                 "must_change_password": {
@@ -8593,7 +8563,7 @@ const docTemplate = `{
                 "roles": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/Role"
+                        "$ref": "#/definitions/user.Role"
                     }
                 },
                 "updated_at": {
@@ -8604,7 +8574,7 @@ const docTemplate = `{
                 }
             }
         },
-        "UserIdentity": {
+        "user.UserIdentity": {
             "type": "object",
             "properties": {
                 "created_at": {
@@ -8634,7 +8604,1324 @@ const docTemplate = `{
                 }
             }
         },
-        "ValidateConfigRequest": {
+        "v1_admin.ReindexAcceptedResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string",
+                    "example": "Reindex started"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "accepted"
+                }
+            }
+        },
+        "v1_admin.ReindexStatusResponse": {
+            "type": "object",
+            "properties": {
+                "es_configured": {
+                    "type": "boolean"
+                },
+                "running": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1_agents.ActivityResponse": {
+            "type": "object",
+            "properties": {
+                "buckets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/agent.Bucket"
+                    }
+                }
+            }
+        },
+        "v1_agents.RecordRunRequest": {
+            "type": "object",
+            "properties": {
+                "agent_mrn": {
+                    "type": "string"
+                },
+                "ended_at": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "model": {
+                    "type": "string"
+                },
+                "observed_assets": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "tokens_in": {
+                    "type": "integer"
+                },
+                "tokens_out": {
+                    "type": "integer"
+                },
+                "tool_calls": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_agents.ToolCallPayload"
+                    }
+                }
+            }
+        },
+        "v1_agents.RunsResponse": {
+            "type": "object",
+            "properties": {
+                "runs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/agent.Run"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_agents.ToolCallPayload": {
+            "type": "object",
+            "properties": {
+                "duration_ms": {
+                    "type": "integer"
+                },
+                "started_at": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target_mrn": {
+                    "type": "string"
+                },
+                "tool_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assetrules.CreateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/assetrule.ExternalLink"
+                    }
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "type": "string"
+                },
+                "term_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_assetrules.PreviewRequest": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assetrules.UpdateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/assetrule.ExternalLink"
+                    }
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "type": "string"
+                },
+                "term_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_assets.AddTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.AddTermsRequest": {
+            "type": "object",
+            "required": [
+                "term_ids"
+            ],
+            "properties": {
+                "term_ids": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_assets.AssetSummaryResponse": {
+            "type": "object",
+            "properties": {
+                "services": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "types": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                }
+            }
+        },
+        "v1_assets.BatchDocumentationRequest": {
+            "type": "object",
+            "required": [
+                "documentation"
+            ],
+            "properties": {
+                "documentation": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/assetdocs.Documentation"
+                    }
+                }
+            }
+        },
+        "v1_assets.BatchDocumentationResponse": {
+            "type": "object",
+            "properties": {
+                "results": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_assets.BatchDocumentationResult"
+                    }
+                }
+            }
+        },
+        "v1_assets.BatchDocumentationResult": {
+            "type": "object",
+            "properties": {
+                "documentation": {
+                    "$ref": "#/definitions/assetdocs.Documentation"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.CreateRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "providers",
+                "type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "environments": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/asset.Environment"
+                    }
+                },
+                "external_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.ExternalLink"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.AssetSource"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.DocumentationCreateRequest": {
+            "type": "object",
+            "required": [
+                "content",
+                "mrn",
+                "source"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.HistogramResponse": {
+            "type": "object",
+            "properties": {
+                "buckets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.HistogramBucket"
+                    }
+                },
+                "period": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.PreviewResponse": {
+            "type": "object",
+            "properties": {
+                "column_names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "rows": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {}
+                    }
+                },
+                "total_rows": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_assets.RemoveColumnTagRequest": {
+            "type": "object",
+            "properties": {
+                "column_path": {
+                    "type": "string"
+                },
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.RemoveTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.RemoveTermRequest": {
+            "type": "object",
+            "required": [
+                "term_id"
+            ],
+            "properties": {
+                "term_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_assets.ReplaceColumnTagsRequest": {
+            "type": "object",
+            "properties": {
+                "column_path": {
+                    "type": "string"
+                },
+                "tag_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_assets.ReplaceTagsRequest": {
+            "type": "object",
+            "properties": {
+                "tag_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_assets.RunHistoryResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "run_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.RunHistory"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_assets.SearchResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.Asset"
+                    }
+                },
+                "filters": {
+                    "$ref": "#/definitions/asset.AvailableFilters"
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_assets.UpdateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "environments": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "$ref": "#/definitions/asset.Environment"
+                    }
+                },
+                "external_links": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.ExternalLink"
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/asset.AssetSource"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                },
+                "user_description": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_dataproducts.AddProductTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_dataproducts.CreateRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_dataproducts.OwnerRequest"
+                    }
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_dataproducts.RuleRequest"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_dataproducts.OwnerRequest": {
+            "type": "object",
+            "required": [
+                "id",
+                "type"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "team"
+                    ]
+                }
+            }
+        },
+        "v1_dataproducts.RemoveProductTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_dataproducts.ReplaceProductTagsRequest": {
+            "type": "object",
+            "properties": {
+                "tag_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_dataproducts.RuleRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "rule_type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_dataproducts.UpdateRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_dataproducts.OwnerRequest"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_glossary.AddTermTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_glossary.CreateTermRequest": {
+            "type": "object",
+            "required": [
+                "definition",
+                "name"
+            ],
+            "properties": {
+                "definition": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_glossary.OwnerRequest"
+                    }
+                },
+                "parent_term_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_glossary.OwnerRequest": {
+            "type": "object",
+            "required": [
+                "id",
+                "type"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "team"
+                    ]
+                }
+            }
+        },
+        "v1_glossary.RemoveTermTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_glossary.ReplaceTermTagsRequest": {
+            "type": "object",
+            "properties": {
+                "tag_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_glossary.UpdateTermRequest": {
+            "type": "object",
+            "properties": {
+                "definition": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_glossary.OwnerRequest"
+                    }
+                },
+                "parent_term_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_lineage.BatchLineageResult": {
+            "type": "object",
+            "properties": {
+                "edge": {
+                    "$ref": "#/definitions/lineage.LineageEdge"
+                },
+                "status": {
+                    "description": "\"created\", \"duplicate\", or \"existing\"",
+                    "type": "string"
+                }
+            }
+        },
+        "v1_metrics.AssetsByOwnerResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            }
+        },
+        "v1_metrics.AssetsByProviderResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            }
+        },
+        "v1_metrics.AssetsByTypeResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                }
+            }
+        },
+        "v1_metrics.AssetsWithSchemasResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "percentage": {
+                    "type": "number"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_metrics.GetMetricsRequest": {
+            "type": "object",
+            "properties": {
+                "aggregation": {
+                    "type": "string"
+                },
+                "bucket_size": {
+                    "type": "string"
+                },
+                "end": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "metric_names": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "start": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_metrics.GetMetricsResponse": {
+            "type": "object",
+            "properties": {
+                "metrics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/metrics.AggregatedMetric"
+                    }
+                },
+                "query": {
+                    "$ref": "#/definitions/v1_metrics.GetMetricsRequest"
+                }
+            }
+        },
+        "v1_metrics.TotalAssetsResponse": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_runs.BatchAssetResult": {
+            "type": "object",
+            "properties": {
+                "asset": {},
+                "error": {
+                    "type": "string"
+                },
+                "mrn": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.BatchCreateRequest": {
+            "type": "object",
+            "required": [
+                "assets",
+                "pipeline_name",
+                "run_id",
+                "source_name"
+            ],
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.CreateAssetRequest"
+                    }
+                },
+                "config": {
+                    "$ref": "#/definitions/plugin.RawPluginConfig"
+                },
+                "documentation": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.CreateDocRequest"
+                    }
+                },
+                "lineage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.CreateLineageRequest"
+                    }
+                },
+                "pipeline_name": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "source_name": {
+                    "type": "string"
+                },
+                "statistics": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.CreateStatRequest"
+                    }
+                }
+            }
+        },
+        "v1_runs.BatchCreateResponse": {
+            "type": "object",
+            "properties": {
+                "assets": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.BatchAssetResult"
+                    }
+                },
+                "documentation": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.DocumentationResult"
+                    }
+                },
+                "lineage": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/v1_runs.LineageResult"
+                    }
+                },
+                "stale_entities_removed": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_runs.CompleteRunRequest": {
+            "type": "object",
+            "required": [
+                "run_id",
+                "status"
+            ],
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "run_id": {
+                    "type": "string"
+                },
+                "status": {
+                    "$ref": "#/definitions/plugin.RunStatus"
+                },
+                "summary": {
+                    "$ref": "#/definitions/plugin.RunSummary"
+                }
+            }
+        },
+        "v1_runs.CreateAssetRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "external_links": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "schema": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "sources": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.CreateDocRequest": {
+            "type": "object",
+            "properties": {
+                "asset_mrn": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.CreateLineageRequest": {
+            "type": "object",
+            "properties": {
+                "source": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.CreateStatRequest": {
+            "type": "object",
+            "required": [
+                "asset_mrn",
+                "metric_name",
+                "value"
+            ],
+            "properties": {
+                "asset_mrn": {
+                    "type": "string"
+                },
+                "metric_name": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "number"
+                }
+            }
+        },
+        "v1_runs.DestroyRunResponse": {
+            "type": "object",
+            "properties": {
+                "assets_deleted": {
+                    "type": "integer"
+                },
+                "deleted_entity_mrns": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "documentation_deleted": {
+                    "type": "integer"
+                },
+                "lineage_deleted": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_runs.DocumentationResult": {
+            "type": "object",
+            "properties": {
+                "asset_mrn": {
+                    "type": "string"
+                },
+                "error": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.LineageResult": {
+            "type": "object",
+            "properties": {
+                "error": {
+                    "type": "string"
+                },
+                "source": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "target": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_runs.RunEntitiesResponse": {
+            "type": "object",
+            "properties": {
+                "entities": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.RunEntity"
+                    }
+                },
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_runs.StartRunRequest": {
+            "type": "object",
+            "required": [
+                "pipeline_name",
+                "source_name"
+            ],
+            "properties": {
+                "config": {
+                    "$ref": "#/definitions/plugin.RawPluginConfig"
+                },
+                "pipeline_name": {
+                    "type": "string"
+                },
+                "source_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_schedules.CreateScheduleRequest": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cron_expression": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_schedules.ListJobRunsResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "runs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.JobRun"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_schedules.ListSchedulesResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "schedules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/runs.Schedule"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_schedules.UpdateScheduleRequest": {
+            "type": "object",
+            "properties": {
+                "config": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "cron_expression": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "plugin_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_schedules.ValidateConfigRequest": {
             "type": "object",
             "properties": {
                 "config": {
@@ -8646,13 +9933,13 @@ const docTemplate = `{
                 }
             }
         },
-        "ValidateConfigResponse": {
+        "v1_schedules.ValidateConfigResponse": {
             "type": "object",
             "properties": {
                 "errors": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/ValidationErrorDetail"
+                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ValidationError"
                     }
                 },
                 "valid": {
@@ -8660,14 +9947,293 @@ const docTemplate = `{
                 }
             }
         },
-        "ValidationErrorDetail": {
+        "v1_tags.TagRequest": {
             "type": "object",
             "properties": {
-                "field": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_teams.AddMemberRequest": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_teams.CreateSSOMappingRequest": {
+            "type": "object",
+            "properties": {
+                "member_role": {
+                    "type": "string"
+                },
+                "provider": {
+                    "type": "string"
+                },
+                "sso_group_name": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_teams.CreateTeamRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_teams.ListMembersResponse": {
+            "type": "object",
+            "properties": {
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/team.TeamMemberWithUser"
+                    }
+                }
+            }
+        },
+        "v1_teams.ListSSOMappingsResponse": {
+            "type": "object",
+            "properties": {
+                "mappings": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/team.SSOTeamMapping"
+                    }
+                }
+            }
+        },
+        "v1_teams.ListTeamsResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "teams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/team.Team"
+                    }
+                },
+                "total": {
+                    "type": "integer"
+                }
+            }
+        },
+        "v1_teams.MessageResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_teams.SearchOwnersResponse": {
+            "type": "object",
+            "properties": {
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/team.Owner"
+                    }
+                }
+            }
+        },
+        "v1_teams.UpdateMemberRoleRequest": {
+            "type": "object",
+            "properties": {
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_teams.UpdateSSOMappingRequest": {
+            "type": "object",
+            "properties": {
+                "member_role": {
+                    "type": "string"
+                },
+                "team_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_teams.UpdateTeamRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "v1_ui.BannerResponse": {
+            "type": "object",
+            "properties": {
+                "dismissible": {
+                    "type": "boolean"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "id": {
                     "type": "string"
                 },
                 "message": {
                     "type": "string"
+                },
+                "variant": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_ui.UIConfigResponse": {
+            "type": "object",
+            "properties": {
+                "allow_unencrypted": {
+                    "type": "boolean"
+                },
+                "banner": {
+                    "$ref": "#/definitions/v1_ui.BannerResponse"
+                },
+                "encryption_configured": {
+                    "type": "boolean"
+                },
+                "table_preview_enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "v1_users.CreateAPIKeyRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "expires_in_days": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_users.ListUsersResponse": {
+            "type": "object",
+            "properties": {
+                "limit": {
+                    "type": "integer"
+                },
+                "offset": {
+                    "type": "integer"
+                },
+                "total": {
+                    "type": "integer"
+                },
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/user.User"
+                    }
+                }
+            }
+        },
+        "v1_users.LoginRequest": {
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_users.OAuthLinkRequest": {
+            "type": "object",
+            "required": [
+                "provider",
+                "provider_user_id",
+                "user_id",
+                "user_info"
+            ],
+            "properties": {
+                "provider": {
+                    "type": "string"
+                },
+                "provider_user_id": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "string"
+                },
+                "user_info": {
+                    "type": "object",
+                    "additionalProperties": true
+                }
+            }
+        },
+        "v1_users.TokenResponse": {
+            "type": "object",
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "expires_in": {
+                    "type": "integer"
+                },
+                "requires_password_change": {
+                    "type": "boolean"
+                },
+                "token_type": {
+                    "type": "string"
+                }
+            }
+        },
+        "v1_users.UpdatePasswordRequest": {
+            "type": "object",
+            "required": [
+                "new_password"
+            ],
+            "properties": {
+                "new_password": {
+                    "type": "string",
+                    "minLength": 8
                 }
             }
         }

@@ -257,7 +257,6 @@ func (s *Source) createDatabaseAsset(host string, port int, dbName string, keysp
 	resourceName := fmt.Sprintf("%s:%d-%s", host, port, dbName)
 	mrnValue := mrn.New("Database", "Redis", resourceName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:      &dbName,
@@ -265,7 +264,6 @@ func (s *Source) createDatabaseAsset(host string, port int, dbName string, keysp
 		Type:      "Database",
 		Providers: []string{"Redis"},
 		Metadata:    metadata,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Redis",
 			LastSyncAt: time.Now(),

@@ -281,7 +281,6 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, error) {
 
 		mrnValue := mrn.New("Dataset", "BigQuery", datasetID)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, assetMetadata)
 
 		assets = append(assets, asset.Asset{
 			Name:      &datasetID,
@@ -289,7 +288,6 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, error) {
 			Type:      "Dataset",
 			Providers: []string{"BigQuery"},
 			Metadata:    assetMetadata,
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "BigQuery",
 				LastSyncAt: time.Now(),
@@ -421,7 +419,6 @@ func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]asset.
 
 		mrnValue := mrn.New(assetType, "BigQuery", tableID)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, assetMetadata)
 
 		var schema map[string]string
 		if metadata.Schema != nil && (tableType == TableTypeTable || tableType == TableTypeView) {
@@ -438,7 +435,6 @@ func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]asset.
 			Description: &assetDesc,
 			Metadata:    assetMetadata,
 			Schema:      schema,
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "BigQuery",
 				LastSyncAt: time.Now(),

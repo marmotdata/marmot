@@ -15,7 +15,6 @@ import (
 	"github.com/apache/iceberg-go/view"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 )
 
@@ -133,7 +132,6 @@ func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier
 	}
 
 	mrnValue := mrn.New("Table", "Iceberg", fullName)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &tableName,
@@ -143,7 +141,6 @@ func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier
 		Description: description,
 		Schema:      schemaMap,
 		Metadata:    metadata,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Iceberg",
 			LastSyncAt: time.Now(),
@@ -189,7 +186,6 @@ func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) asset.
 	}
 
 	mrnValue := mrn.New("View", "Iceberg", fullName)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:          &viewName,
@@ -201,7 +197,6 @@ func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) asset.
 		Query:         query,
 		QueryLanguage: &sqlLang,
 		Metadata:      metadata,
-		Tags:          processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Iceberg",
 			LastSyncAt: time.Now(),

@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/query"
 	"github.com/rs/zerolog/log"
@@ -28,12 +29,12 @@ const (
 	// Note: has_run_history is computed separately via HasRunHistory() to avoid
 	// expensive correlated subqueries on every asset fetch.
 	baseSelectAsset = `
-   	SELECT
-   		id, name, mrn, type, providers, environments, external_links,
-   		description, user_description, metadata, schema, sources, tags,
-   		created_at, created_by, updated_at, last_sync_at,
-   		query, query_language, is_stub
-   	FROM assets`
+    		SELECT
+     		id, name, mrn, type, providers, environments, external_links,
+     		description, user_description, metadata, schema, sources,
+     		created_at, created_by, updated_at, last_sync_at,
+    		query, query_language, is_stub
+    		FROM assets`
 )
 
 type Repository interface {
@@ -54,6 +55,17 @@ type Repository interface {
 	GetMetadataFields(ctx context.Context) ([]MetadataFieldSuggestion, error)
 	GetMetadataValues(ctx context.Context, field string, prefix string, limit int) ([]MetadataValueSuggestion, error)
 	GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error)
+	SetTags(ctx context.Context, assetID string, tagIDs []string) error
+	AddTag(ctx context.Context, assetID string, tagID string) error
+	ListAssetTags(ctx context.Context, assetID string) ([]tag.Tag, error)
+	RemoveTag(ctx context.Context, assetID string, tagID string) error
+
+	GetColumnTags(ctx context.Context, assetID string) (ColumnTagMap, error)
+	SetColumnTags(ctx context.Context, assetID, columnPath string, tagIDs []string) error
+	AddColumnTag(ctx context.Context, assetID, columnPath, tagID string) (*ColumnTag, error)
+	RemoveColumnTag(ctx context.Context, assetID, columnPath, tagID string) error
+	CleanupMissingColumns(ctx context.Context, assetID string, existingPaths []string) error
+
 	GetRunHistory(ctx context.Context, assetID string, limit, offset int) ([]*RunHistory, int, error)
 	GetRunHistoryHistogram(ctx context.Context, assetID string, days int) ([]HistogramBucket, error)
 
@@ -66,13 +78,12 @@ type Repository interface {
 type AvailableFilters struct {
 	Types     map[string]int `json:"types"`
 	Providers map[string]int `json:"providers"`
-	Tags      map[string]int `json:"tags"`
-} // @name AvailableFilters
+}
 
 type AssetTypeSummary struct {
 	Count   int    `json:"count"`
 	Service string `json:"service"`
-} // @name AssetTypeSummary
+}
 
 type AssetSummary struct {
 	Types     map[string]AssetTypeSummary `json:"types"`
@@ -128,15 +139,15 @@ func (r *PostgresRepository) Create(ctx context.Context, asset *Asset) error {
 	query := `
    	INSERT INTO assets (
    		id, name, mrn, type, providers, environments, description, user_description,
-   		metadata, schema, sources, tags, external_links,
+   		metadata, schema, sources, external_links,
    		created_by, created_at, updated_at, last_sync_at,
    		query, query_language, is_stub
-   	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)`
+   	) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)`
 
 	_, err = r.db.Exec(ctx, query,
 		asset.ID, asset.Name, asset.MRN, asset.Type, asset.Providers,
 		environmentsJSON, asset.Description, asset.UserDescription, metadataJSON, asset.Schema,
-		sourcesJSON, asset.Tags, externalLinksJSON,
+		sourcesJSON, externalLinksJSON,
 		asset.CreatedBy, asset.CreatedAt, asset.UpdatedAt, asset.LastSyncAt,
 		asset.Query, asset.QueryLanguage, asset.IsStub)
 
@@ -201,14 +212,14 @@ func (r *PostgresRepository) Update(ctx context.Context, asset *Asset) error {
 	query := `
    	UPDATE assets
    	SET name = $1, description = $2, user_description = $3, metadata = $4, schema = $5,
-   		tags = $6, updated_at = $7, sources = $8, environments = $9,
-   		external_links = $10, providers = $11, mrn = $12,
-   		type = $13, query = $14, query_language = $15, is_stub = $16
-   	WHERE id = $17`
+   		updated_at = $6, sources = $7, environments = $8,
+   		external_links = $9, providers = $10, mrn = $11,
+   		type = $12, query = $13, query_language = $14, is_stub = $15
+   	WHERE id = $16`
 
 	commandTag, err := r.db.Exec(ctx, query,
 		asset.Name, asset.Description, asset.UserDescription, metadataJSON, asset.Schema,
-		asset.Tags, asset.UpdatedAt, sourcesJSON, environmentsJSON,
+		asset.UpdatedAt, sourcesJSON, environmentsJSON,
 		externalLinksJSON, asset.Providers, asset.MRN,
 		asset.Type, asset.Query, asset.QueryLanguage, asset.IsStub, asset.ID)
 
@@ -303,7 +314,7 @@ func (r *PostgresRepository) scanAsset(ctx context.Context, row pgx.Row) (*Asset
 		&asset.ID, &asset.Name, &asset.MRN, &asset.Type, &asset.Providers,
 		&environmentsJSON, &externalLinksJSON, &asset.Description, &asset.UserDescription,
 		&metadataJSON, &schemaJSON, &sourcesJSON,
-		&asset.Tags, &asset.CreatedAt, &asset.CreatedBy, &asset.UpdatedAt,
+		&asset.CreatedAt, &asset.CreatedBy, &asset.UpdatedAt,
 		&asset.LastSyncAt, &asset.Query, &asset.QueryLanguage, &asset.IsStub,
 	)
 
@@ -331,9 +342,6 @@ func (r *PostgresRepository) scanAsset(ctx context.Context, row pgx.Row) (*Asset
 	}
 	if asset.Schema == nil {
 		asset.Schema = make(map[string]string)
-	}
-	if asset.Tags == nil {
-		asset.Tags = make([]string, 0)
 	}
 	if asset.Providers == nil {
 		asset.Providers = make([]string, 0)
@@ -389,7 +397,7 @@ func (r *PostgresRepository) scanMultipleAssets(ctx context.Context, query strin
 	}
 	defer rows.Close()
 
-	assets := []*Asset{}
+	var assets []*Asset
 	for rows.Next() {
 		asset, err := r.scanAsset(ctx, rows)
 		if err != nil {
@@ -572,7 +580,7 @@ func (r *PostgresRepository) GetMetadataValues(ctx context.Context, field string
 		// Kind represents result types: asset, glossary, team, user
 		// Return hardcoded values filtered by prefix
 		kinds := []string{"asset", "glossary", "team", "user"}
-		suggestions := []MetadataValueSuggestion{}
+		var suggestions []MetadataValueSuggestion
 		for _, kind := range kinds {
 			if prefix == "" || strings.Contains(strings.ToLower(kind), strings.ToLower(prefix)) {
 				suggestions = append(suggestions, MetadataValueSuggestion{
@@ -686,7 +694,7 @@ func (r *PostgresRepository) GetMetadataValuesWithContext(ctx context.Context, f
 		// Kind represents result types: asset, glossary, team, user
 		// Return hardcoded values filtered by prefix (context doesn't affect these)
 		kinds := []string{"asset", "glossary", "team", "user"}
-		suggestions := []MetadataValueSuggestion{}
+		var suggestions []MetadataValueSuggestion
 		for _, kind := range kinds {
 			if prefix == "" || strings.Contains(strings.ToLower(kind), strings.ToLower(prefix)) {
 				suggestions = append(suggestions, MetadataValueSuggestion{
@@ -853,7 +861,7 @@ func (r *PostgresRepository) Summary(ctx context.Context) (*AssetSummary, error)
 	rows, err := r.db.Query(ctx, `
 		SELECT dimension, key, count
 		FROM summary_counts
-		WHERE count > 0
+		WHERE count > 0 AND dimension IN ('type', 'provider', 'entity_type', 'tag')
 		ORDER BY
 			CASE dimension
 				WHEN 'type' THEN 1
@@ -867,7 +875,6 @@ func (r *PostgresRepository) Summary(ctx context.Context) (*AssetSummary, error)
 	}
 	defer rows.Close()
 
-	tagCount := 0
 	for rows.Next() {
 		var dimension, key string
 		var count int
@@ -888,11 +895,12 @@ func (r *PostgresRepository) Summary(ctx context.Context) (*AssetSummary, error)
 				}
 			}
 		case "tag":
-			if tagCount < 100 {
-				summary.Tags[key] = count
-				tagCount++
-			}
+			summary.Tags[key] = count
 		}
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating summary counts: %w", err)
 	}
 
 	return summary, nil
@@ -900,11 +908,11 @@ func (r *PostgresRepository) Summary(ctx context.Context) (*AssetSummary, error)
 
 func (r *PostgresRepository) GetTagSuggestions(ctx context.Context, prefix string, limit int) ([]string, error) {
 	rows, err := r.db.Query(ctx, `
-		SELECT tag, COUNT(*) as cnt
-		FROM asset_tags
-		WHERE $1 = '' OR tag LIKE $1 || '%'
-		GROUP BY tag
-		ORDER BY cnt DESC, tag ASC
+		SELECT t.name FROM tags t
+		LEFT JOIN assets_tags at ON at.tag_id = t.id
+		WHERE $1 = '' OR t.name ILIKE $1 || '%'
+		GROUP BY t.name
+		ORDER BY COUNT(at.asset_id) DESC, t.name ASC
 		LIMIT $2`,
 		prefix, limit)
 	if err != nil {
@@ -912,17 +920,293 @@ func (r *PostgresRepository) GetTagSuggestions(ctx context.Context, prefix strin
 	}
 	defer rows.Close()
 
-	tags := []string{}
+	var tagNames []string
 	for rows.Next() {
-		var tag string
-		var cnt int
-		if err := rows.Scan(&tag, &cnt); err != nil {
-			return nil, fmt.Errorf("scanning tag: %w", err)
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, fmt.Errorf("scanning tag name: %w", err)
 		}
-		tags = append(tags, tag)
+		tagNames = append(tagNames, name)
+	}
+	return tagNames, rows.Err()
+}
+
+func (r *PostgresRepository) SetTags(ctx context.Context, assetID string, tagIDs []string) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var exists bool
+	err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM assets WHERE id = $1)`, assetID).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("checking asset existence: %w", err)
+	}
+	if !exists {
+		return ErrNotFound
 	}
 
-	return tags, nil
+	// Diff and apply: only delete rows whose tag_id is no longer desired,
+	// then insert the desired set (existing rows kept untouched, preserving created_at).
+	if len(tagIDs) == 0 {
+		_, err = tx.Exec(ctx, `DELETE FROM assets_tags WHERE asset_id = $1`, assetID)
+		if err != nil {
+			return fmt.Errorf("clearing asset tags: %w", err)
+		}
+	} else {
+		_, err = tx.Exec(ctx,
+			`DELETE FROM assets_tags WHERE asset_id = $1 AND tag_id <> ALL($2::uuid[])`,
+			assetID, tagIDs,
+		)
+		if err != nil {
+			return fmt.Errorf("pruning asset tags: %w", err)
+		}
+
+		_, err = tx.Exec(ctx, `
+			INSERT INTO assets_tags (asset_id, tag_id)
+			SELECT $1, unnest($2::uuid[])
+			ON CONFLICT DO NOTHING`,
+			assetID, tagIDs,
+		)
+		if err != nil {
+			return fmt.Errorf("inserting asset tags: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (r *PostgresRepository) ListAssetTags(ctx context.Context, assetID string) ([]tag.Tag, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT t.id, t.name, t.description, t.created_at, t.updated_at
+		FROM assets_tags at
+		JOIN tags t ON t.id = at.tag_id
+		WHERE at.asset_id = $1
+		ORDER BY t.name`,
+		assetID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("loading asset tags: %w", err)
+	}
+	defer rows.Close()
+
+	var tags []tag.Tag
+	for rows.Next() {
+		var t tag.Tag
+		if err := rows.Scan(&t.ID, &t.Name, &t.Description, &t.CreatedAt, &t.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scanning tag row: %w", err)
+		}
+		tags = append(tags, t)
+	}
+	return tags, rows.Err()
+}
+
+func (r *PostgresRepository) AddTag(ctx context.Context, assetID string, tagID string) error {
+	result, err := r.db.Exec(ctx,
+		`INSERT INTO assets_tags (asset_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		assetID, tagID,
+	)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+			return ErrNotFound
+		}
+		return fmt.Errorf("adding asset tag: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return nil
+	}
+	return nil
+}
+
+func (r *PostgresRepository) RemoveTag(ctx context.Context, assetID string, tagID string) error {
+	result, err := r.db.Exec(ctx,
+		`DELETE FROM assets_tags WHERE asset_id = $1 AND tag_id = $2`,
+		assetID, tagID,
+	)
+	if err != nil {
+		return fmt.Errorf("removing asset tag: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (r *PostgresRepository) GetColumnTags(ctx context.Context, assetID string) (ColumnTagMap, error) {
+	start := time.Now()
+
+	query := `
+		SELECT id, asset_id, column_path, tag_id, created_at, updated_at
+		FROM column_tags
+		WHERE asset_id = $1
+		ORDER BY column_path ASC, created_at ASC, id ASC`
+
+	rows, err := r.db.Query(ctx, query, assetID)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "columntag_get", time.Since(start), false)
+		return nil, fmt.Errorf("querying column tags: %w", err)
+	}
+	defer rows.Close()
+
+	result := make(ColumnTagMap)
+
+	for rows.Next() {
+		var ct ColumnTag
+		if err := rows.Scan(
+			&ct.ID, &ct.AssetID, &ct.ColumnPath, &ct.TagID,
+			&ct.CreatedAt, &ct.UpdatedAt,
+		); err != nil {
+			r.recorder.RecordDBQuery(ctx, "columntag_get", time.Since(start), false)
+			return nil, fmt.Errorf("scanning column tag row: %w", err)
+		}
+
+		result[ct.ColumnPath] = append(result[ct.ColumnPath], ct)
+	}
+
+	if err := rows.Err(); err != nil {
+		r.recorder.RecordDBQuery(ctx, "columntag_get", time.Since(start), false)
+		return nil, fmt.Errorf("iterating column tag rows: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "columntag_get", time.Since(start), true)
+	return result, nil
+}
+
+func (r *PostgresRepository) SetColumnTags(ctx context.Context, assetID, columnPath string, tagIDs []string) error {
+	start := time.Now()
+
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "columntag_set", time.Since(start), false)
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var exists bool
+	err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM assets WHERE id = $1)`, assetID).Scan(&exists)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "columntag_set", time.Since(start), false)
+		return fmt.Errorf("checking asset existence: %w", err)
+	}
+	if !exists {
+		r.recorder.RecordDBQuery(ctx, "columntag_set", time.Since(start), true)
+		return ErrNotFound
+	}
+
+	if len(tagIDs) == 0 {
+		_, err = tx.Exec(ctx,
+			`DELETE FROM column_tags WHERE asset_id = $1 AND column_path = $2`,
+			assetID, columnPath,
+		)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "columntag_set", time.Since(start), false)
+			return fmt.Errorf("clearing column tags: %w", err)
+		}
+	} else {
+		_, err = tx.Exec(ctx, `
+			DELETE FROM column_tags
+			WHERE asset_id = $1 AND column_path = $2 AND tag_id <> ALL($3::uuid[])`,
+			assetID, columnPath, tagIDs,
+		)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "columntag_set", time.Since(start), false)
+			return fmt.Errorf("pruning column tags: %w", err)
+		}
+
+		_, err = tx.Exec(ctx, `
+			INSERT INTO column_tags (id, asset_id, column_path, tag_id, created_at, updated_at)
+			SELECT gen_random_uuid(), $1, $2, t, NOW(), NOW()
+			FROM unnest($3::uuid[]) AS t
+			ON CONFLICT (asset_id, column_path, tag_id) DO NOTHING`,
+			assetID, columnPath, tagIDs,
+		)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "columntag_set", time.Since(start), false)
+			return fmt.Errorf("inserting column tags: %w", err)
+		}
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		r.recorder.RecordDBQuery(ctx, "columntag_set", time.Since(start), false)
+		return fmt.Errorf("committing column tag set: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "columntag_set", time.Since(start), true)
+	return nil
+}
+
+func (r *PostgresRepository) AddColumnTag(ctx context.Context, assetID, columnPath, tagID string) (*ColumnTag, error) {
+	start := time.Now()
+
+	query := `
+		INSERT INTO column_tags (id, asset_id, column_path, tag_id, created_at, updated_at)
+		VALUES (gen_random_uuid(), $1, $2, $3::uuid, NOW(), NOW())
+		ON CONFLICT (asset_id, column_path, tag_id) DO UPDATE SET updated_at = column_tags.updated_at
+		RETURNING id, asset_id, column_path, tag_id, created_at, updated_at`
+
+	var ct ColumnTag
+	err := r.db.QueryRow(ctx, query, assetID, columnPath, tagID).Scan(
+		&ct.ID, &ct.AssetID, &ct.ColumnPath, &ct.TagID, &ct.CreatedAt, &ct.UpdatedAt,
+	)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "columntag_add", time.Since(start), false)
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+			return nil, ErrColumnTagNotFound
+		}
+		return nil, fmt.Errorf("adding column tag: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "columntag_add", time.Since(start), true)
+	return &ct, nil
+}
+
+func (r *PostgresRepository) RemoveColumnTag(ctx context.Context, assetID, columnPath, tagID string) error {
+	start := time.Now()
+
+	result, err := r.db.Exec(ctx,
+		`DELETE FROM column_tags WHERE asset_id = $1 AND column_path = $2 AND tag_id = $3`,
+		assetID, columnPath, tagID,
+	)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "columntag_delete", time.Since(start), false)
+		return fmt.Errorf("deleting column tag: %w", err)
+	}
+
+	if result.RowsAffected() == 0 {
+		r.recorder.RecordDBQuery(ctx, "columntag_delete", time.Since(start), true)
+		return ErrColumnTagNotFound
+	}
+
+	r.recorder.RecordDBQuery(ctx, "columntag_delete", time.Since(start), true)
+	return nil
+}
+
+func (r *PostgresRepository) CleanupMissingColumns(ctx context.Context, assetID string, existingPaths []string) error {
+	start := time.Now()
+
+	if len(existingPaths) == 0 {
+		query := `DELETE FROM column_tags WHERE asset_id = $1`
+		_, err := r.db.Exec(ctx, query, assetID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "columntag_cleanup", time.Since(start), false)
+			return fmt.Errorf("cleaning up column tags: %w", err)
+		}
+		r.recorder.RecordDBQuery(ctx, "columntag_cleanup", time.Since(start), true)
+		return nil
+	}
+
+	query := `DELETE FROM column_tags WHERE asset_id = $1 AND column_path NOT IN (SELECT unnest($2::text[]))`
+	_, err := r.db.Exec(ctx, query, assetID, existingPaths)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "columntag_cleanup", time.Since(start), false)
+		return fmt.Errorf("cleaning up missing column tags: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "columntag_cleanup", time.Since(start), true)
+	return nil
 }
 
 func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, calculateCounts bool) ([]*Asset, int, AvailableFilters, error) {
@@ -971,9 +1255,9 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 
 	if len(filter.Tags) > 0 {
 		if strings.Contains(query, "WHERE") {
-			query += fmt.Sprintf(" AND tags @> $%d", len(params)+1)
+			query += fmt.Sprintf(" AND id IN (SELECT asset_id FROM assets_tags JOIN tags ON tags.id = assets_tags.tag_id WHERE tags.name = ANY($%d))", len(params)+1)
 		} else {
-			query += fmt.Sprintf(" WHERE tags @> $%d", len(params)+1)
+			query += fmt.Sprintf(" WHERE id IN (SELECT asset_id FROM assets_tags JOIN tags ON tags.id = assets_tags.tag_id WHERE tags.name = ANY($%d))", len(params)+1)
 		}
 		params = append(params, filter.Tags)
 	}
@@ -1008,7 +1292,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 	wrappedQuery += `
       SELECT
           id, name, mrn, type, providers, environments, external_links,
-          description, user_description, metadata, schema, sources, tags,
+          description, user_description, metadata, schema, sources,
           created_at, created_by, updated_at, last_sync_at,
           query, query_language, is_stub
       FROM search_results
@@ -1028,7 +1312,6 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 	availableFilters := AvailableFilters{
 		Types:     make(map[string]int),
 		Providers: make(map[string]int),
-		Tags:      make(map[string]int),
 	}
 
 	if calculateCounts {
@@ -1065,10 +1348,6 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 			countQuery += fmt.Sprintf(" AND providers && $%d", len(countParams)+1)
 			countParams = append(countParams, filter.Providers)
 		}
-		if len(filter.Tags) > 0 {
-			countQuery += fmt.Sprintf(" AND tags @> $%d", len(countParams)+1)
-			countParams = append(countParams, filter.Tags)
-		}
 
 		if filter.OwnerType != nil && filter.OwnerID != nil {
 			if *filter.OwnerType == "user" {
@@ -1081,11 +1360,11 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 
 		countQuery += `
        )
-       SELECT 
+       SELECT
            (
                SELECT COALESCE(jsonb_object_agg(type, count), '{}'::jsonb)
                FROM (
-                   SELECT type, COUNT(*) as count 
+                   SELECT type, COUNT(*) as count
                    FROM filtered_results
                    GROUP BY type
                ) type_counts
@@ -1093,27 +1372,17 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
            (
                SELECT COALESCE(jsonb_object_agg(service, count), '{}'::jsonb)
                FROM (
-                   SELECT service, COUNT(*) as count 
+                   SELECT service, COUNT(*) as count
                    FROM filtered_results,
                    unnest(providers) as service
                    WHERE array_length(providers, 1) > 0
                    GROUP BY service
                ) service_counts
-           ) as providers,
-           (
-               SELECT COALESCE(jsonb_object_agg(tag, count), '{}'::jsonb)
-               FROM (
-                   SELECT tag, COUNT(*) as count 
-                   FROM filtered_results,
-                   unnest(tags) as tag
-                   WHERE array_length(tags, 1) > 0
-                   GROUP BY tag
-               ) tag_counts
-           ) as tags
+           ) as providers
        `
 
-		var types, providers, tags pgtype.JSONB
-		err = r.db.QueryRow(ctx, countQuery, countParams...).Scan(&types, &providers, &tags)
+		var types, providers pgtype.JSONB
+		err = r.db.QueryRow(ctx, countQuery, countParams...).Scan(&types, &providers)
 		if err != nil {
 			return nil, 0, AvailableFilters{}, fmt.Errorf("getting counts: %w", err)
 		}
@@ -1123,9 +1392,6 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter, ca
 		}
 		if err := json.Unmarshal(providers.Bytes, &availableFilters.Providers); err != nil {
 			return nil, 0, availableFilters, fmt.Errorf("unmarshaling service counts: %w", err)
-		}
-		if err := json.Unmarshal(tags.Bytes, &availableFilters.Tags); err != nil {
-			return nil, 0, availableFilters, fmt.Errorf("unmarshaling tag counts: %w", err)
 		}
 	}
 
@@ -1193,7 +1459,7 @@ func (r *PostgresRepository) GetRunHistory(ctx context.Context, assetID string, 
 	}
 	defer rows.Close()
 
-	processedRuns := []*RunHistory{}
+	var processedRuns []*RunHistory
 	for rows.Next() {
 		var runID, jobNamespace, jobName, status string
 		var eventTime, createdAt time.Time
@@ -1304,7 +1570,7 @@ func (r *PostgresRepository) GetRunHistoryHistogram(ctx context.Context, assetID
 	}
 	defer rows.Close()
 
-	buckets := []HistogramBucket{}
+	var buckets []HistogramBucket
 	for rows.Next() {
 		var bucket HistogramBucket
 		var date time.Time
@@ -1391,7 +1657,7 @@ func (r *PostgresRepository) GetTerms(ctx context.Context, assetID string) ([]As
 	}
 	defer rows.Close()
 
-	terms := []AssetTerm{}
+	var terms []AssetTerm
 	for rows.Next() {
 		var term AssetTerm
 		err := rows.Scan(
@@ -1452,7 +1718,7 @@ func (r *PostgresRepository) GetAssetsByTerm(ctx context.Context, termID string,
 	}
 	defer rows.Close()
 
-	assets := []*Asset{}
+	var assets []*Asset
 	for rows.Next() {
 		asset, err := r.scanAsset(ctx, rows)
 		if err != nil {
@@ -1491,7 +1757,7 @@ func (r *PostgresRepository) GetMyAssets(ctx context.Context, userID string, tea
 	query := `
 		SELECT DISTINCT
 			a.id, a.name, a.mrn, a.type, a.providers, a.environments, a.external_links,
-			a.description, a.user_description, a.metadata, a.schema, a.sources, a.tags,
+			a.description, a.user_description, a.metadata, a.schema, a.sources,
 			a.created_at, a.created_by, a.updated_at, a.last_sync_at,
 			a.query, a.query_language, a.is_stub
 		FROM assets a
@@ -1509,7 +1775,7 @@ func (r *PostgresRepository) GetMyAssets(ctx context.Context, userID string, tea
 	}
 	defer rows.Close()
 
-	assets := []*Asset{}
+	var assets []*Asset
 	for rows.Next() {
 		asset, err := r.scanAsset(ctx, rows)
 		if err != nil {

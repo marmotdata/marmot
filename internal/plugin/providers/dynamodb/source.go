@@ -255,7 +255,6 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 
 	mrnValue := mrn.New("Table", "DynamoDB", tableName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:      &tableName,
@@ -263,7 +262,6 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 		Type:      "Table",
 		Providers: []string{"DynamoDB"},
 		Metadata:  metadata,
-		Tags:      processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "DynamoDB",
 			LastSyncAt: time.Now(),

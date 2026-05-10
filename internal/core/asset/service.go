@@ -13,6 +13,7 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/rs/zerolog/log"
 )
 
@@ -41,7 +42,6 @@ type Asset struct {
 	Schema          map[string]string      `json:"schema,omitempty"`
 	Metadata        map[string]interface{} `json:"metadata,omitempty"`
 	Sources         []AssetSource          `json:"sources,omitempty"`
-	Tags            []string               `json:"tags,omitempty"`
 	Environments    map[string]Environment `json:"environments,omitempty"`
 	Query           *string                `json:"query,omitempty"`
 	QueryLanguage   *string                `json:"query_language,omitempty"`
@@ -68,7 +68,6 @@ type CreateInput struct {
 	Description   *string                `json:"description"`
 	Metadata      map[string]interface{} `json:"metadata"`
 	Schema        map[string]string      `json:"schema"`
-	Tags          []string               `json:"tags"`
 	CreatedBy     string                 `json:"created_by" validate:"required"`
 	Sources       []AssetSource          `json:"sources"`
 	Environments  map[string]Environment `json:"environments"`
@@ -86,7 +85,6 @@ type UpdateInput struct {
 	Type             string                 `json:"type"`
 	Providers        []string               `json:"providers"`
 	Schema           map[string]string      `json:"schema"`
-	Tags             []string               `json:"tags"`
 	Sources          []AssetSource          `json:"sources"`
 	Environments     map[string]Environment `json:"environments"`
 	ExternalLinks    []ExternalLink         `json:"external_links"`
@@ -176,10 +174,23 @@ type AssetTerm struct {
 } // @name AssetTerm
 
 var (
-	ErrInvalidInput  = errors.New("invalid input")
-	ErrAssetNotFound = errors.New("asset not found")
-	ErrAlreadyExists = errors.New("asset already exists")
+	ErrInvalidInput         = errors.New("invalid input")
+	ErrAssetNotFound        = errors.New("asset not found")
+	ErrAlreadyExists        = errors.New("asset already exists")
+	ErrColumnTagNotFound    = errors.New("column tag not found")
+	ErrColumnTagInvalidInput = errors.New("invalid column tag input")
 )
+
+type ColumnTag struct {
+	ID         string    `json:"id"`
+	AssetID    string    `json:"asset_id"`
+	ColumnPath string    `json:"column_path"`
+	TagID      string    `json:"tag_id"`
+	CreatedAt  time.Time `json:"created_at"`
+	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+type ColumnTagMap map[string][]ColumnTag
 
 type Service interface {
 	Create(ctx context.Context, input CreateInput) (*Asset, error)
@@ -191,8 +202,17 @@ type Service interface {
 	Update(ctx context.Context, id string, input UpdateInput) (*Asset, error)
 	Delete(ctx context.Context, id string) error
 	DeleteByMRN(ctx context.Context, mrn string) error
-	AddTag(ctx context.Context, id string, tag string) (*Asset, error)
-	RemoveTag(ctx context.Context, id string, tag string) (*Asset, error)
+	SetTags(ctx context.Context, id string, tagIDs []string) error
+	AddTag(ctx context.Context, id string, tagID string) error
+	ListAssetTags(ctx context.Context, id string) ([]tag.Tag, error)
+	RemoveTag(ctx context.Context, id string, tagID string) error
+
+	GetColumnTags(ctx context.Context, assetID string) (ColumnTagMap, error)
+	SetColumnTags(ctx context.Context, assetID, columnPath string, tagIDs []string) error
+	AddColumnTag(ctx context.Context, assetID, columnPath, tagID string) (*ColumnTag, error)
+	RemoveColumnTag(ctx context.Context, assetID, columnPath, tagID string) error
+	CleanupMissingColumns(ctx context.Context, assetID string, existingPaths []string) error
+
 	ListByPattern(ctx context.Context, pattern string, assetType string) ([]*Asset, error)
 	GetByMRNs(ctx context.Context, mrns []string) (map[string]*Asset, error)
 	GetByTypeAndName(ctx context.Context, assetType, name string) (*Asset, error)
@@ -213,6 +233,7 @@ type Service interface {
 	AddMembershipObserver(observer MembershipObserver)
 	// SetNotificationObserver registers an observer for asset update notifications.
 	SetNotificationObserver(observer NotificationObserver)
+
 }
 
 // MembershipObserver is notified when assets are created or deleted.
@@ -438,7 +459,6 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 		Schema:        input.Schema,
 		Sources:       input.Sources,
 		Environments:  input.Environments,
-		Tags:          input.Tags,
 		ExternalLinks: input.ExternalLinks,
 		CreatedBy:     input.CreatedBy,
 		CreatedAt:     now,
@@ -448,10 +468,6 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 		QueryLanguage: input.QueryLanguage,
 		IsStub:        input.IsStub,
 	}
-	if asset.Tags == nil {
-		asset.Tags = []string{}
-	}
-
 	if err := s.repo.Create(ctx, asset); err != nil {
 		if errors.Is(err, ErrConflict) {
 			return nil, ErrAlreadyExists
@@ -473,7 +489,10 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*Asset, error)
 func (s *service) GetByTypeAndName(ctx context.Context, assetType, name string) (*Asset, error) {
 	asset, err := s.repo.GetByTypeAndName(ctx, assetType, name)
 	if err != nil {
-		return nil, errors.New("asset not found")
+		if errors.Is(err, ErrNotFound) {
+			return nil, ErrAssetNotFound
+		}
+		return nil, fmt.Errorf("getting asset by type and name: %w", err)
 	}
 	return asset, nil
 }
@@ -580,10 +599,6 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 		updated = true
 		schemaUpdated = true
 	}
-	if input.Tags != nil {
-		asset.Tags = input.Tags
-		updated = true
-	}
 	if input.Sources != nil {
 		asset.Sources = UpdateSources(asset.Sources, input.Sources)
 		updated = true
@@ -618,6 +633,15 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*As
 
 	if err := s.repo.Update(ctx, asset); err != nil {
 		return nil, fmt.Errorf("failed to update asset: %w", err)
+	}
+
+	// If schema was updated, clean up column tag assignments for columns that no longer exist
+	if schemaUpdated && asset.Schema != nil {
+		existingPaths := slices.Collect(maps.Keys(asset.Schema))
+		if err := s.CleanupMissingColumns(ctx, asset.ID, existingPaths); err != nil {
+			log.Warn().Err(err).Str("asset_id", asset.ID).Msg("Failed to cleanup missing column tags after schema update")
+			// Non-fatal — log but don't fail the asset update
+		}
 	}
 
 	if s.notificationObserver != nil && !input.SkipNotification && len(changedFields) > 0 {
@@ -691,9 +715,6 @@ func detectChangedFields(old *Asset, input *UpdateInput) []string {
 	}
 
 	// Complex fields using standard library comparisons
-	if input.Tags != nil && !slices.Equal(old.Tags, input.Tags) {
-		changedFields = append(changedFields, FieldTags)
-	}
 	if input.Schema != nil && !maps.Equal(old.Schema, input.Schema) {
 		changedFields = append(changedFields, FieldSchema)
 	}
@@ -808,80 +829,92 @@ func (s *service) DeleteByMRN(ctx context.Context, mrn string) error {
 	return nil
 }
 
-func (s *service) AddTag(ctx context.Context, id string, tag string) (*Asset, error) {
-	asset, err := s.repo.Get(ctx, id)
-	if err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return nil, ErrAssetNotFound
-		}
-		return nil, fmt.Errorf("getting asset: %w", err)
+func (s *service) SetTags(ctx context.Context, id string, tagIDs []string) error {
+	if err := s.repo.SetTags(ctx, id, tagIDs); err != nil {
+		return fmt.Errorf("setting asset tags: %w", err)
 	}
-
-	for _, existingTag := range asset.Tags {
-		if existingTag == tag {
-			return asset, nil
-		}
-	}
-
-	asset.Tags = append(asset.Tags, tag)
-	asset.UpdatedAt = time.Now()
-
-	if err := s.repo.Update(ctx, asset); err != nil {
-		return nil, fmt.Errorf("failed to add tag to asset: %w", err)
-	}
-
-	log.Debug().
-		Str("asset_id", id).
-		Str("tag", tag).
-		Msg("Asset tag added")
-
-	if s.metrics != nil {
-		s.metrics.Count("asset.tag.added", 1)
-	}
-
-	return asset, nil
+	log.Debug().Str("asset_id", id).Int("tag_count", len(tagIDs)).Msg("Asset tags replaced")
+	return nil
 }
 
-func (s *service) RemoveTag(ctx context.Context, assetId string, tag string) (*Asset, error) {
-	asset, err := s.repo.Get(ctx, assetId)
+func (s *service) AddTag(ctx context.Context, id string, tagID string) error {
+	if err := s.repo.AddTag(ctx, id, tagID); err != nil {
+		return fmt.Errorf("adding asset tag: %w", err)
+	}
+	log.Debug().Str("asset_id", id).Str("tag_id", tagID).Msg("Asset tag added")
+	return nil
+}
+
+func (s *service) ListAssetTags(ctx context.Context, id string) ([]tag.Tag, error) {
+	tags, err := s.repo.ListAssetTags(ctx, id)
 	if err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return nil, ErrAssetNotFound
+		return nil, fmt.Errorf("getting asset tags: %w", err)
+	}
+	return tags, nil
+}
+
+func (s *service) RemoveTag(ctx context.Context, id string, tagID string) error {
+	if err := s.repo.RemoveTag(ctx, id, tagID); err != nil {
+		return fmt.Errorf("removing asset tag: %w", err)
+	}
+	log.Debug().Str("asset_id", id).Str("tag_id", tagID).Msg("Asset tag removed")
+	return nil
+}
+
+func (s *service) GetColumnTags(ctx context.Context, assetID string) (ColumnTagMap, error) {
+	if assetID == "" {
+		return nil, fmt.Errorf("%w: asset ID required", ErrColumnTagInvalidInput)
+	}
+	return s.repo.GetColumnTags(ctx, assetID)
+}
+
+func (s *service) SetColumnTags(ctx context.Context, assetID, columnPath string, tagIDs []string) error {
+	if assetID == "" {
+		return fmt.Errorf("%w: asset ID required", ErrColumnTagInvalidInput)
+	}
+	if columnPath == "" {
+		return fmt.Errorf("%w: column path required", ErrColumnTagInvalidInput)
+	}
+	return s.repo.SetColumnTags(ctx, assetID, columnPath, tagIDs)
+}
+
+func (s *service) AddColumnTag(ctx context.Context, assetID, columnPath, tagID string) (*ColumnTag, error) {
+	if assetID == "" {
+		return nil, fmt.Errorf("%w: asset ID required", ErrColumnTagInvalidInput)
+	}
+	if columnPath == "" {
+		return nil, fmt.Errorf("%w: column path required", ErrColumnTagInvalidInput)
+	}
+	if tagID == "" {
+		return nil, fmt.Errorf("%w: tag ID required", ErrColumnTagInvalidInput)
+	}
+	return s.repo.AddColumnTag(ctx, assetID, columnPath, tagID)
+}
+
+func (s *service) RemoveColumnTag(ctx context.Context, assetID, columnPath, tagID string) error {
+	if assetID == "" {
+		return fmt.Errorf("%w: asset ID required", ErrColumnTagInvalidInput)
+	}
+	if columnPath == "" {
+		return fmt.Errorf("%w: column path required", ErrColumnTagInvalidInput)
+	}
+	if tagID == "" {
+		return fmt.Errorf("%w: tag ID required", ErrColumnTagInvalidInput)
+	}
+	if err := s.repo.RemoveColumnTag(ctx, assetID, columnPath, tagID); err != nil {
+		if errors.Is(err, ErrColumnTagNotFound) {
+			return ErrColumnTagNotFound
 		}
-		return nil, fmt.Errorf("getting asset: %w", err)
+		return err
 	}
+	return nil
+}
 
-	found := false
-	newTags := make([]string, 0, len(asset.Tags))
-	for _, existingTag := range asset.Tags {
-		if existingTag != tag {
-			newTags = append(newTags, existingTag)
-		} else {
-			found = true
-		}
+func (s *service) CleanupMissingColumns(ctx context.Context, assetID string, existingPaths []string) error {
+	if assetID == "" {
+		return fmt.Errorf("%w: asset ID required", ErrColumnTagInvalidInput)
 	}
-
-	if !found {
-		return asset, nil
-	}
-
-	asset.Tags = newTags
-	asset.UpdatedAt = time.Now()
-
-	if err := s.repo.Update(ctx, asset); err != nil {
-		return nil, fmt.Errorf("failed to remove tag from asset: %w", err)
-	}
-
-	log.Debug().
-		Str("asset_id", assetId).
-		Str("tag", tag).
-		Msg("Asset tag removed")
-
-	if s.metrics != nil {
-		s.metrics.Count("asset.tag.removed", 1)
-	}
-
-	return asset, nil
+	return s.repo.CleanupMissingColumns(ctx, assetID, existingPaths)
 }
 
 func (s *service) AddTerms(ctx context.Context, assetID string, termIDs []string, source string, createdBy string) error {
@@ -911,9 +944,6 @@ func (s *service) AddTerms(ctx context.Context, assetID string, termIDs []string
 
 func (s *service) RemoveTerm(ctx context.Context, assetID string, termID string) error {
 	if err := s.repo.RemoveTerm(ctx, assetID, termID); err != nil {
-		if errors.Is(err, ErrNotFound) {
-			return ErrAssetNotFound
-		}
 		return fmt.Errorf("removing term from asset: %w", err)
 	}
 
@@ -964,3 +994,4 @@ func (s *service) GetMyAssets(ctx context.Context, userID string, teamIDs []stri
 
 	return assets, total, nil
 }
+

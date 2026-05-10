@@ -224,24 +224,34 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
+	assetTags := make(map[string][]string)
 
 	// Discover models
 	if config.DiscoverModels && s.manifest != nil {
-		modelAssets, modelLineages := s.discoverModels()
+		modelAssets, modelLineages, modelTags := s.discoverModels()
 		assets = append(assets, modelAssets...)
 		lineages = append(lineages, modelLineages...)
+		for mrn, tags := range modelTags {
+			assetTags[mrn] = tags
+		}
 	}
 
 	// Discover sources
 	if config.DiscoverSources && s.manifest != nil {
-		sourceAssets := s.discoverSources()
+		sourceAssets, sourceTags := s.discoverSources()
 		assets = append(assets, sourceAssets...)
+		for mrn, tags := range sourceTags {
+			assetTags[mrn] = tags
+		}
 	}
 
 	// Discover seeds
 	if s.manifest != nil {
-		seedAssets := s.discoverSeeds()
+		seedAssets, seedTags := s.discoverSeeds()
 		assets = append(assets, seedAssets...)
+		for mrn, tags := range seedTags {
+			assetTags[mrn] = tags
+		}
 	}
 
 	log.Info().
@@ -250,8 +260,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		Msg("DBT discovery completed")
 
 	return &plugin.DiscoveryResult{
-		Assets:  assets,
-		Lineage: lineages,
+		Assets:    assets,
+		AssetTags: assetTags,
+		Lineage:   lineages,
 	}, nil
 }
 
@@ -339,9 +350,10 @@ func (s *Source) getMaterialization(node ManifestNode) string {
 	return ""
 }
 
-func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
+func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge, map[string][]string) {
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
+	assetTags := make(map[string][]string)
 
 	for nodeID, node := range s.manifest.Nodes {
 		if node.ResourceType != "model" {
@@ -351,18 +363,24 @@ func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
 		modelAsset := s.createModelAsset(node, nodeID)
 		if modelAsset.MRN != nil {
 			assets = append(assets, modelAsset)
+			if len(node.Tags) > 0 {
+				assetTags[*modelAsset.MRN] = node.Tags
+			}
 		}
 
 		materializedAsset := s.createMaterializedTableAsset(node, nodeID)
 		if materializedAsset.MRN != nil {
 			assets = append(assets, materializedAsset)
+			if len(node.Tags) > 0 {
+				assetTags[*materializedAsset.MRN] = node.Tags
+			}
 		}
 
 		modelLineages := s.createModelLineage(node, nodeID)
 		lineages = append(lineages, modelLineages...)
 	}
 
-	return assets, lineages
+	return assets, lineages, assetTags
 }
 
 func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset {
@@ -445,8 +463,6 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 		}
 	}
 
-	allTags := append([]string{}, node.Tags...)
-	allTags = append(allTags, s.config.Tags...)
 
 	mrnValue := mrn.New("Model", "DBT", fqn)
 
@@ -487,7 +503,6 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 		Providers:     []string{"DBT"},
 		Description:   description,
 		Metadata:      cleanMetadata,
-		Tags:          allTags,
 		Query:         query,
 		QueryLanguage: queryLanguage,
 		Sources: []asset.AssetSource{{
@@ -592,8 +607,6 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 		}
 	}
 
-	allTags := append([]string{}, node.Tags...)
-	allTags = append(allTags, s.config.Tags...)
 
 	mrnValue := mrn.New(assetType, provider, tableFQN)
 
@@ -611,7 +624,6 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 		Providers:   []string{provider},
 		Description: description,
 		Metadata:    cleanMetadata,
-		Tags:        allTags,
 		Schema:      schema,
 		Sources: []asset.AssetSource{{
 			Name:       "DBT",
@@ -732,15 +744,20 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []lineage.
 	return lineages
 }
 
-func (s *Source) discoverSources() []asset.Asset {
+func (s *Source) discoverSources() ([]asset.Asset, map[string][]string) {
 	var assets []asset.Asset
+	assetTags := make(map[string][]string)
 
 	for _, sourceNode := range s.manifest.Sources {
-		asset := s.createSourceAsset(sourceNode)
-		assets = append(assets, asset)
+		a := s.createSourceAsset(sourceNode)
+		assets = append(assets, a)
+		if a.MRN != nil {
+			tags := append([]string{"dbt-source"}, sourceNode.Tags...)
+			assetTags[*a.MRN] = tags
+		}
 	}
 
-	return assets
+	return assets, assetTags
 }
 
 func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
@@ -782,9 +799,6 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 		}
 	}
 
-	allTags := append([]string{}, node.Tags...)
-	allTags = append(allTags, s.config.Tags...)
-	allTags = append(allTags, "dbt-source")
 
 	mrnValue := mrn.New("Table", provider, tableFQN)
 	var description *string
@@ -801,7 +815,6 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 		Providers:   []string{provider},
 		Description: description,
 		Metadata:    cleanMetadata,
-		Tags:        allTags,
 		Schema:      schema,
 		Sources: []asset.AssetSource{{
 			Name:       "DBT",
@@ -812,19 +825,24 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 	}
 }
 
-func (s *Source) discoverSeeds() []asset.Asset {
+func (s *Source) discoverSeeds() ([]asset.Asset, map[string][]string) {
 	var assets []asset.Asset
+	assetTags := make(map[string][]string)
 
 	for nodeID, node := range s.manifest.Nodes {
 		if node.ResourceType != "seed" {
 			continue
 		}
 
-		asset := s.createSeedAsset(node, nodeID)
-		assets = append(assets, asset)
+		a := s.createSeedAsset(node, nodeID)
+		assets = append(assets, a)
+		if a.MRN != nil {
+			tags := append([]string{"dbt-seed"}, node.Tags...)
+			assetTags[*a.MRN] = tags
+		}
 	}
 
-	return assets
+	return assets, assetTags
 }
 
 func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
@@ -870,9 +888,6 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
 		}
 	}
 
-	allTags := append([]string{}, node.Tags...)
-	allTags = append(allTags, s.config.Tags...)
-	allTags = append(allTags, "dbt-seed")
 
 	mrnValue := mrn.New("Table", provider, tableFQN)
 	var description *string
@@ -889,7 +904,6 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
 		Providers:   []string{provider},
 		Description: description,
 		Metadata:    cleanMetadata,
-		Tags:        allTags,
 		Schema:      schema,
 		Sources: []asset.AssetSource{{
 			Name:       "DBT",

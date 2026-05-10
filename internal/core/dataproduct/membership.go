@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/query"
 	"github.com/marmotdata/marmot/internal/worker"
 	"github.com/rs/zerolog/log"
@@ -14,9 +15,10 @@ import (
 // MembershipService handles the evaluation of data product rules and
 // maintains the precomputed membership table.
 type MembershipService struct {
-	repo        Repository
-	memberRepo  MembershipRepository
-	assetGetter AssetGetter
+	repo          Repository
+	memberRepo    MembershipRepository
+	assetGetter   AssetGetter
+	listAssetTags func(ctx context.Context, assetID string) ([]tag.Tag, error)
 
 	// Background processing
 	workerPool *worker.Pool
@@ -46,6 +48,7 @@ func NewMembershipService(
 	repo Repository,
 	memberRepo MembershipRepository,
 	assetGetter AssetGetter,
+	listAssetTags func(ctx context.Context, assetID string) ([]tag.Tag, error),
 	config *MembershipConfig,
 ) *MembershipService {
 	if config == nil {
@@ -62,9 +65,10 @@ func NewMembershipService(
 	}
 
 	svc := &MembershipService{
-		repo:        repo,
-		memberRepo:  memberRepo,
-		assetGetter: assetGetter,
+		repo:          repo,
+		memberRepo:    memberRepo,
+		assetGetter:   assetGetter,
+		listAssetTags: listAssetTags,
 	}
 
 	// Create worker pool for rule evaluation
@@ -201,11 +205,20 @@ func (s *MembershipService) processBatch(ctx context.Context, assets []*asset.As
 // evaluateAsset finds candidate rules and checks if the asset matches.
 func (s *MembershipService) evaluateAsset(ctx context.Context, ast *asset.Asset) error {
 	// Extract asset signature for candidate lookup
+	var tagNames []string
+	if tags, err := s.listAssetTags(ctx, ast.ID); err == nil {
+		tagNames = make([]string, 0, len(tags))
+		for _, t := range tags {
+			tagNames = append(tagNames, t.Name)
+		}
+	} else {
+		log.Warn().Err(err).Str("asset_id", ast.ID).Msg("Failed to load tags for data product membership evaluation")
+	}
 	sig := AssetSignature{
 		ID:           ast.ID,
 		Type:         ast.Type,
 		Providers:    ast.Providers,
-		Tags:         ast.Tags,
+		Tags:         tagNames,
 		MetadataKeys: extractMetadataKeys(ast.Metadata),
 	}
 

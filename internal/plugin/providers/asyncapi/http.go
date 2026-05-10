@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/http"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 func (s *Source) createHTTPEndpoint(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, opBinding *http.OperationBinding) asset.Asset {
@@ -51,7 +50,6 @@ func (s *Source) createHTTPEndpoint(doc *asyncapi3.Document, channelName string,
 		}
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -60,7 +58,6 @@ func (s *Source) createHTTPEndpoint(doc *asyncapi3.Document, channelName string,
 		Providers:   []string{"HTTP"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),

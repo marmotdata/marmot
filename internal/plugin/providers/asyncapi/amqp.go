@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/amqp"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 func (s *Source) createAMQPAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *amqp.ChannelBinding) []asset.Asset {
@@ -67,7 +66,6 @@ func (s *Source) createAMQPQueue(doc *asyncapi3.Document, channelName string, ch
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -76,7 +74,6 @@ func (s *Source) createAMQPQueue(doc *asyncapi3.Document, channelName string, ch
 		Providers:   []string{"AMQP"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
@@ -132,7 +129,6 @@ func (s *Source) createAMQPExchange(doc *asyncapi3.Document, channelName string,
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -141,7 +137,6 @@ func (s *Source) createAMQPExchange(doc *asyncapi3.Document, channelName string,
 		Providers:   []string{"AMQP"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),

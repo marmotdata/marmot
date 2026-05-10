@@ -12,7 +12,7 @@ import (
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
+	"github.com/marmotdata/marmot/client/models"
 )
 
 // NewDeleteAssetsTagsIDParams creates a new DeleteAssetsTagsIDParams object,
@@ -60,17 +60,17 @@ DeleteAssetsTagsIDParams contains all the parameters to send to the API endpoint
 */
 type DeleteAssetsTagsIDParams struct {
 
+	/* Body.
+
+	   Tag ID to remove
+	*/
+	Body *models.V1AssetsRemoveTagRequest
+
 	/* ID.
 
 	   Asset ID
 	*/
 	ID string
-
-	/* Tag.
-
-	   Tag to remove
-	*/
-	Tag *models.TagRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -125,6 +125,17 @@ func (o *DeleteAssetsTagsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
+// WithBody adds the body to the delete assets tags ID params
+func (o *DeleteAssetsTagsIDParams) WithBody(body *models.V1AssetsRemoveTagRequest) *DeleteAssetsTagsIDParams {
+	o.SetBody(body)
+	return o
+}
+
+// SetBody adds the body to the delete assets tags ID params
+func (o *DeleteAssetsTagsIDParams) SetBody(body *models.V1AssetsRemoveTagRequest) {
+	o.Body = body
+}
+
 // WithID adds the id to the delete assets tags ID params
 func (o *DeleteAssetsTagsIDParams) WithID(id string) *DeleteAssetsTagsIDParams {
 	o.SetID(id)
@@ -136,17 +147,6 @@ func (o *DeleteAssetsTagsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithTag adds the tag to the delete assets tags ID params
-func (o *DeleteAssetsTagsIDParams) WithTag(tag *models.TagRequest) *DeleteAssetsTagsIDParams {
-	o.SetTag(tag)
-	return o
-}
-
-// SetTag adds the tag to the delete assets tags ID params
-func (o *DeleteAssetsTagsIDParams) SetTag(tag *models.TagRequest) {
-	o.Tag = tag
-}
-
 // WriteToRequest writes these params to a swagger request
 func (o *DeleteAssetsTagsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
 
@@ -154,15 +154,15 @@ func (o *DeleteAssetsTagsIDParams) WriteToRequest(r runtime.ClientRequest, reg s
 		return err
 	}
 	var res []error
+	if o.Body != nil {
+		if err := r.SetBodyParam(o.Body); err != nil {
+			return err
+		}
+	}
 
 	// path param id
 	if err := r.SetPathParam("id", o.ID); err != nil {
 		return err
-	}
-	if o.Tag != nil {
-		if err := r.SetBodyParam(o.Tag); err != nil {
-			return err
-		}
 	}
 
 	if len(res) > 0 {

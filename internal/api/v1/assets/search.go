@@ -16,7 +16,6 @@ type SearchFilter struct {
 	Query     string   `json:"query" validate:"omitempty"`
 	Types     []string `json:"types" validate:"omitempty"`
 	Providers []string `json:"services" validate:"omitempty"`
-	Tags      []string `json:"tags" validate:"omitempty"`
 }
 
 type SearchResponse struct {
@@ -86,7 +85,7 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 	if searchQuery != "" && total > 0 {
 		recorder := h.metricsService.GetRecorder()
 		queryType := "full_text"
-		if len(filter.Types) > 0 || len(filter.Providers) > 0 || len(filter.Tags) > 0 {
+		if len(filter.Types) > 0 || len(filter.Providers) > 0 {
 			queryType = "filtered"
 		}
 		recorder.RecordSearchQuery(r.Context(), queryType, searchQuery)
@@ -152,9 +151,7 @@ func parseFilter(r *http.Request) (asset.Filter, error) {
 	if providersStr := query.Get("providers"); providersStr != "" {
 		providers = strings.Split(providersStr, ",")
 	}
-	if tagsStr := query.Get("tags"); tagsStr != "" {
-		tags = strings.Split(tagsStr, ",")
-	}
+	tags = query["tags"]
 
 	var updatedAfter *time.Time
 	if updatedAfterStr := query.Get("updatedAfter"); updatedAfterStr != "" {

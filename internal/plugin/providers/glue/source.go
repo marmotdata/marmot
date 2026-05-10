@@ -227,7 +227,6 @@ func (s *Source) createJobAsset(job types.Job) asset.Asset {
 	}
 
 	mrnValue := mrn.New("Job", "Glue", name)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -236,7 +235,6 @@ func (s *Source) createJobAsset(job types.Job) asset.Asset {
 		Providers:   []string{"Glue"},
 		Description: description,
 		Metadata:    metadata,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Glue",
 			LastSyncAt: time.Now(),
@@ -304,7 +302,6 @@ func (s *Source) createDatabaseAsset(db types.Database) asset.Asset {
 	}
 
 	mrnValue := mrn.New("Database", "Glue", name)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -313,7 +310,6 @@ func (s *Source) createDatabaseAsset(db types.Database) asset.Asset {
 		Providers:   []string{"Glue"},
 		Description: description,
 		Metadata:    metadata,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Glue",
 			LastSyncAt: time.Now(),
@@ -431,7 +427,6 @@ func (s *Source) createTableAsset(dbName string, table types.Table) asset.Asset 
 
 	qualifiedName := dbName + "." + tableName
 	mrnValue := mrn.New("Table", "Glue", qualifiedName)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &tableName,
@@ -441,7 +436,6 @@ func (s *Source) createTableAsset(dbName string, table types.Table) asset.Asset 
 		Description: description,
 		Metadata:    metadata,
 		Schema:      schema,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Glue",
 			LastSyncAt: time.Now(),
@@ -531,7 +525,6 @@ func (s *Source) createCrawlerAsset(crawler types.Crawler) asset.Asset {
 	}
 
 	mrnValue := mrn.New("Crawler", "Glue", name)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -540,7 +533,6 @@ func (s *Source) createCrawlerAsset(crawler types.Crawler) asset.Asset {
 		Providers:   []string{"Glue"},
 		Description: description,
 		Metadata:    metadata,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Glue",
 			LastSyncAt: time.Now(),

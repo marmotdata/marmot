@@ -138,7 +138,25 @@ func (h *Handler) Routes() []common.Route {
 		{
 			Path:    "/api/v1/assets/tags/{id}",
 			Method:  http.MethodPost,
-			Handler: h.addTag,
+			Handler: h.addAssetTag,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/tags/{id}",
+			Method:  http.MethodGet,
+			Handler: h.listAssetTags,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/tags/{id}",
+			Method:  http.MethodPut,
+			Handler: h.replaceAssetTags,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
@@ -147,7 +165,7 @@ func (h *Handler) Routes() []common.Route {
 		{
 			Path:    "/api/v1/assets/tags/{id}",
 			Method:  http.MethodDelete,
-			Handler: h.removeTag,
+			Handler: h.removeAssetTag,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),
@@ -308,6 +326,42 @@ func (h *Handler) Routes() []common.Route {
 			Path:    "/api/v1/assets/owners/",
 			Method:  http.MethodDelete,
 			Handler: h.removeAssetOwner,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/column-tags/{id}",
+			Method:  http.MethodPost,
+			Handler: h.addColumnTag,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/column-tags/{id}",
+			Method:  http.MethodGet,
+			Handler: h.getColumnTags,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/column-tags/{id}",
+			Method:  http.MethodPut,
+			Handler: h.replaceColumnTags,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/assets/column-tags/{id}",
+			Method:  http.MethodDelete,
+			Handler: h.deleteColumnTag,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
 				common.RequirePermission(h.userService, "assets", "manage"),

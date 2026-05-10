@@ -1,58 +1,15 @@
 basePath: /api/v1
 definitions:
-  APIKey:
+  agent.Bucket:
     properties:
-      created_at:
-        type: string
-      expires_at:
-        type: string
-      id:
-        type: string
-      key:
-        type: string
-      last_used_at:
-        type: string
-      name:
-        type: string
-      user_id:
-        type: string
-    type: object
-  AWSCredentialStatus:
-    properties:
-      available:
-        type: boolean
       error:
+        type: integer
+      hour:
         type: string
-      sources:
-        items:
-          type: string
-        type: array
+      success:
+        type: integer
     type: object
-  ActivityResponse:
-    properties:
-      buckets:
-        items:
-          $ref: '#/definitions/Bucket'
-        type: array
-    type: object
-  AddMemberRequest:
-    properties:
-      role:
-        type: string
-      user_id:
-        type: string
-    type: object
-  AddTermsRequest:
-    properties:
-      term_ids:
-        items:
-          type: string
-        minItems: 1
-        type: array
-    required:
-    - term_ids
-    type: object
-  AgentRun:
+  agent.Run:
     properties:
       agent_id:
         type: string
@@ -80,29 +37,40 @@ definitions:
         type: integer
       tool_calls:
         items:
-          $ref: '#/definitions/ToolCall'
+          $ref: '#/definitions/agent.ToolCall'
         type: array
     type: object
-  AggregatedMetric:
+  agent.Stats:
     properties:
-      aggregation_type:
-        type: string
-      bucket_end:
-        type: string
-      bucket_size:
+      median_latency_ms:
         type: integer
-      bucket_start:
-        type: string
-      labels:
-        additionalProperties:
-          type: string
-        type: object
-      name:
-        type: string
-      value:
+      p95_latency_ms:
+        type: integer
+      run_count:
+        type: integer
+      success_rate:
         type: number
+      tokens_in:
+        type: integer
+      tokens_out:
+        type: integer
     type: object
-  Asset:
+  agent.ToolCall:
+    properties:
+      duration_ms:
+        type: integer
+      ordinal:
+        type: integer
+      started_at:
+        type: string
+      status:
+        type: string
+      target_mrn:
+        type: string
+      tool_name:
+        type: string
+    type: object
+  asset.Asset:
     properties:
       created_at:
         type: string
@@ -112,11 +80,11 @@ definitions:
         type: string
       environments:
         additionalProperties:
-          $ref: '#/definitions/Environment'
+          $ref: '#/definitions/asset.Environment'
         type: object
       external_links:
         items:
-          $ref: '#/definitions/AssetExternalLink'
+          $ref: '#/definitions/asset.ExternalLink'
         type: array
       has_run_history:
         type: boolean
@@ -149,11 +117,7 @@ definitions:
         type: object
       sources:
         items:
-          $ref: '#/definitions/AssetSource'
-        type: array
-      tags:
-        items:
-          type: string
+          $ref: '#/definitions/asset.AssetSource'
         type: array
       type:
         type: string
@@ -162,105 +126,7 @@ definitions:
       user_description:
         type: string
     type: object
-  AssetCount:
-    properties:
-      asset_id:
-        type: string
-      asset_name:
-        type: string
-      asset_provider:
-        type: string
-      asset_type:
-        type: string
-      count:
-        type: integer
-    type: object
-  AssetExternalLink:
-    properties:
-      icon:
-        type: string
-      name:
-        type: string
-      url:
-        type: string
-    type: object
-  AssetRule:
-    properties:
-      created_at:
-        type: string
-      created_by:
-        type: string
-      description:
-        type: string
-      id:
-        type: string
-      is_enabled:
-        type: boolean
-      last_reconciled_at:
-        type: string
-      links:
-        items:
-          $ref: '#/definitions/AssetRuleExternalLink'
-        type: array
-      membership_count:
-        type: integer
-      metadata_field:
-        type: string
-      name:
-        type: string
-      pattern_type:
-        type: string
-      pattern_value:
-        type: string
-      priority:
-        type: integer
-      query_expression:
-        type: string
-      reconciliation_hash:
-        type: string
-      rule_type:
-        $ref: '#/definitions/RuleType'
-      term_ids:
-        items:
-          type: string
-        type: array
-      updated_at:
-        type: string
-    type: object
-  AssetRuleExternalLink:
-    properties:
-      icon:
-        type: string
-      name:
-        type: string
-      url:
-        type: string
-    type: object
-  AssetRuleListResult:
-    properties:
-      asset_rules:
-        items:
-          $ref: '#/definitions/AssetRule'
-        type: array
-      total:
-        type: integer
-    type: object
-  AssetSearchResponse:
-    properties:
-      assets:
-        items:
-          $ref: '#/definitions/Asset'
-        type: array
-      filters:
-        $ref: '#/definitions/AvailableFilters'
-      limit:
-        type: integer
-      offset:
-        type: integer
-      total:
-        type: integer
-    type: object
-  AssetSource:
+  asset.AssetSource:
     properties:
       last_sync_at:
         type: string
@@ -272,22 +138,7 @@ definitions:
         additionalProperties: true
         type: object
     type: object
-  AssetSummaryResponse:
-    properties:
-      providers:
-        additionalProperties:
-          type: integer
-        type: object
-      tags:
-        additionalProperties:
-          type: integer
-        type: object
-      types:
-        additionalProperties:
-          $ref: '#/definitions/AssetTypeSummary'
-        type: object
-    type: object
-  AssetTerm:
+  asset.AssetTerm:
     properties:
       created_at:
         type: string
@@ -305,60 +156,9 @@ definitions:
       term_name:
         type: string
     type: object
-  AssetTypeSummary:
-    properties:
-      count:
-        type: integer
-      service:
-        type: string
-    type: object
-  AssetsByOwnerResponse:
-    properties:
-      assets:
-        additionalProperties:
-          format: int64
-          type: integer
-        type: object
-    type: object
-  AssetsByProviderResponse:
-    properties:
-      assets:
-        additionalProperties:
-          format: int64
-          type: integer
-        type: object
-    type: object
-  AssetsByTypeResponse:
-    properties:
-      assets:
-        additionalProperties:
-          format: int64
-          type: integer
-        type: object
-    type: object
-  AssetsWithSchemasResponse:
-    properties:
-      count:
-        type: integer
-      percentage:
-        type: number
-      total:
-        type: integer
-    type: object
-  AuthConfig:
-    properties:
-      enabled_providers:
-        items:
-          type: string
-        type: array
-    type: object
-  AvailableFilters:
+  asset.AvailableFilters:
     properties:
       providers:
-        additionalProperties:
-          type: integer
-        type: object
-      tags:
         additionalProperties:
           type: integer
         type: object
@@ -367,366 +167,93 @@ definitions:
           type: integer
         type: object
     type: object
-  BannerResponse:
+  asset.Environment:
     properties:
-      dismissible:
-        type: boolean
-      enabled:
-        type: boolean
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      path:
+        type: string
+    type: object
+  asset.ExternalLink:
+    properties:
+      icon:
+        type: string
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  asset.HistogramBucket:
+    properties:
+      abort:
+        type: integer
+      complete:
+        type: integer
+      date:
+        type: string
+      fail:
+        type: integer
+      other:
+        type: integer
+      running:
+        type: integer
+      total:
+        type: integer
+    type: object
+  asset.MetadataFieldSuggestion:
+    properties:
+      count:
+        type: integer
+      example: {}
+      field:
+        type: string
+      path_parts:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+      types:
+        items:
+          type: string
+        type: array
+    type: object
+  asset.MetadataValueSuggestion:
+    properties:
+      count:
+        type: integer
+      example:
+        $ref: '#/definitions/asset.Asset'
+      value:
+        type: string
+    type: object
+  asset.RunHistory:
+    properties:
+      duration_ms:
+        type: integer
+      end_time:
+        type: string
+      event_time:
+        type: string
       id:
         type: string
-      message:
+      job_name:
         type: string
-      variant:
-        type: string
-    type: object
-  BatchAssetResult:
-    properties:
-      asset: {}
-      error:
-        type: string
-      mrn:
-        type: string
-      name:
-        type: string
-      provider:
-        type: string
-      status:
-        type: string
-      type:
-        type: string
-    type: object
-  BatchCreateRequest:
-    properties:
-      assets:
-        items:
-          $ref: '#/definitions/RunCreateAssetRequest'
-        minItems: 1
-        type: array
-      config:
-        $ref: '#/definitions/RawPluginConfig'
-      documentation:
-        items:
-          $ref: '#/definitions/CreateDocRequest'
-        type: array
-      lineage:
-        items:
-          $ref: '#/definitions/CreateLineageRequest'
-        type: array
-      pipeline_name:
+      job_namespace:
         type: string
       run_id:
         type: string
-      source_name:
-        type: string
-      statistics:
-        items:
-          $ref: '#/definitions/CreateStatRequest'
-        type: array
-    required:
-    - assets
-    - pipeline_name
-    - run_id
-    - source_name
-    type: object
-  BatchCreateResponse:
-    properties:
-      assets:
-        items:
-          $ref: '#/definitions/BatchAssetResult'
-        type: array
-      documentation:
-        items:
-          $ref: '#/definitions/DocumentationResult'
-        type: array
-      lineage:
-        items:
-          $ref: '#/definitions/LineageResult'
-        type: array
-      stale_entities_removed:
-        items:
-          type: string
-        type: array
-    type: object
-  BatchDocumentationRequest:
-    properties:
-      documentation:
-        items:
-          $ref: '#/definitions/Documentation'
-        minItems: 1
-        type: array
-    required:
-    - documentation
-    type: object
-  BatchDocumentationResponse:
-    properties:
-      results:
-        items:
-          $ref: '#/definitions/BatchDocumentationResult'
-        type: array
-    type: object
-  BatchDocumentationResult:
-    properties:
-      documentation:
-        $ref: '#/definitions/Documentation'
-      error:
+      start_time:
         type: string
       status:
-        type: string
-    type: object
-  BatchLineageResult:
-    properties:
-      edge:
-        $ref: '#/definitions/LineageEdge'
-      status:
-        description: '"created", "duplicate", or "existing"'
-        type: string
-    type: object
-  Bucket:
-    properties:
-      error:
-        type: integer
-      hour:
-        type: string
-      success:
-        type: integer
-    type: object
-  CompleteRunRequest:
-    properties:
-      error:
-        type: string
-      run_id:
-        type: string
-      status:
-        $ref: '#/definitions/RunStatus'
-      summary:
-        $ref: '#/definitions/RunSummary'
-    required:
-    - run_id
-    - status
-    type: object
-  CreateAPIKeyRequest:
-    properties:
-      expires_in_days:
-        type: integer
-      name:
-        type: string
-    required:
-    - name
-    type: object
-  CreateAssetRequest:
-    properties:
-      description:
-        type: string
-      environments:
-        additionalProperties:
-          $ref: '#/definitions/Environment'
-        type: object
-      external_links:
-        items:
-          $ref: '#/definitions/AssetExternalLink'
-        type: array
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      providers:
-        items:
-          type: string
-        type: array
-      schema:
-        additionalProperties:
-          type: string
-        type: object
-      sources:
-        items:
-          $ref: '#/definitions/AssetSource'
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-      type:
-        type: string
-    required:
-    - name
-    - providers
-    - type
-    type: object
-  CreateAssetRuleRequest:
-    properties:
-      description:
-        type: string
-      is_enabled:
-        type: boolean
-      links:
-        items:
-          $ref: '#/definitions/AssetRuleExternalLink'
-        type: array
-      metadata_field:
-        type: string
-      name:
-        type: string
-      pattern_type:
-        type: string
-      pattern_value:
-        type: string
-      priority:
-        type: integer
-      query_expression:
-        type: string
-      rule_type:
-        type: string
-      term_ids:
-        items:
-          type: string
-        type: array
-    type: object
-  CreateDocRequest:
-    properties:
-      asset_mrn:
-        type: string
-      content:
         type: string
       type:
         type: string
     type: object
-  CreateLineageRequest:
-    properties:
-      source:
-        type: string
-      target:
-        type: string
-      type:
-        type: string
-    type: object
-  CreateSSOMappingRequest:
-    properties:
-      member_role:
-        type: string
-      provider:
-        type: string
-      sso_group_name:
-        type: string
-      team_id:
-        type: string
-    type: object
-  CreateScheduleRequest:
-    properties:
-      config:
-        additionalProperties: true
-        type: object
-      cron_expression:
-        type: string
-      enabled:
-        type: boolean
-      name:
-        type: string
-      plugin_id:
-        type: string
-    type: object
-  CreateStatRequest:
-    properties:
-      asset_mrn:
-        type: string
-      metric_name:
-        type: string
-      value:
-        type: number
-    required:
-    - asset_mrn
-    - metric_name
-    - value
-    type: object
-  CreateTeamRequest:
-    properties:
-      description:
-        type: string
-      name:
-        type: string
-    type: object
-  CreateTermRequest:
-    properties:
-      definition:
-        type: string
-      description:
-        type: string
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      owners:
-        items:
-          $ref: '#/definitions/OwnerRequest'
-        type: array
-      parent_term_id:
-        type: string
-    required:
-    - definition
-    - name
-    type: object
-  CreateUserInput:
-    properties:
-      name:
-        type: string
-      oauth_provider:
-        type: string
-      oauth_provider_data:
-        additionalProperties: true
-        type: object
-      oauth_provider_id:
-        type: string
-      password:
-        minLength: 8
-        type: string
-      profile_picture:
-        type: string
-      role_names:
-        items:
-          type: string
-        minItems: 1
-        type: array
-      username:
-        maxLength: 255
-        minLength: 3
-        type: string
-    required:
-    - name
-    - role_names
-    - username
-    type: object
-  Dataset:
-    properties:
-      facets:
-        additionalProperties: true
-        type: object
-      inputFacets:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      namespace:
-        type: string
-      outputFacets:
-        additionalProperties: true
-        type: object
-    type: object
-  DestroyRunResponse:
-    properties:
-      assets_deleted:
-        type: integer
-      deleted_entity_mrns:
-        items:
-          type: string
-        type: array
-      documentation_deleted:
-        type: integer
-      lineage_deleted:
-        type: integer
-    type: object
-  Documentation:
+  assetdocs.Documentation:
     properties:
       content:
         type: string
@@ -745,109 +272,161 @@ definitions:
       updated_at:
         type: string
     type: object
-  DocumentationCreateRequest:
+  assetrule.AssetRule:
     properties:
-      content:
+      created_at:
         type: string
-      mrn:
+      created_by:
         type: string
-      source:
+      description:
         type: string
-    required:
-    - content
-    - mrn
-    - source
+      id:
+        type: string
+      is_enabled:
+        type: boolean
+      last_reconciled_at:
+        type: string
+      links:
+        items:
+          $ref: '#/definitions/assetrule.ExternalLink'
+        type: array
+      membership_count:
+        type: integer
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      reconciliation_hash:
+        type: string
+      rule_type:
+        $ref: '#/definitions/enrichment.RuleType'
+      term_ids:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
     type: object
-  DocumentationResult:
+  assetrule.ExternalLink:
     properties:
-      asset_mrn:
+      icon:
         type: string
+      name:
+        type: string
+      url:
+        type: string
+    type: object
+  assetrule.ListResult:
+    properties:
+      asset_rules:
+        items:
+          $ref: '#/definitions/assetrule.AssetRule'
+        type: array
+      total:
+        type: integer
+    type: object
+  assetrule.RulePreview:
+    properties:
+      asset_count:
+        type: integer
+      asset_ids:
+        items:
+          type: string
+        type: array
+      errors:
+        items:
+          type: string
+        type: array
+    type: object
+  auth.AuthConfig:
+    properties:
+      enabled_providers:
+        items:
+          type: string
+        type: array
+    type: object
+  auth.oauthErrorResponse:
+    properties:
       error:
         type: string
-      status:
-        type: string
-      type:
+      error_description:
         type: string
     type: object
-  Environment:
+  auth.tokenExchangeResponse:
     properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      issued_token_type:
+        type: string
+      token_type:
+        type: string
+    type: object
+  dataproduct.DataProduct:
+    properties:
+      asset_count:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      icon_url:
+        type: string
+      id:
+        type: string
+      manual_asset_count:
+        type: integer
       metadata:
         additionalProperties: true
         type: object
       name:
         type: string
-      path:
-        type: string
-    type: object
-  ErrorResponse:
-    properties:
-      error:
-        type: string
-    type: object
-  FacetValue:
-    properties:
-      count:
-        type: integer
-      value:
-        type: string
-    type: object
-  Facets:
-    properties:
-      asset_types:
+      owners:
         items:
-          $ref: '#/definitions/FacetValue'
+          $ref: '#/definitions/dataproduct.Owner'
         type: array
-      providers:
+      rule_asset_count:
+        type: integer
+      rules:
         items:
-          $ref: '#/definitions/FacetValue'
+          $ref: '#/definitions/dataproduct.Rule'
         type: array
       tags:
         items:
-          $ref: '#/definitions/FacetValue'
+          $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
         type: array
-      types:
-        additionalProperties:
-          type: integer
-        type: object
-    type: object
-  GetMetricsRequest:
-    properties:
-      aggregation:
-        type: string
-      bucket_size:
-        type: string
-      end:
-        type: string
-      labels:
-        additionalProperties:
-          type: string
-        type: object
-      metric_names:
-        items:
-          type: string
-        type: array
-      start:
+      updated_at:
         type: string
     type: object
-  GetMetricsResponse:
+  dataproduct.ImagePurpose:
+    enum:
+    - icon
+    - header
+    type: string
+    x-enum-varnames:
+    - ImagePurposeIcon
+    - ImagePurposeHeader
+  dataproduct.ListResult:
     properties:
-      metrics:
+      data_products:
         items:
-          $ref: '#/definitions/AggregatedMetric'
-        type: array
-      query:
-        $ref: '#/definitions/GetMetricsRequest'
-    type: object
-  GlossaryListResult:
-    properties:
-      terms:
-        items:
-          $ref: '#/definitions/GlossaryTerm'
+          $ref: '#/definitions/dataproduct.DataProduct'
         type: array
       total:
         type: integer
     type: object
-  GlossaryOwner:
+  dataproduct.Owner:
     properties:
       email:
         type: string
@@ -858,13 +437,117 @@ definitions:
       profile_picture:
         type: string
       type:
-        description: '"user" or "team"'
         type: string
       username:
-        description: Only for user owners
         type: string
     type: object
-  GlossaryTerm:
+  dataproduct.ProductImageMeta:
+    properties:
+      content_type:
+        type: string
+      created_at:
+        type: string
+      data_product_id:
+        type: string
+      filename:
+        type: string
+      id:
+        type: string
+      purpose:
+        $ref: '#/definitions/dataproduct.ImagePurpose'
+      size_bytes:
+        type: integer
+      url:
+        type: string
+    type: object
+  dataproduct.Rule:
+    properties:
+      created_at:
+        type: string
+      data_product_id:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_enabled:
+        type: boolean
+      matched_asset_count:
+        type: integer
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        $ref: '#/definitions/dataproduct.RuleType'
+      updated_at:
+        type: string
+    type: object
+  dataproduct.RuleType:
+    enum:
+    - query
+    - metadata_match
+    type: string
+    x-enum-varnames:
+    - RuleTypeQuery
+    - RuleTypeMetadataMatch
+  enrichment.RuleType:
+    enum:
+    - query
+    - metadata_match
+    type: string
+    x-enum-varnames:
+    - RuleTypeQuery
+    - RuleTypeMetadataMatch
+  github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse:
+    properties:
+      error:
+        type: string
+    type: object
+  github_com_marmotdata_marmot_internal_api_v1_common.ValidationError:
+    properties:
+      field:
+        type: string
+      message:
+        type: string
+    type: object
+  github_com_marmotdata_marmot_internal_core_search.Response:
+    properties:
+      facets:
+        $ref: '#/definitions/search.Facets'
+      limit:
+        type: integer
+      offset:
+        type: integer
+      results:
+        items:
+          $ref: '#/definitions/search.Result'
+        type: array
+      total:
+        type: integer
+    type: object
+  github_com_marmotdata_marmot_internal_core_tag.Tag:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  glossary.GlossaryTerm:
     properties:
       created_at:
         type: string
@@ -883,52 +566,60 @@ definitions:
         type: string
       owners:
         items:
-          $ref: '#/definitions/GlossaryOwner'
+          $ref: '#/definitions/glossary.Owner'
         type: array
       parent_term_id:
         type: string
       tags:
         items:
-          type: string
+          $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
         type: array
       updated_at:
         type: string
     type: object
-  HistogramBucket:
+  glossary.ListResult:
     properties:
-      abort:
-        type: integer
-      complete:
-        type: integer
-      date:
-        type: string
-      fail:
-        type: integer
-      other:
-        type: integer
-      running:
-        type: integer
+      terms:
+        items:
+          $ref: '#/definitions/glossary.GlossaryTerm'
+        type: array
       total:
         type: integer
     type: object
-  HistogramResponse:
+  glossary.Owner:
     properties:
-      buckets:
-        items:
-          $ref: '#/definitions/HistogramBucket'
-        type: array
-      period:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      profile_picture:
+        type: string
+      type:
+        description: '"user" or "team"'
+        type: string
+      username:
+        description: Only for user owners
         type: string
     type: object
-  ImagePurpose:
-    enum:
-    - icon
-    - header
-    type: string
-    x-enum-varnames:
-    - ImagePurposeIcon
-    - ImagePurposeHeader
-  Job:
+  lineage.Dataset:
+    properties:
+      facets:
+        additionalProperties: true
+        type: object
+      inputFacets:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      namespace:
+        type: string
+      outputFacets:
+        additionalProperties: true
+        type: object
+    type: object
+  lineage.Job:
     properties:
       facets:
         additionalProperties: true
@@ -938,7 +629,192 @@ definitions:
       namespace:
         type: string
     type: object
-  JobRun:
+  lineage.LineageEdge:
+    properties:
+      id:
+        type: string
+      job_mrn:
+        type: string
+      last_seen_at:
+        type: string
+      observation_count:
+        type: integer
+      origin:
+        type: string
+      source:
+        type: string
+      target:
+        type: string
+      type:
+        type: string
+    type: object
+  lineage.LineageNode:
+    properties:
+      asset:
+        $ref: '#/definitions/asset.Asset'
+      depth:
+        type: integer
+      id:
+        type: string
+      type:
+        type: string
+    type: object
+  lineage.LineageResponse:
+    properties:
+      edges:
+        items:
+          $ref: '#/definitions/lineage.LineageEdge'
+        type: array
+      nodes:
+        items:
+          $ref: '#/definitions/lineage.LineageNode'
+        type: array
+    type: object
+  lineage.Run:
+    properties:
+      facets:
+        additionalProperties: true
+        type: object
+      runId:
+        type: string
+    type: object
+  lineage.RunEvent:
+    properties:
+      eventTime:
+        type: string
+      eventType:
+        type: string
+      inputs:
+        items:
+          $ref: '#/definitions/lineage.Dataset'
+        type: array
+      job:
+        $ref: '#/definitions/lineage.Job'
+      outputs:
+        items:
+          $ref: '#/definitions/lineage.Dataset'
+        type: array
+      producer:
+        type: string
+      run:
+        $ref: '#/definitions/lineage.Run'
+      schemaURL:
+        type: string
+    type: object
+  metrics.AggregatedMetric:
+    properties:
+      aggregation_type:
+        type: string
+      bucket_end:
+        type: string
+      bucket_size:
+        type: integer
+      bucket_start:
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+        type: object
+      name:
+        type: string
+      value:
+        type: number
+    type: object
+  metrics.AssetCount:
+    properties:
+      asset_id:
+        type: string
+      asset_name:
+        type: string
+      asset_provider:
+        type: string
+      asset_type:
+        type: string
+      count:
+        type: integer
+    type: object
+  metrics.QueryCount:
+    properties:
+      count:
+        type: integer
+      query:
+        type: string
+      query_type:
+        type: string
+    type: object
+  plugin.AWSCredentialStatus:
+    properties:
+      available:
+        type: boolean
+      error:
+        type: string
+      sources:
+        items:
+          type: string
+        type: array
+    type: object
+  plugin.RawPluginConfig:
+    additionalProperties: true
+    type: object
+  plugin.Run:
+    properties:
+      completed_at:
+        type: string
+      config:
+        $ref: '#/definitions/plugin.RawPluginConfig'
+      created_by:
+        type: string
+      error_message:
+        type: string
+      id:
+        type: string
+      pipeline_name:
+        type: string
+      run_id:
+        type: string
+      source_name:
+        type: string
+      started_at:
+        type: string
+      status:
+        $ref: '#/definitions/plugin.RunStatus'
+      summary:
+        $ref: '#/definitions/plugin.RunSummary'
+    type: object
+  plugin.RunStatus:
+    enum:
+    - running
+    - completed
+    - failed
+    - cancelled
+    type: string
+    x-enum-varnames:
+    - StatusRunning
+    - StatusCompleted
+    - StatusFailed
+    - StatusCancelled
+  plugin.RunSummary:
+    properties:
+      assets_created:
+        type: integer
+      assets_deleted:
+        type: integer
+      assets_updated:
+        type: integer
+      documentation_added:
+        type: integer
+      duration_seconds:
+        type: integer
+      errors_count:
+        type: integer
+      lineage_created:
+        type: integer
+      lineage_updated:
+        type: integer
+      total_entities:
+        type: integer
+    type: object
+  runs.JobRun:
     properties:
       assets_created:
         type: integer
@@ -986,476 +862,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  LineageEdge:
-    properties:
-      id:
-        type: string
-      job_mrn:
-        type: string
-      last_seen_at:
-        type: string
-      observation_count:
-        type: integer
-      origin:
-        type: string
-      source:
-        type: string
-      target:
-        type: string
-      type:
-        type: string
-    type: object
-  LineageNode:
-    properties:
-      asset:
-        $ref: '#/definitions/Asset'
-      depth:
-        type: integer
-      id:
-        type: string
-      type:
-        type: string
-    type: object
-  LineageResponse:
-    properties:
-      edges:
-        items:
-          $ref: '#/definitions/LineageEdge'
-        type: array
-      nodes:
-        items:
-          $ref: '#/definitions/LineageNode'
-        type: array
-    type: object
-  LineageResult:
-    properties:
-      error:
-        type: string
-      source:
-        type: string
-      status:
-        type: string
-      target:
-        type: string
-      type:
-        type: string
-    type: object
-  LineageRun:
-    properties:
-      facets:
-        additionalProperties: true
-        type: object
-      runId:
-        type: string
-    type: object
-  ListJobRunsResponse:
-    properties:
-      limit:
-        type: integer
-      offset:
-        type: integer
-      runs:
-        items:
-          $ref: '#/definitions/JobRun'
-        type: array
-      total:
-        type: integer
-    type: object
-  ListMembersResponse:
-    properties:
-      members:
-        items:
-          $ref: '#/definitions/TeamMemberWithUser'
-        type: array
-    type: object
-  ListSSOMappingsResponse:
-    properties:
-      mappings:
-        items:
-          $ref: '#/definitions/SSOTeamMapping'
-        type: array
-    type: object
-  ListSchedulesResponse:
-    properties:
-      limit:
-        type: integer
-      offset:
-        type: integer
-      schedules:
-        items:
-          $ref: '#/definitions/Schedule'
-        type: array
-      total:
-        type: integer
-    type: object
-  ListTeamsResponse:
-    properties:
-      limit:
-        type: integer
-      offset:
-        type: integer
-      teams:
-        items:
-          $ref: '#/definitions/Team'
-        type: array
-      total:
-        type: integer
-    type: object
-  ListUsersResponse:
-    properties:
-      limit:
-        type: integer
-      offset:
-        type: integer
-      total:
-        type: integer
-      users:
-        items:
-          $ref: '#/definitions/User'
-        type: array
-    type: object
-  LoginRequest:
-    properties:
-      password:
-        type: string
-      username:
-        type: string
-    required:
-    - password
-    - username
-    type: object
-  MessageResponse:
-    properties:
-      message:
-        type: string
-    type: object
-  MetadataFieldSuggestion:
-    properties:
-      count:
-        type: integer
-      example: {}
-      field:
-        type: string
-      path_parts:
-        items:
-          type: string
-        type: array
-      type:
-        type: string
-      types:
-        items:
-          type: string
-        type: array
-    type: object
-  MetadataValueSuggestion:
-    properties:
-      count:
-        type: integer
-      example:
-        $ref: '#/definitions/Asset'
-      value:
-        type: string
-    type: object
-  OAuthErrorResponse:
-    properties:
-      error:
-        type: string
-      error_description:
-        type: string
-    type: object
-  OAuthLinkRequest:
-    properties:
-      provider:
-        type: string
-      provider_user_id:
-        type: string
-      user_id:
-        type: string
-      user_info:
-        additionalProperties: true
-        type: object
-    required:
-    - provider
-    - provider_user_id
-    - user_id
-    - user_info
-    type: object
-  OwnerRequest:
-    properties:
-      id:
-        type: string
-      type:
-        enum:
-        - user
-        - team
-        type: string
-    required:
-    - id
-    - type
-    type: object
-  Permission:
-    properties:
-      action:
-        type: string
-      description:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      resource_type:
-        type: string
-    type: object
-  PluginRun:
-    properties:
-      completed_at:
-        type: string
-      config:
-        $ref: '#/definitions/RawPluginConfig'
-      created_by:
-        type: string
-      error_message:
-        type: string
-      id:
-        type: string
-      pipeline_name:
-        type: string
-      run_id:
-        type: string
-      source_name:
-        type: string
-      started_at:
-        type: string
-      status:
-        $ref: '#/definitions/RunStatus'
-      summary:
-        $ref: '#/definitions/RunSummary'
-    type: object
-  PreviewRequest:
-    properties:
-      limit:
-        type: integer
-      metadata_field:
-        type: string
-      pattern_type:
-        type: string
-      pattern_value:
-        type: string
-      query_expression:
-        type: string
-      rule_type:
-        type: string
-    type: object
-  PreviewResponse:
-    properties:
-      column_names:
-        items:
-          type: string
-        type: array
-      rows:
-        items:
-          items: {}
-          type: array
-        type: array
-      total_rows:
-        type: integer
-    type: object
-  ProductImageMeta:
-    properties:
-      content_type:
-        type: string
-      created_at:
-        type: string
-      data_product_id:
-        type: string
-      filename:
-        type: string
-      id:
-        type: string
-      purpose:
-        $ref: '#/definitions/ImagePurpose'
-      size_bytes:
-        type: integer
-      url:
-        type: string
-    type: object
-  QueryCount:
-    properties:
-      count:
-        type: integer
-      query:
-        type: string
-      query_type:
-        type: string
-    type: object
-  RawPluginConfig:
-    additionalProperties: true
-    type: object
-  RecordRunRequest:
-    properties:
-      agent_mrn:
-        type: string
-      ended_at:
-        type: string
-      error:
-        type: string
-      model:
-        type: string
-      observed_assets:
-        items:
-          type: string
-        type: array
-      run_id:
-        type: string
-      started_at:
-        type: string
-      status:
-        type: string
-      tokens_in:
-        type: integer
-      tokens_out:
-        type: integer
-      tool_calls:
-        items:
-          $ref: '#/definitions/ToolCallPayload'
-        type: array
-    type: object
-  ReindexAcceptedResponse:
-    properties:
-      message:
-        example: Reindex started
-        type: string
-      status:
-        example: accepted
-        type: string
-    type: object
-  ReindexStatusResponse:
-    properties:
-      es_configured:
-        type: boolean
-      running:
-        type: boolean
-    type: object
-  RemoveTermRequest:
-    properties:
-      term_id:
-        type: string
-    required:
-    - term_id
-    type: object
-  Result:
-    properties:
-      description:
-        type: string
-      id:
-        type: string
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      rank:
-        type: number
-      type:
-        $ref: '#/definitions/ResultType'
-      updated_at:
-        type: string
-      url:
-        type: string
-    type: object
-  ResultType:
-    enum:
-    - asset
-    - glossary
-    - team
-    - data_product
-    type: string
-    x-enum-varnames:
-    - ResultTypeAsset
-    - ResultTypeGlossary
-    - ResultTypeTeam
-    - ResultTypeDataProduct
-  Role:
-    properties:
-      description:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      permissions:
-        items:
-          $ref: '#/definitions/Permission'
-        type: array
-    type: object
-  RulePreview:
-    properties:
-      asset_count:
-        type: integer
-      asset_ids:
-        items:
-          type: string
-        type: array
-      errors:
-        items:
-          type: string
-        type: array
-    type: object
-  RuleType:
-    enum:
-    - query
-    - metadata_match
-    type: string
-    x-enum-varnames:
-    - RuleTypeQuery
-    - RuleTypeMetadataMatch
-  RunCreateAssetRequest:
-    properties:
-      description:
-        type: string
-      external_links:
-        items:
-          additionalProperties:
-            type: string
-          type: object
-        type: array
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      providers:
-        items:
-          type: string
-        type: array
-      schema:
-        additionalProperties: true
-        type: object
-      sources:
-        items:
-          type: string
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-      type:
-        type: string
-    type: object
-  RunEntitiesResponse:
-    properties:
-      entities:
-        items:
-          $ref: '#/definitions/RunEntity'
-        type: array
-      limit:
-        type: integer
-      offset:
-        type: integer
-      total:
-        type: integer
-    type: object
-  RunEntity:
+  runs.RunEntity:
     properties:
       created_at:
         type: string
@@ -1474,125 +881,7 @@ definitions:
       status:
         type: string
     type: object
-  RunEvent:
-    properties:
-      eventTime:
-        type: string
-      eventType:
-        type: string
-      inputs:
-        items:
-          $ref: '#/definitions/Dataset'
-        type: array
-      job:
-        $ref: '#/definitions/Job'
-      outputs:
-        items:
-          $ref: '#/definitions/Dataset'
-        type: array
-      producer:
-        type: string
-      run:
-        $ref: '#/definitions/LineageRun'
-      schemaURL:
-        type: string
-    type: object
-  RunHistory:
-    properties:
-      duration_ms:
-        type: integer
-      end_time:
-        type: string
-      event_time:
-        type: string
-      id:
-        type: string
-      job_name:
-        type: string
-      job_namespace:
-        type: string
-      run_id:
-        type: string
-      start_time:
-        type: string
-      status:
-        type: string
-      type:
-        type: string
-    type: object
-  RunHistoryResponse:
-    properties:
-      limit:
-        type: integer
-      offset:
-        type: integer
-      run_history:
-        items:
-          $ref: '#/definitions/RunHistory'
-        type: array
-      total:
-        type: integer
-    type: object
-  RunStatus:
-    enum:
-    - running
-    - completed
-    - failed
-    - cancelled
-    type: string
-    x-enum-varnames:
-    - StatusRunning
-    - StatusCompleted
-    - StatusFailed
-    - StatusCancelled
-  RunSummary:
-    properties:
-      assets_created:
-        type: integer
-      assets_deleted:
-        type: integer
-      assets_updated:
-        type: integer
-      documentation_added:
-        type: integer
-      duration_seconds:
-        type: integer
-      errors_count:
-        type: integer
-      lineage_created:
-        type: integer
-      lineage_updated:
-        type: integer
-      total_entities:
-        type: integer
-    type: object
-  RunsResponse:
-    properties:
-      runs:
-        items:
-          $ref: '#/definitions/AgentRun'
-        type: array
-      total:
-        type: integer
-    type: object
-  SSOTeamMapping:
-    properties:
-      created_at:
-        type: string
-      id:
-        type: string
-      member_role:
-        type: string
-      provider:
-        type: string
-      sso_group_name:
-        type: string
-      team_id:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  Schedule:
+  runs.Schedule:
     properties:
       config:
         additionalProperties: true
@@ -1622,63 +911,97 @@ definitions:
       updated_at:
         type: string
     type: object
-  SearchOwnersResponse:
+  search.FacetValue:
     properties:
-      owners:
-        items:
-          $ref: '#/definitions/TeamOwner'
-        type: array
-    type: object
-  SearchResponse:
-    properties:
-      facets:
-        $ref: '#/definitions/Facets'
-      limit:
+      count:
         type: integer
-      offset:
-        type: integer
-      results:
-        items:
-          $ref: '#/definitions/Result'
-        type: array
-      total:
-        type: integer
-    type: object
-  StartRunRequest:
-    properties:
-      config:
-        $ref: '#/definitions/RawPluginConfig'
-      pipeline_name:
+      value:
         type: string
-      source_name:
-        type: string
-    required:
-    - pipeline_name
-    - source_name
     type: object
-  Stats:
+  search.Facets:
     properties:
-      median_latency_ms:
-        type: integer
-      p95_latency_ms:
-        type: integer
-      run_count:
-        type: integer
-      success_rate:
+      asset_types:
+        items:
+          $ref: '#/definitions/search.FacetValue'
+        type: array
+      providers:
+        items:
+          $ref: '#/definitions/search.FacetValue'
+        type: array
+      tags:
+        items:
+          $ref: '#/definitions/search.FacetValue'
+        type: array
+      types:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  search.Result:
+    properties:
+      description:
+        type: string
+      id:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      rank:
         type: number
-      tokens_in:
-        type: integer
-      tokens_out:
-        type: integer
-    type: object
-  TagRequest:
-    properties:
-      tag:
+      type:
+        $ref: '#/definitions/search.ResultType'
+      updated_at:
         type: string
-    required:
-    - tag
+      url:
+        type: string
     type: object
-  Team:
+  search.ResultType:
+    enum:
+    - asset
+    - glossary
+    - team
+    - data_product
+    type: string
+    x-enum-varnames:
+    - ResultTypeAsset
+    - ResultTypeGlossary
+    - ResultTypeTeam
+    - ResultTypeDataProduct
+  team.Owner:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      profile_picture:
+        type: string
+      type:
+        type: string
+      username:
+        type: string
+    type: object
+  team.SSOTeamMapping:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: string
+      member_role:
+        type: string
+      provider:
+        type: string
+      sso_group_name:
+        type: string
+      team_id:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  team.Team:
     properties:
       created_at:
         type: string
@@ -1704,7 +1027,7 @@ definitions:
       updated_at:
         type: string
     type: object
-  TeamMemberWithUser:
+  team.TeamMemberWithUser:
     properties:
       email:
         type: string
@@ -1729,221 +1052,80 @@ definitions:
       username:
         type: string
     type: object
-  TeamOwner:
+  user.APIKey:
     properties:
-      email:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      key:
+        type: string
+      last_used_at:
+        type: string
+      name:
+        type: string
+      user_id:
+        type: string
+    type: object
+  user.CreateUserInput:
+    properties:
+      name:
+        type: string
+      oauth_provider:
+        type: string
+      oauth_provider_data:
+        additionalProperties: true
+        type: object
+      oauth_provider_id:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      profile_picture:
+        type: string
+      role_names:
+        items:
+          type: string
+        minItems: 1
+        type: array
+      username:
+        maxLength: 255
+        minLength: 3
+        type: string
+    required:
+    - name
+    - role_names
+    - username
+    type: object
+  user.Permission:
+    properties:
+      action:
+        type: string
+      description:
         type: string
       id:
         type: string
       name:
         type: string
-      profile_picture:
-        type: string
-      type:
-        type: string
-      username:
+      resource_type:
         type: string
     type: object
-  TokenExchangeResponse:
-    properties:
-      access_token:
-        type: string
-      expires_in:
-        type: integer
-      issued_token_type:
-        type: string
-      token_type:
-        type: string
-    type: object
-  TokenResponse:
-    properties:
-      access_token:
-        type: string
-      expires_in:
-        type: integer
-      requires_password_change:
-        type: boolean
-      token_type:
-        type: string
-    type: object
-  ToolCall:
-    properties:
-      duration_ms:
-        type: integer
-      ordinal:
-        type: integer
-      started_at:
-        type: string
-      status:
-        type: string
-      target_mrn:
-        type: string
-      tool_name:
-        type: string
-    type: object
-  ToolCallPayload:
-    properties:
-      duration_ms:
-        type: integer
-      started_at:
-        type: string
-      status:
-        type: string
-      target_mrn:
-        type: string
-      tool_name:
-        type: string
-    type: object
-  TotalAssetsResponse:
-    properties:
-      count:
-        type: integer
-    type: object
-  UIConfigResponse:
-    properties:
-      allow_unencrypted:
-        type: boolean
-      banner:
-        $ref: '#/definitions/BannerResponse'
-      encryption_configured:
-        type: boolean
-      table_preview_enabled:
-        type: boolean
-    type: object
-  UpdateAssetRequest:
+  user.Role:
     properties:
       description:
         type: string
-      environments:
-        additionalProperties:
-          $ref: '#/definitions/Environment'
-        type: object
-      external_links:
-        items:
-          $ref: '#/definitions/AssetExternalLink'
-        type: array
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      providers:
-        items:
-          type: string
-        type: array
-      schema:
-        additionalProperties:
-          type: string
-        type: object
-      sources:
-        items:
-          $ref: '#/definitions/AssetSource'
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-      type:
-        type: string
-      user_description:
-        type: string
-    type: object
-  UpdateAssetRuleRequest:
-    properties:
-      description:
-        type: string
-      is_enabled:
-        type: boolean
-      links:
-        items:
-          $ref: '#/definitions/AssetRuleExternalLink'
-        type: array
-      metadata_field:
+      id:
         type: string
       name:
         type: string
-      pattern_type:
-        type: string
-      pattern_value:
-        type: string
-      priority:
-        type: integer
-      query_expression:
-        type: string
-      rule_type:
-        type: string
-      term_ids:
+      permissions:
         items:
-          type: string
+          $ref: '#/definitions/user.Permission'
         type: array
     type: object
-  UpdateMemberRoleRequest:
-    properties:
-      role:
-        type: string
-    type: object
-  UpdatePasswordRequest:
-    properties:
-      new_password:
-        minLength: 8
-        type: string
-    required:
-    - new_password
-    type: object
-  UpdateSSOMappingRequest:
-    properties:
-      member_role:
-        type: string
-      team_id:
-        type: string
-    type: object
-  UpdateScheduleRequest:
-    properties:
-      config:
-        additionalProperties: true
-        type: object
-      cron_expression:
-        type: string
-      enabled:
-        type: boolean
-      name:
-        type: string
-      plugin_id:
-        type: string
-    type: object
-  UpdateTeamRequest:
-    properties:
-      description:
-        type: string
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      tags:
-        items:
-          type: string
-        type: array
-    type: object
-  UpdateTermRequest:
-    properties:
-      definition:
-        type: string
-      description:
-        type: string
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      owners:
-        items:
-          $ref: '#/definitions/OwnerRequest'
-        type: array
-      parent_term_id:
-        type: string
-    type: object
-  UpdateUserInput:
+  user.UpdateUserInput:
     properties:
       active:
         type: boolean
@@ -1965,7 +1147,7 @@ definitions:
         minItems: 1
         type: array
     type: object
-  User:
+  user.User:
     properties:
       active:
         type: boolean
@@ -1975,7 +1157,7 @@ definitions:
         type: string
       identities:
         items:
-          $ref: '#/definitions/UserIdentity'
+          $ref: '#/definitions/user.UserIdentity'
         type: array
       must_change_password:
         type: boolean
@@ -1988,14 +1170,14 @@ definitions:
         type: string
       roles:
         items:
-          $ref: '#/definitions/Role'
+          $ref: '#/definitions/user.Role'
         type: array
       updated_at:
         type: string
       username:
         type: string
     type: object
-  UserIdentity:
+  user.UserIdentity:
     properties:
       created_at:
         type: string
@@ -2015,7 +1197,876 @@ definitions:
       user_id:
         type: string
     type: object
-  ValidateConfigRequest:
+  v1_admin.ReindexAcceptedResponse:
+    properties:
+      message:
+        example: Reindex started
+        type: string
+      status:
+        example: accepted
+        type: string
+    type: object
+  v1_admin.ReindexStatusResponse:
+    properties:
+      es_configured:
+        type: boolean
+      running:
+        type: boolean
+    type: object
+  v1_agents.ActivityResponse:
+    properties:
+      buckets:
+        items:
+          $ref: '#/definitions/agent.Bucket'
+        type: array
+    type: object
+  v1_agents.RecordRunRequest:
+    properties:
+      agent_mrn:
+        type: string
+      ended_at:
+        type: string
+      error:
+        type: string
+      model:
+        type: string
+      observed_assets:
+        items:
+          type: string
+        type: array
+      run_id:
+        type: string
+      started_at:
+        type: string
+      status:
+        type: string
+      tokens_in:
+        type: integer
+      tokens_out:
+        type: integer
+      tool_calls:
+        items:
+          $ref: '#/definitions/v1_agents.ToolCallPayload'
+        type: array
+    type: object
+  v1_agents.RunsResponse:
+    properties:
+      runs:
+        items:
+          $ref: '#/definitions/agent.Run'
+        type: array
+      total:
+        type: integer
+    type: object
+  v1_agents.ToolCallPayload:
+    properties:
+      duration_ms:
+        type: integer
+      started_at:
+        type: string
+      status:
+        type: string
+      target_mrn:
+        type: string
+      tool_name:
+        type: string
+    type: object
+  v1_assetrules.CreateRequest:
+    properties:
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      links:
+        items:
+          $ref: '#/definitions/assetrule.ExternalLink'
+        type: array
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+      term_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_assetrules.PreviewRequest:
+    properties:
+      limit:
+        type: integer
+      metadata_field:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+    type: object
+  v1_assetrules.UpdateRequest:
+    properties:
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      links:
+        items:
+          $ref: '#/definitions/assetrule.ExternalLink'
+        type: array
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+      term_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_assets.AddTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_assets.AddTermsRequest:
+    properties:
+      term_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - term_ids
+    type: object
+  v1_assets.AssetSummaryResponse:
+    properties:
+      services:
+        additionalProperties:
+          type: integer
+        type: object
+      tags:
+        additionalProperties:
+          type: integer
+        type: object
+      types:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  v1_assets.BatchDocumentationRequest:
+    properties:
+      documentation:
+        items:
+          $ref: '#/definitions/assetdocs.Documentation'
+        minItems: 1
+        type: array
+    required:
+    - documentation
+    type: object
+  v1_assets.BatchDocumentationResponse:
+    properties:
+      results:
+        items:
+          $ref: '#/definitions/v1_assets.BatchDocumentationResult'
+        type: array
+    type: object
+  v1_assets.BatchDocumentationResult:
+    properties:
+      documentation:
+        $ref: '#/definitions/assetdocs.Documentation'
+      error:
+        type: string
+      status:
+        type: string
+    type: object
+  v1_assets.CreateRequest:
+    properties:
+      description:
+        type: string
+      environments:
+        additionalProperties:
+          $ref: '#/definitions/asset.Environment'
+        type: object
+      external_links:
+        items:
+          $ref: '#/definitions/asset.ExternalLink'
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      schema:
+        additionalProperties:
+          type: string
+        type: object
+      sources:
+        items:
+          $ref: '#/definitions/asset.AssetSource'
+        type: array
+      type:
+        type: string
+    required:
+    - name
+    - providers
+    - type
+    type: object
+  v1_assets.DocumentationCreateRequest:
+    properties:
+      content:
+        type: string
+      mrn:
+        type: string
+      source:
+        type: string
+    required:
+    - content
+    - mrn
+    - source
+    type: object
+  v1_assets.HistogramResponse:
+    properties:
+      buckets:
+        items:
+          $ref: '#/definitions/asset.HistogramBucket'
+        type: array
+      period:
+        type: string
+    type: object
+  v1_assets.PreviewResponse:
+    properties:
+      column_names:
+        items:
+          type: string
+        type: array
+      rows:
+        items:
+          items: {}
+          type: array
+        type: array
+      total_rows:
+        type: integer
+    type: object
+  v1_assets.RemoveColumnTagRequest:
+    properties:
+      column_path:
+        type: string
+      tag_id:
+        type: string
+    type: object
+  v1_assets.RemoveTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_assets.RemoveTermRequest:
+    properties:
+      term_id:
+        type: string
+    required:
+    - term_id
+    type: object
+  v1_assets.ReplaceColumnTagsRequest:
+    properties:
+      column_path:
+        type: string
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_assets.ReplaceTagsRequest:
+    properties:
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_assets.RunHistoryResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      run_history:
+        items:
+          $ref: '#/definitions/asset.RunHistory'
+        type: array
+      total:
+        type: integer
+    type: object
+  v1_assets.SearchResponse:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/asset.Asset'
+        type: array
+      filters:
+        $ref: '#/definitions/asset.AvailableFilters'
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  v1_assets.UpdateRequest:
+    properties:
+      description:
+        type: string
+      environments:
+        additionalProperties:
+          $ref: '#/definitions/asset.Environment'
+        type: object
+      external_links:
+        items:
+          $ref: '#/definitions/asset.ExternalLink'
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      schema:
+        additionalProperties:
+          type: string
+        type: object
+      sources:
+        items:
+          $ref: '#/definitions/asset.AssetSource'
+        type: array
+      type:
+        type: string
+      user_description:
+        type: string
+    type: object
+  v1_dataproducts.AddProductTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_dataproducts.CreateRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/v1_dataproducts.OwnerRequest'
+        type: array
+      rules:
+        items:
+          $ref: '#/definitions/v1_dataproducts.RuleRequest'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    type: object
+  v1_dataproducts.OwnerRequest:
+    properties:
+      id:
+        type: string
+      type:
+        enum:
+        - user
+        - team
+        type: string
+    required:
+    - id
+    - type
+    type: object
+  v1_dataproducts.RemoveProductTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_dataproducts.ReplaceProductTagsRequest:
+    properties:
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_dataproducts.RuleRequest:
+    properties:
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+    required:
+    - name
+    - rule_type
+    type: object
+  v1_dataproducts.UpdateRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/v1_dataproducts.OwnerRequest'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_glossary.AddTermTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_glossary.CreateTermRequest:
+    properties:
+      definition:
+        type: string
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/v1_glossary.OwnerRequest'
+        type: array
+      parent_term_id:
+        type: string
+    required:
+    - definition
+    - name
+    type: object
+  v1_glossary.OwnerRequest:
+    properties:
+      id:
+        type: string
+      type:
+        enum:
+        - user
+        - team
+        type: string
+    required:
+    - id
+    - type
+    type: object
+  v1_glossary.RemoveTermTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_glossary.ReplaceTermTagsRequest:
+    properties:
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_glossary.UpdateTermRequest:
+    properties:
+      definition:
+        type: string
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/v1_glossary.OwnerRequest'
+        type: array
+      parent_term_id:
+        type: string
+    type: object
+  v1_lineage.BatchLineageResult:
+    properties:
+      edge:
+        $ref: '#/definitions/lineage.LineageEdge'
+      status:
+        description: '"created", "duplicate", or "existing"'
+        type: string
+    type: object
+  v1_metrics.AssetsByOwnerResponse:
+    properties:
+      assets:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+    type: object
+  v1_metrics.AssetsByProviderResponse:
+    properties:
+      assets:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+    type: object
+  v1_metrics.AssetsByTypeResponse:
+    properties:
+      assets:
+        additionalProperties:
+          format: int64
+          type: integer
+        type: object
+    type: object
+  v1_metrics.AssetsWithSchemasResponse:
+    properties:
+      count:
+        type: integer
+      percentage:
+        type: number
+      total:
+        type: integer
+    type: object
+  v1_metrics.GetMetricsRequest:
+    properties:
+      aggregation:
+        type: string
+      bucket_size:
+        type: string
+      end:
+        type: string
+      labels:
+        additionalProperties:
+          type: string
+        type: object
+      metric_names:
+        items:
+          type: string
+        type: array
+      start:
+        type: string
+    type: object
+  v1_metrics.GetMetricsResponse:
+    properties:
+      metrics:
+        items:
+          $ref: '#/definitions/metrics.AggregatedMetric'
+        type: array
+      query:
+        $ref: '#/definitions/v1_metrics.GetMetricsRequest'
+    type: object
+  v1_metrics.TotalAssetsResponse:
+    properties:
+      count:
+        type: integer
+    type: object
+  v1_runs.BatchAssetResult:
+    properties:
+      asset: {}
+      error:
+        type: string
+      mrn:
+        type: string
+      name:
+        type: string
+      provider:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    type: object
+  v1_runs.BatchCreateRequest:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/v1_runs.CreateAssetRequest'
+        minItems: 1
+        type: array
+      config:
+        $ref: '#/definitions/plugin.RawPluginConfig'
+      documentation:
+        items:
+          $ref: '#/definitions/v1_runs.CreateDocRequest'
+        type: array
+      lineage:
+        items:
+          $ref: '#/definitions/v1_runs.CreateLineageRequest'
+        type: array
+      pipeline_name:
+        type: string
+      run_id:
+        type: string
+      source_name:
+        type: string
+      statistics:
+        items:
+          $ref: '#/definitions/v1_runs.CreateStatRequest'
+        type: array
+    required:
+    - assets
+    - pipeline_name
+    - run_id
+    - source_name
+    type: object
+  v1_runs.BatchCreateResponse:
+    properties:
+      assets:
+        items:
+          $ref: '#/definitions/v1_runs.BatchAssetResult'
+        type: array
+      documentation:
+        items:
+          $ref: '#/definitions/v1_runs.DocumentationResult'
+        type: array
+      lineage:
+        items:
+          $ref: '#/definitions/v1_runs.LineageResult'
+        type: array
+      stale_entities_removed:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_runs.CompleteRunRequest:
+    properties:
+      error:
+        type: string
+      run_id:
+        type: string
+      status:
+        $ref: '#/definitions/plugin.RunStatus'
+      summary:
+        $ref: '#/definitions/plugin.RunSummary'
+    required:
+    - run_id
+    - status
+    type: object
+  v1_runs.CreateAssetRequest:
+    properties:
+      description:
+        type: string
+      external_links:
+        items:
+          additionalProperties:
+            type: string
+          type: object
+        type: array
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      providers:
+        items:
+          type: string
+        type: array
+      schema:
+        additionalProperties: true
+        type: object
+      sources:
+        items:
+          type: string
+        type: array
+      type:
+        type: string
+    type: object
+  v1_runs.CreateDocRequest:
+    properties:
+      asset_mrn:
+        type: string
+      content:
+        type: string
+      type:
+        type: string
+    type: object
+  v1_runs.CreateLineageRequest:
+    properties:
+      source:
+        type: string
+      target:
+        type: string
+      type:
+        type: string
+    type: object
+  v1_runs.CreateStatRequest:
+    properties:
+      asset_mrn:
+        type: string
+      metric_name:
+        type: string
+      value:
+        type: number
+    required:
+    - asset_mrn
+    - metric_name
+    - value
+    type: object
+  v1_runs.DestroyRunResponse:
+    properties:
+      assets_deleted:
+        type: integer
+      deleted_entity_mrns:
+        items:
+          type: string
+        type: array
+      documentation_deleted:
+        type: integer
+      lineage_deleted:
+        type: integer
+    type: object
+  v1_runs.DocumentationResult:
+    properties:
+      asset_mrn:
+        type: string
+      error:
+        type: string
+      status:
+        type: string
+      type:
+        type: string
+    type: object
+  v1_runs.LineageResult:
+    properties:
+      error:
+        type: string
+      source:
+        type: string
+      status:
+        type: string
+      target:
+        type: string
+      type:
+        type: string
+    type: object
+  v1_runs.RunEntitiesResponse:
+    properties:
+      entities:
+        items:
+          $ref: '#/definitions/runs.RunEntity'
+        type: array
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+    type: object
+  v1_runs.StartRunRequest:
+    properties:
+      config:
+        $ref: '#/definitions/plugin.RawPluginConfig'
+      pipeline_name:
+        type: string
+      source_name:
+        type: string
+    required:
+    - pipeline_name
+    - source_name
+    type: object
+  v1_schedules.CreateScheduleRequest:
+    properties:
+      config:
+        additionalProperties: true
+        type: object
+      cron_expression:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+      plugin_id:
+        type: string
+    type: object
+  v1_schedules.ListJobRunsResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      runs:
+        items:
+          $ref: '#/definitions/runs.JobRun'
+        type: array
+      total:
+        type: integer
+    type: object
+  v1_schedules.ListSchedulesResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      schedules:
+        items:
+          $ref: '#/definitions/runs.Schedule'
+        type: array
+      total:
+        type: integer
+    type: object
+  v1_schedules.UpdateScheduleRequest:
+    properties:
+      config:
+        additionalProperties: true
+        type: object
+      cron_expression:
+        type: string
+      enabled:
+        type: boolean
+      name:
+        type: string
+      plugin_id:
+        type: string
+    type: object
+  v1_schedules.ValidateConfigRequest:
     properties:
       config:
         additionalProperties: true
@@ -2023,21 +2074,203 @@ definitions:
       plugin_id:
         type: string
     type: object
-  ValidateConfigResponse:
+  v1_schedules.ValidateConfigResponse:
     properties:
       errors:
         items:
-          $ref: '#/definitions/ValidationErrorDetail'
+          $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ValidationError'
         type: array
       valid:
         type: boolean
     type: object
-  ValidationErrorDetail:
+  v1_tags.TagRequest:
     properties:
-      field:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  v1_teams.AddMemberRequest:
+    properties:
+      role:
+        type: string
+      user_id:
+        type: string
+    type: object
+  v1_teams.CreateSSOMappingRequest:
+    properties:
+      member_role:
+        type: string
+      provider:
+        type: string
+      sso_group_name:
+        type: string
+      team_id:
+        type: string
+    type: object
+  v1_teams.CreateTeamRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
+  v1_teams.ListMembersResponse:
+    properties:
+      members:
+        items:
+          $ref: '#/definitions/team.TeamMemberWithUser'
+        type: array
+    type: object
+  v1_teams.ListSSOMappingsResponse:
+    properties:
+      mappings:
+        items:
+          $ref: '#/definitions/team.SSOTeamMapping'
+        type: array
+    type: object
+  v1_teams.ListTeamsResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      teams:
+        items:
+          $ref: '#/definitions/team.Team'
+        type: array
+      total:
+        type: integer
+    type: object
+  v1_teams.MessageResponse:
+    properties:
+      message:
+        type: string
+    type: object
+  v1_teams.SearchOwnersResponse:
+    properties:
+      owners:
+        items:
+          $ref: '#/definitions/team.Owner'
+        type: array
+    type: object
+  v1_teams.UpdateMemberRoleRequest:
+    properties:
+      role:
+        type: string
+    type: object
+  v1_teams.UpdateSSOMappingRequest:
+    properties:
+      member_role:
+        type: string
+      team_id:
+        type: string
+    type: object
+  v1_teams.UpdateTeamRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_ui.BannerResponse:
+    properties:
+      dismissible:
+        type: boolean
+      enabled:
+        type: boolean
+      id:
         type: string
       message:
         type: string
+      variant:
+        type: string
+    type: object
+  v1_ui.UIConfigResponse:
+    properties:
+      allow_unencrypted:
+        type: boolean
+      banner:
+        $ref: '#/definitions/v1_ui.BannerResponse'
+      encryption_configured:
+        type: boolean
+      table_preview_enabled:
+        type: boolean
+    type: object
+  v1_users.CreateAPIKeyRequest:
+    properties:
+      expires_in_days:
+        type: integer
+      name:
+        type: string
+    required:
+    - name
+    type: object
+  v1_users.ListUsersResponse:
+    properties:
+      limit:
+        type: integer
+      offset:
+        type: integer
+      total:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/user.User'
+        type: array
+    type: object
+  v1_users.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    required:
+    - password
+    - username
+    type: object
+  v1_users.OAuthLinkRequest:
+    properties:
+      provider:
+        type: string
+      provider_user_id:
+        type: string
+      user_id:
+        type: string
+      user_info:
+        additionalProperties: true
+        type: object
+    required:
+    - provider
+    - provider_user_id
+    - user_id
+    - user_info
+    type: object
+  v1_users.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      expires_in:
+        type: integer
+      requires_password_change:
+        type: boolean
+      token_type:
+        type: string
+    type: object
+  v1_users.UpdatePasswordRequest:
+    properties:
+      new_password:
+        minLength: 8
+        type: string
+    required:
+    - new_password
     type: object
 info:
   contact: {}
@@ -2058,15 +2291,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ReindexStatusResponse'
+            $ref: '#/definitions/v1_admin.ReindexStatusResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get reindex status
       tags:
       - admin
@@ -2079,23 +2312,23 @@ paths:
         "202":
           description: Accepted
           schema:
-            $ref: '#/definitions/ReindexAcceptedResponse'
+            $ref: '#/definitions/v1_admin.ReindexAcceptedResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "503":
           description: Service Unavailable
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Start search reindex
       tags:
       - admin
@@ -2117,7 +2350,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ActivityResponse'
+            $ref: '#/definitions/v1_agents.ActivityResponse'
       summary: Agent activity
       tags:
       - agents
@@ -2143,7 +2376,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/RunsResponse'
+            $ref: '#/definitions/v1_agents.RunsResponse'
       summary: List agent runs
       tags:
       - agents
@@ -2165,7 +2398,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Stats'
+            $ref: '#/definitions/agent.Stats'
       summary: Agent stats
       tags:
       - agents
@@ -2179,14 +2412,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/RecordRunRequest'
+          $ref: '#/definitions/v1_agents.RecordRunRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/AgentRun'
+            $ref: '#/definitions/agent.Run'
       summary: Record agent run
       tags:
       - agents
@@ -2206,27 +2439,27 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/PreviewResponse'
+            $ref: '#/definitions/v1_assets.PreviewResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "403":
           description: Missing assets:preview permission
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "501":
           description: Data preview not supported for this asset
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get preview data for an asset
       tags:
       - assets
@@ -2255,15 +2488,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ListJobRunsResponse'
+            $ref: '#/definitions/v1_schedules.ListJobRunsResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List ingestion job runs
       tags:
       - ingestion
@@ -2281,19 +2514,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/JobRun'
+            $ref: '#/definitions/runs.JobRun'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get a job run by ID
       tags:
       - ingestion
@@ -2311,15 +2544,15 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Cancel a running job
       tags:
       - ingestion
@@ -2350,15 +2583,15 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get entities for a job run
       tags:
       - ingestion
@@ -2383,15 +2616,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ListSchedulesResponse'
+            $ref: '#/definitions/v1_schedules.ListSchedulesResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List ingestion schedules
       tags:
       - ingestion
@@ -2404,26 +2637,26 @@ paths:
         name: schedule
         required: true
         schema:
-          $ref: '#/definitions/CreateScheduleRequest'
+          $ref: '#/definitions/v1_schedules.CreateScheduleRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/Schedule'
+            $ref: '#/definitions/runs.Schedule'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create a new ingestion schedule
       tags:
       - ingestion
@@ -2441,15 +2674,15 @@ paths:
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete an ingestion schedule
       tags:
       - ingestion
@@ -2466,19 +2699,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Schedule'
+            $ref: '#/definitions/runs.Schedule'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get an ingestion schedule by ID
       tags:
       - ingestion
@@ -2496,30 +2729,30 @@ paths:
         name: schedule
         required: true
         schema:
-          $ref: '#/definitions/UpdateScheduleRequest'
+          $ref: '#/definitions/v1_schedules.UpdateScheduleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Schedule'
+            $ref: '#/definitions/runs.Schedule'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update an ingestion schedule
       tags:
       - ingestion
@@ -2535,19 +2768,19 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/JobRun'
+            $ref: '#/definitions/runs.JobRun'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Manually trigger an ingestion schedule
       tags:
       - ingestion
@@ -2561,22 +2794,22 @@ paths:
         name: config
         required: true
         schema:
-          $ref: '#/definitions/ValidateConfigRequest'
+          $ref: '#/definitions/v1_schedules.ValidateConfigRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ValidateConfigResponse'
+            $ref: '#/definitions/v1_schedules.ValidateConfigResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Validate plugin configuration
       tags:
       - ingestion
@@ -2591,7 +2824,7 @@ paths:
         name: event
         required: true
         schema:
-          $ref: '#/definitions/RunEvent'
+          $ref: '#/definitions/lineage.RunEvent'
       produces:
       - application/json
       responses:
@@ -2600,14 +2833,201 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Ingest OpenLineage event
       tags:
       - lineage
+  /api/v1/metrics:
+    get:
+      consumes:
+      - application/json
+      description: Get aggregated metrics for dashboard display
+      parameters:
+      - description: Start time (ISO 8601)
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: End time (ISO 8601)
+        in: query
+        name: end
+        required: true
+        type: string
+      - collectionFormat: csv
+        description: Filter by metric names
+        in: query
+        items:
+          type: string
+        name: metric_names
+        type: array
+      - default: avg
+        description: Aggregation type
+        enum:
+        - avg
+        - sum
+        - max
+        - min
+        in: query
+        name: aggregation
+        type: string
+      - description: Time bucket size
+        enum:
+        - 1m
+        - 5m
+        - 1h
+        - 1d
+        in: query
+        name: bucket_size
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_metrics.GetMetricsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get metrics for UI
+      tags:
+      - metrics
+  /api/v1/metrics/assets/by-owner:
+    get:
+      description: Get asset counts grouped by owner
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_metrics.AssetsByOwnerResponse'
+      summary: Get assets by owner
+      tags:
+      - metrics
+  /api/v1/metrics/assets/by-provider:
+    get:
+      description: Get asset counts grouped by provider
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_metrics.AssetsByProviderResponse'
+      summary: Get assets by provider
+      tags:
+      - metrics
+  /api/v1/metrics/assets/by-type:
+    get:
+      description: Get asset counts grouped by type
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_metrics.AssetsByTypeResponse'
+      summary: Get assets by type
+      tags:
+      - metrics
+  /api/v1/metrics/assets/total:
+    get:
+      description: Get the total number of assets
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_metrics.TotalAssetsResponse'
+      summary: Get total assets count
+      tags:
+      - metrics
+  /api/v1/metrics/assets/with-schemas:
+    get:
+      description: Get the count of assets that have schemas defined
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/v1_metrics.AssetsWithSchemasResponse'
+      summary: Get assets with schemas count
+      tags:
+      - metrics
+  /api/v1/metrics/top-assets:
+    get:
+      description: Get the most viewed assets
+      parameters:
+      - description: Start time (ISO 8601)
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: End time (ISO 8601)
+        in: query
+        name: end
+        required: true
+        type: string
+      - default: 10
+        description: Number of results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/metrics.AssetCount'
+            type: array
+      summary: Get top viewed assets
+      tags:
+      - metrics
+  /api/v1/metrics/top-queries:
+    get:
+      description: Get the most popular search queries
+      parameters:
+      - description: Start time (ISO 8601)
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: End time (ISO 8601)
+        in: query
+        name: end
+        required: true
+        type: string
+      - default: 10
+        description: Number of results
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/metrics.QueryCount'
+            type: array
+      summary: Get top search queries
+      tags:
+      - metrics
   /api/v1/plugins/aws/credentials/status:
     get:
       description: Detects if AWS credentials are available from environment or config
@@ -2618,7 +3038,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AWSCredentialStatus'
+            $ref: '#/definitions/plugin.AWSCredentialStatus'
       summary: Get AWS credential detection status
       tags:
       - plugins
@@ -2633,26 +3053,26 @@ paths:
         name: rule
         required: true
         schema:
-          $ref: '#/definitions/CreateAssetRuleRequest'
+          $ref: '#/definitions/v1_assetrules.CreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/AssetRule'
+            $ref: '#/definitions/assetrule.AssetRule'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create an asset rule
       tags:
       - asset-rules
@@ -2671,11 +3091,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete an asset rule
       tags:
       - asset-rules
@@ -2693,15 +3113,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AssetRule'
+            $ref: '#/definitions/assetrule.AssetRule'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get an asset rule
       tags:
       - asset-rules
@@ -2720,30 +3140,30 @@ paths:
         name: rule
         required: true
         schema:
-          $ref: '#/definitions/UpdateAssetRuleRequest'
+          $ref: '#/definitions/v1_assetrules.UpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AssetRule'
+            $ref: '#/definitions/assetrule.AssetRule'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update an asset rule
       tags:
       - asset-rules
@@ -2777,11 +3197,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get assets matched by a rule
       tags:
       - asset-rules
@@ -2805,11 +3225,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AssetRuleListResult'
+            $ref: '#/definitions/assetrule.ListResult'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List asset rules
       tags:
       - asset-rules
@@ -2824,22 +3244,22 @@ paths:
         name: rule
         required: true
         schema:
-          $ref: '#/definitions/PreviewRequest'
+          $ref: '#/definitions/v1_assetrules.PreviewRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/RulePreview'
+            $ref: '#/definitions/assetrule.RulePreview'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Preview an asset rule
       tags:
       - asset-rules
@@ -2867,11 +3287,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AssetRuleListResult'
+            $ref: '#/definitions/assetrule.ListResult'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Search asset rules
       tags:
       - asset-rules
@@ -2886,26 +3306,26 @@ paths:
         name: asset
         required: true
         schema:
-          $ref: '#/definitions/CreateAssetRequest'
+          $ref: '#/definitions/v1_assets.CreateRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/Asset'
+            $ref: '#/definitions/asset.Asset'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create a new asset
       tags:
       - assets
@@ -2928,15 +3348,15 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete an asset
       tags:
       - assets
@@ -2956,15 +3376,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Asset'
+            $ref: '#/definitions/asset.Asset'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get an asset by ID
       tags:
       - assets
@@ -2983,26 +3403,26 @@ paths:
         name: asset
         required: true
         schema:
-          $ref: '#/definitions/UpdateAssetRequest'
+          $ref: '#/definitions/v1_assets.UpdateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Asset'
+            $ref: '#/definitions/asset.Asset'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update an asset
       tags:
       - assets
@@ -3031,19 +3451,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/RunHistoryResponse'
+            $ref: '#/definitions/v1_assets.RunHistoryResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get asset run history
       tags:
       - assets
@@ -3067,20 +3487,117 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/HistogramResponse'
+            $ref: '#/definitions/v1_assets.HistogramResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get asset run history histogram
+      tags:
+      - assets
+  /assets/{id}/terms:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a glossary term association from an asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Term ID to remove
+        in: body
+        name: term
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assets.RemoveTermRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/asset.AssetTerm'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Remove glossary term from asset
+      tags:
+      - assets
+    get:
+      description: Retrieve all glossary terms associated with an asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/asset.AssetTerm'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get asset's glossary terms
+      tags:
+      - assets
+    post:
+      consumes:
+      - application/json
+      description: Associate one or more glossary terms with an asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Term IDs to add
+        in: body
+        name: terms
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assets.AddTermsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/asset.AssetTerm'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Add glossary terms to asset
       tags:
       - assets
   /assets/by-glossary-term/{term_id}:
@@ -3113,8 +3630,82 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get assets by glossary term
+      tags:
+      - assets
+  /assets/column-tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete one (column_path, tag_id) assignment for an asset.
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Column path and tag ID to remove
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assets.RemoveColumnTagRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Remove a single tag from a column
+      tags:
+      - assets
+    put:
+      consumes:
+      - application/json
+      description: Atomically replace the tag set assigned to one column. Tags already
+        attached are preserved.
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Column path and tag IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assets.ReplaceColumnTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Replace tags for a single column on an asset
       tags:
       - assets
   /assets/documentation:
@@ -3128,22 +3719,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/DocumentationCreateRequest'
+          $ref: '#/definitions/v1_assets.DocumentationCreateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Documentation'
+            $ref: '#/definitions/assetdocs.Documentation'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create asset documentation
       tags:
       - assets
@@ -3164,16 +3755,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/Documentation'
+              $ref: '#/definitions/assetdocs.Documentation'
             type: array
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get asset documentation
       tags:
       - assets
@@ -3188,22 +3779,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/BatchDocumentationRequest'
+          $ref: '#/definitions/v1_assets.BatchDocumentationRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/BatchDocumentationResponse'
+            $ref: '#/definitions/v1_assets.BatchDocumentationResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Batch create documentation
       tags:
       - assets
@@ -3232,15 +3823,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Asset'
+            $ref: '#/definitions/asset.Asset'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Lookup asset by type, service, and name
       tags:
       - assets
@@ -3265,16 +3856,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/Asset'
+              $ref: '#/definitions/asset.Asset'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Match asset pattern
       tags:
       - assets
@@ -3298,15 +3889,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AssetSearchResponse'
+            $ref: '#/definitions/v1_assets.SearchResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get user's assets
       tags:
       - assets
@@ -3328,15 +3919,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Asset'
+            $ref: '#/definitions/asset.Asset'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get an asset by qualified name
       tags:
       - assets
@@ -3392,15 +3983,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AssetSearchResponse'
+            $ref: '#/definitions/v1_assets.SearchResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Search assets
       tags:
       - assets
@@ -3414,12 +4005,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/MetadataFieldSuggestion'
+              $ref: '#/definitions/asset.MetadataFieldSuggestion'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get metadata field suggestions
       tags:
       - assets
@@ -3448,16 +4039,16 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/MetadataValueSuggestion'
+              $ref: '#/definitions/asset.MetadataValueSuggestion'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get metadata value suggestions
       tags:
       - assets
@@ -3486,7 +4077,7 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get tag suggestions
       tags:
       - assets
@@ -3501,11 +4092,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AssetSummaryResponse'
+            $ref: '#/definitions/v1_assets.AssetSummaryResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get asset summary
       tags:
       - assets
@@ -3513,110 +4104,41 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Remove a tag from an existing asset
+      description: Remove a single tag association from an asset
       parameters:
       - description: Asset ID
         in: path
         name: id
         required: true
         type: string
-      - description: Tag to remove
+      - description: Tag ID to remove
         in: body
-        name: tag
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/TagRequest'
+          $ref: '#/definitions/v1_assets.RemoveTagRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/Asset'
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Remove tag from asset
-      tags:
-      - assets
-    post:
-      consumes:
-      - application/json
-      description: Add a new tag to an existing asset
-      parameters:
-      - description: Asset ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Tag to add
-        in: body
-        name: tag
-        required: true
-        schema:
-          $ref: '#/definitions/TagRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
           schema:
-            $ref: '#/definitions/Asset'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Add tag to asset
-      tags:
-      - assets
-  /assets/terms/{id}:
-    delete:
-      consumes:
-      - application/json
-      description: Remove a glossary term association from an asset
-      parameters:
-      - description: Asset ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Term ID to remove
-        in: body
-        name: term
-        required: true
-        schema:
-          $ref: '#/definitions/RemoveTermRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/AssetTerm'
-            type: array
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Remove glossary term from asset
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Remove a tag from an asset
       tags:
       - assets
     get:
-      description: Retrieve all glossary terms associated with an asset
+      description: Get all tags associated with an asset
       parameters:
       - description: Asset ID
         in: path
@@ -3630,31 +4152,75 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/AssetTerm'
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
             type: array
-        "404":
-          description: Not Found
+        "400":
+          description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Get asset's glossary terms
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List asset tags
       tags:
       - assets
     post:
       consumes:
       - application/json
-      description: Associate one or more glossary terms with an asset
+      description: Add a single tag association to an asset
       parameters:
       - description: Asset ID
         in: path
         name: id
         required: true
         type: string
-      - description: Term IDs to add
+      - description: Tag ID to add
         in: body
-        name: terms
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/AddTermsRequest'
+          $ref: '#/definitions/v1_assets.AddTagRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Add a tag to an asset
+      tags:
+      - assets
+    put:
+      consumes:
+      - application/json
+      description: Atomically replace all tag associations for an asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assets.ReplaceTagsRequest'
       produces:
       - application/json
       responses:
@@ -3662,17 +4228,21 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/AssetTerm'
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Add glossary terms to asset
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Replace all tags on an asset
       tags:
       - assets
   /auth-providers:
@@ -3684,7 +4254,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/AuthConfig'
+            $ref: '#/definitions/auth.AuthConfig'
       summary: Get auth configuration
       tags:
       - auth
@@ -3717,15 +4287,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Handle OAuth callback
       tags:
       - auth
@@ -3748,11 +4318,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Initiate OAuth login
       tags:
       - auth
@@ -3768,30 +4338,30 @@ paths:
         name: term
         required: true
         schema:
-          $ref: '#/definitions/CreateTermRequest'
+          $ref: '#/definitions/v1_glossary.CreateTermRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/GlossaryTerm'
+            $ref: '#/definitions/glossary.GlossaryTerm'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create glossary term
       tags:
       - glossary
@@ -3816,15 +4386,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete glossary term
       tags:
       - glossary
@@ -3842,19 +4412,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/GlossaryTerm'
+            $ref: '#/definitions/glossary.GlossaryTerm'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get glossary term
       tags:
       - glossary
@@ -3873,26 +4443,26 @@ paths:
         name: term
         required: true
         schema:
-          $ref: '#/definitions/UpdateTermRequest'
+          $ref: '#/definitions/v1_glossary.UpdateTermRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/GlossaryTerm'
+            $ref: '#/definitions/glossary.GlossaryTerm'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update glossary term
       tags:
       - glossary
@@ -3916,15 +4486,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get ancestor terms
       tags:
       - glossary
@@ -3948,15 +4518,15 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get child terms
       tags:
       - glossary
@@ -3980,11 +4550,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/GlossaryListResult'
+            $ref: '#/definitions/glossary.ListResult'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List glossary terms
       tags:
       - glossary
@@ -4016,16 +4586,167 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/GlossaryListResult'
+            $ref: '#/definitions/glossary.ListResult'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Search glossary terms
+      tags:
+      - glossary
+  /glossary/tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a single tag association from a glossary term
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag ID to remove
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_glossary.RemoveTermTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Remove glossary term tag
+      tags:
+      - glossary
+    get:
+      description: Get all tags associated with a glossary term
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List glossary term tags
+      tags:
+      - glossary
+    post:
+      consumes:
+      - application/json
+      description: Add a single tag association to a glossary term
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag ID to add
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_glossary.AddTermTagRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Add a tag to a glossary term
+      tags:
+      - glossary
+    put:
+      consumes:
+      - application/json
+      description: Atomically replace all tag associations for a glossary term
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_glossary.ReplaceTermTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/glossary.GlossaryTerm'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Replace glossary term tags
       tags:
       - glossary
   /lineage/assets/{id}:
@@ -4060,19 +4781,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/LineageResponse'
+            $ref: '#/definitions/lineage.LineageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get asset lineage
       tags:
       - lineage
@@ -4088,7 +4809,7 @@ paths:
         required: true
         schema:
           items:
-            $ref: '#/definitions/LineageEdge'
+            $ref: '#/definitions/lineage.LineageEdge'
           type: array
       produces:
       - application/json
@@ -4097,12 +4818,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/BatchLineageResult'
+              $ref: '#/definitions/v1_lineage.BatchLineageResult'
             type: array
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Batch create lineage edges
       tags:
       - lineage
@@ -4118,22 +4839,22 @@ paths:
         name: edge
         required: true
         schema:
-          $ref: '#/definitions/LineageEdge'
+          $ref: '#/definitions/lineage.LineageEdge'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/LineageEdge'
+            $ref: '#/definitions/lineage.LineageEdge'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create direct lineage
       tags:
       - lineage
@@ -4157,11 +4878,11 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete direct lineage
       tags:
       - lineage
@@ -4182,205 +4903,18 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/LineageEdge'
+            $ref: '#/definitions/lineage.LineageEdge'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get direct lineage by ID
       tags:
       - lineage
-  /metrics:
-    get:
-      consumes:
-      - application/json
-      description: Get aggregated metrics for dashboard display
-      parameters:
-      - description: Start time (ISO 8601)
-        in: query
-        name: start
-        required: true
-        type: string
-      - description: End time (ISO 8601)
-        in: query
-        name: end
-        required: true
-        type: string
-      - collectionFormat: csv
-        description: Filter by metric names
-        in: query
-        items:
-          type: string
-        name: metric_names
-        type: array
-      - default: avg
-        description: Aggregation type
-        enum:
-        - avg
-        - sum
-        - max
-        - min
-        in: query
-        name: aggregation
-        type: string
-      - description: Time bucket size
-        enum:
-        - 1m
-        - 5m
-        - 1h
-        - 1d
-        in: query
-        name: bucket_size
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/GetMetricsResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "401":
-          description: Unauthorized
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Get metrics for UI
-      tags:
-      - metrics
-  /metrics/assets/by-owner:
-    get:
-      description: Get asset counts grouped by owner
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/AssetsByOwnerResponse'
-      summary: Get assets by owner
-      tags:
-      - metrics
-  /metrics/assets/by-provider:
-    get:
-      description: Get asset counts grouped by provider
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/AssetsByProviderResponse'
-      summary: Get assets by provider
-      tags:
-      - metrics
-  /metrics/assets/by-type:
-    get:
-      description: Get asset counts grouped by type
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/AssetsByTypeResponse'
-      summary: Get assets by type
-      tags:
-      - metrics
-  /metrics/assets/total:
-    get:
-      description: Get the total number of assets
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/TotalAssetsResponse'
-      summary: Get total assets count
-      tags:
-      - metrics
-  /metrics/assets/with-schemas:
-    get:
-      description: Get the count of assets that have schemas defined
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/AssetsWithSchemasResponse'
-      summary: Get assets with schemas count
-      tags:
-      - metrics
-  /metrics/top-assets:
-    get:
-      description: Get the most viewed assets
-      parameters:
-      - description: Start time (ISO 8601)
-        in: query
-        name: start
-        required: true
-        type: string
-      - description: End time (ISO 8601)
-        in: query
-        name: end
-        required: true
-        type: string
-      - default: 10
-        description: Number of results
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/AssetCount'
-            type: array
-      summary: Get top viewed assets
-      tags:
-      - metrics
-  /metrics/top-queries:
-    get:
-      description: Get the most popular search queries
-      parameters:
-      - description: Start time (ISO 8601)
-        in: query
-        name: start
-        required: true
-        type: string
-      - description: End time (ISO 8601)
-        in: query
-        name: end
-        required: true
-        type: string
-      - default: 10
-        description: Number of results
-        in: query
-        name: limit
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            items:
-              $ref: '#/definitions/QueryCount'
-            type: array
-      summary: Get top search queries
-      tags:
-      - metrics
   /oauth/token:
     post:
       consumes:
@@ -4409,19 +4943,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/TokenExchangeResponse'
+            $ref: '#/definitions/auth.tokenExchangeResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/OAuthErrorResponse'
+            $ref: '#/definitions/auth.oauthErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/OAuthErrorResponse'
+            $ref: '#/definitions/auth.oauthErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/OAuthErrorResponse'
+            $ref: '#/definitions/auth.oauthErrorResponse'
       summary: OAuth token endpoint
       tags:
       - auth
@@ -4447,15 +4981,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/SearchOwnersResponse'
+            $ref: '#/definitions/v1_teams.SearchOwnersResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Search owners
       tags:
       - owners
@@ -4474,10 +5008,147 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/DestroyRunResponse'
+            $ref: '#/definitions/v1_runs.DestroyRunResponse'
       summary: Destroy pipeline
       tags:
       - pipelines
+  /products:
+    post:
+      consumes:
+      - application/json
+      description: Create a new data product
+      parameters:
+      - description: Data product creation request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dataproduct.DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Create a data product
+      tags:
+      - products
+  /products/{id}:
+    delete:
+      description: Delete a data product from the system
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Delete a data product
+      tags:
+      - products
+    get:
+      description: Get detailed information about a specific data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get a data product
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Update an existing data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data product update request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Update a data product
+      tags:
+      - products
   /products/images/{id}:
     get:
       description: List all images for a data product
@@ -4498,11 +5169,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List product images
       tags:
       - products
@@ -4532,11 +5203,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete product image
       tags:
       - products
@@ -4566,11 +5237,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get product image
       tags:
       - products
@@ -4600,20 +5271,235 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ProductImageMeta'
+            $ref: '#/definitions/dataproduct.ProductImageMeta'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Upload product image
+      tags:
+      - products
+  /products/list:
+    get:
+      description: List all data products with pagination
+      parameters:
+      - description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.ListResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List data products
+      tags:
+      - products
+  /products/search:
+    get:
+      description: Search data products using query string and filters
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Filter by tags (comma-separated)
+        in: query
+        name: tags
+        type: string
+      - description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.ListResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Search data products
+      tags:
+      - products
+  /products/tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a single tag association from a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag ID to remove
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.RemoveProductTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Remove data product tag
+      tags:
+      - products
+    get:
+      description: Get all tags associated with a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List data product tags
+      tags:
+      - products
+    post:
+      consumes:
+      - application/json
+      description: Add a single tag association to a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag ID to add
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.AddProductTagRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Add a tag to a data product
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Atomically replace all tag associations for a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.ReplaceProductTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Replace data product tags
       tags:
       - products
   /runs:
@@ -4655,7 +5541,7 @@ paths:
                 type: array
               runs:
                 items:
-                  $ref: '#/definitions/PluginRun'
+                  $ref: '#/definitions/plugin.Run'
                 type: array
               total:
                 type: integer
@@ -4678,7 +5564,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/PluginRun'
+            $ref: '#/definitions/plugin.Run'
       summary: Get run
       tags:
       - runs
@@ -4715,7 +5601,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/RunEntitiesResponse'
+            $ref: '#/definitions/v1_runs.RunEntitiesResponse'
       summary: Get run entities
       tags:
       - runs
@@ -4730,14 +5616,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/BatchCreateRequest'
+          $ref: '#/definitions/v1_runs.BatchCreateRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/BatchCreateResponse'
+            $ref: '#/definitions/v1_runs.BatchCreateResponse'
       summary: Batch create assets
       tags:
       - runs
@@ -4765,7 +5651,7 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/CompleteRunRequest'
+          $ref: '#/definitions/v1_runs.CompleteRunRequest'
       produces:
       - application/json
       responses:
@@ -4789,14 +5675,14 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/StartRunRequest'
+          $ref: '#/definitions/v1_runs.StartRunRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/PluginRun'
+            $ref: '#/definitions/plugin.Run'
       summary: Start run
       tags:
       - runs
@@ -4832,15 +5718,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/SearchResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_search.Response'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Unified search
       tags:
       - search
@@ -4860,11 +5746,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ListSSOMappingsResponse'
+            $ref: '#/definitions/v1_teams.ListSSOMappingsResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List SSO team mappings
       tags:
       - sso
@@ -4878,26 +5764,26 @@ paths:
         name: mapping
         required: true
         schema:
-          $ref: '#/definitions/CreateSSOMappingRequest'
+          $ref: '#/definitions/v1_teams.CreateSSOMappingRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/SSOTeamMapping'
+            $ref: '#/definitions/team.SSOTeamMapping'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create an SSO team mapping
       tags:
       - sso
@@ -4918,15 +5804,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/MessageResponse'
+            $ref: '#/definitions/v1_teams.MessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete an SSO team mapping
       tags:
       - sso
@@ -4946,15 +5832,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/SSOTeamMapping'
+            $ref: '#/definitions/team.SSOTeamMapping'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get an SSO team mapping
       tags:
       - sso
@@ -4973,29 +5859,180 @@ paths:
         name: mapping
         required: true
         schema:
-          $ref: '#/definitions/UpdateSSOMappingRequest'
+          $ref: '#/definitions/v1_teams.UpdateSSOMappingRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/MessageResponse'
+            $ref: '#/definitions/v1_teams.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update an SSO team mapping
       tags:
       - sso
+  /tags:
+    get:
+      description: Retrieve a list of all tags in the catalog
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: List all tags
+      tags:
+      - tags
+    post:
+      consumes:
+      - application/json
+      description: Create a new tag in the catalog
+      parameters:
+      - description: Tag to create
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_tags.TagRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Create a tag
+      tags:
+      - tags
+  /tags/{id}:
+    delete:
+      description: Delete a tag from the catalog (removes all associations)
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Delete a tag
+      tags:
+      - tags
+    get:
+      description: Retrieve a single tag by its ID
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Get a tag
+      tags:
+      - tags
+    put:
+      consumes:
+      - application/json
+      description: Update an existing tag's name or description
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated tag fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_tags.TagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
+      summary: Update a tag
+      tags:
+      - tags
   /teams:
     get:
       consumes:
@@ -5018,11 +6055,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ListTeamsResponse'
+            $ref: '#/definitions/v1_teams.ListTeamsResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List teams
       tags:
       - teams
@@ -5036,26 +6073,26 @@ paths:
         name: team
         required: true
         schema:
-          $ref: '#/definitions/CreateTeamRequest'
+          $ref: '#/definitions/v1_teams.CreateTeamRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/Team'
+            $ref: '#/definitions/team.Team'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create a team
       tags:
       - teams
@@ -5076,19 +6113,19 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/MessageResponse'
+            $ref: '#/definitions/v1_teams.MessageResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete a team
       tags:
       - teams
@@ -5108,15 +6145,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/Team'
+            $ref: '#/definitions/team.Team'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get a team
       tags:
       - teams
@@ -5135,34 +6172,34 @@ paths:
         name: team
         required: true
         schema:
-          $ref: '#/definitions/UpdateTeamRequest'
+          $ref: '#/definitions/v1_teams.UpdateTeamRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/MessageResponse'
+            $ref: '#/definitions/v1_teams.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update a team
       tags:
       - teams
@@ -5183,11 +6220,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ListMembersResponse'
+            $ref: '#/definitions/v1_teams.ListMembersResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List team members
       tags:
       - teams
@@ -5206,30 +6243,30 @@ paths:
         name: member
         required: true
         schema:
-          $ref: '#/definitions/AddMemberRequest'
+          $ref: '#/definitions/v1_teams.AddMemberRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/MessageResponse'
+            $ref: '#/definitions/v1_teams.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "403":
           description: Forbidden
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Add a team member
       tags:
       - teams
@@ -5255,15 +6292,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/MessageResponse'
+            $ref: '#/definitions/v1_teams.MessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Remove a team member
       tags:
       - teams
@@ -5289,15 +6326,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/MessageResponse'
+            $ref: '#/definitions/v1_teams.MessageResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Convert member to manual
       tags:
       - teams
@@ -5322,26 +6359,26 @@ paths:
         name: role
         required: true
         schema:
-          $ref: '#/definitions/UpdateMemberRoleRequest'
+          $ref: '#/definitions/v1_teams.UpdateMemberRoleRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/MessageResponse'
+            $ref: '#/definitions/v1_teams.MessageResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update member role
       tags:
       - teams
@@ -5354,7 +6391,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/UIConfigResponse'
+            $ref: '#/definitions/v1_ui.UIConfigResponse'
       summary: Get UI configuration
       tags:
       - ui
@@ -5395,11 +6432,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ListUsersResponse'
+            $ref: '#/definitions/v1_users.ListUsersResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List users
       tags:
       - users
@@ -5413,22 +6450,22 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/CreateUserInput'
+          $ref: '#/definitions/user.CreateUserInput'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/User'
+            $ref: '#/definitions/user.User'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "409":
           description: Conflict
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create a new user
       tags:
       - users
@@ -5451,11 +6488,11 @@ paths:
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete a user
       tags:
       - users
@@ -5475,15 +6512,15 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/User'
+            $ref: '#/definitions/user.User'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Get a user by ID
       tags:
       - users
@@ -5502,22 +6539,22 @@ paths:
         name: user
         required: true
         schema:
-          $ref: '#/definitions/UpdateUserInput'
+          $ref: '#/definitions/user.UpdateUserInput'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/User'
+            $ref: '#/definitions/user.User'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "404":
           description: Not Found
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update a user
       tags:
       - users
@@ -5533,12 +6570,12 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/APIKey'
+              $ref: '#/definitions/user.APIKey'
             type: array
         "500":
           description: Internal Server Error
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: List API keys
       tags:
       - users
@@ -5552,18 +6589,18 @@ paths:
         name: key
         required: true
         schema:
-          $ref: '#/definitions/CreateAPIKeyRequest'
+          $ref: '#/definitions/v1_users.CreateAPIKeyRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/APIKey'
+            $ref: '#/definitions/user.APIKey'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Create API key
       tags:
       - users
@@ -5586,7 +6623,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Delete API key
       tags:
       - users
@@ -5601,22 +6638,22 @@ paths:
         name: credentials
         required: true
         schema:
-          $ref: '#/definitions/LoginRequest'
+          $ref: '#/definitions/v1_users.LoginRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/TokenResponse'
+            $ref: '#/definitions/v1_users.TokenResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Login user
       tags:
       - users
@@ -5631,11 +6668,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/User'
+            $ref: '#/definitions/user.User'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       security:
       - BearerAuth: []
       summary: Get current user profile
@@ -5652,7 +6689,7 @@ paths:
         name: link
         required: true
         schema:
-          $ref: '#/definitions/OAuthLinkRequest'
+          $ref: '#/definitions/v1_users.OAuthLinkRequest'
       produces:
       - application/json
       responses:
@@ -5661,7 +6698,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Link OAuth account
       tags:
       - users
@@ -5689,7 +6726,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Unlink OAuth account
       tags:
       - users
@@ -5714,7 +6751,7 @@ paths:
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update user preferences
       tags:
       - users
@@ -5729,22 +6766,22 @@ paths:
         name: request
         required: true
         schema:
-          $ref: '#/definitions/UpdatePasswordRequest'
+          $ref: '#/definitions/v1_users.UpdatePasswordRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/TokenResponse'
+            $ref: '#/definitions/v1_users.TokenResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
         "401":
           description: Unauthorized
           schema:
-            $ref: '#/definitions/ErrorResponse'
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_api_v1_common.ErrorResponse'
       summary: Update user password
       tags:
       - users

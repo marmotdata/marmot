@@ -50,7 +50,8 @@ export function processDbtSchema(schemaSection: unknown): Field[] {
 			description: col.description,
 			// dbt doesn't have required/optional concept - all columns exist in the table
 			// Leave required undefined so the UI doesn't show the badge
-			indentLevel: 0
+			indentLevel: 0,
+			isLeaf: true
 		});
 	}
 

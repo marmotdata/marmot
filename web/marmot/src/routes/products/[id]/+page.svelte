@@ -25,7 +25,9 @@
 	import IconUploader from '$components/product/IconUploader.svelte';
 	import { auth } from '$lib/stores/auth';
 	import { createKeyboardNavigationState } from '$lib/keyboard';
-	import Tags from '$components/shared/Tags.svelte';
+	import TagPicker from '$components/shared/TagPicker.svelte';
+	import TagBadge from '$components/shared/TagBadge.svelte';
+	import { replaceDataProductTags } from '$lib/dataproducts/api';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 
 	let productId = $derived($page.params.id);
@@ -88,6 +90,8 @@
 	let currentAssetPage = $state(1);
 
 	let canManage = $derived(auth.hasPermission('assets', 'manage'));
+
+	let tagPickerAnchor = $state<DOMRect | null>(null);
 
 	// Description editing state
 	let editedDescription = $state('');
@@ -554,7 +558,7 @@
 
 			if (response.ok) {
 				const updated = await response.json();
-				updated.tags = updated.tags || [];
+				updated.tags = product.tags;
 				updated.owners = updated.owners || [];
 				updated.rules = updated.rules || [];
 				product = updated;
@@ -581,7 +585,7 @@
 
 			if (response.ok) {
 				const updated = await response.json();
-				updated.tags = updated.tags || [];
+				updated.tags = product.tags;
 				updated.owners = updated.owners || [];
 				updated.rules = updated.rules || [];
 				product = updated;
@@ -589,6 +593,12 @@
 		} catch (err) {
 			console.error('Failed to update owners:', err);
 		}
+	}
+
+	async function handleSaveProductTags(tagIds: string[]): Promise<void> {
+		if (!product) return;
+		await replaceDataProductTags(product.id, tagIds);
+		await loadDataProduct(false);
 	}
 
 	onMount(() => {
@@ -735,11 +745,32 @@
 									<span class="text-xs font-medium text-gray-400 uppercase tracking-wide">Tags</span
 									>
 								</div>
-								<Tags
-									tags={product.tags ?? []}
-									endpoint="/products"
-									id={product.id}
-									canEdit={canManage}
+								<div class="flex items-center gap-1.5 flex-wrap group">
+									{#each product.tags ?? [] as tag (tag.name)}
+										<TagBadge name={tag.name} title={tag.description || tag.name} />
+									{/each}
+									{#if canManage}
+										<button
+											onclick={(e) => {
+												tagPickerAnchor = (e.currentTarget as HTMLElement).getBoundingClientRect();
+											}}
+											class="flex-shrink-0 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+											title={(product.tags ?? []).length === 0 ? 'Add tags' : 'Edit tags'}
+										>
+											<IconifyIcon icon="material-symbols:edit" class="w-3.5 h-3.5" />
+										</button>
+									{/if}
+								</div>
+								<TagPicker
+									anchorRect={tagPickerAnchor}
+									title={product.name}
+									assignedTagIds={(product.tags ?? []).map((t) => t.id)}
+									onSave={async (ids) => {
+										await handleSaveProductTags(ids);
+									}}
+									onClose={() => {
+										tagPickerAnchor = null;
+									}}
 								/>
 							</div>
 							<div>
