@@ -8,7 +8,7 @@ title: CLI Reference
 The Marmot CLI lets you interact with your data catalog directly from the terminal.
 
 import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
-import { Steps, Step, Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
+import { CliInstall } from '@site/src/components/CliInstall';
 
 <CalloutCard
   title="Looking for Ingestion?"
@@ -20,35 +20,7 @@ import { Steps, Step, Tabs, TabPanel, TipBox } from '@site/src/components/Steps'
 
 ## Installation
 
-<Tabs items={[
-{ label: "Automatic", value: "auto", icon: "mdi:download" },
-{ label: "Manual", value: "manual", icon: "mdi:folder-download" }
-]}>
-<TabPanel>
-
-**Homebrew**
-
-```bash
-brew install marmot
-```
-
-**Install script**
-
-```bash
-curl -fsSL get.marmotdata.io | sh
-```
-
-</TabPanel>
-<TabPanel>
-
-Download the latest binary for your platform from [GitHub Releases](https://github.com/marmotdata/marmot/releases), then:
-
-```bash
-chmod +x marmot && sudo mv marmot /usr/local/bin/
-```
-
-</TabPanel>
-</Tabs>
+<CliInstall />
 
 ---
 

@@ -8,53 +8,12 @@ title: CLI / Binary
 Run Marmot directly on your system using the single binary.
 
 import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
-import { Steps, Step, Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
+import { Steps, Step, TipBox } from '@site/src/components/Steps';
+import { CliInstall } from '@site/src/components/CliInstall';
 
 ## Installation
 
-<Tabs items={[
-{ label: "Automatic", value: "auto", icon: "mdi:download" },
-{ label: "Manual", value: "manual", icon: "mdi:folder-download" }
-]}>
-<TabPanel>
-
-Install Marmot with the installation script:
-
-```bash
-curl -fsSL get.marmotdata.io | sh
-```
-
-<TipBox variant="info" title="Verify Scripts">
-It's good practice to inspect the contents of any script before piping it into bash.
-</TipBox>
-
-</TabPanel>
-<TabPanel>
-
-<Steps>
-<Step title="Download the binary">
-
-Download the latest Marmot binary for your platform from [GitHub Releases](https://github.com/marmotdata/marmot/releases).
-
-</Step>
-<Step title="Make it executable">
-
-```bash
-chmod +x marmot
-```
-
-</Step>
-<Step title="Move to your PATH">
-
-```bash
-sudo mv marmot /usr/local/bin/
-```
-
-</Step>
-</Steps>
-
-</TabPanel>
-</Tabs>
+<CliInstall />
 
 ---
 
