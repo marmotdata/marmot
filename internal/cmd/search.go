@@ -3,7 +3,7 @@ package cmd
 import (
 	"strings"
 
-	"github.com/marmotdata/marmot/client/client/search"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
 )
@@ -18,23 +18,22 @@ var searchCmd = &cobra.Command{
 		types, _ := cmd.Flags().GetStringSlice("types")
 
 		p := getPrinter()
-		c := newSwaggerClient()
-
-		params := search.NewGetSearchParams()
-		params.SetQ(args[0])
-		params.SetLimit(int64Ptr(limit))
-		params.SetOffset(int64Ptr(offset))
-		if len(types) > 0 {
-			params.SetTypes(types)
+		c, err := newClient()
+		if err != nil {
+			return err
 		}
 
-		resp, err := c.Search.GetSearch(params)
+		results, err := c.Search.Query(cmd.Context(), args[0], marmot.SearchOptions{
+			Types:  types,
+			Limit:  int64(limit),
+			Offset: int64(offset),
+		})
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(results)
 			if err != nil {
 				return err
 			}
@@ -42,14 +41,14 @@ var searchCmd = &cobra.Command{
 		}
 
 		t := output.NewTable("ID", "NAME", "TYPE", "DESCRIPTION")
-		for _, r := range resp.Payload.Results {
+		for _, r := range results.Results {
 			desc := r.Description
 			if len(desc) > 60 {
 				desc = desc[:57] + "..."
 			}
 			t.AddRow(r.ID, r.Name, string(r.Type), desc)
 		}
-		t.SetFooter("Showing %d of %d results", len(resp.Payload.Results), resp.Payload.Total)
+		t.SetFooter("Showing %d of %d results", len(results.Results), results.Total)
 		p.PrintTable(t)
 		return nil
 	},

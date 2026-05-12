@@ -5,7 +5,6 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
@@ -31,14 +30,13 @@ type RemoveTermRequest struct {
 // @Success 200 {array} asset.AssetTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/{id}/terms [post]
+// @Router /assets/terms/{id} [post]
 func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/assets/terms/"), "/")
-	if len(parts) < 1 || parts[0] == "" {
-		common.RespondError(w, http.StatusBadRequest, "Invalid path")
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Asset ID is required")
 		return
 	}
-	id := parts[0]
 
 	var input AddTermsRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -90,14 +88,13 @@ func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {array} asset.AssetTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/{id}/terms [delete]
+// @Router /assets/terms/{id} [delete]
 func (h *Handler) removeTerm(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/assets/terms/"), "/")
-	if len(parts) < 1 || parts[0] == "" {
-		common.RespondError(w, http.StatusBadRequest, "Invalid path")
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Asset ID is required")
 		return
 	}
-	id := parts[0]
 
 	var input RemoveTermRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -139,14 +136,13 @@ func (h *Handler) removeTerm(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Asset ID"
 // @Success 200 {array} asset.AssetTerm
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/{id}/terms [get]
+// @Router /assets/terms/{id} [get]
 func (h *Handler) getAssetTerms(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/assets/terms/"), "/")
-	if len(parts) < 1 || parts[0] == "" {
-		common.RespondError(w, http.StatusBadRequest, "Invalid path")
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Asset ID is required")
 		return
 	}
-	id := parts[0]
 
 	terms, err := h.assetService.GetTerms(r.Context(), id)
 	if err != nil {

@@ -28,7 +28,6 @@ const (
 )
 
 var (
-	ErrRunNotFound   = errors.New("run not found")
 	ErrInvalidInput  = errors.New("invalid input")
 	ErrInvalidStatus = errors.New("invalid status transition")
 )
@@ -750,8 +749,8 @@ func (s *service) GetRun(ctx context.Context, id string) (*plugin.Run, error) {
 
 	run, err := s.repo.Get(ctx, id)
 	if err != nil {
-		if errors.Is(err, ErrRunNotFound) {
-			return nil, ErrRunNotFound
+		if errors.Is(err, ErrNotFound) {
+			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("getting run: %w", err)
 	}
@@ -773,8 +772,8 @@ func (s *service) ListRunEntities(ctx context.Context, runID, entityType, status
 
 	run, err := s.repo.Get(ctx, runID)
 	if err != nil {
-		if errors.Is(err, ErrRunNotFound) {
-			return nil, 0, ErrRunNotFound
+		if errors.Is(err, ErrNotFound) {
+			return nil, 0, ErrNotFound
 		}
 		return nil, 0, fmt.Errorf("getting run: %w", err)
 	}

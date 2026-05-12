@@ -3,7 +3,6 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/marmotdata/marmot/client/client/admin"
 	"github.com/spf13/cobra"
 )
 
@@ -16,13 +15,16 @@ var adminReindexCmd = &cobra.Command{
 	Use:   "reindex",
 	Short: "Trigger a search reindex",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := newSwaggerClient()
-		resp, err := c.Admin.PostAdminSearchReindex(admin.NewPostAdminSearchReindexParams())
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+		resp, err := c.Admin.Reindex(cmd.Context())
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Reindex started: %s\n", resp.Payload.Status)
+		fmt.Printf("Reindex started: %s\n", resp.Status)
 		return nil
 	},
 }
@@ -32,18 +34,20 @@ var adminReindexStatusCmd = &cobra.Command{
 	Short: "Check search reindex status",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		resp, err := c.Admin.GetAdminSearchReindex(admin.NewGetAdminSearchReindexParams())
+		status, err := c.Admin.ReindexStatus(cmd.Context())
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			return p.PrintJSON(resp.Payload)
+			return p.PrintJSON(status)
 		}
 
-		status := resp.Payload
 		fmt.Printf("ES Configured: %v\n", status.EsConfigured)
 		fmt.Printf("Running:       %v\n", status.Running)
 		return nil

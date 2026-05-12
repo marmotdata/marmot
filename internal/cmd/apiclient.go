@@ -3,48 +3,31 @@ package cmd
 import (
 	"encoding/json"
 	"fmt"
-	"net/url"
 
-	httptransport "github.com/go-openapi/runtime/client"
-	"github.com/go-openapi/strfmt"
-	apiclient "github.com/marmotdata/marmot/client/client"
+	marmot "github.com/marmotdata/marmot/sdk/go"
+	"github.com/marmotdata/marmot/sdk/go/auth"
 )
 
-// newSwaggerClient creates a go-swagger Marmot client configured from viper.
-func newSwaggerClient() *apiclient.Marmot {
-	host := getHost()
-
-	u, err := url.Parse(host)
-	if err != nil {
-		u = &url.URL{Host: "localhost:8080", Scheme: "http"}
-	}
-
-	hostWithPort := u.Host
-	scheme := u.Scheme
-	if scheme == "" {
-		scheme = "http"
-	}
-
-	cfg := apiclient.DefaultTransportConfig().
-		WithHost(hostWithPort).
-		WithBasePath("/api/v1").
-		WithSchemes([]string{scheme})
-
-	transport := httptransport.New(cfg.Host, cfg.BasePath, cfg.Schemes)
-	token, isSAToken := getAuthToken()
+// newClient builds an SDK client configured from the active CLI context.
+func newClient() (*marmot.Client, error) {
+	token, isBearer := getAuthToken()
+	opts := marmot.ClientOptions{Host: getHost()}
 	if token != "" {
-		if isSAToken {
-			transport.DefaultAuthentication = httptransport.BearerToken(token)
+		if isBearer {
+			opts.Credential = auth.Bearer(token)
 		} else {
-			transport.DefaultAuthentication = httptransport.APIKeyAuth("X-API-Key", "header", token)
+			opts.Credential = auth.APIKey(token)
 		}
 	}
-
-	return apiclient.New(transport, strfmt.Default)
+	c, err := marmot.NewClient(opts)
+	if err != nil {
+		return nil, fmt.Errorf("connect: %w", err)
+	}
+	return c, nil
 }
 
-// marshalPayload marshals any go-swagger payload to JSON bytes for raw output.
-func marshalPayload(v interface{}) ([]byte, error) {
+// marshalPayload marshals any SDK payload to JSON bytes for raw output.
+func marshalPayload(v any) ([]byte, error) {
 	data, err := json.Marshal(v)
 	if err != nil {
 		return nil, fmt.Errorf("marshalling response: %w", err)

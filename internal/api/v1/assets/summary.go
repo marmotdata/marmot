@@ -4,13 +4,16 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/rs/zerolog/log"
 )
 
+// AssetSummaryResponse mirrors the shape served by /assets/summary. Each
+// entry under Types includes a count and the provider that contributed it.
 type AssetSummaryResponse struct {
-	Types    map[string]int `json:"types"`
-	Services map[string]int `json:"services"`
-	Tags     map[string]int `json:"tags"`
+	Types     map[string]asset.AssetTypeSummary `json:"types"`
+	Providers map[string]int                    `json:"providers"`
+	Tags      map[string]int                    `json:"tags"`
 }
 
 // @Summary Get asset summary

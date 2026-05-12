@@ -2,6 +2,7 @@ package runs
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -321,6 +322,10 @@ func (h *Handler) getRunEntities(w http.ResponseWriter, r *http.Request) {
 
 	entities, total, err := h.runService.ListRunEntities(r.Context(), runID, entityType, status, limit, offset)
 	if err != nil {
+		if errors.Is(err, runs.ErrNotFound) {
+			common.RespondError(w, http.StatusNotFound, "Run not found")
+			return
+		}
 		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to list run entities: %v", err))
 		return
 	}
@@ -444,7 +449,7 @@ func (h *Handler) getRun(w http.ResponseWriter, r *http.Request) {
 
 	run, err := h.runService.GetRun(r.Context(), runID)
 	if err != nil {
-		if err.Error() == "run not found" {
+		if errors.Is(err, runs.ErrNotFound) {
 			common.RespondError(w, http.StatusNotFound, "Run not found")
 		} else {
 			common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to get run: %v", err))

@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/marmotdata/marmot/client/client/users"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
 )
@@ -19,23 +19,24 @@ var usersMeCmd = &cobra.Command{
 	Short: "Show the currently authenticated user",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := users.NewGetUsersMeParams()
-		resp, err := c.Users.GetUsersMe(params, nil)
+		u, err := c.Users.Me(cmd.Context())
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(u)
 			if err != nil {
 				return err
 			}
 			return p.PrintRaw(data)
 		}
 
-		u := resp.Payload
 		t := output.NewTable("FIELD", "VALUE")
 		t.AddRow("ID", u.ID)
 		t.AddRow("Username", u.Username)
@@ -59,19 +60,18 @@ var usersListCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := users.NewGetUsersParams()
-		params.SetLimit(int64Ptr(limit))
-		params.SetOffset(int64Ptr(offset))
-
-		resp, err := c.Users.GetUsers(params)
+		resp, err := c.Users.List(cmd.Context(), marmot.UsersListOptions{Limit: int64(limit), Offset: int64(offset)})
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
@@ -79,14 +79,14 @@ var usersListCmd = &cobra.Command{
 		}
 
 		t := output.NewTable("ID", "USERNAME", "NAME", "ACTIVE", "ROLES")
-		for _, u := range resp.Payload.Users {
+		for _, u := range resp.Users {
 			roles := make([]string, len(u.Roles))
 			for i, r := range u.Roles {
 				roles[i] = r.Name
 			}
 			t.AddRow(u.ID, u.Username, u.Name, fmt.Sprintf("%v", u.Active), strings.Join(roles, ", "))
 		}
-		t.SetFooter("Showing %d of %d users", len(resp.Payload.Users), resp.Payload.Total)
+		t.SetFooter("Showing %d of %d users", len(resp.Users), resp.Total)
 		p.PrintTable(t)
 		return nil
 	},
@@ -98,25 +98,24 @@ var usersGetCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := users.NewGetUsersIDParams()
-		params.SetID(args[0])
-
-		resp, err := c.Users.GetUsersID(params)
+		u, err := c.Users.Get(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(u)
 			if err != nil {
 				return err
 			}
 			return p.PrintRaw(data)
 		}
 
-		u := resp.Payload
 		t := output.NewTable("FIELD", "VALUE")
 		t.AddRow("ID", u.ID)
 		t.AddRow("Username", u.Username)

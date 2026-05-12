@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/marmotdata/marmot/client/client/runs"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
 )
@@ -24,27 +24,26 @@ var runsListCmd = &cobra.Command{
 		statuses, _ := cmd.Flags().GetStringSlice("statuses")
 
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := runs.NewGetRunsParams()
-		params.SetLimit(int64Ptr(limit))
-		params.SetOffset(int64Ptr(offset))
+		opts := marmot.RunsListOptions{Limit: int64(limit), Offset: int64(offset)}
 		if len(pipelines) > 0 {
-			joined := strings.Join(pipelines, ",")
-			params.SetPipelines(&joined)
+			opts.Pipelines = strings.Join(pipelines, ",")
 		}
 		if len(statuses) > 0 {
-			joined := strings.Join(statuses, ",")
-			params.SetStatuses(&joined)
+			opts.Statuses = strings.Join(statuses, ",")
 		}
 
-		resp, err := c.Runs.GetRuns(params)
+		resp, err := c.Runs.List(cmd.Context(), opts)
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
@@ -52,7 +51,7 @@ var runsListCmd = &cobra.Command{
 		}
 
 		t := output.NewTable("ID", "PIPELINE", "SOURCE", "STATUS", "STARTED", "COMPLETED")
-		for _, r := range resp.Payload.Runs {
+		for _, r := range resp.Runs {
 			t.AddRow(
 				r.RunID,
 				r.PipelineName,
@@ -62,7 +61,7 @@ var runsListCmd = &cobra.Command{
 				r.CompletedAt,
 			)
 		}
-		t.SetFooter("Showing %d of %d runs", len(resp.Payload.Runs), resp.Payload.Total)
+		t.SetFooter("Showing %d of %d runs", len(resp.Runs), resp.Total)
 		p.PrintTable(t)
 		return nil
 	},
@@ -74,25 +73,24 @@ var runsGetCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := runs.NewGetRunsIDParams()
-		params.SetID(args[0])
-
-		resp, err := c.Runs.GetRunsID(params)
+		r, err := c.Runs.Get(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(r)
 			if err != nil {
 				return err
 			}
 			return p.PrintRaw(data)
 		}
 
-		r := resp.Payload
 		t := output.NewTable("FIELD", "VALUE")
 		t.AddRow("Run ID", r.RunID)
 		t.AddRow("Pipeline", r.PipelineName)
@@ -125,20 +123,18 @@ var runsEntitiesCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := runs.NewGetRunsIDEntitiesParams()
-		params.SetID(args[0])
-		params.SetLimit(int64Ptr(limit))
-		params.SetOffset(int64Ptr(offset))
-
-		resp, err := c.Runs.GetRunsIDEntities(params)
+		resp, err := c.Runs.Entities(cmd.Context(), args[0], marmot.RunEntitiesOptions{Limit: int64(limit), Offset: int64(offset)})
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
@@ -146,23 +142,21 @@ var runsEntitiesCmd = &cobra.Command{
 		}
 
 		t := output.NewTable("TYPE", "MRN", "NAME", "STATUS")
-		for _, e := range resp.Payload.Entities {
+		for _, e := range resp.Entities {
 			t.AddRow(e.EntityType, e.EntityMrn, e.EntityName, e.Status)
 		}
-		t.SetFooter("Showing %d of %d entities", len(resp.Payload.Entities), resp.Payload.Total)
+		t.SetFooter("Showing %d of %d entities", len(resp.Entities), resp.Total)
 		p.PrintTable(t)
 		return nil
 	},
 }
 
 func init() {
-	// list
 	runsListCmd.Flags().Int("limit", 20, "Maximum number of results")
 	runsListCmd.Flags().Int("offset", 0, "Offset for pagination")
 	runsListCmd.Flags().StringSlice("pipelines", nil, "Filter by pipeline names")
 	runsListCmd.Flags().StringSlice("statuses", nil, "Filter by statuses: "+strings.Join([]string{"running", "completed", "failed", "cancelled"}, ", "))
 
-	// entities
 	runsEntitiesCmd.Flags().Int("limit", 20, "Maximum number of results")
 	runsEntitiesCmd.Flags().Int("offset", 0, "Offset for pagination")
 

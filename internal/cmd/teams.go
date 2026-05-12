@@ -3,7 +3,7 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/marmotdata/marmot/client/client/teams"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
 )
@@ -20,19 +20,18 @@ var teamsListCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := teams.NewGetTeamsParams()
-		params.SetLimit(int64Ptr(limit))
-		params.SetOffset(int64Ptr(offset))
-
-		resp, err := c.Teams.GetTeams(params)
+		resp, err := c.Teams.List(cmd.Context(), marmot.TeamsListOptions{Limit: int64(limit), Offset: int64(offset)})
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
@@ -40,14 +39,14 @@ var teamsListCmd = &cobra.Command{
 		}
 
 		t := output.NewTable("ID", "NAME", "DESCRIPTION")
-		for _, team := range resp.Payload.Teams {
+		for _, team := range resp.Teams {
 			desc := team.Description
 			if len(desc) > 60 {
 				desc = desc[:57] + "..."
 			}
 			t.AddRow(team.ID, team.Name, desc)
 		}
-		t.SetFooter("Showing %d of %d teams", len(resp.Payload.Teams), resp.Payload.Total)
+		t.SetFooter("Showing %d of %d teams", len(resp.Teams), resp.Total)
 		p.PrintTable(t)
 		return nil
 	},
@@ -59,25 +58,24 @@ var teamsGetCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := teams.NewGetTeamsIDParams()
-		params.SetID(args[0])
-
-		resp, err := c.Teams.GetTeamsID(params)
+		team, err := c.Teams.Get(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(team)
 			if err != nil {
 				return err
 			}
 			return p.PrintRaw(data)
 		}
 
-		team := resp.Payload
 		t := output.NewTable("FIELD", "VALUE")
 		t.AddRow("ID", team.ID)
 		t.AddRow("Name", team.Name)
@@ -95,31 +93,31 @@ var teamsMembersCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := teams.NewGetTeamsIDMembersParams()
-		params.SetID(args[0])
-
-		resp, err := c.Teams.GetTeamsIDMembers(params)
+		resp, err := c.Teams.Members(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
 			return p.PrintRaw(data)
 		}
 
-		if len(resp.Payload.Members) == 0 {
+		if len(resp.Members) == 0 {
 			fmt.Println("No members found.")
 			return nil
 		}
 
 		t := output.NewTable("USER ID", "USERNAME", "NAME", "ROLE", "JOINED")
-		for _, m := range resp.Payload.Members {
+		for _, m := range resp.Members {
 			t.AddRow(m.UserID, m.Username, m.Name, m.Role, m.JoinedAt)
 		}
 		p.PrintTable(t)

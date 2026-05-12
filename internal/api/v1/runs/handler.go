@@ -95,7 +95,7 @@ func (h *Handler) Routes() []common.Route {
 			},
 		},
 		{
-			Path:    "/api/v1/runs/entities/{id}",
+			Path:    "/api/v1/runs/{id}/entities",
 			Method:  http.MethodGet,
 			Handler: h.getRunEntities,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{

@@ -6,8 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/marmotdata/marmot/client/client/users"
-	"github.com/marmotdata/marmot/client/models"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
 )
@@ -22,22 +21,24 @@ var apikeysListCmd = &cobra.Command{
 	Short: "List your API keys",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		resp, err := c.Users.GetUsersApikeys(users.NewGetUsersApikeysParams())
+		keys, err := c.APIKeys.List(cmd.Context())
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(keys)
 			if err != nil {
 				return err
 			}
 			return p.PrintRaw(data)
 		}
 
-		keys := resp.Payload
 		if len(keys) == 0 {
 			fmt.Println("No API keys found.")
 			return nil
@@ -61,19 +62,16 @@ var apikeysCreateCmd = &cobra.Command{
 	Short: "Create a new API key",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := newSwaggerClient()
-
-		params := users.NewPostUsersApikeysParams()
-		params.SetKey(&models.V1UsersCreateAPIKeyRequest{
-			Name: strPtr(args[0]),
-		})
-
-		resp, err := c.Users.PostUsersApikeys(params)
+		c, err := newClient()
 		if err != nil {
 			return err
 		}
 
-		key := resp.Payload
+		key, err := c.APIKeys.Create(cmd.Context(), marmot.CreateAPIKeyInput{Name: args[0]})
+		if err != nil {
+			return err
+		}
+
 		fmt.Printf("API key created successfully.\n\n")
 		fmt.Printf("  Name: %s\n", key.Name)
 		fmt.Printf("  Key:  %s\n\n", key.Key)
@@ -88,7 +86,10 @@ var apikeysDeleteCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		yes, _ := cmd.Flags().GetBool("yes")
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
 		if !yes {
 			fmt.Printf("Are you sure you want to delete API key %s? (y/N): ", args[0])
@@ -101,9 +102,7 @@ var apikeysDeleteCmd = &cobra.Command{
 			}
 		}
 
-		params := users.NewDeleteUsersApikeysIDParams()
-		params.SetID(args[0])
-		if _, err := c.Users.DeleteUsersApikeysID(params); err != nil {
+		if err := c.APIKeys.Delete(cmd.Context(), args[0]); err != nil {
 			return err
 		}
 

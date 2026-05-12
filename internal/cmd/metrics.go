@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marmotdata/marmot/client/client/metrics"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
 )
@@ -50,30 +50,33 @@ var metricsSummaryCmd = &cobra.Command{
 	Short: "Show combined metrics summary",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
-
-		totalResp, err := c.Metrics.GetAPIV1MetricsAssetsTotal(metrics.NewGetAPIV1MetricsAssetsTotalParams())
+		c, err := newClient()
 		if err != nil {
 			return err
 		}
-		byTypeResp, err := c.Metrics.GetAPIV1MetricsAssetsByType(metrics.NewGetAPIV1MetricsAssetsByTypeParams())
+
+		total, err := c.Metrics.TotalAssets(cmd.Context())
+		if err != nil {
+			return err
+		}
+		byType, err := c.Metrics.AssetsByType(cmd.Context())
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			combined := map[string]interface{}{
-				"total_assets":   totalResp.Payload,
-				"assets_by_type": byTypeResp.Payload,
+			combined := map[string]any{
+				"total_assets":   total,
+				"assets_by_type": byType,
 			}
 			return p.PrintJSON(combined)
 		}
 
-		fmt.Printf("Total Assets: %d\n\n", totalResp.Payload.Count)
+		fmt.Printf("Total Assets: %d\n\n", total.Count)
 
-		if len(byTypeResp.Payload.Assets) > 0 {
+		if len(byType.Assets) > 0 {
 			t := output.NewTable("TYPE", "COUNT")
-			for k, v := range byTypeResp.Payload.Assets {
+			for k, v := range byType.Assets {
 				t.AddRow(k, fmt.Sprintf("%d", v))
 			}
 			p.PrintTable(t)
@@ -87,15 +90,18 @@ var metricsByTypeCmd = &cobra.Command{
 	Short: "Show assets grouped by type",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		resp, err := c.Metrics.GetAPIV1MetricsAssetsByType(metrics.NewGetAPIV1MetricsAssetsByTypeParams())
+		resp, err := c.Metrics.AssetsByType(cmd.Context())
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
@@ -103,7 +109,7 @@ var metricsByTypeCmd = &cobra.Command{
 		}
 
 		t := output.NewTable("TYPE", "COUNT")
-		for k, v := range resp.Payload.Assets {
+		for k, v := range resp.Assets {
 			t.AddRow(k, fmt.Sprintf("%d", v))
 		}
 		p.PrintTable(t)
@@ -116,15 +122,18 @@ var metricsByProviderCmd = &cobra.Command{
 	Short: "Show assets grouped by provider",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		resp, err := c.Metrics.GetAPIV1MetricsAssetsByProvider(metrics.NewGetAPIV1MetricsAssetsByProviderParams())
+		resp, err := c.Metrics.AssetsByProvider(cmd.Context())
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
@@ -132,7 +141,7 @@ var metricsByProviderCmd = &cobra.Command{
 		}
 
 		t := output.NewTable("PROVIDER", "COUNT")
-		for k, v := range resp.Payload.Assets {
+		for k, v := range resp.Assets {
 			t.AddRow(k, fmt.Sprintf("%d", v))
 		}
 		p.PrintTable(t)
@@ -150,20 +159,22 @@ var metricsTopAssetsCmd = &cobra.Command{
 		}
 		limit, _ := cmd.Flags().GetInt("limit")
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := metrics.NewGetAPIV1MetricsTopAssetsParams()
-		params.SetStart(start.Format(time.RFC3339))
-		params.SetEnd(end.Format(time.RFC3339))
-		params.SetLimit(int64Ptr(limit))
-
-		resp, err := c.Metrics.GetAPIV1MetricsTopAssets(params)
+		resp, err := c.Metrics.TopAssets(cmd.Context(), marmot.TopOptions{
+			Start: start.Format(time.RFC3339),
+			End:   end.Format(time.RFC3339),
+			Limit: int64(limit),
+		})
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
@@ -171,7 +182,7 @@ var metricsTopAssetsCmd = &cobra.Command{
 		}
 
 		t := output.NewTable("NAME", "TYPE", "VIEWS")
-		for _, a := range resp.Payload {
+		for _, a := range resp {
 			t.AddRow(a.AssetName, a.AssetType, fmt.Sprintf("%d", a.Count))
 		}
 		p.PrintTable(t)
@@ -189,20 +200,22 @@ var metricsTopQueriesCmd = &cobra.Command{
 		}
 		limit, _ := cmd.Flags().GetInt("limit")
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := metrics.NewGetAPIV1MetricsTopQueriesParams()
-		params.SetStart(start.Format(time.RFC3339))
-		params.SetEnd(end.Format(time.RFC3339))
-		params.SetLimit(int64Ptr(limit))
-
-		resp, err := c.Metrics.GetAPIV1MetricsTopQueries(params)
+		resp, err := c.Metrics.TopQueries(cmd.Context(), marmot.TopOptions{
+			Start: start.Format(time.RFC3339),
+			End:   end.Format(time.RFC3339),
+			Limit: int64(limit),
+		})
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
@@ -210,7 +223,7 @@ var metricsTopQueriesCmd = &cobra.Command{
 		}
 
 		t := output.NewTable("QUERY", "COUNT")
-		for _, q := range resp.Payload {
+		for _, q := range resp {
 			t.AddRow(q.Query, fmt.Sprintf("%d", q.Count))
 		}
 		p.PrintTable(t)

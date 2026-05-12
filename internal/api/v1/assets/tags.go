@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strings"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
@@ -25,14 +24,13 @@ type TagRequest struct {
 // @Success 200 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/{id}/tags [post]
+// @Router /assets/tags/{id} [post]
 func (h *Handler) addTag(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/assets/tags/"), "/")
-	if len(parts) < 1 || parts[0] == "" {
-		common.RespondError(w, http.StatusBadRequest, "Invalid path")
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Asset ID is required")
 		return
 	}
-	id := parts[0]
 
 	var input TagRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -72,14 +70,13 @@ func (h *Handler) addTag(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/{id}/tags [delete]
+// @Router /assets/tags/{id} [delete]
 func (h *Handler) removeTag(w http.ResponseWriter, r *http.Request) {
-	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/assets/tags/"), "/")
-	if len(parts) < 1 || parts[0] == "" {
-		common.RespondError(w, http.StatusBadRequest, "Invalid path")
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Asset ID is required")
 		return
 	}
-	id := parts[0]
 
 	var input TagRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {

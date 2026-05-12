@@ -6,9 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/marmotdata/marmot/client/client/assets"
-	"github.com/marmotdata/marmot/client/client/owners"
-	"github.com/marmotdata/marmot/client/models"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
 )
@@ -18,58 +16,63 @@ var assetsCmd = &cobra.Command{
 	Short: "Manage assets in the data catalog",
 }
 
+func searchAssets(cmd *cobra.Command, query string) error {
+	limit, _ := cmd.Flags().GetInt("limit")
+	offset, _ := cmd.Flags().GetInt("offset")
+	types, _ := cmd.Flags().GetStringSlice("types")
+	providers, _ := cmd.Flags().GetStringSlice("providers")
+	tags, _ := cmd.Flags().GetStringSlice("tags")
+
+	p := getPrinter()
+	c, err := newClient()
+	if err != nil {
+		return err
+	}
+
+	resp, err := c.Assets.Search(cmd.Context(), marmot.AssetSearchOptions{
+		Query:     query,
+		Types:     types,
+		Providers: providers,
+		Tags:      tags,
+		Limit:     int64(limit),
+		Offset:    int64(offset),
+	})
+	if err != nil {
+		return err
+	}
+
+	if p.IsRaw() {
+		data, err := marshalPayload(resp)
+		if err != nil {
+			return err
+		}
+		return p.PrintRaw(data)
+	}
+
+	t := output.NewTable("ID", "NAME", "TYPE", "PROVIDERS", "TAGS")
+	for _, a := range resp.Assets {
+		t.AddRow(
+			a.ID,
+			formatAssetName(a),
+			a.Type,
+			strings.Join(a.Providers, ", "),
+			strings.Join(a.Tags, ", "),
+		)
+	}
+	label := "assets"
+	if query != "" {
+		label = "results"
+	}
+	t.SetFooter("Showing %d of %d "+label, len(resp.Assets), resp.Total)
+	p.PrintTable(t)
+	return nil
+}
+
 var assetsListCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List assets",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		limit, _ := cmd.Flags().GetInt("limit")
-		offset, _ := cmd.Flags().GetInt("offset")
-		types, _ := cmd.Flags().GetStringSlice("types")
-		providers, _ := cmd.Flags().GetStringSlice("providers")
-		tags, _ := cmd.Flags().GetStringSlice("tags")
-
-		p := getPrinter()
-		c := newSwaggerClient()
-
-		params := assets.NewGetAssetsSearchParams()
-		params.SetLimit(int64Ptr(limit))
-		params.SetOffset(int64Ptr(offset))
-		if len(types) > 0 {
-			params.SetTypes(types)
-		}
-		if len(providers) > 0 {
-			params.SetServices(providers)
-		}
-		if len(tags) > 0 {
-			params.SetTags(tags)
-		}
-
-		resp, err := c.Assets.GetAssetsSearch(params)
-		if err != nil {
-			return err
-		}
-
-		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
-			if err != nil {
-				return err
-			}
-			return p.PrintRaw(data)
-		}
-
-		t := output.NewTable("ID", "NAME", "TYPE", "PROVIDERS", "TAGS")
-		for _, a := range resp.Payload.Assets {
-			t.AddRow(
-				a.ID,
-				formatAssetName(a),
-				a.Type,
-				strings.Join(a.Providers, ", "),
-				strings.Join(a.Tags, ", "),
-			)
-		}
-		t.SetFooter("Showing %d of %d assets", len(resp.Payload.Assets), resp.Payload.Total)
-		p.PrintTable(t)
-		return nil
+		return searchAssets(cmd, "")
 	},
 }
 
@@ -79,25 +82,24 @@ var assetsGetCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := assets.NewGetAssetsIDParams()
-		params.SetID(args[0])
-
-		resp, err := c.Assets.GetAssetsID(params)
+		a, err := c.Assets.Get(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(a)
 			if err != nil {
 				return err
 			}
 			return p.PrintRaw(data)
 		}
 
-		a := resp.Payload
 		t := output.NewTable("FIELD", "VALUE")
 		t.AddRow("ID", a.ID)
 		t.AddRow("Name", formatAssetName(a))
@@ -118,55 +120,7 @@ var assetsSearchCmd = &cobra.Command{
 	Short: "Search assets",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		limit, _ := cmd.Flags().GetInt("limit")
-		offset, _ := cmd.Flags().GetInt("offset")
-		types, _ := cmd.Flags().GetStringSlice("types")
-		providers, _ := cmd.Flags().GetStringSlice("providers")
-		tags, _ := cmd.Flags().GetStringSlice("tags")
-
-		p := getPrinter()
-		c := newSwaggerClient()
-
-		params := assets.NewGetAssetsSearchParams()
-		params.SetQ(strPtr(args[0]))
-		params.SetLimit(int64Ptr(limit))
-		params.SetOffset(int64Ptr(offset))
-		if len(types) > 0 {
-			params.SetTypes(types)
-		}
-		if len(providers) > 0 {
-			params.SetServices(providers)
-		}
-		if len(tags) > 0 {
-			params.SetTags(tags)
-		}
-
-		resp, err := c.Assets.GetAssetsSearch(params)
-		if err != nil {
-			return err
-		}
-
-		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
-			if err != nil {
-				return err
-			}
-			return p.PrintRaw(data)
-		}
-
-		t := output.NewTable("ID", "NAME", "TYPE", "PROVIDERS", "TAGS")
-		for _, a := range resp.Payload.Assets {
-			t.AddRow(
-				a.ID,
-				formatAssetName(a),
-				a.Type,
-				strings.Join(a.Providers, ", "),
-				strings.Join(a.Tags, ", "),
-			)
-		}
-		t.SetFooter("Showing %d of %d results", len(resp.Payload.Assets), resp.Payload.Total)
-		p.PrintTable(t)
-		return nil
+		return searchAssets(cmd, args[0])
 	},
 }
 
@@ -176,7 +130,10 @@ var assetsDeleteCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		yes, _ := cmd.Flags().GetBool("yes")
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
 		if !yes {
 			fmt.Printf("Are you sure you want to delete asset %s? (y/N): ", args[0])
@@ -189,9 +146,7 @@ var assetsDeleteCmd = &cobra.Command{
 			}
 		}
 
-		params := assets.NewDeleteAssetsIDParams()
-		params.SetID(args[0])
-		if _, err := c.Assets.DeleteAssetsID(params); err != nil {
+		if err := c.Assets.Delete(cmd.Context(), args[0]); err != nil {
 			return err
 		}
 
@@ -205,33 +160,34 @@ var assetsSummaryCmd = &cobra.Command{
 	Short: "Show asset summary statistics",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		resp, err := c.Assets.GetAssetsSummary(assets.NewGetAssetsSummaryParams())
+		s, err := c.Assets.Summary(cmd.Context())
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(s)
 			if err != nil {
 				return err
 			}
 			return p.PrintRaw(data)
 		}
 
-		s := resp.Payload
-
 		fmt.Println("Assets by Type:")
 		t := output.NewTable("TYPE", "COUNT")
-		for typeName, count := range s.Types {
-			t.AddRow(typeName, fmt.Sprintf("%d", count))
+		for typeName, info := range s.Types {
+			t.AddRow(typeName, fmt.Sprintf("%d", info.Count))
 		}
 		p.PrintTable(t)
 
 		fmt.Println("\nAssets by Provider:")
 		t2 := output.NewTable("PROVIDER", "COUNT")
-		for provider, count := range s.Services {
+		for provider, count := range s.Providers {
 			t2.AddRow(provider, fmt.Sprintf("%d", count))
 		}
 		p.PrintTable(t2)
@@ -258,11 +214,11 @@ var assetsTagsAddCmd = &cobra.Command{
 	Short: "Add a tag to an asset",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := newSwaggerClient()
-		params := assets.NewPostAssetsIDTagsParams()
-		params.SetID(args[0])
-		params.SetTag(&models.V1AssetsTagRequest{Tag: strPtr(args[1])})
-		if _, err := c.Assets.PostAssetsIDTags(params); err != nil {
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+		if err := c.Assets.AddTag(cmd.Context(), args[0], args[1]); err != nil {
 			return err
 		}
 		fmt.Printf("Tag %q added to asset %s.\n", args[1], args[0])
@@ -275,11 +231,11 @@ var assetsTagsRemoveCmd = &cobra.Command{
 	Short: "Remove a tag from an asset",
 	Args:  cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		c := newSwaggerClient()
-		params := assets.NewDeleteAssetsIDTagsParams()
-		params.SetID(args[0])
-		params.SetTag(&models.V1AssetsTagRequest{Tag: strPtr(args[1])})
-		if _, err := c.Assets.DeleteAssetsIDTags(params); err != nil {
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+		if err := c.Assets.RemoveTag(cmd.Context(), args[0], args[1]); err != nil {
 			return err
 		}
 		fmt.Printf("Tag %q removed from asset %s.\n", args[1], args[0])
@@ -293,31 +249,31 @@ var assetsOwnersCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := owners.NewGetOwnersSearchParams()
-		params.SetQ(args[0])
-
-		resp, err := c.Owners.GetOwnersSearch(params)
+		resp, err := c.Owners.Search(cmd.Context(), args[0], marmot.OwnerSearchOptions{})
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			data, err := marshalPayload(resp.Payload)
+			data, err := marshalPayload(resp)
 			if err != nil {
 				return err
 			}
 			return p.PrintRaw(data)
 		}
 
-		if len(resp.Payload.Owners) == 0 {
+		if len(resp.Owners) == 0 {
 			fmt.Println("No owners found.")
 			return nil
 		}
 
 		t := output.NewTable("ID", "NAME", "TYPE")
-		for _, o := range resp.Payload.Owners {
+		for _, o := range resp.Owners {
 			t.AddRow(o.ID, o.Name, o.Type)
 		}
 		p.PrintTable(t)
@@ -326,24 +282,20 @@ var assetsOwnersCmd = &cobra.Command{
 }
 
 func init() {
-	// list
 	assetsListCmd.Flags().Int("limit", 20, "Maximum number of results")
 	assetsListCmd.Flags().Int("offset", 0, "Offset for pagination")
 	assetsListCmd.Flags().StringSlice("types", nil, "Filter by asset types")
 	assetsListCmd.Flags().StringSlice("providers", nil, "Filter by providers")
 	assetsListCmd.Flags().StringSlice("tags", nil, "Filter by tags")
 
-	// search
 	assetsSearchCmd.Flags().Int("limit", 20, "Maximum number of results")
 	assetsSearchCmd.Flags().Int("offset", 0, "Offset for pagination")
 	assetsSearchCmd.Flags().StringSlice("types", nil, "Filter by asset types")
 	assetsSearchCmd.Flags().StringSlice("providers", nil, "Filter by providers")
 	assetsSearchCmd.Flags().StringSlice("tags", nil, "Filter by tags")
 
-	// delete
 	assetsDeleteCmd.Flags().BoolP("yes", "y", false, "Skip confirmation prompt")
 
-	// tags
 	assetsTagsCmd.AddCommand(assetsTagsAddCmd)
 	assetsTagsCmd.AddCommand(assetsTagsRemoveCmd)
 
