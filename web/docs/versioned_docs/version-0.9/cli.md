@@ -26,6 +26,14 @@ import { Steps, Step, Tabs, TabPanel, TipBox } from '@site/src/components/Steps'
 ]}>
 <TabPanel>
 
+**Homebrew**
+
+```bash
+brew install marmot
+```
+
+**Install script**
+
 ```bash
 curl -fsSL get.marmotdata.io | sh
 ```
