@@ -129,7 +129,7 @@ func (r *PostgresMembershipRepository) GetMembershipAssetIDs(ctx context.Context
 	}
 	defer rows.Close()
 
-	var assetIDs []string
+	assetIDs := []string{}
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
@@ -304,7 +304,7 @@ func (r *PostgresMembershipRepository) FindCandidateRules(ctx context.Context, s
 	}
 	defer rows.Close()
 
-	var candidates []enrichment.CandidateRule
+	candidates := []enrichment.CandidateRule{}
 	for rows.Next() {
 		var c enrichment.CandidateRule
 		if err := rows.Scan(&c.RuleID); err != nil {

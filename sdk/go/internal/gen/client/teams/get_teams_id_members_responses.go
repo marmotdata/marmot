@@ -50,7 +50,7 @@ GetTeamsIDMembersOK describes a response with status code 200, with default head
 OK
 */
 type GetTeamsIDMembersOK struct {
-	Payload *models.V1TeamsListMembersResponse
+	Payload *models.ListMembersResponse
 }
 
 // IsSuccess returns true when this get teams Id members o k response has a 2xx status code
@@ -93,13 +93,13 @@ func (o *GetTeamsIDMembersOK) String() string {
 	return fmt.Sprintf("[GET /teams/{id}/members][%d] getTeamsIdMembersOK %s", 200, payload)
 }
 
-func (o *GetTeamsIDMembersOK) GetPayload() *models.V1TeamsListMembersResponse {
+func (o *GetTeamsIDMembersOK) GetPayload() *models.ListMembersResponse {
 	return o.Payload
 }
 
 func (o *GetTeamsIDMembersOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1TeamsListMembersResponse)
+	o.Payload = new(models.ListMembersResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -120,7 +120,7 @@ GetTeamsIDMembersInternalServerError describes a response with status code 500, 
 Internal Server Error
 */
 type GetTeamsIDMembersInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get teams Id members internal server error response has a 2xx status code
@@ -163,13 +163,13 @@ func (o *GetTeamsIDMembersInternalServerError) String() string {
 	return fmt.Sprintf("[GET /teams/{id}/members][%d] getTeamsIdMembersInternalServerError %s", 500, payload)
 }
 
-func (o *GetTeamsIDMembersInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetTeamsIDMembersInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetTeamsIDMembersInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

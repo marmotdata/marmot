@@ -43,7 +43,7 @@ func (r *PostgresRepository) GetDocumentation(ctx context.Context, mrn string) (
 	}
 	defer rows.Close()
 
-	var docs []Documentation
+	docs := []Documentation{}
 	for rows.Next() {
 		var doc Documentation
 		err := rows.Scan(

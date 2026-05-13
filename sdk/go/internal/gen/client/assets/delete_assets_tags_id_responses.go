@@ -56,7 +56,7 @@ DeleteAssetsTagsIDOK describes a response with status code 200, with default hea
 OK
 */
 type DeleteAssetsTagsIDOK struct {
-	Payload *models.AssetAsset
+	Payload *models.Asset
 }
 
 // IsSuccess returns true when this delete assets tags Id o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *DeleteAssetsTagsIDOK) String() string {
 	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdOK %s", 200, payload)
 }
 
-func (o *DeleteAssetsTagsIDOK) GetPayload() *models.AssetAsset {
+func (o *DeleteAssetsTagsIDOK) GetPayload() *models.Asset {
 	return o.Payload
 }
 
 func (o *DeleteAssetsTagsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AssetAsset)
+	o.Payload = new(models.Asset)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ DeleteAssetsTagsIDBadRequest describes a response with status code 400, with def
 Bad Request
 */
 type DeleteAssetsTagsIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete assets tags Id bad request response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *DeleteAssetsTagsIDBadRequest) String() string {
 	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdBadRequest %s", 400, payload)
 }
 
-func (o *DeleteAssetsTagsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAssetsTagsIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetsTagsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ DeleteAssetsTagsIDNotFound describes a response with status code 404, with defau
 Not Found
 */
 type DeleteAssetsTagsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete assets tags Id not found response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *DeleteAssetsTagsIDNotFound) String() string {
 	return fmt.Sprintf("[DELETE /assets/tags/{id}][%d] deleteAssetsTagsIdNotFound %s", 404, payload)
 }
 
-func (o *DeleteAssetsTagsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAssetsTagsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetsTagsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

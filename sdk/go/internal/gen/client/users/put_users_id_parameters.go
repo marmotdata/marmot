@@ -70,7 +70,7 @@ type PutUsersIDParams struct {
 
 	   User update request
 	*/
-	User *models.UserUpdateUserInput
+	User *models.UpdateUserInput
 
 	timeout    time.Duration
 	Context    context.Context
@@ -137,13 +137,13 @@ func (o *PutUsersIDParams) SetID(id string) {
 }
 
 // WithUser adds the user to the put users ID params
-func (o *PutUsersIDParams) WithUser(user *models.UserUpdateUserInput) *PutUsersIDParams {
+func (o *PutUsersIDParams) WithUser(user *models.UpdateUserInput) *PutUsersIDParams {
 	o.SetUser(user)
 	return o
 }
 
 // SetUser adds the user to the put users ID params
-func (o *PutUsersIDParams) SetUser(user *models.UserUpdateUserInput) {
+func (o *PutUsersIDParams) SetUser(user *models.UpdateUserInput) {
 	o.User = user
 }
 

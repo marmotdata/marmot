@@ -159,12 +159,12 @@ func (h *Handler) Routes() []common.Route {
 type ValidateConfigRequest struct {
 	PluginID string                 `json:"plugin_id"`
 	Config   map[string]interface{} `json:"config"`
-}
+} // @name ValidateConfigRequest
 
 type ValidateConfigResponse struct {
 	Valid  bool                     `json:"valid"`
 	Errors []common.ValidationError `json:"errors,omitempty"`
-}
+} // @name ValidateConfigResponse
 
 // @Summary Validate plugin configuration
 // @Tags ingestion
@@ -234,7 +234,7 @@ type CreateScheduleRequest struct{
 	Config         map[string]interface{} `json:"config"`
 	CronExpression string                 `json:"cron_expression"`
 	Enabled        bool                   `json:"enabled"`
-}
+} // @name CreateScheduleRequest
 
 type UpdateScheduleRequest struct {
 	Name           string                 `json:"name"`
@@ -242,21 +242,21 @@ type UpdateScheduleRequest struct {
 	Config         map[string]interface{} `json:"config"`
 	CronExpression string                 `json:"cron_expression"`
 	Enabled        bool                   `json:"enabled"`
-}
+} // @name UpdateScheduleRequest
 
 type ListSchedulesResponse struct {
 	Schedules []*runs.Schedule `json:"schedules"`
 	Total     int                   `json:"total"`
 	Limit     int                   `json:"limit"`
 	Offset    int                   `json:"offset"`
-}
+} // @name ListSchedulesResponse
 
 type ListJobRunsResponse struct {
 	Runs   []*runs.JobRun `json:"runs"`
 	Total  int                 `json:"total"`
 	Limit  int                 `json:"limit"`
 	Offset int                 `json:"offset"`
-}
+} // @name ListJobRunsResponse
 
 // @Summary Create a new ingestion schedule
 // @Tags ingestion

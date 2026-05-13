@@ -44,7 +44,7 @@ DeletePipelinesPipelineNameOK describes a response with status code 200, with de
 OK
 */
 type DeletePipelinesPipelineNameOK struct {
-	Payload *models.V1RunsDestroyRunResponse
+	Payload *models.DestroyRunResponse
 }
 
 // IsSuccess returns true when this delete pipelines pipeline name o k response has a 2xx status code
@@ -87,13 +87,13 @@ func (o *DeletePipelinesPipelineNameOK) String() string {
 	return fmt.Sprintf("[DELETE /pipelines/{pipelineName}][%d] deletePipelinesPipelineNameOK %s", 200, payload)
 }
 
-func (o *DeletePipelinesPipelineNameOK) GetPayload() *models.V1RunsDestroyRunResponse {
+func (o *DeletePipelinesPipelineNameOK) GetPayload() *models.DestroyRunResponse {
 	return o.Payload
 }
 
 func (o *DeletePipelinesPipelineNameOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1RunsDestroyRunResponse)
+	o.Payload = new(models.DestroyRunResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -70,7 +70,7 @@ type PutTeamsIDParams struct {
 
 	   Team update request
 	*/
-	Team *models.V1TeamsUpdateTeamRequest
+	Team *models.UpdateTeamRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -137,13 +137,13 @@ func (o *PutTeamsIDParams) SetID(id string) {
 }
 
 // WithTeam adds the team to the put teams ID params
-func (o *PutTeamsIDParams) WithTeam(team *models.V1TeamsUpdateTeamRequest) *PutTeamsIDParams {
+func (o *PutTeamsIDParams) WithTeam(team *models.UpdateTeamRequest) *PutTeamsIDParams {
 	o.SetTeam(team)
 	return o
 }
 
 // SetTeam adds the team to the put teams ID params
-func (o *PutTeamsIDParams) SetTeam(team *models.V1TeamsUpdateTeamRequest) {
+func (o *PutTeamsIDParams) SetTeam(team *models.UpdateTeamRequest) {
 	o.Team = team
 }
 

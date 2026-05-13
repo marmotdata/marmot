@@ -44,7 +44,7 @@ GetAPIV1PluginsAwsCredentialsStatusOK describes a response with status code 200,
 OK
 */
 type GetAPIV1PluginsAwsCredentialsStatusOK struct {
-	Payload *models.PluginAWSCredentialStatus
+	Payload *models.AWSCredentialStatus
 }
 
 // IsSuccess returns true when this get Api v1 plugins aws credentials status o k response has a 2xx status code
@@ -87,13 +87,13 @@ func (o *GetAPIV1PluginsAwsCredentialsStatusOK) String() string {
 	return fmt.Sprintf("[GET /api/v1/plugins/aws/credentials/status][%d] getApiV1PluginsAwsCredentialsStatusOK %s", 200, payload)
 }
 
-func (o *GetAPIV1PluginsAwsCredentialsStatusOK) GetPayload() *models.PluginAWSCredentialStatus {
+func (o *GetAPIV1PluginsAwsCredentialsStatusOK) GetPayload() *models.AWSCredentialStatus {
 	return o.Payload
 }
 
 func (o *GetAPIV1PluginsAwsCredentialsStatusOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.PluginAWSCredentialStatus)
+	o.Payload = new(models.AWSCredentialStatus)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

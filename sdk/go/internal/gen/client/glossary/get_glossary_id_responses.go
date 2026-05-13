@@ -62,7 +62,7 @@ GetGlossaryIDOK describes a response with status code 200, with default header v
 OK
 */
 type GetGlossaryIDOK struct {
-	Payload *models.GlossaryGlossaryTerm
+	Payload *models.GlossaryTerm
 }
 
 // IsSuccess returns true when this get glossary Id o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *GetGlossaryIDOK) String() string {
 	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdOK %s", 200, payload)
 }
 
-func (o *GetGlossaryIDOK) GetPayload() *models.GlossaryGlossaryTerm {
+func (o *GetGlossaryIDOK) GetPayload() *models.GlossaryTerm {
 	return o.Payload
 }
 
 func (o *GetGlossaryIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GlossaryGlossaryTerm)
+	o.Payload = new(models.GlossaryTerm)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ GetGlossaryIDBadRequest describes a response with status code 400, with default 
 Bad Request
 */
 type GetGlossaryIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary Id bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *GetGlossaryIDBadRequest) String() string {
 	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdBadRequest %s", 400, payload)
 }
 
-func (o *GetGlossaryIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ GetGlossaryIDNotFound describes a response with status code 404, with default he
 Not Found
 */
 type GetGlossaryIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary Id not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *GetGlossaryIDNotFound) String() string {
 	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdNotFound %s", 404, payload)
 }
 
-func (o *GetGlossaryIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ GetGlossaryIDInternalServerError describes a response with status code 500, with
 Internal Server Error
 */
 type GetGlossaryIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary Id internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *GetGlossaryIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /glossary/{id}][%d] getGlossaryIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetGlossaryIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -64,7 +64,7 @@ type PostRunsAssetsBatchParams struct {
 
 	   Batch create request
 	*/
-	Request *models.V1RunsBatchCreateRequest
+	Request *models.BatchCreateRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostRunsAssetsBatchParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithRequest adds the request to the post runs assets batch params
-func (o *PostRunsAssetsBatchParams) WithRequest(request *models.V1RunsBatchCreateRequest) *PostRunsAssetsBatchParams {
+func (o *PostRunsAssetsBatchParams) WithRequest(request *models.BatchCreateRequest) *PostRunsAssetsBatchParams {
 	o.SetRequest(request)
 	return o
 }
 
 // SetRequest adds the request to the post runs assets batch params
-func (o *PostRunsAssetsBatchParams) SetRequest(request *models.V1RunsBatchCreateRequest) {
+func (o *PostRunsAssetsBatchParams) SetRequest(request *models.BatchCreateRequest) {
 	o.Request = request
 }
 

@@ -13,8 +13,8 @@ if TYPE_CHECKING:
     from marmot.auth import Credential
 
 GRANT_TYPE = "urn:ietf:params:oauth:grant-type:token-exchange"
-TOKEN_TYPE_ID_TOKEN = "urn:ietf:params:oauth:token-type:id_token"
-TOKEN_TYPE_ACCESS_TOKEN = "urn:ietf:params:oauth:token-type:access_token"
+TOKEN_TYPE_ID_TOKEN = "urn:ietf:params:oauth:token-type:id_token"  # noqa: S105 — RFC 8693 URN, not a credential
+TOKEN_TYPE_ACCESS_TOKEN = "urn:ietf:params:oauth:token-type:access_token"  # noqa: S105 — RFC 8693 URN, not a credential
 
 _DEFAULT_TIMEOUT = 10.0
 

@@ -56,7 +56,7 @@ PostAssetRulesPreviewOK describes a response with status code 200, with default 
 OK
 */
 type PostAssetRulesPreviewOK struct {
-	Payload *models.AssetruleRulePreview
+	Payload *models.RulePreview
 }
 
 // IsSuccess returns true when this post asset rules preview o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *PostAssetRulesPreviewOK) String() string {
 	return fmt.Sprintf("[POST /asset-rules/preview][%d] postAssetRulesPreviewOK %s", 200, payload)
 }
 
-func (o *PostAssetRulesPreviewOK) GetPayload() *models.AssetruleRulePreview {
+func (o *PostAssetRulesPreviewOK) GetPayload() *models.RulePreview {
 	return o.Payload
 }
 
 func (o *PostAssetRulesPreviewOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AssetruleRulePreview)
+	o.Payload = new(models.RulePreview)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ PostAssetRulesPreviewBadRequest describes a response with status code 400, with 
 Bad Request
 */
 type PostAssetRulesPreviewBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post asset rules preview bad request response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *PostAssetRulesPreviewBadRequest) String() string {
 	return fmt.Sprintf("[POST /asset-rules/preview][%d] postAssetRulesPreviewBadRequest %s", 400, payload)
 }
 
-func (o *PostAssetRulesPreviewBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAssetRulesPreviewBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAssetRulesPreviewBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ PostAssetRulesPreviewInternalServerError describes a response with status code 5
 Internal Server Error
 */
 type PostAssetRulesPreviewInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post asset rules preview internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *PostAssetRulesPreviewInternalServerError) String() string {
 	return fmt.Sprintf("[POST /asset-rules/preview][%d] postAssetRulesPreviewInternalServerError %s", 500, payload)
 }
 
-func (o *PostAssetRulesPreviewInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAssetRulesPreviewInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAssetRulesPreviewInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

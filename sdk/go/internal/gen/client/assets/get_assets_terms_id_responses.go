@@ -50,7 +50,7 @@ GetAssetsTermsIDOK describes a response with status code 200, with default heade
 OK
 */
 type GetAssetsTermsIDOK struct {
-	Payload []*models.AssetAssetTerm
+	Payload []*models.AssetTerm
 }
 
 // IsSuccess returns true when this get assets terms Id o k response has a 2xx status code
@@ -93,7 +93,7 @@ func (o *GetAssetsTermsIDOK) String() string {
 	return fmt.Sprintf("[GET /assets/terms/{id}][%d] getAssetsTermsIdOK %s", 200, payload)
 }
 
-func (o *GetAssetsTermsIDOK) GetPayload() []*models.AssetAssetTerm {
+func (o *GetAssetsTermsIDOK) GetPayload() []*models.AssetTerm {
 	return o.Payload
 }
 
@@ -118,7 +118,7 @@ GetAssetsTermsIDNotFound describes a response with status code 404, with default
 Not Found
 */
 type GetAssetsTermsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets terms Id not found response has a 2xx status code
@@ -161,13 +161,13 @@ func (o *GetAssetsTermsIDNotFound) String() string {
 	return fmt.Sprintf("[GET /assets/terms/{id}][%d] getAssetsTermsIdNotFound %s", 404, payload)
 }
 
-func (o *GetAssetsTermsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsTermsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsTermsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

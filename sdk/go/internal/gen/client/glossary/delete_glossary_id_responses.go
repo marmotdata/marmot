@@ -130,7 +130,7 @@ DeleteGlossaryIDBadRequest describes a response with status code 400, with defau
 Bad Request
 */
 type DeleteGlossaryIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete glossary Id bad request response has a 2xx status code
@@ -173,13 +173,13 @@ func (o *DeleteGlossaryIDBadRequest) String() string {
 	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdBadRequest %s", 400, payload)
 }
 
-func (o *DeleteGlossaryIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteGlossaryIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteGlossaryIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -200,7 +200,7 @@ DeleteGlossaryIDNotFound describes a response with status code 404, with default
 Not Found
 */
 type DeleteGlossaryIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete glossary Id not found response has a 2xx status code
@@ -243,13 +243,13 @@ func (o *DeleteGlossaryIDNotFound) String() string {
 	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdNotFound %s", 404, payload)
 }
 
-func (o *DeleteGlossaryIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteGlossaryIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteGlossaryIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -270,7 +270,7 @@ DeleteGlossaryIDInternalServerError describes a response with status code 500, w
 Internal Server Error
 */
 type DeleteGlossaryIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete glossary Id internal server error response has a 2xx status code
@@ -313,13 +313,13 @@ func (o *DeleteGlossaryIDInternalServerError) String() string {
 	return fmt.Sprintf("[DELETE /glossary/{id}][%d] deleteGlossaryIdInternalServerError %s", 500, payload)
 }
 
-func (o *DeleteGlossaryIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteGlossaryIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteGlossaryIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

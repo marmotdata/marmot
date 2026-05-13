@@ -62,7 +62,7 @@ PostProductsImagesIDPurposeOK describes a response with status code 200, with de
 OK
 */
 type PostProductsImagesIDPurposeOK struct {
-	Payload *models.DataproductProductImageMeta
+	Payload *models.ProductImageMeta
 }
 
 // IsSuccess returns true when this post products images Id purpose o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PostProductsImagesIDPurposeOK) String() string {
 	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeOK %s", 200, payload)
 }
 
-func (o *PostProductsImagesIDPurposeOK) GetPayload() *models.DataproductProductImageMeta {
+func (o *PostProductsImagesIDPurposeOK) GetPayload() *models.ProductImageMeta {
 	return o.Payload
 }
 
 func (o *PostProductsImagesIDPurposeOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.DataproductProductImageMeta)
+	o.Payload = new(models.ProductImageMeta)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ PostProductsImagesIDPurposeBadRequest describes a response with status code 400,
 Bad Request
 */
 type PostProductsImagesIDPurposeBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post products images Id purpose bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *PostProductsImagesIDPurposeBadRequest) String() string {
 	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeBadRequest %s", 400, payload)
 }
 
-func (o *PostProductsImagesIDPurposeBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostProductsImagesIDPurposeBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostProductsImagesIDPurposeBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ PostProductsImagesIDPurposeNotFound describes a response with status code 404, w
 Not Found
 */
 type PostProductsImagesIDPurposeNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post products images Id purpose not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *PostProductsImagesIDPurposeNotFound) String() string {
 	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeNotFound %s", 404, payload)
 }
 
-func (o *PostProductsImagesIDPurposeNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostProductsImagesIDPurposeNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostProductsImagesIDPurposeNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ PostProductsImagesIDPurposeInternalServerError describes a response with status 
 Internal Server Error
 */
 type PostProductsImagesIDPurposeInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post products images Id purpose internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *PostProductsImagesIDPurposeInternalServerError) String() string {
 	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeInternalServerError %s", 500, payload)
 }
 
-func (o *PostProductsImagesIDPurposeInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostProductsImagesIDPurposeInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostProductsImagesIDPurposeInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

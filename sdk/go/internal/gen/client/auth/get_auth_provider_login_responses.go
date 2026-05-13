@@ -124,7 +124,7 @@ GetAuthProviderLoginNotFound describes a response with status code 404, with def
 Not Found
 */
 type GetAuthProviderLoginNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get auth provider login not found response has a 2xx status code
@@ -167,13 +167,13 @@ func (o *GetAuthProviderLoginNotFound) String() string {
 	return fmt.Sprintf("[GET /auth/{provider}/login][%d] getAuthProviderLoginNotFound %s", 404, payload)
 }
 
-func (o *GetAuthProviderLoginNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAuthProviderLoginNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAuthProviderLoginNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -194,7 +194,7 @@ GetAuthProviderLoginInternalServerError describes a response with status code 50
 Internal Server Error
 */
 type GetAuthProviderLoginInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get auth provider login internal server error response has a 2xx status code
@@ -237,13 +237,13 @@ func (o *GetAuthProviderLoginInternalServerError) String() string {
 	return fmt.Sprintf("[GET /auth/{provider}/login][%d] getAuthProviderLoginInternalServerError %s", 500, payload)
 }
 
-func (o *GetAuthProviderLoginInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAuthProviderLoginInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAuthProviderLoginInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -11,7 +11,7 @@ import (
 
 // AssetExternalLink asset external link
 //
-// swagger:model asset.ExternalLink
+// swagger:model AssetExternalLink
 type AssetExternalLink struct {
 
 	// icon

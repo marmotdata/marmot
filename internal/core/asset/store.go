@@ -67,12 +67,12 @@ type AvailableFilters struct {
 	Types     map[string]int `json:"types"`
 	Providers map[string]int `json:"providers"`
 	Tags      map[string]int `json:"tags"`
-}
+} // @name AvailableFilters
 
 type AssetTypeSummary struct {
 	Count   int    `json:"count"`
 	Service string `json:"service"`
-}
+} // @name AssetTypeSummary
 
 type AssetSummary struct {
 	Types     map[string]AssetTypeSummary `json:"types"`
@@ -389,7 +389,7 @@ func (r *PostgresRepository) scanMultipleAssets(ctx context.Context, query strin
 	}
 	defer rows.Close()
 
-	var assets []*Asset
+	assets := []*Asset{}
 	for rows.Next() {
 		asset, err := r.scanAsset(ctx, rows)
 		if err != nil {
@@ -572,7 +572,7 @@ func (r *PostgresRepository) GetMetadataValues(ctx context.Context, field string
 		// Kind represents result types: asset, glossary, team, user
 		// Return hardcoded values filtered by prefix
 		kinds := []string{"asset", "glossary", "team", "user"}
-		var suggestions []MetadataValueSuggestion
+		suggestions := []MetadataValueSuggestion{}
 		for _, kind := range kinds {
 			if prefix == "" || strings.Contains(strings.ToLower(kind), strings.ToLower(prefix)) {
 				suggestions = append(suggestions, MetadataValueSuggestion{
@@ -686,7 +686,7 @@ func (r *PostgresRepository) GetMetadataValuesWithContext(ctx context.Context, f
 		// Kind represents result types: asset, glossary, team, user
 		// Return hardcoded values filtered by prefix (context doesn't affect these)
 		kinds := []string{"asset", "glossary", "team", "user"}
-		var suggestions []MetadataValueSuggestion
+		suggestions := []MetadataValueSuggestion{}
 		for _, kind := range kinds {
 			if prefix == "" || strings.Contains(strings.ToLower(kind), strings.ToLower(prefix)) {
 				suggestions = append(suggestions, MetadataValueSuggestion{
@@ -912,7 +912,7 @@ func (r *PostgresRepository) GetTagSuggestions(ctx context.Context, prefix strin
 	}
 	defer rows.Close()
 
-	var tags []string
+	tags := []string{}
 	for rows.Next() {
 		var tag string
 		var cnt int
@@ -1193,7 +1193,7 @@ func (r *PostgresRepository) GetRunHistory(ctx context.Context, assetID string, 
 	}
 	defer rows.Close()
 
-	var processedRuns []*RunHistory
+	processedRuns := []*RunHistory{}
 	for rows.Next() {
 		var runID, jobNamespace, jobName, status string
 		var eventTime, createdAt time.Time
@@ -1304,7 +1304,7 @@ func (r *PostgresRepository) GetRunHistoryHistogram(ctx context.Context, assetID
 	}
 	defer rows.Close()
 
-	var buckets []HistogramBucket
+	buckets := []HistogramBucket{}
 	for rows.Next() {
 		var bucket HistogramBucket
 		var date time.Time
@@ -1391,7 +1391,7 @@ func (r *PostgresRepository) GetTerms(ctx context.Context, assetID string) ([]As
 	}
 	defer rows.Close()
 
-	var terms []AssetTerm
+	terms := []AssetTerm{}
 	for rows.Next() {
 		var term AssetTerm
 		err := rows.Scan(
@@ -1452,7 +1452,7 @@ func (r *PostgresRepository) GetAssetsByTerm(ctx context.Context, termID string,
 	}
 	defer rows.Close()
 
-	var assets []*Asset
+	assets := []*Asset{}
 	for rows.Next() {
 		asset, err := r.scanAsset(ctx, rows)
 		if err != nil {
@@ -1509,7 +1509,7 @@ func (r *PostgresRepository) GetMyAssets(ctx context.Context, userID string, tea
 	}
 	defer rows.Close()
 
-	var assets []*Asset
+	assets := []*Asset{}
 	for rows.Next() {
 		asset, err := r.scanAsset(ctx, rows)
 		if err != nil {

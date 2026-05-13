@@ -56,7 +56,7 @@ GetOwnersSearchOK describes a response with status code 200, with default header
 OK
 */
 type GetOwnersSearchOK struct {
-	Payload *models.V1TeamsSearchOwnersResponse
+	Payload *models.SearchOwnersResponse
 }
 
 // IsSuccess returns true when this get owners search o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *GetOwnersSearchOK) String() string {
 	return fmt.Sprintf("[GET /owners/search][%d] getOwnersSearchOK %s", 200, payload)
 }
 
-func (o *GetOwnersSearchOK) GetPayload() *models.V1TeamsSearchOwnersResponse {
+func (o *GetOwnersSearchOK) GetPayload() *models.SearchOwnersResponse {
 	return o.Payload
 }
 
 func (o *GetOwnersSearchOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1TeamsSearchOwnersResponse)
+	o.Payload = new(models.SearchOwnersResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ GetOwnersSearchBadRequest describes a response with status code 400, with defaul
 Bad Request
 */
 type GetOwnersSearchBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get owners search bad request response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetOwnersSearchBadRequest) String() string {
 	return fmt.Sprintf("[GET /owners/search][%d] getOwnersSearchBadRequest %s", 400, payload)
 }
 
-func (o *GetOwnersSearchBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetOwnersSearchBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetOwnersSearchBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetOwnersSearchInternalServerError describes a response with status code 500, wi
 Internal Server Error
 */
 type GetOwnersSearchInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get owners search internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetOwnersSearchInternalServerError) String() string {
 	return fmt.Sprintf("[GET /owners/search][%d] getOwnersSearchInternalServerError %s", 500, payload)
 }
 
-func (o *GetOwnersSearchInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetOwnersSearchInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetOwnersSearchInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

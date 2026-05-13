@@ -64,7 +64,7 @@ type PostAPIV1IngestionSchedulesParams struct {
 
 	   Schedule configuration
 	*/
-	Schedule *models.V1SchedulesCreateScheduleRequest
+	Schedule *models.CreateScheduleRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostAPIV1IngestionSchedulesParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithSchedule adds the schedule to the post API v1 ingestion schedules params
-func (o *PostAPIV1IngestionSchedulesParams) WithSchedule(schedule *models.V1SchedulesCreateScheduleRequest) *PostAPIV1IngestionSchedulesParams {
+func (o *PostAPIV1IngestionSchedulesParams) WithSchedule(schedule *models.CreateScheduleRequest) *PostAPIV1IngestionSchedulesParams {
 	o.SetSchedule(schedule)
 	return o
 }
 
 // SetSchedule adds the schedule to the post API v1 ingestion schedules params
-func (o *PostAPIV1IngestionSchedulesParams) SetSchedule(schedule *models.V1SchedulesCreateScheduleRequest) {
+func (o *PostAPIV1IngestionSchedulesParams) SetSchedule(schedule *models.CreateScheduleRequest) {
 	o.Schedule = schedule
 }
 

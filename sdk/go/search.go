@@ -9,7 +9,7 @@ import (
 )
 
 // SearchResults is the response from SearchService.Query.
-type SearchResults = models.GithubComMarmotdataMarmotInternalCoreSearchResponse
+type SearchResults = models.SearchResponse
 
 // SearchOptions filters SearchService.Query.
 type SearchOptions struct {

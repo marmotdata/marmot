@@ -56,7 +56,7 @@ GetLineageDirectIDOK describes a response with status code 200, with default hea
 OK
 */
 type GetLineageDirectIDOK struct {
-	Payload *models.LineageLineageEdge
+	Payload *models.LineageEdge
 }
 
 // IsSuccess returns true when this get lineage direct Id o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *GetLineageDirectIDOK) String() string {
 	return fmt.Sprintf("[GET /lineage/direct/{id}][%d] getLineageDirectIdOK %s", 200, payload)
 }
 
-func (o *GetLineageDirectIDOK) GetPayload() *models.LineageLineageEdge {
+func (o *GetLineageDirectIDOK) GetPayload() *models.LineageEdge {
 	return o.Payload
 }
 
 func (o *GetLineageDirectIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.LineageLineageEdge)
+	o.Payload = new(models.LineageEdge)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ GetLineageDirectIDNotFound describes a response with status code 404, with defau
 Not Found
 */
 type GetLineageDirectIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get lineage direct Id not found response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetLineageDirectIDNotFound) String() string {
 	return fmt.Sprintf("[GET /lineage/direct/{id}][%d] getLineageDirectIdNotFound %s", 404, payload)
 }
 
-func (o *GetLineageDirectIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetLineageDirectIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetLineageDirectIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetLineageDirectIDInternalServerError describes a response with status code 500,
 Internal Server Error
 */
 type GetLineageDirectIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get lineage direct Id internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetLineageDirectIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /lineage/direct/{id}][%d] getLineageDirectIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetLineageDirectIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetLineageDirectIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetLineageDirectIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

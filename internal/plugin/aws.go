@@ -120,7 +120,7 @@ type AWSCredentialStatus struct {
 	Available bool     `json:"available"`
 	Sources   []string `json:"sources"`
 	Error     string   `json:"error,omitempty"`
-}
+} // @name AWSCredentialStatus
 
 func contains(slice []string, item string) bool {
 	for _, s := range slice {

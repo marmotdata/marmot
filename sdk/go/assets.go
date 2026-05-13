@@ -9,13 +9,13 @@ import (
 )
 
 // Asset is a single catalog entry.
-type Asset = models.AssetAsset
+type Asset = models.Asset
 
 // AssetSearchResults is the response from AssetsService.Search.
-type AssetSearchResults = models.V1AssetsSearchResponse
+type AssetSearchResults = models.AssetSearchResponse
 
 // AssetSummary is the response from AssetsService.Summary.
-type AssetSummary = models.V1AssetsAssetSummaryResponse
+type AssetSummary = models.AssetSummaryResponse
 
 // AssetSearchOptions filters AssetsService.Search.
 type AssetSearchOptions struct {
@@ -71,7 +71,7 @@ func (s *AssetsService) Search(ctx context.Context, opts AssetSearchOptions) (*A
 
 // Create creates a new asset.
 func (s *AssetsService) Create(ctx context.Context, in CreateAssetInput) (*Asset, error) {
-	body := &models.V1AssetsCreateRequest{
+	body := &models.CreateAssetRequest{
 		Name:        &in.Name,
 		Type:        &in.Type,
 		Providers:   in.Providers,
@@ -115,14 +115,14 @@ func (s *AssetsService) Summary(ctx context.Context) (*AssetSummary, error) {
 
 // AddTag adds a tag to an asset.
 func (s *AssetsService) AddTag(ctx context.Context, id, tag string) error {
-	p := assets.NewPostAssetsTagsIDParams().WithContext(ctx).WithID(id).WithTag(&models.V1AssetsTagRequest{Tag: &tag})
+	p := assets.NewPostAssetsTagsIDParams().WithContext(ctx).WithID(id).WithTag(&models.TagRequest{Tag: &tag})
 	_, err := s.gen.Assets.PostAssetsTagsID(p)
 	return mapErr(err)
 }
 
 // RemoveTag removes a tag from an asset.
 func (s *AssetsService) RemoveTag(ctx context.Context, id, tag string) error {
-	p := assets.NewDeleteAssetsTagsIDParams().WithContext(ctx).WithID(id).WithTag(&models.V1AssetsTagRequest{Tag: &tag})
+	p := assets.NewDeleteAssetsTagsIDParams().WithContext(ctx).WithID(id).WithTag(&models.TagRequest{Tag: &tag})
 	_, err := s.gen.Assets.DeleteAssetsTagsID(p)
 	return mapErr(err)
 }

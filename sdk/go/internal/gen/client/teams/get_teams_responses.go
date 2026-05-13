@@ -50,7 +50,7 @@ GetTeamsOK describes a response with status code 200, with default header values
 OK
 */
 type GetTeamsOK struct {
-	Payload *models.V1TeamsListTeamsResponse
+	Payload *models.ListTeamsResponse
 }
 
 // IsSuccess returns true when this get teams o k response has a 2xx status code
@@ -93,13 +93,13 @@ func (o *GetTeamsOK) String() string {
 	return fmt.Sprintf("[GET /teams][%d] getTeamsOK %s", 200, payload)
 }
 
-func (o *GetTeamsOK) GetPayload() *models.V1TeamsListTeamsResponse {
+func (o *GetTeamsOK) GetPayload() *models.ListTeamsResponse {
 	return o.Payload
 }
 
 func (o *GetTeamsOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1TeamsListTeamsResponse)
+	o.Payload = new(models.ListTeamsResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -120,7 +120,7 @@ GetTeamsInternalServerError describes a response with status code 500, with defa
 Internal Server Error
 */
 type GetTeamsInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get teams internal server error response has a 2xx status code
@@ -163,13 +163,13 @@ func (o *GetTeamsInternalServerError) String() string {
 	return fmt.Sprintf("[GET /teams][%d] getTeamsInternalServerError %s", 500, payload)
 }
 
-func (o *GetTeamsInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetTeamsInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetTeamsInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

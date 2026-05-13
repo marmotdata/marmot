@@ -20,7 +20,7 @@ type PreviewResponse struct {
 	ColumnNames []string        `json:"column_names"`
 	Rows        [][]interface{} `json:"rows"`
 	TotalRows   *int            `json:"total_rows,omitempty"`
-}
+} // @name PreviewResponse
 
 // getAssetPreview handles GET /api/v1/assets/preview/{id}
 // @Summary Get preview data for an asset

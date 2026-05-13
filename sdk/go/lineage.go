@@ -11,7 +11,7 @@ import (
 )
 
 // Lineage is the lineage graph for an asset.
-type Lineage = models.LineageLineageResponse
+type Lineage = models.LineageResponse
 
 // LineageOptions controls LineageService.Get traversal.
 type LineageOptions struct {

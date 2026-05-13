@@ -31,7 +31,7 @@ type CreateRequest struct {
 	Sources       []asset.AssetSource          `json:"sources"`
 	Environments  map[string]asset.Environment `json:"environments"`
 	ExternalLinks []asset.ExternalLink         `json:"external_links"`
-}
+} // @name CreateAssetRequest
 
 type UpdateRequest struct {
 	Name            *string                      `json:"name"`
@@ -45,7 +45,7 @@ type UpdateRequest struct {
 	Sources         []asset.AssetSource          `json:"sources"`
 	Environments    map[string]asset.Environment `json:"environments"`
 	ExternalLinks   []asset.ExternalLink         `json:"external_links"`
-}
+} // @name UpdateAssetRequest
 
 // @Summary Create a new asset
 // @Description Create a new asset in the system

@@ -62,7 +62,7 @@ GetAPIV1IngestionSchedulesIDOK describes a response with status code 200, with d
 OK
 */
 type GetAPIV1IngestionSchedulesIDOK struct {
-	Payload *models.RunsSchedule
+	Payload *models.Schedule
 }
 
 // IsSuccess returns true when this get Api v1 ingestion schedules Id o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *GetAPIV1IngestionSchedulesIDOK) String() string {
 	return fmt.Sprintf("[GET /api/v1/ingestion/schedules/{id}][%d] getApiV1IngestionSchedulesIdOK %s", 200, payload)
 }
 
-func (o *GetAPIV1IngestionSchedulesIDOK) GetPayload() *models.RunsSchedule {
+func (o *GetAPIV1IngestionSchedulesIDOK) GetPayload() *models.Schedule {
 	return o.Payload
 }
 
 func (o *GetAPIV1IngestionSchedulesIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.RunsSchedule)
+	o.Payload = new(models.Schedule)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ GetAPIV1IngestionSchedulesIDUnauthorized describes a response with status code 4
 Unauthorized
 */
 type GetAPIV1IngestionSchedulesIDUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get Api v1 ingestion schedules Id unauthorized response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *GetAPIV1IngestionSchedulesIDUnauthorized) String() string {
 	return fmt.Sprintf("[GET /api/v1/ingestion/schedules/{id}][%d] getApiV1IngestionSchedulesIdUnauthorized %s", 401, payload)
 }
 
-func (o *GetAPIV1IngestionSchedulesIDUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAPIV1IngestionSchedulesIDUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAPIV1IngestionSchedulesIDUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ GetAPIV1IngestionSchedulesIDNotFound describes a response with status code 404, 
 Not Found
 */
 type GetAPIV1IngestionSchedulesIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get Api v1 ingestion schedules Id not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *GetAPIV1IngestionSchedulesIDNotFound) String() string {
 	return fmt.Sprintf("[GET /api/v1/ingestion/schedules/{id}][%d] getApiV1IngestionSchedulesIdNotFound %s", 404, payload)
 }
 
-func (o *GetAPIV1IngestionSchedulesIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAPIV1IngestionSchedulesIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAPIV1IngestionSchedulesIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ GetAPIV1IngestionSchedulesIDInternalServerError describes a response with status
 Internal Server Error
 */
 type GetAPIV1IngestionSchedulesIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get Api v1 ingestion schedules Id internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *GetAPIV1IngestionSchedulesIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /api/v1/ingestion/schedules/{id}][%d] getApiV1IngestionSchedulesIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetAPIV1IngestionSchedulesIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAPIV1IngestionSchedulesIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAPIV1IngestionSchedulesIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

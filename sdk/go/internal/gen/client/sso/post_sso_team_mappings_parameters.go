@@ -64,7 +64,7 @@ type PostSsoTeamMappingsParams struct {
 
 	   SSO mapping creation request
 	*/
-	Mapping *models.V1TeamsCreateSSOMappingRequest
+	Mapping *models.CreateSSOMappingRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostSsoTeamMappingsParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithMapping adds the mapping to the post sso team mappings params
-func (o *PostSsoTeamMappingsParams) WithMapping(mapping *models.V1TeamsCreateSSOMappingRequest) *PostSsoTeamMappingsParams {
+func (o *PostSsoTeamMappingsParams) WithMapping(mapping *models.CreateSSOMappingRequest) *PostSsoTeamMappingsParams {
 	o.SetMapping(mapping)
 	return o
 }
 
 // SetMapping adds the mapping to the post sso team mappings params
-func (o *PostSsoTeamMappingsParams) SetMapping(mapping *models.V1TeamsCreateSSOMappingRequest) {
+func (o *PostSsoTeamMappingsParams) SetMapping(mapping *models.CreateSSOMappingRequest) {
 	o.Mapping = mapping
 }
 

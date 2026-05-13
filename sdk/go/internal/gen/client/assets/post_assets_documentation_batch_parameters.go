@@ -64,7 +64,7 @@ type PostAssetsDocumentationBatchParams struct {
 
 	   Batch documentation request
 	*/
-	Request *models.V1AssetsBatchDocumentationRequest
+	Request *models.BatchDocumentationRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostAssetsDocumentationBatchParams) SetHTTPClient(client *http.Client) 
 }
 
 // WithRequest adds the request to the post assets documentation batch params
-func (o *PostAssetsDocumentationBatchParams) WithRequest(request *models.V1AssetsBatchDocumentationRequest) *PostAssetsDocumentationBatchParams {
+func (o *PostAssetsDocumentationBatchParams) WithRequest(request *models.BatchDocumentationRequest) *PostAssetsDocumentationBatchParams {
 	o.SetRequest(request)
 	return o
 }
 
 // SetRequest adds the request to the post assets documentation batch params
-func (o *PostAssetsDocumentationBatchParams) SetRequest(request *models.V1AssetsBatchDocumentationRequest) {
+func (o *PostAssetsDocumentationBatchParams) SetRequest(request *models.BatchDocumentationRequest) {
 	o.Request = request
 }
 

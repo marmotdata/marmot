@@ -25,13 +25,13 @@ type ListTeamsResponse struct {
 	Total  int         `json:"total"`
 	Limit  int         `json:"limit"`
 	Offset int         `json:"offset"`
-}
+} // @name ListTeamsResponse
 
 // CreateTeamRequest represents the request body for creating a team.
 type CreateTeamRequest struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-}
+} // @name CreateTeamRequest
 
 // UpdateTeamRequest represents the request body for updating a team.
 type UpdateTeamRequest struct {
@@ -39,33 +39,33 @@ type UpdateTeamRequest struct {
 	Description *string                `json:"description,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 	Tags        []string               `json:"tags,omitempty"`
-}
+} // @name UpdateTeamRequest
 
 // AddMemberRequest represents the request body for adding a team member.
 type AddMemberRequest struct {
 	UserID string `json:"user_id"`
 	Role   string `json:"role"`
-}
+} // @name AddMemberRequest
 
 // UpdateMemberRoleRequest represents the request body for updating a member role.
 type UpdateMemberRoleRequest struct {
 	Role string `json:"role"`
-}
+} // @name UpdateMemberRoleRequest
 
 // ListMembersResponse represents the response from the list members endpoint.
 type ListMembersResponse struct {
 	Members []team.TeamMemberWithUser `json:"members"`
-}
+} // @name ListMembersResponse
 
 // MessageResponse represents a simple message response.
 type MessageResponse struct {
 	Message string `json:"message"`
-}
+} // @name MessageResponse
 
 // ListSSOMappingsResponse represents the response from the SSO mappings list endpoint.
 type ListSSOMappingsResponse struct {
 	Mappings []team.SSOTeamMapping `json:"mappings"`
-}
+} // @name ListSSOMappingsResponse
 
 // CreateSSOMappingRequest represents the request body for creating an SSO mapping.
 type CreateSSOMappingRequest struct {
@@ -73,18 +73,18 @@ type CreateSSOMappingRequest struct {
 	SSOGroupName string `json:"sso_group_name"`
 	TeamID       string `json:"team_id"`
 	MemberRole   string `json:"member_role"`
-}
+} // @name CreateSSOMappingRequest
 
 // UpdateSSOMappingRequest represents the request body for updating an SSO mapping.
 type UpdateSSOMappingRequest struct {
 	TeamID     string `json:"team_id"`
 	MemberRole string `json:"member_role"`
-}
+} // @name UpdateSSOMappingRequest
 
 // SearchOwnersResponse represents the response from the search owners endpoint.
 type SearchOwnersResponse struct {
 	Owners []team.Owner `json:"owners"`
-}
+} // @name SearchOwnersResponse
 
 func NewHandler(teamService *team.Service, userService user.Service, authService auth.Service, cfg *config.Config) *Handler {
 	return &Handler{

@@ -37,14 +37,14 @@ type User struct {
 	Identities         []UserIdentity         `json:"identities,omitempty"`
 	CreatedAt          time.Time              `json:"created_at"`
 	UpdatedAt          time.Time              `json:"updated_at"`
-}
+} // @name User
 
 type Role struct {
 	ID          string       `json:"id"`
 	Name        string       `json:"name"`
 	Description string       `json:"description"`
 	Permissions []Permission `json:"permissions,omitempty"`
-}
+} // @name Role
 
 type Permission struct {
 	ID           string `json:"id"`
@@ -52,7 +52,7 @@ type Permission struct {
 	Description  string `json:"description"`
 	ResourceType string `json:"resource_type"`
 	Action       string `json:"action"`
-}
+} // @name Permission
 
 type CreateUserInput struct {
 	Username       string   `json:"username" validate:"required,min=3,max=255"`
@@ -64,7 +64,7 @@ type CreateUserInput struct {
 	OAuthProvider     string                 `json:"oauth_provider,omitempty"`
 	OAuthProviderID   string                 `json:"oauth_provider_id,omitempty"`
 	OAuthProviderData map[string]interface{} `json:"oauth_provider_data,omitempty"`
-}
+} // @name CreateUserInput
 
 type UpdateUserInput struct {
 	Email          *string                `json:"email,omitempty" validate:"omitempty,email"`
@@ -74,7 +74,7 @@ type UpdateUserInput struct {
 	Active         *bool                  `json:"active,omitempty"`
 	Preferences    map[string]interface{} `json:"preferences,omitempty"`
 	RoleNames      []string               `json:"role_names,omitempty" validate:"omitempty,min=1"`
-}
+} // @name UpdateUserInput
 
 type Filter struct {
 	Query   string

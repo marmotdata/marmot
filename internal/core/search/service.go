@@ -9,7 +9,7 @@ import (
 )
 
 // ResultType represents the type of search result
-type ResultType string
+type ResultType string // @name ResultType
 
 const (
 	ResultTypeAsset       ResultType = "asset"
@@ -28,7 +28,7 @@ type Result struct {
 	URL         string                 `json:"url"`
 	Rank        float32                `json:"rank"`
 	UpdatedAt   *time.Time             `json:"updated_at,omitempty"`
-}
+} // @name Result
 
 // Filter represents search filter options
 type Filter struct {
@@ -44,14 +44,14 @@ type Filter struct {
 type FacetValue struct {
 	Value string `json:"value"`
 	Count int    `json:"count"`
-}
+} // @name FacetValue
 
 type Facets struct {
 	Types      map[ResultType]int `json:"types"`
 	AssetTypes []FacetValue       `json:"asset_types"`
 	Providers  []FacetValue       `json:"providers"`
 	Tags       []FacetValue       `json:"tags"`
-}
+} // @name Facets
 
 type Response struct {
 	Results []*Result `json:"results"`
@@ -59,7 +59,7 @@ type Response struct {
 	Facets  *Facets   `json:"facets"`
 	Limit   int       `json:"limit"`
 	Offset  int       `json:"offset"`
-}
+} // @name SearchResponse
 
 type Service interface {
 	Search(ctx context.Context, filter Filter) (*Response, error)

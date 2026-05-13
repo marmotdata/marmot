@@ -56,7 +56,7 @@ GetTeamsIDOK describes a response with status code 200, with default header valu
 OK
 */
 type GetTeamsIDOK struct {
-	Payload *models.TeamTeam
+	Payload *models.Team
 }
 
 // IsSuccess returns true when this get teams Id o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *GetTeamsIDOK) String() string {
 	return fmt.Sprintf("[GET /teams/{id}][%d] getTeamsIdOK %s", 200, payload)
 }
 
-func (o *GetTeamsIDOK) GetPayload() *models.TeamTeam {
+func (o *GetTeamsIDOK) GetPayload() *models.Team {
 	return o.Payload
 }
 
 func (o *GetTeamsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.TeamTeam)
+	o.Payload = new(models.Team)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ GetTeamsIDNotFound describes a response with status code 404, with default heade
 Not Found
 */
 type GetTeamsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get teams Id not found response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetTeamsIDNotFound) String() string {
 	return fmt.Sprintf("[GET /teams/{id}][%d] getTeamsIdNotFound %s", 404, payload)
 }
 
-func (o *GetTeamsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetTeamsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetTeamsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetTeamsIDInternalServerError describes a response with status code 500, with de
 Internal Server Error
 */
 type GetTeamsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get teams Id internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetTeamsIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /teams/{id}][%d] getTeamsIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetTeamsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetTeamsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetTeamsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

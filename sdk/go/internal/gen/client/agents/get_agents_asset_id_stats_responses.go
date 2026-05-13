@@ -44,7 +44,7 @@ GetAgentsAssetIDStatsOK describes a response with status code 200, with default 
 OK
 */
 type GetAgentsAssetIDStatsOK struct {
-	Payload *models.AgentStats
+	Payload *models.Stats
 }
 
 // IsSuccess returns true when this get agents asset Id stats o k response has a 2xx status code
@@ -87,13 +87,13 @@ func (o *GetAgentsAssetIDStatsOK) String() string {
 	return fmt.Sprintf("[GET /agents/{asset_id}/stats][%d] getAgentsAssetIdStatsOK %s", 200, payload)
 }
 
-func (o *GetAgentsAssetIDStatsOK) GetPayload() *models.AgentStats {
+func (o *GetAgentsAssetIDStatsOK) GetPayload() *models.Stats {
 	return o.Payload
 }
 
 func (o *GetAgentsAssetIDStatsOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AgentStats)
+	o.Payload = new(models.Stats)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

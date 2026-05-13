@@ -14,11 +14,11 @@ import (
 
 // GlossaryListResult glossary list result
 //
-// swagger:model glossary.ListResult
+// swagger:model GlossaryListResult
 type GlossaryListResult struct {
 
 	// terms
-	Terms []*GlossaryGlossaryTerm `json:"terms"`
+	Terms []*GlossaryTerm `json:"terms"`
 
 	// total
 	Total int64 `json:"total,omitempty"`

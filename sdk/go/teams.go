@@ -9,13 +9,13 @@ import (
 )
 
 // Team is a single team.
-type Team = models.TeamTeam
+type Team = models.Team
 
 // TeamList is a paginated set of teams.
-type TeamList = models.V1TeamsListTeamsResponse
+type TeamList = models.ListTeamsResponse
 
 // TeamMembers is the response from TeamsService.Members.
-type TeamMembers = models.V1TeamsListMembersResponse
+type TeamMembers = models.ListMembersResponse
 
 // TeamsListOptions paginates TeamsService.List.
 type TeamsListOptions struct {

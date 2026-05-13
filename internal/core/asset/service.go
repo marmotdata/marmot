@@ -21,13 +21,13 @@ type AssetSource struct {
 	LastSyncAt time.Time              `json:"last_sync_at"`
 	Properties map[string]interface{} `json:"properties"`
 	Priority   int                    `json:"priority"`
-}
+} // @name AssetSource
 
 type ExternalLink struct {
 	Name string `json:"name"`
 	Icon string `json:"icon"`
 	URL  string `json:"url"`
-}
+} // @name AssetExternalLink
 
 type Asset struct {
 	ID              string                 `json:"id,omitempty"`
@@ -52,13 +52,13 @@ type Asset struct {
 	UpdatedAt       time.Time              `json:"updated_at,omitempty"`
 	LastSyncAt      time.Time              `json:"last_sync_at,omitempty"`
 	CreatedBy       string                 `json:"created_by,omitempty"`
-}
+} // @name Asset
 
 type Environment struct {
 	Name     string                 `json:"name"`
 	Path     string                 `json:"path"`
 	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
+} // @name Environment
 
 type CreateInput struct {
 	Name          *string                `json:"name" validate:"required"`
@@ -134,13 +134,13 @@ type MetadataFieldSuggestion struct {
 	Example   interface{} `json:"example"`
 	PathParts []string    `json:"path_parts"`
 	Types     []string    `json:"types"`
-}
+} // @name MetadataFieldSuggestion
 
 type MetadataValueSuggestion struct {
 	Value   string `json:"value"`
 	Count   int    `json:"count"`
 	Example *Asset `json:"example,omitempty"`
-}
+} // @name MetadataValueSuggestion
 
 type RunHistory struct {
 	ID           string     `json:"id"`
@@ -153,7 +153,7 @@ type RunHistory struct {
 	DurationMs   *int64     `json:"duration_ms,omitempty"`
 	Type         string     `json:"type"`
 	EventTime    time.Time  `json:"event_time"`
-}
+} // @name RunHistory
 
 type HistogramBucket struct {
 	Date     string `json:"date"`
@@ -163,7 +163,7 @@ type HistogramBucket struct {
 	Running  int    `json:"running"`
 	Abort    int    `json:"abort"`
 	Other    int    `json:"other"`
-}
+} // @name HistogramBucket
 
 type AssetTerm struct {
 	TermID            string    `json:"term_id"`
@@ -173,7 +173,7 @@ type AssetTerm struct {
 	CreatedAt         time.Time `json:"created_at"`
 	CreatedBy         *string   `json:"created_by,omitempty"`
 	CreatedByUsername *string   `json:"created_by_username,omitempty"`
-}
+} // @name AssetTerm
 
 var (
 	ErrInvalidInput  = errors.New("invalid input")

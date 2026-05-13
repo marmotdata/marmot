@@ -62,7 +62,7 @@ PostTeamsCreated describes a response with status code 201, with default header 
 Created
 */
 type PostTeamsCreated struct {
-	Payload *models.TeamTeam
+	Payload *models.Team
 }
 
 // IsSuccess returns true when this post teams created response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PostTeamsCreated) String() string {
 	return fmt.Sprintf("[POST /teams][%d] postTeamsCreated %s", 201, payload)
 }
 
-func (o *PostTeamsCreated) GetPayload() *models.TeamTeam {
+func (o *PostTeamsCreated) GetPayload() *models.Team {
 	return o.Payload
 }
 
 func (o *PostTeamsCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.TeamTeam)
+	o.Payload = new(models.Team)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ PostTeamsBadRequest describes a response with status code 400, with default head
 Bad Request
 */
 type PostTeamsBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post teams bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *PostTeamsBadRequest) String() string {
 	return fmt.Sprintf("[POST /teams][%d] postTeamsBadRequest %s", 400, payload)
 }
 
-func (o *PostTeamsBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostTeamsBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostTeamsBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ PostTeamsConflict describes a response with status code 409, with default header
 Conflict
 */
 type PostTeamsConflict struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post teams conflict response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *PostTeamsConflict) String() string {
 	return fmt.Sprintf("[POST /teams][%d] postTeamsConflict %s", 409, payload)
 }
 
-func (o *PostTeamsConflict) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostTeamsConflict) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostTeamsConflict) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ PostTeamsInternalServerError describes a response with status code 500, with def
 Internal Server Error
 */
 type PostTeamsInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post teams internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *PostTeamsInternalServerError) String() string {
 	return fmt.Sprintf("[POST /teams][%d] postTeamsInternalServerError %s", 500, payload)
 }
 
-func (o *PostTeamsInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostTeamsInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostTeamsInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -44,7 +44,7 @@ GetAuthProvidersOK describes a response with status code 200, with default heade
 OK
 */
 type GetAuthProvidersOK struct {
-	Payload *models.AuthAuthConfig
+	Payload *models.AuthConfig
 }
 
 // IsSuccess returns true when this get auth providers o k response has a 2xx status code
@@ -87,13 +87,13 @@ func (o *GetAuthProvidersOK) String() string {
 	return fmt.Sprintf("[GET /auth-providers][%d] getAuthProvidersOK %s", 200, payload)
 }
 
-func (o *GetAuthProvidersOK) GetPayload() *models.AuthAuthConfig {
+func (o *GetAuthProvidersOK) GetPayload() *models.AuthConfig {
 	return o.Payload
 }
 
 func (o *GetAuthProvidersOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AuthAuthConfig)
+	o.Payload = new(models.AuthConfig)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

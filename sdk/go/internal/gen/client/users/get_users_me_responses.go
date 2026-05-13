@@ -50,7 +50,7 @@ GetUsersMeOK describes a response with status code 200, with default header valu
 OK
 */
 type GetUsersMeOK struct {
-	Payload *models.UserUser
+	Payload *models.User
 }
 
 // IsSuccess returns true when this get users me o k response has a 2xx status code
@@ -93,13 +93,13 @@ func (o *GetUsersMeOK) String() string {
 	return fmt.Sprintf("[GET /users/me][%d] getUsersMeOK %s", 200, payload)
 }
 
-func (o *GetUsersMeOK) GetPayload() *models.UserUser {
+func (o *GetUsersMeOK) GetPayload() *models.User {
 	return o.Payload
 }
 
 func (o *GetUsersMeOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.UserUser)
+	o.Payload = new(models.User)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -120,7 +120,7 @@ GetUsersMeUnauthorized describes a response with status code 401, with default h
 Unauthorized
 */
 type GetUsersMeUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get users me unauthorized response has a 2xx status code
@@ -163,13 +163,13 @@ func (o *GetUsersMeUnauthorized) String() string {
 	return fmt.Sprintf("[GET /users/me][%d] getUsersMeUnauthorized %s", 401, payload)
 }
 
-func (o *GetUsersMeUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetUsersMeUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetUsersMeUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

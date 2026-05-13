@@ -205,7 +205,7 @@ func (r *PostgresMembershipRepository) GetMemberships(ctx context.Context, dataP
 	}
 	defer rows.Close()
 
-	var memberships []Membership
+	memberships := []Membership{}
 	for rows.Next() {
 		var m Membership
 		if err := rows.Scan(&m.DataProductID, &m.AssetID, &m.Source, &m.RuleID, &m.CreatedAt); err != nil {
@@ -239,7 +239,7 @@ func (r *PostgresMembershipRepository) GetDataProductsForAsset(ctx context.Conte
 	}
 	defer rows.Close()
 
-	var productIDs []string
+	productIDs := []string{}
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
@@ -333,7 +333,7 @@ func (r *PostgresMembershipRepository) FindCandidateRules(ctx context.Context, s
 	}
 	defer rows.Close()
 
-	var candidates []CandidateRule
+	candidates := []CandidateRule{}
 	for rows.Next() {
 		var c CandidateRule
 		if err := rows.Scan(&c.RuleID, &c.DataProductID); err != nil {

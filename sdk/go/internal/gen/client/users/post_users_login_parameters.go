@@ -64,7 +64,7 @@ type PostUsersLoginParams struct {
 
 	   Login credentials
 	*/
-	Credentials *models.V1UsersLoginRequest
+	Credentials *models.LoginRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostUsersLoginParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithCredentials adds the credentials to the post users login params
-func (o *PostUsersLoginParams) WithCredentials(credentials *models.V1UsersLoginRequest) *PostUsersLoginParams {
+func (o *PostUsersLoginParams) WithCredentials(credentials *models.LoginRequest) *PostUsersLoginParams {
 	o.SetCredentials(credentials)
 	return o
 }
 
 // SetCredentials adds the credentials to the post users login params
-func (o *PostUsersLoginParams) SetCredentials(credentials *models.V1UsersLoginRequest) {
+func (o *PostUsersLoginParams) SetCredentials(credentials *models.LoginRequest) {
 	o.Credentials = credentials
 }
 

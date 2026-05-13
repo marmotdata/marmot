@@ -75,7 +75,7 @@ def catalog_tools(client: Client) -> list[BaseTool]:
         After this returns, use ``lookup_asset`` (when you know type+provider+name)
         or ``get_asset`` (when you have an id from these results) for full details.
         """
-        raw = client.search(query, limit=limit)
+        raw = client.search(query, limit=limit).to_dict()
         hits = []
         for r in raw.get("results") or []:
             md = r.get("metadata") or {}
@@ -99,11 +99,9 @@ def catalog_tools(client: Client) -> list[BaseTool]:
         ``search_catalog`` finds a candidate, when you need column/schema
         details to write a query or understand structure.
         """
-        return client.assets.get(asset_id)
+        return client.assets.get(asset_id).to_dict()
 
-    def lookup_asset(
-        asset_type: str, service: str, name: str
-    ) -> dict[str, Any] | None:
+    def lookup_asset(asset_type: str, service: str, name: str) -> dict[str, Any] | None:
         """Look up a single asset by its (type, service, name) triple.
 
         Use this when you already know the natural identifiers — for example
@@ -111,7 +109,7 @@ def catalog_tools(client: Client) -> list[BaseTool]:
         Returns ``None`` if no asset matches.
         """
         try:
-            return client.assets.lookup(type=asset_type, service=service, name=name)
+            return client.assets.lookup(type=asset_type, service=service, name=name).to_dict()
         except NotFoundError:
             return None
 
@@ -122,7 +120,7 @@ def catalog_tools(client: Client) -> list[BaseTool]:
         understand where data comes from, who/what writes to a table, or to
         find a root source you can query directly.
         """
-        return client.lineage.upstream(asset_id, depth=depth)
+        return client.lineage.upstream(asset_id, limit=depth).to_dict()
 
     # Tools whose return value uniquely identifies the asset the agent fetched
     # opt in to lineage emission. search_catalog deliberately does NOT — its

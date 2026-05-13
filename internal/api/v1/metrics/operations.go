@@ -17,12 +17,12 @@ type GetMetricsRequest struct {
 	Labels          map[string]string `json:"labels"`
 	AggregationType string            `json:"aggregation"`
 	BucketSize      string            `json:"bucket_size"`
-}
+} // @name GetMetricsRequest
 
 type GetMetricsResponse struct {
 	Metrics []metrics.AggregatedMetric `json:"metrics"`
 	Query   GetMetricsRequest          `json:"query"`
-}
+} // @name GetMetricsResponse
 
 // @Summary Get metrics for UI
 // @Description Get aggregated metrics for dashboard display
@@ -246,7 +246,7 @@ func (h *Handler) getTopAssets(w http.ResponseWriter, r *http.Request) {
 
 type TotalAssetsResponse struct {
 	Count int64 `json:"count"`
-}
+} // @name TotalAssetsResponse
 
 // @Summary Get total assets count
 // @Description Get the total number of assets
@@ -267,7 +267,7 @@ func (h *Handler) getTotalAssets(w http.ResponseWriter, r *http.Request) {
 
 type AssetsByTypeResponse struct {
 	Assets map[string]int64 `json:"assets"`
-}
+} // @name AssetsByTypeResponse
 
 // @Summary Get assets by type
 // @Description Get asset counts grouped by type
@@ -288,7 +288,7 @@ func (h *Handler) getAssetsByType(w http.ResponseWriter, r *http.Request) {
 
 type AssetsByProviderResponse struct {
 	Assets map[string]int64 `json:"assets"`
-}
+} // @name AssetsByProviderResponse
 
 // @Summary Get assets by provider
 // @Description Get asset counts grouped by provider
@@ -311,7 +311,7 @@ type AssetsWithSchemasResponse struct {
 	Count      int64   `json:"count"`
 	Total      int64   `json:"total"`
 	Percentage float64 `json:"percentage"`
-}
+} // @name AssetsWithSchemasResponse
 
 // @Summary Get assets with schemas count
 // @Description Get the count of assets that have schemas defined
@@ -350,7 +350,7 @@ func (h *Handler) getAssetsWithSchemas(w http.ResponseWriter, r *http.Request) {
 
 type AssetsByOwnerResponse struct {
 	Assets map[string]int64 `json:"assets"`
-}
+} // @name AssetsByOwnerResponse
 
 // @Summary Get assets by owner
 // @Description Get asset counts grouped by owner

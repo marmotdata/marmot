@@ -15,7 +15,7 @@ type ListUsersResponse struct {
 	Total  int          `json:"total"`
 	Limit  int          `json:"limit"`
 	Offset int          `json:"offset"`
-}
+} // @name ListUsersResponse
 
 type UserSearchResult struct {
 	ID             string  `json:"id"`

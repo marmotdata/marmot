@@ -9,7 +9,7 @@ import (
 )
 
 // OwnerSearchResults is the response from OwnersService.Search.
-type OwnerSearchResults = models.V1TeamsSearchOwnersResponse
+type OwnerSearchResults = models.SearchOwnersResponse
 
 // OwnerSearchOptions filters OwnersService.Search.
 type OwnerSearchOptions struct {

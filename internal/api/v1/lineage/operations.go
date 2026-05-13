@@ -161,7 +161,11 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 	assetID := parts[len(parts)-1]
 
 	limit := 10
-	if limitStr := r.URL.Query().Get("depth"); limitStr != "" {
+	limitStr := r.URL.Query().Get("limit")
+	if limitStr == "" {
+		limitStr = r.URL.Query().Get("depth") // legacy alias
+	}
+	if limitStr != "" {
 		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 {
 			limit = l
 		}

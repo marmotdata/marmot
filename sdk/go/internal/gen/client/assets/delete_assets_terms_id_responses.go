@@ -56,7 +56,7 @@ DeleteAssetsTermsIDOK describes a response with status code 200, with default he
 OK
 */
 type DeleteAssetsTermsIDOK struct {
-	Payload []*models.AssetAssetTerm
+	Payload []*models.AssetTerm
 }
 
 // IsSuccess returns true when this delete assets terms Id o k response has a 2xx status code
@@ -99,7 +99,7 @@ func (o *DeleteAssetsTermsIDOK) String() string {
 	return fmt.Sprintf("[DELETE /assets/terms/{id}][%d] deleteAssetsTermsIdOK %s", 200, payload)
 }
 
-func (o *DeleteAssetsTermsIDOK) GetPayload() []*models.AssetAssetTerm {
+func (o *DeleteAssetsTermsIDOK) GetPayload() []*models.AssetTerm {
 	return o.Payload
 }
 
@@ -124,7 +124,7 @@ DeleteAssetsTermsIDBadRequest describes a response with status code 400, with de
 Bad Request
 */
 type DeleteAssetsTermsIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete assets terms Id bad request response has a 2xx status code
@@ -167,13 +167,13 @@ func (o *DeleteAssetsTermsIDBadRequest) String() string {
 	return fmt.Sprintf("[DELETE /assets/terms/{id}][%d] deleteAssetsTermsIdBadRequest %s", 400, payload)
 }
 
-func (o *DeleteAssetsTermsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAssetsTermsIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetsTermsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -194,7 +194,7 @@ DeleteAssetsTermsIDNotFound describes a response with status code 404, with defa
 Not Found
 */
 type DeleteAssetsTermsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete assets terms Id not found response has a 2xx status code
@@ -237,13 +237,13 @@ func (o *DeleteAssetsTermsIDNotFound) String() string {
 	return fmt.Sprintf("[DELETE /assets/terms/{id}][%d] deleteAssetsTermsIdNotFound %s", 404, payload)
 }
 
-func (o *DeleteAssetsTermsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAssetsTermsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetsTermsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

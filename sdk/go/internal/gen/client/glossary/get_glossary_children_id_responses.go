@@ -130,7 +130,7 @@ GetGlossaryChildrenIDBadRequest describes a response with status code 400, with 
 Bad Request
 */
 type GetGlossaryChildrenIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary children Id bad request response has a 2xx status code
@@ -173,13 +173,13 @@ func (o *GetGlossaryChildrenIDBadRequest) String() string {
 	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdBadRequest %s", 400, payload)
 }
 
-func (o *GetGlossaryChildrenIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryChildrenIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryChildrenIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -200,7 +200,7 @@ GetGlossaryChildrenIDNotFound describes a response with status code 404, with de
 Not Found
 */
 type GetGlossaryChildrenIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary children Id not found response has a 2xx status code
@@ -243,13 +243,13 @@ func (o *GetGlossaryChildrenIDNotFound) String() string {
 	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdNotFound %s", 404, payload)
 }
 
-func (o *GetGlossaryChildrenIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryChildrenIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryChildrenIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -270,7 +270,7 @@ GetGlossaryChildrenIDInternalServerError describes a response with status code 5
 Internal Server Error
 */
 type GetGlossaryChildrenIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary children Id internal server error response has a 2xx status code
@@ -313,13 +313,13 @@ func (o *GetGlossaryChildrenIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /glossary/children/{id}][%d] getGlossaryChildrenIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetGlossaryChildrenIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryChildrenIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryChildrenIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -56,7 +56,7 @@ GetAssetsIDOK describes a response with status code 200, with default header val
 OK
 */
 type GetAssetsIDOK struct {
-	Payload *models.AssetAsset
+	Payload *models.Asset
 }
 
 // IsSuccess returns true when this get assets Id o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *GetAssetsIDOK) String() string {
 	return fmt.Sprintf("[GET /assets/{id}][%d] getAssetsIdOK %s", 200, payload)
 }
 
-func (o *GetAssetsIDOK) GetPayload() *models.AssetAsset {
+func (o *GetAssetsIDOK) GetPayload() *models.Asset {
 	return o.Payload
 }
 
 func (o *GetAssetsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AssetAsset)
+	o.Payload = new(models.Asset)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ GetAssetsIDNotFound describes a response with status code 404, with default head
 Not Found
 */
 type GetAssetsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets Id not found response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetAssetsIDNotFound) String() string {
 	return fmt.Sprintf("[GET /assets/{id}][%d] getAssetsIdNotFound %s", 404, payload)
 }
 
-func (o *GetAssetsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetAssetsIDInternalServerError describes a response with status code 500, with d
 Internal Server Error
 */
 type GetAssetsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets Id internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetAssetsIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /assets/{id}][%d] getAssetsIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

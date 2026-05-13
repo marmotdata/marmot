@@ -56,7 +56,7 @@ GetSsoTeamMappingsIDOK describes a response with status code 200, with default h
 OK
 */
 type GetSsoTeamMappingsIDOK struct {
-	Payload *models.TeamSSOTeamMapping
+	Payload *models.SSOTeamMapping
 }
 
 // IsSuccess returns true when this get sso team mappings Id o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *GetSsoTeamMappingsIDOK) String() string {
 	return fmt.Sprintf("[GET /sso/team-mappings/{id}][%d] getSsoTeamMappingsIdOK %s", 200, payload)
 }
 
-func (o *GetSsoTeamMappingsIDOK) GetPayload() *models.TeamSSOTeamMapping {
+func (o *GetSsoTeamMappingsIDOK) GetPayload() *models.SSOTeamMapping {
 	return o.Payload
 }
 
 func (o *GetSsoTeamMappingsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.TeamSSOTeamMapping)
+	o.Payload = new(models.SSOTeamMapping)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ GetSsoTeamMappingsIDNotFound describes a response with status code 404, with def
 Not Found
 */
 type GetSsoTeamMappingsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get sso team mappings Id not found response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetSsoTeamMappingsIDNotFound) String() string {
 	return fmt.Sprintf("[GET /sso/team-mappings/{id}][%d] getSsoTeamMappingsIdNotFound %s", 404, payload)
 }
 
-func (o *GetSsoTeamMappingsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetSsoTeamMappingsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetSsoTeamMappingsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetSsoTeamMappingsIDInternalServerError describes a response with status code 50
 Internal Server Error
 */
 type GetSsoTeamMappingsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get sso team mappings Id internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetSsoTeamMappingsIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /sso/team-mappings/{id}][%d] getSsoTeamMappingsIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetSsoTeamMappingsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetSsoTeamMappingsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetSsoTeamMappingsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

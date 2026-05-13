@@ -15,7 +15,7 @@ type Run = models.PluginRun
 type RunList = runs.GetRunsOKBody
 
 // RunEntities is the response from RunsService.Entities.
-type RunEntities = models.V1RunsRunEntitiesResponse
+type RunEntities = models.RunEntitiesResponse
 
 // RunsListOptions filters RunsService.List. Pipelines and Statuses are comma-separated.
 type RunsListOptions struct {

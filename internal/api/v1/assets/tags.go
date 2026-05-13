@@ -12,7 +12,7 @@ import (
 
 type TagRequest struct {
 	Tag string `json:"tag" validate:"required"`
-}
+} // @name TagRequest
 
 // @Summary Add tag to asset
 // @Description Add a new tag to an existing asset

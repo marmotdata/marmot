@@ -70,7 +70,7 @@ type PostTeamsIDMembersParams struct {
 
 	   Member addition request
 	*/
-	Member *models.V1TeamsAddMemberRequest
+	Member *models.AddMemberRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -137,13 +137,13 @@ func (o *PostTeamsIDMembersParams) SetID(id string) {
 }
 
 // WithMember adds the member to the post teams ID members params
-func (o *PostTeamsIDMembersParams) WithMember(member *models.V1TeamsAddMemberRequest) *PostTeamsIDMembersParams {
+func (o *PostTeamsIDMembersParams) WithMember(member *models.AddMemberRequest) *PostTeamsIDMembersParams {
 	o.SetMember(member)
 	return o
 }
 
 // SetMember adds the member to the post teams ID members params
-func (o *PostTeamsIDMembersParams) SetMember(member *models.V1TeamsAddMemberRequest) {
+func (o *PostTeamsIDMembersParams) SetMember(member *models.AddMemberRequest) {
 	o.Member = member
 }
 

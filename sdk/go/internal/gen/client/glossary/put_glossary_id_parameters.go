@@ -70,7 +70,7 @@ type PutGlossaryIDParams struct {
 
 	   Glossary term update data
 	*/
-	Term *models.V1GlossaryUpdateTermRequest
+	Term *models.UpdateTermRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -137,13 +137,13 @@ func (o *PutGlossaryIDParams) SetID(id string) {
 }
 
 // WithTerm adds the term to the put glossary ID params
-func (o *PutGlossaryIDParams) WithTerm(term *models.V1GlossaryUpdateTermRequest) *PutGlossaryIDParams {
+func (o *PutGlossaryIDParams) WithTerm(term *models.UpdateTermRequest) *PutGlossaryIDParams {
 	o.SetTerm(term)
 	return o
 }
 
 // SetTerm adds the term to the put glossary ID params
-func (o *PutGlossaryIDParams) SetTerm(term *models.V1GlossaryUpdateTermRequest) {
+func (o *PutGlossaryIDParams) SetTerm(term *models.UpdateTermRequest) {
 	o.Term = term
 }
 

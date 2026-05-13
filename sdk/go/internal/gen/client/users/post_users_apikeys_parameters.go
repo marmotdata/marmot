@@ -64,7 +64,7 @@ type PostUsersApikeysParams struct {
 
 	   API key creation request
 	*/
-	Key *models.V1UsersCreateAPIKeyRequest
+	Key *models.CreateAPIKeyRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostUsersApikeysParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithKey adds the key to the post users apikeys params
-func (o *PostUsersApikeysParams) WithKey(key *models.V1UsersCreateAPIKeyRequest) *PostUsersApikeysParams {
+func (o *PostUsersApikeysParams) WithKey(key *models.CreateAPIKeyRequest) *PostUsersApikeysParams {
 	o.SetKey(key)
 	return o
 }
 
 // SetKey adds the key to the post users apikeys params
-func (o *PostUsersApikeysParams) SetKey(key *models.V1UsersCreateAPIKeyRequest) {
+func (o *PostUsersApikeysParams) SetKey(key *models.CreateAPIKeyRequest) {
 	o.Key = key
 }
 

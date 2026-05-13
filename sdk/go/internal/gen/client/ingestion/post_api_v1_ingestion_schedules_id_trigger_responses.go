@@ -62,7 +62,7 @@ PostAPIV1IngestionSchedulesIDTriggerCreated describes a response with status cod
 Created
 */
 type PostAPIV1IngestionSchedulesIDTriggerCreated struct {
-	Payload *models.RunsJobRun
+	Payload *models.JobRun
 }
 
 // IsSuccess returns true when this post Api v1 ingestion schedules Id trigger created response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PostAPIV1IngestionSchedulesIDTriggerCreated) String() string {
 	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postApiV1IngestionSchedulesIdTriggerCreated %s", 201, payload)
 }
 
-func (o *PostAPIV1IngestionSchedulesIDTriggerCreated) GetPayload() *models.RunsJobRun {
+func (o *PostAPIV1IngestionSchedulesIDTriggerCreated) GetPayload() *models.JobRun {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionSchedulesIDTriggerCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.RunsJobRun)
+	o.Payload = new(models.JobRun)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ PostAPIV1IngestionSchedulesIDTriggerUnauthorized describes a response with statu
 Unauthorized
 */
 type PostAPIV1IngestionSchedulesIDTriggerUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 ingestion schedules Id trigger unauthorized response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *PostAPIV1IngestionSchedulesIDTriggerUnauthorized) String() string {
 	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postApiV1IngestionSchedulesIdTriggerUnauthorized %s", 401, payload)
 }
 
-func (o *PostAPIV1IngestionSchedulesIDTriggerUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1IngestionSchedulesIDTriggerUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionSchedulesIDTriggerUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ PostAPIV1IngestionSchedulesIDTriggerNotFound describes a response with status co
 Not Found
 */
 type PostAPIV1IngestionSchedulesIDTriggerNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 ingestion schedules Id trigger not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *PostAPIV1IngestionSchedulesIDTriggerNotFound) String() string {
 	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postApiV1IngestionSchedulesIdTriggerNotFound %s", 404, payload)
 }
 
-func (o *PostAPIV1IngestionSchedulesIDTriggerNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1IngestionSchedulesIDTriggerNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionSchedulesIDTriggerNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ PostAPIV1IngestionSchedulesIDTriggerInternalServerError describes a response wit
 Internal Server Error
 */
 type PostAPIV1IngestionSchedulesIDTriggerInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 ingestion schedules Id trigger internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *PostAPIV1IngestionSchedulesIDTriggerInternalServerError) String() strin
 	return fmt.Sprintf("[POST /api/v1/ingestion/schedules/{id}/trigger][%d] postApiV1IngestionSchedulesIdTriggerInternalServerError %s", 500, payload)
 }
 
-func (o *PostAPIV1IngestionSchedulesIDTriggerInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1IngestionSchedulesIDTriggerInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionSchedulesIDTriggerInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -124,7 +124,7 @@ DeleteProductsImagesIDPurposeNotFound describes a response with status code 404,
 Not Found
 */
 type DeleteProductsImagesIDPurposeNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete products images Id purpose not found response has a 2xx status code
@@ -167,13 +167,13 @@ func (o *DeleteProductsImagesIDPurposeNotFound) String() string {
 	return fmt.Sprintf("[DELETE /products/images/{id}/{purpose}][%d] deleteProductsImagesIdPurposeNotFound %s", 404, payload)
 }
 
-func (o *DeleteProductsImagesIDPurposeNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteProductsImagesIDPurposeNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteProductsImagesIDPurposeNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -194,7 +194,7 @@ DeleteProductsImagesIDPurposeInternalServerError describes a response with statu
 Internal Server Error
 */
 type DeleteProductsImagesIDPurposeInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete products images Id purpose internal server error response has a 2xx status code
@@ -237,13 +237,13 @@ func (o *DeleteProductsImagesIDPurposeInternalServerError) String() string {
 	return fmt.Sprintf("[DELETE /products/images/{id}/{purpose}][%d] deleteProductsImagesIdPurposeInternalServerError %s", 500, payload)
 }
 
-func (o *DeleteProductsImagesIDPurposeInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteProductsImagesIDPurposeInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteProductsImagesIDPurposeInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

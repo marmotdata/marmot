@@ -106,7 +106,7 @@ PutUsersPreferencesBadRequest describes a response with status code 400, with de
 Bad Request
 */
 type PutUsersPreferencesBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put users preferences bad request response has a 2xx status code
@@ -149,13 +149,13 @@ func (o *PutUsersPreferencesBadRequest) String() string {
 	return fmt.Sprintf("[PUT /users/preferences][%d] putUsersPreferencesBadRequest %s", 400, payload)
 }
 
-func (o *PutUsersPreferencesBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutUsersPreferencesBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutUsersPreferencesBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

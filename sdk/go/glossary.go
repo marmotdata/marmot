@@ -9,7 +9,7 @@ import (
 )
 
 // GlossaryTerm is a single business-glossary term.
-type GlossaryTerm = models.GlossaryGlossaryTerm
+type GlossaryTerm = models.GlossaryTerm
 
 // GlossaryTermList is a paginated set of glossary terms.
 type GlossaryTermList = models.GlossaryListResult
@@ -99,7 +99,7 @@ func (s *GlossaryService) Get(ctx context.Context, id string) (*GlossaryTerm, er
 
 // Create creates a new glossary term.
 func (s *GlossaryService) Create(ctx context.Context, in CreateTermInput) (*GlossaryTerm, error) {
-	body := &models.V1GlossaryCreateTermRequest{
+	body := &models.CreateTermRequest{
 		Name:         &in.Name,
 		Definition:   &in.Definition,
 		Description:  in.Description,
@@ -115,7 +115,7 @@ func (s *GlossaryService) Create(ctx context.Context, in CreateTermInput) (*Glos
 
 // Update modifies an existing glossary term.
 func (s *GlossaryService) Update(ctx context.Context, id string, in UpdateTermInput) (*GlossaryTerm, error) {
-	body := &models.V1GlossaryUpdateTermRequest{
+	body := &models.UpdateTermRequest{
 		Name:         in.Name,
 		Definition:   in.Definition,
 		Description:  in.Description,

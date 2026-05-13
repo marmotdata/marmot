@@ -16,7 +16,7 @@ import (
 type OwnerRequest struct {
 	ID   string `json:"id" validate:"required"`
 	Type string `json:"type" validate:"required,oneof=user team"`
-}
+} // @name OwnerRequest
 
 type CreateTermRequest struct {
 	Name         string                 `json:"name" validate:"required"`
@@ -25,7 +25,7 @@ type CreateTermRequest struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []OwnerRequest         `json:"owners,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-}
+} // @name CreateTermRequest
 
 type UpdateTermRequest struct {
 	Name         *string                `json:"name,omitempty"`
@@ -34,7 +34,7 @@ type UpdateTermRequest struct {
 	ParentTermID *string                `json:"parent_term_id,omitempty"`
 	Owners       []OwnerRequest         `json:"owners,omitempty"`
 	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-}
+} // @name UpdateTermRequest
 
 // CreateTerm creates a new glossary term
 // @Summary Create glossary term

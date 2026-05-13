@@ -74,7 +74,7 @@ GetAPIV1AssetsPreviewIDOK describes a response with status code 200, with defaul
 OK
 */
 type GetAPIV1AssetsPreviewIDOK struct {
-	Payload *models.V1AssetsPreviewResponse
+	Payload *models.PreviewResponse
 }
 
 // IsSuccess returns true when this get Api v1 assets preview Id o k response has a 2xx status code
@@ -117,13 +117,13 @@ func (o *GetAPIV1AssetsPreviewIDOK) String() string {
 	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getApiV1AssetsPreviewIdOK %s", 200, payload)
 }
 
-func (o *GetAPIV1AssetsPreviewIDOK) GetPayload() *models.V1AssetsPreviewResponse {
+func (o *GetAPIV1AssetsPreviewIDOK) GetPayload() *models.PreviewResponse {
 	return o.Payload
 }
 
 func (o *GetAPIV1AssetsPreviewIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1AssetsPreviewResponse)
+	o.Payload = new(models.PreviewResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -144,7 +144,7 @@ GetAPIV1AssetsPreviewIDBadRequest describes a response with status code 400, wit
 Bad Request
 */
 type GetAPIV1AssetsPreviewIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get Api v1 assets preview Id bad request response has a 2xx status code
@@ -187,13 +187,13 @@ func (o *GetAPIV1AssetsPreviewIDBadRequest) String() string {
 	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getApiV1AssetsPreviewIdBadRequest %s", 400, payload)
 }
 
-func (o *GetAPIV1AssetsPreviewIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAPIV1AssetsPreviewIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAPIV1AssetsPreviewIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -214,7 +214,7 @@ GetAPIV1AssetsPreviewIDForbidden describes a response with status code 403, with
 Missing assets:preview permission
 */
 type GetAPIV1AssetsPreviewIDForbidden struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get Api v1 assets preview Id forbidden response has a 2xx status code
@@ -257,13 +257,13 @@ func (o *GetAPIV1AssetsPreviewIDForbidden) String() string {
 	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getApiV1AssetsPreviewIdForbidden %s", 403, payload)
 }
 
-func (o *GetAPIV1AssetsPreviewIDForbidden) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAPIV1AssetsPreviewIDForbidden) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAPIV1AssetsPreviewIDForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -284,7 +284,7 @@ GetAPIV1AssetsPreviewIDNotFound describes a response with status code 404, with 
 Not Found
 */
 type GetAPIV1AssetsPreviewIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get Api v1 assets preview Id not found response has a 2xx status code
@@ -327,13 +327,13 @@ func (o *GetAPIV1AssetsPreviewIDNotFound) String() string {
 	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getApiV1AssetsPreviewIdNotFound %s", 404, payload)
 }
 
-func (o *GetAPIV1AssetsPreviewIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAPIV1AssetsPreviewIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAPIV1AssetsPreviewIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -354,7 +354,7 @@ GetAPIV1AssetsPreviewIDInternalServerError describes a response with status code
 Internal Server Error
 */
 type GetAPIV1AssetsPreviewIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get Api v1 assets preview Id internal server error response has a 2xx status code
@@ -397,13 +397,13 @@ func (o *GetAPIV1AssetsPreviewIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getApiV1AssetsPreviewIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetAPIV1AssetsPreviewIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAPIV1AssetsPreviewIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAPIV1AssetsPreviewIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -424,7 +424,7 @@ GetAPIV1AssetsPreviewIDNotImplemented describes a response with status code 501,
 Data preview not supported for this asset
 */
 type GetAPIV1AssetsPreviewIDNotImplemented struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get Api v1 assets preview Id not implemented response has a 2xx status code
@@ -467,13 +467,13 @@ func (o *GetAPIV1AssetsPreviewIDNotImplemented) String() string {
 	return fmt.Sprintf("[GET /api/v1/assets/preview/{id}][%d] getApiV1AssetsPreviewIdNotImplemented %s", 501, payload)
 }
 
-func (o *GetAPIV1AssetsPreviewIDNotImplemented) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAPIV1AssetsPreviewIDNotImplemented) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAPIV1AssetsPreviewIDNotImplemented) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

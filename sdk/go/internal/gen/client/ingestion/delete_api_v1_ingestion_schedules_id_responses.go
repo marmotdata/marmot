@@ -118,7 +118,7 @@ DeleteAPIV1IngestionSchedulesIDUnauthorized describes a response with status cod
 Unauthorized
 */
 type DeleteAPIV1IngestionSchedulesIDUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete Api v1 ingestion schedules Id unauthorized response has a 2xx status code
@@ -161,13 +161,13 @@ func (o *DeleteAPIV1IngestionSchedulesIDUnauthorized) String() string {
 	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteApiV1IngestionSchedulesIdUnauthorized %s", 401, payload)
 }
 
-func (o *DeleteAPIV1IngestionSchedulesIDUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAPIV1IngestionSchedulesIDUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAPIV1IngestionSchedulesIDUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -188,7 +188,7 @@ DeleteAPIV1IngestionSchedulesIDNotFound describes a response with status code 40
 Not Found
 */
 type DeleteAPIV1IngestionSchedulesIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete Api v1 ingestion schedules Id not found response has a 2xx status code
@@ -231,13 +231,13 @@ func (o *DeleteAPIV1IngestionSchedulesIDNotFound) String() string {
 	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteApiV1IngestionSchedulesIdNotFound %s", 404, payload)
 }
 
-func (o *DeleteAPIV1IngestionSchedulesIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAPIV1IngestionSchedulesIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAPIV1IngestionSchedulesIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -258,7 +258,7 @@ DeleteAPIV1IngestionSchedulesIDInternalServerError describes a response with sta
 Internal Server Error
 */
 type DeleteAPIV1IngestionSchedulesIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete Api v1 ingestion schedules Id internal server error response has a 2xx status code
@@ -301,13 +301,13 @@ func (o *DeleteAPIV1IngestionSchedulesIDInternalServerError) String() string {
 	return fmt.Sprintf("[DELETE /api/v1/ingestion/schedules/{id}][%d] deleteApiV1IngestionSchedulesIdInternalServerError %s", 500, payload)
 }
 
-func (o *DeleteAPIV1IngestionSchedulesIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAPIV1IngestionSchedulesIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAPIV1IngestionSchedulesIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

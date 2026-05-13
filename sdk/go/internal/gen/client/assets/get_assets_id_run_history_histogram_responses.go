@@ -62,7 +62,7 @@ GetAssetsIDRunHistoryHistogramOK describes a response with status code 200, with
 OK
 */
 type GetAssetsIDRunHistoryHistogramOK struct {
-	Payload *models.V1AssetsHistogramResponse
+	Payload *models.HistogramResponse
 }
 
 // IsSuccess returns true when this get assets Id run history histogram o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *GetAssetsIDRunHistoryHistogramOK) String() string {
 	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramOK %s", 200, payload)
 }
 
-func (o *GetAssetsIDRunHistoryHistogramOK) GetPayload() *models.V1AssetsHistogramResponse {
+func (o *GetAssetsIDRunHistoryHistogramOK) GetPayload() *models.HistogramResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDRunHistoryHistogramOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1AssetsHistogramResponse)
+	o.Payload = new(models.HistogramResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ GetAssetsIDRunHistoryHistogramBadRequest describes a response with status code 4
 Bad Request
 */
 type GetAssetsIDRunHistoryHistogramBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets Id run history histogram bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *GetAssetsIDRunHistoryHistogramBadRequest) String() string {
 	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramBadRequest %s", 400, payload)
 }
 
-func (o *GetAssetsIDRunHistoryHistogramBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsIDRunHistoryHistogramBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDRunHistoryHistogramBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ GetAssetsIDRunHistoryHistogramNotFound describes a response with status code 404
 Not Found
 */
 type GetAssetsIDRunHistoryHistogramNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets Id run history histogram not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *GetAssetsIDRunHistoryHistogramNotFound) String() string {
 	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramNotFound %s", 404, payload)
 }
 
-func (o *GetAssetsIDRunHistoryHistogramNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsIDRunHistoryHistogramNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDRunHistoryHistogramNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ GetAssetsIDRunHistoryHistogramInternalServerError describes a response with stat
 Internal Server Error
 */
 type GetAssetsIDRunHistoryHistogramInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets Id run history histogram internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *GetAssetsIDRunHistoryHistogramInternalServerError) String() string {
 	return fmt.Sprintf("[GET /assets/{id}/run-history/histogram][%d] getAssetsIdRunHistoryHistogramInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsIDRunHistoryHistogramInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsIDRunHistoryHistogramInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDRunHistoryHistogramInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

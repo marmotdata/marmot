@@ -220,7 +220,7 @@ func (s *MembershipService) evaluateAsset(ctx context.Context, ast *asset.Asset)
 	}
 
 	// Evaluate each candidate rule against this single asset
-	var memberships []Membership
+	memberships := []Membership{}
 	for _, candidate := range candidates {
 		matches, err := s.evaluateRuleForAsset(ctx, candidate, ast)
 		if err != nil {
@@ -472,7 +472,7 @@ func extractMetadataKeys(metadata map[string]interface{}) []string {
 
 // ExtractRuleTargets analyzes a rule and extracts what it's targeting.
 func ExtractRuleTargets(rule *Rule) []RuleTarget {
-	var targets []RuleTarget
+	targets := []RuleTarget{}
 
 	if rule.RuleType == RuleTypeMetadataMatch {
 		if rule.MetadataField != nil {
@@ -517,7 +517,7 @@ func ExtractRuleTargets(rule *Rule) []RuleTarget {
 
 // extractTargetsFromQuery walks a parsed query and extracts targetable fields.
 func extractTargetsFromQuery(q *query.Query) []RuleTarget {
-	var targets []RuleTarget
+	targets := []RuleTarget{}
 
 	if q.Bool == nil {
 		// Free text search - complex query
@@ -538,7 +538,7 @@ func extractTargetsFromQuery(q *query.Query) []RuleTarget {
 }
 
 func extractTargetsFromFilter(filter query.Filter) []RuleTarget {
-	var targets []RuleTarget
+	targets := []RuleTarget{}
 
 	switch filter.FieldType {
 	case query.FieldAssetType:

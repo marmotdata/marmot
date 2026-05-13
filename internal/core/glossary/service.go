@@ -16,7 +16,7 @@ type Owner struct {
 	Type           string  `json:"type"` // "user" or "team"
 	Email          *string `json:"email,omitempty"`
 	ProfilePicture *string `json:"profile_picture,omitempty"`
-}
+} // @name GlossaryOwner
 
 type GlossaryTerm struct {
 	ID           string                 `json:"id"`
@@ -30,7 +30,7 @@ type GlossaryTerm struct {
 	CreatedAt    time.Time              `json:"created_at"`
 	UpdatedAt    time.Time              `json:"updated_at"`
 	DeletedAt    *time.Time             `json:"deleted_at,omitempty"`
-}
+} // @name GlossaryTerm
 
 type OwnerInput struct {
 	ID   string `json:"id" validate:"required"`
@@ -68,7 +68,7 @@ type SearchFilter struct {
 type ListResult struct {
 	Terms []*GlossaryTerm `json:"terms"`
 	Total int             `json:"total"`
-}
+} // @name GlossaryListResult
 
 var (
 	ErrInvalidInput = errors.New("invalid input")
@@ -332,7 +332,7 @@ func (s *service) GetAncestors(ctx context.Context, termID string) ([]*GlossaryT
 		return nil, err
 	}
 
-	var ancestors []*GlossaryTerm
+	ancestors := []*GlossaryTerm{}
 	current := term
 
 	for current.ParentTermID != nil && *current.ParentTermID != "" {

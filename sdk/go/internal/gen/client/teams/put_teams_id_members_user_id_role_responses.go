@@ -62,7 +62,7 @@ PutTeamsIDMembersUserIDRoleOK describes a response with status code 200, with de
 OK
 */
 type PutTeamsIDMembersUserIDRoleOK struct {
-	Payload *models.V1TeamsMessageResponse
+	Payload *models.MessageResponse
 }
 
 // IsSuccess returns true when this put teams Id members user Id role o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PutTeamsIDMembersUserIDRoleOK) String() string {
 	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleOK %s", 200, payload)
 }
 
-func (o *PutTeamsIDMembersUserIDRoleOK) GetPayload() *models.V1TeamsMessageResponse {
+func (o *PutTeamsIDMembersUserIDRoleOK) GetPayload() *models.MessageResponse {
 	return o.Payload
 }
 
 func (o *PutTeamsIDMembersUserIDRoleOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1TeamsMessageResponse)
+	o.Payload = new(models.MessageResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ PutTeamsIDMembersUserIDRoleBadRequest describes a response with status code 400,
 Bad Request
 */
 type PutTeamsIDMembersUserIDRoleBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put teams Id members user Id role bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *PutTeamsIDMembersUserIDRoleBadRequest) String() string {
 	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleBadRequest %s", 400, payload)
 }
 
-func (o *PutTeamsIDMembersUserIDRoleBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutTeamsIDMembersUserIDRoleBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutTeamsIDMembersUserIDRoleBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ PutTeamsIDMembersUserIDRoleNotFound describes a response with status code 404, w
 Not Found
 */
 type PutTeamsIDMembersUserIDRoleNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put teams Id members user Id role not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *PutTeamsIDMembersUserIDRoleNotFound) String() string {
 	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleNotFound %s", 404, payload)
 }
 
-func (o *PutTeamsIDMembersUserIDRoleNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutTeamsIDMembersUserIDRoleNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutTeamsIDMembersUserIDRoleNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ PutTeamsIDMembersUserIDRoleInternalServerError describes a response with status 
 Internal Server Error
 */
 type PutTeamsIDMembersUserIDRoleInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put teams Id members user Id role internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *PutTeamsIDMembersUserIDRoleInternalServerError) String() string {
 	return fmt.Sprintf("[PUT /teams/{id}/members/{userId}/role][%d] putTeamsIdMembersUserIdRoleInternalServerError %s", 500, payload)
 }
 
-func (o *PutTeamsIDMembersUserIDRoleInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutTeamsIDMembersUserIDRoleInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutTeamsIDMembersUserIDRoleInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

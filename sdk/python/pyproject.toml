@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "marmot-sdk"
-version = "0.1.0"
+version = "0.3.0"
 description = "Python SDK for Marmot — read the catalog and self-document automation, agents, and pipelines."
 requires-python = ">=3.10"
 license = { text = "Apache-2.0" }
@@ -22,6 +22,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
+    "attrs>=23.2",
     "httpx>=0.27",
     "pyyaml>=6.0",
     "typing-extensions>=4.9; python_version < '3.12'",
@@ -37,8 +38,10 @@ dev = [
     "pytest>=8.0",
     "pytest-httpx>=0.30",
     "ruff>=0.6",
+    "mypy>=1.11",
+    "types-PyYAML>=6.0",
+    "pip-audit>=2.7",
     "openapi-python-client>=0.21",
-    "langchain-core>=0.3",
 ]
 langchain = [
     "langchain-core>=0.3",
@@ -47,6 +50,9 @@ langchain = [
 [tool.hatch.build.targets.wheel]
 packages = ["src/marmot"]
 
+# Ruff handles linting + formatting. Includes pycodestyle (E/W), pyflakes (F),
+# pyupgrade (UP), bugbear (B), bandit-equivalent security (S), naming (N),
+# isort (I), simplify (SIM), pytest style (PT), pathlib (PTH), and more.
 [tool.ruff]
 line-length = 100
 target-version = "py310"
@@ -54,8 +60,75 @@ src = ["src", "tests"]
 extend-exclude = ["src/marmot/_gen"]
 
 [tool.ruff.lint]
-select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]
-ignore = ["E501"]  # line length handled by formatter
+select = [
+    "E", "W", "F",   # pycodestyle + pyflakes
+    "I",             # isort
+    "N",             # pep8-naming
+    "UP",            # pyupgrade
+    "B",             # bugbear
+    "S",             # bandit (security)
+    "SIM",           # simplify
+    "RUF",           # ruff-specific
+    "RET",           # return statements
+    "PIE",           # misc anti-patterns
+    "PT",            # pytest style
+    "TID",           # tidy imports
+    "PTH",           # use pathlib
+    "C90",           # mccabe complexity
+    "PL",            # pylint subset
+    "TRY",           # exception anti-patterns
+]
+ignore = [
+    "E501",      # line length (handled by formatter)
+    "A003",      # methods shadowing builtins (.list, .get — idiomatic for resource clients)
+    "PLC0415",   # imports inside functions — deliberate for lazy/circular avoidance
+    "PLR0911",   # too many returns — auth chain reads better as flat returns
+    "PLR0913",   # too many arguments — option-heavy APIs need them
+    "PLR2004",   # magic value comparisons (HTTP status codes etc.)
+    "TRY003",    # long messages in exception classes — too noisy
+    "TRY300",    # else clause on try — stylistic
+    "TRY400",    # use logging.exception — not always logging
+    "TRY301",    # raise within try — sometimes intentional
+    "C901",      # function complexity — case-by-case via noqa where actually warranted
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = [
+    "S101",      # assert OK in tests
+    "S105",      # hardcoded passwords OK in tests
+    "S106",      # hardcoded passwords in func args OK in tests
+    "PLR2004",   # magic values OK in tests
+]
+"src/marmot/auth/__init__.py" = [
+    "PLR0911",   # multiple returns are clear in the resolution chain
+    "PLR0912",   # branches inherent to the resolution order
+]
+"examples/*" = [
+    "PLR0912",   # smoketest is a long imperative script
+    "PLR0915",   # ditto
+    "PLW0108",   # `lambda: x.y()` shorthand for endpoint calls is readable
+    "PLW0603",   # globals for pass/fail counters keep the script flat
+    "BLE001",    # smoketest catches everything to keep running
+    "T201",      # print is the point
+]
+
+[tool.mypy]
+python_version = "3.10"
+strict = true
+warn_return_any = false  # endpoints return untyped JSON; resource methods promise dict[str, Any]
+warn_unused_ignores = true
+warn_redundant_casts = true
+exclude = [
+    "src/marmot/_gen",
+    "src/marmot/integrations",
+    "tests",
+    "dist",
+    ".venv",
+]
+
+[[tool.mypy.overrides]]
+module = ["marmot._gen.*"]
+ignore_errors = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

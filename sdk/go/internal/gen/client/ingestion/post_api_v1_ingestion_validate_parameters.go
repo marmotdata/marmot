@@ -64,7 +64,7 @@ type PostAPIV1IngestionValidateParams struct {
 
 	   Config to validate
 	*/
-	Config *models.V1SchedulesValidateConfigRequest
+	Config *models.ValidateConfigRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostAPIV1IngestionValidateParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithConfig adds the config to the post API v1 ingestion validate params
-func (o *PostAPIV1IngestionValidateParams) WithConfig(config *models.V1SchedulesValidateConfigRequest) *PostAPIV1IngestionValidateParams {
+func (o *PostAPIV1IngestionValidateParams) WithConfig(config *models.ValidateConfigRequest) *PostAPIV1IngestionValidateParams {
 	o.SetConfig(config)
 	return o
 }
 
 // SetConfig adds the config to the post API v1 ingestion validate params
-func (o *PostAPIV1IngestionValidateParams) SetConfig(config *models.V1SchedulesValidateConfigRequest) {
+func (o *PostAPIV1IngestionValidateParams) SetConfig(config *models.ValidateConfigRequest) {
 	o.Config = config
 }
 

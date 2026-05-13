@@ -8,7 +8,7 @@ import (
 
 type AuthConfig struct {
 	EnabledProviders []string `json:"enabled_providers"`
-}
+} // @name AuthConfig
 
 // @Summary Get auth configuration
 // @Description Returns the enabled auth providers without sensitive data

@@ -70,7 +70,7 @@ type PutAssetRulesIDParams struct {
 
 	   Asset rule update request
 	*/
-	Rule *models.V1AssetrulesUpdateRequest
+	Rule *models.UpdateAssetRuleRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -137,13 +137,13 @@ func (o *PutAssetRulesIDParams) SetID(id string) {
 }
 
 // WithRule adds the rule to the put asset rules ID params
-func (o *PutAssetRulesIDParams) WithRule(rule *models.V1AssetrulesUpdateRequest) *PutAssetRulesIDParams {
+func (o *PutAssetRulesIDParams) WithRule(rule *models.UpdateAssetRuleRequest) *PutAssetRulesIDParams {
 	o.SetRule(rule)
 	return o
 }
 
 // SetRule adds the rule to the put asset rules ID params
-func (o *PutAssetRulesIDParams) SetRule(rule *models.V1AssetrulesUpdateRequest) {
+func (o *PutAssetRulesIDParams) SetRule(rule *models.UpdateAssetRuleRequest) {
 	o.Rule = rule
 }
 

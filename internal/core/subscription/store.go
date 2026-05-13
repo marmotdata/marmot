@@ -190,7 +190,7 @@ func (r *PostgresRepository) ListByUser(ctx context.Context, userID string) ([]*
 	}
 	defer rows.Close()
 
-	var subs []*SubscriptionWithAsset
+	subs := []*SubscriptionWithAsset{}
 	for rows.Next() {
 		var sub SubscriptionWithAsset
 		var typesRaw []byte
@@ -231,7 +231,7 @@ func (r *PostgresRepository) GetSubscribersForAsset(ctx context.Context, assetID
 	}
 	defer rows.Close()
 
-	var userIDs []string
+	userIDs := []string{}
 	for rows.Next() {
 		var userID string
 		if err := rows.Scan(&userID); err != nil {

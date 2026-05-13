@@ -13,12 +13,12 @@ import (
 type ReindexAcceptedResponse struct {
 	Status  string `json:"status" example:"accepted"`
 	Message string `json:"message" example:"Reindex started"`
-}
+} // @name ReindexAcceptedResponse
 
 type ReindexStatusResponse struct {
 	Running      bool `json:"running"`
 	ESConfigured bool `json:"es_configured"`
-}
+} // @name ReindexStatusResponse
 
 // @Summary Start search reindex
 // @Description Trigger a full reindex from PostgreSQL to Elasticsearch. The reindex runs asynchronously in the background. Only one reindex can run at a time.

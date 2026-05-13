@@ -20,14 +20,14 @@ type StartRunRequest struct {
 	PipelineName string                 `json:"pipeline_name" validate:"required"`
 	SourceName   string                 `json:"source_name" validate:"required"`
 	Config       plugin.RawPluginConfig `json:"config"`
-}
+} // @name StartRunRequest
 
 type CompleteRunRequest struct {
 	RunID   string             `json:"run_id" validate:"required"`
 	Status  plugin.RunStatus   `json:"status" validate:"required"`
 	Summary *plugin.RunSummary `json:"summary"`
 	Error   string             `json:"error,omitempty"`
-}
+} // @name CompleteRunRequest
 
 type BatchCreateRequest struct {
 	Assets        []CreateAssetRequest   `json:"assets" validate:"required,min=1"`
@@ -38,32 +38,32 @@ type BatchCreateRequest struct {
 	PipelineName  string                 `json:"pipeline_name" validate:"required"`
 	SourceName    string                 `json:"source_name" validate:"required"`
 	RunID         string                 `json:"run_id" validate:"required"`
-}
+} // @name BatchCreateRequest
 
 type DestroyRunResponse struct {
 	AssetsDeleted        int      `json:"assets_deleted"`
 	LineageDeleted       int      `json:"lineage_deleted"`
 	DocumentationDeleted int      `json:"documentation_deleted"`
 	DeletedEntityMRNs    []string `json:"deleted_entity_mrns"`
-}
+} // @name DestroyRunResponse
 
 type CreateStatRequest struct {
 	AssetMRN   string  `json:"asset_mrn" validate:"required"`
 	MetricName string  `json:"metric_name" validate:"required"`
 	Value      float64 `json:"value" validate:"required"`
-}
+} // @name CreateStatRequest
 
 type CreateLineageRequest struct {
 	Source string `json:"source"`
 	Target string `json:"target"`
 	Type   string `json:"type"`
-}
+} // @name CreateLineageRequest
 
 type CreateDocRequest struct {
 	AssetMRN string `json:"asset_mrn"`
 	Content  string `json:"content"`
 	Type     string `json:"type"`
-}
+} // @name CreateDocRequest
 
 type LineageResult struct {
 	Source string `json:"source"`
@@ -71,14 +71,14 @@ type LineageResult struct {
 	Type   string `json:"type"`
 	Status string `json:"status"`
 	Error  string `json:"error,omitempty"`
-}
+} // @name LineageResult
 
 type DocumentationResult struct {
 	AssetMRN string `json:"asset_mrn"`
 	Type     string `json:"type"`
 	Status   string `json:"status"`
 	Error    string `json:"error,omitempty"`
-}
+} // @name DocumentationResult
 
 type CreateAssetRequest struct {
 	Name          string                 `json:"name"`
@@ -90,14 +90,14 @@ type CreateAssetRequest struct {
 	Tags          []string               `json:"tags"`
 	Sources       []string               `json:"sources"`
 	ExternalLinks []map[string]string    `json:"external_links"`
-}
+} // @name RunCreateAssetRequest
 
 type BatchCreateResponse struct {
 	Assets               []BatchAssetResult    `json:"assets"`
 	StaleEntitiesRemoved []string              `json:"stale_entities_removed,omitempty"`
 	Lineage              []LineageResult       `json:"lineage,omitempty"`
 	Documentation        []DocumentationResult `json:"documentation,omitempty"`
-}
+} // @name BatchCreateResponse
 
 type BatchAssetResult struct {
 	Name     string      `json:"name"`
@@ -107,14 +107,14 @@ type BatchAssetResult struct {
 	Asset    interface{} `json:"asset"`
 	Status   string      `json:"status"`
 	Error    string      `json:"error,omitempty"`
-}
+} // @name BatchAssetResult
 
 type RunEntitiesResponse struct {
 	Entities []*runs.RunEntity `json:"entities"`
 	Total    int               `json:"total"`
 	Limit    int               `json:"limit"`
 	Offset   int               `json:"offset"`
-}
+} // @name RunEntitiesResponse
 
 // @Summary Start run
 // @Description Start a new run for tracking

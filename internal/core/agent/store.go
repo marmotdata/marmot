@@ -31,7 +31,7 @@ type Run struct {
 	Error      string     `json:"error,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
 	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
-}
+} // @name AgentRun
 
 // ToolCall is a single tool invocation inside a Run.
 type ToolCall struct {
@@ -41,14 +41,14 @@ type ToolCall struct {
 	StartedAt  time.Time `json:"started_at"`
 	DurationMs *int      `json:"duration_ms,omitempty"`
 	Status     string    `json:"status"`
-}
+} // @name ToolCall
 
 // Bucket is an hour-aligned aggregate of runs by status.
 type Bucket struct {
 	Hour    time.Time `json:"hour"`
 	Success int       `json:"success"`
 	Error   int       `json:"error"`
-}
+} // @name Bucket
 
 // Stats summarises agent activity over a window.
 type Stats struct {
@@ -58,7 +58,7 @@ type Stats struct {
 	P95Latency    int     `json:"p95_latency_ms"`
 	TokensIn      int     `json:"tokens_in"`
 	TokensOut     int     `json:"tokens_out"`
-}
+} // @name Stats
 
 type Repository interface {
 	InsertRun(ctx context.Context, r *Run) error
@@ -151,7 +151,7 @@ func (r *PostgresRepository) ListRuns(ctx context.Context, agentID string, since
 	}
 	defer rows.Close()
 
-	var runs []*Run
+	runs := []*Run{}
 	for rows.Next() {
 		run := &Run{}
 		if err := scanRun(rows, run); err != nil {
@@ -223,7 +223,7 @@ func (r *PostgresRepository) BucketRuns(ctx context.Context, agentID string, sin
 	}
 	defer rows.Close()
 
-	var buckets []Bucket
+	buckets := []Bucket{}
 	for rows.Next() {
 		var b Bucket
 		if err := rows.Scan(&b.Hour, &b.Success, &b.Error); err != nil {

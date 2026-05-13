@@ -120,7 +120,7 @@ GetGlossaryListInternalServerError describes a response with status code 500, wi
 Internal Server Error
 */
 type GetGlossaryListInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary list internal server error response has a 2xx status code
@@ -163,13 +163,13 @@ func (o *GetGlossaryListInternalServerError) String() string {
 	return fmt.Sprintf("[GET /glossary/list][%d] getGlossaryListInternalServerError %s", 500, payload)
 }
 
-func (o *GetGlossaryListInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryListInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryListInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

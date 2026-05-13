@@ -70,7 +70,7 @@ type PutAPIV1IngestionSchedulesIDParams struct {
 
 	   Updated schedule configuration
 	*/
-	Schedule *models.V1SchedulesUpdateScheduleRequest
+	Schedule *models.UpdateScheduleRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -137,13 +137,13 @@ func (o *PutAPIV1IngestionSchedulesIDParams) SetID(id string) {
 }
 
 // WithSchedule adds the schedule to the put API v1 ingestion schedules ID params
-func (o *PutAPIV1IngestionSchedulesIDParams) WithSchedule(schedule *models.V1SchedulesUpdateScheduleRequest) *PutAPIV1IngestionSchedulesIDParams {
+func (o *PutAPIV1IngestionSchedulesIDParams) WithSchedule(schedule *models.UpdateScheduleRequest) *PutAPIV1IngestionSchedulesIDParams {
 	o.SetSchedule(schedule)
 	return o
 }
 
 // SetSchedule adds the schedule to the put API v1 ingestion schedules ID params
-func (o *PutAPIV1IngestionSchedulesIDParams) SetSchedule(schedule *models.V1SchedulesUpdateScheduleRequest) {
+func (o *PutAPIV1IngestionSchedulesIDParams) SetSchedule(schedule *models.UpdateScheduleRequest) {
 	o.Schedule = schedule
 }
 

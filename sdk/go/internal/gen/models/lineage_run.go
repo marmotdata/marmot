@@ -11,7 +11,7 @@ import (
 
 // LineageRun lineage run
 //
-// swagger:model lineage.Run
+// swagger:model LineageRun
 type LineageRun struct {
 
 	// facets

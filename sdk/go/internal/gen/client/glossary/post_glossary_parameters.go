@@ -64,7 +64,7 @@ type PostGlossaryParams struct {
 
 	   Glossary term to create
 	*/
-	Term *models.V1GlossaryCreateTermRequest
+	Term *models.CreateTermRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostGlossaryParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithTerm adds the term to the post glossary params
-func (o *PostGlossaryParams) WithTerm(term *models.V1GlossaryCreateTermRequest) *PostGlossaryParams {
+func (o *PostGlossaryParams) WithTerm(term *models.CreateTermRequest) *PostGlossaryParams {
 	o.SetTerm(term)
 	return o
 }
 
 // SetTerm adds the term to the post glossary params
-func (o *PostGlossaryParams) SetTerm(term *models.V1GlossaryCreateTermRequest) {
+func (o *PostGlossaryParams) SetTerm(term *models.CreateTermRequest) {
 	o.Term = term
 }
 

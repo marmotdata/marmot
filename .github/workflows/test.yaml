@@ -3,15 +3,23 @@ name: Test
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - 'sdk/**'
+      - 'web/docs/**'
+      - '.github/workflows/test-sdk-*.yaml'
   pull_request:
     branches: [main]
+    paths-ignore:
+      - 'sdk/**'
+      - 'web/docs/**'
+      - '.github/workflows/test-sdk-*.yaml'
 
 permissions:
   contents: read
 
 jobs:
-  test-and-lint:
-    name: Run Tests and Linting
+  test:
+    name: Server + Frontend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
@@ -38,11 +46,17 @@ jobs:
       - name: Install dev dependencies
         run: make dev-deps
 
-      - name: Run linting
-        run: make lint
+      - name: Generate swagger
+        run: make swagger
+
+      - name: Lint frontend
+        run: make frontend-lint
+
+      - name: Lint server (Go)
+        run: make server-lint
 
       - name: Run actionlint
         run: make actionlint
 
-      - name: Run tests
+      - name: Run Go tests
         run: make test

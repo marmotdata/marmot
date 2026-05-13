@@ -56,7 +56,7 @@ GetAssetsQualifiedNameQualifiedNameOK describes a response with status code 200,
 OK
 */
 type GetAssetsQualifiedNameQualifiedNameOK struct {
-	Payload *models.AssetAsset
+	Payload *models.Asset
 }
 
 // IsSuccess returns true when this get assets qualified name qualified name o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *GetAssetsQualifiedNameQualifiedNameOK) String() string {
 	return fmt.Sprintf("[GET /assets/qualified-name/{qualifiedName}][%d] getAssetsQualifiedNameQualifiedNameOK %s", 200, payload)
 }
 
-func (o *GetAssetsQualifiedNameQualifiedNameOK) GetPayload() *models.AssetAsset {
+func (o *GetAssetsQualifiedNameQualifiedNameOK) GetPayload() *models.Asset {
 	return o.Payload
 }
 
 func (o *GetAssetsQualifiedNameQualifiedNameOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AssetAsset)
+	o.Payload = new(models.Asset)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ GetAssetsQualifiedNameQualifiedNameNotFound describes a response with status cod
 Not Found
 */
 type GetAssetsQualifiedNameQualifiedNameNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets qualified name qualified name not found response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetAssetsQualifiedNameQualifiedNameNotFound) String() string {
 	return fmt.Sprintf("[GET /assets/qualified-name/{qualifiedName}][%d] getAssetsQualifiedNameQualifiedNameNotFound %s", 404, payload)
 }
 
-func (o *GetAssetsQualifiedNameQualifiedNameNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsQualifiedNameQualifiedNameNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsQualifiedNameQualifiedNameNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetAssetsQualifiedNameQualifiedNameInternalServerError describes a response with
 Internal Server Error
 */
 type GetAssetsQualifiedNameQualifiedNameInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets qualified name qualified name internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetAssetsQualifiedNameQualifiedNameInternalServerError) String() string
 	return fmt.Sprintf("[GET /assets/qualified-name/{qualifiedName}][%d] getAssetsQualifiedNameQualifiedNameInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsQualifiedNameQualifiedNameInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsQualifiedNameQualifiedNameInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsQualifiedNameQualifiedNameInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

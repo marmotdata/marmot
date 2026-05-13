@@ -56,7 +56,7 @@ PostUsersUpdatePasswordOK describes a response with status code 200, with defaul
 OK
 */
 type PostUsersUpdatePasswordOK struct {
-	Payload *models.V1UsersTokenResponse
+	Payload *models.TokenResponse
 }
 
 // IsSuccess returns true when this post users update password o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *PostUsersUpdatePasswordOK) String() string {
 	return fmt.Sprintf("[POST /users/update-password][%d] postUsersUpdatePasswordOK %s", 200, payload)
 }
 
-func (o *PostUsersUpdatePasswordOK) GetPayload() *models.V1UsersTokenResponse {
+func (o *PostUsersUpdatePasswordOK) GetPayload() *models.TokenResponse {
 	return o.Payload
 }
 
 func (o *PostUsersUpdatePasswordOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1UsersTokenResponse)
+	o.Payload = new(models.TokenResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ PostUsersUpdatePasswordBadRequest describes a response with status code 400, wit
 Bad Request
 */
 type PostUsersUpdatePasswordBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post users update password bad request response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *PostUsersUpdatePasswordBadRequest) String() string {
 	return fmt.Sprintf("[POST /users/update-password][%d] postUsersUpdatePasswordBadRequest %s", 400, payload)
 }
 
-func (o *PostUsersUpdatePasswordBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostUsersUpdatePasswordBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostUsersUpdatePasswordBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ PostUsersUpdatePasswordUnauthorized describes a response with status code 401, w
 Unauthorized
 */
 type PostUsersUpdatePasswordUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post users update password unauthorized response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *PostUsersUpdatePasswordUnauthorized) String() string {
 	return fmt.Sprintf("[POST /users/update-password][%d] postUsersUpdatePasswordUnauthorized %s", 401, payload)
 }
 
-func (o *PostUsersUpdatePasswordUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostUsersUpdatePasswordUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostUsersUpdatePasswordUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

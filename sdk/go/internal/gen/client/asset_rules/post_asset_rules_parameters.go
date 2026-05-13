@@ -64,7 +64,7 @@ type PostAssetRulesParams struct {
 
 	   Asset rule creation request
 	*/
-	Rule *models.V1AssetrulesCreateRequest
+	Rule *models.CreateAssetRuleRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostAssetRulesParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithRule adds the rule to the post asset rules params
-func (o *PostAssetRulesParams) WithRule(rule *models.V1AssetrulesCreateRequest) *PostAssetRulesParams {
+func (o *PostAssetRulesParams) WithRule(rule *models.CreateAssetRuleRequest) *PostAssetRulesParams {
 	o.SetRule(rule)
 	return o
 }
 
 // SetRule adds the rule to the post asset rules params
-func (o *PostAssetRulesParams) SetRule(rule *models.V1AssetrulesCreateRequest) {
+func (o *PostAssetRulesParams) SetRule(rule *models.CreateAssetRuleRequest) {
 	o.Rule = rule
 }
 

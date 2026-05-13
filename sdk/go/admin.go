@@ -9,10 +9,10 @@ import (
 )
 
 // ReindexAccepted is the response from AdminService.Reindex.
-type ReindexAccepted = models.V1AdminReindexAcceptedResponse
+type ReindexAccepted = models.ReindexAcceptedResponse
 
 // ReindexStatus reports reindex progress.
-type ReindexStatus = models.V1AdminReindexStatusResponse
+type ReindexStatus = models.ReindexStatusResponse
 
 // AdminService exposes administrative operations.
 type AdminService struct {

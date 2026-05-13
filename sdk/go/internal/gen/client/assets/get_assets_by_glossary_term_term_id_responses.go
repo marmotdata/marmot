@@ -118,7 +118,7 @@ GetAssetsByGlossaryTermTermIDInternalServerError describes a response with statu
 Internal Server Error
 */
 type GetAssetsByGlossaryTermTermIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets by glossary term term Id internal server error response has a 2xx status code
@@ -161,13 +161,13 @@ func (o *GetAssetsByGlossaryTermTermIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /assets/by-glossary-term/{term_id}][%d] getAssetsByGlossaryTermTermIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsByGlossaryTermTermIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsByGlossaryTermTermIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsByGlossaryTermTermIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

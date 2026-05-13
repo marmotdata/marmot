@@ -1,0 +1,59 @@
+name: Test Python SDK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sdk/python/**'
+      - 'docs/swagger.yaml'
+      - 'Makefile'
+      - '.github/workflows/test-sdk-py.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'sdk/python/**'
+      - 'docs/swagger.yaml'
+      - 'Makefile'
+      - '.github/workflows/test-sdk-py.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Python SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Go (for swag)
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Set up pnpm (for swagger2openapi)
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+          cache-dependency-glob: "sdk/python/uv.lock"
+
+      - name: Install swag
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Lint Python SDK
+        run: make sdk-py-lint
+
+      - name: Run Python SDK tests
+        run: make sdk-py-test

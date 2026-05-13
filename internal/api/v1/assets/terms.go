@@ -14,11 +14,11 @@ import (
 
 type AddTermsRequest struct {
 	TermIDs []string `json:"term_ids" validate:"required,min=1"`
-}
+} // @name AddTermsRequest
 
 type RemoveTermRequest struct {
 	TermID string `json:"term_id" validate:"required"`
-}
+} // @name RemoveTermRequest
 
 // @Summary Add glossary terms to asset
 // @Description Associate one or more glossary terms with an asset

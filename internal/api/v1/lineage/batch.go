@@ -12,7 +12,7 @@ import (
 type BatchLineageResult struct {
 	Edge   lineage.LineageEdge `json:"edge"`
 	Status string              `json:"status"` // "created", "duplicate", or "existing"
-}
+} // @name BatchLineageResult
 
 // @Summary Batch create lineage edges
 // @Description Create lineage edges in batch

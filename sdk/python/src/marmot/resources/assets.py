@@ -1,41 +1,143 @@
-"""Asset CRUD operations."""
+"""Asset CRUD, search, summary, and tag management."""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
-from marmot._http import Transport
+from marmot._adapter import unwrap
+from marmot._gen.api.assets import (
+    delete_assets_id,
+    delete_assets_tags_id,
+    get_assets_id,
+    get_assets_lookup_type_service_name,
+    get_assets_search,
+    get_assets_summary,
+    post_assets,
+    post_assets_tags_id,
+    put_assets_id,
+)
+from marmot._gen.client import AuthenticatedClient
+from marmot._gen.models.asset import Asset
+from marmot._gen.models.asset_search_response import AssetSearchResponse
+from marmot._gen.models.asset_summary_response import AssetSummaryResponse
+from marmot._gen.models.create_asset_request import CreateAssetRequest
+from marmot._gen.models.tag_request import TagRequest
+from marmot._gen.models.update_asset_request import UpdateAssetRequest
+from marmot._gen.types import UNSET, Unset
 from marmot.errors import NotFoundError
-from marmot.resources import API_PREFIX
 
 
 class AssetsResource:
-    def __init__(self, transport: Transport) -> None:
-        self._t = transport
+    def __init__(self, client: AuthenticatedClient) -> None:
+        self._c = client
 
-    def get(self, id: str) -> dict[str, Any]:
-        """Fetch an asset by its ID."""
-        return self._t.get(f"{API_PREFIX}/assets/{id}")
+    def get(self, asset_id: str) -> Asset:
+        """Fetch an asset by ID."""
+        return cast(Asset, unwrap(get_assets_id.sync_detailed(id=asset_id, client=self._c)))
 
-    def lookup(self, *, type: str, service: str, name: str) -> dict[str, Any]:
+    def lookup(self, *, type: str, service: str, name: str) -> Asset:
         """Fetch an asset by its (type, service, name) triple."""
-        return self._t.get(f"{API_PREFIX}/assets/lookup/{type}/{service}/{name}")
+        return cast(
+            Asset,
+            unwrap(
+                get_assets_lookup_type_service_name.sync_detailed(
+                    type_=type, service=service, name=name, client=self._c
+                )
+            ),
+        )
 
-    def find(self, *, type: str, service: str, name: str) -> dict[str, Any] | None:
+    def find(self, *, type: str, service: str, name: str) -> Asset | None:
         """Like :meth:`lookup` but returns ``None`` instead of raising on 404."""
         try:
             return self.lookup(type=type, service=service, name=name)
         except NotFoundError:
             return None
 
-    def create(self, asset: dict[str, Any]) -> dict[str, Any]:
-        """Create a new asset. ``asset`` must include name, type, providers, etc."""
-        return self._t.post(f"{API_PREFIX}/assets", json=asset)
+    def search(
+        self,
+        *,
+        query: str | None = None,
+        types: list[str] | None = None,
+        providers: list[str] | None = None,
+        tags: list[str] | None = None,
+        limit: int | None = None,
+        offset: int | None = None,
+    ) -> AssetSearchResponse:
+        """Search assets with optional filters."""
+        q_arg: str | Unset = query if query is not None else UNSET
+        types_arg: list[str] | Unset = types if types else UNSET
+        services_arg: list[str] | Unset = providers if providers else UNSET
+        tags_arg: list[str] | Unset = tags if tags else UNSET
+        limit_arg: int | Unset = limit if limit is not None else UNSET
+        offset_arg: int | Unset = offset if offset is not None else UNSET
+        return cast(
+            AssetSearchResponse,
+            unwrap(
+                get_assets_search.sync_detailed(
+                    client=self._c,
+                    q=q_arg,
+                    types=types_arg,
+                    services=services_arg,
+                    tags=tags_arg,
+                    limit=limit_arg,
+                    offset=offset_arg,
+                )
+            ),
+        )
 
-    def update(self, id: str, asset: dict[str, Any]) -> dict[str, Any]:
+    def summary(self) -> AssetSummaryResponse:
+        """Return aggregate counts for the catalog (totals, by-type, etc.)."""
+        return cast(
+            AssetSummaryResponse,
+            unwrap(get_assets_summary.sync_detailed(client=self._c)),
+        )
+
+    def create(self, asset: CreateAssetRequest | dict[str, Any]) -> Asset:
+        """Create a new asset. Must include name, type, providers.
+
+        Accepts a :class:`CreateAssetRequest` for type-safety, or a plain dict
+        for ergonomic ad-hoc use.
+        """
+        body = (
+            asset if isinstance(asset, CreateAssetRequest) else CreateAssetRequest.from_dict(asset)
+        )
+        return cast(
+            Asset,
+            unwrap(post_assets.sync_detailed(client=self._c, body=body)),
+        )
+
+    def update(self, asset_id: str, asset: UpdateAssetRequest | dict[str, Any]) -> Asset:
         """Update an existing asset by ID."""
-        return self._t.put(f"{API_PREFIX}/assets/{id}", json=asset)
+        body = (
+            asset if isinstance(asset, UpdateAssetRequest) else UpdateAssetRequest.from_dict(asset)
+        )
+        return cast(
+            Asset,
+            unwrap(put_assets_id.sync_detailed(id=asset_id, client=self._c, body=body)),
+        )
 
-    def delete(self, id: str) -> None:
+    def delete(self, asset_id: str) -> None:
         """Delete an asset by ID."""
-        self._t.delete(f"{API_PREFIX}/assets/{id}")
+        unwrap(delete_assets_id.sync_detailed(id=asset_id, client=self._c))
+
+    def add_tag(self, asset_id: str, tag: str) -> Asset:
+        """Add a tag to an asset."""
+        return cast(
+            Asset,
+            unwrap(
+                post_assets_tags_id.sync_detailed(
+                    id=asset_id, client=self._c, body=TagRequest(tag=tag)
+                )
+            ),
+        )
+
+    def remove_tag(self, asset_id: str, tag: str) -> Asset:
+        """Remove a tag from an asset."""
+        return cast(
+            Asset,
+            unwrap(
+                delete_assets_tags_id.sync_detailed(
+                    id=asset_id, client=self._c, body=TagRequest(tag=tag)
+                )
+            ),
+        )

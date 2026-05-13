@@ -15,7 +15,7 @@ type UserIdentity struct {
 	ProviderData   map[string]interface{} `json:"provider_data"`
 	CreatedAt      time.Time              `json:"created_at"`
 	UpdatedAt      time.Time              `json:"updated_at"`
-}
+} // @name UserIdentity
 
 func (s *service) AuthenticateOAuth(ctx context.Context, provider string, providerUserID string, userInfo map[string]interface{}) (*User, error) {
 	user, err := s.repo.GetUserByProviderID(ctx, provider, providerUserID)

@@ -34,7 +34,7 @@ type RunEntity struct {
 	Status       string    `json:"status"`
 	ErrorMessage string    `json:"error_message,omitempty"`
 	CreatedAt    time.Time `json:"created_at"`
-}
+} // @name RunEntity
 
 type Repository interface {
 	Create(ctx context.Context, run *plugin.Run) error
@@ -305,7 +305,7 @@ func (r *PostgresRepository) ListRunEntities(ctx context.Context, runDBID, entit
 	}
 	defer rows.Close()
 
-	var entities []*RunEntity
+	entities := []*RunEntity{}
 	for rows.Next() {
 		var entity RunEntity
 		var entityName sql.NullString
@@ -350,7 +350,7 @@ func (r *PostgresRepository) scanMultipleRuns(ctx context.Context, query string,
 	}
 	defer rows.Close()
 
-	var runs []*plugin.Run
+	runs := []*plugin.Run{}
 	for rows.Next() {
 		run, err := r.scanRun(ctx, rows)
 		if err != nil {
@@ -477,7 +477,7 @@ func (r *PostgresRepository) GetPipelines(ctx context.Context) ([]string, error)
 	}
 	defer rows.Close()
 
-	var pipelines []string
+	pipelines := []string{}
 	for rows.Next() {
 		var pipeline string
 		if err := rows.Scan(&pipeline); err != nil {

@@ -22,7 +22,7 @@ type Team struct {
 	CreatedBy     *string                `json:"created_by,omitempty"`
 	CreatedAt     time.Time              `json:"created_at"`
 	UpdatedAt     time.Time              `json:"updated_at"`
-}
+} // @name Team
 
 type TeamMember struct {
 	ID          string    `json:"id"`
@@ -40,7 +40,7 @@ type TeamMemberWithUser struct {
 	Name           string  `json:"name"`
 	Email          *string `json:"email,omitempty"`
 	ProfilePicture *string `json:"profile_picture,omitempty"`
-}
+} // @name TeamMemberWithUser
 
 type SSOTeamMapping struct {
 	ID           string    `json:"id"`
@@ -50,7 +50,7 @@ type SSOTeamMapping struct {
 	MemberRole   string    `json:"member_role"`
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
-}
+} // @name SSOTeamMapping
 
 type AssetOwner struct {
 	AssetID   string     `json:"asset_id"`
@@ -66,7 +66,7 @@ type Owner struct {
 	Username       *string `json:"username,omitempty"`
 	Email          *string `json:"email,omitempty"`
 	ProfilePicture *string `json:"profile_picture,omitempty"`
-}
+} // @name TeamOwner
 
 const (
 	RoleOwner  = "owner"

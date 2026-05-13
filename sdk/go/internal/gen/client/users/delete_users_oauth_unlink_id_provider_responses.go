@@ -106,7 +106,7 @@ DeleteUsersOauthUnlinkIDProviderBadRequest describes a response with status code
 Bad Request
 */
 type DeleteUsersOauthUnlinkIDProviderBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete users oauth unlink Id provider bad request response has a 2xx status code
@@ -149,13 +149,13 @@ func (o *DeleteUsersOauthUnlinkIDProviderBadRequest) String() string {
 	return fmt.Sprintf("[DELETE /users/oauth/unlink/{id}/{provider}][%d] deleteUsersOauthUnlinkIdProviderBadRequest %s", 400, payload)
 }
 
-func (o *DeleteUsersOauthUnlinkIDProviderBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteUsersOauthUnlinkIDProviderBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteUsersOauthUnlinkIDProviderBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -62,7 +62,7 @@ GetAssetsIDRunHistoryOK describes a response with status code 200, with default 
 OK
 */
 type GetAssetsIDRunHistoryOK struct {
-	Payload *models.V1AssetsRunHistoryResponse
+	Payload *models.RunHistoryResponse
 }
 
 // IsSuccess returns true when this get assets Id run history o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *GetAssetsIDRunHistoryOK) String() string {
 	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryOK %s", 200, payload)
 }
 
-func (o *GetAssetsIDRunHistoryOK) GetPayload() *models.V1AssetsRunHistoryResponse {
+func (o *GetAssetsIDRunHistoryOK) GetPayload() *models.RunHistoryResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDRunHistoryOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1AssetsRunHistoryResponse)
+	o.Payload = new(models.RunHistoryResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ GetAssetsIDRunHistoryBadRequest describes a response with status code 400, with 
 Bad Request
 */
 type GetAssetsIDRunHistoryBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets Id run history bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *GetAssetsIDRunHistoryBadRequest) String() string {
 	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryBadRequest %s", 400, payload)
 }
 
-func (o *GetAssetsIDRunHistoryBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsIDRunHistoryBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDRunHistoryBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ GetAssetsIDRunHistoryNotFound describes a response with status code 404, with de
 Not Found
 */
 type GetAssetsIDRunHistoryNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets Id run history not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *GetAssetsIDRunHistoryNotFound) String() string {
 	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryNotFound %s", 404, payload)
 }
 
-func (o *GetAssetsIDRunHistoryNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsIDRunHistoryNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDRunHistoryNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ GetAssetsIDRunHistoryInternalServerError describes a response with status code 5
 Internal Server Error
 */
 type GetAssetsIDRunHistoryInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets Id run history internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *GetAssetsIDRunHistoryInternalServerError) String() string {
 	return fmt.Sprintf("[GET /assets/{id}/run-history][%d] getAssetsIdRunHistoryInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsIDRunHistoryInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsIDRunHistoryInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsIDRunHistoryInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -64,7 +64,7 @@ type PostLineageBatchParams struct {
 
 	   Array of lineage edges to create
 	*/
-	Edges []*models.LineageLineageEdge
+	Edges []*models.LineageEdge
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostLineageBatchParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithEdges adds the edges to the post lineage batch params
-func (o *PostLineageBatchParams) WithEdges(edges []*models.LineageLineageEdge) *PostLineageBatchParams {
+func (o *PostLineageBatchParams) WithEdges(edges []*models.LineageEdge) *PostLineageBatchParams {
 	o.SetEdges(edges)
 	return o
 }
 
 // SetEdges adds the edges to the post lineage batch params
-func (o *PostLineageBatchParams) SetEdges(edges []*models.LineageLineageEdge) {
+func (o *PostLineageBatchParams) SetEdges(edges []*models.LineageEdge) {
 	o.Edges = edges
 }
 

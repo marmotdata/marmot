@@ -321,7 +321,7 @@ func (r *PostgresRepository) GetPageTree(ctx context.Context, entityType EntityT
 	defer rows.Close()
 
 	pageMap := make(map[string]*Page)
-	var allPages []*Page
+	allPages := []*Page{}
 
 	for rows.Next() {
 		var page Page
@@ -375,7 +375,7 @@ func (r *PostgresRepository) GetRootPages(ctx context.Context, entityType Entity
 	}
 	defer rows.Close()
 
-	var pages []*Page
+	pages := []*Page{}
 	for rows.Next() {
 		var page Page
 		err := rows.Scan(
@@ -405,7 +405,7 @@ func (r *PostgresRepository) GetChildPages(ctx context.Context, parentID string)
 	}
 	defer rows.Close()
 
-	var pages []*Page
+	pages := []*Page{}
 	for rows.Next() {
 		var page Page
 		err := rows.Scan(
@@ -448,7 +448,7 @@ func (r *PostgresRepository) SearchPages(ctx context.Context, entityType EntityT
 	}
 	defer rows.Close()
 
-	var pages []*Page
+	pages := []*Page{}
 	for rows.Next() {
 		var page Page
 		var rank float64
@@ -559,7 +559,7 @@ func (r *PostgresRepository) ListPageImages(ctx context.Context, pageID string) 
 	}
 	defer rows.Close()
 
-	var images []*ImageMeta
+	images := []*ImageMeta{}
 	for rows.Next() {
 		var meta ImageMeta
 		err := rows.Scan(&meta.ID, &meta.PageID, &meta.Filename, &meta.ContentType, &meta.SizeBytes, &meta.CreatedAt)

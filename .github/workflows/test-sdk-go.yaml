@@ -1,0 +1,52 @@
+name: Test Go SDK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sdk/go/**'
+      - 'docs/swagger.yaml'
+      - 'Makefile'
+      - '.github/workflows/test-sdk-go.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'sdk/go/**'
+      - 'docs/swagger.yaml'
+      - 'Makefile'
+      - '.github/workflows/test-sdk-go.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Go SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Install dev dependencies
+        run: |
+          go install github.com/swaggo/swag/cmd/swag@latest
+          go install github.com/go-swagger/go-swagger/cmd/swagger@latest
+          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b "$(go env GOPATH)/bin" v2.9.0
+
+      - name: Generate Go SDK
+        run: make sdk-go-generate
+
+      - name: Lint Go SDK
+        run: make sdk-go-lint
+
+      - name: Build Go SDK
+        run: make sdk-go-build
+
+      - name: Run Go SDK tests
+        run: make sdk-go-test

@@ -31,7 +31,7 @@ type RecordRunRequest struct {
 	Error          string            `json:"error,omitempty"`
 	ToolCalls      []ToolCallPayload `json:"tool_calls,omitempty"`
 	ObservedAssets []string          `json:"observed_assets,omitempty"`
-}
+} // @name RecordRunRequest
 
 type ToolCallPayload struct {
 	ToolName   string    `json:"tool_name"`
@@ -39,16 +39,16 @@ type ToolCallPayload struct {
 	StartedAt  time.Time `json:"started_at"`
 	DurationMs *int      `json:"duration_ms,omitempty"`
 	Status     string    `json:"status"`
-}
+} // @name ToolCallPayload
 
 type RunsResponse struct {
 	Runs  []*agent.Run `json:"runs"`
 	Total int          `json:"total"`
-}
+} // @name RunsResponse
 
 type ActivityResponse struct {
 	Buckets []agent.Bucket `json:"buckets"`
-}
+} // @name ActivityResponse
 
 // recordRun records a completed agent run.
 //

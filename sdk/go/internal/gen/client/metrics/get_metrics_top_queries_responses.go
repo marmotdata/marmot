@@ -44,7 +44,7 @@ GetMetricsTopQueriesOK describes a response with status code 200, with default h
 OK
 */
 type GetMetricsTopQueriesOK struct {
-	Payload []*models.MetricsQueryCount
+	Payload []*models.QueryCount
 }
 
 // IsSuccess returns true when this get metrics top queries o k response has a 2xx status code
@@ -87,7 +87,7 @@ func (o *GetMetricsTopQueriesOK) String() string {
 	return fmt.Sprintf("[GET /metrics/top-queries][%d] getMetricsTopQueriesOK %s", 200, payload)
 }
 
-func (o *GetMetricsTopQueriesOK) GetPayload() []*models.MetricsQueryCount {
+func (o *GetMetricsTopQueriesOK) GetPayload() []*models.QueryCount {
 	return o.Payload
 }
 

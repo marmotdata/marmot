@@ -64,7 +64,7 @@ type PostRunsStartParams struct {
 
 	   Start run request
 	*/
-	Request *models.V1RunsStartRunRequest
+	Request *models.StartRunRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostRunsStartParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithRequest adds the request to the post runs start params
-func (o *PostRunsStartParams) WithRequest(request *models.V1RunsStartRunRequest) *PostRunsStartParams {
+func (o *PostRunsStartParams) WithRequest(request *models.StartRunRequest) *PostRunsStartParams {
 	o.SetRequest(request)
 	return o
 }
 
 // SetRequest adds the request to the post runs start params
-func (o *PostRunsStartParams) SetRequest(request *models.V1RunsStartRunRequest) {
+func (o *PostRunsStartParams) SetRequest(request *models.StartRunRequest) {
 	o.Request = request
 }
 

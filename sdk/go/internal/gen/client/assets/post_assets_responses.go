@@ -62,7 +62,7 @@ PostAssetsCreated describes a response with status code 201, with default header
 Created
 */
 type PostAssetsCreated struct {
-	Payload *models.AssetAsset
+	Payload *models.Asset
 }
 
 // IsSuccess returns true when this post assets created response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PostAssetsCreated) String() string {
 	return fmt.Sprintf("[POST /assets][%d] postAssetsCreated %s", 201, payload)
 }
 
-func (o *PostAssetsCreated) GetPayload() *models.AssetAsset {
+func (o *PostAssetsCreated) GetPayload() *models.Asset {
 	return o.Payload
 }
 
 func (o *PostAssetsCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AssetAsset)
+	o.Payload = new(models.Asset)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ PostAssetsBadRequest describes a response with status code 400, with default hea
 Bad Request
 */
 type PostAssetsBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post assets bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *PostAssetsBadRequest) String() string {
 	return fmt.Sprintf("[POST /assets][%d] postAssetsBadRequest %s", 400, payload)
 }
 
-func (o *PostAssetsBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAssetsBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAssetsBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ PostAssetsUnauthorized describes a response with status code 401, with default h
 Unauthorized
 */
 type PostAssetsUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post assets unauthorized response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *PostAssetsUnauthorized) String() string {
 	return fmt.Sprintf("[POST /assets][%d] postAssetsUnauthorized %s", 401, payload)
 }
 
-func (o *PostAssetsUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAssetsUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAssetsUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ PostAssetsConflict describes a response with status code 409, with default heade
 Conflict
 */
 type PostAssetsConflict struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post assets conflict response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *PostAssetsConflict) String() string {
 	return fmt.Sprintf("[POST /assets][%d] postAssetsConflict %s", 409, payload)
 }
 
-func (o *PostAssetsConflict) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAssetsConflict) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAssetsConflict) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

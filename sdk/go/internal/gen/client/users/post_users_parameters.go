@@ -64,7 +64,7 @@ type PostUsersParams struct {
 
 	   User creation request
 	*/
-	User *models.UserCreateUserInput
+	User *models.CreateUserInput
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostUsersParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithUser adds the user to the post users params
-func (o *PostUsersParams) WithUser(user *models.UserCreateUserInput) *PostUsersParams {
+func (o *PostUsersParams) WithUser(user *models.CreateUserInput) *PostUsersParams {
 	o.SetUser(user)
 	return o
 }
 
 // SetUser adds the user to the post users params
-func (o *PostUsersParams) SetUser(user *models.UserCreateUserInput) {
+func (o *PostUsersParams) SetUser(user *models.CreateUserInput) {
 	o.User = user
 }
 

@@ -56,7 +56,7 @@ PostAssetsTermsIDOK describes a response with status code 200, with default head
 OK
 */
 type PostAssetsTermsIDOK struct {
-	Payload []*models.AssetAssetTerm
+	Payload []*models.AssetTerm
 }
 
 // IsSuccess returns true when this post assets terms Id o k response has a 2xx status code
@@ -99,7 +99,7 @@ func (o *PostAssetsTermsIDOK) String() string {
 	return fmt.Sprintf("[POST /assets/terms/{id}][%d] postAssetsTermsIdOK %s", 200, payload)
 }
 
-func (o *PostAssetsTermsIDOK) GetPayload() []*models.AssetAssetTerm {
+func (o *PostAssetsTermsIDOK) GetPayload() []*models.AssetTerm {
 	return o.Payload
 }
 
@@ -124,7 +124,7 @@ PostAssetsTermsIDBadRequest describes a response with status code 400, with defa
 Bad Request
 */
 type PostAssetsTermsIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post assets terms Id bad request response has a 2xx status code
@@ -167,13 +167,13 @@ func (o *PostAssetsTermsIDBadRequest) String() string {
 	return fmt.Sprintf("[POST /assets/terms/{id}][%d] postAssetsTermsIdBadRequest %s", 400, payload)
 }
 
-func (o *PostAssetsTermsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAssetsTermsIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAssetsTermsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -194,7 +194,7 @@ PostAssetsTermsIDNotFound describes a response with status code 404, with defaul
 Not Found
 */
 type PostAssetsTermsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post assets terms Id not found response has a 2xx status code
@@ -237,13 +237,13 @@ func (o *PostAssetsTermsIDNotFound) String() string {
 	return fmt.Sprintf("[POST /assets/terms/{id}][%d] postAssetsTermsIdNotFound %s", 404, payload)
 }
 
-func (o *PostAssetsTermsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAssetsTermsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAssetsTermsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

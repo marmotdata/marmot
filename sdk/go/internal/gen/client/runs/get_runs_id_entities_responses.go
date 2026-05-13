@@ -44,7 +44,7 @@ GetRunsIDEntitiesOK describes a response with status code 200, with default head
 OK
 */
 type GetRunsIDEntitiesOK struct {
-	Payload *models.V1RunsRunEntitiesResponse
+	Payload *models.RunEntitiesResponse
 }
 
 // IsSuccess returns true when this get runs Id entities o k response has a 2xx status code
@@ -87,13 +87,13 @@ func (o *GetRunsIDEntitiesOK) String() string {
 	return fmt.Sprintf("[GET /runs/{id}/entities][%d] getRunsIdEntitiesOK %s", 200, payload)
 }
 
-func (o *GetRunsIDEntitiesOK) GetPayload() *models.V1RunsRunEntitiesResponse {
+func (o *GetRunsIDEntitiesOK) GetPayload() *models.RunEntitiesResponse {
 	return o.Payload
 }
 
 func (o *GetRunsIDEntitiesOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1RunsRunEntitiesResponse)
+	o.Payload = new(models.RunEntitiesResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

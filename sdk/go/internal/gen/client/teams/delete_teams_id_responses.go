@@ -62,7 +62,7 @@ DeleteTeamsIDOK describes a response with status code 200, with default header v
 OK
 */
 type DeleteTeamsIDOK struct {
-	Payload *models.V1TeamsMessageResponse
+	Payload *models.MessageResponse
 }
 
 // IsSuccess returns true when this delete teams Id o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *DeleteTeamsIDOK) String() string {
 	return fmt.Sprintf("[DELETE /teams/{id}][%d] deleteTeamsIdOK %s", 200, payload)
 }
 
-func (o *DeleteTeamsIDOK) GetPayload() *models.V1TeamsMessageResponse {
+func (o *DeleteTeamsIDOK) GetPayload() *models.MessageResponse {
 	return o.Payload
 }
 
 func (o *DeleteTeamsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1TeamsMessageResponse)
+	o.Payload = new(models.MessageResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ DeleteTeamsIDForbidden describes a response with status code 403, with default h
 Forbidden
 */
 type DeleteTeamsIDForbidden struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete teams Id forbidden response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *DeleteTeamsIDForbidden) String() string {
 	return fmt.Sprintf("[DELETE /teams/{id}][%d] deleteTeamsIdForbidden %s", 403, payload)
 }
 
-func (o *DeleteTeamsIDForbidden) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteTeamsIDForbidden) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteTeamsIDForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ DeleteTeamsIDNotFound describes a response with status code 404, with default he
 Not Found
 */
 type DeleteTeamsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete teams Id not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *DeleteTeamsIDNotFound) String() string {
 	return fmt.Sprintf("[DELETE /teams/{id}][%d] deleteTeamsIdNotFound %s", 404, payload)
 }
 
-func (o *DeleteTeamsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteTeamsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteTeamsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ DeleteTeamsIDInternalServerError describes a response with status code 500, with
 Internal Server Error
 */
 type DeleteTeamsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete teams Id internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *DeleteTeamsIDInternalServerError) String() string {
 	return fmt.Sprintf("[DELETE /teams/{id}][%d] deleteTeamsIdInternalServerError %s", 500, payload)
 }
 
-func (o *DeleteTeamsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteTeamsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteTeamsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

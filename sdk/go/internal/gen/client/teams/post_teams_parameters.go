@@ -64,7 +64,7 @@ type PostTeamsParams struct {
 
 	   Team creation request
 	*/
-	Team *models.V1TeamsCreateTeamRequest
+	Team *models.CreateTeamRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostTeamsParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithTeam adds the team to the post teams params
-func (o *PostTeamsParams) WithTeam(team *models.V1TeamsCreateTeamRequest) *PostTeamsParams {
+func (o *PostTeamsParams) WithTeam(team *models.CreateTeamRequest) *PostTeamsParams {
 	o.SetTeam(team)
 	return o
 }
 
 // SetTeam adds the team to the post teams params
-func (o *PostTeamsParams) SetTeam(team *models.V1TeamsCreateTeamRequest) {
+func (o *PostTeamsParams) SetTeam(team *models.CreateTeamRequest) {
 	o.Team = team
 }
 

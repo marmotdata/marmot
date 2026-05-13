@@ -64,7 +64,7 @@ type PostAPIV1LineageParams struct {
 
 	   OpenLineage run event
 	*/
-	Event *models.LineageRunEvent
+	Event *models.RunEvent
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostAPIV1LineageParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithEvent adds the event to the post API v1 lineage params
-func (o *PostAPIV1LineageParams) WithEvent(event *models.LineageRunEvent) *PostAPIV1LineageParams {
+func (o *PostAPIV1LineageParams) WithEvent(event *models.RunEvent) *PostAPIV1LineageParams {
 	o.SetEvent(event)
 	return o
 }
 
 // SetEvent adds the event to the post API v1 lineage params
-func (o *PostAPIV1LineageParams) SetEvent(event *models.LineageRunEvent) {
+func (o *PostAPIV1LineageParams) SetEvent(event *models.RunEvent) {
 	o.Event = event
 }
 

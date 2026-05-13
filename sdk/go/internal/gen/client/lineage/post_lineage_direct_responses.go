@@ -56,7 +56,7 @@ PostLineageDirectOK describes a response with status code 200, with default head
 OK
 */
 type PostLineageDirectOK struct {
-	Payload *models.LineageLineageEdge
+	Payload *models.LineageEdge
 }
 
 // IsSuccess returns true when this post lineage direct o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *PostLineageDirectOK) String() string {
 	return fmt.Sprintf("[POST /lineage/direct][%d] postLineageDirectOK %s", 200, payload)
 }
 
-func (o *PostLineageDirectOK) GetPayload() *models.LineageLineageEdge {
+func (o *PostLineageDirectOK) GetPayload() *models.LineageEdge {
 	return o.Payload
 }
 
 func (o *PostLineageDirectOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.LineageLineageEdge)
+	o.Payload = new(models.LineageEdge)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ PostLineageDirectBadRequest describes a response with status code 400, with defa
 Bad Request
 */
 type PostLineageDirectBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post lineage direct bad request response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *PostLineageDirectBadRequest) String() string {
 	return fmt.Sprintf("[POST /lineage/direct][%d] postLineageDirectBadRequest %s", 400, payload)
 }
 
-func (o *PostLineageDirectBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostLineageDirectBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostLineageDirectBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ PostLineageDirectInternalServerError describes a response with status code 500, 
 Internal Server Error
 */
 type PostLineageDirectInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post lineage direct internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *PostLineageDirectInternalServerError) String() string {
 	return fmt.Sprintf("[POST /lineage/direct][%d] postLineageDirectInternalServerError %s", 500, payload)
 }
 
-func (o *PostLineageDirectInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostLineageDirectInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostLineageDirectInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

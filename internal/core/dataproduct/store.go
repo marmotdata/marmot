@@ -507,7 +507,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 	}
 	defer rows.Close()
 
-	var products []*DataProduct
+	products := []*DataProduct{}
 	for rows.Next() {
 		var dp DataProduct
 		var metadataJSON []byte
@@ -606,7 +606,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 	defer rows.Close()
 
-	var products []*DataProduct
+	products := []*DataProduct{}
 	for rows.Next() {
 		var dp DataProduct
 		var metadataJSON []byte
@@ -763,7 +763,7 @@ func (r *PostgresRepository) GetManualAssets(ctx context.Context, dataProductID 
 	}
 	defer rows.Close()
 
-	var assetIDs []string
+	assetIDs := []string{}
 	for rows.Next() {
 		var assetID string
 		if err := rows.Scan(&assetID); err != nil {
@@ -967,7 +967,7 @@ func (r *PostgresRepository) ResolveAssets(ctx context.Context, dataProductID st
 func (r *PostgresRepository) ExecuteRule(ctx context.Context, rule *Rule) ([]string, error) {
 	start := time.Now()
 
-	var assetIDs []string
+	assetIDs := []string{}
 	var err error
 
 	switch {
@@ -1033,7 +1033,7 @@ func (r *PostgresRepository) executeQueryRule(ctx context.Context, queryExpressi
 	}
 	defer rows.Close()
 
-	var assetIDs []string
+	assetIDs := []string{}
 	for rows.Next() {
 		var id string
 		var rank float64
@@ -1105,7 +1105,7 @@ func (r *PostgresRepository) executeMetadataMatchRule(ctx context.Context, rule 
 	}
 	defer rows.Close()
 
-	var assetIDs []string
+	assetIDs := []string{}
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
@@ -1173,7 +1173,7 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 	}
 	defer rows.Close()
 
-	var products []*DataProduct
+	products := []*DataProduct{}
 	for rows.Next() {
 		var dp DataProduct
 		var metadataJSON []byte
@@ -1209,7 +1209,7 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 	return products, nil
 }
 
-type ImagePurpose string
+type ImagePurpose string // @name ImagePurpose
 
 const (
 	ImagePurposeIcon   ImagePurpose = "icon"
@@ -1252,7 +1252,7 @@ type ProductImageMeta struct {
 	SizeBytes     int          `json:"size_bytes"`
 	URL           string       `json:"url"`
 	CreatedAt     time.Time    `json:"created_at"`
-}
+} // @name ProductImageMeta
 
 type UploadImageInput struct {
 	Filename    string
@@ -1418,7 +1418,7 @@ func (r *PostgresRepository) ListProductImages(ctx context.Context, dataProductI
 	}
 	defer rows.Close()
 
-	var images []*ProductImageMeta
+	images := []*ProductImageMeta{}
 	for rows.Next() {
 		var meta ProductImageMeta
 		err := rows.Scan(

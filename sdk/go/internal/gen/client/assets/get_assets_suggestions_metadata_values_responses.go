@@ -56,7 +56,7 @@ GetAssetsSuggestionsMetadataValuesOK describes a response with status code 200, 
 OK
 */
 type GetAssetsSuggestionsMetadataValuesOK struct {
-	Payload []*models.AssetMetadataValueSuggestion
+	Payload []*models.MetadataValueSuggestion
 }
 
 // IsSuccess returns true when this get assets suggestions metadata values o k response has a 2xx status code
@@ -99,7 +99,7 @@ func (o *GetAssetsSuggestionsMetadataValuesOK) String() string {
 	return fmt.Sprintf("[GET /assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesOK %s", 200, payload)
 }
 
-func (o *GetAssetsSuggestionsMetadataValuesOK) GetPayload() []*models.AssetMetadataValueSuggestion {
+func (o *GetAssetsSuggestionsMetadataValuesOK) GetPayload() []*models.MetadataValueSuggestion {
 	return o.Payload
 }
 
@@ -124,7 +124,7 @@ GetAssetsSuggestionsMetadataValuesBadRequest describes a response with status co
 Bad Request
 */
 type GetAssetsSuggestionsMetadataValuesBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets suggestions metadata values bad request response has a 2xx status code
@@ -167,13 +167,13 @@ func (o *GetAssetsSuggestionsMetadataValuesBadRequest) String() string {
 	return fmt.Sprintf("[GET /assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesBadRequest %s", 400, payload)
 }
 
-func (o *GetAssetsSuggestionsMetadataValuesBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsSuggestionsMetadataValuesBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsSuggestionsMetadataValuesBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -194,7 +194,7 @@ GetAssetsSuggestionsMetadataValuesInternalServerError describes a response with 
 Internal Server Error
 */
 type GetAssetsSuggestionsMetadataValuesInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets suggestions metadata values internal server error response has a 2xx status code
@@ -237,13 +237,13 @@ func (o *GetAssetsSuggestionsMetadataValuesInternalServerError) String() string 
 	return fmt.Sprintf("[GET /assets/suggestions/metadata/values][%d] getAssetsSuggestionsMetadataValuesInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsSuggestionsMetadataValuesInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsSuggestionsMetadataValuesInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsSuggestionsMetadataValuesInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

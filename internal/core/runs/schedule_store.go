@@ -48,7 +48,7 @@ type Schedule struct {
 	CreatedBy          *string                `json:"created_by,omitempty"`
 	CreatedAt          time.Time              `json:"created_at"`
 	UpdatedAt          time.Time              `json:"updated_at"`
-}
+} // @name Schedule
 
 type JobRun struct {
 	ID                 string     `json:"id"`
@@ -73,7 +73,7 @@ type JobRun struct {
 	CreatedBy          string     `json:"created_by"`
 	CreatedAt          time.Time  `json:"created_at"`
 	UpdatedAt          time.Time  `json:"updated_at"`
-}
+} // @name JobRun
 
 // ValidJobStatus checks if a job status is valid
 func ValidJobStatus(status string) bool {

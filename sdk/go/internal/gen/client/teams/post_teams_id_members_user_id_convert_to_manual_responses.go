@@ -56,7 +56,7 @@ PostTeamsIDMembersUserIDConvertToManualOK describes a response with status code 
 OK
 */
 type PostTeamsIDMembersUserIDConvertToManualOK struct {
-	Payload *models.V1TeamsMessageResponse
+	Payload *models.MessageResponse
 }
 
 // IsSuccess returns true when this post teams Id members user Id convert to manual o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *PostTeamsIDMembersUserIDConvertToManualOK) String() string {
 	return fmt.Sprintf("[POST /teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualOK %s", 200, payload)
 }
 
-func (o *PostTeamsIDMembersUserIDConvertToManualOK) GetPayload() *models.V1TeamsMessageResponse {
+func (o *PostTeamsIDMembersUserIDConvertToManualOK) GetPayload() *models.MessageResponse {
 	return o.Payload
 }
 
 func (o *PostTeamsIDMembersUserIDConvertToManualOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1TeamsMessageResponse)
+	o.Payload = new(models.MessageResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ PostTeamsIDMembersUserIDConvertToManualNotFound describes a response with status
 Not Found
 */
 type PostTeamsIDMembersUserIDConvertToManualNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post teams Id members user Id convert to manual not found response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *PostTeamsIDMembersUserIDConvertToManualNotFound) String() string {
 	return fmt.Sprintf("[POST /teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualNotFound %s", 404, payload)
 }
 
-func (o *PostTeamsIDMembersUserIDConvertToManualNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostTeamsIDMembersUserIDConvertToManualNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostTeamsIDMembersUserIDConvertToManualNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ PostTeamsIDMembersUserIDConvertToManualInternalServerError describes a response 
 Internal Server Error
 */
 type PostTeamsIDMembersUserIDConvertToManualInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post teams Id members user Id convert to manual internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *PostTeamsIDMembersUserIDConvertToManualInternalServerError) String() st
 	return fmt.Sprintf("[POST /teams/{id}/members/{userId}/convert-to-manual][%d] postTeamsIdMembersUserIdConvertToManualInternalServerError %s", 500, payload)
 }
 
-func (o *PostTeamsIDMembersUserIDConvertToManualInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostTeamsIDMembersUserIDConvertToManualInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostTeamsIDMembersUserIDConvertToManualInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

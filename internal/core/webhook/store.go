@@ -175,7 +175,7 @@ func (r *PostgresRepository) ListByTeam(ctx context.Context, teamID string) ([]*
 	}
 	defer rows.Close()
 
-	var webhooks []*Webhook
+	webhooks := []*Webhook{}
 	for rows.Next() {
 		var webhook Webhook
 		var typesRaw []byte
@@ -220,7 +220,7 @@ func (r *PostgresRepository) GetEnabledForNotificationType(ctx context.Context, 
 	}
 	defer rows.Close()
 
-	var webhooks []*Webhook
+	webhooks := []*Webhook{}
 	for rows.Next() {
 		var webhook Webhook
 		var typesRaw []byte

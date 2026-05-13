@@ -9,19 +9,19 @@ import (
 )
 
 // TotalAssets is the catalog-wide asset count.
-type TotalAssets = models.V1MetricsTotalAssetsResponse
+type TotalAssets = models.TotalAssetsResponse
 
 // AssetsByType is the by-type asset breakdown.
-type AssetsByType = models.V1MetricsAssetsByTypeResponse
+type AssetsByType = models.AssetsByTypeResponse
 
 // AssetsByProvider is the by-provider asset breakdown.
-type AssetsByProvider = models.V1MetricsAssetsByProviderResponse
+type AssetsByProvider = models.AssetsByProviderResponse
 
 // AssetCount is one (asset, count) entry.
-type AssetCount = models.MetricsAssetCount
+type AssetCount = models.AssetCount
 
 // QueryCount is one (query, count) entry.
-type QueryCount = models.MetricsQueryCount
+type QueryCount = models.QueryCount
 
 // TopOptions sets the time window and limit for top-N queries.
 // Start and End must be RFC3339 timestamps.

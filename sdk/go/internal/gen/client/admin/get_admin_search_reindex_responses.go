@@ -56,7 +56,7 @@ GetAdminSearchReindexOK describes a response with status code 200, with default 
 OK
 */
 type GetAdminSearchReindexOK struct {
-	Payload *models.V1AdminReindexStatusResponse
+	Payload *models.ReindexStatusResponse
 }
 
 // IsSuccess returns true when this get admin search reindex o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *GetAdminSearchReindexOK) String() string {
 	return fmt.Sprintf("[GET /admin/search/reindex][%d] getAdminSearchReindexOK %s", 200, payload)
 }
 
-func (o *GetAdminSearchReindexOK) GetPayload() *models.V1AdminReindexStatusResponse {
+func (o *GetAdminSearchReindexOK) GetPayload() *models.ReindexStatusResponse {
 	return o.Payload
 }
 
 func (o *GetAdminSearchReindexOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1AdminReindexStatusResponse)
+	o.Payload = new(models.ReindexStatusResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ GetAdminSearchReindexUnauthorized describes a response with status code 401, wit
 Unauthorized
 */
 type GetAdminSearchReindexUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get admin search reindex unauthorized response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetAdminSearchReindexUnauthorized) String() string {
 	return fmt.Sprintf("[GET /admin/search/reindex][%d] getAdminSearchReindexUnauthorized %s", 401, payload)
 }
 
-func (o *GetAdminSearchReindexUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAdminSearchReindexUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAdminSearchReindexUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetAdminSearchReindexForbidden describes a response with status code 403, with d
 Forbidden
 */
 type GetAdminSearchReindexForbidden struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get admin search reindex forbidden response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetAdminSearchReindexForbidden) String() string {
 	return fmt.Sprintf("[GET /admin/search/reindex][%d] getAdminSearchReindexForbidden %s", 403, payload)
 }
 
-func (o *GetAdminSearchReindexForbidden) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAdminSearchReindexForbidden) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAdminSearchReindexForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

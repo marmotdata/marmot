@@ -70,7 +70,7 @@ type DeleteAssetsTermsIDParams struct {
 
 	   Term ID to remove
 	*/
-	Term *models.V1AssetsRemoveTermRequest
+	Term *models.RemoveTermRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -137,13 +137,13 @@ func (o *DeleteAssetsTermsIDParams) SetID(id string) {
 }
 
 // WithTerm adds the term to the delete assets terms ID params
-func (o *DeleteAssetsTermsIDParams) WithTerm(term *models.V1AssetsRemoveTermRequest) *DeleteAssetsTermsIDParams {
+func (o *DeleteAssetsTermsIDParams) WithTerm(term *models.RemoveTermRequest) *DeleteAssetsTermsIDParams {
 	o.SetTerm(term)
 	return o
 }
 
 // SetTerm adds the term to the delete assets terms ID params
-func (o *DeleteAssetsTermsIDParams) SetTerm(term *models.V1AssetsRemoveTermRequest) {
+func (o *DeleteAssetsTermsIDParams) SetTerm(term *models.RemoveTermRequest) {
 	o.Term = term
 }
 

@@ -278,7 +278,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 	}
 	defer rows.Close()
 
-	var terms []*GlossaryTerm
+	terms := []*GlossaryTerm{}
 	for rows.Next() {
 		var term GlossaryTerm
 		var metadataJSON []byte
@@ -378,7 +378,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 	defer rows.Close()
 
-	var terms []*GlossaryTerm
+	terms := []*GlossaryTerm{}
 	for rows.Next() {
 		var term GlossaryTerm
 		var metadataJSON []byte
@@ -433,7 +433,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 	}
 	defer rows.Close()
 
-	var terms []*GlossaryTerm
+	terms := []*GlossaryTerm{}
 	for rows.Next() {
 		var term GlossaryTerm
 		var metadataJSON []byte

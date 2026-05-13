@@ -62,7 +62,7 @@ PostOauthTokenOK describes a response with status code 200, with default header 
 OK
 */
 type PostOauthTokenOK struct {
-	Payload *models.AuthTokenExchangeResponse
+	Payload *models.TokenExchangeResponse
 }
 
 // IsSuccess returns true when this post oauth token o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PostOauthTokenOK) String() string {
 	return fmt.Sprintf("[POST /oauth/token][%d] postOauthTokenOK %s", 200, payload)
 }
 
-func (o *PostOauthTokenOK) GetPayload() *models.AuthTokenExchangeResponse {
+func (o *PostOauthTokenOK) GetPayload() *models.TokenExchangeResponse {
 	return o.Payload
 }
 
 func (o *PostOauthTokenOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AuthTokenExchangeResponse)
+	o.Payload = new(models.TokenExchangeResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ PostOauthTokenBadRequest describes a response with status code 400, with default
 Bad Request
 */
 type PostOauthTokenBadRequest struct {
-	Payload *models.AuthOauthErrorResponse
+	Payload *models.OauthErrorResponse
 }
 
 // IsSuccess returns true when this post oauth token bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *PostOauthTokenBadRequest) String() string {
 	return fmt.Sprintf("[POST /oauth/token][%d] postOauthTokenBadRequest %s", 400, payload)
 }
 
-func (o *PostOauthTokenBadRequest) GetPayload() *models.AuthOauthErrorResponse {
+func (o *PostOauthTokenBadRequest) GetPayload() *models.OauthErrorResponse {
 	return o.Payload
 }
 
 func (o *PostOauthTokenBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AuthOauthErrorResponse)
+	o.Payload = new(models.OauthErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ PostOauthTokenUnauthorized describes a response with status code 401, with defau
 Unauthorized
 */
 type PostOauthTokenUnauthorized struct {
-	Payload *models.AuthOauthErrorResponse
+	Payload *models.OauthErrorResponse
 }
 
 // IsSuccess returns true when this post oauth token unauthorized response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *PostOauthTokenUnauthorized) String() string {
 	return fmt.Sprintf("[POST /oauth/token][%d] postOauthTokenUnauthorized %s", 401, payload)
 }
 
-func (o *PostOauthTokenUnauthorized) GetPayload() *models.AuthOauthErrorResponse {
+func (o *PostOauthTokenUnauthorized) GetPayload() *models.OauthErrorResponse {
 	return o.Payload
 }
 
 func (o *PostOauthTokenUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AuthOauthErrorResponse)
+	o.Payload = new(models.OauthErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ PostOauthTokenInternalServerError describes a response with status code 500, wit
 Internal Server Error
 */
 type PostOauthTokenInternalServerError struct {
-	Payload *models.AuthOauthErrorResponse
+	Payload *models.OauthErrorResponse
 }
 
 // IsSuccess returns true when this post oauth token internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *PostOauthTokenInternalServerError) String() string {
 	return fmt.Sprintf("[POST /oauth/token][%d] postOauthTokenInternalServerError %s", 500, payload)
 }
 
-func (o *PostOauthTokenInternalServerError) GetPayload() *models.AuthOauthErrorResponse {
+func (o *PostOauthTokenInternalServerError) GetPayload() *models.OauthErrorResponse {
 	return o.Payload
 }
 
 func (o *PostOauthTokenInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AuthOauthErrorResponse)
+	o.Payload = new(models.OauthErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

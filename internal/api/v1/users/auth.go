@@ -12,26 +12,26 @@ import (
 
 type UpdatePasswordRequest struct {
 	NewPassword string `json:"new_password" validate:"required,min=8"`
-}
+} // @name UpdatePasswordRequest
 
 type LoginRequest struct {
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
-}
+} // @name LoginRequest
 
 type TokenResponse struct {
 	AccessToken            string `json:"access_token"`
 	TokenType              string `json:"token_type"`
 	ExpiresIn              int64  `json:"expires_in"`
 	RequiresPasswordChange bool   `json:"requires_password_change"`
-}
+} // @name TokenResponse
 
 type OAuthLinkRequest struct {
 	UserID         string                 `json:"user_id" validate:"required"`
 	Provider       string                 `json:"provider" validate:"required"`
 	ProviderUserID string                 `json:"provider_user_id" validate:"required"`
 	UserInfo       map[string]interface{} `json:"user_info" validate:"required"`
-}
+} // @name OAuthLinkRequest
 
 // @Summary Login user
 // @Description Authenticate a user with username/email and password

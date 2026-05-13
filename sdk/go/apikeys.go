@@ -9,7 +9,7 @@ import (
 )
 
 // APIKey is a personal API key. The Token value is only populated on the Create response.
-type APIKey = models.UserAPIKey
+type APIKey = models.APIKey
 
 // CreateAPIKeyInput is the input for APIKeysService.Create.
 type CreateAPIKeyInput struct {
@@ -34,7 +34,7 @@ func (s *APIKeysService) List(ctx context.Context) ([]*APIKey, error) {
 
 // Create issues a new API key. The full token is only readable from this response.
 func (s *APIKeysService) Create(ctx context.Context, in CreateAPIKeyInput) (*APIKey, error) {
-	body := &models.V1UsersCreateAPIKeyRequest{
+	body := &models.CreateAPIKeyRequest{
 		Name:          &in.Name,
 		ExpiresInDays: in.ExpiresInDays,
 	}

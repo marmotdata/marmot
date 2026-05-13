@@ -68,7 +68,7 @@ PostAdminSearchReindexAccepted describes a response with status code 202, with d
 Accepted
 */
 type PostAdminSearchReindexAccepted struct {
-	Payload *models.V1AdminReindexAcceptedResponse
+	Payload *models.ReindexAcceptedResponse
 }
 
 // IsSuccess returns true when this post admin search reindex accepted response has a 2xx status code
@@ -111,13 +111,13 @@ func (o *PostAdminSearchReindexAccepted) String() string {
 	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexAccepted %s", 202, payload)
 }
 
-func (o *PostAdminSearchReindexAccepted) GetPayload() *models.V1AdminReindexAcceptedResponse {
+func (o *PostAdminSearchReindexAccepted) GetPayload() *models.ReindexAcceptedResponse {
 	return o.Payload
 }
 
 func (o *PostAdminSearchReindexAccepted) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1AdminReindexAcceptedResponse)
+	o.Payload = new(models.ReindexAcceptedResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -138,7 +138,7 @@ PostAdminSearchReindexUnauthorized describes a response with status code 401, wi
 Unauthorized
 */
 type PostAdminSearchReindexUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post admin search reindex unauthorized response has a 2xx status code
@@ -181,13 +181,13 @@ func (o *PostAdminSearchReindexUnauthorized) String() string {
 	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexUnauthorized %s", 401, payload)
 }
 
-func (o *PostAdminSearchReindexUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAdminSearchReindexUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAdminSearchReindexUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -208,7 +208,7 @@ PostAdminSearchReindexForbidden describes a response with status code 403, with 
 Forbidden
 */
 type PostAdminSearchReindexForbidden struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post admin search reindex forbidden response has a 2xx status code
@@ -251,13 +251,13 @@ func (o *PostAdminSearchReindexForbidden) String() string {
 	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexForbidden %s", 403, payload)
 }
 
-func (o *PostAdminSearchReindexForbidden) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAdminSearchReindexForbidden) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAdminSearchReindexForbidden) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -278,7 +278,7 @@ PostAdminSearchReindexConflict describes a response with status code 409, with d
 Conflict
 */
 type PostAdminSearchReindexConflict struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post admin search reindex conflict response has a 2xx status code
@@ -321,13 +321,13 @@ func (o *PostAdminSearchReindexConflict) String() string {
 	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexConflict %s", 409, payload)
 }
 
-func (o *PostAdminSearchReindexConflict) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAdminSearchReindexConflict) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAdminSearchReindexConflict) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -348,7 +348,7 @@ PostAdminSearchReindexServiceUnavailable describes a response with status code 5
 Service Unavailable
 */
 type PostAdminSearchReindexServiceUnavailable struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post admin search reindex service unavailable response has a 2xx status code
@@ -391,13 +391,13 @@ func (o *PostAdminSearchReindexServiceUnavailable) String() string {
 	return fmt.Sprintf("[POST /admin/search/reindex][%d] postAdminSearchReindexServiceUnavailable %s", 503, payload)
 }
 
-func (o *PostAdminSearchReindexServiceUnavailable) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAdminSearchReindexServiceUnavailable) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAdminSearchReindexServiceUnavailable) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

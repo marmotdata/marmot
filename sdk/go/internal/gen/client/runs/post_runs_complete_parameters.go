@@ -64,7 +64,7 @@ type PostRunsCompleteParams struct {
 
 	   Complete run request
 	*/
-	Request *models.V1RunsCompleteRunRequest
+	Request *models.CompleteRunRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostRunsCompleteParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithRequest adds the request to the post runs complete params
-func (o *PostRunsCompleteParams) WithRequest(request *models.V1RunsCompleteRunRequest) *PostRunsCompleteParams {
+func (o *PostRunsCompleteParams) WithRequest(request *models.CompleteRunRequest) *PostRunsCompleteParams {
 	o.SetRequest(request)
 	return o
 }
 
 // SetRequest adds the request to the post runs complete params
-func (o *PostRunsCompleteParams) SetRequest(request *models.V1RunsCompleteRunRequest) {
+func (o *PostRunsCompleteParams) SetRequest(request *models.CompleteRunRequest) {
 	o.Request = request
 }
 

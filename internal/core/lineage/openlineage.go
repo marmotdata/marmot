@@ -60,18 +60,18 @@ type RunEvent struct {
 	Outputs   []Dataset `json:"outputs,omitempty"`
 	Producer  string    `json:"producer,omitempty"`
 	SchemaURL string    `json:"schemaURL,omitempty"`
-}
+} // @name RunEvent
 
 type Run struct {
 	RunID  string                 `json:"runId"`
 	Facets map[string]interface{} `json:"facets,omitempty"`
-}
+} // @name LineageRun
 
 type Job struct {
 	Namespace string                 `json:"namespace"`
 	Name      string                 `json:"name"`
 	Facets    map[string]interface{} `json:"facets,omitempty"`
-}
+} // @name Job
 
 type Dataset struct {
 	Namespace    string                 `json:"namespace"`
@@ -79,7 +79,7 @@ type Dataset struct {
 	Facets       map[string]interface{} `json:"facets,omitempty"`
 	InputFacets  map[string]interface{} `json:"inputFacets,omitempty"`
 	OutputFacets map[string]interface{} `json:"outputFacets,omitempty"`
-}
+} // @name Dataset
 
 type RunHistoryEntry struct {
 	ID           string                 `json:"id"`

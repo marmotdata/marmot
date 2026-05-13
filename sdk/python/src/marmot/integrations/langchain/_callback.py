@@ -100,9 +100,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         self._tools = tools
         self._tool_names = [t.name for t in tools] if tools else None
         self._system_prompt_hash = (
-            hashlib.sha256(system_prompt.encode()).hexdigest()[:16]
-            if system_prompt
-            else None
+            hashlib.sha256(system_prompt.encode()).hexdigest()[:16] if system_prompt else None
         )
         self._extra_metadata = extra_metadata or {}
 
@@ -131,9 +129,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         implementation when neither :func:`marmot_tool` nor
         :class:`MarmotTool` is convenient.
         """
-        root = self._root_of.get(run_id, run_id) if run_id else next(
-            iter(self._upstreams), None
-        )
+        root = self._root_of.get(run_id, run_id) if run_id else next(iter(self._upstreams), None)
         if root is None:
             _LOG.debug("record_source called outside of any active run; ignoring")
             return
@@ -223,13 +219,15 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             return
         ended = datetime.now(timezone.utc)
         duration_ms = max(0, int((ended - opened["started_at"]).total_seconds() * 1000))
-        self._tool_traces.setdefault(root_run_id, []).append({
-            "tool_name": opened["tool_name"],
-            "target_mrn": opened["target_mrn"],
-            "started_at": opened["started_at"],
-            "duration_ms": duration_ms,
-            "status": status,
-        })
+        self._tool_traces.setdefault(root_run_id, []).append(
+            {
+                "tool_name": opened["tool_name"],
+                "target_mrn": opened["target_mrn"],
+                "started_at": opened["started_at"],
+                "duration_ms": duration_ms,
+                "status": status,
+            }
+        )
 
     def on_llm_end(
         self,
@@ -308,8 +306,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         # Clear any tool-open entries that belonged to this run (defensive — they
         # should already be gone through on_tool_end/on_tool_error).
         self._tool_open = {
-            k: v for k, v in self._tool_open.items()
-            if self._root_of.get(k) != root_run_id
+            k: v for k, v in self._tool_open.items() if self._root_of.get(k) != root_run_id
         }
         # Garbage-collect run_id → root mappings for this run.
         self._root_of = {k: v for k, v in self._root_of.items() if v != root_run_id}
@@ -360,11 +357,11 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         try:
             if existing is None:
                 created = self._client.assets.create(payload)
-                self._agent_id = created.get("id")
-                self._agent_mrn = created.get("mrn")
+                self._agent_id = _str_or_none(created.id)
+                self._agent_mrn = _str_or_none(created.mrn)
             else:
-                self._agent_id = existing.get("id")
-                self._agent_mrn = existing.get("mrn")
+                self._agent_id = _str_or_none(existing.id)
+                self._agent_mrn = _str_or_none(existing.mrn)
                 if self._agent_id:
                     self._client.assets.update(self._agent_id, payload)
         except Exception as e:  # pragma: no cover - best-effort
@@ -386,11 +383,13 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             mrn = _tool_asset_mrn(tool)
             if not mrn:
                 continue
-            edges.append({
-                "source": self._agent_mrn,
-                "target": mrn,
-                "type": "AGENT_INVOKES",
-            })
+            edges.append(
+                {
+                    "source": self._agent_mrn,
+                    "target": mrn,
+                    "type": "AGENT_INVOKES",
+                }
+            )
         if not edges:
             return
         try:
@@ -488,6 +487,11 @@ class MarmotTool:
             existing = getattr(self, "metadata", None) or {}
             existing[_TOOL_METADATA_KEY] = self.marmot_asset_mrn
             self.metadata = existing  # type: ignore[attr-defined]
+
+
+def _str_or_none(v: Any) -> str | None:
+    """Treat generated `Unset` and empty strings as missing."""
+    return v if isinstance(v, str) and v else None
 
 
 def _extract_mrns(output: Any) -> set[str]:

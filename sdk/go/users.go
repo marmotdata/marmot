@@ -9,10 +9,10 @@ import (
 )
 
 // User is a single user account.
-type User = models.UserUser
+type User = models.User
 
 // UserList is a paginated set of users.
-type UserList = models.V1UsersListUsersResponse
+type UserList = models.ListUsersResponse
 
 // UsersListOptions filters UsersService.List.
 type UsersListOptions struct {

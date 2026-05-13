@@ -62,7 +62,7 @@ PutAssetsIDOK describes a response with status code 200, with default header val
 OK
 */
 type PutAssetsIDOK struct {
-	Payload *models.AssetAsset
+	Payload *models.Asset
 }
 
 // IsSuccess returns true when this put assets Id o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PutAssetsIDOK) String() string {
 	return fmt.Sprintf("[PUT /assets/{id}][%d] putAssetsIdOK %s", 200, payload)
 }
 
-func (o *PutAssetsIDOK) GetPayload() *models.AssetAsset {
+func (o *PutAssetsIDOK) GetPayload() *models.Asset {
 	return o.Payload
 }
 
 func (o *PutAssetsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AssetAsset)
+	o.Payload = new(models.Asset)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ PutAssetsIDBadRequest describes a response with status code 400, with default he
 Bad Request
 */
 type PutAssetsIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put assets Id bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *PutAssetsIDBadRequest) String() string {
 	return fmt.Sprintf("[PUT /assets/{id}][%d] putAssetsIdBadRequest %s", 400, payload)
 }
 
-func (o *PutAssetsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAssetsIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAssetsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ PutAssetsIDNotFound describes a response with status code 404, with default head
 Not Found
 */
 type PutAssetsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put assets Id not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *PutAssetsIDNotFound) String() string {
 	return fmt.Sprintf("[PUT /assets/{id}][%d] putAssetsIdNotFound %s", 404, payload)
 }
 
-func (o *PutAssetsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAssetsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAssetsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ PutAssetsIDInternalServerError describes a response with status code 500, with d
 Internal Server Error
 */
 type PutAssetsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put assets Id internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *PutAssetsIDInternalServerError) String() string {
 	return fmt.Sprintf("[PUT /assets/{id}][%d] putAssetsIdInternalServerError %s", 500, payload)
 }
 
-func (o *PutAssetsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAssetsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAssetsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

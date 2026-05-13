@@ -44,7 +44,7 @@ PostRunsAssetsBatchOK describes a response with status code 200, with default he
 OK
 */
 type PostRunsAssetsBatchOK struct {
-	Payload *models.V1RunsBatchCreateResponse
+	Payload *models.BatchCreateResponse
 }
 
 // IsSuccess returns true when this post runs assets batch o k response has a 2xx status code
@@ -87,13 +87,13 @@ func (o *PostRunsAssetsBatchOK) String() string {
 	return fmt.Sprintf("[POST /runs/assets/batch][%d] postRunsAssetsBatchOK %s", 200, payload)
 }
 
-func (o *PostRunsAssetsBatchOK) GetPayload() *models.V1RunsBatchCreateResponse {
+func (o *PostRunsAssetsBatchOK) GetPayload() *models.BatchCreateResponse {
 	return o.Payload
 }
 
 func (o *PostRunsAssetsBatchOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1RunsBatchCreateResponse)
+	o.Payload = new(models.BatchCreateResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -50,7 +50,7 @@ GetAssetsSuggestionsMetadataFieldsOK describes a response with status code 200, 
 OK
 */
 type GetAssetsSuggestionsMetadataFieldsOK struct {
-	Payload []*models.AssetMetadataFieldSuggestion
+	Payload []*models.MetadataFieldSuggestion
 }
 
 // IsSuccess returns true when this get assets suggestions metadata fields o k response has a 2xx status code
@@ -93,7 +93,7 @@ func (o *GetAssetsSuggestionsMetadataFieldsOK) String() string {
 	return fmt.Sprintf("[GET /assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsOK %s", 200, payload)
 }
 
-func (o *GetAssetsSuggestionsMetadataFieldsOK) GetPayload() []*models.AssetMetadataFieldSuggestion {
+func (o *GetAssetsSuggestionsMetadataFieldsOK) GetPayload() []*models.MetadataFieldSuggestion {
 	return o.Payload
 }
 
@@ -118,7 +118,7 @@ GetAssetsSuggestionsMetadataFieldsInternalServerError describes a response with 
 Internal Server Error
 */
 type GetAssetsSuggestionsMetadataFieldsInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets suggestions metadata fields internal server error response has a 2xx status code
@@ -161,13 +161,13 @@ func (o *GetAssetsSuggestionsMetadataFieldsInternalServerError) String() string 
 	return fmt.Sprintf("[GET /assets/suggestions/metadata/fields][%d] getAssetsSuggestionsMetadataFieldsInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsSuggestionsMetadataFieldsInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsSuggestionsMetadataFieldsInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsSuggestionsMetadataFieldsInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -11,7 +11,7 @@ import (
 	"github.com/marmotdata/marmot/internal/query"
 )
 
-type RuleType string
+type RuleType string // @name RuleType
 
 const (
 	RuleTypeQuery         RuleType = "query"

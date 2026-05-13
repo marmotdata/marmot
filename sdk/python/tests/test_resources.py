@@ -5,6 +5,7 @@ from __future__ import annotations
 import httpx
 import pytest
 
+from marmot import Asset, LineageEdge
 from marmot.auth import Credential
 from marmot.client import Client
 from marmot.errors import AuthError, NotFoundError, ServerError
@@ -19,12 +20,13 @@ def client(httpx_mock: object) -> Client:
 def test_search_sends_query_and_filters(client: Client, httpx_mock: object) -> None:
     httpx_mock.add_response(  # type: ignore[attr-defined]
         method="GET",
-        url="http://m/api/v1/search?query=orders&asset_types=table&limit=10",
+        url="http://m/api/v1/search?q=orders&types=table&limit=10",
         json={"results": [{"id": "a1"}]},
         match_headers={"X-API-Key": "test-key"},
     )
     out = client.search("orders", types=["table"], limit=10)
-    assert out == {"results": [{"id": "a1"}]}
+    assert out.results is not None  # type: ignore[union-attr]
+    assert len(out.results) == 1
 
 
 def test_assets_get(client: Client, httpx_mock: object) -> None:
@@ -33,7 +35,9 @@ def test_assets_get(client: Client, httpx_mock: object) -> None:
         url="http://m/api/v1/assets/abc",
         json={"id": "abc", "name": "orders"},
     )
-    assert client.assets.get("abc")["name"] == "orders"
+    asset = client.assets.get("abc")
+    assert isinstance(asset, Asset)
+    assert asset.name == "orders"
 
 
 def test_assets_lookup(client: Client, httpx_mock: object) -> None:
@@ -43,7 +47,7 @@ def test_assets_lookup(client: Client, httpx_mock: object) -> None:
         json={"id": "abc"},
     )
     asset = client.assets.lookup(type="Table", service="bigquery", name="prod.orders")
-    assert asset["id"] == "abc"
+    assert asset.id == "abc"
 
 
 def test_assets_find_returns_none_on_404(client: Client, httpx_mock: object) -> None:
@@ -75,7 +79,8 @@ def test_lineage_write_default_type(client: Client, httpx_mock: object) -> None:
         match_json={"source": "a", "target": "b", "type": "DIRECT"},
     )
     edge = client.lineage.write(source="a", target="b")
-    assert edge["id"] == "edge-1"
+    assert isinstance(edge, LineageEdge)
+    assert edge.id == "edge-1"
 
 
 def test_lineage_write_custom_type(client: Client, httpx_mock: object) -> None:
@@ -129,7 +134,7 @@ def test_bearer_credential_uses_authorization_header(httpx_mock: object) -> None
     c = Client(base_url="http://m", credential=cred, http_client=httpx.Client())
     httpx_mock.add_response(  # type: ignore[attr-defined]
         method="GET",
-        url="http://m/api/v1/search?query=x",
+        url="http://m/api/v1/search?q=x",
         json={"results": []},
         match_headers={"Authorization": "Bearer jwt"},
     )
@@ -147,16 +152,15 @@ def test_refresh_on_401(httpx_mock: object) -> None:
     cred = Credential(token="old-jwt", scheme="Bearer", refresh=refresh_fn, source="r")
     c = Client(base_url="http://m", credential=cred, http_client=httpx.Client())
 
-    # First call returns 401; second (with new token) succeeds.
     httpx_mock.add_response(  # type: ignore[attr-defined]
         method="GET",
-        url="http://m/api/v1/search?query=x",
+        url="http://m/api/v1/search?q=x",
         status_code=401,
         match_headers={"Authorization": "Bearer old-jwt"},
     )
     httpx_mock.add_response(  # type: ignore[attr-defined]
         method="GET",
-        url="http://m/api/v1/search?query=x",
+        url="http://m/api/v1/search?q=x",
         json={"results": []},
         match_headers={"Authorization": "Bearer new-jwt"},
     )

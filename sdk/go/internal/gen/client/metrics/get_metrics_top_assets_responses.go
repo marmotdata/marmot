@@ -44,7 +44,7 @@ GetMetricsTopAssetsOK describes a response with status code 200, with default he
 OK
 */
 type GetMetricsTopAssetsOK struct {
-	Payload []*models.MetricsAssetCount
+	Payload []*models.AssetCount
 }
 
 // IsSuccess returns true when this get metrics top assets o k response has a 2xx status code
@@ -87,7 +87,7 @@ func (o *GetMetricsTopAssetsOK) String() string {
 	return fmt.Sprintf("[GET /metrics/top-assets][%d] getMetricsTopAssetsOK %s", 200, payload)
 }
 
-func (o *GetMetricsTopAssetsOK) GetPayload() []*models.MetricsAssetCount {
+func (o *GetMetricsTopAssetsOK) GetPayload() []*models.AssetCount {
 	return o.Payload
 }
 

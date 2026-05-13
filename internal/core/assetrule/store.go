@@ -28,7 +28,7 @@ type ExternalLink struct {
 	Name string `json:"name"`
 	Icon string `json:"icon"`
 	URL  string `json:"url"`
-}
+} // @name AssetRuleExternalLink
 
 // AssetRule represents a governance rule that assigns external links and/or glossary terms to assets.
 type AssetRule struct {
@@ -51,7 +51,7 @@ type AssetRule struct {
 	MembershipCount    int        `json:"membership_count"`
 	LastReconciledAt   *time.Time `json:"last_reconciled_at,omitempty"`
 	ReconciliationHash *string    `json:"reconciliation_hash,omitempty"`
-}
+} // @name AssetRule
 
 // Implement enrichment.EnrichmentRule interface.
 func (r *AssetRule) GetID() string                    { return r.ID }
@@ -111,14 +111,14 @@ type SearchFilter struct {
 type ListResult struct {
 	AssetRules []*AssetRule `json:"asset_rules"`
 	Total      int          `json:"total"`
-}
+} // @name AssetRuleListResult
 
 // RulePreview is the result of previewing a rule.
 type RulePreview struct {
 	AssetIDs   []string `json:"asset_ids"`
 	AssetCount int      `json:"asset_count"`
 	Errors     []string `json:"errors,omitempty"`
-}
+} // @name RulePreview
 
 // Repository handles database operations for asset rules.
 type Repository interface {
@@ -351,7 +351,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 	}
 	defer rows.Close()
 
-	var rules []*AssetRule
+	rules := []*AssetRule{}
 	for rows.Next() {
 		rule, err := r.scanRuleFromRows(rows)
 		if err != nil {
@@ -415,7 +415,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 	defer rows.Close()
 
-	var rules []*AssetRule
+	rules := []*AssetRule{}
 	for rows.Next() {
 		rule, err := r.scanRuleFromRows(rows)
 		if err != nil {
@@ -454,7 +454,7 @@ func (r *PostgresRepository) GetAllEnabled(ctx context.Context) ([]*AssetRule, e
 	}
 	defer rows.Close()
 
-	var rules []*AssetRule
+	rules := []*AssetRule{}
 	for rows.Next() {
 		rule, err := r.scanRuleFromRows(rows)
 		if err != nil {
@@ -535,7 +535,7 @@ func (r *PostgresRepository) GetTermIDs(ctx context.Context, ruleID string) ([]s
 	}
 	defer rows.Close()
 
-	var termIDs []string
+	termIDs := []string{}
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
@@ -563,7 +563,7 @@ func (r *PostgresRepository) GetRuleManagedLinks(ctx context.Context, assetID st
 	}
 	defer rows.Close()
 
-	var result []EnrichedExternalLink
+	result := []EnrichedExternalLink{}
 	for rows.Next() {
 		var ruleID, ruleName string
 		var linksJSON []byte

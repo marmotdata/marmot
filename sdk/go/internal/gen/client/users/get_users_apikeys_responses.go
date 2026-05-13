@@ -50,7 +50,7 @@ GetUsersApikeysOK describes a response with status code 200, with default header
 OK
 */
 type GetUsersApikeysOK struct {
-	Payload []*models.UserAPIKey
+	Payload []*models.APIKey
 }
 
 // IsSuccess returns true when this get users apikeys o k response has a 2xx status code
@@ -93,7 +93,7 @@ func (o *GetUsersApikeysOK) String() string {
 	return fmt.Sprintf("[GET /users/apikeys][%d] getUsersApikeysOK %s", 200, payload)
 }
 
-func (o *GetUsersApikeysOK) GetPayload() []*models.UserAPIKey {
+func (o *GetUsersApikeysOK) GetPayload() []*models.APIKey {
 	return o.Payload
 }
 
@@ -118,7 +118,7 @@ GetUsersApikeysInternalServerError describes a response with status code 500, wi
 Internal Server Error
 */
 type GetUsersApikeysInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get users apikeys internal server error response has a 2xx status code
@@ -161,13 +161,13 @@ func (o *GetUsersApikeysInternalServerError) String() string {
 	return fmt.Sprintf("[GET /users/apikeys][%d] getUsersApikeysInternalServerError %s", 500, payload)
 }
 
-func (o *GetUsersApikeysInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetUsersApikeysInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetUsersApikeysInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

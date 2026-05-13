@@ -16,21 +16,21 @@ type DocumentationCreateRequest struct {
 	MRN     string `json:"mrn" validate:"required"`
 	Content string `json:"content" validate:"required"`
 	Source  string `json:"source" validate:"required"`
-}
+} // @name DocumentationCreateRequest
 
 type BatchDocumentationRequest struct {
 	Documentation []assetdocs.Documentation `json:"documentation" validate:"required,min=1"`
-}
+} // @name BatchDocumentationRequest
 
 type BatchDocumentationResponse struct {
 	Results []BatchDocumentationResult `json:"results"`
-}
+} // @name BatchDocumentationResponse
 
 type BatchDocumentationResult struct {
 	Documentation assetdocs.Documentation `json:"documentation"`
 	Status        string                  `json:"status"`
 	Error         string                  `json:"error,omitempty"`
-}
+} // @name BatchDocumentationResult
 
 // @Summary Create asset documentation
 // @Description Create or update documentation for an asset

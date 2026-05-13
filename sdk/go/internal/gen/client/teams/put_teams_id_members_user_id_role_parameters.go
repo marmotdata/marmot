@@ -70,7 +70,7 @@ type PutTeamsIDMembersUserIDRoleParams struct {
 
 	   Role update request
 	*/
-	Role *models.V1TeamsUpdateMemberRoleRequest
+	Role *models.UpdateMemberRoleRequest
 
 	/* UserID.
 
@@ -143,13 +143,13 @@ func (o *PutTeamsIDMembersUserIDRoleParams) SetID(id string) {
 }
 
 // WithRole adds the role to the put teams ID members user ID role params
-func (o *PutTeamsIDMembersUserIDRoleParams) WithRole(role *models.V1TeamsUpdateMemberRoleRequest) *PutTeamsIDMembersUserIDRoleParams {
+func (o *PutTeamsIDMembersUserIDRoleParams) WithRole(role *models.UpdateMemberRoleRequest) *PutTeamsIDMembersUserIDRoleParams {
 	o.SetRole(role)
 	return o
 }
 
 // SetRole adds the role to the put teams ID members user ID role params
-func (o *PutTeamsIDMembersUserIDRoleParams) SetRole(role *models.V1TeamsUpdateMemberRoleRequest) {
+func (o *PutTeamsIDMembersUserIDRoleParams) SetRole(role *models.UpdateMemberRoleRequest) {
 	o.Role = role
 }
 

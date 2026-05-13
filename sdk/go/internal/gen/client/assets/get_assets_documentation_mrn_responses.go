@@ -56,7 +56,7 @@ GetAssetsDocumentationMrnOK describes a response with status code 200, with defa
 OK
 */
 type GetAssetsDocumentationMrnOK struct {
-	Payload []*models.AssetdocsDocumentation
+	Payload []*models.Documentation
 }
 
 // IsSuccess returns true when this get assets documentation mrn o k response has a 2xx status code
@@ -99,7 +99,7 @@ func (o *GetAssetsDocumentationMrnOK) String() string {
 	return fmt.Sprintf("[GET /assets/documentation/{mrn}][%d] getAssetsDocumentationMrnOK %s", 200, payload)
 }
 
-func (o *GetAssetsDocumentationMrnOK) GetPayload() []*models.AssetdocsDocumentation {
+func (o *GetAssetsDocumentationMrnOK) GetPayload() []*models.Documentation {
 	return o.Payload
 }
 
@@ -124,7 +124,7 @@ GetAssetsDocumentationMrnNotFound describes a response with status code 404, wit
 Not Found
 */
 type GetAssetsDocumentationMrnNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets documentation mrn not found response has a 2xx status code
@@ -167,13 +167,13 @@ func (o *GetAssetsDocumentationMrnNotFound) String() string {
 	return fmt.Sprintf("[GET /assets/documentation/{mrn}][%d] getAssetsDocumentationMrnNotFound %s", 404, payload)
 }
 
-func (o *GetAssetsDocumentationMrnNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsDocumentationMrnNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsDocumentationMrnNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -194,7 +194,7 @@ GetAssetsDocumentationMrnInternalServerError describes a response with status co
 Internal Server Error
 */
 type GetAssetsDocumentationMrnInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets documentation mrn internal server error response has a 2xx status code
@@ -237,13 +237,13 @@ func (o *GetAssetsDocumentationMrnInternalServerError) String() string {
 	return fmt.Sprintf("[GET /assets/documentation/{mrn}][%d] getAssetsDocumentationMrnInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsDocumentationMrnInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsDocumentationMrnInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsDocumentationMrnInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

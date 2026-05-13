@@ -56,7 +56,7 @@ GetAssetsMatchPatternOK describes a response with status code 200, with default 
 OK
 */
 type GetAssetsMatchPatternOK struct {
-	Payload []*models.AssetAsset
+	Payload []*models.Asset
 }
 
 // IsSuccess returns true when this get assets match pattern o k response has a 2xx status code
@@ -99,7 +99,7 @@ func (o *GetAssetsMatchPatternOK) String() string {
 	return fmt.Sprintf("[GET /assets/match-pattern][%d] getAssetsMatchPatternOK %s", 200, payload)
 }
 
-func (o *GetAssetsMatchPatternOK) GetPayload() []*models.AssetAsset {
+func (o *GetAssetsMatchPatternOK) GetPayload() []*models.Asset {
 	return o.Payload
 }
 
@@ -124,7 +124,7 @@ GetAssetsMatchPatternBadRequest describes a response with status code 400, with 
 Bad Request
 */
 type GetAssetsMatchPatternBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets match pattern bad request response has a 2xx status code
@@ -167,13 +167,13 @@ func (o *GetAssetsMatchPatternBadRequest) String() string {
 	return fmt.Sprintf("[GET /assets/match-pattern][%d] getAssetsMatchPatternBadRequest %s", 400, payload)
 }
 
-func (o *GetAssetsMatchPatternBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsMatchPatternBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsMatchPatternBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -194,7 +194,7 @@ GetAssetsMatchPatternInternalServerError describes a response with status code 5
 Internal Server Error
 */
 type GetAssetsMatchPatternInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets match pattern internal server error response has a 2xx status code
@@ -237,13 +237,13 @@ func (o *GetAssetsMatchPatternInternalServerError) String() string {
 	return fmt.Sprintf("[GET /assets/match-pattern][%d] getAssetsMatchPatternInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsMatchPatternInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsMatchPatternInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsMatchPatternInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

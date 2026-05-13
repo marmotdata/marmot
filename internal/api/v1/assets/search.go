@@ -25,7 +25,7 @@ type SearchResponse struct {
 	Limit   int                    `json:"limit"`
 	Offset  int                    `json:"offset"`
 	Filters asset.AvailableFilters `json:"filters"`
-}
+} // @name AssetSearchResponse
 
 // @Summary Search assets
 // @Description Search for assets using query string and filters

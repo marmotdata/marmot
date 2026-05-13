@@ -30,7 +30,7 @@ type Documentation struct {
 	GlobalDocs []string  `json:"global_docs,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
-}
+} // @name Documentation
 
 type Service interface {
 	Get(ctx context.Context, mrn string) ([]Documentation, error)
@@ -96,7 +96,7 @@ func (s *service) CombineDocumentation(ctx context.Context, docs []Documentation
 	}
 
 	// Create combined docs
-	var result []Documentation
+	result := []Documentation{}
 	for _, doc := range docs {
 		combined := doc
 		if len(doc.GlobalDocs) > 0 {

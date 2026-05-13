@@ -44,7 +44,7 @@ GetUIConfigOK describes a response with status code 200, with default header val
 OK
 */
 type GetUIConfigOK struct {
-	Payload *models.V1UIUIConfigResponse
+	Payload *models.UIConfigResponse
 }
 
 // IsSuccess returns true when this get Ui config o k response has a 2xx status code
@@ -87,13 +87,13 @@ func (o *GetUIConfigOK) String() string {
 	return fmt.Sprintf("[GET /ui/config][%d] getUiConfigOK %s", 200, payload)
 }
 
-func (o *GetUIConfigOK) GetPayload() *models.V1UIUIConfigResponse {
+func (o *GetUIConfigOK) GetPayload() *models.UIConfigResponse {
 	return o.Payload
 }
 
 func (o *GetUIConfigOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1UIUIConfigResponse)
+	o.Payload = new(models.UIConfigResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

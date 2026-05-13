@@ -27,13 +27,13 @@ type tokenExchangeResponse struct {
 	IssuedTokenType string `json:"issued_token_type"`
 	TokenType       string `json:"token_type"`
 	ExpiresIn       int    `json:"expires_in,omitempty"`
-}
+} // @name TokenExchangeResponse
 
 // oauthErrorResponse is the RFC 6749 Section 5.2 error response.
 type oauthErrorResponse struct {
 	Error       string `json:"error"`
 	Description string `json:"error_description,omitempty"`
-}
+} // @name OAuthErrorResponse
 
 func respondOAuthError(w http.ResponseWriter, status int, code, description string) {
 	w.Header().Set("Content-Type", "application/json")

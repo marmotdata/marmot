@@ -130,7 +130,7 @@ GetAuthProviderCallbackBadRequest describes a response with status code 400, wit
 Bad Request
 */
 type GetAuthProviderCallbackBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get auth provider callback bad request response has a 2xx status code
@@ -173,13 +173,13 @@ func (o *GetAuthProviderCallbackBadRequest) String() string {
 	return fmt.Sprintf("[GET /auth/{provider}/callback][%d] getAuthProviderCallbackBadRequest %s", 400, payload)
 }
 
-func (o *GetAuthProviderCallbackBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAuthProviderCallbackBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAuthProviderCallbackBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -200,7 +200,7 @@ GetAuthProviderCallbackNotFound describes a response with status code 404, with 
 Not Found
 */
 type GetAuthProviderCallbackNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get auth provider callback not found response has a 2xx status code
@@ -243,13 +243,13 @@ func (o *GetAuthProviderCallbackNotFound) String() string {
 	return fmt.Sprintf("[GET /auth/{provider}/callback][%d] getAuthProviderCallbackNotFound %s", 404, payload)
 }
 
-func (o *GetAuthProviderCallbackNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAuthProviderCallbackNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAuthProviderCallbackNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -270,7 +270,7 @@ GetAuthProviderCallbackInternalServerError describes a response with status code
 Internal Server Error
 */
 type GetAuthProviderCallbackInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get auth provider callback internal server error response has a 2xx status code
@@ -313,13 +313,13 @@ func (o *GetAuthProviderCallbackInternalServerError) String() string {
 	return fmt.Sprintf("[GET /auth/{provider}/callback][%d] getAuthProviderCallbackInternalServerError %s", 500, payload)
 }
 
-func (o *GetAuthProviderCallbackInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAuthProviderCallbackInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAuthProviderCallbackInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

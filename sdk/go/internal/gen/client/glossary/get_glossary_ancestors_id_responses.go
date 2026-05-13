@@ -130,7 +130,7 @@ GetGlossaryAncestorsIDBadRequest describes a response with status code 400, with
 Bad Request
 */
 type GetGlossaryAncestorsIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary ancestors Id bad request response has a 2xx status code
@@ -173,13 +173,13 @@ func (o *GetGlossaryAncestorsIDBadRequest) String() string {
 	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdBadRequest %s", 400, payload)
 }
 
-func (o *GetGlossaryAncestorsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryAncestorsIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryAncestorsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -200,7 +200,7 @@ GetGlossaryAncestorsIDNotFound describes a response with status code 404, with d
 Not Found
 */
 type GetGlossaryAncestorsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary ancestors Id not found response has a 2xx status code
@@ -243,13 +243,13 @@ func (o *GetGlossaryAncestorsIDNotFound) String() string {
 	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdNotFound %s", 404, payload)
 }
 
-func (o *GetGlossaryAncestorsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryAncestorsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryAncestorsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -270,7 +270,7 @@ GetGlossaryAncestorsIDInternalServerError describes a response with status code 
 Internal Server Error
 */
 type GetGlossaryAncestorsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get glossary ancestors Id internal server error response has a 2xx status code
@@ -313,13 +313,13 @@ func (o *GetGlossaryAncestorsIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /glossary/ancestors/{id}][%d] getGlossaryAncestorsIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetGlossaryAncestorsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetGlossaryAncestorsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetGlossaryAncestorsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -112,7 +112,7 @@ PostAPIV1LineageBadRequest describes a response with status code 400, with defau
 Bad Request
 */
 type PostAPIV1LineageBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 lineage bad request response has a 2xx status code
@@ -155,13 +155,13 @@ func (o *PostAPIV1LineageBadRequest) String() string {
 	return fmt.Sprintf("[POST /api/v1/lineage][%d] postApiV1LineageBadRequest %s", 400, payload)
 }
 
-func (o *PostAPIV1LineageBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1LineageBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1LineageBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -182,7 +182,7 @@ PostAPIV1LineageInternalServerError describes a response with status code 500, w
 Internal Server Error
 */
 type PostAPIV1LineageInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 lineage internal server error response has a 2xx status code
@@ -225,13 +225,13 @@ func (o *PostAPIV1LineageInternalServerError) String() string {
 	return fmt.Sprintf("[POST /api/v1/lineage][%d] postApiV1LineageInternalServerError %s", 500, payload)
 }
 
-func (o *PostAPIV1LineageInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1LineageInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1LineageInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

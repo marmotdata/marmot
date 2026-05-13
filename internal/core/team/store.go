@@ -219,7 +219,7 @@ func (r *PostgresRepository) FindSimilarTeamNames(ctx context.Context, searchTer
 	}
 	defer rows.Close()
 
-	var names []string
+	names := []string{}
 	for rows.Next() {
 		var name string
 		if err := rows.Scan(&name); err != nil {

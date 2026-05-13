@@ -112,7 +112,7 @@ DeleteAssetRulesIDNotFound describes a response with status code 404, with defau
 Not Found
 */
 type DeleteAssetRulesIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete asset rules Id not found response has a 2xx status code
@@ -155,13 +155,13 @@ func (o *DeleteAssetRulesIDNotFound) String() string {
 	return fmt.Sprintf("[DELETE /asset-rules/{id}][%d] deleteAssetRulesIdNotFound %s", 404, payload)
 }
 
-func (o *DeleteAssetRulesIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAssetRulesIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetRulesIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -182,7 +182,7 @@ DeleteAssetRulesIDInternalServerError describes a response with status code 500,
 Internal Server Error
 */
 type DeleteAssetRulesIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete asset rules Id internal server error response has a 2xx status code
@@ -225,13 +225,13 @@ func (o *DeleteAssetRulesIDInternalServerError) String() string {
 	return fmt.Sprintf("[DELETE /asset-rules/{id}][%d] deleteAssetRulesIdInternalServerError %s", 500, payload)
 }
 
-func (o *DeleteAssetRulesIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAssetRulesIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetRulesIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

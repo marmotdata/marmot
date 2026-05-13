@@ -26,7 +26,7 @@ type CreateRequest struct {
 	PatternValue    *string                   `json:"pattern_value,omitempty"`
 	Priority        int                       `json:"priority"`
 	IsEnabled       bool                      `json:"is_enabled"`
-}
+} // @name CreateAssetRuleRequest
 
 type UpdateRequest struct {
 	Name            *string                   `json:"name,omitempty"`
@@ -40,7 +40,7 @@ type UpdateRequest struct {
 	PatternValue    *string                   `json:"pattern_value,omitempty"`
 	Priority        *int                      `json:"priority,omitempty"`
 	IsEnabled       *bool                     `json:"is_enabled,omitempty"`
-}
+} // @name UpdateAssetRuleRequest
 
 type PreviewRequest struct {
 	RuleType        string  `json:"rule_type"`
@@ -49,7 +49,7 @@ type PreviewRequest struct {
 	PatternType     *string `json:"pattern_type,omitempty"`
 	PatternValue    *string `json:"pattern_value,omitempty"`
 	Limit           int     `json:"limit,omitempty"`
-}
+} // @name PreviewRequest
 
 // @Summary Create an asset rule
 // @Description Create a new asset rule that applies enrichments to matching assets

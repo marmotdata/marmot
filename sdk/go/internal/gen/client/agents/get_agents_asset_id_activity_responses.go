@@ -44,7 +44,7 @@ GetAgentsAssetIDActivityOK describes a response with status code 200, with defau
 OK
 */
 type GetAgentsAssetIDActivityOK struct {
-	Payload *models.V1AgentsActivityResponse
+	Payload *models.ActivityResponse
 }
 
 // IsSuccess returns true when this get agents asset Id activity o k response has a 2xx status code
@@ -87,13 +87,13 @@ func (o *GetAgentsAssetIDActivityOK) String() string {
 	return fmt.Sprintf("[GET /agents/{asset_id}/activity][%d] getAgentsAssetIdActivityOK %s", 200, payload)
 }
 
-func (o *GetAgentsAssetIDActivityOK) GetPayload() *models.V1AgentsActivityResponse {
+func (o *GetAgentsAssetIDActivityOK) GetPayload() *models.ActivityResponse {
 	return o.Payload
 }
 
 func (o *GetAgentsAssetIDActivityOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1AgentsActivityResponse)
+	o.Payload = new(models.ActivityResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

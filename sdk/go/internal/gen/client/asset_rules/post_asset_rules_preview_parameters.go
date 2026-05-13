@@ -64,7 +64,7 @@ type PostAssetRulesPreviewParams struct {
 
 	   Rule preview request
 	*/
-	Rule *models.V1AssetrulesPreviewRequest
+	Rule *models.PreviewRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostAssetRulesPreviewParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithRule adds the rule to the post asset rules preview params
-func (o *PostAssetRulesPreviewParams) WithRule(rule *models.V1AssetrulesPreviewRequest) *PostAssetRulesPreviewParams {
+func (o *PostAssetRulesPreviewParams) WithRule(rule *models.PreviewRequest) *PostAssetRulesPreviewParams {
 	o.SetRule(rule)
 	return o
 }
 
 // SetRule adds the rule to the post asset rules preview params
-func (o *PostAssetRulesPreviewParams) SetRule(rule *models.V1AssetrulesPreviewRequest) {
+func (o *PostAssetRulesPreviewParams) SetRule(rule *models.PreviewRequest) {
 	o.Rule = rule
 }
 

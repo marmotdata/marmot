@@ -70,7 +70,7 @@ type PutSsoTeamMappingsIDParams struct {
 
 	   SSO mapping update request
 	*/
-	Mapping *models.V1TeamsUpdateSSOMappingRequest
+	Mapping *models.UpdateSSOMappingRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -137,13 +137,13 @@ func (o *PutSsoTeamMappingsIDParams) SetID(id string) {
 }
 
 // WithMapping adds the mapping to the put sso team mappings ID params
-func (o *PutSsoTeamMappingsIDParams) WithMapping(mapping *models.V1TeamsUpdateSSOMappingRequest) *PutSsoTeamMappingsIDParams {
+func (o *PutSsoTeamMappingsIDParams) WithMapping(mapping *models.UpdateSSOMappingRequest) *PutSsoTeamMappingsIDParams {
 	o.SetMapping(mapping)
 	return o
 }
 
 // SetMapping adds the mapping to the put sso team mappings ID params
-func (o *PutSsoTeamMappingsIDParams) SetMapping(mapping *models.V1TeamsUpdateSSOMappingRequest) {
+func (o *PutSsoTeamMappingsIDParams) SetMapping(mapping *models.UpdateSSOMappingRequest) {
 	o.Mapping = mapping
 }
 

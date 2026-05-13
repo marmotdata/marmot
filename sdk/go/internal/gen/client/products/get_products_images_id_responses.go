@@ -124,7 +124,7 @@ GetProductsImagesIDNotFound describes a response with status code 404, with defa
 Not Found
 */
 type GetProductsImagesIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get products images Id not found response has a 2xx status code
@@ -167,13 +167,13 @@ func (o *GetProductsImagesIDNotFound) String() string {
 	return fmt.Sprintf("[GET /products/images/{id}][%d] getProductsImagesIdNotFound %s", 404, payload)
 }
 
-func (o *GetProductsImagesIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetProductsImagesIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetProductsImagesIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -194,7 +194,7 @@ GetProductsImagesIDInternalServerError describes a response with status code 500
 Internal Server Error
 */
 type GetProductsImagesIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get products images Id internal server error response has a 2xx status code
@@ -237,13 +237,13 @@ func (o *GetProductsImagesIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /products/images/{id}][%d] getProductsImagesIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetProductsImagesIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetProductsImagesIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetProductsImagesIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

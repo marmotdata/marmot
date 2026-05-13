@@ -15,7 +15,7 @@ const (
 // ErrorResponse represents an API error response
 type ErrorResponse struct {
 	Error string `json:"error"`
-}
+} // @name ErrorResponse
 
 // ValidationErrorResponse represents validation errors
 type ValidationErrorResponse struct {
@@ -27,7 +27,7 @@ type ValidationErrorResponse struct {
 type ValidationError struct {
 	Field   string `json:"field"`
 	Message string `json:"message"`
-}
+} // @name ValidationErrorDetail
 
 // Filter represents common query parameters for list operations
 type Filter struct {

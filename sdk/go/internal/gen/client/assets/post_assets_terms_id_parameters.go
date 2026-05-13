@@ -70,7 +70,7 @@ type PostAssetsTermsIDParams struct {
 
 	   Term IDs to add
 	*/
-	Terms *models.V1AssetsAddTermsRequest
+	Terms *models.AddTermsRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -137,13 +137,13 @@ func (o *PostAssetsTermsIDParams) SetID(id string) {
 }
 
 // WithTerms adds the terms to the post assets terms ID params
-func (o *PostAssetsTermsIDParams) WithTerms(terms *models.V1AssetsAddTermsRequest) *PostAssetsTermsIDParams {
+func (o *PostAssetsTermsIDParams) WithTerms(terms *models.AddTermsRequest) *PostAssetsTermsIDParams {
 	o.SetTerms(terms)
 	return o
 }
 
 // SetTerms adds the terms to the post assets terms ID params
-func (o *PostAssetsTermsIDParams) SetTerms(terms *models.V1AssetsAddTermsRequest) {
+func (o *PostAssetsTermsIDParams) SetTerms(terms *models.AddTermsRequest) {
 	o.Terms = terms
 }
 

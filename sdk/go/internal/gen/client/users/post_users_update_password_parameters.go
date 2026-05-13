@@ -64,7 +64,7 @@ type PostUsersUpdatePasswordParams struct {
 
 	   Password update request
 	*/
-	Request *models.V1UsersUpdatePasswordRequest
+	Request *models.UpdatePasswordRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostUsersUpdatePasswordParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithRequest adds the request to the post users update password params
-func (o *PostUsersUpdatePasswordParams) WithRequest(request *models.V1UsersUpdatePasswordRequest) *PostUsersUpdatePasswordParams {
+func (o *PostUsersUpdatePasswordParams) WithRequest(request *models.UpdatePasswordRequest) *PostUsersUpdatePasswordParams {
 	o.SetRequest(request)
 	return o
 }
 
 // SetRequest adds the request to the post users update password params
-func (o *PostUsersUpdatePasswordParams) SetRequest(request *models.V1UsersUpdatePasswordRequest) {
+func (o *PostUsersUpdatePasswordParams) SetRequest(request *models.UpdatePasswordRequest) {
 	o.Request = request
 }
 

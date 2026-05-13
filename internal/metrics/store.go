@@ -36,7 +36,7 @@ type AggregatedMetric struct {
 	BucketStart     time.Time         `json:"bucket_start"`
 	BucketEnd       time.Time         `json:"bucket_end"`
 	BucketSize      time.Duration     `json:"bucket_size" swaggertype:"integer"`
-}
+} // @name AggregatedMetric
 
 type TimeRange struct {
 	Start time.Time `json:"start"`
@@ -55,7 +55,7 @@ type QueryCount struct {
 	Query     string `json:"query"`
 	QueryType string `json:"query_type"`
 	Count     int64  `json:"count"`
-}
+} // @name QueryCount
 
 type AssetCount struct {
 	AssetID       string `json:"asset_id"`
@@ -63,7 +63,7 @@ type AssetCount struct {
 	AssetName     string `json:"asset_name"`
 	AssetProvider string `json:"asset_provider"`
 	Count         int64  `json:"count"`
-}
+} // @name AssetCount
 
 type AssetBreakdown struct {
 	Type      string `json:"type"`
@@ -265,7 +265,7 @@ func (s *PostgresStore) GetMetrics(ctx context.Context, opts QueryOptions) ([]Me
 	}
 	defer rows.Close()
 
-	var metrics []Metric
+	metrics := []Metric{}
 	for rows.Next() {
 		var metric Metric
 		var labelsJSON []byte
@@ -344,7 +344,7 @@ func (s *PostgresStore) GetAggregatedMetrics(ctx context.Context, opts QueryOpti
 	}
 	defer rows.Close()
 
-	var metrics []AggregatedMetric
+	metrics := []AggregatedMetric{}
 	for rows.Next() {
 		var metric AggregatedMetric
 		var labelsJSON []byte
@@ -405,7 +405,7 @@ func (s *PostgresStore) GetTopQueries(ctx context.Context, timeRange TimeRange, 
 	}
 	defer rows.Close()
 
-	var results []QueryCount
+	results := []QueryCount{}
 	for rows.Next() {
 		var result QueryCount
 		if err := rows.Scan(&result.Query, &result.QueryType, &result.Count); err != nil {
@@ -440,7 +440,7 @@ func (s *PostgresStore) GetTopAssets(ctx context.Context, timeRange TimeRange, l
 	}
 	defer rows.Close()
 
-	var results []AssetCount
+	results := []AssetCount{}
 	for rows.Next() {
 		var result AssetCount
 		if err := rows.Scan(&result.AssetID, &result.AssetType, &result.AssetName, &result.AssetProvider, &result.Count); err != nil {
@@ -678,7 +678,7 @@ func (s *PostgresStore) GetAssetBreakdown(ctx context.Context) ([]AssetBreakdown
 		return s.getAssetBreakdownFromSource(ctx)
 	}
 
-	var result []AssetBreakdown
+	result := []AssetBreakdown{}
 	if len(breakdownJSON) == 0 {
 		return result, nil
 	}
@@ -718,7 +718,7 @@ func (s *PostgresStore) getAssetBreakdownFromSource(ctx context.Context) ([]Asse
 	}
 	defer rows.Close()
 
-	var result []AssetBreakdown
+	result := []AssetBreakdown{}
 	for rows.Next() {
 		var breakdown AssetBreakdown
 		if err := rows.Scan(&breakdown.Type, &breakdown.Provider, &breakdown.HasSchema, &breakdown.Owner, &breakdown.Count); err != nil {

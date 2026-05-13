@@ -13,14 +13,14 @@ import (
 
 // PluginRun plugin run
 //
-// swagger:model plugin.Run
+// swagger:model PluginRun
 type PluginRun struct {
 
 	// completed at
 	CompletedAt string `json:"completed_at,omitempty"`
 
 	// config
-	Config PluginRawPluginConfig `json:"config,omitempty"`
+	Config RawPluginConfig `json:"config,omitempty"`
 
 	// created by
 	CreatedBy string `json:"created_by,omitempty"`
@@ -44,10 +44,10 @@ type PluginRun struct {
 	StartedAt string `json:"started_at,omitempty"`
 
 	// status
-	Status PluginRunStatus `json:"status,omitempty"`
+	Status RunStatus `json:"status,omitempty"`
 
 	// summary
-	Summary *PluginRunSummary `json:"summary,omitempty"`
+	Summary *RunSummary `json:"summary,omitempty"`
 }
 
 // Validate validates this plugin run

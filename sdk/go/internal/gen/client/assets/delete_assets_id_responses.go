@@ -118,7 +118,7 @@ DeleteAssetsIDNotFound describes a response with status code 404, with default h
 Not Found
 */
 type DeleteAssetsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete assets Id not found response has a 2xx status code
@@ -161,13 +161,13 @@ func (o *DeleteAssetsIDNotFound) String() string {
 	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdNotFound %s", 404, payload)
 }
 
-func (o *DeleteAssetsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAssetsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -188,7 +188,7 @@ DeleteAssetsIDConflict describes a response with status code 409, with default h
 Conflict
 */
 type DeleteAssetsIDConflict struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete assets Id conflict response has a 2xx status code
@@ -231,13 +231,13 @@ func (o *DeleteAssetsIDConflict) String() string {
 	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdConflict %s", 409, payload)
 }
 
-func (o *DeleteAssetsIDConflict) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAssetsIDConflict) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetsIDConflict) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -258,7 +258,7 @@ DeleteAssetsIDInternalServerError describes a response with status code 500, wit
 Internal Server Error
 */
 type DeleteAssetsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete assets Id internal server error response has a 2xx status code
@@ -301,13 +301,13 @@ func (o *DeleteAssetsIDInternalServerError) String() string {
 	return fmt.Sprintf("[DELETE /assets/{id}][%d] deleteAssetsIdInternalServerError %s", 500, payload)
 }
 
-func (o *DeleteAssetsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteAssetsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteAssetsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

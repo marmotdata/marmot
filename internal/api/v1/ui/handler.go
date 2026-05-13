@@ -34,7 +34,7 @@ type UIConfigResponse struct {
 	EncryptionConfigured bool           `json:"encryption_configured"`
 	AllowUnencrypted     bool           `json:"allow_unencrypted"`
 	TablePreviewEnabled  bool           `json:"table_preview_enabled"`
-}
+} // @name UIConfigResponse
 
 type BannerResponse struct {
 	Enabled     bool   `json:"enabled"`
@@ -42,7 +42,7 @@ type BannerResponse struct {
 	Variant     string `json:"variant"`
 	Message     string `json:"message"`
 	ID          string `json:"id"`
-}
+} // @name BannerResponse
 
 // @Summary Get UI configuration
 // @Description Get UI configuration including banner settings

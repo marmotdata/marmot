@@ -36,14 +36,14 @@ type ObservedEdge struct {
 type LineageResponse struct {
 	Nodes []LineageNode `json:"nodes"`
 	Edges []LineageEdge `json:"edges"`
-}
+} // @name LineageResponse
 
 type LineageNode struct {
 	ID    string       `json:"id"`
 	Type  string       `json:"type"`
 	Asset *asset.Asset `json:"asset"`
 	Depth int          `json:"depth"`
-}
+} // @name LineageNode
 
 type LineageEdge struct {
 	ID               string     `json:"id"`
@@ -54,7 +54,7 @@ type LineageEdge struct {
 	ObservationCount int        `json:"observation_count,omitempty"`
 	LastSeenAt       *time.Time `json:"last_seen_at,omitempty"`
 	JobMRN           string     `json:"job_mrn,omitempty"`
-}
+} // @name LineageEdge
 
 type PostgresRepository struct {
 	db *pgxpool.Pool
@@ -419,7 +419,7 @@ func (r *PostgresRepository) getLineageEdges(ctx context.Context, tx pgx.Tx, nod
 	}
 	defer rows.Close()
 
-	var edges []LineageEdge
+	edges := []LineageEdge{}
 	for rows.Next() {
 		var edge LineageEdge
 		var jobMRN *string
@@ -446,7 +446,7 @@ func (r *PostgresRepository) scanLineageNodes(ctx context.Context, tx pgx.Tx, qu
 	}
 	defer rows.Close()
 
-	var nodes []LineageNode
+	nodes := []LineageNode{}
 	for rows.Next() {
 		var a asset.Asset
 		var node LineageNode
@@ -640,7 +640,7 @@ func (r *PostgresRepository) GetImmediateNeighbors(ctx context.Context, assetMRN
 	}
 	defer rows.Close()
 
-	var mrns []string
+	mrns := []string{}
 	for rows.Next() {
 		var mrn string
 		if err := rows.Scan(&mrn); err != nil {

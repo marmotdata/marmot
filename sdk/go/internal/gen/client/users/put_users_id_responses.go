@@ -56,7 +56,7 @@ PutUsersIDOK describes a response with status code 200, with default header valu
 OK
 */
 type PutUsersIDOK struct {
-	Payload *models.UserUser
+	Payload *models.User
 }
 
 // IsSuccess returns true when this put users Id o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *PutUsersIDOK) String() string {
 	return fmt.Sprintf("[PUT /users/{id}][%d] putUsersIdOK %s", 200, payload)
 }
 
-func (o *PutUsersIDOK) GetPayload() *models.UserUser {
+func (o *PutUsersIDOK) GetPayload() *models.User {
 	return o.Payload
 }
 
 func (o *PutUsersIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.UserUser)
+	o.Payload = new(models.User)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ PutUsersIDBadRequest describes a response with status code 400, with default hea
 Bad Request
 */
 type PutUsersIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put users Id bad request response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *PutUsersIDBadRequest) String() string {
 	return fmt.Sprintf("[PUT /users/{id}][%d] putUsersIdBadRequest %s", 400, payload)
 }
 
-func (o *PutUsersIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutUsersIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutUsersIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ PutUsersIDNotFound describes a response with status code 404, with default heade
 Not Found
 */
 type PutUsersIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put users Id not found response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *PutUsersIDNotFound) String() string {
 	return fmt.Sprintf("[PUT /users/{id}][%d] putUsersIdNotFound %s", 404, payload)
 }
 
-func (o *PutUsersIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutUsersIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutUsersIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

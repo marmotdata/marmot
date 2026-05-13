@@ -1,0 +1,58 @@
+name: Test TS SDK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'sdk/ts/**'
+      - 'docs/swagger.yaml'
+      - 'Makefile'
+      - '.github/workflows/test-sdk-ts.yaml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'sdk/ts/**'
+      - 'docs/swagger.yaml'
+      - 'Makefile'
+      - '.github/workflows/test-sdk-ts.yaml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: TS SDK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Go (for swag)
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+          cache-dependency-path: "sdk/ts/pnpm-lock.yaml"
+
+      - name: Install swag
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Lint TS SDK
+        run: make sdk-ts-lint
+
+      - name: Build TS SDK
+        run: make sdk-ts-build
+
+      - name: Run TS SDK tests
+        run: make sdk-ts-test

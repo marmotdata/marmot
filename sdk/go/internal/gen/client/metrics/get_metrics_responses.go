@@ -56,7 +56,7 @@ GetMetricsOK describes a response with status code 200, with default header valu
 OK
 */
 type GetMetricsOK struct {
-	Payload *models.V1MetricsGetMetricsResponse
+	Payload *models.GetMetricsResponse
 }
 
 // IsSuccess returns true when this get metrics o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *GetMetricsOK) String() string {
 	return fmt.Sprintf("[GET /metrics][%d] getMetricsOK %s", 200, payload)
 }
 
-func (o *GetMetricsOK) GetPayload() *models.V1MetricsGetMetricsResponse {
+func (o *GetMetricsOK) GetPayload() *models.GetMetricsResponse {
 	return o.Payload
 }
 
 func (o *GetMetricsOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1MetricsGetMetricsResponse)
+	o.Payload = new(models.GetMetricsResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ GetMetricsBadRequest describes a response with status code 400, with default hea
 Bad Request
 */
 type GetMetricsBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get metrics bad request response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetMetricsBadRequest) String() string {
 	return fmt.Sprintf("[GET /metrics][%d] getMetricsBadRequest %s", 400, payload)
 }
 
-func (o *GetMetricsBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetMetricsBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetMetricsBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetMetricsUnauthorized describes a response with status code 401, with default h
 Unauthorized
 */
 type GetMetricsUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get metrics unauthorized response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetMetricsUnauthorized) String() string {
 	return fmt.Sprintf("[GET /metrics][%d] getMetricsUnauthorized %s", 401, payload)
 }
 
-func (o *GetMetricsUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetMetricsUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetMetricsUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

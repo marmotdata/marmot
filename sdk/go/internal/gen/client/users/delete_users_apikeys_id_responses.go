@@ -106,7 +106,7 @@ DeleteUsersApikeysIDBadRequest describes a response with status code 400, with d
 Bad Request
 */
 type DeleteUsersApikeysIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete users apikeys Id bad request response has a 2xx status code
@@ -149,13 +149,13 @@ func (o *DeleteUsersApikeysIDBadRequest) String() string {
 	return fmt.Sprintf("[DELETE /users/apikeys/{id}][%d] deleteUsersApikeysIdBadRequest %s", 400, payload)
 }
 
-func (o *DeleteUsersApikeysIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteUsersApikeysIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteUsersApikeysIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

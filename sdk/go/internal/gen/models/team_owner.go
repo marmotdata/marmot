@@ -11,7 +11,7 @@ import (
 
 // TeamOwner team owner
 //
-// swagger:model team.Owner
+// swagger:model TeamOwner
 type TeamOwner struct {
 
 	// email

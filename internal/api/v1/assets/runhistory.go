@@ -14,7 +14,7 @@ type RunHistoryResponse struct {
 	Total      int                 `json:"total"`
 	Limit      int                 `json:"limit"`
 	Offset     int                 `json:"offset"`
-}
+} // @name RunHistoryResponse
 
 // @Summary Get asset run history
 // @Description Get paginated run history for a specific asset
@@ -69,7 +69,7 @@ func (h *Handler) getRunHistory(w http.ResponseWriter, r *http.Request) {
 type HistogramResponse struct {
 	Buckets []asset.HistogramBucket `json:"buckets"`
 	Period  string                  `json:"period"`
-}
+} // @name HistogramResponse
 
 // @Summary Get asset run history histogram
 // @Description Get histogram data for asset run history over specified period

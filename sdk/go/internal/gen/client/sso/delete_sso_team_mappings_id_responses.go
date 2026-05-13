@@ -56,7 +56,7 @@ DeleteSsoTeamMappingsIDOK describes a response with status code 200, with defaul
 OK
 */
 type DeleteSsoTeamMappingsIDOK struct {
-	Payload *models.V1TeamsMessageResponse
+	Payload *models.MessageResponse
 }
 
 // IsSuccess returns true when this delete sso team mappings Id o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *DeleteSsoTeamMappingsIDOK) String() string {
 	return fmt.Sprintf("[DELETE /sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdOK %s", 200, payload)
 }
 
-func (o *DeleteSsoTeamMappingsIDOK) GetPayload() *models.V1TeamsMessageResponse {
+func (o *DeleteSsoTeamMappingsIDOK) GetPayload() *models.MessageResponse {
 	return o.Payload
 }
 
 func (o *DeleteSsoTeamMappingsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1TeamsMessageResponse)
+	o.Payload = new(models.MessageResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ DeleteSsoTeamMappingsIDNotFound describes a response with status code 404, with 
 Not Found
 */
 type DeleteSsoTeamMappingsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete sso team mappings Id not found response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *DeleteSsoTeamMappingsIDNotFound) String() string {
 	return fmt.Sprintf("[DELETE /sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdNotFound %s", 404, payload)
 }
 
-func (o *DeleteSsoTeamMappingsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteSsoTeamMappingsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteSsoTeamMappingsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ DeleteSsoTeamMappingsIDInternalServerError describes a response with status code
 Internal Server Error
 */
 type DeleteSsoTeamMappingsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this delete sso team mappings Id internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *DeleteSsoTeamMappingsIDInternalServerError) String() string {
 	return fmt.Sprintf("[DELETE /sso/team-mappings/{id}][%d] deleteSsoTeamMappingsIdInternalServerError %s", 500, payload)
 }
 
-func (o *DeleteSsoTeamMappingsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *DeleteSsoTeamMappingsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *DeleteSsoTeamMappingsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

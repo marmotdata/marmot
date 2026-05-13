@@ -14,7 +14,7 @@ type AssetSummaryResponse struct {
 	Types     map[string]asset.AssetTypeSummary `json:"types"`
 	Providers map[string]int                    `json:"providers"`
 	Tags      map[string]int                    `json:"tags"`
-}
+} // @name AssetSummaryResponse
 
 // @Summary Get asset summary
 // @Description Get the total count of assets by type

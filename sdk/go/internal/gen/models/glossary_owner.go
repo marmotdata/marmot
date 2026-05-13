@@ -11,7 +11,7 @@ import (
 
 // GlossaryOwner glossary owner
 //
-// swagger:model glossary.Owner
+// swagger:model GlossaryOwner
 type GlossaryOwner struct {
 
 	// email

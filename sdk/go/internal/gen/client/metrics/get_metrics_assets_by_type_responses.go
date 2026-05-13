@@ -44,7 +44,7 @@ GetMetricsAssetsByTypeOK describes a response with status code 200, with default
 OK
 */
 type GetMetricsAssetsByTypeOK struct {
-	Payload *models.V1MetricsAssetsByTypeResponse
+	Payload *models.AssetsByTypeResponse
 }
 
 // IsSuccess returns true when this get metrics assets by type o k response has a 2xx status code
@@ -87,13 +87,13 @@ func (o *GetMetricsAssetsByTypeOK) String() string {
 	return fmt.Sprintf("[GET /metrics/assets/by-type][%d] getMetricsAssetsByTypeOK %s", 200, payload)
 }
 
-func (o *GetMetricsAssetsByTypeOK) GetPayload() *models.V1MetricsAssetsByTypeResponse {
+func (o *GetMetricsAssetsByTypeOK) GetPayload() *models.AssetsByTypeResponse {
 	return o.Payload
 }
 
 func (o *GetMetricsAssetsByTypeOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1MetricsAssetsByTypeResponse)
+	o.Payload = new(models.AssetsByTypeResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

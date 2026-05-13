@@ -1,4 +1,4 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate generate-operator lint frontend-build actionlint frontend-lint frontend-typecheck fix \
+.PHONY: swagger build run test clean dev release docker-build dev-deps generate generate-operator lint server-lint frontend-build actionlint frontend-lint frontend-typecheck fix \
 	sdk sdk-generate sdk-test sdk-build sdk-lint sdk-clean \
 	sdk-go sdk-go-generate sdk-go-lint sdk-go-test sdk-go-build sdk-go-clean \
 	sdk-py sdk-py-deps sdk-py-install sdk-py-generate sdk-py-lint sdk-py-test sdk-py-build sdk-py-clean \
@@ -12,6 +12,7 @@ LDFLAGS_VERSION=-X "github.com/marmotdata/marmot/internal/cmd.Version=$(VERSION)
 
 swagger:
 	swag init -d internal/api --generalInfo v1/server.go --parseDependency --output docs
+	rm -f $(SDK_OPENAPI3)
 
 build:
 	go build -o bin/$(BINARY_NAME) cmd/main.go
@@ -49,7 +50,9 @@ generate-operator:
 	$(CONTROLLER_GEN) object paths=./internal/operator/api/...
 	$(CONTROLLER_GEN) crd paths=./internal/operator/api/... output:crd:dir=charts/marmot/crds
 
-lint: frontend-lint sdk-go-lint
+lint: frontend-lint sdk-go-lint sdk-py-lint server-lint
+
+server-lint:
 	$$(go env GOPATH)/bin/golangci-lint run --config=./.github/.golangci.yaml ./... -v
 
 frontend-lint:
@@ -121,7 +124,10 @@ sdk-py-generate: swagger sdk-py-install $(SDK_OPENAPI3)
 			--output-path src/marmot/_gen
 
 sdk-py-lint: sdk-py-install
-	cd $(SDK_PY_DIR) && uv run ruff check . && uv run ruff format --check .
+	cd $(SDK_PY_DIR) && uv run ruff check .
+	cd $(SDK_PY_DIR) && uv run ruff format --check .
+	cd $(SDK_PY_DIR) && uv run mypy src/marmot
+	cd $(SDK_PY_DIR) && uv run pip-audit --skip-editable
 
 sdk-py-test: sdk-py-generate
 	cd $(SDK_PY_DIR) && uv run pytest

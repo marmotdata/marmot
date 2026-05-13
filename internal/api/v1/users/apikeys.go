@@ -17,7 +17,7 @@ var _ = user.APIKey{}
 type CreateAPIKeyRequest struct {
 	Name          string `json:"name" validate:"required"`
 	ExpiresInDays int    `json:"expires_in_days"`
-}
+} // @name CreateAPIKeyRequest
 
 // @Summary List API keys
 // @Description Get all API keys for a user

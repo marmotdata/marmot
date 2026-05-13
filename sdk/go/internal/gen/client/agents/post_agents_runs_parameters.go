@@ -64,7 +64,7 @@ type PostAgentsRunsParams struct {
 
 	   Agent run record
 	*/
-	Request *models.V1AgentsRecordRunRequest
+	Request *models.RecordRunRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostAgentsRunsParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithRequest adds the request to the post agents runs params
-func (o *PostAgentsRunsParams) WithRequest(request *models.V1AgentsRecordRunRequest) *PostAgentsRunsParams {
+func (o *PostAgentsRunsParams) WithRequest(request *models.RecordRunRequest) *PostAgentsRunsParams {
 	o.SetRequest(request)
 	return o
 }
 
 // SetRequest adds the request to the post agents runs params
-func (o *PostAgentsRunsParams) SetRequest(request *models.V1AgentsRecordRunRequest) {
+func (o *PostAgentsRunsParams) SetRequest(request *models.RecordRunRequest) {
 	o.Request = request
 }
 

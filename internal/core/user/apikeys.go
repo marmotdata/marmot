@@ -17,7 +17,7 @@ type APIKey struct {
 	ExpiresAt  *time.Time `json:"expires_at,omitempty"`
 	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
-}
+} // @name APIKey
 
 func (s *service) CreateAPIKey(ctx context.Context, userID string, name string, expiresIn *time.Duration) (*APIKey, error) {
 	keyBytes := make([]byte, 32)

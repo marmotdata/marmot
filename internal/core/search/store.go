@@ -406,7 +406,7 @@ func (r *PostgresRepository) buildFilterClauses(filter Filter, parsedQuery *quer
 
 // scanSearchResults scans rows from the search_index table into Result structs.
 func (r *PostgresRepository) scanSearchResults(rows pgx.Rows) ([]*Result, error) {
-	var results []*Result
+	results := []*Result{}
 
 	for rows.Next() {
 		var (

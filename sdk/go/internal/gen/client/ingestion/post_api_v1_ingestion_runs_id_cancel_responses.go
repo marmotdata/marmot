@@ -118,7 +118,7 @@ PostAPIV1IngestionRunsIDCancelUnauthorized describes a response with status code
 Unauthorized
 */
 type PostAPIV1IngestionRunsIDCancelUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 ingestion runs Id cancel unauthorized response has a 2xx status code
@@ -161,13 +161,13 @@ func (o *PostAPIV1IngestionRunsIDCancelUnauthorized) String() string {
 	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postApiV1IngestionRunsIdCancelUnauthorized %s", 401, payload)
 }
 
-func (o *PostAPIV1IngestionRunsIDCancelUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1IngestionRunsIDCancelUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionRunsIDCancelUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -188,7 +188,7 @@ PostAPIV1IngestionRunsIDCancelNotFound describes a response with status code 404
 Not Found
 */
 type PostAPIV1IngestionRunsIDCancelNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 ingestion runs Id cancel not found response has a 2xx status code
@@ -231,13 +231,13 @@ func (o *PostAPIV1IngestionRunsIDCancelNotFound) String() string {
 	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postApiV1IngestionRunsIdCancelNotFound %s", 404, payload)
 }
 
-func (o *PostAPIV1IngestionRunsIDCancelNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1IngestionRunsIDCancelNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionRunsIDCancelNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -258,7 +258,7 @@ PostAPIV1IngestionRunsIDCancelInternalServerError describes a response with stat
 Internal Server Error
 */
 type PostAPIV1IngestionRunsIDCancelInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 ingestion runs Id cancel internal server error response has a 2xx status code
@@ -301,13 +301,13 @@ func (o *PostAPIV1IngestionRunsIDCancelInternalServerError) String() string {
 	return fmt.Sprintf("[POST /api/v1/ingestion/runs/{id}/cancel][%d] postApiV1IngestionRunsIdCancelInternalServerError %s", 500, payload)
 }
 
-func (o *PostAPIV1IngestionRunsIDCancelInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1IngestionRunsIDCancelInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionRunsIDCancelInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

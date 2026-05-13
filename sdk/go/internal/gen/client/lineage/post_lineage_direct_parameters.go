@@ -64,7 +64,7 @@ type PostLineageDirectParams struct {
 
 	   Lineage edge to create
 	*/
-	Edge *models.LineageLineageEdge
+	Edge *models.LineageEdge
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostLineageDirectParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithEdge adds the edge to the post lineage direct params
-func (o *PostLineageDirectParams) WithEdge(edge *models.LineageLineageEdge) *PostLineageDirectParams {
+func (o *PostLineageDirectParams) WithEdge(edge *models.LineageEdge) *PostLineageDirectParams {
 	o.SetEdge(edge)
 	return o
 }
 
 // SetEdge adds the edge to the post lineage direct params
-func (o *PostLineageDirectParams) SetEdge(edge *models.LineageLineageEdge) {
+func (o *PostLineageDirectParams) SetEdge(edge *models.LineageEdge) {
 	o.Edge = edge
 }
 

@@ -50,7 +50,7 @@ PostLineageBatchOK describes a response with status code 200, with default heade
 OK
 */
 type PostLineageBatchOK struct {
-	Payload []*models.V1LineageBatchLineageResult
+	Payload []*models.BatchLineageResult
 }
 
 // IsSuccess returns true when this post lineage batch o k response has a 2xx status code
@@ -93,7 +93,7 @@ func (o *PostLineageBatchOK) String() string {
 	return fmt.Sprintf("[POST /lineage/batch][%d] postLineageBatchOK %s", 200, payload)
 }
 
-func (o *PostLineageBatchOK) GetPayload() []*models.V1LineageBatchLineageResult {
+func (o *PostLineageBatchOK) GetPayload() []*models.BatchLineageResult {
 	return o.Payload
 }
 
@@ -118,7 +118,7 @@ PostLineageBatchBadRequest describes a response with status code 400, with defau
 Bad Request
 */
 type PostLineageBatchBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post lineage batch bad request response has a 2xx status code
@@ -161,13 +161,13 @@ func (o *PostLineageBatchBadRequest) String() string {
 	return fmt.Sprintf("[POST /lineage/batch][%d] postLineageBatchBadRequest %s", 400, payload)
 }
 
-func (o *PostLineageBatchBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostLineageBatchBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostLineageBatchBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

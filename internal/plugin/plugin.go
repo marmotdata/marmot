@@ -22,7 +22,7 @@ type SourceRun map[string]RawPluginConfig
 // RawPluginConfig holds the raw JSON configuration for a plugin
 // It uses a `map[string]interface{}` to unmarshal arbitrary JSON data
 // for each plugin's specific config.
-type RawPluginConfig map[string]interface{}
+type RawPluginConfig map[string]interface{} // @name RawPluginConfig
 
 type BaseConfig struct {
 	Tags          TagsConfig     `json:"tags,omitempty" description:"Tags to apply to discovered assets"`
@@ -88,9 +88,9 @@ type Run struct {
 	Config       RawPluginConfig `json:"config,omitempty"`
 	Summary      *RunSummary     `json:"summary,omitempty"`
 	CreatedBy    string          `json:"created_by"`
-}
+} // @name PluginRun
 
-type RunStatus string
+type RunStatus string // @name RunStatus
 
 const (
 	StatusRunning   RunStatus = "running"
@@ -110,7 +110,7 @@ type RunSummary struct {
 	ErrorsCount        int `json:"errors_count"`
 	TotalEntities      int `json:"total_entities"`
 	DurationSeconds    int `json:"duration_seconds"`
-}
+} // @name RunSummary
 
 // RunCheckpoint tracks what entities were processed in a run
 type RunCheckpoint struct {

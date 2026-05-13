@@ -56,7 +56,7 @@ GetAssetsLookupTypeServiceNameOK describes a response with status code 200, with
 OK
 */
 type GetAssetsLookupTypeServiceNameOK struct {
-	Payload *models.AssetAsset
+	Payload *models.Asset
 }
 
 // IsSuccess returns true when this get assets lookup type service name o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *GetAssetsLookupTypeServiceNameOK) String() string {
 	return fmt.Sprintf("[GET /assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameOK %s", 200, payload)
 }
 
-func (o *GetAssetsLookupTypeServiceNameOK) GetPayload() *models.AssetAsset {
+func (o *GetAssetsLookupTypeServiceNameOK) GetPayload() *models.Asset {
 	return o.Payload
 }
 
 func (o *GetAssetsLookupTypeServiceNameOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.AssetAsset)
+	o.Payload = new(models.Asset)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ GetAssetsLookupTypeServiceNameNotFound describes a response with status code 404
 Not Found
 */
 type GetAssetsLookupTypeServiceNameNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets lookup type service name not found response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetAssetsLookupTypeServiceNameNotFound) String() string {
 	return fmt.Sprintf("[GET /assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameNotFound %s", 404, payload)
 }
 
-func (o *GetAssetsLookupTypeServiceNameNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsLookupTypeServiceNameNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsLookupTypeServiceNameNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetAssetsLookupTypeServiceNameInternalServerError describes a response with stat
 Internal Server Error
 */
 type GetAssetsLookupTypeServiceNameInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets lookup type service name internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetAssetsLookupTypeServiceNameInternalServerError) String() string {
 	return fmt.Sprintf("[GET /assets/lookup/{type}/{service}/{name}][%d] getAssetsLookupTypeServiceNameInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsLookupTypeServiceNameInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsLookupTypeServiceNameInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsLookupTypeServiceNameInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

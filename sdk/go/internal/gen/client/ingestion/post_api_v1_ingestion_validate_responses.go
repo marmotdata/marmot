@@ -56,7 +56,7 @@ PostAPIV1IngestionValidateOK describes a response with status code 200, with def
 OK
 */
 type PostAPIV1IngestionValidateOK struct {
-	Payload *models.V1SchedulesValidateConfigResponse
+	Payload *models.ValidateConfigResponse
 }
 
 // IsSuccess returns true when this post Api v1 ingestion validate o k response has a 2xx status code
@@ -99,13 +99,13 @@ func (o *PostAPIV1IngestionValidateOK) String() string {
 	return fmt.Sprintf("[POST /api/v1/ingestion/validate][%d] postApiV1IngestionValidateOK %s", 200, payload)
 }
 
-func (o *PostAPIV1IngestionValidateOK) GetPayload() *models.V1SchedulesValidateConfigResponse {
+func (o *PostAPIV1IngestionValidateOK) GetPayload() *models.ValidateConfigResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionValidateOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.V1SchedulesValidateConfigResponse)
+	o.Payload = new(models.ValidateConfigResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -126,7 +126,7 @@ PostAPIV1IngestionValidateBadRequest describes a response with status code 400, 
 Bad Request
 */
 type PostAPIV1IngestionValidateBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 ingestion validate bad request response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *PostAPIV1IngestionValidateBadRequest) String() string {
 	return fmt.Sprintf("[POST /api/v1/ingestion/validate][%d] postApiV1IngestionValidateBadRequest %s", 400, payload)
 }
 
-func (o *PostAPIV1IngestionValidateBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1IngestionValidateBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionValidateBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ PostAPIV1IngestionValidateUnauthorized describes a response with status code 401
 Unauthorized
 */
 type PostAPIV1IngestionValidateUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post Api v1 ingestion validate unauthorized response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *PostAPIV1IngestionValidateUnauthorized) String() string {
 	return fmt.Sprintf("[POST /api/v1/ingestion/validate][%d] postApiV1IngestionValidateUnauthorized %s", 401, payload)
 }
 
-func (o *PostAPIV1IngestionValidateUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostAPIV1IngestionValidateUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostAPIV1IngestionValidateUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -62,7 +62,7 @@ GetLineageAssetsIDOK describes a response with status code 200, with default hea
 OK
 */
 type GetLineageAssetsIDOK struct {
-	Payload *models.LineageLineageResponse
+	Payload *models.LineageResponse
 }
 
 // IsSuccess returns true when this get lineage assets Id o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *GetLineageAssetsIDOK) String() string {
 	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdOK %s", 200, payload)
 }
 
-func (o *GetLineageAssetsIDOK) GetPayload() *models.LineageLineageResponse {
+func (o *GetLineageAssetsIDOK) GetPayload() *models.LineageResponse {
 	return o.Payload
 }
 
 func (o *GetLineageAssetsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.LineageLineageResponse)
+	o.Payload = new(models.LineageResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -132,7 +132,7 @@ GetLineageAssetsIDBadRequest describes a response with status code 400, with def
 Bad Request
 */
 type GetLineageAssetsIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get lineage assets Id bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *GetLineageAssetsIDBadRequest) String() string {
 	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdBadRequest %s", 400, payload)
 }
 
-func (o *GetLineageAssetsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetLineageAssetsIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetLineageAssetsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ GetLineageAssetsIDNotFound describes a response with status code 404, with defau
 Not Found
 */
 type GetLineageAssetsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get lineage assets Id not found response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *GetLineageAssetsIDNotFound) String() string {
 	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdNotFound %s", 404, payload)
 }
 
-func (o *GetLineageAssetsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetLineageAssetsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetLineageAssetsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ GetLineageAssetsIDInternalServerError describes a response with status code 500,
 Internal Server Error
 */
 type GetLineageAssetsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get lineage assets Id internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *GetLineageAssetsIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /lineage/assets/{id}][%d] getLineageAssetsIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetLineageAssetsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetLineageAssetsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetLineageAssetsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -68,7 +68,7 @@ PutAPIV1IngestionSchedulesIDOK describes a response with status code 200, with d
 OK
 */
 type PutAPIV1IngestionSchedulesIDOK struct {
-	Payload *models.RunsSchedule
+	Payload *models.Schedule
 }
 
 // IsSuccess returns true when this put Api v1 ingestion schedules Id o k response has a 2xx status code
@@ -111,13 +111,13 @@ func (o *PutAPIV1IngestionSchedulesIDOK) String() string {
 	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putApiV1IngestionSchedulesIdOK %s", 200, payload)
 }
 
-func (o *PutAPIV1IngestionSchedulesIDOK) GetPayload() *models.RunsSchedule {
+func (o *PutAPIV1IngestionSchedulesIDOK) GetPayload() *models.Schedule {
 	return o.Payload
 }
 
 func (o *PutAPIV1IngestionSchedulesIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.RunsSchedule)
+	o.Payload = new(models.Schedule)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -138,7 +138,7 @@ PutAPIV1IngestionSchedulesIDBadRequest describes a response with status code 400
 Bad Request
 */
 type PutAPIV1IngestionSchedulesIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put Api v1 ingestion schedules Id bad request response has a 2xx status code
@@ -181,13 +181,13 @@ func (o *PutAPIV1IngestionSchedulesIDBadRequest) String() string {
 	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putApiV1IngestionSchedulesIdBadRequest %s", 400, payload)
 }
 
-func (o *PutAPIV1IngestionSchedulesIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAPIV1IngestionSchedulesIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAPIV1IngestionSchedulesIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -208,7 +208,7 @@ PutAPIV1IngestionSchedulesIDUnauthorized describes a response with status code 4
 Unauthorized
 */
 type PutAPIV1IngestionSchedulesIDUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put Api v1 ingestion schedules Id unauthorized response has a 2xx status code
@@ -251,13 +251,13 @@ func (o *PutAPIV1IngestionSchedulesIDUnauthorized) String() string {
 	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putApiV1IngestionSchedulesIdUnauthorized %s", 401, payload)
 }
 
-func (o *PutAPIV1IngestionSchedulesIDUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAPIV1IngestionSchedulesIDUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAPIV1IngestionSchedulesIDUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -278,7 +278,7 @@ PutAPIV1IngestionSchedulesIDNotFound describes a response with status code 404, 
 Not Found
 */
 type PutAPIV1IngestionSchedulesIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put Api v1 ingestion schedules Id not found response has a 2xx status code
@@ -321,13 +321,13 @@ func (o *PutAPIV1IngestionSchedulesIDNotFound) String() string {
 	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putApiV1IngestionSchedulesIdNotFound %s", 404, payload)
 }
 
-func (o *PutAPIV1IngestionSchedulesIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAPIV1IngestionSchedulesIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAPIV1IngestionSchedulesIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -348,7 +348,7 @@ PutAPIV1IngestionSchedulesIDInternalServerError describes a response with status
 Internal Server Error
 */
 type PutAPIV1IngestionSchedulesIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put Api v1 ingestion schedules Id internal server error response has a 2xx status code
@@ -391,13 +391,13 @@ func (o *PutAPIV1IngestionSchedulesIDInternalServerError) String() string {
 	return fmt.Sprintf("[PUT /api/v1/ingestion/schedules/{id}][%d] putApiV1IngestionSchedulesIdInternalServerError %s", 500, payload)
 }
 
-func (o *PutAPIV1IngestionSchedulesIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAPIV1IngestionSchedulesIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAPIV1IngestionSchedulesIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

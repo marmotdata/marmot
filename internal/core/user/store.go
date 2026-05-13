@@ -98,7 +98,7 @@ func scanUser(row pgx.Row) (*User, error) {
 
 // Helper function to scan multiple users from rows
 func scanUsers(rows pgx.Rows) ([]*User, error) {
-	var users []*User
+	users := []*User{}
 	for rows.Next() {
 		var user User
 		var preferencesJSON, rolesJSON []byte
@@ -587,7 +587,7 @@ func (r *PostgresRepository) FindSimilarUsernames(ctx context.Context, searchTer
 	}
 	defer rows.Close()
 
-	var usernames []string
+	usernames := []string{}
 	for rows.Next() {
 		var username string
 		if err := rows.Scan(&username); err != nil {
@@ -689,7 +689,7 @@ func (r *PostgresRepository) GetUserIdentities(ctx context.Context, userID strin
 	}
 	defer rows.Close()
 
-	var identities []*UserIdentity
+	identities := []*UserIdentity{}
 	for rows.Next() {
 		var identity UserIdentity
 		var providerDataJSON []byte
@@ -870,7 +870,7 @@ func (r *PostgresRepository) ListAPIKeys(ctx context.Context, userID string) ([]
 	}
 	defer rows.Close()
 
-	var keys []*APIKey
+	keys := []*APIKey{}
 	for rows.Next() {
 		var key APIKey
 		err := rows.Scan(
@@ -908,7 +908,7 @@ func (r *PostgresRepository) GetPermissionsByRoleName(ctx context.Context, roleN
 	}
 	defer rows.Close()
 
-	var permissions []Permission
+	permissions := []Permission{}
 	for rows.Next() {
 		var permission Permission
 		err := rows.Scan(
