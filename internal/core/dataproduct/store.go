@@ -967,7 +967,7 @@ func (r *PostgresRepository) ResolveAssets(ctx context.Context, dataProductID st
 func (r *PostgresRepository) ExecuteRule(ctx context.Context, rule *Rule) ([]string, error) {
 	start := time.Now()
 
-	assetIDs := []string{}
+	var assetIDs []string
 	var err error
 
 	switch {

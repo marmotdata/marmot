@@ -96,10 +96,20 @@ export function TabSyncProvider({
   return <TabSyncContext.Provider value={ctx}>{children}</TabSyncContext.Provider>;
 }
 
+// useLayoutEffect runs after DOM mutation but before paint — the only place
+// to compensate for layout shifts without a visible flash. Fall back to
+// useEffect during SSR to silence React's hydration warning.
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? React.useLayoutEffect : React.useEffect;
+
 export function Tabs({ items, children, groupId }: TabsProps): JSX.Element {
   const initial = items[0]?.value || "";
   const ctx = React.useContext(TabSyncContext);
   const [localActive, setLocalActive] = React.useState(initial);
+  const tabRefs = React.useRef(new Map<string, HTMLAnchorElement | null>());
+  // Set on click; consumed in the post-render layout effect to pin the
+  // clicked tab to the same viewport position across the panel swap.
+  const pendingAnchor = React.useRef<{ value: string; top: number } | null>(null);
 
   const useShared = groupId !== undefined && ctx !== null;
   const sharedActive = useShared ? ctx.values[groupId!] : undefined;
@@ -112,9 +122,26 @@ export function Tabs({ items, children, groupId }: TabsProps): JSX.Element {
     : localActive;
 
   const setActiveTab = (value: string) => {
+    const tab = tabRefs.current.get(value);
+    if (tab) {
+      pendingAnchor.current = { value, top: tab.getBoundingClientRect().top };
+    }
     if (useShared) ctx!.setValue(groupId!, value);
     else setLocalActive(value);
   };
+
+  // After the panel swap, scroll by the delta so the tab the user clicked
+  // stays under their cursor — even when synced Tabs blocks above resize
+  // the layout out from under it.
+  useIsomorphicLayoutEffect(() => {
+    const anchor = pendingAnchor.current;
+    if (!anchor) return;
+    pendingAnchor.current = null;
+    const tab = tabRefs.current.get(anchor.value);
+    if (!tab) return;
+    const delta = tab.getBoundingClientRect().top - anchor.top;
+    if (delta !== 0) window.scrollBy(0, delta);
+  }, [activeTab]);
 
   const childArray = React.Children.toArray(children);
 
@@ -124,6 +151,9 @@ export function Tabs({ items, children, groupId }: TabsProps): JSX.Element {
         {items.map((item) => (
           <a
             key={item.value}
+            ref={(el) => {
+              tabRefs.current.set(item.value, el);
+            }}
             onClick={(e) => {
               e.preventDefault();
               setActiveTab(item.value);

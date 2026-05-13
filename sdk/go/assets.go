@@ -2,6 +2,7 @@ package marmot
 
 import (
 	"context"
+	"errors"
 
 	apiclient "github.com/marmotdata/marmot/sdk/go/internal/gen/client"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/assets"
@@ -34,6 +35,24 @@ type CreateAssetInput struct {
 	Providers   []string
 	Description string
 	Tags        []string
+}
+
+// LookupInput identifies an asset by its natural key (type, service, name).
+type LookupInput struct {
+	Type    string
+	Service string
+	Name    string
+}
+
+// UpdateAssetInput is the input for AssetsService.Update. Empty fields are
+// omitted from the patch — the server treats absent fields as "leave unchanged".
+type UpdateAssetInput struct {
+	Name            string
+	Type            string
+	Description     string
+	UserDescription string
+	Providers       []string
+	Tags            []string
 }
 
 // AssetsService covers asset CRUD, search, summary, and tag management.
@@ -90,6 +109,52 @@ func (s *AssetsService) Create(ctx context.Context, in CreateAssetInput) (*Asset
 func (s *AssetsService) Get(ctx context.Context, id string) (*Asset, error) {
 	p := assets.NewGetAssetsIDParams().WithContext(ctx).WithID(id)
 	resp, err := s.gen.Assets.GetAssetsID(p)
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return resp.Payload, nil
+}
+
+// Lookup fetches an asset by its natural key. Returns *NotFoundError if
+// no asset matches; see Find for a nil-on-miss variant.
+func (s *AssetsService) Lookup(ctx context.Context, in LookupInput) (*Asset, error) {
+	p := assets.NewGetAssetsLookupTypeServiceNameParams().
+		WithContext(ctx).
+		WithType(in.Type).
+		WithService(in.Service).
+		WithName(in.Name)
+	resp, err := s.gen.Assets.GetAssetsLookupTypeServiceName(p)
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return resp.Payload, nil
+}
+
+// Find is like Lookup but returns (nil, nil) on a 404 instead of an error.
+func (s *AssetsService) Find(ctx context.Context, in LookupInput) (*Asset, error) {
+	asset, err := s.Lookup(ctx, in)
+	if err != nil {
+		var nf *NotFoundError
+		if errors.As(err, &nf) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return asset, nil
+}
+
+// Update modifies an existing asset by ID. Empty fields on in are skipped.
+func (s *AssetsService) Update(ctx context.Context, id string, in UpdateAssetInput) (*Asset, error) {
+	body := &models.UpdateAssetRequest{
+		Name:            in.Name,
+		Type:            in.Type,
+		Description:     in.Description,
+		UserDescription: in.UserDescription,
+		Providers:       in.Providers,
+		Tags:            in.Tags,
+	}
+	p := assets.NewPutAssetsIDParams().WithContext(ctx).WithID(id).WithAsset(body)
+	resp, err := s.gen.Assets.PutAssetsID(p)
 	if err != nil {
 		return nil, mapErr(err)
 	}
