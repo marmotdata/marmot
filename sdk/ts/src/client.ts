@@ -1,9 +1,19 @@
 import { Transport } from "./_http.js";
+import type { SearchResponse } from "./_models.js";
 import { type Credential, resolve } from "./auth/index.js";
 import type { WorkloadIdentitySource } from "./auth/workload/index.js";
+import { AdminResource } from "./resources/admin.js";
+import { AgentRunsResource } from "./resources/agent_runs.js";
+import { APIKeysResource } from "./resources/api_keys.js";
 import { AssetsResource } from "./resources/assets.js";
+import { GlossaryResource } from "./resources/glossary.js";
 import { LineageResource } from "./resources/lineage.js";
+import { MetricsResource } from "./resources/metrics.js";
+import { OwnersResource } from "./resources/owners.js";
+import { RunsResource } from "./resources/runs.js";
 import { type SearchOptions, SearchResource } from "./resources/search.js";
+import { TeamsResource } from "./resources/teams.js";
+import { UsersResource } from "./resources/users.js";
 
 export interface ClientOptions {
   baseUrl: string;
@@ -13,8 +23,17 @@ export interface ClientOptions {
 }
 
 export class Client {
+  readonly admin: AdminResource;
+  readonly agentRuns: AgentRunsResource;
+  readonly apiKeys: APIKeysResource;
   readonly assets: AssetsResource;
+  readonly glossary: GlossaryResource;
   readonly lineage: LineageResource;
+  readonly metrics: MetricsResource;
+  readonly owners: OwnersResource;
+  readonly runs: RunsResource;
+  readonly teams: TeamsResource;
+  readonly users: UsersResource;
   private readonly searchResource: SearchResource;
   private readonly transport: Transport;
 
@@ -25,8 +44,17 @@ export class Client {
       ...(opts.fetchImpl ? { fetchImpl: opts.fetchImpl } : {}),
       ...(opts.timeoutMs !== undefined ? { timeoutMs: opts.timeoutMs } : {}),
     });
+    this.admin = new AdminResource(this.transport);
+    this.agentRuns = new AgentRunsResource(this.transport);
+    this.apiKeys = new APIKeysResource(this.transport);
     this.assets = new AssetsResource(this.transport);
+    this.glossary = new GlossaryResource(this.transport);
     this.lineage = new LineageResource(this.transport);
+    this.metrics = new MetricsResource(this.transport);
+    this.owners = new OwnersResource(this.transport);
+    this.runs = new RunsResource(this.transport);
+    this.teams = new TeamsResource(this.transport);
+    this.users = new UsersResource(this.transport);
     this.searchResource = new SearchResource(this.transport);
   }
 
@@ -34,7 +62,7 @@ export class Client {
     return this.transport.baseUrl;
   }
 
-  search(query: string, opts: SearchOptions = {}): Promise<Record<string, unknown>> {
+  search(query: string, opts: SearchOptions = {}): Promise<SearchResponse> {
     return this.searchResource.query(query, opts);
   }
 }

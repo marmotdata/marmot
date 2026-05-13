@@ -1,7 +1,14 @@
 /** HTTP transport with auth injection and refresh-on-401. */
 
 import type { Credential } from "./auth/index.js";
-import { AuthError, MarmotError, NotFoundError, ServerError } from "./errors.js";
+import {
+  AuthError,
+  MarmotError,
+  NotFoundError,
+  RateLimitError,
+  ServerError,
+  ValidationError,
+} from "./errors.js";
 
 export interface TransportOptions {
   baseUrl: string;
@@ -74,8 +81,8 @@ export class Transport {
     return this.request<T>("PUT", path, { json: body });
   }
 
-  delete<T = unknown>(path: string): Promise<T> {
-    return this.request<T>("DELETE", path);
+  delete<T = unknown>(path: string, body?: unknown): Promise<T> {
+    return this.request<T>("DELETE", path, body !== undefined ? { json: body } : {});
   }
 
   private url(path: string, query?: Record<string, unknown>): string {
@@ -115,11 +122,13 @@ export class Transport {
       }
     }
     const msg = await errorMessage(resp);
-    if (resp.status === 401) throw new AuthError(msg);
-    if (resp.status === 403) throw new AuthError(msg);
-    if (resp.status === 404) throw new NotFoundError(msg);
+    if (resp.status === 400) throw new ValidationError(msg, resp.status);
+    if (resp.status === 401) throw new AuthError(msg, resp.status);
+    if (resp.status === 403) throw new AuthError(msg, resp.status);
+    if (resp.status === 404) throw new NotFoundError(msg, resp.status);
+    if (resp.status === 429) throw new RateLimitError(msg, resp.status);
     if (resp.status >= 500) throw new ServerError(msg, resp.status);
-    throw new MarmotError(msg);
+    throw new MarmotError(msg, resp.status);
   }
 }
 

@@ -35,7 +35,9 @@ describe("langchain integration", () => {
     const fetchImpl = vi.fn(async (url: URL | string) => {
       expect(url.toString()).toContain("/api/v1/search");
       expect(url.toString()).toContain("query=orders");
-      return ok({ results: [{ id: "a1", mrn: "postgres://p/s/orders" }] });
+      return ok({
+        results: [{ id: "a1", metadata: { mrn: "postgres://p/s/orders", type: "Table" } }],
+      });
     });
     const client = makeClient(fetchImpl as unknown as typeof fetch);
     const tools = catalogTools(client);

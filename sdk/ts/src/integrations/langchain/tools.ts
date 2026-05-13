@@ -94,7 +94,7 @@ export function catalogTools(client: Client) {
           query: {
             type: "string",
             description:
-              "Marmot query — free text or structured (e.g. `@name: \"metrics-current\"`).",
+              'Marmot query — free text or structured (e.g. `@name: "metrics-current"`).',
           },
           limit: { type: "integer", minimum: 1, maximum: 100 },
         },
@@ -103,24 +103,21 @@ export function catalogTools(client: Client) {
     },
   );
 
-  const getAsset = tool(
-    async (input: IdInput) => await client.assets.get(input.assetId),
-    {
-      name: "get_asset",
-      description:
-        "Fetch the full details of a single asset by its Marmot ID. " +
-        "Returns name, MRN, type, provider, description, owner, schema, " +
-        "and provider-specific metadata. Use after search_catalog when you " +
-        "need column/schema details.",
-      schema: {
-        type: "object",
-        properties: {
-          assetId: { type: "string", description: "The Marmot asset ID." },
-        },
-        required: ["assetId"],
+  const getAsset = tool(async (input: IdInput) => await client.assets.get(input.assetId), {
+    name: "get_asset",
+    description:
+      "Fetch the full details of a single asset by its Marmot ID. " +
+      "Returns name, MRN, type, provider, description, owner, schema, " +
+      "and provider-specific metadata. Use after search_catalog when you " +
+      "need column/schema details.",
+    schema: {
+      type: "object",
+      properties: {
+        assetId: { type: "string", description: "The Marmot asset ID." },
       },
+      required: ["assetId"],
     },
-  );
+  });
 
   const lookupAsset = tool(
     async (input: LookupInput) => {

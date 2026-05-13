@@ -46,7 +46,7 @@
     "lint": "biome check src tests",
     "format": "biome format --write src tests",
     "typecheck": "tsc --noEmit",
-    "generate": "openapi-typescript ../../docs/.openapi3.yaml -o src/_gen/schema.ts"
+    "generate": "openapi-typescript ../../docs/.openapi3.yaml -o src/_gen/schema.ts && node scripts/generate-models.mjs"
   },
   "dependencies": {
     "openapi-fetch": "^0.13.0",

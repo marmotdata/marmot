@@ -123,7 +123,7 @@ sdk-py-generate: swagger sdk-py-install $(SDK_OPENAPI3)
 			--meta none \
 			--output-path src/marmot/_gen
 
-sdk-py-lint: sdk-py-install
+sdk-py-lint: sdk-py-generate
 	cd $(SDK_PY_DIR) && uv run ruff check .
 	cd $(SDK_PY_DIR) && uv run ruff format --check .
 	cd $(SDK_PY_DIR) && uv run mypy src/marmot
@@ -146,7 +146,8 @@ sdk-ts-install: sdk-ts-deps
 
 sdk-ts-generate: swagger sdk-ts-install $(SDK_OPENAPI3)
 	cd $(SDK_TS_DIR) && rm -rf src/_gen && mkdir -p src/_gen && \
-		pnpm exec openapi-typescript ../../$(SDK_OPENAPI3) -o src/_gen/schema.ts
+		pnpm exec openapi-typescript ../../$(SDK_OPENAPI3) -o src/_gen/schema.ts && \
+		node scripts/generate-models.mjs
 
 sdk-ts-lint: sdk-ts-install
 	cd $(SDK_TS_DIR) && pnpm run lint
