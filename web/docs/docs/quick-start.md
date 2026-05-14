@@ -75,25 +75,25 @@ Open [http://localhost:8080](http://localhost:8080) and log in with `admin` / `a
   <DocCard
     title="Add Data with Plugins"
     description="Automatically discover assets from PostgreSQL, Kafka, S3 and more"
-    href="/docs/Plugins"
+    docId="Plugins/index"
     icon="mdi:puzzle"
   />
   <DocCard
     title="Configure Marmot"
     description="Set up authentication, customise settings and more"
-    href="/docs/Configure"
+    docId="Configure/index"
     icon="mdi:cog"
   />
   <DocCard
     title="Learn the Query Language"
     description="Find any asset with powerful search queries"
-    href="/docs/queries"
+    docId="queries"
     icon="mdi:magnify"
   />
   <DocCard
     title="Production Deployment"
     description="Deploy with Docker Compose, Kubernetes or the CLI"
-    href="/docs/Deploy"
+    docId="Deploy/index"
     icon="mdi:cloud-upload"
   />
 </DocCardGrid>

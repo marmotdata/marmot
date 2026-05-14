@@ -13,7 +13,7 @@ import { Steps, Step, TipBox } from '@site/src/components/Steps';
 <CalloutCard
   title="Looking for a Quick Test?"
   description="Try the Quick Start guide for a simple local setup without encryption."
-  href="/docs/quick-start"
+  docId="quick-start"
   buttonText="Quick Start"
   icon="mdi:rocket-launch"
 />
@@ -120,13 +120,13 @@ For all configuration options, see the [configuration guide](/docs/Configure).
 <DocCard
   title="Add Data with Plugins"
   description="Automatically discover assets from PostgreSQL, Kafka, S3 and more"
-  href="/docs/Plugins"
+  docId="Plugins/index"
   icon="mdi:puzzle"
 />
 <DocCard
   title="Configure Authentication"
   description="Set up SSO with GitHub, Google, Okta and more"
-  href="/docs/Configure/Authentication"
+  docId="Configure/Authentication/index"
   icon="mdi:shield-account"
 />
 </DocCardGrid>

@@ -69,7 +69,7 @@ Supported plugins such as Airflow and dbt will automatically fill out lineage fo
 <CalloutCard
   title="It's Easy to Build a Plugin"
   description="A plugin is just a Go package with a simple interface - if you can fetch metadata from a system, you can build one."
-  href="/docs/Develop/creating-plugins"
+  docId="Develop/creating-plugins"
   buttonText="Plugin Guide"
   icon="mdi:puzzle-plus"
   variant="secondary"

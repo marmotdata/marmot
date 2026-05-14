@@ -14,7 +14,7 @@ import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@si
   <DocCard
     title="LangChain"
     description="Catalog tools and a callback handler for Python and TypeScript agents."
-    href="/docs/Agents/langchain"
+    docId="Agents/langchain"
     icon="simple-icons:langchain"
   />
 </DocCardGrid>

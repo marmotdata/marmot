@@ -10,31 +10,31 @@ import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
   <DocCard
     title="Authentication"
     description="Set up SSO with Google, GitHub, GitLab, Okta, Slack or Auth0"
-    href="/docs/Configure/Authentication"
+    docId="Configure/Authentication/index"
     icon="mdi:shield-account"
   />
   <DocCard
     title="Anonymous Access"
     description="Allow users to browse the Catalog without logging in"
-    href="/docs/Configure/anonymous-access"
+    docId="Configure/anonymous-access"
     icon="mdi:incognito"
   />
   <DocCard
     title="TLS"
     description="Set up custom TLS configuration"
-    href="/docs/Configure/tls"
+    docId="Configure/tls"
     icon="mdi:lock"
   />
   <DocCard
     title="Customisable Banner"
     description="Display announcements and notices to users"
-    href="/docs/Configure/banner"
+    docId="Configure/banner"
     icon="mdi:message-alert"
   />
   <DocCard
     title="Elasticsearch"
     description="Enhance search with deep fuzzy matching across all fields"
-    href="/docs/Configure/elasticsearch"
+    docId="Configure/elasticsearch"
     icon="mdi:magnify"
   />
 </DocCardGrid>

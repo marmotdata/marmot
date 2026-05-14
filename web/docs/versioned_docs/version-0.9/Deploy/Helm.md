@@ -246,13 +246,13 @@ Or browse the [values.yaml on GitHub](https://github.com/marmotdata/marmot/blob/
   <DocCard
     title="Add Data with Plugins"
     description="Automatically discover assets from your data sources"
-    href="/docs/Plugins"
+    docId="Plugins/index"
     icon="mdi:puzzle"
   />
   <DocCard
     title="Configure Authentication"
     description="Set up SSO with GitHub, Google, Okta and more"
-    href="/docs/Configure/Authentication"
+    docId="Configure/Authentication/index"
     icon="mdi:shield-account"
   />
 </DocCardGrid>

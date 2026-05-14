@@ -85,31 +85,31 @@ Ready to dive in? Here's where to go next:
   <DocCard
     title="Populating Your Catalog"
     description="Learn how to add assets using plugins, CLI, or API"
-    href="/docs/Populating"
+    docId="Populating/index"
     icon="mdi:database-plus"
   />
   <DocCard
     title="Data Products"
     description="Group assets into logical collections with manual or dynamic rules"
-    href="/docs/data-products"
+    docId="data-products"
     icon="mdi:package-variant-closed"
   />
   <DocCard
     title="Glossary"
     description="Define business terms and create a shared vocabulary"
-    href="/docs/glossary"
+    docId="glossary"
     icon="mdi:book-alphabet"
   />
   <DocCard
     title="Query Language"
     description="Use Marmot's powerful search capabilities"
-    href="/docs/queries"
+    docId="queries"
     icon="mdi:code-tags"
   />
   <DocCard
     title="Deployment Options"
     description="Deploy to production with Docker, Helm, or the CLI"
-    href="/docs/Deploy"
+    docId="Deploy/index"
     icon="mdi:cloud-upload"
   />
 </DocCardGrid>

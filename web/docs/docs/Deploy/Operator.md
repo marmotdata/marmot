@@ -124,13 +124,13 @@ By default, deleting a Run resource runs `marmot ingest --destroy` to remove all
   <DocCard
     title="Browse Plugins"
     description="See all available data source plugins and their configuration"
-    href="/docs/Plugins"
+    docId="Plugins/index"
     icon="mdi:puzzle"
   />
   <DocCard
     title="CLI Ingestion"
     description="Learn the pipeline config format used by Run resources"
-    href="/docs/Populating/CLI"
+    docId="Populating/CLI"
     icon="mdi:console"
   />
 </DocCardGrid>

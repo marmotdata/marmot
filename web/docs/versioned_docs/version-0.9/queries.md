@@ -32,7 +32,7 @@ The query language powers several features across Marmot:
 <CalloutCard
   title="Build Dynamic Data Products"
   description="Use the query language to create rules that automatically group related assets. As your catalog grows, matching assets are included automatically."
-  href="/docs/data-products"
+  docId="data-products"
   buttonText="Learn About Data Products"
   icon="mdi:package-variant-closed"
 />

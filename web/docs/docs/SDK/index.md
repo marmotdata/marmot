@@ -4,7 +4,7 @@ sidebar_position: 1
 
 # SDK
 
-Official SDKs for **Python**, **Go**, and **TypeScript** wrap the Marmot REST API with credential resolution, typed resources, and ergonomic helpers. Every server resource — assets, lineage, search, glossary, runs, metrics, users, teams, API keys, owners, agent runs, and admin — is exposed as a strongly-typed namespace on the client.
+The Marmot SDK is a typed client for the REST API, available in **Python**, **Go** and **TypeScript**. Authentication resolves automatically from environment variables, cached OAuth tokens or workload identity.
 
 import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
 import { Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
@@ -13,7 +13,7 @@ import { Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
   <DocCard
     title="Marmot for Agents"
     description="Plug your LLM agents into the catalog with ready-made tools and automatic lineage."
-    href="/docs/Agents"
+    docId="Agents/index"
     icon="mdi:robot"
   />
   <DocCard
@@ -23,8 +23,6 @@ import { Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
     icon="mdi:api"
   />
 </DocCardGrid>
-
-The three SDKs share the same auth chain, the same resource layout, and return the same OpenAPI-derived shapes. Switching languages mid-project should feel like changing dialects, not rewriting.
 
 ## Install
 
@@ -68,12 +66,12 @@ Requires Node 18+. ESM and CJS builds ship together with bundled types.
 
 ## Authenticate
 
-Every SDK resolves credentials from the same priority chain, so the same code runs locally, in CI, and in production without branching on environment:
+Every SDK resolves credentials from the same priority chain, so the same code runs locally, in CI and in production without branching on environment:
 
 1. **Explicit arguments.** `api_key` / `token` passed to `connect()` or `NewClient()`.
 2. **Environment variables.** `MARMOT_API_KEY`, `MARMOT_TOKEN`, `MARMOT_HOST`, `MARMOT_CONTEXT`.
 3. **Cached OAuth token.** Written to `~/.config/marmot/credentials.json` by `marmot login`.
-4. **Workload identity.** GitHub Actions OIDC, GCP metadata, or a Kubernetes service-account token — no API key needed.
+4. **Workload identity.** GitHub Actions OIDC, GCP metadata or a Kubernetes service-account token. No API key needed.
 
 If no credential resolves, the SDK raises an `AuthError` so misconfiguration fails fast.
 
@@ -136,8 +134,6 @@ func main() {
         Host:   "https://marmot.example.com",
         APIKey: os.Getenv("MARMOT_API_KEY"),
     })
-    _ = client
-    _ = ctx
 }
 ```
 
@@ -166,7 +162,7 @@ The following sections all assume `client` (and `ctx` for Go) is already constru
 
 ## Search
 
-`client.search(query)` is the unified search across assets, glossary terms, teams, and data products. Returns a typed `SearchResponse` with facets, results, and pagination.
+`client.search(query)` is the unified search across assets, glossary terms, teams and data products. Returns a typed `SearchResponse` with facets, results and pagination.
 
 <Tabs items={[
 { label: "Python", value: "py", icon: "mdi:language-python" },
@@ -235,7 +231,7 @@ Marmot accepts both free-text queries and a structured query language (`@type: "
 
 ## Assets
 
-Every catalog entry is an Asset. The Assets resource covers CRUD, lookup by natural key, search, summary aggregates, and tag management.
+Every catalog entry is an Asset. The Assets resource covers CRUD, lookup by natural key, search, summary aggregates and tag management.
 
 ### Fetch by ID
 
@@ -610,7 +606,7 @@ const downstream = await client.lineage.downstream(assetId, { depth: 2 });
 
 ### Write edges
 
-Prefer `/lineage/direct` and `/lineage/batch` for new integrations — they accept simple `(source, target)` pairs and de-duplicate server-side.
+Prefer `/lineage/direct` and `/lineage/batch` for new integrations. They accept simple `(source, target)` pairs and de-duplicate server-side.
 
 <Tabs items={[
 { label: "Python", value: "py", icon: "mdi:language-python" },
@@ -689,7 +685,7 @@ Leave `Type` empty (`DIRECT` is the default) for code-derived edges; set it expl
 
 ## Glossary
 
-Business glossary terms — definitions, descriptions, hierarchies via `parent_term_id`.
+Business glossary terms with definitions, descriptions and hierarchies via `parent_term_id`.
 
 <Tabs items={[
 { label: "Python", value: "py", icon: "mdi:language-python" },
@@ -838,7 +834,7 @@ const members = await client.teams.members(teamId);
 
 ## API Keys
 
-Manage personal API keys for the authenticated user. The full key token is only readable from the `create` response — store it immediately.
+Manage personal API keys for the authenticated user. The full key token is only readable from the `create` response, so store it immediately.
 
 <Tabs items={[
 { label: "Python", value: "py", icon: "mdi:language-python" },
@@ -906,7 +902,7 @@ await client.apiKeys.delete(created.id!);
 
 ## Runs
 
-Read pipeline-ingestion run history — useful when wiring up alerts on failed ingests or audit dashboards.
+Read pipeline-ingestion run history. Useful when wiring up alerts on failed ingests or audit dashboards.
 
 <Tabs items={[
 { label: "Python", value: "py", icon: "mdi:language-python" },
@@ -1235,8 +1231,8 @@ const activity = await client.agentRuns.activity(agentAssetId, {
 
 <CalloutCard
   title="Building an agent?"
-  description="Marmot for Agents builds on the SDK to give LLM agents the catalog as tools, and writes their lineage automatically."
-  href="/docs/Agents"
+  description="Marmot for Agents builds on the SDK to give LLM agents the catalog as tools and writes their lineage automatically."
+  docId="Agents/index"
   buttonText="Read the guide"
   icon="mdi:robot"
 />
@@ -1251,7 +1247,7 @@ const activity = await client.agentRuns.activity(agentAssetId, {
   <DocCard
     title="Authentication"
     description="The full credential resolution chain, including OIDC workload identity."
-    href="/docs/Configure/Authentication"
+    docId="Configure/Authentication/index"
     icon="mdi:lock"
   />
 </DocCardGrid>

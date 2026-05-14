@@ -15,49 +15,49 @@ import { DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/compon
   <DocCard
     title="Generic OIDC"
     description="Any OIDC-compliant provider with team synchronisation"
-    href="/docs/Configure/Authentication/generic-oidc"
+    docId="Configure/Authentication/generic-oidc"
     icon="mdi:shield-key-outline"
   />
   <DocCard
     title="Google OIDC"
     description="OpenID Connect authentication with Google Workspace"
-    href="/docs/Configure/Authentication/google-oidc"
+    docId="Configure/Authentication/google-oidc"
     icon="mdi:google"
   />
   <DocCard
     title="GitHub OAuth"
     description="OAuth 2.0 authentication with GitHub"
-    href="/docs/Configure/Authentication/github-oauth"
+    docId="Configure/Authentication/github-oauth"
     icon="mdi:github"
   />
   <DocCard
     title="GitLab OIDC"
     description="OpenID Connect for GitLab SaaS and self-hosted"
-    href="/docs/Configure/Authentication/gitlab-oidc"
+    docId="Configure/Authentication/gitlab-oidc"
     icon="mdi:gitlab"
   />
   <DocCard
     title="Keycloak OIDC"
     description="OpenID Connect with team synchronisation"
-    href="/docs/Configure/Authentication/keycloak-oidc"
+    docId="Configure/Authentication/keycloak-oidc"
     icon="simple-icons:keycloak"
   />
   <DocCard
     title="Okta OIDC"
     description="OpenID Connect with team synchronisation"
-    href="/docs/Configure/Authentication/okta-oidc"
+    docId="Configure/Authentication/okta-oidc"
     icon="simple-icons:okta"
   />
   <DocCard
     title="Slack OIDC"
     description="OpenID Connect authentication with Slack"
-    href="/docs/Configure/Authentication/slack-oidc"
+    docId="Configure/Authentication/slack-oidc"
     icon="mdi:slack"
   />
   <DocCard
     title="Auth0 OIDC"
     description="OpenID Connect with team synchronisation"
-    href="/docs/Configure/Authentication/auth0-oidc"
+    docId="Configure/Authentication/auth0-oidc"
     icon="simple-icons:auth0"
   />
 </DocCardGrid>

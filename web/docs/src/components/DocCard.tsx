@@ -1,22 +1,50 @@
 import React from "react";
 import { Icon } from "@iconify/react";
+import Link from "@docusaurus/Link";
+import { useDocsVersionCandidates } from "@docusaurus/plugin-content-docs/client";
+
+function useDocHref(docId: string | undefined, href: string | undefined): string {
+  // Always call the hook (rules of hooks); ignore the result if docId is unset.
+  const candidates = useDocsVersionCandidates("default");
+  if (docId) {
+    for (const version of candidates) {
+      const doc = version.docs.find((d) => d.id === docId);
+      if (doc) return doc.path;
+    }
+    return "#";
+  }
+  return href ?? "#";
+}
 
 interface DocCardProps {
   title: string;
   description: string;
-  href: string;
   icon: string;
+  /** Doc ID (preferred): version-aware, e.g. "Deploy/Docker-Compose" or "Plugins/index". */
+  docId?: string;
+  /** Escape hatch for external URLs or deliberate cross-version links. */
+  href?: string;
 }
 
-export function DocCard({ title, description, href, icon }: DocCardProps): JSX.Element {
+export function DocCard({
+  title,
+  description,
+  docId,
+  href,
+  icon,
+}: DocCardProps): JSX.Element {
+  const to = useDocHref(docId, href);
   return (
-    <a
-      href={href}
+    <Link
+      to={to}
       className="group block p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[var(--ifm-color-primary)] dark:hover:border-[var(--ifm-color-primary)] hover:shadow-lg transition-all no-underline"
     >
       <div className="flex items-start gap-4">
         <div className="flex-shrink-0 p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 group-hover:border-[var(--ifm-color-primary)] transition-colors">
-          <Icon icon={icon} className="w-6 h-6 text-[var(--ifm-color-primary)]" />
+          <Icon
+            icon={icon}
+            className="w-6 h-6 text-[var(--ifm-color-primary)]"
+          />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white m-0 group-hover:text-[var(--ifm-color-primary)] transition-colors">
@@ -31,7 +59,7 @@ export function DocCard({ title, description, href, icon }: DocCardProps): JSX.E
           className="w-5 h-5 text-gray-400 group-hover:text-[var(--ifm-color-primary)] group-hover:translate-x-1 transition-all"
         />
       </div>
-    </a>
+    </Link>
   );
 }
 
@@ -50,15 +78,19 @@ export function DocCardGrid({ children }: DocCardGridProps): JSX.Element {
 interface CalloutCardProps {
   title: string;
   description: string;
-  href: string;
   buttonText: string;
   variant?: "primary" | "secondary" | "external";
   icon?: string;
+  /** Doc ID (preferred): version-aware. */
+  docId?: string;
+  /** Escape hatch for external URLs or deliberate cross-version links. */
+  href?: string;
 }
 
 export function CalloutCard({
   title,
   description,
+  docId,
   href,
   buttonText,
   variant = "primary",
@@ -66,6 +98,7 @@ export function CalloutCard({
 }: CalloutCardProps): JSX.Element {
   const isPrimary = variant === "primary";
   const isExternal = variant === "external";
+  const to = useDocHref(docId, href);
 
   const containerClasses = isPrimary
     ? "bg-gradient-to-br from-[var(--ifm-color-primary)] to-[#b34822] text-white"
@@ -102,23 +135,20 @@ export function CalloutCard({
             />
           )}
           <div>
-            <h3
-              className={`text-lg font-bold m-0 ${titleClasses}`}
-            >
-              {title}
-            </h3>
-            <p
-              className={`mt-2 mb-4 text-sm ${descriptionClasses}`}
-            >
+            <h3 className={`text-lg font-bold m-0 ${titleClasses}`}>{title}</h3>
+            <p className={`mt-2 mb-4 text-sm ${descriptionClasses}`}>
               {description}
             </p>
-            <a
-              href={href}
+            <Link
+              to={to}
               className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-sm transition-all no-underline ${buttonClasses}`}
             >
               {buttonText}
-              <Icon icon={isExternal ? "mdi:open-in-new" : "mdi:arrow-right"} className="w-4 h-4" />
-            </a>
+              <Icon
+                icon={isExternal ? "mdi:open-in-new" : "mdi:arrow-right"}
+                className="w-4 h-4"
+              />
+            </Link>
           </div>
         </div>
       </div>
@@ -135,12 +165,19 @@ interface FeatureCardProps {
   icon: string;
 }
 
-export function FeatureCard({ title, description, icon }: FeatureCardProps): JSX.Element {
+export function FeatureCard({
+  title,
+  description,
+  icon,
+}: FeatureCardProps): JSX.Element {
   return (
     <div className="p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
       <div className="flex items-start gap-4">
         <div className="flex-shrink-0 p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-          <Icon icon={icon} className="w-6 h-6 text-[var(--ifm-color-primary)]" />
+          <Icon
+            icon={icon}
+            className="w-6 h-6 text-[var(--ifm-color-primary)]"
+          />
         </div>
         <div className="flex-1 min-w-0">
           <h3 className="text-base font-semibold text-gray-900 dark:text-white m-0">

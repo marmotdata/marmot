@@ -247,7 +247,7 @@ Each run also writes one batched lineage call (one edge per upstream MRN to the 
 <CalloutCard
   title="Other frameworks"
   description="LlamaIndex, AutoGen and CrewAI work today against the Marmot SDK. First-class integrations follow demand."
-  href="/docs/Agents"
+  docId="Agents/index"
   buttonText="See all integrations"
   icon="mdi:robot"
 />

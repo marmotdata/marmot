@@ -18,25 +18,25 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
   <DocCard
     title="Docker Compose"
     description="Deploy Marmot and PostgreSQL together with one command"
-    href="/docs/Deploy/Docker-Compose"
+    docId="Deploy/Docker-Compose"
     icon="mdi:docker"
   />
   <DocCard
     title="Docker"
     description="Deploy using containers with your own PostgreSQL"
-    href="/docs/Deploy/Docker"
+    docId="Deploy/Docker"
     icon="mdi:docker"
   />
   <DocCard
     title="Helm / Kubernetes"
     description="Deploy to Kubernetes clusters with the official Helm chart"
-    href="/docs/Deploy/Helm"
+    docId="Deploy/Helm"
     icon="mdi:kubernetes"
   />
   <DocCard
     title="CLI / Binary"
     description="Run directly on your system with the single binary"
-    href="/docs/Deploy/CLI"
+    docId="Deploy/CLI"
     icon="mdi:console"
   />
   <DocCard
@@ -55,13 +55,13 @@ Once deployed, you'll want to populate your catalog with data assets:
   <DocCard
     title="Add Data with Plugins"
     description="Automatically discover assets from your data sources"
-    href="/docs/Plugins"
+    docId="Plugins/index"
     icon="mdi:puzzle"
   />
   <DocCard
     title="Configure Marmot"
     description="Customise authentication, settings, and more"
-    href="/docs/Configure"
+    docId="Configure/index"
     icon="mdi:cog"
   />
 </DocCardGrid>

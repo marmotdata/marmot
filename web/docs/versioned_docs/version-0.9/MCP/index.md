@@ -55,37 +55,37 @@ With MCP, you can ask questions like:
   <DocCard
     title="Claude Desktop"
     description="Anthropic's official desktop application"
-    href="/docs/MCP/claude-desktop"
+    docId="MCP/claude-desktop"
     icon="simple-icons:anthropic"
   />
   <DocCard
     title="Claude Code"
     description="Claude's command-line interface"
-    href="/docs/MCP/claude-code"
+    docId="MCP/claude-code"
     icon="mdi:console"
   />
   <DocCard
     title="Cursor"
     description="The AI-first code editor"
-    href="/docs/MCP/cursor"
+    docId="MCP/cursor"
     icon="mdi:cursor-default"
   />
   <DocCard
     title="Cline"
     description="VS Code extension for AI-powered coding"
-    href="/docs/MCP/cline"
+    docId="MCP/cline"
     icon="mdi:microsoft-visual-studio-code"
   />
   <DocCard
     title="LibreChat"
     description="Universal AI chat interface supporting multiple providers"
-    href="/docs/MCP/librechat"
+    docId="MCP/librechat"
     icon="mdi:chat"
   />
   <DocCard
     title="Skills"
     description="Install the Marmot skill to give any AI agent catalog knowledge"
-    href="/docs/MCP/skills"
+    docId="MCP/skills"
     icon="mdi:brain"
   />
 </DocCardGrid>

@@ -13,7 +13,7 @@ import { CliInstall } from '@site/src/components/CliInstall';
 <CalloutCard
   title="Looking for Ingestion?"
   description="The CLI also supports populating your catalog from data sources via the ingest command."
-  href="/docs/Populating/CLI"
+  docId="Populating/CLI"
   buttonText="View Ingestion Docs"
   icon="mdi:database-plus"
 />
@@ -177,13 +177,13 @@ source <(marmot completion bash)
   <DocCard
     title="Populating Your Catalog"
     description="Learn about all the ways to add assets to Marmot"
-    href="/docs/Populating"
+    docId="Populating/index"
     icon="mdi:database-plus"
   />
   <DocCard
     title="Query Language"
     description="Use advanced search queries to find assets"
-    href="/docs/queries"
+    docId="queries"
     icon="mdi:code-tags"
   />
   <DocCard
@@ -195,7 +195,7 @@ source <(marmot completion bash)
   <DocCard
     title="Deployment Options"
     description="Deploy Marmot to production with Docker, Helm or the CLI"
-    href="/docs/Deploy"
+    docId="Deploy/index"
     icon="mdi:cloud-upload"
   />
 </DocCardGrid>

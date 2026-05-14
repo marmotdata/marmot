@@ -74,7 +74,7 @@ Send notifications to Slack, Discord, or any HTTP endpoint via team webhooks.
   <DocCard
     title="Webhooks"
     description="Configure external notifications for your team via Slack, Discord, or generic HTTP webhooks"
-    href="/docs/Notifications/webhooks"
+    docId="Notifications/webhooks"
     icon="mdi:webhook"
   />
 </DocCardGrid>
