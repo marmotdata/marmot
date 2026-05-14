@@ -93,12 +93,17 @@ export class MarmotCallbackHandler extends BaseCallbackHandler {
     _chain: Serialized,
     _inputs: ChainValues,
     runId: string,
-    _runType?: string,
+    // @langchain/core 1.x dispatches handleChainStart as
+    //   (chain, inputs, runId, parentRunId, tags, metadata, runType, runName, extra)
+    // even though its own type declaration puts parentRunId at position 7.
+    // Accept either ordering by sniffing both slots for a UUID.
+    arg3?: string,
     _tags?: string[],
     _metadata?: Record<string, unknown>,
     _runName?: string,
-    parentRunId?: string,
+    arg7?: string,
   ): Promise<void> {
+    const parentRunId = asUuid(arg3) ?? asUuid(arg7);
     if (parentRunId === undefined) {
       this.rootOf.set(runId, runId);
       this.upstreams.set(runId, new Set());
@@ -319,6 +324,12 @@ function walkForMrns(value: unknown, out: Set<string>, depth: number): void {
       }
     }
   }
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function asUuid(value: string | undefined): string | undefined {
+  return value && UUID_RE.test(value) ? value : undefined;
 }
 
 async function sha256Hex(input: string): Promise<string> {

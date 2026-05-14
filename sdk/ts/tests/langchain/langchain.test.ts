@@ -1,11 +1,11 @@
 import { describe, expect, test, vi } from "vitest";
-import type { Credential } from "../src/auth/index.js";
-import { Client } from "../src/client.js";
+import type { Credential } from "../../src/auth/index.js";
+import { Client } from "../../src/client.js";
 import {
   MarmotCallbackHandler,
   catalogTools,
   marmotTool,
-} from "../src/integrations/langchain/index.js";
+} from "../../src/integrations/langchain/index.js";
 
 function makeClient(fetchImpl: typeof fetch, credential?: Credential): Client {
   return new Client({
@@ -172,6 +172,38 @@ describe("langchain integration", () => {
 
     const sources = (batchBody as { source: string }[]).map((e) => e.source);
     expect(sources).toEqual(["kafka://c/orders.events"]);
+  });
+
+  test("treats v1.x positional ordering (parentRunId at index 3) as nested", async () => {
+    // @langchain/core 1.x dispatches handleChainStart as
+    //   (chain, inputs, runId, parentRunId, tags, metadata, runType, runName, extra)
+    // — different from its own type declaration. Make sure a nested call in
+    // that shape does NOT trigger agent registration.
+    let registerCalls = 0;
+    const fetchImpl = vi.fn(async (url: URL | string) => {
+      registerCalls += 1;
+      return ok({ id: "agent-1", mrn: "marmot://langchain/agent/explorer", _url: url.toString() });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const handler = new MarmotCallbackHandler(client, { name: "explorer" });
+
+    // Root chain: parentRunId undefined in either slot → register.
+    await handler.handleChainStart({} as never, {}, "11111111-1111-4111-8111-111111111111");
+    const rootCalls = registerCalls;
+    expect(rootCalls).toBeGreaterThan(0);
+
+    // Nested chain dispatched in v1 ordering: position 3 is the parent UUID.
+    await handler.handleChainStart(
+      {} as never,
+      {},
+      "22222222-2222-4222-8222-222222222222",
+      "11111111-1111-4111-8111-111111111111",
+      [],
+      {},
+      "chain",
+      "RunnableLambda",
+    );
+    expect(registerCalls).toBe(rootCalls);
   });
 
   test("marmotTool stamps the asset MRN into tool metadata", () => {

@@ -38,7 +38,22 @@
 	});
 
 	async function loadPendingConsent() {
-		if (!auth.isAuthenticated()) {
+		const token = auth.getToken();
+		if (!token) {
+			return;
+		}
+		// Verify the stored token still works on the server — a stale token
+		// (expired, signing key rotated, server restarted) would otherwise let us
+		// show the consent screen, then fail at /oauth/authorize/complete with 401.
+		try {
+			const meRes = await fetch('/api/v1/users/me', {
+				headers: { Authorization: `Bearer ${token}` }
+			});
+			if (!meRes.ok) {
+				auth.clearToken();
+				return;
+			}
+		} catch {
 			return;
 		}
 		try {

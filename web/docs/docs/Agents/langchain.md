@@ -223,27 +223,6 @@ function queryTable(table: string, sql: string) {
 
 If your tool returns objects shaped like `{ mrn, ... }` or `{ results: [{ mrn, ... }] }`, the handler walks the output looking for them. This is how `catalog_tools` produces lineage automatically.
 
-## What ends up in Marmot
-
-The agent asset:
-
-```json
-{
-  "name": "catalog-explorer",
-  "type": "Agent",
-  "providers": ["LangChain"],
-  "metadata": {
-    "framework": "LangChain",
-    "model": "gpt-4o-mini",
-    "owner": "data-eng",
-    "tool_names": ["search_catalog", "get_asset", "lookup_asset", "get_upstream_lineage"],
-    "system_prompt_sha256_16": "a1b2c3d4e5f60718"
-  }
-}
-```
-
-Each run also writes one batched lineage call (one edge per upstream MRN to the agent) and one run record (model, tokens, tool calls, status) visible on the agent's Runs tab.
-
 <CalloutCard
   title="Other frameworks"
   description="LlamaIndex, AutoGen and CrewAI work today against the Marmot SDK. First-class integrations follow demand."
