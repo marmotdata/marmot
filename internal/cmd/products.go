@@ -1,11 +1,11 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/marmotdata/marmot/client/client/products"
-	"github.com/marmotdata/marmot/client/models"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
 )
@@ -22,22 +22,24 @@ var productsListCmd = &cobra.Command{
 		limit, _ := cmd.Flags().GetInt("limit")
 		offset, _ := cmd.Flags().GetInt("offset")
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := products.NewGetProductsListParams()
-		params.SetLimit(int64Ptr(limit))
-		params.SetOffset(int64Ptr(offset))
-
-		resp, err := c.Products.GetProductsList(params)
+		result, err := c.Products.List(cmd.Context(), marmot.ProductsListOptions{Limit: int64(limit), Offset: int64(offset)})
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			return p.PrintJSON(resp.Payload)
+			data, err := marshalPayload(result)
+			if err != nil {
+				return err
+			}
+			return p.PrintRaw(data)
 		}
 
-		result := resp.Payload
 		if len(result.DataProducts) == 0 {
 			fmt.Println("No data products found.")
 			return nil
@@ -64,21 +66,24 @@ var productsGetCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := products.NewGetProductsIDParams()
-		params.SetID(args[0])
-
-		resp, err := c.Products.GetProductsID(params)
+		dp, err := c.Products.Get(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			return p.PrintJSON(resp.Payload)
+			data, err := marshalPayload(dp)
+			if err != nil {
+				return err
+			}
+			return p.PrintRaw(data)
 		}
 
-		dp := resp.Payload
 		t := output.NewTable("FIELD", "VALUE")
 		t.AddRow("ID", dp.ID)
 		t.AddRow("Name", dp.Name)
@@ -111,33 +116,33 @@ var productsTagsCmd = &cobra.Command{
 		if len(args) == 0 {
 			return cmd.Help()
 		}
-		return listProductTags(args[0])
+		return listProductTags(cmd.Context(), args[0])
 	},
 }
 
-func listProductTags(productID string) error {
+func listProductTags(ctx context.Context, productID string) error {
 	p := getPrinter()
-	c := newSwaggerClient()
+	c, err := newClient()
+	if err != nil {
+		return err
+	}
 
-	params := products.NewGetProductsTagsIDParams()
-	params.SetID(productID)
-
-	resp, err := c.Products.GetProductsTagsID(params)
+	tags, err := c.Products.ListProductTags(ctx, productID)
 	if err != nil {
 		return err
 	}
 
 	if p.IsRaw() {
-		return p.PrintJSON(resp.Payload)
+		return p.PrintJSON(tags)
 	}
 
-	if len(resp.Payload) == 0 {
+	if len(tags) == 0 {
 		fmt.Println("No tags found on this data product.")
 		return nil
 	}
 
 	t := output.NewTable("ID", "NAME", "DESCRIPTION")
-	for _, tag := range resp.Payload {
+	for _, tag := range tags {
 		t.AddRow(tag.ID, tag.Name, tag.Description)
 	}
 	p.PrintTable(t)
@@ -154,14 +159,12 @@ var productsTagsAddCmd = &cobra.Command{
 			return fmt.Errorf("--tag-id is required")
 		}
 
-		c := newSwaggerClient()
-		params := products.NewPostProductsTagsIDParams()
-		params.SetID(args[0])
-		params.SetBody(&models.V1DataproductsAddProductTagRequest{
-			TagID: tagID,
-		})
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		if _, err := c.Products.PostProductsTagsID(params); err != nil {
+		if err := c.Products.AddProductTag(cmd.Context(), args[0], tagID); err != nil {
 			return err
 		}
 
@@ -180,14 +183,12 @@ var productsTagsRemoveCmd = &cobra.Command{
 			return fmt.Errorf("--tag-id is required")
 		}
 
-		c := newSwaggerClient()
-		params := products.NewDeleteProductsTagsIDParams()
-		params.SetID(args[0])
-		params.SetBody(&models.V1DataproductsRemoveProductTagRequest{
-			TagID: tagID,
-		})
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		if _, err := c.Products.DeleteProductsTagsID(params); err != nil {
+		if err := c.Products.RemoveProductTag(cmd.Context(), args[0], tagID); err != nil {
 			return err
 		}
 
@@ -203,14 +204,12 @@ var productsTagsSetCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tagIDs, _ := cmd.Flags().GetStringSlice("tag-ids")
 
-		c := newSwaggerClient()
-		params := products.NewPutProductsTagsIDParams()
-		params.SetID(args[0])
-		params.SetBody(&models.V1DataproductsReplaceProductTagsRequest{
-			TagIds: tagIDs,
-		})
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		if _, err := c.Products.PutProductsTagsID(params); err != nil {
+		if err := c.Products.SetProductTags(cmd.Context(), args[0], tagIDs); err != nil {
 			return err
 		}
 
