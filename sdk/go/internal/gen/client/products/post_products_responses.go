@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/client/models"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
 // PostProductsReader is a Reader for the PostProducts structure.
@@ -132,7 +132,7 @@ PostProductsBadRequest describes a response with status code 400, with default h
 Bad Request
 */
 type PostProductsBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post products bad request response has a 2xx status code
@@ -175,13 +175,13 @@ func (o *PostProductsBadRequest) String() string {
 	return fmt.Sprintf("[POST /products][%d] postProductsBadRequest %s", 400, payload)
 }
 
-func (o *PostProductsBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostProductsBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostProductsBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -202,7 +202,7 @@ PostProductsUnauthorized describes a response with status code 401, with default
 Unauthorized
 */
 type PostProductsUnauthorized struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post products unauthorized response has a 2xx status code
@@ -245,13 +245,13 @@ func (o *PostProductsUnauthorized) String() string {
 	return fmt.Sprintf("[POST /products][%d] postProductsUnauthorized %s", 401, payload)
 }
 
-func (o *PostProductsUnauthorized) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostProductsUnauthorized) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostProductsUnauthorized) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -272,7 +272,7 @@ PostProductsInternalServerError describes a response with status code 500, with 
 Internal Server Error
 */
 type PostProductsInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this post products internal server error response has a 2xx status code
@@ -315,13 +315,13 @@ func (o *PostProductsInternalServerError) String() string {
 	return fmt.Sprintf("[POST /products][%d] postProductsInternalServerError %s", 500, payload)
 }
 
-func (o *PostProductsInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PostProductsInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PostProductsInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

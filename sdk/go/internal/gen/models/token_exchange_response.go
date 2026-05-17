@@ -11,7 +11,7 @@ import (
 
 // TokenExchangeResponse token exchange response
 //
-// swagger:model tokenExchangeResponse
+// swagger:model TokenExchangeResponse
 type TokenExchangeResponse struct {
 
 	// access token

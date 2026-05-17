@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/client/models"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
 // GetProductsTagsIDReader is a Reader for the GetProductsTagsID structure.
@@ -130,7 +130,7 @@ GetProductsTagsIDBadRequest describes a response with status code 400, with defa
 Bad Request
 */
 type GetProductsTagsIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get products tags Id bad request response has a 2xx status code
@@ -173,13 +173,13 @@ func (o *GetProductsTagsIDBadRequest) String() string {
 	return fmt.Sprintf("[GET /products/tags/{id}][%d] getProductsTagsIdBadRequest %s", 400, payload)
 }
 
-func (o *GetProductsTagsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetProductsTagsIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetProductsTagsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -200,7 +200,7 @@ GetProductsTagsIDNotFound describes a response with status code 404, with defaul
 Not Found
 */
 type GetProductsTagsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get products tags Id not found response has a 2xx status code
@@ -243,13 +243,13 @@ func (o *GetProductsTagsIDNotFound) String() string {
 	return fmt.Sprintf("[GET /products/tags/{id}][%d] getProductsTagsIdNotFound %s", 404, payload)
 }
 
-func (o *GetProductsTagsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetProductsTagsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetProductsTagsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -270,7 +270,7 @@ GetProductsTagsIDInternalServerError describes a response with status code 500, 
 Internal Server Error
 */
 type GetProductsTagsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get products tags Id internal server error response has a 2xx status code
@@ -313,13 +313,13 @@ func (o *GetProductsTagsIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /products/tags/{id}][%d] getProductsTagsIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetProductsTagsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetProductsTagsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetProductsTagsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

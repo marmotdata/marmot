@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/client/models"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
 // GetAssetsTagsIDReader is a Reader for the GetAssetsTagsID structure.
@@ -124,7 +124,7 @@ GetAssetsTagsIDBadRequest describes a response with status code 400, with defaul
 Bad Request
 */
 type GetAssetsTagsIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets tags Id bad request response has a 2xx status code
@@ -167,13 +167,13 @@ func (o *GetAssetsTagsIDBadRequest) String() string {
 	return fmt.Sprintf("[GET /assets/tags/{id}][%d] getAssetsTagsIdBadRequest %s", 400, payload)
 }
 
-func (o *GetAssetsTagsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsTagsIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsTagsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -194,7 +194,7 @@ GetAssetsTagsIDInternalServerError describes a response with status code 500, wi
 Internal Server Error
 */
 type GetAssetsTagsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get assets tags Id internal server error response has a 2xx status code
@@ -237,13 +237,13 @@ func (o *GetAssetsTagsIDInternalServerError) String() string {
 	return fmt.Sprintf("[GET /assets/tags/{id}][%d] getAssetsTagsIdInternalServerError %s", 500, payload)
 }
 
-func (o *GetAssetsTagsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetAssetsTagsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetAssetsTagsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -21,7 +21,7 @@ type AssetSearchResponse struct {
 	Assets []*Asset `json:"assets"`
 
 	// filters
-	Filters *AvailableFilters `json:"filters,omitempty"`
+	Filters *AssetAvailableFilters `json:"filters,omitempty"`
 
 	// limit
 	Limit int64 `json:"limit,omitempty"`

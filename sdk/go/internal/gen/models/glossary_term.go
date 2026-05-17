@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// GlossaryGlossaryTerm glossary glossary term
+// GlossaryTerm glossary term
 //
-// swagger:model glossary.GlossaryTerm
-type GlossaryGlossaryTerm struct {
+// swagger:model GlossaryTerm
+type GlossaryTerm struct {
 
 	// created at
 	CreatedAt string `json:"created_at,omitempty"`
@@ -51,8 +51,8 @@ type GlossaryGlossaryTerm struct {
 	UpdatedAt string `json:"updated_at,omitempty"`
 }
 
-// Validate validates this glossary glossary term
-func (m *GlossaryGlossaryTerm) Validate(formats strfmt.Registry) error {
+// Validate validates this glossary term
+func (m *GlossaryTerm) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateOwners(formats); err != nil {
@@ -69,7 +69,7 @@ func (m *GlossaryGlossaryTerm) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *GlossaryGlossaryTerm) validateOwners(formats strfmt.Registry) error {
+func (m *GlossaryTerm) validateOwners(formats strfmt.Registry) error {
 	if swag.IsZero(m.Owners) { // not required
 		return nil
 	}
@@ -99,7 +99,7 @@ func (m *GlossaryGlossaryTerm) validateOwners(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *GlossaryGlossaryTerm) validateTags(formats strfmt.Registry) error {
+func (m *GlossaryTerm) validateTags(formats strfmt.Registry) error {
 	if swag.IsZero(m.Tags) { // not required
 		return nil
 	}
@@ -129,8 +129,8 @@ func (m *GlossaryGlossaryTerm) validateTags(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this glossary glossary term based on the context it is used
-func (m *GlossaryGlossaryTerm) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this glossary term based on the context it is used
+func (m *GlossaryTerm) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateOwners(ctx, formats); err != nil {
@@ -147,7 +147,7 @@ func (m *GlossaryGlossaryTerm) ContextValidate(ctx context.Context, formats strf
 	return nil
 }
 
-func (m *GlossaryGlossaryTerm) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
+func (m *GlossaryTerm) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Owners); i++ {
 
@@ -176,7 +176,7 @@ func (m *GlossaryGlossaryTerm) contextValidateOwners(ctx context.Context, format
 	return nil
 }
 
-func (m *GlossaryGlossaryTerm) contextValidateTags(ctx context.Context, formats strfmt.Registry) error {
+func (m *GlossaryTerm) contextValidateTags(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Tags); i++ {
 
@@ -206,7 +206,7 @@ func (m *GlossaryGlossaryTerm) contextValidateTags(ctx context.Context, formats 
 }
 
 // MarshalBinary interface implementation
-func (m *GlossaryGlossaryTerm) MarshalBinary() ([]byte, error) {
+func (m *GlossaryTerm) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -214,8 +214,8 @@ func (m *GlossaryGlossaryTerm) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *GlossaryGlossaryTerm) UnmarshalBinary(b []byte) error {
-	var res GlossaryGlossaryTerm
+func (m *GlossaryTerm) UnmarshalBinary(b []byte) error {
+	var res GlossaryTerm
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
