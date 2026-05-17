@@ -53,8 +53,10 @@ type Client struct {
 	Lineage  *LineageService
 	Metrics  *MetricsService
 	Owners   *OwnersService
+	Products *ProductsService
 	Runs     *RunsService
 	Search   *SearchService
+	Tags     *TagsService
 	Teams    *TeamsService
 	Users    *UsersService
 
@@ -115,8 +117,10 @@ func NewClient(opts ClientOptions) (*Client, error) {
 		Lineage:  &LineageService{gen: gen},
 		Metrics:  &MetricsService{gen: gen},
 		Owners:   &OwnersService{gen: gen},
+		Products: &ProductsService{gen: gen},
 		Runs:     &RunsService{gen: gen},
 		Search:   &SearchService{gen: gen},
+		Tags:     &TagsService{gen: gen},
 		Teams:    &TeamsService{gen: gen},
 		Users:    &UsersService{gen: gen},
 		host:     host,

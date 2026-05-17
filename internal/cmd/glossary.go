@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -237,33 +238,33 @@ var glossaryTagsCmd = &cobra.Command{
 		if len(args) == 0 {
 			return cmd.Help()
 		}
-		return listGlossaryTermTags(args[0])
+		return listGlossaryTermTags(cmd.Context(), args[0])
 	},
 }
 
-func listGlossaryTermTags(termID string) error {
+func listGlossaryTermTags(ctx context.Context, termID string) error {
 	p := getPrinter()
-	c := newSwaggerClient()
+	c, err := newClient()
+	if err != nil {
+		return err
+	}
 
-	params := glossary.NewGetGlossaryTagsIDParams()
-	params.SetID(termID)
-
-	resp, err := c.Glossary.GetGlossaryTagsID(params)
+	tags, err := c.Glossary.ListTermTags(ctx, termID)
 	if err != nil {
 		return err
 	}
 
 	if p.IsRaw() {
-		return p.PrintJSON(resp.Payload)
+		return p.PrintJSON(tags)
 	}
 
-	if len(resp.Payload) == 0 {
+	if len(tags) == 0 {
 		fmt.Println("No tags found on this glossary term.")
 		return nil
 	}
 
 	t := output.NewTable("ID", "NAME", "DESCRIPTION")
-	for _, tag := range resp.Payload {
+	for _, tag := range tags {
 		t.AddRow(tag.ID, tag.Name, tag.Description)
 	}
 	p.PrintTable(t)
@@ -280,14 +281,12 @@ var glossaryTagsAddCmd = &cobra.Command{
 			return fmt.Errorf("--tag-id is required")
 		}
 
-		c := newSwaggerClient()
-		params := glossary.NewPostGlossaryTagsIDParams()
-		params.SetID(args[0])
-		params.SetBody(&models.V1GlossaryAddTermTagRequest{
-			TagID: tagID,
-		})
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		if _, err := c.Glossary.PostGlossaryTagsID(params); err != nil {
+		if err := c.Glossary.AddTermTag(cmd.Context(), args[0], tagID); err != nil {
 			return err
 		}
 
@@ -306,14 +305,12 @@ var glossaryTagsRemoveCmd = &cobra.Command{
 			return fmt.Errorf("--tag-id is required")
 		}
 
-		c := newSwaggerClient()
-		params := glossary.NewDeleteGlossaryTagsIDParams()
-		params.SetID(args[0])
-		params.SetBody(&models.V1GlossaryRemoveTermTagRequest{
-			TagID: tagID,
-		})
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		if _, err := c.Glossary.DeleteGlossaryTagsID(params); err != nil {
+		if err := c.Glossary.RemoveTermTag(cmd.Context(), args[0], tagID); err != nil {
 			return err
 		}
 
@@ -329,14 +326,12 @@ var glossaryTagsSetCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tagIDs, _ := cmd.Flags().GetStringSlice("tag-ids")
 
-		c := newSwaggerClient()
-		params := glossary.NewPutGlossaryTagsIDParams()
-		params.SetID(args[0])
-		params.SetBody(&models.V1GlossaryReplaceTermTagsRequest{
-			TagIds: tagIDs,
-		})
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		if _, err := c.Glossary.PutGlossaryTagsID(params); err != nil {
+		if err := c.Glossary.SetTermTags(cmd.Context(), args[0], tagIDs); err != nil {
 			return err
 		}
 

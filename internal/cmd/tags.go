@@ -6,8 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/marmotdata/marmot/client/client/tags"
-	"github.com/marmotdata/marmot/client/models"
+	marmot "github.com/marmotdata/marmot/sdk/go"
 	"github.com/marmotdata/marmot/internal/cmd/output"
 	"github.com/spf13/cobra"
 )
@@ -22,24 +21,27 @@ var tagsListCmd = &cobra.Command{
 	Short: "List all tags",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		resp, err := c.Tags.GetTags(tags.NewGetTagsParams())
+		tagList, err := c.Tags.List(cmd.Context(), marmot.TagsListOptions{})
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			return p.PrintJSON(resp.Payload)
+			return p.PrintJSON(tagList)
 		}
 
-		if len(resp.Payload) == 0 {
+		if len(tagList) == 0 {
 			fmt.Println("No tags found.")
 			return nil
 		}
 
 		t := output.NewTable("ID", "NAME", "DESCRIPTION")
-		for _, tag := range resp.Payload {
+		for _, tag := range tagList {
 			t.AddRow(tag.ID, tag.Name, tag.Description)
 		}
 		p.PrintTable(t)
@@ -53,21 +55,20 @@ var tagsGetCmd = &cobra.Command{
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		p := getPrinter()
-		c := newSwaggerClient()
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		params := tags.NewGetTagsIDParams()
-		params.SetID(args[0])
-
-		resp, err := c.Tags.GetTagsID(params)
+		tag, err := c.Tags.Get(cmd.Context(), args[0])
 		if err != nil {
 			return err
 		}
 
 		if p.IsRaw() {
-			return p.PrintJSON(resp.Payload)
+			return p.PrintJSON(tag)
 		}
 
-		tag := resp.Payload
 		t := output.NewTable("FIELD", "VALUE")
 		t.AddRow("ID", tag.ID)
 		t.AddRow("Name", tag.Name)
@@ -92,19 +93,20 @@ var tagsCreateCmd = &cobra.Command{
 			return fmt.Errorf("--name is required")
 		}
 
-		c := newSwaggerClient()
-		params := tags.NewPostTagsParams()
-		params.SetBody(&models.V1TagsTagRequest{
-			Name:        name,
-			Description: description,
-		})
-
-		resp, err := c.Tags.PostTags(params)
+		c, err := newClient()
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Tag created: %s (ID: %s)\n", resp.Payload.Name, resp.Payload.ID)
+		tag, err := c.Tags.Create(cmd.Context(), marmot.CreateTagInput{
+			Name:        name,
+			Description: description,
+		})
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Tag created: %s (ID: %s)\n", tag.Name, tag.ID)
 		return nil
 	},
 }
@@ -114,32 +116,30 @@ var tagsUpdateCmd = &cobra.Command{
 	Short: "Update a tag",
 	Args:  cobra.ExactArgs(1),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		req := &models.V1TagsTagRequest{}
+		in := marmot.UpdateTagInput{}
 
 		if cmd.Flags().Changed("name") {
-			name, _ := cmd.Flags().GetString("name")
-			req.Name = name
+			in.Name, _ = cmd.Flags().GetString("name")
 		}
 		if cmd.Flags().Changed("description") {
-			description, _ := cmd.Flags().GetString("description")
-			req.Description = description
+			in.Description, _ = cmd.Flags().GetString("description")
 		}
 
-		if req.Name == "" && req.Description == "" {
+		if in.Name == "" && in.Description == "" {
 			return fmt.Errorf("at least one of --name or --description must be provided")
 		}
 
-		c := newSwaggerClient()
-		params := tags.NewPutTagsIDParams()
-		params.SetID(args[0])
-		params.SetBody(req)
-
-		resp, err := c.Tags.PutTagsID(params)
+		c, err := newClient()
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("Tag updated: %s (ID: %s)\n", resp.Payload.Name, resp.Payload.ID)
+		tag, err := c.Tags.Update(cmd.Context(), args[0], in)
+		if err != nil {
+			return err
+		}
+
+		fmt.Printf("Tag updated: %s (ID: %s)\n", tag.Name, tag.ID)
 		return nil
 	},
 }
@@ -162,11 +162,12 @@ var tagsDeleteCmd = &cobra.Command{
 			}
 		}
 
-		c := newSwaggerClient()
-		params := tags.NewDeleteTagsIDParams()
-		params.SetID(args[0])
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
 
-		if _, err := c.Tags.DeleteTagsID(params); err != nil {
+		if err := c.Tags.Delete(cmd.Context(), args[0]); err != nil {
 			return err
 		}
 
