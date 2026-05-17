@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/client/models"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
 // PutAssetsColumnTagsIDReader is a Reader for the PutAssetsColumnTagsID structure.
@@ -118,7 +118,7 @@ PutAssetsColumnTagsIDBadRequest describes a response with status code 400, with 
 Bad Request
 */
 type PutAssetsColumnTagsIDBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put assets column tags Id bad request response has a 2xx status code
@@ -161,13 +161,13 @@ func (o *PutAssetsColumnTagsIDBadRequest) String() string {
 	return fmt.Sprintf("[PUT /assets/column-tags/{id}][%d] putAssetsColumnTagsIdBadRequest %s", 400, payload)
 }
 
-func (o *PutAssetsColumnTagsIDBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAssetsColumnTagsIDBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAssetsColumnTagsIDBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -188,7 +188,7 @@ PutAssetsColumnTagsIDNotFound describes a response with status code 404, with de
 Not Found
 */
 type PutAssetsColumnTagsIDNotFound struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put assets column tags Id not found response has a 2xx status code
@@ -231,13 +231,13 @@ func (o *PutAssetsColumnTagsIDNotFound) String() string {
 	return fmt.Sprintf("[PUT /assets/column-tags/{id}][%d] putAssetsColumnTagsIdNotFound %s", 404, payload)
 }
 
-func (o *PutAssetsColumnTagsIDNotFound) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAssetsColumnTagsIDNotFound) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAssetsColumnTagsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -258,7 +258,7 @@ PutAssetsColumnTagsIDInternalServerError describes a response with status code 5
 Internal Server Error
 */
 type PutAssetsColumnTagsIDInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this put assets column tags Id internal server error response has a 2xx status code
@@ -301,13 +301,13 @@ func (o *PutAssetsColumnTagsIDInternalServerError) String() string {
 	return fmt.Sprintf("[PUT /assets/column-tags/{id}][%d] putAssetsColumnTagsIdInternalServerError %s", 500, payload)
 }
 
-func (o *PutAssetsColumnTagsIDInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *PutAssetsColumnTagsIDInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *PutAssetsColumnTagsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 
-	"github.com/marmotdata/marmot/client/models"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
 // GetProductsSearchReader is a Reader for the GetProductsSearch structure.
@@ -126,7 +126,7 @@ GetProductsSearchBadRequest describes a response with status code 400, with defa
 Bad Request
 */
 type GetProductsSearchBadRequest struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get products search bad request response has a 2xx status code
@@ -169,13 +169,13 @@ func (o *GetProductsSearchBadRequest) String() string {
 	return fmt.Sprintf("[GET /products/search][%d] getProductsSearchBadRequest %s", 400, payload)
 }
 
-func (o *GetProductsSearchBadRequest) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetProductsSearchBadRequest) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetProductsSearchBadRequest) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
@@ -196,7 +196,7 @@ GetProductsSearchInternalServerError describes a response with status code 500, 
 Internal Server Error
 */
 type GetProductsSearchInternalServerError struct {
-	Payload *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse
+	Payload *models.ErrorResponse
 }
 
 // IsSuccess returns true when this get products search internal server error response has a 2xx status code
@@ -239,13 +239,13 @@ func (o *GetProductsSearchInternalServerError) String() string {
 	return fmt.Sprintf("[GET /products/search][%d] getProductsSearchInternalServerError %s", 500, payload)
 }
 
-func (o *GetProductsSearchInternalServerError) GetPayload() *models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse {
+func (o *GetProductsSearchInternalServerError) GetPayload() *models.ErrorResponse {
 	return o.Payload
 }
 
 func (o *GetProductsSearchInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalAPIV1CommonErrorResponse)
+	o.Payload = new(models.ErrorResponse)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

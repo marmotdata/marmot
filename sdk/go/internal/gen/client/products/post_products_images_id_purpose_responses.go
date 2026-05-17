@@ -62,7 +62,7 @@ PostProductsImagesIDPurposeOK describes a response with status code 200, with de
 OK
 */
 type PostProductsImagesIDPurposeOK struct {
-	Payload *models.ProductImageMeta
+	Payload *models.DataproductProductImageMeta
 }
 
 // IsSuccess returns true when this post products images Id purpose o k response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PostProductsImagesIDPurposeOK) String() string {
 	return fmt.Sprintf("[POST /products/images/{id}/{purpose}][%d] postProductsImagesIdPurposeOK %s", 200, payload)
 }
 
-func (o *PostProductsImagesIDPurposeOK) GetPayload() *models.ProductImageMeta {
+func (o *PostProductsImagesIDPurposeOK) GetPayload() *models.DataproductProductImageMeta {
 	return o.Payload
 }
 
 func (o *PostProductsImagesIDPurposeOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.ProductImageMeta)
+	o.Payload = new(models.DataproductProductImageMeta)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
