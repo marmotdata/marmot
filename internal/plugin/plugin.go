@@ -46,6 +46,7 @@ type ExternalLink struct {
 // DiscoveryResult contains all discovered assets, lineage, and documentation
 type DiscoveryResult struct {
 	Assets        []asset.Asset             `json:"assets"`
+	AssetTags     map[string][]string       `json:"-"`
 	Lineage       []lineage.LineageEdge     `json:"lineage"`
 	Documentation []assetdocs.Documentation `json:"documentation"`
 	Statistics    []Statistic               `json:"statistics"`

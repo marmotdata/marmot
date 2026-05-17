@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/nats"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 func (s *Source) createNATSSubject(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *nats.OperationBinding) asset.Asset {
@@ -45,7 +44,6 @@ func (s *Source) createNATSSubject(doc *asyncapi3.Document, channelName string, 
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -54,7 +52,6 @@ func (s *Source) createNATSSubject(doc *asyncapi3.Document, channelName string, 
 		Providers:   []string{"NATS"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),

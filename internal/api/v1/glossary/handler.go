@@ -107,5 +107,41 @@ func (h *Handler) Routes() []common.Route {
 				common.RequirePermission(h.userService, "glossary", "manage"),
 			},
 		},
+		{
+			Path:    "/api/v1/glossary/tags/{id}",
+			Method:  http.MethodPost,
+			Handler: h.addTermTag,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/glossary/tags/{id}",
+			Method:  http.MethodGet,
+			Handler: h.listTermTags,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/glossary/tags/{id}",
+			Method:  http.MethodPut,
+			Handler: h.replaceTermTags,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/glossary/tags/{id}",
+			Method:  http.MethodDelete,
+			Handler: h.removeTermTag,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "glossary", "manage"),
+			},
+		},
 	}
 }

@@ -798,7 +798,6 @@ func (s *Source) createCatalogAsset(catalogName string) asset.Asset {
 
 	mrnValue := mrn.New("Catalog", "Trino", catalogName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &catalogName,
@@ -806,7 +805,6 @@ func (s *Source) createCatalogAsset(catalogName string) asset.Asset {
 		Type:        "Catalog",
 		Providers:   []string{"Trino"},
 		Metadata:    metadata,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Trino",
 			LastSyncAt: time.Now(),
@@ -862,7 +860,6 @@ func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, 
 	name := info.MRNName(catalog, schema, tableName)
 	mrnValue := mrn.New(assetType, info.Provider, name)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -870,7 +867,6 @@ func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, 
 		Type:        assetType,
 		Providers:   []string{info.Provider},
 		Metadata:    metadata,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Trino",
 			LastSyncAt: time.Now(),

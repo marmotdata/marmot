@@ -12,6 +12,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/query"
 )
@@ -55,7 +56,7 @@ type DataProduct struct {
 	Name        string                 `json:"name"`
 	Description *string                `json:"description,omitempty"`
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
-	Tags        []string               `json:"tags,omitempty"`
+	Tags        []tag.Tag              `json:"tags,omitempty"`
 	Owners      []Owner                `json:"owners"`
 	Rules       []Rule                 `json:"rules,omitempty"`
 	CreatedBy   *string                `json:"created_by,omitempty"`
@@ -175,6 +176,11 @@ type Repository interface {
 	GetProductImageMeta(ctx context.Context, dataProductID string, purpose ImagePurpose) (*ProductImageMeta, error)
 	DeleteProductImage(ctx context.Context, dataProductID string, purpose ImagePurpose) error
 	ListProductImages(ctx context.Context, dataProductID string) ([]*ProductImageMeta, error)
+
+	ListDataProductTags(ctx context.Context, dataProductID string) ([]tag.Tag, error)
+	SetTags(ctx context.Context, dataProductID string, tagIDs []string) error
+	AddTag(ctx context.Context, dataProductID string, tagID string) error
+	RemoveTag(ctx context.Context, dataProductID string, tagID string) error
 }
 
 type PostgresRepository struct {
@@ -318,12 +324,12 @@ func (r *PostgresRepository) Create(ctx context.Context, dp *DataProduct, owners
 	defer tx.Rollback(ctx)
 
 	q := `
-		INSERT INTO data_products (name, description, metadata, tags, created_by, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+		INSERT INTO data_products (name, description, metadata, created_by, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
 		RETURNING id`
 
 	err = tx.QueryRow(ctx, q,
-		dp.Name, dp.Description, metadataJSON, dp.Tags,
+		dp.Name, dp.Description, metadataJSON,
 		dp.CreatedBy, dp.CreatedAt, dp.UpdatedAt,
 	).Scan(&dp.ID)
 
@@ -354,7 +360,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*DataProduct, 
 	start := time.Now()
 
 	q := `
-		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, created_by, created_at, updated_at
 		FROM data_products
 		WHERE id = $1`
 
@@ -363,7 +369,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*DataProduct, 
 
 	err := r.db.QueryRow(ctx, q, id).Scan(
 		&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
-		&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+		&dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
 	)
 
 	duration := time.Since(start)
@@ -386,6 +392,12 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*DataProduct, 
 	if err != nil {
 		r.recorder.RecordDBQuery(ctx, "dataproduct_get", duration, false)
 		return nil, fmt.Errorf("loading owners: %w", err)
+	}
+
+	dp.Tags, err = r.loadTags(ctx, id)
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "dataproduct_get", duration, false)
+		return nil, fmt.Errorf("loading tags: %w", err)
 	}
 
 	dp.Rules, err = r.loadRules(ctx, id)
@@ -423,11 +435,11 @@ func (r *PostgresRepository) Update(ctx context.Context, dp *DataProduct, owners
 
 	q := `
 		UPDATE data_products
-		SET name = $1, description = $2, metadata = $3, tags = $4, updated_at = $5
-		WHERE id = $6`
+		SET name = $1, description = $2, metadata = $3, updated_at = $4
+		WHERE id = $5`
 
 	result, err := tx.Exec(ctx, q,
-		dp.Name, dp.Description, metadataJSON, dp.Tags, dp.UpdatedAt, dp.ID,
+		dp.Name, dp.Description, metadataJSON, dp.UpdatedAt, dp.ID,
 	)
 
 	duration := time.Since(start)
@@ -495,7 +507,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 	}
 
 	q := `
-		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, created_by, created_at, updated_at
 		FROM data_products
 		ORDER BY name ASC
 		LIMIT $1 OFFSET $2`
@@ -507,14 +519,14 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 	}
 	defer rows.Close()
 
-	products := []*DataProduct{}
+	var products []*DataProduct
 	for rows.Next() {
 		var dp DataProduct
 		var metadataJSON []byte
 
 		if err := rows.Scan(
 			&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
-			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+			&dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
 			return nil, fmt.Errorf("scanning data product: %w", err)
@@ -529,6 +541,12 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 		if err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
 			return nil, fmt.Errorf("loading owners for %s: %w", dp.ID, err)
+		}
+
+		dp.Tags, err = r.loadTags(ctx, dp.ID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_list", time.Since(start), false)
+			return nil, fmt.Errorf("loading tags for %s: %w", dp.ID, err)
 		}
 
 		dp.ManualAssetCount, dp.RuleAssetCount, _ = r.getAssetCounts(ctx, dp.ID)
@@ -567,7 +585,11 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 
 	if len(filter.Tags) > 0 {
-		conditions = append(conditions, fmt.Sprintf("tags @> $%d", argCount))
+		conditions = append(conditions, fmt.Sprintf(`id IN (
+			SELECT data_product_id FROM data_product_tags dpt
+			JOIN tags t ON t.id = dpt.tag_id
+			WHERE t.name = ANY($%d)
+		)`, argCount))
 		args = append(args, filter.Tags)
 		argCount++
 	}
@@ -591,7 +613,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 
 	q := fmt.Sprintf(`
-		SELECT id, name, description, metadata, tags, created_by, created_at, updated_at
+		SELECT id, name, description, metadata, created_by, created_at, updated_at
 		FROM data_products
 		%s
 		ORDER BY name ASC
@@ -606,14 +628,14 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 	defer rows.Close()
 
-	products := []*DataProduct{}
+	var products []*DataProduct
 	for rows.Next() {
 		var dp DataProduct
 		var metadataJSON []byte
 
 		if err := rows.Scan(
 			&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
-			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+			&dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
 			return nil, fmt.Errorf("scanning search result: %w", err)
@@ -628,6 +650,12 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 		if err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
 			return nil, fmt.Errorf("loading owners for %s: %w", dp.ID, err)
+		}
+
+		dp.Tags, err = r.loadTags(ctx, dp.ID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_search", time.Since(start), false)
+			return nil, fmt.Errorf("loading tags for %s: %w", dp.ID, err)
 		}
 
 		dp.ManualAssetCount, dp.RuleAssetCount, _ = r.getAssetCounts(ctx, dp.ID)
@@ -763,7 +791,7 @@ func (r *PostgresRepository) GetManualAssets(ctx context.Context, dataProductID 
 	}
 	defer rows.Close()
 
-	assetIDs := []string{}
+	var assetIDs []string
 	for rows.Next() {
 		var assetID string
 		if err := rows.Scan(&assetID); err != nil {
@@ -1033,7 +1061,7 @@ func (r *PostgresRepository) executeQueryRule(ctx context.Context, queryExpressi
 	}
 	defer rows.Close()
 
-	assetIDs := []string{}
+	var assetIDs []string
 	for rows.Next() {
 		var id string
 		var rank float64
@@ -1105,7 +1133,7 @@ func (r *PostgresRepository) executeMetadataMatchRule(ctx context.Context, rule 
 	}
 	defer rows.Close()
 
-	assetIDs := []string{}
+	var assetIDs []string
 	for rows.Next() {
 		var id string
 		if err := rows.Scan(&id); err != nil {
@@ -1159,7 +1187,7 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 	start := time.Now()
 
 	q := `
-		SELECT DISTINCT dp.id, dp.name, dp.description, dp.metadata, dp.tags,
+		SELECT DISTINCT dp.id, dp.name, dp.description, dp.metadata,
 			   dp.created_by, dp.created_at, dp.updated_at
 		FROM data_products dp
 		JOIN data_product_memberships dpm ON dp.id = dpm.data_product_id
@@ -1173,14 +1201,14 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 	}
 	defer rows.Close()
 
-	products := []*DataProduct{}
+	var products []*DataProduct
 	for rows.Next() {
 		var dp DataProduct
 		var metadataJSON []byte
 
 		if err := rows.Scan(
 			&dp.ID, &dp.Name, &dp.Description, &metadataJSON,
-			&dp.Tags, &dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
+			&dp.CreatedBy, &dp.CreatedAt, &dp.UpdatedAt,
 		); err != nil {
 			r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), false)
 			return nil, fmt.Errorf("scanning data product: %w", err)
@@ -1197,6 +1225,12 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 			return nil, fmt.Errorf("loading owners for %s: %w", dp.ID, err)
 		}
 
+		dp.Tags, err = r.loadTags(ctx, dp.ID)
+		if err != nil {
+			r.recorder.RecordDBQuery(ctx, "dataproduct_get_for_asset", time.Since(start), false)
+			return nil, fmt.Errorf("loading tags for %s: %w", dp.ID, err)
+		}
+
 		products = append(products, &dp)
 	}
 
@@ -1209,7 +1243,111 @@ func (r *PostgresRepository) GetDataProductsForAsset(ctx context.Context, assetI
 	return products, nil
 }
 
-type ImagePurpose string // @name ImagePurpose
+func (r *PostgresRepository) loadTags(ctx context.Context, dataProductID string) ([]tag.Tag, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT t.id, t.name, t.description, t.created_at, t.updated_at
+		FROM data_product_tags dpt
+		JOIN tags t ON t.id = dpt.tag_id
+		WHERE dpt.data_product_id = $1
+		ORDER BY t.name`,
+		dataProductID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("loading product tags: %w", err)
+	}
+	defer rows.Close()
+
+	var tags []tag.Tag
+	for rows.Next() {
+		var t tag.Tag
+		if err := rows.Scan(&t.ID, &t.Name, &t.Description, &t.CreatedAt, &t.UpdatedAt); err != nil {
+			return nil, fmt.Errorf("scanning tag: %w", err)
+		}
+		tags = append(tags, t)
+	}
+	return tags, rows.Err()
+}
+
+func (r *PostgresRepository) ListDataProductTags(ctx context.Context, dataProductID string) ([]tag.Tag, error) {
+	return r.loadTags(ctx, dataProductID)
+}
+
+func (r *PostgresRepository) SetTags(ctx context.Context, dataProductID string, tagIDs []string) error {
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return fmt.Errorf("beginning transaction: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var exists bool
+	err = tx.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM data_products WHERE id = $1)`, dataProductID).Scan(&exists)
+	if err != nil {
+		return fmt.Errorf("checking product existence: %w", err)
+	}
+	if !exists {
+		return ErrNotFound
+	}
+
+	// Diff and apply: only delete rows whose tag_id is no longer desired,
+	// then insert the desired set (existing rows kept untouched, preserving created_at).
+	if len(tagIDs) == 0 {
+		_, err = tx.Exec(ctx, `DELETE FROM data_product_tags WHERE data_product_id = $1`, dataProductID)
+		if err != nil {
+			return fmt.Errorf("clearing product tags: %w", err)
+		}
+	} else {
+		_, err = tx.Exec(ctx,
+			`DELETE FROM data_product_tags WHERE data_product_id = $1 AND tag_id <> ALL($2::uuid[])`,
+			dataProductID, tagIDs,
+		)
+		if err != nil {
+			return fmt.Errorf("pruning product tags: %w", err)
+		}
+
+		_, err = tx.Exec(ctx, `
+			INSERT INTO data_product_tags (data_product_id, tag_id)
+			SELECT $1, unnest($2::uuid[])
+			ON CONFLICT DO NOTHING`,
+			dataProductID, tagIDs,
+		)
+		if err != nil {
+			return fmt.Errorf("inserting product tags: %w", err)
+		}
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (r *PostgresRepository) AddTag(ctx context.Context, dataProductID string, tagID string) error {
+	_, err := r.db.Exec(ctx,
+		`INSERT INTO data_product_tags (data_product_id, tag_id) VALUES ($1, $2) ON CONFLICT DO NOTHING`,
+		dataProductID, tagID,
+	)
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+			return ErrNotFound
+		}
+		return fmt.Errorf("adding product tag: %w", err)
+	}
+	return nil
+}
+
+func (r *PostgresRepository) RemoveTag(ctx context.Context, dataProductID string, tagID string) error {
+	result, err := r.db.Exec(ctx,
+		`DELETE FROM data_product_tags WHERE data_product_id = $1 AND tag_id = $2`,
+		dataProductID, tagID,
+	)
+	if err != nil {
+		return fmt.Errorf("removing product tag: %w", err)
+	}
+	if result.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+type ImagePurpose string
 
 const (
 	ImagePurposeIcon   ImagePurpose = "icon"
@@ -1252,7 +1390,7 @@ type ProductImageMeta struct {
 	SizeBytes     int          `json:"size_bytes"`
 	URL           string       `json:"url"`
 	CreatedAt     time.Time    `json:"created_at"`
-} // @name ProductImageMeta
+}
 
 type UploadImageInput struct {
 	Filename    string
@@ -1418,7 +1556,7 @@ func (r *PostgresRepository) ListProductImages(ctx context.Context, dataProductI
 	}
 	defer rows.Close()
 
-	images := []*ProductImageMeta{}
+	var images []*ProductImageMeta
 	for rows.Next() {
 		var meta ProductImageMeta
 		err := rows.Scan(

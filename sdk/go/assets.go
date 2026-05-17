@@ -34,7 +34,6 @@ type CreateAssetInput struct {
 	Type        string
 	Providers   []string
 	Description string
-	Tags        []string
 }
 
 // LookupInput identifies an asset by its natural key (type, service, name).
@@ -52,7 +51,6 @@ type UpdateAssetInput struct {
 	Description     string
 	UserDescription string
 	Providers       []string
-	Tags            []string
 }
 
 // AssetsService covers asset CRUD, search, summary, and tag management.
@@ -94,7 +92,6 @@ func (s *AssetsService) Create(ctx context.Context, in CreateAssetInput) (*Asset
 		Name:        &in.Name,
 		Type:        &in.Type,
 		Providers:   in.Providers,
-		Tags:        in.Tags,
 		Description: in.Description,
 	}
 	p := assets.NewPostAssetsParams().WithContext(ctx).WithAsset(body)
@@ -151,7 +148,6 @@ func (s *AssetsService) Update(ctx context.Context, id string, in UpdateAssetInp
 		Description:     in.Description,
 		UserDescription: in.UserDescription,
 		Providers:       in.Providers,
-		Tags:            in.Tags,
 	}
 	p := assets.NewPutAssetsIDParams().WithContext(ctx).WithID(id).WithAsset(body)
 	resp, err := s.gen.Assets.PutAssetsID(p)
@@ -178,16 +174,59 @@ func (s *AssetsService) Summary(ctx context.Context) (*AssetSummary, error) {
 	return resp.Payload, nil
 }
 
-// AddTag adds a tag to an asset.
-func (s *AssetsService) AddTag(ctx context.Context, id, tag string) error {
-	p := assets.NewPostAssetsTagsIDParams().WithContext(ctx).WithID(id).WithTag(&models.TagRequest{Tag: &tag})
+// ListTags lists all tags on an asset.
+func (s *AssetsService) ListTags(ctx context.Context, id string) ([]*Tag, error) {
+	p := assets.NewGetAssetsTagsIDParams().WithContext(ctx).WithID(id)
+	resp, err := s.gen.Assets.GetAssetsTagsID(p)
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return resp.Payload, nil
+}
+
+// AddTag adds a tag to an asset by tag ID.
+func (s *AssetsService) AddTag(ctx context.Context, id, tagID string) error {
+	p := assets.NewPostAssetsTagsIDParams().WithContext(ctx).WithID(id)
+	p.SetBody(&models.V1AssetsAddTagRequest{TagID: tagID})
 	_, err := s.gen.Assets.PostAssetsTagsID(p)
 	return mapErr(err)
 }
 
-// RemoveTag removes a tag from an asset.
-func (s *AssetsService) RemoveTag(ctx context.Context, id, tag string) error {
-	p := assets.NewDeleteAssetsTagsIDParams().WithContext(ctx).WithID(id).WithTag(&models.TagRequest{Tag: &tag})
+// RemoveTag removes a tag from an asset by tag ID.
+func (s *AssetsService) RemoveTag(ctx context.Context, id, tagID string) error {
+	p := assets.NewDeleteAssetsTagsIDParams().WithContext(ctx).WithID(id)
+	p.SetBody(&models.V1AssetsRemoveTagRequest{TagID: tagID})
 	_, err := s.gen.Assets.DeleteAssetsTagsID(p)
 	return mapErr(err)
 }
+
+// SetTags replaces all tags on an asset.
+func (s *AssetsService) SetTags(ctx context.Context, id string, tagIDs []string) error {
+	p := assets.NewPutAssetsTagsIDParams().WithContext(ctx).WithID(id)
+	p.SetBody(&models.V1AssetsReplaceTagsRequest{TagIds: tagIDs})
+	_, err := s.gen.Assets.PutAssetsTagsID(p)
+	return mapErr(err)
+}
+
+// SetColumnTags replaces all tags on a specific column of an asset.
+func (s *AssetsService) SetColumnTags(ctx context.Context, id string, columnPath string, tagIDs []string) error {
+	p := assets.NewPutAssetsColumnTagsIDParams().WithContext(ctx).WithID(id)
+	p.SetBody(&models.V1AssetsReplaceColumnTagsRequest{
+		ColumnPath: columnPath,
+		TagIds:     tagIDs,
+	})
+	_, err := s.gen.Assets.PutAssetsColumnTagsID(p)
+	return mapErr(err)
+}
+
+// RemoveColumnTag removes a single tag from a specific column of an asset.
+func (s *AssetsService) RemoveColumnTag(ctx context.Context, id string, columnPath string, tagID string) error {
+	p := assets.NewDeleteAssetsColumnTagsIDParams().WithContext(ctx).WithID(id)
+	p.SetBody(&models.V1AssetsRemoveColumnTagRequest{
+		ColumnPath: columnPath,
+		TagID:      tagID,
+	})
+	_, err := s.gen.Assets.DeleteAssetsColumnTagsID(p)
+	return mapErr(err)
+}
+

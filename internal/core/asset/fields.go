@@ -5,7 +5,6 @@ const (
 	FieldName            = "name"
 	FieldDescription     = "description"
 	FieldUserDescription = "user_description"
-	FieldTags            = "tags"
 	FieldMetadata        = "metadata"
 	FieldSchema          = "schema"
 	FieldQuery           = "query"

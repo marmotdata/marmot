@@ -63,6 +63,7 @@ import (
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
 	searchAPI "github.com/marmotdata/marmot/internal/api/v1/search"
 	subscriptionsAPI "github.com/marmotdata/marmot/internal/api/v1/subscriptions"
+	"github.com/marmotdata/marmot/internal/api/v1/tags"
 	"github.com/marmotdata/marmot/internal/api/v1/teams"
 	"github.com/marmotdata/marmot/internal/api/v1/ui"
 	"github.com/marmotdata/marmot/internal/api/v1/users"
@@ -78,6 +79,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/enrichment"
 	glossaryService "github.com/marmotdata/marmot/internal/core/glossary"
 	lineageService "github.com/marmotdata/marmot/internal/core/lineage"
+	tagService "github.com/marmotdata/marmot/internal/core/tag"
 	notificationService "github.com/marmotdata/marmot/internal/core/notification"
 	runService "github.com/marmotdata/marmot/internal/core/runs"
 	searchService "github.com/marmotdata/marmot/internal/core/search"
@@ -143,22 +145,24 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	authRepo := authService.NewPostgresRepository(db)
 	runRepo := runService.NewPostgresRepository(db)
 	glossaryRepo := glossaryService.NewPostgresRepository(db, recorder)
+	tagRepo := tagService.NewPostgresRepository(db, recorder)
 	searchRepo := searchService.NewPostgresRepository(db, recorder)
 	dataProductRepo := dataproductService.NewPostgresRepository(db, recorder)
 
 	assetSvc := asset.NewService(assetRepo)
 	userSvc := userService.NewService(userRepo)
-	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
+	tagSvc := tagService.NewService(tagRepo)
+	lineageSvc := lineageService.NewService(lineageRepo, assetSvc, tagSvc)
 	agentRepo := agentService.NewPostgresRepository(db)
 	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)
 	assetDocsSvc := assetdocs.NewService(assetDocsRepo)
 	authSvc := authService.NewService(authRepo, userSvc)
-	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc, recorder)
-	glossarySvc := glossaryService.NewService(glossaryRepo)
+	runsSvc := runService.NewService(runRepo, assetSvc, lineageSvc, tagSvc, recorder)
+	glossarySvc := glossaryService.NewService(glossaryRepo, tagSvc)
 	teamRepo := teamService.NewPostgresRepository(db)
 	teamSvc := teamService.NewService(teamRepo)
 	searchSvc := searchService.NewService(searchRepo)
-	dataProductSvc := dataproductService.NewService(dataProductRepo)
+	dataProductSvc := dataproductService.NewService(dataProductRepo, tagSvc)
 	docsRepo := docsService.NewPostgresRepository(db)
 	docsSvc := docsService.NewService(docsRepo)
 	notificationRepo := notificationService.NewPostgresRepository(db)
@@ -176,6 +180,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		dataProductRepo,
 		membershipRepo,
 		assetSvc,
+		assetSvc.ListAssetTags,
 		&dataproductService.MembershipConfig{
 			MaxWorkers:    5,
 			BatchSize:     50,
@@ -195,6 +200,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		assetRuleRepo,
 		assetRuleMemberRepo,
 		enrichmentEvaluator,
+		assetSvc.ListAssetTags,
 		&assetruleService.MembershipConfig{
 			MaxWorkers:    5,
 			BatchSize:     50,
@@ -534,6 +540,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
+		tags.NewHandler(tagSvc, userSvc, authSvc, config),
 		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config),
 		assetrulesAPI.NewHandler(assetRuleSvc, userSvc, authSvc, config),
 		docsAPI.NewHandler(docsSvc, userSvc, authSvc, config),

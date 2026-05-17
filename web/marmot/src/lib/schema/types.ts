@@ -28,6 +28,7 @@ export interface Field {
 	maxLength?: number;
 	examples?: unknown[];
 	const?: unknown;
+	isLeaf?: boolean;
 }
 
 export interface SchemaSection {

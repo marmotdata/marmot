@@ -8,7 +8,6 @@ import (
 	"github.com/apache/iceberg-go/table"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 )
 
@@ -78,7 +77,6 @@ func (s *Source) createNamespaceAsset(ctx context.Context, ns table.Identifier) 
 
 	mrnValue := mrn.New("Namespace", "Iceberg", nsPath)
 	name := nsPath
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -87,7 +85,6 @@ func (s *Source) createNamespaceAsset(ctx context.Context, ns table.Identifier) 
 		Providers:   []string{"Iceberg"},
 		Description: description,
 		Metadata:    metadata,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Iceberg",
 			LastSyncAt: time.Now(),

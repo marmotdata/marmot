@@ -206,5 +206,41 @@ func (h *Handler) Routes() []common.Route {
 				common.RequirePermission(h.userService, "assets", "view"),
 			},
 		},
+		{
+			Path:    "/api/v1/products/tags/{id}",
+			Method:  http.MethodPost,
+			Handler: h.addProductTag,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/products/tags/{id}",
+			Method:  http.MethodGet,
+			Handler: h.listProductTags,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "view"),
+			},
+		},
+		{
+			Path:    "/api/v1/products/tags/{id}",
+			Method:  http.MethodPut,
+			Handler: h.replaceProductTags,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
+		{
+			Path:    "/api/v1/products/tags/{id}",
+			Method:  http.MethodDelete,
+			Handler: h.removeProductTag,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "assets", "manage"),
+			},
+		},
 	}
 }

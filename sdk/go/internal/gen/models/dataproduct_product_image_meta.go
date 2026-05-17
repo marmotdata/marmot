@@ -11,10 +11,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// ProductImageMeta product image meta
+// DataproductProductImageMeta dataproduct product image meta
 //
-// swagger:model ProductImageMeta
-type ProductImageMeta struct {
+// swagger:model dataproduct.ProductImageMeta
+type DataproductProductImageMeta struct {
 
 	// content type
 	ContentType string `json:"content_type,omitempty"`
@@ -32,7 +32,7 @@ type ProductImageMeta struct {
 	ID string `json:"id,omitempty"`
 
 	// purpose
-	Purpose ImagePurpose `json:"purpose,omitempty"`
+	Purpose DataproductImagePurpose `json:"purpose,omitempty"`
 
 	// size bytes
 	SizeBytes int64 `json:"size_bytes,omitempty"`
@@ -41,8 +41,8 @@ type ProductImageMeta struct {
 	URL string `json:"url,omitempty"`
 }
 
-// Validate validates this product image meta
-func (m *ProductImageMeta) Validate(formats strfmt.Registry) error {
+// Validate validates this dataproduct product image meta
+func (m *DataproductProductImageMeta) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validatePurpose(formats); err != nil {
@@ -55,7 +55,7 @@ func (m *ProductImageMeta) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *ProductImageMeta) validatePurpose(formats strfmt.Registry) error {
+func (m *DataproductProductImageMeta) validatePurpose(formats strfmt.Registry) error {
 	if swag.IsZero(m.Purpose) { // not required
 		return nil
 	}
@@ -76,8 +76,8 @@ func (m *ProductImageMeta) validatePurpose(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this product image meta based on the context it is used
-func (m *ProductImageMeta) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this dataproduct product image meta based on the context it is used
+func (m *DataproductProductImageMeta) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidatePurpose(ctx, formats); err != nil {
@@ -90,7 +90,7 @@ func (m *ProductImageMeta) ContextValidate(ctx context.Context, formats strfmt.R
 	return nil
 }
 
-func (m *ProductImageMeta) contextValidatePurpose(ctx context.Context, formats strfmt.Registry) error {
+func (m *DataproductProductImageMeta) contextValidatePurpose(ctx context.Context, formats strfmt.Registry) error {
 
 	if swag.IsZero(m.Purpose) { // not required
 		return nil
@@ -113,7 +113,7 @@ func (m *ProductImageMeta) contextValidatePurpose(ctx context.Context, formats s
 }
 
 // MarshalBinary interface implementation
-func (m *ProductImageMeta) MarshalBinary() ([]byte, error) {
+func (m *DataproductProductImageMeta) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -121,8 +121,8 @@ func (m *ProductImageMeta) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *ProductImageMeta) UnmarshalBinary(b []byte) error {
-	var res ProductImageMeta
+func (m *DataproductProductImageMeta) UnmarshalBinary(b []byte) error {
+	var res DataproductProductImageMeta
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

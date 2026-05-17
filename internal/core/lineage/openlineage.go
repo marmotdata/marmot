@@ -197,7 +197,6 @@ func (s *service) ensureDAGAssetExists(ctx context.Context, dagMRN, dagName, nam
 		Providers:   []string{provider},
 		Description: &desc,
 		Metadata:    metadata,
-		Tags:        []string{"openlineage", strings.ToLower(AssetTypeDAG), strings.ToLower(provider)},
 		CreatedBy:   createdBy,
 		Sources: []asset.AssetSource{{
 			Name:       "OpenLineage",
@@ -211,8 +210,12 @@ func (s *service) ensureDAGAssetExists(ctx context.Context, dagMRN, dagName, nam
 		}},
 	}
 
-	_, err = s.assetSvc.Create(ctx, createInput)
-	return err
+	created, err := s.assetSvc.Create(ctx, createInput)
+	if err != nil {
+		return err
+	}
+	s.setAutoTags(ctx, created.ID, []string{"openlineage", strings.ToLower(ProviderAirflow), strings.ToLower(AssetTypeDAG)})
+	return nil
 }
 
 func (s *service) createProjectModelLineage(ctx context.Context, event *RunEvent, jobAssetMRN string, jobAssetType string) error {
@@ -313,7 +316,6 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 		Providers:     []string{provider},
 		Description:   &desc,
 		Metadata:      metadata,
-		Tags:          []string{"openlineage", strings.ToLower(assetType), strings.ToLower(provider)},
 		CreatedBy:     createdBy,
 		Query:         queryPtr,
 		QueryLanguage: queryLanguagePtr,
@@ -325,7 +327,7 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 		}},
 	}
 
-	_, err := s.assetSvc.Create(ctx, createInput)
+	created, err := s.assetSvc.Create(ctx, createInput)
 	if err != nil {
 		if errors.Is(err, asset.ErrAlreadyExists) {
 			existingAsset, getErr := s.assetSvc.GetByMRN(ctx, mrn)
@@ -358,6 +360,7 @@ func (s *service) processJobAsset(ctx context.Context, event *RunEvent, createdB
 		return "", fmt.Errorf("failed to create job asset: %w", err)
 	}
 
+	s.setAutoTags(ctx, created.ID, []string{"openlineage", strings.ToLower(provider)})
 	return mrn, nil
 }
 
@@ -474,7 +477,6 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 		Description: &desc,
 		Metadata:    metadata,
 		Schema:      schema,
-		Tags:        []string{"openlineage", strings.ToLower(assetType), role, strings.ToLower(provider)},
 		CreatedBy:   createdBy,
 		IsStub:      true,
 		Sources: []asset.AssetSource{{
@@ -490,11 +492,12 @@ func (s *service) processDatasetAsset(ctx context.Context, dataset *Dataset, rol
 		createInput.QueryLanguage = &queryLanguage
 	}
 
-	_, err = s.assetSvc.Create(ctx, createInput)
+	created, err := s.assetSvc.Create(ctx, createInput)
 	if err != nil {
 		return "", fmt.Errorf("failed to create stub asset: %w", err)
 	}
 
+	s.setAutoTags(ctx, created.ID, []string{"openlineage", strings.ToLower(provider), strings.ToLower(assetType), role})
 	return mrn, nil
 }
 
@@ -821,4 +824,17 @@ func extractSimpleJobName(fullJobName string) string {
 	}
 
 	return fullJobName
+}
+
+// setAutoTags resolves tag names and attaches them to the given asset.
+// No-ops when tagSvc is not configured. Errors are logged as warnings (non-fatal).
+func (s *service) setAutoTags(ctx context.Context, assetID string, tagNames []string) {
+	tagIDs, err := s.tagSvc.ResolveNames(ctx, tagNames)
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", assetID).Msg("Failed to resolve auto-tag names for openlineage asset")
+		return
+	}
+	if err := s.assetSvc.SetTags(ctx, assetID, tagIDs); err != nil {
+		log.Warn().Err(err).Str("asset_id", assetID).Msg("Failed to set auto-tags on openlineage asset")
+	}
 }

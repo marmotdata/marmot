@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/websockets"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 func (s *Source) createWebSocketChannel(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *websockets.ChannelBinding) asset.Asset {
@@ -52,7 +51,6 @@ func (s *Source) createWebSocketChannel(doc *asyncapi3.Document, channelName str
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -61,7 +59,6 @@ func (s *Source) createWebSocketChannel(doc *asyncapi3.Document, channelName str
 		Providers:   []string{"WebSocket"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),

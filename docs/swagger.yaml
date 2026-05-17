@@ -151,10 +151,6 @@ definitions:
         items:
           $ref: '#/definitions/AssetSource'
         type: array
-      tags:
-        items:
-          type: string
-        type: array
       type:
         type: string
       updated_at:
@@ -252,7 +248,7 @@ definitions:
           $ref: '#/definitions/Asset'
         type: array
       filters:
-        $ref: '#/definitions/AvailableFilters'
+        $ref: '#/definitions/asset.AvailableFilters'
       limit:
         type: integer
       offset:
@@ -284,7 +280,7 @@ definitions:
         type: object
       types:
         additionalProperties:
-          $ref: '#/definitions/AssetTypeSummary'
+          $ref: '#/definitions/asset.AssetTypeSummary'
         type: object
     type: object
   AssetTerm:
@@ -303,13 +299,6 @@ definitions:
       term_id:
         type: string
       term_name:
-        type: string
-    type: object
-  AssetTypeSummary:
-    properties:
-      count:
-        type: integer
-      service:
         type: string
     type: object
   AssetsByOwnerResponse:
@@ -351,21 +340,6 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  AvailableFilters:
-    properties:
-      providers:
-        additionalProperties:
-          type: integer
-        type: object
-      tags:
-        additionalProperties:
-          type: integer
-        type: object
-      types:
-        additionalProperties:
-          type: integer
-        type: object
     type: object
   BannerResponse:
     properties:
@@ -542,10 +516,6 @@ definitions:
       sources:
         items:
           $ref: '#/definitions/AssetSource'
-        type: array
-      tags:
-        items:
-          type: string
         type: array
       type:
         type: string
@@ -889,7 +859,7 @@ definitions:
         type: string
       tags:
         items:
-          type: string
+          $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
         type: array
       updated_at:
         type: string
@@ -920,14 +890,6 @@ definitions:
       period:
         type: string
     type: object
-  ImagePurpose:
-    enum:
-    - icon
-    - header
-    type: string
-    x-enum-varnames:
-    - ImagePurposeIcon
-    - ImagePurposeHeader
   Job:
     properties:
       facets:
@@ -1260,25 +1222,6 @@ definitions:
       total_rows:
         type: integer
     type: object
-  ProductImageMeta:
-    properties:
-      content_type:
-        type: string
-      created_at:
-        type: string
-      data_product_id:
-        type: string
-      filename:
-        type: string
-      id:
-        type: string
-      purpose:
-        $ref: '#/definitions/ImagePurpose'
-      size_bytes:
-        type: integer
-      url:
-        type: string
-    type: object
   QueryCount:
     properties:
       count:
@@ -1432,10 +1375,6 @@ definitions:
         additionalProperties: true
         type: object
       sources:
-        items:
-          type: string
-        type: array
-      tags:
         items:
           type: string
         type: array
@@ -1671,13 +1610,6 @@ definitions:
       tokens_out:
         type: integer
     type: object
-  TagRequest:
-    properties:
-      tag:
-        type: string
-    required:
-    - tag
-    type: object
   Team:
     properties:
       created_at:
@@ -1838,10 +1770,6 @@ definitions:
       sources:
         items:
           $ref: '#/definitions/AssetSource'
-        type: array
-      tags:
-        items:
-          type: string
         type: array
       type:
         type: string
@@ -2037,6 +1965,318 @@ definitions:
       field:
         type: string
       message:
+        type: string
+    type: object
+  asset.AssetTypeSummary:
+    properties:
+      count:
+        type: integer
+      service:
+        type: string
+    type: object
+  asset.AvailableFilters:
+    properties:
+      providers:
+        additionalProperties:
+          type: integer
+        type: object
+      types:
+        additionalProperties:
+          type: integer
+        type: object
+    type: object
+  dataproduct.DataProduct:
+    properties:
+      asset_count:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      icon_url:
+        type: string
+      id:
+        type: string
+      manual_asset_count:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/dataproduct.Owner'
+        type: array
+      rule_asset_count:
+        type: integer
+      rules:
+        items:
+          $ref: '#/definitions/dataproduct.Rule'
+        type: array
+      tags:
+        items:
+          $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  dataproduct.ImagePurpose:
+    enum:
+    - icon
+    - header
+    type: string
+    x-enum-varnames:
+    - ImagePurposeIcon
+    - ImagePurposeHeader
+  dataproduct.ListResult:
+    properties:
+      data_products:
+        items:
+          $ref: '#/definitions/dataproduct.DataProduct'
+        type: array
+      total:
+        type: integer
+    type: object
+  dataproduct.Owner:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      profile_picture:
+        type: string
+      type:
+        type: string
+      username:
+        type: string
+    type: object
+  dataproduct.ProductImageMeta:
+    properties:
+      content_type:
+        type: string
+      created_at:
+        type: string
+      data_product_id:
+        type: string
+      filename:
+        type: string
+      id:
+        type: string
+      purpose:
+        $ref: '#/definitions/dataproduct.ImagePurpose'
+      size_bytes:
+        type: integer
+      url:
+        type: string
+    type: object
+  dataproduct.Rule:
+    properties:
+      created_at:
+        type: string
+      data_product_id:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_enabled:
+        type: boolean
+      matched_asset_count:
+        type: integer
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        $ref: '#/definitions/dataproduct.RuleType'
+      updated_at:
+        type: string
+    type: object
+  dataproduct.RuleType:
+    enum:
+    - query
+    - metadata_match
+    type: string
+    x-enum-varnames:
+    - RuleTypeQuery
+    - RuleTypeMetadataMatch
+  github_com_marmotdata_marmot_internal_core_tag.Tag:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
+    type: object
+  v1_assets.AddTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_assets.RemoveColumnTagRequest:
+    properties:
+      column_path:
+        type: string
+      tag_id:
+        type: string
+    type: object
+  v1_assets.RemoveTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_assets.ReplaceColumnTagsRequest:
+    properties:
+      column_path:
+        type: string
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_assets.ReplaceTagsRequest:
+    properties:
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_dataproducts.AddProductTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_dataproducts.CreateRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/v1_dataproducts.OwnerRequest'
+        type: array
+      rules:
+        items:
+          $ref: '#/definitions/v1_dataproducts.RuleRequest'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    type: object
+  v1_dataproducts.OwnerRequest:
+    properties:
+      id:
+        type: string
+      type:
+        enum:
+        - user
+        - team
+        type: string
+    required:
+    - id
+    - type
+    type: object
+  v1_dataproducts.RemoveProductTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_dataproducts.ReplaceProductTagsRequest:
+    properties:
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_dataproducts.RuleRequest:
+    properties:
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+    required:
+    - name
+    - rule_type
+    type: object
+  v1_dataproducts.UpdateRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/v1_dataproducts.OwnerRequest'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_glossary.AddTermTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_glossary.RemoveTermTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  v1_glossary.ReplaceTermTagsRequest:
+    properties:
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_tags.TagRequest:
+    properties:
+      description:
+        type: string
+      name:
         type: string
     type: object
 info:
@@ -3117,6 +3357,80 @@ paths:
       summary: Get assets by glossary term
       tags:
       - assets
+  /assets/column-tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete one (column_path, tag_id) assignment for an asset.
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Column path and tag ID to remove
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assets.RemoveColumnTagRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Remove a single tag from a column
+      tags:
+      - assets
+    put:
+      consumes:
+      - application/json
+      description: Atomically replace the tag set assigned to one column. Tags already
+        attached are preserved.
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Column path and tag IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assets.ReplaceColumnTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Replace tags for a single column on an asset
+      tags:
+      - assets
   /assets/documentation:
     post:
       consumes:
@@ -3513,26 +3827,24 @@ paths:
     delete:
       consumes:
       - application/json
-      description: Remove a tag from an existing asset
+      description: Remove a single tag association from an asset
       parameters:
       - description: Asset ID
         in: path
         name: id
         required: true
         type: string
-      - description: Tag to remove
+      - description: Tag ID to remove
         in: body
-        name: tag
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/TagRequest'
+          $ref: '#/definitions/v1_assets.RemoveTagRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/Asset'
+        "204":
+          description: No Content
         "400":
           description: Bad Request
           schema:
@@ -3541,32 +3853,66 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
-      summary: Remove tag from asset
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Remove a tag from an asset
+      tags:
+      - assets
+    get:
+      description: Get all tags associated with an asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List asset tags
       tags:
       - assets
     post:
       consumes:
       - application/json
-      description: Add a new tag to an existing asset
+      description: Add a single tag association to an asset
       parameters:
       - description: Asset ID
         in: path
         name: id
         required: true
         type: string
-      - description: Tag to add
+      - description: Tag ID to add
         in: body
-        name: tag
+        name: body
         required: true
         schema:
-          $ref: '#/definitions/TagRequest'
+          $ref: '#/definitions/v1_assets.AddTagRequest'
       produces:
       - application/json
       responses:
-        "200":
-          description: OK
+        "201":
+          description: Created
           schema:
-            $ref: '#/definitions/Asset'
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
         "400":
           description: Bad Request
           schema:
@@ -3575,7 +3921,51 @@ paths:
           description: Not Found
           schema:
             $ref: '#/definitions/ErrorResponse'
-      summary: Add tag to asset
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Add a tag to an asset
+      tags:
+      - assets
+    put:
+      consumes:
+      - application/json
+      description: Atomically replace all tag associations for an asset
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_assets.ReplaceTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Replace all tags on an asset
       tags:
       - assets
   /assets/terms/{id}:
@@ -4028,6 +4418,157 @@ paths:
       summary: Search glossary terms
       tags:
       - glossary
+  /glossary/tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a single tag association from a glossary term
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag ID to remove
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_glossary.RemoveTermTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Remove glossary term tag
+      tags:
+      - glossary
+    get:
+      description: Get all tags associated with a glossary term
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List glossary term tags
+      tags:
+      - glossary
+    post:
+      consumes:
+      - application/json
+      description: Add a single tag association to a glossary term
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag ID to add
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_glossary.AddTermTagRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Add a tag to a glossary term
+      tags:
+      - glossary
+    put:
+      consumes:
+      - application/json
+      description: Atomically replace all tag associations for a glossary term
+      parameters:
+      - description: Glossary Term ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_glossary.ReplaceTermTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/GlossaryTerm'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Replace glossary term tags
+      tags:
+      - glossary
   /lineage/assets/{id}:
     get:
       consumes:
@@ -4478,6 +5019,143 @@ paths:
       summary: Destroy pipeline
       tags:
       - pipelines
+  /products:
+    post:
+      consumes:
+      - application/json
+      description: Create a new data product
+      parameters:
+      - description: Data product creation request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.CreateRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dataproduct.DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Create a data product
+      tags:
+      - products
+  /products/{id}:
+    delete:
+      description: Delete a data product from the system
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Delete a data product
+      tags:
+      - products
+    get:
+      description: Get detailed information about a specific data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get a data product
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Update an existing data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Data product update request
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.UpdateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Update a data product
+      tags:
+      - products
   /products/images/{id}:
     get:
       description: List all images for a data product
@@ -4600,7 +5278,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/ProductImageMeta'
+            $ref: '#/definitions/dataproduct.ProductImageMeta'
         "400":
           description: Bad Request
           schema:
@@ -4614,6 +5292,221 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
       summary: Upload product image
+      tags:
+      - products
+  /products/list:
+    get:
+      description: List all data products with pagination
+      parameters:
+      - description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.ListResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List data products
+      tags:
+      - products
+  /products/search:
+    get:
+      description: Search data products using query string and filters
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Filter by tags (comma-separated)
+        in: query
+        name: tags
+        type: string
+      - description: Number of items to return
+        in: query
+        name: limit
+        type: integer
+      - description: Number of items to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.ListResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Search data products
+      tags:
+      - products
+  /products/tags/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Remove a single tag association from a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag ID to remove
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.RemoveProductTagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Remove data product tag
+      tags:
+      - products
+    get:
+      description: Get all tags associated with a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List data product tags
+      tags:
+      - products
+    post:
+      consumes:
+      - application/json
+      description: Add a single tag association to a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag ID to add
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.AddProductTagRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Add a tag to a data product
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Atomically replace all tag associations for a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Tag IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_dataproducts.ReplaceProductTagsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/dataproduct.DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Replace data product tags
       tags:
       - products
   /runs:
@@ -4996,6 +5889,157 @@ paths:
       summary: Update an SSO team mapping
       tags:
       - sso
+  /tags:
+    get:
+      description: Retrieve a list of all tags in the catalog
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List all tags
+      tags:
+      - tags
+    post:
+      consumes:
+      - application/json
+      description: Create a new tag in the catalog
+      parameters:
+      - description: Tag to create
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_tags.TagRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Create a tag
+      tags:
+      - tags
+  /tags/{id}:
+    delete:
+      description: Delete a tag from the catalog (removes all associations)
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Delete a tag
+      tags:
+      - tags
+    get:
+      description: Retrieve a single tag by its ID
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get a tag
+      tags:
+      - tags
+    put:
+      consumes:
+      - application/json
+      description: Update an existing tag's name or description
+      parameters:
+      - description: Tag ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Updated tag fields
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_tags.TagRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Update a tag
+      tags:
+      - tags
   /teams:
     get:
       consumes:

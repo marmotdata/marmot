@@ -8,7 +8,6 @@ import (
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -140,7 +139,6 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]asse
 		}
 
 		mrnValue := mrn.New(assetType, "MongoDB", collName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
 			Name:        &collName,
@@ -149,7 +147,6 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]asse
 			Providers:   []string{"MongoDB"},
 			Description: &assetDesc,
 			Metadata:    metadata,
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "MongoDB",
 				LastSyncAt: time.Now(),

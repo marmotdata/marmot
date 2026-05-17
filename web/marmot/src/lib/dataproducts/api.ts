@@ -10,6 +10,7 @@ import type {
 	ResolvedAssetsResponse,
 	AssetsResponse
 } from './types';
+import type { Tag } from '$lib/tags/types';
 
 export async function listDataProducts(
 	offset: number = 0,
@@ -185,4 +186,23 @@ export async function getResolvedAssets(
 		throw new Error('Failed to get resolved assets');
 	}
 	return response.json();
+}
+
+export async function listDataProductTags(productId: string): Promise<Tag[]> {
+	const response = await fetchApi(`/products/tags/${productId}`);
+	if (!response.ok) {
+		throw new Error('Failed to fetch data product tags');
+	}
+	return response.json();
+}
+
+export async function replaceDataProductTags(productId: string, tagIds: string[]): Promise<void> {
+	const response = await fetchApi(`/products/tags/${productId}`, {
+		method: 'PUT',
+		body: JSON.stringify({ tag_ids: tagIds })
+	});
+	if (!response.ok) {
+		const error = await response.json();
+		throw new Error(error.error || 'Failed to update data product tags');
+	}
 }

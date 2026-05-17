@@ -9,14 +9,16 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetrule"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/rs/zerolog/log"
 )
 
-// AssetResponse wraps an asset with enriched external links from rules.
+// AssetResponse wraps an asset with data from related tables.
 type AssetResponse struct {
 	*asset.Asset
+	Tags                  []tag.Tag                        `json:"tags"`
 	EnrichedExternalLinks []assetrule.EnrichedExternalLink `json:"enriched_external_links,omitempty"`
 }
 
@@ -27,7 +29,6 @@ type CreateRequest struct {
 	Description   *string                      `json:"description"`
 	Metadata      map[string]interface{}       `json:"metadata"`
 	Schema        map[string]string            `json:"schema"`
-	Tags          []string                     `json:"tags"`
 	Sources       []asset.AssetSource          `json:"sources"`
 	Environments  map[string]asset.Environment `json:"environments"`
 	ExternalLinks []asset.ExternalLink         `json:"external_links"`
@@ -41,7 +42,6 @@ type UpdateRequest struct {
 	Type            string                       `json:"type"`
 	Providers       []string                     `json:"providers"`
 	Schema          map[string]string            `json:"schema"`
-	Tags            []string                     `json:"tags"`
 	Sources         []asset.AssetSource          `json:"sources"`
 	Environments    map[string]asset.Environment `json:"environments"`
 	ExternalLinks   []asset.ExternalLink         `json:"external_links"`
@@ -79,7 +79,6 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 		Description:   req.Description,
 		Metadata:      req.Metadata,
 		Schema:        req.Schema,
-		Tags:          req.Tags,
 		Sources:       req.Sources,
 		Environments:  req.Environments,
 		ExternalLinks: req.ExternalLinks,
@@ -111,7 +110,12 @@ func (h *Handler) createAsset(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *AssetResponse {
-	resp := &AssetResponse{Asset: result}
+	tags, err := h.assetService.ListAssetTags(r.Context(), result.ID)
+	if err != nil {
+		log.Warn().Err(err).Str("asset_id", result.ID).Msg("Failed to load asset tags")
+		tags = []tag.Tag{}
+	}
+	resp := &AssetResponse{Asset: result, Tags: tags}
 
 	enrichedLinks, err := h.assetRuleService.GetEnrichedLinks(r.Context(), result.ID)
 	if err != nil {
@@ -199,7 +203,6 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 		Providers:       req.Providers,
 		Metadata:        req.Metadata,
 		Schema:          req.Schema,
-		Tags:            req.Tags,
 		Sources:         req.Sources,
 		Environments:    req.Environments,
 		ExternalLinks:   req.ExternalLinks,

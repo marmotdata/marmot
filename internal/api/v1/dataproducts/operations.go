@@ -11,6 +11,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
@@ -53,6 +54,17 @@ type AddAssetsRequest struct {
 	AssetIDs []string `json:"asset_ids" validate:"required,min=1"`
 }
 
+// @Summary Create a data product
+// @Description Create a new data product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param body body CreateRequest true "Data product creation request"
+// @Success 201 {object} dataproduct.DataProduct
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 401 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products [post]
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -121,6 +133,16 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusCreated, dp)
 }
 
+// @Summary Get a data product
+// @Description Get detailed information about a specific data product
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Success 200 {object} dataproduct.DataProduct
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/{id} [get]
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/")
 	if id == "" {
@@ -143,6 +165,19 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, dp)
 }
 
+// @Summary Update a data product
+// @Description Update an existing data product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param body body UpdateRequest true "Data product update request"
+// @Success 200 {object} dataproduct.DataProduct
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 409 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/{id} [put]
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/")
 	if id == "" {
@@ -195,6 +230,15 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, dp)
 }
 
+// @Summary Delete a data product
+// @Description Delete a data product from the system
+// @Tags products
+// @Param id path string true "Data Product ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/{id} [delete]
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/")
 	if id == "" {
@@ -217,6 +261,15 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Data product deleted successfully"})
 }
 
+// @Summary List data products
+// @Description List all data products with pagination
+// @Tags products
+// @Produce json
+// @Param limit query int false "Number of items to return"
+// @Param offset query int false "Number of items to skip"
+// @Success 200 {object} dataproduct.ListResult
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/list [get]
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -231,6 +284,18 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, result)
 }
 
+// @Summary Search data products
+// @Description Search data products using query string and filters
+// @Tags products
+// @Produce json
+// @Param q query string false "Search query"
+// @Param tags query string false "Filter by tags (comma-separated)"
+// @Param limit query int false "Number of items to return"
+// @Param offset query int false "Number of items to skip"
+// @Success 200 {object} dataproduct.ListResult
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/search [get]
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -765,4 +830,194 @@ func (h *Handler) listImages(w http.ResponseWriter, r *http.Request) {
 		"images": images,
 		"total":  len(images),
 	})
+}
+
+type AddProductTagRequest struct {
+	TagID string `json:"tag_id"`
+}
+
+type ReplaceProductTagsRequest struct {
+	TagIDs []string `json:"tag_ids"`
+}
+
+type RemoveProductTagRequest struct {
+	TagID string `json:"tag_id"`
+}
+
+// @Summary Add a tag to a data product
+// @Description Add a single tag association to a data product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param body body AddProductTagRequest true "Tag ID to add"
+// @Success 201 {array} tag.Tag
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/tags/{id} [post]
+func (h *Handler) addProductTag(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Data product ID required")
+		return
+	}
+
+	var input AddProductTagRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if input.TagID == "" {
+		common.RespondError(w, http.StatusBadRequest, "tag_id is required")
+		return
+	}
+
+	if err := h.dataProductService.AddProductTag(r.Context(), id, input.TagID); err != nil {
+		switch {
+		case errors.Is(err, dataproduct.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Data product or tag not found")
+		default:
+			log.Error().Err(err).Str("id", id).Str("tag_id", input.TagID).Msg("Failed to add product tag")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	tags, err := h.dataProductService.ListDataProductTags(r.Context(), id)
+	if err != nil {
+		common.RespondError(w, http.StatusInternalServerError, "Failed to fetch updated tags")
+		return
+	}
+	if tags == nil {
+		tags = []tag.Tag{}
+	}
+	common.RespondJSON(w, http.StatusCreated, tags)
+}
+
+// @Summary List data product tags
+// @Description Get all tags associated with a data product
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Success 200 {array} tag.Tag
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/tags/{id} [get]
+func (h *Handler) listProductTags(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Data product ID required")
+		return
+	}
+
+	tags, err := h.dataProductService.ListDataProductTags(r.Context(), id)
+	if err != nil {
+		switch {
+		case errors.Is(err, dataproduct.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Data product not found")
+		default:
+			log.Error().Err(err).Str("id", id).Msg("Failed to get product tags")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	if tags == nil {
+		tags = []tag.Tag{}
+	}
+
+	common.RespondJSON(w, http.StatusOK, tags)
+}
+
+// @Summary Replace data product tags
+// @Description Atomically replace all tag associations for a data product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param body body ReplaceProductTagsRequest true "Tag IDs to assign"
+// @Success 200 {object} dataproduct.DataProduct
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/tags/{id} [put]
+func (h *Handler) replaceProductTags(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Data product ID required")
+		return
+	}
+
+	var input ReplaceProductTagsRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if input.TagIDs == nil {
+		input.TagIDs = []string{}
+	}
+
+	if err := h.dataProductService.SetProductTags(r.Context(), id, input.TagIDs); err != nil {
+		switch {
+		case errors.Is(err, dataproduct.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Data product not found")
+		default:
+			log.Error().Err(err).Str("id", id).Msg("Failed to replace product tags")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	updatedProduct, err := h.dataProductService.Get(r.Context(), id)
+	if err != nil {
+		common.RespondError(w, http.StatusInternalServerError, "Failed to fetch updated product")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, updatedProduct)
+}
+
+// @Summary Remove data product tag
+// @Description Remove a single tag association from a data product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param body body RemoveProductTagRequest true "Tag ID to remove"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/tags/{id} [delete]
+func (h *Handler) removeProductTag(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Data product ID required")
+		return
+	}
+
+	var input RemoveProductTagRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if input.TagID == "" {
+		common.RespondError(w, http.StatusBadRequest, "tag_id is required")
+		return
+	}
+
+	if err := h.dataProductService.RemoveProductTag(r.Context(), id, input.TagID); err != nil {
+		switch {
+		case errors.Is(err, dataproduct.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Data product or tag association not found")
+		default:
+			log.Error().Err(err).Str("id", id).Str("tag_id", input.TagID).Msg("Failed to remove product tag")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Tag removed"})
 }

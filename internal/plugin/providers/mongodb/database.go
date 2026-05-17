@@ -7,7 +7,6 @@ import (
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -66,7 +65,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 
 		mrnValue := mrn.New("Database", "MongoDB", dbName)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
 			Name:      &dbName,
@@ -74,7 +72,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 			Type:      "Database",
 			Providers: []string{"MongoDB"},
 			Metadata:    metadata,
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "MongoDB",
 				LastSyncAt: time.Now(),

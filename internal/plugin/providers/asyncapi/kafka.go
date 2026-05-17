@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/kafka"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 func (s *Source) createKafkaTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *kafka.ChannelBinding) asset.Asset {
@@ -67,7 +66,6 @@ func (s *Source) createKafkaTopic(doc *asyncapi3.Document, channelName string, c
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -76,7 +74,6 @@ func (s *Source) createKafkaTopic(doc *asyncapi3.Document, channelName string, c
 		Providers:   []string{"Kafka"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),

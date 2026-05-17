@@ -35,9 +35,6 @@ type RunCreateAssetRequest struct {
 	// sources
 	Sources []string `json:"sources"`
 
-	// tags
-	Tags []string `json:"tags"`
-
 	// type
 	Type string `json:"type,omitempty"`
 }
