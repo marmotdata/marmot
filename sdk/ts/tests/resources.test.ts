@@ -10,7 +10,7 @@ import {
   isNotFound,
   isRateLimit,
 } from "../src/errors.js";
-import type { Asset, GlossaryTerm, User } from "../src/index.js";
+import type { Asset, DataProduct, DataProductListResult, GlossaryTerm, Tag, User } from "../src/index.js";
 
 function makeClient(fetchImpl: typeof fetch, credential?: Credential): Client {
   return new Client({
@@ -206,25 +206,25 @@ describe("resource modules", () => {
 
   test("assets.addTag POSTs to /assets/tags/{id}", async () => {
     const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
-      expect(url.toString()).toBe("http://m/api/v1/assets/tags/abc");
+      expect(url.toString()).toBe("http://m/api/v1/assets/tags/asset-1");
       expect(init?.method).toBe("POST");
-      expect(JSON.parse(init?.body as string)).toEqual({ tag: "pii" });
-      return new Response(JSON.stringify({ id: "abc", tags: ["pii"] }), { status: 200 });
+      expect(JSON.parse(init?.body as string)).toEqual({ tag_id: "tag-1" });
+      return new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 201 });
     });
     const client = makeClient(fetchImpl as unknown as typeof fetch);
-    const out = await client.assets.addTag("abc", "pii");
-    expect(out.tags).toEqual(["pii"]);
+    const tags = await client.assets.addTag("asset-1", "tag-1");
+    expect(tags[0]?.name).toBe("pii");
   });
 
   test("assets.removeTag DELETEs with a body", async () => {
     const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
-      expect(url.toString()).toBe("http://m/api/v1/assets/tags/abc");
+      expect(url.toString()).toBe("http://m/api/v1/assets/tags/asset-1");
       expect(init?.method).toBe("DELETE");
-      expect(JSON.parse(init?.body as string)).toEqual({ tag: "pii" });
-      return new Response(JSON.stringify({ id: "abc", tags: [] }), { status: 200 });
+      expect(JSON.parse(init?.body as string)).toEqual({ tag_id: "tag-1" });
+      return new Response(null, { status: 204 });
     });
     const client = makeClient(fetchImpl as unknown as typeof fetch);
-    await client.assets.removeTag("abc", "pii");
+    await client.assets.removeTag("asset-1", "tag-1");
   });
 
   test("lineage.get attaches direction and depth", async () => {
@@ -438,5 +438,225 @@ describe("resource modules", () => {
     } catch (e) {
       expect(isNotFound(e)).toBe(true);
     }
+  });
+
+  test("tags.list returns Tag array", async () => {
+    const fetchImpl = vi.fn(async () =>
+      new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 200 }),
+    );
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tags: Tag[] = await client.tags.list();
+    expect(tags[0]?.id).toBe("tag-1");
+    expect(tags[0]?.name).toBe("pii");
+  });
+
+  test("tags.get returns a Tag", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string) => {
+      expect(url.toString()).toContain("/api/v1/tags/tag-1");
+      return new Response(JSON.stringify({ id: "tag-1", name: "pii" }), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tag: Tag = await client.tags.get("tag-1");
+    expect(tag.id).toBe("tag-1");
+    expect(tag.name).toBe("pii");
+  });
+
+  test("tags.create POSTs with name and description", async () => {
+    const fetchImpl = vi.fn(async (_url: URL | string, init?: RequestInit) => {
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(init?.body as string)).toEqual({ name: "pii", description: "sensitive data" });
+      return new Response(JSON.stringify({ id: "tag-1", name: "pii" }), { status: 201 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tag = await client.tags.create({ name: "pii", description: "sensitive data" });
+    expect(tag.id).toBe("tag-1");
+  });
+
+  test("tags.update PUTs updated fields", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toContain("/api/v1/tags/tag-1");
+      expect(init?.method).toBe("PUT");
+      expect(JSON.parse(init?.body as string)).toEqual({ name: "pii-updated" });
+      return new Response(JSON.stringify({ id: "tag-1", name: "pii-updated" }), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tag = await client.tags.update("tag-1", { name: "pii-updated" });
+    expect(tag.name).toBe("pii-updated");
+  });
+
+  test("tags.delete sends DELETE", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toContain("/api/v1/tags/tag-1");
+      expect(init?.method).toBe("DELETE");
+      return new Response(null, { status: 204 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    await client.tags.delete("tag-1");
+  });
+
+  test("assets.listTags GETs tag array", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string) => {
+      expect(url.toString()).toBe("http://m/api/v1/assets/tags/asset-1");
+      return new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tags: Tag[] = await client.assets.listTags("asset-1");
+    expect(tags[0]?.id).toBe("tag-1");
+  });
+
+  test("assets.setTags PUTs tag_ids", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toBe("http://m/api/v1/assets/tags/asset-1");
+      expect(init?.method).toBe("PUT");
+      expect(JSON.parse(init?.body as string)).toEqual({ tag_ids: ["tag-1"] });
+      return new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tags = await client.assets.setTags("asset-1", ["tag-1"]);
+    expect(tags[0]?.id).toBe("tag-1");
+  });
+
+  test("assets.setColumnTags PUTs column path and tag_ids", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toBe("http://m/api/v1/assets/column-tags/asset-1");
+      expect(init?.method).toBe("PUT");
+      expect(JSON.parse(init?.body as string)).toEqual({ column_path: "schema.table.col", tag_ids: ["tag-1"] });
+      return new Response(null, { status: 204 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    await client.assets.setColumnTags("asset-1", "schema.table.col", ["tag-1"]);
+  });
+
+  test("assets.removeColumnTag DELETEs with column path and tag_id", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toBe("http://m/api/v1/assets/column-tags/asset-1");
+      expect(init?.method).toBe("DELETE");
+      expect(JSON.parse(init?.body as string)).toEqual({ column_path: "schema.table.col", tag_id: "tag-1" });
+      return new Response(null, { status: 204 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    await client.assets.removeColumnTag("asset-1", "schema.table.col", "tag-1");
+  });
+
+  test("glossary.listTermTags returns Tag array", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string) => {
+      expect(url.toString()).toBe("http://m/api/v1/glossary/tags/term-1");
+      return new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tags: Tag[] = await client.glossary.listTermTags("term-1");
+    expect(tags[0]?.id).toBe("tag-1");
+  });
+
+  test("glossary.addTermTag POSTs tag_id", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toBe("http://m/api/v1/glossary/tags/term-1");
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(init?.body as string)).toEqual({ tag_id: "tag-1" });
+      return new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 201 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tags = await client.glossary.addTermTag("term-1", "tag-1");
+    expect(tags[0]?.id).toBe("tag-1");
+  });
+
+  test("glossary.removeTermTag DELETEs with tag_id", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toBe("http://m/api/v1/glossary/tags/term-1");
+      expect(init?.method).toBe("DELETE");
+      expect(JSON.parse(init?.body as string)).toEqual({ tag_id: "tag-1" });
+      return new Response(JSON.stringify({ message: "tag removed" }), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    await client.glossary.removeTermTag("term-1", "tag-1");
+  });
+
+  test("glossary.setTermTags PUTs tag_ids and returns term", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toBe("http://m/api/v1/glossary/tags/term-1");
+      expect(init?.method).toBe("PUT");
+      expect(JSON.parse(init?.body as string)).toEqual({ tag_ids: ["tag-1"] });
+      return new Response(JSON.stringify({ id: "term-1", name: "PII" }), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const result = await client.glossary.setTermTags("term-1", ["tag-1"]);
+    expect(result.id).toBe("term-1");
+  });
+
+  test("dataProducts.list returns DataProductListResult", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string) => {
+      expect(url.toString()).toContain("/api/v1/products/list");
+      return new Response(JSON.stringify({ data_products: [{ id: "product-1", name: "Orders" }], total: 1 }), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const result: DataProductListResult = await client.dataProducts.list();
+    expect(result.total).toBe(1);
+    expect(result.data_products?.[0]?.id).toBe("product-1");
+  });
+
+  test("dataProducts.list passes pagination params", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string) => {
+      expect(url.toString()).toContain("limit=10");
+      expect(url.toString()).toContain("offset=20");
+      return new Response(JSON.stringify({ data_products: [], total: 0 }), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    await client.dataProducts.list({ limit: 10, offset: 20 });
+  });
+
+  test("dataProducts.get returns DataProduct", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string) => {
+      expect(url.toString()).toContain("/api/v1/products/product-1");
+      return new Response(JSON.stringify({ id: "product-1", name: "Orders" }), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const product: DataProduct = await client.dataProducts.get("product-1");
+    expect(product.id).toBe("product-1");
+    expect(product.name).toBe("Orders");
+  });
+
+  test("dataProducts.listTags returns Tag array", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string) => {
+      expect(url.toString()).toBe("http://m/api/v1/products/tags/product-1");
+      return new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tags: Tag[] = await client.dataProducts.listTags("product-1");
+    expect(tags[0]?.id).toBe("tag-1");
+  });
+
+  test("dataProducts.addTag POSTs tag_id", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toBe("http://m/api/v1/products/tags/product-1");
+      expect(init?.method).toBe("POST");
+      expect(JSON.parse(init?.body as string)).toEqual({ tag_id: "tag-1" });
+      return new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 201 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const tags = await client.dataProducts.addTag("product-1", "tag-1");
+    expect(tags[0]?.id).toBe("tag-1");
+  });
+
+  test("dataProducts.removeTag DELETEs with tag_id", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toBe("http://m/api/v1/products/tags/product-1");
+      expect(init?.method).toBe("DELETE");
+      expect(JSON.parse(init?.body as string)).toEqual({ tag_id: "tag-1" });
+      return new Response(JSON.stringify({ message: "tag removed" }), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    await client.dataProducts.removeTag("product-1", "tag-1");
+  });
+
+  test("dataProducts.setTags PUTs tag_ids and returns DataProduct", async () => {
+    const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
+      expect(url.toString()).toBe("http://m/api/v1/products/tags/product-1");
+      expect(init?.method).toBe("PUT");
+      expect(JSON.parse(init?.body as string)).toEqual({ tag_ids: ["tag-1"] });
+      return new Response(JSON.stringify({ id: "product-1", name: "Orders" }), { status: 200 });
+    });
+    const client = makeClient(fetchImpl as unknown as typeof fetch);
+    const product = await client.dataProducts.setTags("product-1", ["tag-1"]);
+    expect(product.id).toBe("product-1");
   });
 });

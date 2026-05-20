@@ -41,5 +41,7 @@ export type { ListRunsOptions, ListEntitiesOptions } from "./resources/runs.js";
 export type { ListUsersOptions } from "./resources/users.js";
 export type { TopAssetsArgs } from "./resources/metrics.js";
 export type { RecordAgentRunArgs, ToolCallInput } from "./resources/agent_runs.js";
+export type { CreateTagArgs, UpdateTagArgs } from "./resources/tags.js";
+export type { DataProductsListOptions } from "./resources/products.js";
 
 export const VERSION = "0.2.0";

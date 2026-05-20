@@ -4,6 +4,10 @@ import type {
   AssetSearchResponse,
   AssetSummaryResponse,
   CreateAssetRequest,
+  RemoveAssetColumnTagRequest,
+  ReplaceAssetColumnTagsRequest,
+  ReplaceAssetTagsRequest,
+  Tag,
   UpdateAssetRequest,
 } from "../_models.js";
 import { NotFoundError } from "../errors.js";
@@ -73,11 +77,30 @@ export class AssetsResource {
     await this.transport.delete(`${API_PREFIX}/assets/${id}`);
   }
 
-  async addTag(id: string, tag: string): Promise<Asset> {
-    return this.transport.post<Asset>(`${API_PREFIX}/assets/tags/${id}`, { tag });
+  async addTag(id: string, tagId: string): Promise<Tag[]> {
+    return this.transport.post<Tag[]>(`${API_PREFIX}/assets/tags/${id}`, { tag_id: tagId });
   }
 
-  async removeTag(id: string, tag: string): Promise<Asset> {
-    return this.transport.delete<Asset>(`${API_PREFIX}/assets/tags/${id}`, { tag });
+  async removeTag(id: string, tagId: string): Promise<void> {
+    await this.transport.delete(`${API_PREFIX}/assets/tags/${id}`, { tag_id: tagId });
+  }
+
+  async listTags(id: string): Promise<Tag[]> {
+    return this.transport.get<Tag[]>(`${API_PREFIX}/assets/tags/${id}`);
+  }
+
+  async setTags(id: string, tagIds: string[]): Promise<Tag[]> {
+    const body: ReplaceAssetTagsRequest = { tag_ids: tagIds };
+    return this.transport.put<Tag[]>(`${API_PREFIX}/assets/tags/${id}`, body);
+  }
+
+  async setColumnTags(id: string, columnPath: string, tagIds: string[]): Promise<void> {
+    const body: ReplaceAssetColumnTagsRequest = { column_path: columnPath, tag_ids: tagIds };
+    await this.transport.put<void>(`${API_PREFIX}/assets/column-tags/${id}`, body);
+  }
+
+  async removeColumnTag(id: string, columnPath: string, tagId: string): Promise<void> {
+    const body: RemoveAssetColumnTagRequest = { column_path: columnPath, tag_id: tagId };
+    await this.transport.delete<void>(`${API_PREFIX}/assets/column-tags/${id}`, body);
   }
 }
