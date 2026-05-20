@@ -387,15 +387,15 @@ func (h *Handler) getAncestors(w http.ResponseWriter, r *http.Request) {
 
 type AddTermTagRequest struct {
 	TagID string `json:"tag_id"`
-}
+} // @name AddGlossaryTermTagRequest
 
 type ReplaceTermTagsRequest struct {
 	TagIDs []string `json:"tag_ids"`
-}
+} // @name ReplaceGlossaryTermTagsRequest
 
 type RemoveTermTagRequest struct {
 	TagID string `json:"tag_id"`
-}
+} // @name RemoveGlossaryTermTagRequest
 
 // @Summary Add a tag to a glossary term
 // @Description Add a single tag association to a glossary term

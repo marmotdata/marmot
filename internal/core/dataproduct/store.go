@@ -68,7 +68,7 @@ type DataProduct struct {
 	RuleAssetCount   int `json:"rule_asset_count,omitempty"`
 
 	IconURL *string `json:"icon_url,omitempty"`
-}
+} // @name DataProduct
 
 type Owner struct {
 	ID             string  `json:"id"`
@@ -126,7 +126,7 @@ type SearchFilter struct {
 type ListResult struct {
 	DataProducts []*DataProduct `json:"data_products"`
 	Total        int            `json:"total"`
-}
+} // @name DataProductListResult
 
 type ResolvedAssets struct {
 	ManualAssets  []string `json:"manual_assets"`
@@ -1347,7 +1347,7 @@ func (r *PostgresRepository) RemoveTag(ctx context.Context, dataProductID string
 	return nil
 }
 
-type ImagePurpose string
+type ImagePurpose string // @name ImagePurpose
 
 const (
 	ImagePurposeIcon   ImagePurpose = "icon"
@@ -1390,7 +1390,7 @@ type ProductImageMeta struct {
 	SizeBytes     int          `json:"size_bytes"`
 	URL           string       `json:"url"`
 	CreatedAt     time.Time    `json:"created_at"`
-}
+} // @name ProductImageMeta
 
 type UploadImageInput struct {
 	Filename    string

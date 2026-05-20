@@ -15,7 +15,7 @@ import (
 type TagRequest struct {
 	Name        string  `json:"name"`
 	Description *string `json:"description,omitempty"`
-}
+} // @name CreateTagRequest
 
 // ListTags returns all tags
 // @Summary List all tags

@@ -834,15 +834,15 @@ func (h *Handler) listImages(w http.ResponseWriter, r *http.Request) {
 
 type AddProductTagRequest struct {
 	TagID string `json:"tag_id"`
-}
+} // @name AddDataProductTagRequest
 
 type ReplaceProductTagsRequest struct {
 	TagIDs []string `json:"tag_ids"`
-}
+} // @name ReplaceDataProductTagsRequest
 
 type RemoveProductTagRequest struct {
 	TagID string `json:"tag_id"`
-}
+} // @name RemoveDataProductTagRequest
 
 // @Summary Add a tag to a data product
 // @Description Add a single tag association to a data product

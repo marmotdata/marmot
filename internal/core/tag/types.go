@@ -14,7 +14,7 @@ type Tag struct {
 	Description *string   `json:"description"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
-}
+} // @name Tag
 
 // CreateTagInput represents a request to create a new tag
 type CreateTagInput struct {

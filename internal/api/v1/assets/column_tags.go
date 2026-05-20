@@ -18,12 +18,12 @@ type AddColumnTagRequest struct {
 type ReplaceColumnTagsRequest struct {
 	ColumnPath string   `json:"column_path"`
 	TagIDs     []string `json:"tag_ids"`
-}
+} // @name ReplaceAssetColumnTagsRequest
 
 type RemoveColumnTagRequest struct {
 	ColumnPath string `json:"column_path"`
 	TagID      string `json:"tag_id"`
-}
+} // @name RemoveAssetColumnTagRequest
 
 func (h *Handler) getColumnTags(w http.ResponseWriter, r *http.Request) {
 	assetID := r.PathValue("id")

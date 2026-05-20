@@ -1402,7 +1402,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_assets.ReplaceColumnTagsRequest"
+                            "$ref": "#/definitions/ReplaceAssetColumnTagsRequest"
                         }
                     }
                 ],
@@ -1456,7 +1456,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_assets.RemoveColumnTagRequest"
+                            "$ref": "#/definitions/RemoveAssetColumnTagRequest"
                         }
                     }
                 ],
@@ -2098,7 +2098,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                                "$ref": "#/definitions/Tag"
                             }
                         }
                     },
@@ -2142,7 +2142,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_assets.ReplaceTagsRequest"
+                            "$ref": "#/definitions/ReplaceAssetTagsRequest"
                         }
                     }
                 ],
@@ -2152,7 +2152,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                                "$ref": "#/definitions/Tag"
                             }
                         }
                     },
@@ -2202,7 +2202,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_assets.AddTagRequest"
+                            "$ref": "#/definitions/AddAssetTagRequest"
                         }
                     }
                 ],
@@ -2212,7 +2212,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                                "$ref": "#/definitions/Tag"
                             }
                         }
                     },
@@ -2262,7 +2262,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_assets.RemoveTagRequest"
+                            "$ref": "#/definitions/RemoveAssetTagRequest"
                         }
                     }
                 ],
@@ -3101,7 +3101,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                                "$ref": "#/definitions/Tag"
                             }
                         }
                     },
@@ -3151,7 +3151,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_glossary.ReplaceTermTagsRequest"
+                            "$ref": "#/definitions/ReplaceGlossaryTermTagsRequest"
                         }
                     }
                 ],
@@ -3208,7 +3208,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_glossary.AddTermTagRequest"
+                            "$ref": "#/definitions/AddGlossaryTermTagRequest"
                         }
                     }
                 ],
@@ -3218,7 +3218,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                                "$ref": "#/definitions/Tag"
                             }
                         }
                     },
@@ -3268,7 +3268,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_glossary.RemoveTermTagRequest"
+                            "$ref": "#/definitions/RemoveGlossaryTermTagRequest"
                         }
                     }
                 ],
@@ -4150,7 +4150,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/dataproduct.DataProduct"
+                            "$ref": "#/definitions/DataProduct"
                         }
                     },
                     "400": {
@@ -4305,7 +4305,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dataproduct.ProductImageMeta"
+                            "$ref": "#/definitions/ProductImageMeta"
                         }
                     },
                     "400": {
@@ -4406,7 +4406,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dataproduct.ListResult"
+                            "$ref": "#/definitions/DataProductListResult"
                         }
                     },
                     "500": {
@@ -4458,7 +4458,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dataproduct.ListResult"
+                            "$ref": "#/definitions/DataProductListResult"
                         }
                     },
                     "400": {
@@ -4501,7 +4501,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                                "$ref": "#/definitions/Tag"
                             }
                         }
                     },
@@ -4551,7 +4551,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_dataproducts.ReplaceProductTagsRequest"
+                            "$ref": "#/definitions/ReplaceDataProductTagsRequest"
                         }
                     }
                 ],
@@ -4559,7 +4559,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dataproduct.DataProduct"
+                            "$ref": "#/definitions/DataProduct"
                         }
                     },
                     "400": {
@@ -4608,7 +4608,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_dataproducts.AddProductTagRequest"
+                            "$ref": "#/definitions/AddDataProductTagRequest"
                         }
                     }
                 ],
@@ -4618,7 +4618,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                                "$ref": "#/definitions/Tag"
                             }
                         }
                     },
@@ -4668,7 +4668,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_dataproducts.RemoveProductTagRequest"
+                            "$ref": "#/definitions/RemoveDataProductTagRequest"
                         }
                     }
                 ],
@@ -4726,7 +4726,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dataproduct.DataProduct"
+                            "$ref": "#/definitions/DataProduct"
                         }
                     },
                     "400": {
@@ -4783,7 +4783,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/dataproduct.DataProduct"
+                            "$ref": "#/definitions/DataProduct"
                         }
                     },
                     "400": {
@@ -5449,7 +5449,7 @@ const docTemplate = `{
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                                "$ref": "#/definitions/Tag"
                             }
                         }
                     },
@@ -5480,7 +5480,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_tags.TagRequest"
+                            "$ref": "#/definitions/CreateTagRequest"
                         }
                     }
                 ],
@@ -5488,7 +5488,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                            "$ref": "#/definitions/Tag"
                         }
                     },
                     "400": {
@@ -5535,7 +5535,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                            "$ref": "#/definitions/Tag"
                         }
                     },
                     "400": {
@@ -5584,7 +5584,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_tags.TagRequest"
+                            "$ref": "#/definitions/CreateTagRequest"
                         }
                     }
                 ],
@@ -5592,7 +5592,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                            "$ref": "#/definitions/Tag"
                         }
                     },
                     "400": {
@@ -6855,6 +6855,30 @@ const docTemplate = `{
                 }
             }
         },
+        "AddAssetTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "AddDataProductTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "AddGlossaryTermTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
         "AddMemberRequest": {
             "type": "object",
             "properties": {
@@ -7178,7 +7202,7 @@ const docTemplate = `{
                     }
                 },
                 "filters": {
-                    "$ref": "#/definitions/asset.AvailableFilters"
+                    "$ref": "#/definitions/AvailableFilters"
                 },
                 "limit": {
                     "type": "integer"
@@ -7227,7 +7251,7 @@ const docTemplate = `{
                 "types": {
                     "type": "object",
                     "additionalProperties": {
-                        "$ref": "#/definitions/asset.AssetTypeSummary"
+                        "$ref": "#/definitions/AssetTypeSummary"
                     }
                 }
             }
@@ -7255,6 +7279,17 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "term_name": {
+                    "type": "string"
+                }
+            }
+        },
+        "AssetTypeSummary": {
+            "type": "object",
+            "properties": {
+                "count": {
+                    "type": "integer"
+                },
+                "service": {
                     "type": "string"
                 }
             }
@@ -7316,6 +7351,23 @@ const docTemplate = `{
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                }
+            }
+        },
+        "AvailableFilters": {
+            "type": "object",
+            "properties": {
+                "providers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
+                    }
+                },
+                "types": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "integer"
                     }
                 }
             }
@@ -7724,6 +7776,17 @@ const docTemplate = `{
                 }
             }
         },
+        "CreateTagRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "CreateTeamRequest": {
             "type": "object",
             "properties": {
@@ -7805,6 +7868,77 @@ const docTemplate = `{
                     "type": "string",
                     "maxLength": 255,
                     "minLength": 3
+                }
+            }
+        },
+        "DataProduct": {
+            "type": "object",
+            "properties": {
+                "asset_count": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "icon_url": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "manual_asset_count": {
+                    "type": "integer"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dataproduct.Owner"
+                    }
+                },
+                "rule_asset_count": {
+                    "type": "integer"
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/dataproduct.Rule"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Tag"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "DataProductListResult": {
+            "type": "object",
+            "properties": {
+                "data_products": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataProduct"
+                    }
+                },
+                "total": {
+                    "type": "integer"
                 }
             }
         },
@@ -8098,7 +8232,7 @@ const docTemplate = `{
                 "tags": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
+                        "$ref": "#/definitions/Tag"
                     }
                 },
                 "updated_at": {
@@ -8145,6 +8279,17 @@ const docTemplate = `{
                     "type": "string"
                 }
             }
+        },
+        "ImagePurpose": {
+            "type": "string",
+            "enum": [
+                "icon",
+                "header"
+            ],
+            "x-enum-varnames": [
+                "ImagePurposeIcon",
+                "ImagePurposeHeader"
+            ]
         },
         "Job": {
             "type": "object",
@@ -8650,6 +8795,35 @@ const docTemplate = `{
                 }
             }
         },
+        "ProductImageMeta": {
+            "type": "object",
+            "properties": {
+                "content_type": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "data_product_id": {
+                    "type": "string"
+                },
+                "filename": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "purpose": {
+                    "$ref": "#/definitions/ImagePurpose"
+                },
+                "size_bytes": {
+                    "type": "integer"
+                },
+                "url": {
+                    "type": "string"
+                }
+            }
+        },
         "QueryCount": {
             "type": "object",
             "properties": {
@@ -8736,6 +8910,41 @@ const docTemplate = `{
                 }
             }
         },
+        "RemoveAssetColumnTagRequest": {
+            "type": "object",
+            "properties": {
+                "column_path": {
+                    "type": "string"
+                },
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "RemoveAssetTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "RemoveDataProductTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
+        "RemoveGlossaryTermTagRequest": {
+            "type": "object",
+            "properties": {
+                "tag_id": {
+                    "type": "string"
+                }
+            }
+        },
         "RemoveTermRequest": {
             "type": "object",
             "required": [
@@ -8744,6 +8953,53 @@ const docTemplate = `{
             "properties": {
                 "term_id": {
                     "type": "string"
+                }
+            }
+        },
+        "ReplaceAssetColumnTagsRequest": {
+            "type": "object",
+            "properties": {
+                "column_path": {
+                    "type": "string"
+                },
+                "tag_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "ReplaceAssetTagsRequest": {
+            "type": "object",
+            "properties": {
+                "tag_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "ReplaceDataProductTagsRequest": {
+            "type": "object",
+            "properties": {
+                "tag_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "ReplaceGlossaryTermTagsRequest": {
+            "type": "object",
+            "properties": {
+                "tag_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
@@ -9229,6 +9485,26 @@ const docTemplate = `{
                 },
                 "tokens_out": {
                     "type": "integer"
+                }
+            }
+        },
+        "Tag": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "string"
                 }
             }
         },
@@ -9773,116 +10049,6 @@ const docTemplate = `{
                 }
             }
         },
-        "asset.AssetTypeSummary": {
-            "type": "object",
-            "properties": {
-                "count": {
-                    "type": "integer"
-                },
-                "service": {
-                    "type": "string"
-                }
-            }
-        },
-        "asset.AvailableFilters": {
-            "type": "object",
-            "properties": {
-                "providers": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                },
-                "types": {
-                    "type": "object",
-                    "additionalProperties": {
-                        "type": "integer"
-                    }
-                }
-            }
-        },
-        "dataproduct.DataProduct": {
-            "type": "object",
-            "properties": {
-                "asset_count": {
-                    "type": "integer"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "created_by": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "icon_url": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "manual_asset_count": {
-                    "type": "integer"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "owners": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dataproduct.Owner"
-                    }
-                },
-                "rule_asset_count": {
-                    "type": "integer"
-                },
-                "rules": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dataproduct.Rule"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag"
-                    }
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "dataproduct.ImagePurpose": {
-            "type": "string",
-            "enum": [
-                "icon",
-                "header"
-            ],
-            "x-enum-varnames": [
-                "ImagePurposeIcon",
-                "ImagePurposeHeader"
-            ]
-        },
-        "dataproduct.ListResult": {
-            "type": "object",
-            "properties": {
-                "data_products": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/dataproduct.DataProduct"
-                    }
-                },
-                "total": {
-                    "type": "integer"
-                }
-            }
-        },
         "dataproduct.Owner": {
             "type": "object",
             "properties": {
@@ -9902,35 +10068,6 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "username": {
-                    "type": "string"
-                }
-            }
-        },
-        "dataproduct.ProductImageMeta": {
-            "type": "object",
-            "properties": {
-                "content_type": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "string"
-                },
-                "data_product_id": {
-                    "type": "string"
-                },
-                "filename": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "purpose": {
-                    "$ref": "#/definitions/dataproduct.ImagePurpose"
-                },
-                "size_bytes": {
-                    "type": "integer"
-                },
-                "url": {
                     "type": "string"
                 }
             }
@@ -9993,86 +10130,6 @@ const docTemplate = `{
                 "RuleTypeMetadataMatch"
             ]
         },
-        "github_com_marmotdata_marmot_internal_core_tag.Tag": {
-            "type": "object",
-            "properties": {
-                "created_at": {
-                    "type": "string"
-                },
-                "description": {
-                    "type": "string"
-                },
-                "id": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1_assets.AddTagRequest": {
-            "type": "object",
-            "properties": {
-                "tag_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1_assets.RemoveColumnTagRequest": {
-            "type": "object",
-            "properties": {
-                "column_path": {
-                    "type": "string"
-                },
-                "tag_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1_assets.RemoveTagRequest": {
-            "type": "object",
-            "properties": {
-                "tag_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1_assets.ReplaceColumnTagsRequest": {
-            "type": "object",
-            "properties": {
-                "column_path": {
-                    "type": "string"
-                },
-                "tag_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "v1_assets.ReplaceTagsRequest": {
-            "type": "object",
-            "properties": {
-                "tag_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "v1_dataproducts.AddProductTagRequest": {
-            "type": "object",
-            "properties": {
-                "tag_id": {
-                    "type": "string"
-                }
-            }
-        },
         "v1_dataproducts.CreateRequest": {
             "type": "object",
             "required": [
@@ -10125,25 +10182,6 @@ const docTemplate = `{
                         "user",
                         "team"
                     ]
-                }
-            }
-        },
-        "v1_dataproducts.RemoveProductTagRequest": {
-            "type": "object",
-            "properties": {
-                "tag_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1_dataproducts.ReplaceProductTagsRequest": {
-            "type": "object",
-            "properties": {
-                "tag_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
                 }
             }
         },
@@ -10207,44 +10245,6 @@ const docTemplate = `{
                     "items": {
                         "type": "string"
                     }
-                }
-            }
-        },
-        "v1_glossary.AddTermTagRequest": {
-            "type": "object",
-            "properties": {
-                "tag_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1_glossary.RemoveTermTagRequest": {
-            "type": "object",
-            "properties": {
-                "tag_id": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1_glossary.ReplaceTermTagsRequest": {
-            "type": "object",
-            "properties": {
-                "tag_ids": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "v1_tags.TagRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
                 }
             }
         }

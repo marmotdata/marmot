@@ -35,6 +35,21 @@ definitions:
           $ref: '#/definitions/Bucket'
         type: array
     type: object
+  AddAssetTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  AddDataProductTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  AddGlossaryTermTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
   AddMemberRequest:
     properties:
       role:
@@ -248,7 +263,7 @@ definitions:
           $ref: '#/definitions/Asset'
         type: array
       filters:
-        $ref: '#/definitions/asset.AvailableFilters'
+        $ref: '#/definitions/AvailableFilters'
       limit:
         type: integer
       offset:
@@ -280,7 +295,7 @@ definitions:
         type: object
       types:
         additionalProperties:
-          $ref: '#/definitions/asset.AssetTypeSummary'
+          $ref: '#/definitions/AssetTypeSummary'
         type: object
     type: object
   AssetTerm:
@@ -299,6 +314,13 @@ definitions:
       term_id:
         type: string
       term_name:
+        type: string
+    type: object
+  AssetTypeSummary:
+    properties:
+      count:
+        type: integer
+      service:
         type: string
     type: object
   AssetsByOwnerResponse:
@@ -340,6 +362,17 @@ definitions:
         items:
           type: string
         type: array
+    type: object
+  AvailableFilters:
+    properties:
+      providers:
+        additionalProperties:
+          type: integer
+        type: object
+      types:
+        additionalProperties:
+          type: integer
+        type: object
     type: object
   BannerResponse:
     properties:
@@ -609,6 +642,13 @@ definitions:
     - metric_name
     - value
     type: object
+  CreateTagRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+    type: object
   CreateTeamRequest:
     properties:
       description:
@@ -666,6 +706,53 @@ definitions:
     - name
     - role_names
     - username
+    type: object
+  DataProduct:
+    properties:
+      asset_count:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      icon_url:
+        type: string
+      id:
+        type: string
+      manual_asset_count:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/dataproduct.Owner'
+        type: array
+      rule_asset_count:
+        type: integer
+      rules:
+        items:
+          $ref: '#/definitions/dataproduct.Rule'
+        type: array
+      tags:
+        items:
+          $ref: '#/definitions/Tag'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  DataProductListResult:
+    properties:
+      data_products:
+        items:
+          $ref: '#/definitions/DataProduct'
+        type: array
+      total:
+        type: integer
     type: object
   Dataset:
     properties:
@@ -859,7 +946,7 @@ definitions:
         type: string
       tags:
         items:
-          $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+          $ref: '#/definitions/Tag'
         type: array
       updated_at:
         type: string
@@ -890,6 +977,14 @@ definitions:
       period:
         type: string
     type: object
+  ImagePurpose:
+    enum:
+    - icon
+    - header
+    type: string
+    x-enum-varnames:
+    - ImagePurposeIcon
+    - ImagePurposeHeader
   Job:
     properties:
       facets:
@@ -1222,6 +1317,25 @@ definitions:
       total_rows:
         type: integer
     type: object
+  ProductImageMeta:
+    properties:
+      content_type:
+        type: string
+      created_at:
+        type: string
+      data_product_id:
+        type: string
+      filename:
+        type: string
+      id:
+        type: string
+      purpose:
+        $ref: '#/definitions/ImagePurpose'
+      size_bytes:
+        type: integer
+      url:
+        type: string
+    type: object
   QueryCount:
     properties:
       count:
@@ -1279,12 +1393,64 @@ definitions:
       running:
         type: boolean
     type: object
+  RemoveAssetColumnTagRequest:
+    properties:
+      column_path:
+        type: string
+      tag_id:
+        type: string
+    type: object
+  RemoveAssetTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  RemoveDataProductTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
+  RemoveGlossaryTermTagRequest:
+    properties:
+      tag_id:
+        type: string
+    type: object
   RemoveTermRequest:
     properties:
       term_id:
         type: string
     required:
     - term_id
+    type: object
+  ReplaceAssetColumnTagsRequest:
+    properties:
+      column_path:
+        type: string
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  ReplaceAssetTagsRequest:
+    properties:
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  ReplaceDataProductTagsRequest:
+    properties:
+      tag_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  ReplaceGlossaryTermTagsRequest:
+    properties:
+      tag_ids:
+        items:
+          type: string
+        type: array
     type: object
   Result:
     properties:
@@ -1609,6 +1775,19 @@ definitions:
         type: integer
       tokens_out:
         type: integer
+    type: object
+  Tag:
+    properties:
+      created_at:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      updated_at:
+        type: string
     type: object
   Team:
     properties:
@@ -1967,79 +2146,6 @@ definitions:
       message:
         type: string
     type: object
-  asset.AssetTypeSummary:
-    properties:
-      count:
-        type: integer
-      service:
-        type: string
-    type: object
-  asset.AvailableFilters:
-    properties:
-      providers:
-        additionalProperties:
-          type: integer
-        type: object
-      types:
-        additionalProperties:
-          type: integer
-        type: object
-    type: object
-  dataproduct.DataProduct:
-    properties:
-      asset_count:
-        type: integer
-      created_at:
-        type: string
-      created_by:
-        type: string
-      description:
-        type: string
-      icon_url:
-        type: string
-      id:
-        type: string
-      manual_asset_count:
-        type: integer
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      owners:
-        items:
-          $ref: '#/definitions/dataproduct.Owner'
-        type: array
-      rule_asset_count:
-        type: integer
-      rules:
-        items:
-          $ref: '#/definitions/dataproduct.Rule'
-        type: array
-      tags:
-        items:
-          $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
-        type: array
-      updated_at:
-        type: string
-    type: object
-  dataproduct.ImagePurpose:
-    enum:
-    - icon
-    - header
-    type: string
-    x-enum-varnames:
-    - ImagePurposeIcon
-    - ImagePurposeHeader
-  dataproduct.ListResult:
-    properties:
-      data_products:
-        items:
-          $ref: '#/definitions/dataproduct.DataProduct'
-        type: array
-      total:
-        type: integer
-    type: object
   dataproduct.Owner:
     properties:
       email:
@@ -2053,25 +2159,6 @@ definitions:
       type:
         type: string
       username:
-        type: string
-    type: object
-  dataproduct.ProductImageMeta:
-    properties:
-      content_type:
-        type: string
-      created_at:
-        type: string
-      data_product_id:
-        type: string
-      filename:
-        type: string
-      id:
-        type: string
-      purpose:
-        $ref: '#/definitions/dataproduct.ImagePurpose'
-      size_bytes:
-        type: integer
-      url:
         type: string
     type: object
   dataproduct.Rule:
@@ -2113,57 +2200,6 @@ definitions:
     x-enum-varnames:
     - RuleTypeQuery
     - RuleTypeMetadataMatch
-  github_com_marmotdata_marmot_internal_core_tag.Tag:
-    properties:
-      created_at:
-        type: string
-      description:
-        type: string
-      id:
-        type: string
-      name:
-        type: string
-      updated_at:
-        type: string
-    type: object
-  v1_assets.AddTagRequest:
-    properties:
-      tag_id:
-        type: string
-    type: object
-  v1_assets.RemoveColumnTagRequest:
-    properties:
-      column_path:
-        type: string
-      tag_id:
-        type: string
-    type: object
-  v1_assets.RemoveTagRequest:
-    properties:
-      tag_id:
-        type: string
-    type: object
-  v1_assets.ReplaceColumnTagsRequest:
-    properties:
-      column_path:
-        type: string
-      tag_ids:
-        items:
-          type: string
-        type: array
-    type: object
-  v1_assets.ReplaceTagsRequest:
-    properties:
-      tag_ids:
-        items:
-          type: string
-        type: array
-    type: object
-  v1_dataproducts.AddProductTagRequest:
-    properties:
-      tag_id:
-        type: string
-    type: object
   v1_dataproducts.CreateRequest:
     properties:
       description:
@@ -2200,18 +2236,6 @@ definitions:
     required:
     - id
     - type
-    type: object
-  v1_dataproducts.RemoveProductTagRequest:
-    properties:
-      tag_id:
-        type: string
-    type: object
-  v1_dataproducts.ReplaceProductTagsRequest:
-    properties:
-      tag_ids:
-        items:
-          type: string
-        type: array
     type: object
   v1_dataproducts.RuleRequest:
     properties:
@@ -2254,30 +2278,6 @@ definitions:
         items:
           type: string
         type: array
-    type: object
-  v1_glossary.AddTermTagRequest:
-    properties:
-      tag_id:
-        type: string
-    type: object
-  v1_glossary.RemoveTermTagRequest:
-    properties:
-      tag_id:
-        type: string
-    type: object
-  v1_glossary.ReplaceTermTagsRequest:
-    properties:
-      tag_ids:
-        items:
-          type: string
-        type: array
-    type: object
-  v1_tags.TagRequest:
-    properties:
-      description:
-        type: string
-      name:
-        type: string
     type: object
 info:
   contact: {}
@@ -3373,7 +3373,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_assets.RemoveColumnTagRequest'
+          $ref: '#/definitions/RemoveAssetColumnTagRequest'
       produces:
       - application/json
       responses:
@@ -3410,7 +3410,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_assets.ReplaceColumnTagsRequest'
+          $ref: '#/definitions/ReplaceAssetColumnTagsRequest'
       produces:
       - application/json
       responses:
@@ -3839,7 +3839,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_assets.RemoveTagRequest'
+          $ref: '#/definitions/RemoveAssetTagRequest'
       produces:
       - application/json
       responses:
@@ -3875,7 +3875,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+              $ref: '#/definitions/Tag'
             type: array
         "400":
           description: Bad Request
@@ -3903,7 +3903,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_assets.AddTagRequest'
+          $ref: '#/definitions/AddAssetTagRequest'
       produces:
       - application/json
       responses:
@@ -3911,7 +3911,7 @@ paths:
           description: Created
           schema:
             items:
-              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+              $ref: '#/definitions/Tag'
             type: array
         "400":
           description: Bad Request
@@ -3943,7 +3943,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_assets.ReplaceTagsRequest'
+          $ref: '#/definitions/ReplaceAssetTagsRequest'
       produces:
       - application/json
       responses:
@@ -3951,7 +3951,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+              $ref: '#/definitions/Tag'
             type: array
         "400":
           description: Bad Request
@@ -4434,7 +4434,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_glossary.RemoveTermTagRequest'
+          $ref: '#/definitions/RemoveGlossaryTermTagRequest'
       produces:
       - application/json
       responses:
@@ -4474,7 +4474,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+              $ref: '#/definitions/Tag'
             type: array
         "400":
           description: Bad Request
@@ -4506,7 +4506,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_glossary.AddTermTagRequest'
+          $ref: '#/definitions/AddGlossaryTermTagRequest'
       produces:
       - application/json
       responses:
@@ -4514,7 +4514,7 @@ paths:
           description: Created
           schema:
             items:
-              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+              $ref: '#/definitions/Tag'
             type: array
         "400":
           description: Bad Request
@@ -4546,7 +4546,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_glossary.ReplaceTermTagsRequest'
+          $ref: '#/definitions/ReplaceGlossaryTermTagsRequest'
       produces:
       - application/json
       responses:
@@ -5037,7 +5037,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/dataproduct.DataProduct'
+            $ref: '#/definitions/DataProduct'
         "400":
           description: Bad Request
           schema:
@@ -5098,7 +5098,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dataproduct.DataProduct'
+            $ref: '#/definitions/DataProduct'
         "400":
           description: Bad Request
           schema:
@@ -5136,7 +5136,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dataproduct.DataProduct'
+            $ref: '#/definitions/DataProduct'
         "400":
           description: Bad Request
           schema:
@@ -5278,7 +5278,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dataproduct.ProductImageMeta'
+            $ref: '#/definitions/ProductImageMeta'
         "400":
           description: Bad Request
           schema:
@@ -5312,7 +5312,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dataproduct.ListResult'
+            $ref: '#/definitions/DataProductListResult'
         "500":
           description: Internal Server Error
           schema:
@@ -5346,7 +5346,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dataproduct.ListResult'
+            $ref: '#/definitions/DataProductListResult'
         "400":
           description: Bad Request
           schema:
@@ -5374,7 +5374,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_dataproducts.RemoveProductTagRequest'
+          $ref: '#/definitions/RemoveDataProductTagRequest'
       produces:
       - application/json
       responses:
@@ -5414,7 +5414,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+              $ref: '#/definitions/Tag'
             type: array
         "400":
           description: Bad Request
@@ -5446,7 +5446,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_dataproducts.AddProductTagRequest'
+          $ref: '#/definitions/AddDataProductTagRequest'
       produces:
       - application/json
       responses:
@@ -5454,7 +5454,7 @@ paths:
           description: Created
           schema:
             items:
-              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+              $ref: '#/definitions/Tag'
             type: array
         "400":
           description: Bad Request
@@ -5486,14 +5486,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_dataproducts.ReplaceProductTagsRequest'
+          $ref: '#/definitions/ReplaceDataProductTagsRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/dataproduct.DataProduct'
+            $ref: '#/definitions/DataProduct'
         "400":
           description: Bad Request
           schema:
@@ -5899,7 +5899,7 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+              $ref: '#/definitions/Tag'
             type: array
         "500":
           description: Internal Server Error
@@ -5918,14 +5918,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_tags.TagRequest'
+          $ref: '#/definitions/CreateTagRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            $ref: '#/definitions/Tag'
         "400":
           description: Bad Request
           schema:
@@ -5982,7 +5982,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            $ref: '#/definitions/Tag'
         "400":
           description: Bad Request
           schema:
@@ -6013,14 +6013,14 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_tags.TagRequest'
+          $ref: '#/definitions/CreateTagRequest'
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_marmotdata_marmot_internal_core_tag.Tag'
+            $ref: '#/definitions/Tag'
         "400":
           description: Bad Request
           schema:

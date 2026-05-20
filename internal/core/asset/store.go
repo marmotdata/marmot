@@ -78,12 +78,12 @@ type Repository interface {
 type AvailableFilters struct {
 	Types     map[string]int `json:"types"`
 	Providers map[string]int `json:"providers"`
-}
+} // @name AvailableFilters
 
 type AssetTypeSummary struct {
 	Count   int    `json:"count"`
 	Service string `json:"service"`
-}
+} // @name AssetTypeSummary
 
 type AssetSummary struct {
 	Types     map[string]AssetTypeSummary `json:"types"`

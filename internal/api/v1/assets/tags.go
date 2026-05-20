@@ -13,15 +13,15 @@ import (
 
 type ReplaceTagsRequest struct {
 	TagIDs []string `json:"tag_ids"`
-}
+} // @name ReplaceAssetTagsRequest
 
 type AddTagRequest struct {
 	TagID string `json:"tag_id"`
-}
+} // @name AddAssetTagRequest
 
 type RemoveTagRequest struct {
 	TagID string `json:"tag_id"`
-}
+} // @name RemoveAssetTagRequest
 
 // @Summary Add a tag to an asset
 // @Description Add a single tag association to an asset
