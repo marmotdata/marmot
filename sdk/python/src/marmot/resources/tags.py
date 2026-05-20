@@ -13,13 +13,9 @@ from marmot._gen.api.tags import (
     put_tags_id,
 )
 from marmot._gen.client import AuthenticatedClient
-from marmot._gen.models.github_com_marmotdata_marmot_internal_core_tag_tag import (
-    GithubComMarmotdataMarmotInternalCoreTagTag,
-)
-from marmot._gen.models.v1_tags_tag_request import V1TagsTagRequest
+from marmot._gen.models.create_tag_request import CreateTagRequest
+from marmot._gen.models.tag import Tag
 from marmot._gen.types import UNSET, Unset
-
-Tag = GithubComMarmotdataMarmotInternalCoreTagTag
 
 
 class TagsResource:
@@ -43,17 +39,19 @@ class TagsResource:
     def create(self, *, name: str, description: str | None = None) -> Tag:
         """Create a new tag in the catalog."""
         desc_arg: str | Unset = description if description is not None else UNSET
-        body = V1TagsTagRequest(name=name, description=desc_arg)
+        body = CreateTagRequest(name=name, description=desc_arg)
         return cast(
             Tag,
             unwrap(post_tags.sync_detailed(client=self._c, body=body)),
         )
 
-    def update(self, tag_id: str, *, name: str | None = None, description: str | None = None) -> Tag:
+    def update(
+        self, tag_id: str, *, name: str | None = None, description: str | None = None
+    ) -> Tag:
         """Update an existing tag."""
         name_arg: str | Unset = name if name is not None else UNSET
         desc_arg: str | Unset = description if description is not None else UNSET
-        body = V1TagsTagRequest(name=name_arg, description=desc_arg)
+        body = CreateTagRequest(name=name_arg, description=desc_arg)
         return cast(
             Tag,
             unwrap(put_tags_id.sync_detailed(id=tag_id, client=self._c, body=body)),

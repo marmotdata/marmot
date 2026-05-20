@@ -21,27 +21,19 @@ from marmot._gen.api.assets import (
     put_assets_tags_id,
 )
 from marmot._gen.client import AuthenticatedClient
+from marmot._gen.models.add_asset_tag_request import AddAssetTagRequest
 from marmot._gen.models.asset import Asset
 from marmot._gen.models.asset_search_response import AssetSearchResponse
 from marmot._gen.models.asset_summary_response import AssetSummaryResponse
 from marmot._gen.models.create_asset_request import CreateAssetRequest
-from marmot._gen.models.github_com_marmotdata_marmot_internal_core_tag_tag import (
-    GithubComMarmotdataMarmotInternalCoreTagTag,
-)
+from marmot._gen.models.remove_asset_column_tag_request import RemoveAssetColumnTagRequest
+from marmot._gen.models.remove_asset_tag_request import RemoveAssetTagRequest
+from marmot._gen.models.replace_asset_column_tags_request import ReplaceAssetColumnTagsRequest
+from marmot._gen.models.replace_asset_tags_request import ReplaceAssetTagsRequest
+from marmot._gen.models.tag import Tag
 from marmot._gen.models.update_asset_request import UpdateAssetRequest
-from marmot._gen.models.v1_assets_add_tag_request import V1AssetsAddTagRequest
-from marmot._gen.models.v1_assets_remove_column_tag_request import (
-    V1AssetsRemoveColumnTagRequest,
-)
-from marmot._gen.models.v1_assets_remove_tag_request import V1AssetsRemoveTagRequest
-from marmot._gen.models.v1_assets_replace_column_tags_request import (
-    V1AssetsReplaceColumnTagsRequest,
-)
-from marmot._gen.models.v1_assets_replace_tags_request import V1AssetsReplaceTagsRequest
 from marmot._gen.types import UNSET, Unset
 from marmot.errors import NotFoundError
-
-Tag = GithubComMarmotdataMarmotInternalCoreTagTag
 
 
 class AssetsResource:
@@ -139,26 +131,18 @@ class AssetsResource:
 
     def add_tag(self, asset_id: str, tag_id: str) -> Tag:
         """Add a tag to an asset by tag ID."""
-        body = V1AssetsAddTagRequest(tag_id=tag_id)
+        body = AddAssetTagRequest(tag_id=tag_id)
         return cast(
             Tag,
-            unwrap(
-                post_assets_tags_id.sync_detailed(
-                    id=asset_id, client=self._c, body=body
-                )
-            ),
+            unwrap(post_assets_tags_id.sync_detailed(id=asset_id, client=self._c, body=body)),
         )
 
     def remove_tag(self, asset_id: str, tag_id: str) -> Tag:
         """Remove a tag from an asset by tag ID."""
-        body = V1AssetsRemoveTagRequest(tag_id=tag_id)
+        body = RemoveAssetTagRequest(tag_id=tag_id)
         return cast(
             Tag,
-            unwrap(
-                delete_assets_tags_id.sync_detailed(
-                    id=asset_id, client=self._c, body=body
-                )
-            ),
+            unwrap(delete_assets_tags_id.sync_detailed(id=asset_id, client=self._c, body=body)),
         )
 
     def list_tags(self, asset_id: str) -> list[Tag]:
@@ -170,7 +154,7 @@ class AssetsResource:
 
     def set_tags(self, asset_id: str, tag_ids: list[str]) -> list[Tag]:
         """Atomically replace all tag associations for an asset."""
-        body = V1AssetsReplaceTagsRequest(tag_ids=tag_ids)
+        body = ReplaceAssetTagsRequest(tag_ids=tag_ids)
         return cast(
             list[Tag],
             unwrap(put_assets_tags_id.sync_detailed(id=asset_id, client=self._c, body=body)),
@@ -178,12 +162,10 @@ class AssetsResource:
 
     def set_column_tags(self, asset_id: str, column_path: str, tag_ids: list[str]) -> None:
         """Atomically replace the tag set assigned to one column."""
-        body = V1AssetsReplaceColumnTagsRequest(column_path=column_path, tag_ids=tag_ids)
+        body = ReplaceAssetColumnTagsRequest(column_path=column_path, tag_ids=tag_ids)
         unwrap(put_assets_column_tags_id.sync_detailed(id=asset_id, client=self._c, body=body))
 
     def remove_column_tag(self, asset_id: str, column_path: str, tag_id: str) -> None:
         """Remove one (column_path, tag_id) assignment for an asset."""
-        body = V1AssetsRemoveColumnTagRequest(column_path=column_path, tag_id=tag_id)
-        unwrap(
-            delete_assets_column_tags_id.sync_detailed(id=asset_id, client=self._c, body=body)
-        )
+        body = RemoveAssetColumnTagRequest(column_path=column_path, tag_id=tag_id)
+        unwrap(delete_assets_column_tags_id.sync_detailed(id=asset_id, client=self._c, body=body))

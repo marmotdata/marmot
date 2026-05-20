@@ -12,6 +12,7 @@ from marmot._gen.models.assets_by_type_response import AssetsByTypeResponse
 from marmot._gen.models.batch_lineage_result import BatchLineageResult
 from marmot._gen.models.create_api_key_request import CreateAPIKeyRequest
 from marmot._gen.models.create_asset_request import CreateAssetRequest
+from marmot._gen.models.create_tag_request import CreateTagRequest as TagRequest
 from marmot._gen.models.create_term_request import CreateTermRequest
 from marmot._gen.models.get_runs_response_200 import GetRunsResponse200 as ListRunsResponse
 from marmot._gen.models.glossary_list_result import GlossaryListResult
@@ -38,7 +39,6 @@ from marmot._gen.models.total_assets_response import TotalAssetsResponse
 from marmot._gen.models.update_asset_request import UpdateAssetRequest
 from marmot._gen.models.update_term_request import UpdateTermRequest
 from marmot._gen.models.user import User
-from marmot._gen.models.v1_tags_tag_request import V1TagsTagRequest as TagRequest
 from marmot._gen.types import UNSET, Unset
 from marmot.auth import Credential, resolve
 from marmot.client import Client, connect
