@@ -32,7 +32,7 @@ from marmot._gen.models.runs_response import RunsResponse
 from marmot._gen.models.search_owners_response import SearchOwnersResponse
 from marmot._gen.models.search_response import SearchResponse
 from marmot._gen.models.stats import Stats
-from marmot._gen.models.tag_request import TagRequest
+from marmot._gen.models.v1_tags_tag_request import V1TagsTagRequest as TagRequest
 from marmot._gen.models.team import Team
 from marmot._gen.models.tool_call_payload import ToolCallPayload
 from marmot._gen.models.total_assets_response import TotalAssetsResponse
