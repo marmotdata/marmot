@@ -10,7 +10,14 @@ import {
   isNotFound,
   isRateLimit,
 } from "../src/errors.js";
-import type { Asset, DataProduct, DataProductListResult, GlossaryTerm, Tag, User } from "../src/index.js";
+import type {
+  Asset,
+  DataProduct,
+  DataProductListResult,
+  GlossaryTerm,
+  Tag,
+  User,
+} from "../src/index.js";
 
 function makeClient(fetchImpl: typeof fetch, credential?: Credential): Client {
   return new Client({
@@ -441,8 +448,8 @@ describe("resource modules", () => {
   });
 
   test("tags.list returns Tag array", async () => {
-    const fetchImpl = vi.fn(async () =>
-      new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 200 }),
+    const fetchImpl = vi.fn(
+      async () => new Response(JSON.stringify([{ id: "tag-1", name: "pii" }]), { status: 200 }),
     );
     const client = makeClient(fetchImpl as unknown as typeof fetch);
     const tags: Tag[] = await client.tags.list();
@@ -464,7 +471,10 @@ describe("resource modules", () => {
   test("tags.create POSTs with name and description", async () => {
     const fetchImpl = vi.fn(async (_url: URL | string, init?: RequestInit) => {
       expect(init?.method).toBe("POST");
-      expect(JSON.parse(init?.body as string)).toEqual({ name: "pii", description: "sensitive data" });
+      expect(JSON.parse(init?.body as string)).toEqual({
+        name: "pii",
+        description: "sensitive data",
+      });
       return new Response(JSON.stringify({ id: "tag-1", name: "pii" }), { status: 201 });
     });
     const client = makeClient(fetchImpl as unknown as typeof fetch);
@@ -520,7 +530,10 @@ describe("resource modules", () => {
     const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
       expect(url.toString()).toBe("http://m/api/v1/assets/column-tags/asset-1");
       expect(init?.method).toBe("PUT");
-      expect(JSON.parse(init?.body as string)).toEqual({ column_path: "schema.table.col", tag_ids: ["tag-1"] });
+      expect(JSON.parse(init?.body as string)).toEqual({
+        column_path: "schema.table.col",
+        tag_ids: ["tag-1"],
+      });
       return new Response(null, { status: 204 });
     });
     const client = makeClient(fetchImpl as unknown as typeof fetch);
@@ -531,7 +544,10 @@ describe("resource modules", () => {
     const fetchImpl = vi.fn(async (url: URL | string, init?: RequestInit) => {
       expect(url.toString()).toBe("http://m/api/v1/assets/column-tags/asset-1");
       expect(init?.method).toBe("DELETE");
-      expect(JSON.parse(init?.body as string)).toEqual({ column_path: "schema.table.col", tag_id: "tag-1" });
+      expect(JSON.parse(init?.body as string)).toEqual({
+        column_path: "schema.table.col",
+        tag_id: "tag-1",
+      });
       return new Response(null, { status: 204 });
     });
     const client = makeClient(fetchImpl as unknown as typeof fetch);
@@ -586,7 +602,10 @@ describe("resource modules", () => {
   test("dataProducts.list returns DataProductListResult", async () => {
     const fetchImpl = vi.fn(async (url: URL | string) => {
       expect(url.toString()).toContain("/api/v1/products/list");
-      return new Response(JSON.stringify({ data_products: [{ id: "product-1", name: "Orders" }], total: 1 }), { status: 200 });
+      return new Response(
+        JSON.stringify({ data_products: [{ id: "product-1", name: "Orders" }], total: 1 }),
+        { status: 200 },
+      );
     });
     const client = makeClient(fetchImpl as unknown as typeof fetch);
     const result: DataProductListResult = await client.dataProducts.list();
