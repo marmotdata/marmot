@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import cast
+from typing import List, cast  # noqa: UP006
 
 from marmot._adapter import unwrap
 from marmot._gen.api.products import (
@@ -45,18 +45,18 @@ class ProductsResource:
             unwrap(get_products_id.sync_detailed(id=product_id, client=self._c)),
         )
 
-    def list_tags(self, product_id: str) -> list[Tag]:
+    def list_tags(self, product_id: str) -> List[Tag]:
         """List all tags associated with a data product."""
         return cast(
-            list[Tag],
+            List[Tag],
             unwrap(get_products_tags_id.sync_detailed(id=product_id, client=self._c)),
         )
 
-    def add_tag(self, product_id: str, tag_id: str) -> list[Tag]:
+    def add_tag(self, product_id: str, tag_id: str) -> List[Tag]:
         """Add a single tag association to a data product."""
         body = AddDataProductTagRequest(tag_id=tag_id)
         return cast(
-            list[Tag],
+            List[Tag],
             unwrap(post_products_tags_id.sync_detailed(id=product_id, client=self._c, body=body)),
         )
 
@@ -68,7 +68,7 @@ class ProductsResource:
             unwrap(delete_products_tags_id.sync_detailed(id=product_id, client=self._c, body=body)),
         )
 
-    def set_tags(self, product_id: str, tag_ids: list[str]) -> DataProduct:
+    def set_tags(self, product_id: str, tag_ids: List[str]) -> DataProduct:
         """Atomically replace all tag associations for a data product."""
         body = ReplaceDataProductTagsRequest(tag_ids=tag_ids)
         return cast(
