@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import List, cast  # noqa: UP006
+# mypy doesn't allow to use list type if the class has a method with the same name e.g. list()
+from typing import List, cast  # noqa: UP035
 
 from marmot._adapter import unwrap
 from marmot._gen.api.glossary import (
@@ -122,18 +123,18 @@ class GlossaryResource:
         """Delete a glossary term."""
         unwrap(delete_glossary_id.sync_detailed(id=term_id, client=self._c))
 
-    def list_term_tags(self, term_id: str) -> List[Tag]:
+    def list_term_tags(self, term_id: str) -> List[Tag]:  # noqa: UP006
         """List all tags associated with a glossary term."""
         return cast(
-            List[Tag],
+            List[Tag],  # noqa: UP006
             unwrap(get_glossary_tags_id.sync_detailed(id=term_id, client=self._c)),
         )
 
-    def add_term_tag(self, term_id: str, tag_id: str) -> List[Tag]:
+    def add_term_tag(self, term_id: str, tag_id: str) -> List[Tag]:  # noqa: UP006
         """Add a single tag association to a glossary term."""
         body = AddGlossaryTermTagRequest(tag_id=tag_id)
         return cast(
-            List[Tag],
+            List[Tag],  # noqa: UP006
             unwrap(post_glossary_tags_id.sync_detailed(id=term_id, client=self._c, body=body)),
         )
 
@@ -145,7 +146,7 @@ class GlossaryResource:
             unwrap(delete_glossary_tags_id.sync_detailed(id=term_id, client=self._c, body=body)),
         )
 
-    def set_term_tags(self, term_id: str, tag_ids: List[str]) -> GlossaryTerm:
+    def set_term_tags(self, term_id: str, tag_ids: List[str]) -> GlossaryTerm:  # noqa: UP006
         """Atomically replace all tag associations for a glossary term."""
         body = ReplaceGlossaryTermTagsRequest(tag_ids=tag_ids)
         return cast(
