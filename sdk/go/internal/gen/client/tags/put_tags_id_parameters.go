@@ -64,7 +64,7 @@ type PutTagsIDParams struct {
 
 	   Updated tag fields
 	*/
-	Body *models.V1TagsTagRequest
+	Body *models.CreateTagRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *PutTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the put tags ID params
-func (o *PutTagsIDParams) WithBody(body *models.V1TagsTagRequest) *PutTagsIDParams {
+func (o *PutTagsIDParams) WithBody(body *models.CreateTagRequest) *PutTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the put tags ID params
-func (o *PutTagsIDParams) SetBody(body *models.V1TagsTagRequest) {
+func (o *PutTagsIDParams) SetBody(body *models.CreateTagRequest) {
 	o.Body = body
 }
 

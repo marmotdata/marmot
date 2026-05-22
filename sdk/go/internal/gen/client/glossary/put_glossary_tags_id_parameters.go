@@ -64,7 +64,7 @@ type PutGlossaryTagsIDParams struct {
 
 	   Tag IDs to assign
 	*/
-	Body *models.V1GlossaryReplaceTermTagsRequest
+	Body *models.ReplaceGlossaryTermTagsRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *PutGlossaryTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the put glossary tags ID params
-func (o *PutGlossaryTagsIDParams) WithBody(body *models.V1GlossaryReplaceTermTagsRequest) *PutGlossaryTagsIDParams {
+func (o *PutGlossaryTagsIDParams) WithBody(body *models.ReplaceGlossaryTermTagsRequest) *PutGlossaryTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the put glossary tags ID params
-func (o *PutGlossaryTagsIDParams) SetBody(body *models.V1GlossaryReplaceTermTagsRequest) {
+func (o *PutGlossaryTagsIDParams) SetBody(body *models.ReplaceGlossaryTermTagsRequest) {
 	o.Body = body
 }
 

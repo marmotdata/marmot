@@ -24,7 +24,7 @@ type AssetSummaryResponse struct {
 	Tags map[string]int64 `json:"tags,omitempty"`
 
 	// types
-	Types map[string]AssetAssetTypeSummary `json:"types,omitempty"`
+	Types map[string]AssetTypeSummary `json:"types,omitempty"`
 }
 
 // Validate validates this asset summary response

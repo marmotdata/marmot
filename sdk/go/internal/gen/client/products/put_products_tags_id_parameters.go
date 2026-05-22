@@ -64,7 +64,7 @@ type PutProductsTagsIDParams struct {
 
 	   Tag IDs to assign
 	*/
-	Body *models.V1DataproductsReplaceProductTagsRequest
+	Body *models.ReplaceDataProductTagsRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *PutProductsTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the put products tags ID params
-func (o *PutProductsTagsIDParams) WithBody(body *models.V1DataproductsReplaceProductTagsRequest) *PutProductsTagsIDParams {
+func (o *PutProductsTagsIDParams) WithBody(body *models.ReplaceDataProductTagsRequest) *PutProductsTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the put products tags ID params
-func (o *PutProductsTagsIDParams) SetBody(body *models.V1DataproductsReplaceProductTagsRequest) {
+func (o *PutProductsTagsIDParams) SetBody(body *models.ReplaceDataProductTagsRequest) {
 	o.Body = body
 }
 

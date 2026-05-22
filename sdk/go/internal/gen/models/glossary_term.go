@@ -45,7 +45,7 @@ type GlossaryTerm struct {
 	ParentTermID string `json:"parent_term_id,omitempty"`
 
 	// tags
-	Tags []*GithubComMarmotdataMarmotInternalCoreTagTag `json:"tags"`
+	Tags []*Tag `json:"tags"`
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`

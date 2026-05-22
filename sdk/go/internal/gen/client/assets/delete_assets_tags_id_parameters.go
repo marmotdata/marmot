@@ -64,7 +64,7 @@ type DeleteAssetsTagsIDParams struct {
 
 	   Tag ID to remove
 	*/
-	Body *models.V1AssetsRemoveTagRequest
+	Body *models.RemoveAssetTagRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *DeleteAssetsTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the delete assets tags ID params
-func (o *DeleteAssetsTagsIDParams) WithBody(body *models.V1AssetsRemoveTagRequest) *DeleteAssetsTagsIDParams {
+func (o *DeleteAssetsTagsIDParams) WithBody(body *models.RemoveAssetTagRequest) *DeleteAssetsTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the delete assets tags ID params
-func (o *DeleteAssetsTagsIDParams) SetBody(body *models.V1AssetsRemoveTagRequest) {
+func (o *DeleteAssetsTagsIDParams) SetBody(body *models.RemoveAssetTagRequest) {
 	o.Body = body
 }
 

@@ -62,7 +62,7 @@ PostTagsCreated describes a response with status code 201, with default header v
 Created
 */
 type PostTagsCreated struct {
-	Payload *models.GithubComMarmotdataMarmotInternalCoreTagTag
+	Payload *models.Tag
 }
 
 // IsSuccess returns true when this post tags created response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PostTagsCreated) String() string {
 	return fmt.Sprintf("[POST /tags][%d] postTagsCreated %s", 201, payload)
 }
 
-func (o *PostTagsCreated) GetPayload() *models.GithubComMarmotdataMarmotInternalCoreTagTag {
+func (o *PostTagsCreated) GetPayload() *models.Tag {
 	return o.Payload
 }
 
 func (o *PostTagsCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalCoreTagTag)
+	o.Payload = new(models.Tag)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

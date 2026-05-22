@@ -64,7 +64,7 @@ type DeleteGlossaryTagsIDParams struct {
 
 	   Tag ID to remove
 	*/
-	Body *models.V1GlossaryRemoveTermTagRequest
+	Body *models.RemoveGlossaryTermTagRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *DeleteGlossaryTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the delete glossary tags ID params
-func (o *DeleteGlossaryTagsIDParams) WithBody(body *models.V1GlossaryRemoveTermTagRequest) *DeleteGlossaryTagsIDParams {
+func (o *DeleteGlossaryTagsIDParams) WithBody(body *models.RemoveGlossaryTermTagRequest) *DeleteGlossaryTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the delete glossary tags ID params
-func (o *DeleteGlossaryTagsIDParams) SetBody(body *models.V1GlossaryRemoveTermTagRequest) {
+func (o *DeleteGlossaryTagsIDParams) SetBody(body *models.RemoveGlossaryTermTagRequest) {
 	o.Body = body
 }
 

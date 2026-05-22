@@ -12,20 +12,20 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// DataproductListResult dataproduct list result
+// DataProductListResult data product list result
 //
-// swagger:model dataproduct.ListResult
-type DataproductListResult struct {
+// swagger:model DataProductListResult
+type DataProductListResult struct {
 
 	// data products
-	DataProducts []*DataproductDataProduct `json:"data_products"`
+	DataProducts []*DataProduct `json:"data_products"`
 
 	// total
 	Total int64 `json:"total,omitempty"`
 }
 
-// Validate validates this dataproduct list result
-func (m *DataproductListResult) Validate(formats strfmt.Registry) error {
+// Validate validates this data product list result
+func (m *DataProductListResult) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateDataProducts(formats); err != nil {
@@ -38,7 +38,7 @@ func (m *DataproductListResult) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *DataproductListResult) validateDataProducts(formats strfmt.Registry) error {
+func (m *DataProductListResult) validateDataProducts(formats strfmt.Registry) error {
 	if swag.IsZero(m.DataProducts) { // not required
 		return nil
 	}
@@ -68,8 +68,8 @@ func (m *DataproductListResult) validateDataProducts(formats strfmt.Registry) er
 	return nil
 }
 
-// ContextValidate validate this dataproduct list result based on the context it is used
-func (m *DataproductListResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this data product list result based on the context it is used
+func (m *DataProductListResult) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateDataProducts(ctx, formats); err != nil {
@@ -82,7 +82,7 @@ func (m *DataproductListResult) ContextValidate(ctx context.Context, formats str
 	return nil
 }
 
-func (m *DataproductListResult) contextValidateDataProducts(ctx context.Context, formats strfmt.Registry) error {
+func (m *DataProductListResult) contextValidateDataProducts(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.DataProducts); i++ {
 
@@ -112,7 +112,7 @@ func (m *DataproductListResult) contextValidateDataProducts(ctx context.Context,
 }
 
 // MarshalBinary interface implementation
-func (m *DataproductListResult) MarshalBinary() ([]byte, error) {
+func (m *DataProductListResult) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -120,8 +120,8 @@ func (m *DataproductListResult) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *DataproductListResult) UnmarshalBinary(b []byte) error {
-	var res DataproductListResult
+func (m *DataProductListResult) UnmarshalBinary(b []byte) error {
+	var res DataProductListResult
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

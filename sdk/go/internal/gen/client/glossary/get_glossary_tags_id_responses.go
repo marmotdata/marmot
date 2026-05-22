@@ -62,7 +62,7 @@ GetGlossaryTagsIDOK describes a response with status code 200, with default head
 OK
 */
 type GetGlossaryTagsIDOK struct {
-	Payload []*models.GithubComMarmotdataMarmotInternalCoreTagTag
+	Payload []*models.Tag
 }
 
 // IsSuccess returns true when this get glossary tags Id o k response has a 2xx status code
@@ -105,7 +105,7 @@ func (o *GetGlossaryTagsIDOK) String() string {
 	return fmt.Sprintf("[GET /glossary/tags/{id}][%d] getGlossaryTagsIdOK %s", 200, payload)
 }
 
-func (o *GetGlossaryTagsIDOK) GetPayload() []*models.GithubComMarmotdataMarmotInternalCoreTagTag {
+func (o *GetGlossaryTagsIDOK) GetPayload() []*models.Tag {
 	return o.Payload
 }
 

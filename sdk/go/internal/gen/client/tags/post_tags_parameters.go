@@ -64,7 +64,7 @@ type PostTagsParams struct {
 
 	   Tag to create
 	*/
-	Body *models.V1TagsTagRequest
+	Body *models.CreateTagRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostTagsParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the post tags params
-func (o *PostTagsParams) WithBody(body *models.V1TagsTagRequest) *PostTagsParams {
+func (o *PostTagsParams) WithBody(body *models.CreateTagRequest) *PostTagsParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the post tags params
-func (o *PostTagsParams) SetBody(body *models.V1TagsTagRequest) {
+func (o *PostTagsParams) SetBody(body *models.CreateTagRequest) {
 	o.Body = body
 }
 

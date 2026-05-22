@@ -62,7 +62,7 @@ GetProductsTagsIDOK describes a response with status code 200, with default head
 OK
 */
 type GetProductsTagsIDOK struct {
-	Payload []*models.GithubComMarmotdataMarmotInternalCoreTagTag
+	Payload []*models.Tag
 }
 
 // IsSuccess returns true when this get products tags Id o k response has a 2xx status code
@@ -105,7 +105,7 @@ func (o *GetProductsTagsIDOK) String() string {
 	return fmt.Sprintf("[GET /products/tags/{id}][%d] getProductsTagsIdOK %s", 200, payload)
 }
 
-func (o *GetProductsTagsIDOK) GetPayload() []*models.GithubComMarmotdataMarmotInternalCoreTagTag {
+func (o *GetProductsTagsIDOK) GetPayload() []*models.Tag {
 	return o.Payload
 }
 

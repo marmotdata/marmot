@@ -64,7 +64,7 @@ type PostAssetsTagsIDParams struct {
 
 	   Tag ID to add
 	*/
-	Body *models.V1AssetsAddTagRequest
+	Body *models.AddAssetTagRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *PostAssetsTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the post assets tags ID params
-func (o *PostAssetsTagsIDParams) WithBody(body *models.V1AssetsAddTagRequest) *PostAssetsTagsIDParams {
+func (o *PostAssetsTagsIDParams) WithBody(body *models.AddAssetTagRequest) *PostAssetsTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the post assets tags ID params
-func (o *PostAssetsTagsIDParams) SetBody(body *models.V1AssetsAddTagRequest) {
+func (o *PostAssetsTagsIDParams) SetBody(body *models.AddAssetTagRequest) {
 	o.Body = body
 }
 

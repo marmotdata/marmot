@@ -68,7 +68,7 @@ PutTagsIDOK describes a response with status code 200, with default header value
 OK
 */
 type PutTagsIDOK struct {
-	Payload *models.GithubComMarmotdataMarmotInternalCoreTagTag
+	Payload *models.Tag
 }
 
 // IsSuccess returns true when this put tags Id o k response has a 2xx status code
@@ -111,13 +111,13 @@ func (o *PutTagsIDOK) String() string {
 	return fmt.Sprintf("[PUT /tags/{id}][%d] putTagsIdOK %s", 200, payload)
 }
 
-func (o *PutTagsIDOK) GetPayload() *models.GithubComMarmotdataMarmotInternalCoreTagTag {
+func (o *PutTagsIDOK) GetPayload() *models.Tag {
 	return o.Payload
 }
 
 func (o *PutTagsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.GithubComMarmotdataMarmotInternalCoreTagTag)
+	o.Payload = new(models.Tag)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

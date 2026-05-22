@@ -62,7 +62,7 @@ PostProductsCreated describes a response with status code 201, with default head
 Created
 */
 type PostProductsCreated struct {
-	Payload *models.DataproductDataProduct
+	Payload *models.DataProduct
 }
 
 // IsSuccess returns true when this post products created response has a 2xx status code
@@ -105,13 +105,13 @@ func (o *PostProductsCreated) String() string {
 	return fmt.Sprintf("[POST /products][%d] postProductsCreated %s", 201, payload)
 }
 
-func (o *PostProductsCreated) GetPayload() *models.DataproductDataProduct {
+func (o *PostProductsCreated) GetPayload() *models.DataProduct {
 	return o.Payload
 }
 
 func (o *PostProductsCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.DataproductDataProduct)
+	o.Payload = new(models.DataProduct)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

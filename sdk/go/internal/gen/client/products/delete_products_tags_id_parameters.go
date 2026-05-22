@@ -64,7 +64,7 @@ type DeleteProductsTagsIDParams struct {
 
 	   Tag ID to remove
 	*/
-	Body *models.V1DataproductsRemoveProductTagRequest
+	Body *models.RemoveDataProductTagRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *DeleteProductsTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the delete products tags ID params
-func (o *DeleteProductsTagsIDParams) WithBody(body *models.V1DataproductsRemoveProductTagRequest) *DeleteProductsTagsIDParams {
+func (o *DeleteProductsTagsIDParams) WithBody(body *models.RemoveDataProductTagRequest) *DeleteProductsTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the delete products tags ID params
-func (o *DeleteProductsTagsIDParams) SetBody(body *models.V1DataproductsRemoveProductTagRequest) {
+func (o *DeleteProductsTagsIDParams) SetBody(body *models.RemoveDataProductTagRequest) {
 	o.Body = body
 }
 

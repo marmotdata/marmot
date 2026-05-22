@@ -62,7 +62,7 @@ PostAssetsTagsIDCreated describes a response with status code 201, with default 
 Created
 */
 type PostAssetsTagsIDCreated struct {
-	Payload []*models.GithubComMarmotdataMarmotInternalCoreTagTag
+	Payload []*models.Tag
 }
 
 // IsSuccess returns true when this post assets tags Id created response has a 2xx status code
@@ -105,7 +105,7 @@ func (o *PostAssetsTagsIDCreated) String() string {
 	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdCreated %s", 201, payload)
 }
 
-func (o *PostAssetsTagsIDCreated) GetPayload() []*models.GithubComMarmotdataMarmotInternalCoreTagTag {
+func (o *PostAssetsTagsIDCreated) GetPayload() []*models.Tag {
 	return o.Payload
 }
 

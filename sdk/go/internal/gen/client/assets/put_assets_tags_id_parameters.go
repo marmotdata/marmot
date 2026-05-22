@@ -64,7 +64,7 @@ type PutAssetsTagsIDParams struct {
 
 	   Tag IDs to assign
 	*/
-	Body *models.V1AssetsReplaceTagsRequest
+	Body *models.ReplaceAssetTagsRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *PutAssetsTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the put assets tags ID params
-func (o *PutAssetsTagsIDParams) WithBody(body *models.V1AssetsReplaceTagsRequest) *PutAssetsTagsIDParams {
+func (o *PutAssetsTagsIDParams) WithBody(body *models.ReplaceAssetTagsRequest) *PutAssetsTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the put assets tags ID params
-func (o *PutAssetsTagsIDParams) SetBody(body *models.V1AssetsReplaceTagsRequest) {
+func (o *PutAssetsTagsIDParams) SetBody(body *models.ReplaceAssetTagsRequest) {
 	o.Body = body
 }
 

@@ -68,7 +68,7 @@ PutProductsIDOK describes a response with status code 200, with default header v
 OK
 */
 type PutProductsIDOK struct {
-	Payload *models.DataproductDataProduct
+	Payload *models.DataProduct
 }
 
 // IsSuccess returns true when this put products Id o k response has a 2xx status code
@@ -111,13 +111,13 @@ func (o *PutProductsIDOK) String() string {
 	return fmt.Sprintf("[PUT /products/{id}][%d] putProductsIdOK %s", 200, payload)
 }
 
-func (o *PutProductsIDOK) GetPayload() *models.DataproductDataProduct {
+func (o *PutProductsIDOK) GetPayload() *models.DataProduct {
 	return o.Payload
 }
 
 func (o *PutProductsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
-	o.Payload = new(models.DataproductDataProduct)
+	o.Payload = new(models.DataProduct)
 
 	// response payload
 	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {

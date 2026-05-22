@@ -62,7 +62,7 @@ PostGlossaryTagsIDCreated describes a response with status code 201, with defaul
 Created
 */
 type PostGlossaryTagsIDCreated struct {
-	Payload []*models.GithubComMarmotdataMarmotInternalCoreTagTag
+	Payload []*models.Tag
 }
 
 // IsSuccess returns true when this post glossary tags Id created response has a 2xx status code
@@ -105,7 +105,7 @@ func (o *PostGlossaryTagsIDCreated) String() string {
 	return fmt.Sprintf("[POST /glossary/tags/{id}][%d] postGlossaryTagsIdCreated %s", 201, payload)
 }
 
-func (o *PostGlossaryTagsIDCreated) GetPayload() []*models.GithubComMarmotdataMarmotInternalCoreTagTag {
+func (o *PostGlossaryTagsIDCreated) GetPayload() []*models.Tag {
 	return o.Payload
 }
 

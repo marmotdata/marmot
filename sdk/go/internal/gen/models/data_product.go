@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// DataproductDataProduct dataproduct data product
+// DataProduct data product
 //
-// swagger:model dataproduct.DataProduct
-type DataproductDataProduct struct {
+// swagger:model DataProduct
+type DataProduct struct {
 
 	// asset count
 	AssetCount int64 `json:"asset_count,omitempty"`
@@ -54,14 +54,14 @@ type DataproductDataProduct struct {
 	Rules []*DataproductRule `json:"rules"`
 
 	// tags
-	Tags []*GithubComMarmotdataMarmotInternalCoreTagTag `json:"tags"`
+	Tags []*Tag `json:"tags"`
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`
 }
 
-// Validate validates this dataproduct data product
-func (m *DataproductDataProduct) Validate(formats strfmt.Registry) error {
+// Validate validates this data product
+func (m *DataProduct) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateOwners(formats); err != nil {
@@ -82,7 +82,7 @@ func (m *DataproductDataProduct) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *DataproductDataProduct) validateOwners(formats strfmt.Registry) error {
+func (m *DataProduct) validateOwners(formats strfmt.Registry) error {
 	if swag.IsZero(m.Owners) { // not required
 		return nil
 	}
@@ -112,7 +112,7 @@ func (m *DataproductDataProduct) validateOwners(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *DataproductDataProduct) validateRules(formats strfmt.Registry) error {
+func (m *DataProduct) validateRules(formats strfmt.Registry) error {
 	if swag.IsZero(m.Rules) { // not required
 		return nil
 	}
@@ -142,7 +142,7 @@ func (m *DataproductDataProduct) validateRules(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *DataproductDataProduct) validateTags(formats strfmt.Registry) error {
+func (m *DataProduct) validateTags(formats strfmt.Registry) error {
 	if swag.IsZero(m.Tags) { // not required
 		return nil
 	}
@@ -172,8 +172,8 @@ func (m *DataproductDataProduct) validateTags(formats strfmt.Registry) error {
 	return nil
 }
 
-// ContextValidate validate this dataproduct data product based on the context it is used
-func (m *DataproductDataProduct) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this data product based on the context it is used
+func (m *DataProduct) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateOwners(ctx, formats); err != nil {
@@ -194,7 +194,7 @@ func (m *DataproductDataProduct) ContextValidate(ctx context.Context, formats st
 	return nil
 }
 
-func (m *DataproductDataProduct) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
+func (m *DataProduct) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Owners); i++ {
 
@@ -223,7 +223,7 @@ func (m *DataproductDataProduct) contextValidateOwners(ctx context.Context, form
 	return nil
 }
 
-func (m *DataproductDataProduct) contextValidateRules(ctx context.Context, formats strfmt.Registry) error {
+func (m *DataProduct) contextValidateRules(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Rules); i++ {
 
@@ -252,7 +252,7 @@ func (m *DataproductDataProduct) contextValidateRules(ctx context.Context, forma
 	return nil
 }
 
-func (m *DataproductDataProduct) contextValidateTags(ctx context.Context, formats strfmt.Registry) error {
+func (m *DataProduct) contextValidateTags(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Tags); i++ {
 
@@ -282,7 +282,7 @@ func (m *DataproductDataProduct) contextValidateTags(ctx context.Context, format
 }
 
 // MarshalBinary interface implementation
-func (m *DataproductDataProduct) MarshalBinary() ([]byte, error) {
+func (m *DataProduct) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -290,8 +290,8 @@ func (m *DataproductDataProduct) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *DataproductDataProduct) UnmarshalBinary(b []byte) error {
-	var res DataproductDataProduct
+func (m *DataProduct) UnmarshalBinary(b []byte) error {
+	var res DataProduct
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

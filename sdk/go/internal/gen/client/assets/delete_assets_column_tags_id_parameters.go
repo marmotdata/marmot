@@ -64,7 +64,7 @@ type DeleteAssetsColumnTagsIDParams struct {
 
 	   Column path and tag ID to remove
 	*/
-	Body *models.V1AssetsRemoveColumnTagRequest
+	Body *models.RemoveAssetColumnTagRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *DeleteAssetsColumnTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the delete assets column tags ID params
-func (o *DeleteAssetsColumnTagsIDParams) WithBody(body *models.V1AssetsRemoveColumnTagRequest) *DeleteAssetsColumnTagsIDParams {
+func (o *DeleteAssetsColumnTagsIDParams) WithBody(body *models.RemoveAssetColumnTagRequest) *DeleteAssetsColumnTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the delete assets column tags ID params
-func (o *DeleteAssetsColumnTagsIDParams) SetBody(body *models.V1AssetsRemoveColumnTagRequest) {
+func (o *DeleteAssetsColumnTagsIDParams) SetBody(body *models.RemoveAssetColumnTagRequest) {
 	o.Body = body
 }
 

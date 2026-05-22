@@ -50,7 +50,7 @@ GetTagsOK describes a response with status code 200, with default header values.
 OK
 */
 type GetTagsOK struct {
-	Payload []*models.GithubComMarmotdataMarmotInternalCoreTagTag
+	Payload []*models.Tag
 }
 
 // IsSuccess returns true when this get tags o k response has a 2xx status code
@@ -93,7 +93,7 @@ func (o *GetTagsOK) String() string {
 	return fmt.Sprintf("[GET /tags][%d] getTagsOK %s", 200, payload)
 }
 
-func (o *GetTagsOK) GetPayload() []*models.GithubComMarmotdataMarmotInternalCoreTagTag {
+func (o *GetTagsOK) GetPayload() []*models.Tag {
 	return o.Payload
 }
 

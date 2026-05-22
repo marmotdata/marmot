@@ -64,7 +64,7 @@ type PutAssetsColumnTagsIDParams struct {
 
 	   Column path and tag IDs to assign
 	*/
-	Body *models.V1AssetsReplaceColumnTagsRequest
+	Body *models.ReplaceAssetColumnTagsRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *PutAssetsColumnTagsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the put assets column tags ID params
-func (o *PutAssetsColumnTagsIDParams) WithBody(body *models.V1AssetsReplaceColumnTagsRequest) *PutAssetsColumnTagsIDParams {
+func (o *PutAssetsColumnTagsIDParams) WithBody(body *models.ReplaceAssetColumnTagsRequest) *PutAssetsColumnTagsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the put assets column tags ID params
-func (o *PutAssetsColumnTagsIDParams) SetBody(body *models.V1AssetsReplaceColumnTagsRequest) {
+func (o *PutAssetsColumnTagsIDParams) SetBody(body *models.ReplaceAssetColumnTagsRequest) {
 	o.Body = body
 }
 

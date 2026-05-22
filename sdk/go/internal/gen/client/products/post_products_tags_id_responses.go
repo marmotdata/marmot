@@ -62,7 +62,7 @@ PostProductsTagsIDCreated describes a response with status code 201, with defaul
 Created
 */
 type PostProductsTagsIDCreated struct {
-	Payload []*models.GithubComMarmotdataMarmotInternalCoreTagTag
+	Payload []*models.Tag
 }
 
 // IsSuccess returns true when this post products tags Id created response has a 2xx status code
@@ -105,7 +105,7 @@ func (o *PostProductsTagsIDCreated) String() string {
 	return fmt.Sprintf("[POST /products/tags/{id}][%d] postProductsTagsIdCreated %s", 201, payload)
 }
 
-func (o *PostProductsTagsIDCreated) GetPayload() []*models.GithubComMarmotdataMarmotInternalCoreTagTag {
+func (o *PostProductsTagsIDCreated) GetPayload() []*models.Tag {
 	return o.Payload
 }
 
