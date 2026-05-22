@@ -137,7 +137,7 @@ func (s *GlossaryService) Delete(ctx context.Context, id string) error {
 }
 
 // ListTermTags returns all tags on a glossary term.
-func (s *GlossaryService) ListTermTags(ctx context.Context, termID string) ([]*models.GithubComMarmotdataMarmotInternalCoreTagTag, error) {
+func (s *GlossaryService) ListTermTags(ctx context.Context, termID string) ([]*models.Tag, error) {
 	p := glossary.NewGetGlossaryTagsIDParams().WithContext(ctx).WithID(termID)
 	resp, err := s.gen.Glossary.GetGlossaryTagsID(p)
 	if err != nil {
@@ -149,7 +149,7 @@ func (s *GlossaryService) ListTermTags(ctx context.Context, termID string) ([]*m
 // AddTermTag adds a tag to a glossary term.
 func (s *GlossaryService) AddTermTag(ctx context.Context, termID, tagID string) error {
 	p := glossary.NewPostGlossaryTagsIDParams().WithContext(ctx).WithID(termID)
-	p.SetBody(&models.V1GlossaryAddTermTagRequest{TagID: tagID})
+	p.SetBody(&models.AddGlossaryTermTagRequest{TagID: tagID})
 	_, err := s.gen.Glossary.PostGlossaryTagsID(p)
 	return mapErr(err)
 }
@@ -157,7 +157,7 @@ func (s *GlossaryService) AddTermTag(ctx context.Context, termID, tagID string) 
 // RemoveTermTag removes a tag from a glossary term.
 func (s *GlossaryService) RemoveTermTag(ctx context.Context, termID, tagID string) error {
 	p := glossary.NewDeleteGlossaryTagsIDParams().WithContext(ctx).WithID(termID)
-	p.SetBody(&models.V1GlossaryRemoveTermTagRequest{TagID: tagID})
+	p.SetBody(&models.RemoveGlossaryTermTagRequest{TagID: tagID})
 	_, err := s.gen.Glossary.DeleteGlossaryTagsID(p)
 	return mapErr(err)
 }
@@ -165,7 +165,7 @@ func (s *GlossaryService) RemoveTermTag(ctx context.Context, termID, tagID strin
 // SetTermTags replaces all tags on a glossary term.
 func (s *GlossaryService) SetTermTags(ctx context.Context, termID string, tagIDs []string) error {
 	p := glossary.NewPutGlossaryTagsIDParams().WithContext(ctx).WithID(termID)
-	p.SetBody(&models.V1GlossaryReplaceTermTagsRequest{TagIds: tagIDs})
+	p.SetBody(&models.ReplaceGlossaryTermTagsRequest{TagIds: tagIDs})
 	_, err := s.gen.Glossary.PutGlossaryTagsID(p)
 	return mapErr(err)
 }

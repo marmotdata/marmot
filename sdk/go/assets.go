@@ -187,7 +187,7 @@ func (s *AssetsService) ListTags(ctx context.Context, id string) ([]*Tag, error)
 // AddTag adds a tag to an asset by tag ID.
 func (s *AssetsService) AddTag(ctx context.Context, id, tagID string) error {
 	p := assets.NewPostAssetsTagsIDParams().WithContext(ctx).WithID(id)
-	p.SetBody(&models.V1AssetsAddTagRequest{TagID: tagID})
+	p.SetBody(&models.AddAssetTagRequest{TagID: tagID})
 	_, err := s.gen.Assets.PostAssetsTagsID(p)
 	return mapErr(err)
 }
@@ -195,7 +195,7 @@ func (s *AssetsService) AddTag(ctx context.Context, id, tagID string) error {
 // RemoveTag removes a tag from an asset by tag ID.
 func (s *AssetsService) RemoveTag(ctx context.Context, id, tagID string) error {
 	p := assets.NewDeleteAssetsTagsIDParams().WithContext(ctx).WithID(id)
-	p.SetBody(&models.V1AssetsRemoveTagRequest{TagID: tagID})
+	p.SetBody(&models.RemoveAssetTagRequest{TagID: tagID})
 	_, err := s.gen.Assets.DeleteAssetsTagsID(p)
 	return mapErr(err)
 }
@@ -203,7 +203,7 @@ func (s *AssetsService) RemoveTag(ctx context.Context, id, tagID string) error {
 // SetTags replaces all tags on an asset.
 func (s *AssetsService) SetTags(ctx context.Context, id string, tagIDs []string) error {
 	p := assets.NewPutAssetsTagsIDParams().WithContext(ctx).WithID(id)
-	p.SetBody(&models.V1AssetsReplaceTagsRequest{TagIds: tagIDs})
+	p.SetBody(&models.ReplaceAssetTagsRequest{TagIds: tagIDs})
 	_, err := s.gen.Assets.PutAssetsTagsID(p)
 	return mapErr(err)
 }
@@ -211,7 +211,7 @@ func (s *AssetsService) SetTags(ctx context.Context, id string, tagIDs []string)
 // SetColumnTags replaces all tags on a specific column of an asset.
 func (s *AssetsService) SetColumnTags(ctx context.Context, id string, columnPath string, tagIDs []string) error {
 	p := assets.NewPutAssetsColumnTagsIDParams().WithContext(ctx).WithID(id)
-	p.SetBody(&models.V1AssetsReplaceColumnTagsRequest{
+	p.SetBody(&models.ReplaceAssetColumnTagsRequest{
 		ColumnPath: columnPath,
 		TagIds:     tagIDs,
 	})
@@ -222,7 +222,7 @@ func (s *AssetsService) SetColumnTags(ctx context.Context, id string, columnPath
 // RemoveColumnTag removes a single tag from a specific column of an asset.
 func (s *AssetsService) RemoveColumnTag(ctx context.Context, id string, columnPath string, tagID string) error {
 	p := assets.NewDeleteAssetsColumnTagsIDParams().WithContext(ctx).WithID(id)
-	p.SetBody(&models.V1AssetsRemoveColumnTagRequest{
+	p.SetBody(&models.RemoveAssetColumnTagRequest{
 		ColumnPath: columnPath,
 		TagID:      tagID,
 	})

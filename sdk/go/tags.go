@@ -8,7 +8,7 @@ import (
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
-type Tag = models.GithubComMarmotdataMarmotInternalCoreTagTag
+type Tag = models.Tag
 
 // TagsService manages tags in the catalog.
 type TagsService struct {
@@ -49,7 +49,7 @@ type CreateTagInput struct {
 // Create creates a new tag.
 func (s *TagsService) Create(ctx context.Context, in CreateTagInput) (*Tag, error) {
 	p := tags.NewPostTagsParams().WithContext(ctx)
-	p.SetBody(&models.V1TagsTagRequest{
+	p.SetBody(&models.CreateTagRequest{
 		Name:        in.Name,
 		Description: in.Description,
 	})
@@ -69,7 +69,7 @@ type UpdateTagInput struct {
 // Update modifies an existing tag.
 func (s *TagsService) Update(ctx context.Context, id string, in UpdateTagInput) (*Tag, error) {
 	p := tags.NewPutTagsIDParams().WithContext(ctx).WithID(id)
-	p.SetBody(&models.V1TagsTagRequest{
+	p.SetBody(&models.CreateTagRequest{
 		Name:        in.Name,
 		Description: in.Description,
 	})

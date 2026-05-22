@@ -9,10 +9,10 @@ import (
 )
 
 // DataProduct is a data product entry.
-type DataProduct = models.DataproductDataProduct
+type DataProduct = models.DataProduct
 
 // DataProductListResult is a paginated list of data products.
-type DataProductListResult = models.DataproductListResult
+type DataProductListResult = models.DataProductListResult
 
 // ProductsService manages data products.
 type ProductsService struct {
@@ -52,7 +52,7 @@ func (s *ProductsService) Get(ctx context.Context, id string) (*DataProduct, err
 }
 
 // ListProductTags returns all tags on a data product.
-func (s *ProductsService) ListProductTags(ctx context.Context, productID string) ([]*models.GithubComMarmotdataMarmotInternalCoreTagTag, error) {
+func (s *ProductsService) ListProductTags(ctx context.Context, productID string) ([]*models.Tag, error) {
 	p := products.NewGetProductsTagsIDParams().WithContext(ctx).WithID(productID)
 	resp, err := s.gen.Products.GetProductsTagsID(p)
 	if err != nil {
@@ -64,7 +64,7 @@ func (s *ProductsService) ListProductTags(ctx context.Context, productID string)
 // AddProductTag adds a tag to a data product.
 func (s *ProductsService) AddProductTag(ctx context.Context, productID, tagID string) error {
 	p := products.NewPostProductsTagsIDParams().WithContext(ctx).WithID(productID)
-	p.SetBody(&models.V1DataproductsAddProductTagRequest{TagID: tagID})
+	p.SetBody(&models.AddDataProductTagRequest{TagID: tagID})
 	_, err := s.gen.Products.PostProductsTagsID(p)
 	return mapErr(err)
 }
@@ -72,7 +72,7 @@ func (s *ProductsService) AddProductTag(ctx context.Context, productID, tagID st
 // RemoveProductTag removes a tag from a data product.
 func (s *ProductsService) RemoveProductTag(ctx context.Context, productID, tagID string) error {
 	p := products.NewDeleteProductsTagsIDParams().WithContext(ctx).WithID(productID)
-	p.SetBody(&models.V1DataproductsRemoveProductTagRequest{TagID: tagID})
+	p.SetBody(&models.RemoveDataProductTagRequest{TagID: tagID})
 	_, err := s.gen.Products.DeleteProductsTagsID(p)
 	return mapErr(err)
 }
@@ -80,7 +80,7 @@ func (s *ProductsService) RemoveProductTag(ctx context.Context, productID, tagID
 // SetProductTags replaces all tags on a data product.
 func (s *ProductsService) SetProductTags(ctx context.Context, productID string, tagIDs []string) error {
 	p := products.NewPutProductsTagsIDParams().WithContext(ctx).WithID(productID)
-	p.SetBody(&models.V1DataproductsReplaceProductTagsRequest{TagIds: tagIDs})
+	p.SetBody(&models.ReplaceDataProductTagsRequest{TagIds: tagIDs})
 	_, err := s.gen.Products.PutProductsTagsID(p)
 	return mapErr(err)
 }
