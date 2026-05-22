@@ -586,6 +586,30 @@ definitions:
           type: string
         type: array
     type: object
+  CreateDataProductRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/DataProductOwnerRequest'
+        type: array
+      rules:
+        items:
+          $ref: '#/definitions/DataProductRuleRequest'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    type: object
   CreateDocRequest:
     properties:
       asset_mrn:
@@ -753,6 +777,43 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  DataProductOwnerRequest:
+    properties:
+      id:
+        type: string
+      type:
+        enum:
+        - user
+        - team
+        type: string
+    required:
+    - id
+    - type
+    type: object
+  DataProductRuleRequest:
+    properties:
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+    required:
+    - name
+    - rule_type
     type: object
   Dataset:
     properties:
@@ -1984,6 +2045,24 @@ definitions:
           type: string
         type: array
     type: object
+  UpdateDataProductRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/DataProductOwnerRequest'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
   UpdateMemberRoleRequest:
     properties:
       role:
@@ -2200,85 +2279,6 @@ definitions:
     x-enum-varnames:
     - RuleTypeQuery
     - RuleTypeMetadataMatch
-  v1_dataproducts.CreateRequest:
-    properties:
-      description:
-        type: string
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      owners:
-        items:
-          $ref: '#/definitions/v1_dataproducts.OwnerRequest'
-        type: array
-      rules:
-        items:
-          $ref: '#/definitions/v1_dataproducts.RuleRequest'
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-    required:
-    - name
-    type: object
-  v1_dataproducts.OwnerRequest:
-    properties:
-      id:
-        type: string
-      type:
-        enum:
-        - user
-        - team
-        type: string
-    required:
-    - id
-    - type
-    type: object
-  v1_dataproducts.RuleRequest:
-    properties:
-      description:
-        type: string
-      is_enabled:
-        type: boolean
-      metadata_field:
-        type: string
-      name:
-        type: string
-      pattern_type:
-        type: string
-      pattern_value:
-        type: string
-      priority:
-        type: integer
-      query_expression:
-        type: string
-      rule_type:
-        type: string
-    required:
-    - name
-    - rule_type
-    type: object
-  v1_dataproducts.UpdateRequest:
-    properties:
-      description:
-        type: string
-      metadata:
-        additionalProperties: true
-        type: object
-      name:
-        type: string
-      owners:
-        items:
-          $ref: '#/definitions/v1_dataproducts.OwnerRequest'
-        type: array
-      tags:
-        items:
-          type: string
-        type: array
-    type: object
 info:
   contact: {}
   description: API for interacting with Marmot
@@ -5030,7 +5030,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_dataproducts.CreateRequest'
+          $ref: '#/definitions/CreateDataProductRequest'
       produces:
       - application/json
       responses:
@@ -5129,7 +5129,7 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/v1_dataproducts.UpdateRequest'
+          $ref: '#/definitions/UpdateDataProductRequest'
       produces:
       - application/json
       responses:

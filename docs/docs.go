@@ -4142,7 +4142,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_dataproducts.CreateRequest"
+                            "$ref": "#/definitions/CreateDataProductRequest"
                         }
                     }
                 ],
@@ -4775,7 +4775,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/v1_dataproducts.UpdateRequest"
+                            "$ref": "#/definitions/UpdateDataProductRequest"
                         }
                     }
                 ],
@@ -7691,6 +7691,42 @@ const docTemplate = `{
                 }
             }
         },
+        "CreateDataProductRequest": {
+            "type": "object",
+            "required": [
+                "name"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataProductOwnerRequest"
+                    }
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataProductRuleRequest"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "CreateDocRequest": {
             "type": "object",
             "properties": {
@@ -7939,6 +7975,61 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "DataProductOwnerRequest": {
+            "type": "object",
+            "required": [
+                "id",
+                "type"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "user",
+                        "team"
+                    ]
+                }
+            }
+        },
+        "DataProductRuleRequest": {
+            "type": "object",
+            "required": [
+                "name",
+                "rule_type"
+            ],
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "is_enabled": {
+                    "type": "boolean"
+                },
+                "metadata_field": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "pattern_type": {
+                    "type": "string"
+                },
+                "pattern_value": {
+                    "type": "string"
+                },
+                "priority": {
+                    "type": "integer"
+                },
+                "query_expression": {
+                    "type": "string"
+                },
+                "rule_type": {
+                    "type": "string"
                 }
             }
         },
@@ -9805,6 +9896,33 @@ const docTemplate = `{
                 }
             }
         },
+        "UpdateDataProductRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "owners": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DataProductOwnerRequest"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "UpdateMemberRoleRequest": {
             "type": "object",
             "properties": {
@@ -10129,124 +10247,6 @@ const docTemplate = `{
                 "RuleTypeQuery",
                 "RuleTypeMetadataMatch"
             ]
-        },
-        "v1_dataproducts.CreateRequest": {
-            "type": "object",
-            "required": [
-                "name"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "owners": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/v1_dataproducts.OwnerRequest"
-                    }
-                },
-                "rules": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/v1_dataproducts.RuleRequest"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
-        },
-        "v1_dataproducts.OwnerRequest": {
-            "type": "object",
-            "required": [
-                "id",
-                "type"
-            ],
-            "properties": {
-                "id": {
-                    "type": "string"
-                },
-                "type": {
-                    "type": "string",
-                    "enum": [
-                        "user",
-                        "team"
-                    ]
-                }
-            }
-        },
-        "v1_dataproducts.RuleRequest": {
-            "type": "object",
-            "required": [
-                "name",
-                "rule_type"
-            ],
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "is_enabled": {
-                    "type": "boolean"
-                },
-                "metadata_field": {
-                    "type": "string"
-                },
-                "name": {
-                    "type": "string"
-                },
-                "pattern_type": {
-                    "type": "string"
-                },
-                "pattern_value": {
-                    "type": "string"
-                },
-                "priority": {
-                    "type": "integer"
-                },
-                "query_expression": {
-                    "type": "string"
-                },
-                "rule_type": {
-                    "type": "string"
-                }
-            }
-        },
-        "v1_dataproducts.UpdateRequest": {
-            "type": "object",
-            "properties": {
-                "description": {
-                    "type": "string"
-                },
-                "metadata": {
-                    "type": "object",
-                    "additionalProperties": true
-                },
-                "name": {
-                    "type": "string"
-                },
-                "owners": {
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/v1_dataproducts.OwnerRequest"
-                    }
-                },
-                "tags": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                }
-            }
         }
     }
 }`

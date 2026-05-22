@@ -64,7 +64,7 @@ type PutProductsIDParams struct {
 
 	   Data product update request
 	*/
-	Body *models.V1DataproductsUpdateRequest
+	Body *models.UpdateDataProductRequest
 
 	/* ID.
 
@@ -126,13 +126,13 @@ func (o *PutProductsIDParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the put products ID params
-func (o *PutProductsIDParams) WithBody(body *models.V1DataproductsUpdateRequest) *PutProductsIDParams {
+func (o *PutProductsIDParams) WithBody(body *models.UpdateDataProductRequest) *PutProductsIDParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the put products ID params
-func (o *PutProductsIDParams) SetBody(body *models.V1DataproductsUpdateRequest) {
+func (o *PutProductsIDParams) SetBody(body *models.UpdateDataProductRequest) {
 	o.Body = body
 }
 

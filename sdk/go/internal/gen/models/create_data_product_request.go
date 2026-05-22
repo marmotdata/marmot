@@ -13,10 +13,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// V1DataproductsCreateRequest v1 dataproducts create request
+// CreateDataProductRequest create data product request
 //
-// swagger:model v1_dataproducts.CreateRequest
-type V1DataproductsCreateRequest struct {
+// swagger:model CreateDataProductRequest
+type CreateDataProductRequest struct {
 
 	// description
 	Description string `json:"description,omitempty"`
@@ -29,17 +29,17 @@ type V1DataproductsCreateRequest struct {
 	Name *string `json:"name"`
 
 	// owners
-	Owners []*V1DataproductsOwnerRequest `json:"owners"`
+	Owners []*DataProductOwnerRequest `json:"owners"`
 
 	// rules
-	Rules []*V1DataproductsRuleRequest `json:"rules"`
+	Rules []*DataProductRuleRequest `json:"rules"`
 
 	// tags
 	Tags []string `json:"tags"`
 }
 
-// Validate validates this v1 dataproducts create request
-func (m *V1DataproductsCreateRequest) Validate(formats strfmt.Registry) error {
+// Validate validates this create data product request
+func (m *CreateDataProductRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateName(formats); err != nil {
@@ -60,7 +60,7 @@ func (m *V1DataproductsCreateRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1DataproductsCreateRequest) validateName(formats strfmt.Registry) error {
+func (m *CreateDataProductRequest) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", m.Name); err != nil {
 		return err
@@ -69,7 +69,7 @@ func (m *V1DataproductsCreateRequest) validateName(formats strfmt.Registry) erro
 	return nil
 }
 
-func (m *V1DataproductsCreateRequest) validateOwners(formats strfmt.Registry) error {
+func (m *CreateDataProductRequest) validateOwners(formats strfmt.Registry) error {
 	if swag.IsZero(m.Owners) { // not required
 		return nil
 	}
@@ -99,7 +99,7 @@ func (m *V1DataproductsCreateRequest) validateOwners(formats strfmt.Registry) er
 	return nil
 }
 
-func (m *V1DataproductsCreateRequest) validateRules(formats strfmt.Registry) error {
+func (m *CreateDataProductRequest) validateRules(formats strfmt.Registry) error {
 	if swag.IsZero(m.Rules) { // not required
 		return nil
 	}
@@ -129,8 +129,8 @@ func (m *V1DataproductsCreateRequest) validateRules(formats strfmt.Registry) err
 	return nil
 }
 
-// ContextValidate validate this v1 dataproducts create request based on the context it is used
-func (m *V1DataproductsCreateRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this create data product request based on the context it is used
+func (m *CreateDataProductRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateOwners(ctx, formats); err != nil {
@@ -147,7 +147,7 @@ func (m *V1DataproductsCreateRequest) ContextValidate(ctx context.Context, forma
 	return nil
 }
 
-func (m *V1DataproductsCreateRequest) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateDataProductRequest) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Owners); i++ {
 
@@ -176,7 +176,7 @@ func (m *V1DataproductsCreateRequest) contextValidateOwners(ctx context.Context,
 	return nil
 }
 
-func (m *V1DataproductsCreateRequest) contextValidateRules(ctx context.Context, formats strfmt.Registry) error {
+func (m *CreateDataProductRequest) contextValidateRules(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Rules); i++ {
 
@@ -206,7 +206,7 @@ func (m *V1DataproductsCreateRequest) contextValidateRules(ctx context.Context, 
 }
 
 // MarshalBinary interface implementation
-func (m *V1DataproductsCreateRequest) MarshalBinary() ([]byte, error) {
+func (m *CreateDataProductRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -214,8 +214,8 @@ func (m *V1DataproductsCreateRequest) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1DataproductsCreateRequest) UnmarshalBinary(b []byte) error {
-	var res V1DataproductsCreateRequest
+func (m *CreateDataProductRequest) UnmarshalBinary(b []byte) error {
+	var res CreateDataProductRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

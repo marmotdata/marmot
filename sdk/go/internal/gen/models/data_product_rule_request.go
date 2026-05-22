@@ -11,10 +11,10 @@ import (
 	"github.com/go-openapi/validate"
 )
 
-// V1DataproductsRuleRequest v1 dataproducts rule request
+// DataProductRuleRequest data product rule request
 //
-// swagger:model v1_dataproducts.RuleRequest
-type V1DataproductsRuleRequest struct {
+// swagger:model DataProductRuleRequest
+type DataProductRuleRequest struct {
 
 	// description
 	Description string `json:"description,omitempty"`
@@ -46,8 +46,8 @@ type V1DataproductsRuleRequest struct {
 	RuleType *string `json:"rule_type"`
 }
 
-// Validate validates this v1 dataproducts rule request
-func (m *V1DataproductsRuleRequest) Validate(formats strfmt.Registry) error {
+// Validate validates this data product rule request
+func (m *DataProductRuleRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateName(formats); err != nil {
@@ -64,7 +64,7 @@ func (m *V1DataproductsRuleRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1DataproductsRuleRequest) validateName(formats strfmt.Registry) error {
+func (m *DataProductRuleRequest) validateName(formats strfmt.Registry) error {
 
 	if err := validate.Required("name", "body", m.Name); err != nil {
 		return err
@@ -73,7 +73,7 @@ func (m *V1DataproductsRuleRequest) validateName(formats strfmt.Registry) error 
 	return nil
 }
 
-func (m *V1DataproductsRuleRequest) validateRuleType(formats strfmt.Registry) error {
+func (m *DataProductRuleRequest) validateRuleType(formats strfmt.Registry) error {
 
 	if err := validate.Required("rule_type", "body", m.RuleType); err != nil {
 		return err
@@ -82,13 +82,13 @@ func (m *V1DataproductsRuleRequest) validateRuleType(formats strfmt.Registry) er
 	return nil
 }
 
-// ContextValidate validates this v1 dataproducts rule request based on context it is used
-func (m *V1DataproductsRuleRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validates this data product rule request based on context it is used
+func (m *DataProductRuleRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	return nil
 }
 
 // MarshalBinary interface implementation
-func (m *V1DataproductsRuleRequest) MarshalBinary() ([]byte, error) {
+func (m *DataProductRuleRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -96,8 +96,8 @@ func (m *V1DataproductsRuleRequest) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1DataproductsRuleRequest) UnmarshalBinary(b []byte) error {
-	var res V1DataproductsRuleRequest
+func (m *DataProductRuleRequest) UnmarshalBinary(b []byte) error {
+	var res DataProductRuleRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}

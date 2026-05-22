@@ -64,7 +64,7 @@ type PostProductsParams struct {
 
 	   Data product creation request
 	*/
-	Body *models.V1DataproductsCreateRequest
+	Body *models.CreateDataProductRequest
 
 	timeout    time.Duration
 	Context    context.Context
@@ -120,13 +120,13 @@ func (o *PostProductsParams) SetHTTPClient(client *http.Client) {
 }
 
 // WithBody adds the body to the post products params
-func (o *PostProductsParams) WithBody(body *models.V1DataproductsCreateRequest) *PostProductsParams {
+func (o *PostProductsParams) WithBody(body *models.CreateDataProductRequest) *PostProductsParams {
 	o.SetBody(body)
 	return o
 }
 
 // SetBody adds the body to the post products params
-func (o *PostProductsParams) SetBody(body *models.V1DataproductsCreateRequest) {
+func (o *PostProductsParams) SetBody(body *models.CreateDataProductRequest) {
 	o.Body = body
 }
 

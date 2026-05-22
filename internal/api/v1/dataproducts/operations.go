@@ -19,7 +19,7 @@ import (
 type OwnerRequest struct {
 	ID   string `json:"id" validate:"required"`
 	Type string `json:"type" validate:"required,oneof=user team"`
-}
+} // @name DataProductOwnerRequest
 
 type RuleRequest struct {
 	Name            string  `json:"name" validate:"required"`
@@ -31,7 +31,7 @@ type RuleRequest struct {
 	PatternValue    *string `json:"pattern_value,omitempty"`
 	Priority        int     `json:"priority"`
 	IsEnabled       bool    `json:"is_enabled"`
-}
+} // @name DataProductRuleRequest
 
 type CreateRequest struct {
 	Name        string                 `json:"name" validate:"required"`
@@ -40,7 +40,7 @@ type CreateRequest struct {
 	Tags        []string               `json:"tags,omitempty"`
 	Owners      []OwnerRequest         `json:"owners,omitempty"`
 	Rules       []RuleRequest          `json:"rules,omitempty"`
-}
+} // @name CreateDataProductRequest
 
 type UpdateRequest struct {
 	Name        *string                `json:"name,omitempty"`
@@ -48,7 +48,7 @@ type UpdateRequest struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 	Tags        []string               `json:"tags,omitempty"`
 	Owners      []OwnerRequest         `json:"owners,omitempty"`
-}
+} // @name UpdateDataProductRequest
 
 type AddAssetsRequest struct {
 	AssetIDs []string `json:"asset_ids" validate:"required,min=1"`

@@ -12,10 +12,10 @@ import (
 	"github.com/go-openapi/swag"
 )
 
-// V1DataproductsUpdateRequest v1 dataproducts update request
+// UpdateDataProductRequest update data product request
 //
-// swagger:model v1_dataproducts.UpdateRequest
-type V1DataproductsUpdateRequest struct {
+// swagger:model UpdateDataProductRequest
+type UpdateDataProductRequest struct {
 
 	// description
 	Description string `json:"description,omitempty"`
@@ -27,14 +27,14 @@ type V1DataproductsUpdateRequest struct {
 	Name string `json:"name,omitempty"`
 
 	// owners
-	Owners []*V1DataproductsOwnerRequest `json:"owners"`
+	Owners []*DataProductOwnerRequest `json:"owners"`
 
 	// tags
 	Tags []string `json:"tags"`
 }
 
-// Validate validates this v1 dataproducts update request
-func (m *V1DataproductsUpdateRequest) Validate(formats strfmt.Registry) error {
+// Validate validates this update data product request
+func (m *UpdateDataProductRequest) Validate(formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.validateOwners(formats); err != nil {
@@ -47,7 +47,7 @@ func (m *V1DataproductsUpdateRequest) Validate(formats strfmt.Registry) error {
 	return nil
 }
 
-func (m *V1DataproductsUpdateRequest) validateOwners(formats strfmt.Registry) error {
+func (m *UpdateDataProductRequest) validateOwners(formats strfmt.Registry) error {
 	if swag.IsZero(m.Owners) { // not required
 		return nil
 	}
@@ -77,8 +77,8 @@ func (m *V1DataproductsUpdateRequest) validateOwners(formats strfmt.Registry) er
 	return nil
 }
 
-// ContextValidate validate this v1 dataproducts update request based on the context it is used
-func (m *V1DataproductsUpdateRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
+// ContextValidate validate this update data product request based on the context it is used
+func (m *UpdateDataProductRequest) ContextValidate(ctx context.Context, formats strfmt.Registry) error {
 	var res []error
 
 	if err := m.contextValidateOwners(ctx, formats); err != nil {
@@ -91,7 +91,7 @@ func (m *V1DataproductsUpdateRequest) ContextValidate(ctx context.Context, forma
 	return nil
 }
 
-func (m *V1DataproductsUpdateRequest) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
+func (m *UpdateDataProductRequest) contextValidateOwners(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Owners); i++ {
 
@@ -121,7 +121,7 @@ func (m *V1DataproductsUpdateRequest) contextValidateOwners(ctx context.Context,
 }
 
 // MarshalBinary interface implementation
-func (m *V1DataproductsUpdateRequest) MarshalBinary() ([]byte, error) {
+func (m *UpdateDataProductRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -129,8 +129,8 @@ func (m *V1DataproductsUpdateRequest) MarshalBinary() ([]byte, error) {
 }
 
 // UnmarshalBinary interface implementation
-func (m *V1DataproductsUpdateRequest) UnmarshalBinary(b []byte) error {
-	var res V1DataproductsUpdateRequest
+func (m *UpdateDataProductRequest) UnmarshalBinary(b []byte) error {
+	var res UpdateDataProductRequest
 	if err := swag.ReadJSON(b, &res); err != nil {
 		return err
 	}
