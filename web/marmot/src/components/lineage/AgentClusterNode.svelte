@@ -12,9 +12,27 @@
 			memberMRNs: string[];
 			recencyMs?: number;
 			clusterKey?: string;
+			// `declared` = SDK / API wrote the edges; `observed` = runtime
+			// lookups via the agent-runs path; `mixed` = both.
+			originKind?: 'declared' | 'observed' | 'mixed';
 			onToggleExpand?: (clusterKey: string) => void;
 		};
 	}>();
+
+	let originLabel = $derived(
+		data.originKind === 'declared'
+			? 'DECLARED · sdk'
+			: data.originKind === 'mixed'
+				? 'MIXED · declared + observed'
+				: 'OBSERVED · runtime'
+	);
+
+	// Observed clusters count tool lookups; declared clusters count member
+	// assets — different things, so don't conflate them in the footer.
+	let footerCount = $derived(
+		data.originKind === 'declared' ? data.count : data.totalObservations || data.count
+	);
+	let footerNoun = $derived(data.originKind === 'declared' ? 'assets' : 'lookups');
 
 	function handleExpand(e: MouseEvent) {
 		e.stopPropagation();
@@ -58,9 +76,14 @@
 	<div class="stack-shadow stack-shadow-1"></div>
 
 	<div class="card">
-		<div class="observed-pill">
-			<IconifyIcon icon="material-symbols:visibility-outline" class="w-3 h-3" />
-			<span>OBSERVED · runtime</span>
+		<div class="observed-pill" class:declared={data.originKind === 'declared'}>
+			<IconifyIcon
+				icon={data.originKind === 'declared'
+					? 'material-symbols:link-rounded'
+					: 'material-symbols:visibility-outline'}
+				class="w-3 h-3"
+			/>
+			<span>{originLabel}</span>
 		</div>
 
 		<div class="header">
@@ -75,7 +98,7 @@
 		</div>
 
 		<div class="footer">
-			<span>{formatCount(data.totalObservations)} lookups</span>
+			<span>{formatCount(footerCount)} {footerNoun}</span>
 			{#if lastSeen}
 				<span class="last-seen">· {lastSeen}</span>
 			{/if}
@@ -174,6 +197,10 @@
 		background: #607b60;
 		border-radius: 999px;
 		box-shadow: 0 1px 0 rgba(0, 0, 0, 0.05);
+	}
+
+	.observed-pill.declared {
+		background: #475569;
 	}
 
 	.header {

@@ -40,6 +40,7 @@ from marmot._gen.models.update_asset_request import UpdateAssetRequest
 from marmot._gen.models.update_term_request import UpdateTermRequest
 from marmot._gen.models.user import User
 from marmot._gen.types import UNSET, Unset
+from marmot.auth import Credential, resolve
 from marmot.client import Client, connect
 from marmot.errors import (
     AuthError,
@@ -69,6 +70,7 @@ __all__ = [
     "CreateAPIKeyRequest",
     "CreateAssetRequest",
     "CreateTermRequest",
+    "Credential",
     "GlossaryListResult",
     "GlossaryTerm",
     "LineageEdge",
@@ -104,6 +106,7 @@ __all__ = [
     "connect",
     "is_not_found",
     "is_rate_limit",
+    "resolve",
 ]
 
 __version__ = "0.3.0"

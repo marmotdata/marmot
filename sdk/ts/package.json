@@ -32,6 +32,11 @@
       "types": "./dist/integrations/langchain/index.d.ts",
       "import": "./dist/integrations/langchain/index.js",
       "require": "./dist/integrations/langchain/index.cjs"
+    },
+    "./claude-agent": {
+      "types": "./dist/integrations/claude-agent/index.d.ts",
+      "import": "./dist/integrations/claude-agent/index.js",
+      "require": "./dist/integrations/claude-agent/index.cjs"
     }
   },
   "files": [

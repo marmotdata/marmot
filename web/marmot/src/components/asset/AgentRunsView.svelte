@@ -210,8 +210,8 @@
 						class="w-10 h-10 text-gray-300 dark:text-gray-600 mx-auto"
 					/>
 					<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-						No runs yet. Invoke this agent with the Marmot LangChain callback attached and runs will
-						land here.
+						No runs yet. Invoke this agent with a Marmot SDK integration attached and runs will land
+						here.
 					</p>
 				</div>
 			{:else}

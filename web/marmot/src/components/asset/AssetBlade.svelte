@@ -50,6 +50,8 @@
 		currentAssetId = asset?.id || null;
 		lineage = null;
 		expandedAssets = new SvelteSet<string>();
+		showAllUpstream = false;
+		showAllDownstream = false;
 		owners = [];
 		if (asset?.id) {
 			fetchOwners();
@@ -77,6 +79,9 @@
 	let loadingLineage = false;
 	let lineageError: string | null = null;
 	let expandedAssets: SvelteSet<string> = new SvelteSet<string>();
+	let showAllUpstream = false;
+	let showAllDownstream = false;
+	const LINEAGE_COLLAPSED_LIMIT = 5;
 	let owners: Owner[] = [];
 	let loadingOwners = false;
 
@@ -395,7 +400,15 @@
 								{:else if lineageError}
 									<div class="text-sm text-red-600 dark:text-red-400">{lineageError}</div>
 								{:else if lineage}
-									{#if lineage.nodes.filter((n) => n.depth < 0).length > 0}
+									{@const upstreamNodes = filteredLineage?.nodes.filter((n) => n.depth < 0) ?? []}
+									{@const downstreamNodes = filteredLineage?.nodes.filter((n) => n.depth > 0) ?? []}
+									{@const visibleUpstream = showAllUpstream
+										? upstreamNodes
+										: upstreamNodes.slice(0, LINEAGE_COLLAPSED_LIMIT)}
+									{@const visibleDownstream = showAllDownstream
+										? downstreamNodes
+										: downstreamNodes.slice(0, LINEAGE_COLLAPSED_LIMIT)}
+									{#if upstreamNodes.length > 0}
 										<div class="mb-4">
 											<h4
 												class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2"
@@ -403,7 +416,7 @@
 												Upstream
 											</h4>
 											<div class="space-y-2">
-												{#each filteredLineage.nodes.filter((n) => n.depth < 0) as node (node.id)}
+												{#each visibleUpstream as node (node.id)}
 													<LineageViewNode
 														{node}
 														expanded={expandedAssets.has(node.id)}
@@ -413,10 +426,21 @@
 													/>
 												{/each}
 											</div>
+											{#if upstreamNodes.length > LINEAGE_COLLAPSED_LIMIT}
+												<button
+													type="button"
+													onclick={() => (showAllUpstream = !showAllUpstream)}
+													class="mt-2 text-xs font-medium text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:underline focus:outline-none"
+												>
+													{showAllUpstream
+														? 'Show less'
+														: `Show ${upstreamNodes.length - LINEAGE_COLLAPSED_LIMIT} more`}
+												</button>
+											{/if}
 										</div>
 									{/if}
 
-									{#if lineage.nodes.filter((n) => n.depth > 0).length > 0}
+									{#if downstreamNodes.length > 0}
 										<div>
 											<h4
 												class="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase tracking-wider mb-2"
@@ -424,7 +448,7 @@
 												Downstream
 											</h4>
 											<div class="space-y-2">
-												{#each filteredLineage.nodes.filter((n) => n.depth > 0) as node (node.id)}
+												{#each visibleDownstream as node (node.id)}
 													<LineageViewNode
 														{node}
 														expanded={expandedAssets.has(node.id)}
@@ -434,6 +458,17 @@
 													/>
 												{/each}
 											</div>
+											{#if downstreamNodes.length > LINEAGE_COLLAPSED_LIMIT}
+												<button
+													type="button"
+													onclick={() => (showAllDownstream = !showAllDownstream)}
+													class="mt-2 text-xs font-medium text-earthy-terracotta-700 dark:text-earthy-terracotta-400 hover:underline focus:outline-none"
+												>
+													{showAllDownstream
+														? 'Show less'
+														: `Show ${downstreamNodes.length - LINEAGE_COLLAPSED_LIMIT} more`}
+												</button>
+											{/if}
 										</div>
 									{/if}
 								{/if}

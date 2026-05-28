@@ -46,6 +46,9 @@ dev = [
 langchain = [
     "langchain-core>=0.3",
 ]
+claude-agent = [
+    "claude-agent-sdk>=0.1",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/marmot"]

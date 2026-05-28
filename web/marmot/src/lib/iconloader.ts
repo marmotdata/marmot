@@ -39,6 +39,7 @@ import RabbitMQIcon from '~icons/devicon/rabbitmq';
 import TableauIcon from '~icons/simple-icons/tableau';
 import LookerIcon from '~icons/logos/looker-icon';
 import LangChainIcon from '~icons/simple-icons/langchain';
+import ClaudeIcon from '~icons/simple-icons/claude';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -201,6 +202,21 @@ export const providerIconMap: Record<
 		default: LangChainIcon,
 		class: 'text-[#1C3C3C] dark:text-gray-100',
 		displayName: 'LangChain'
+	},
+	claudeagent: {
+		default: ClaudeIcon,
+		class: 'text-[#D97757] dark:text-[#E8927C]',
+		displayName: 'Claude Agent'
+	},
+	'claude-agent': {
+		default: ClaudeIcon,
+		class: 'text-[#D97757] dark:text-[#E8927C]',
+		displayName: 'Claude Agent'
+	},
+	claude: {
+		default: ClaudeIcon,
+		class: 'text-[#D97757] dark:text-[#E8927C]',
+		displayName: 'Claude'
 	}
 };
 

@@ -1,4 +1,5 @@
 export { Client, type ClientOptions, connect, type ConnectOptions } from "./client.js";
+export { resolve } from "./auth/index.js";
 export type { Credential, AuthScheme, ResolveOptions } from "./auth/index.js";
 export type {
   WorkloadIdentitySource,

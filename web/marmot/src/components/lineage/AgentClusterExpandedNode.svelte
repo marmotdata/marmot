@@ -9,6 +9,7 @@
 			assetType: string;
 			count: number;
 			totalObservations: number;
+			originKind?: 'declared' | 'observed' | 'mixed';
 			clusterKey: string;
 			onCollapse: (clusterKey: string) => void;
 		};
@@ -18,6 +19,15 @@
 		e.stopPropagation();
 		data.onCollapse(data.clusterKey);
 	}
+
+	let originPrefix = $derived(
+		data.originKind === 'declared' ? 'DECLARED' : data.originKind === 'mixed' ? 'MIXED' : 'OBSERVED'
+	);
+	let originIcon = $derived(
+		data.originKind === 'declared'
+			? 'material-symbols:link-rounded'
+			: 'material-symbols:visibility-outline'
+	);
 </script>
 
 <!-- Source handle so the synthetic single edge to the focal agent emerges
@@ -32,13 +42,15 @@
 			</div>
 			<div class="meta">
 				<div class="title">
-					<IconifyIcon icon="material-symbols:visibility-outline" class="w-3 h-3" />
-					<span>OBSERVED · {data.provider}</span>
+					<IconifyIcon icon={originIcon} class="w-3 h-3" />
+					<span>{originPrefix} · {data.provider}</span>
 				</div>
 				<div class="subtitle">
 					{data.count}
 					{data.assetType}{data.count === 1 ? '' : 's'}
-					· {data.totalObservations} lookups
+					{#if data.totalObservations > 0}
+						· {data.totalObservations} lookups
+					{/if}
 				</div>
 			</div>
 		</div>

@@ -16,7 +16,7 @@
 		"@iconify/svelte": "^5.2.1",
 		"@sveltejs/adapter-auto": "^6.1.1",
 		"@sveltejs/adapter-static": "^3.0.10",
-		"@sveltejs/kit": "^2.58.0",
+		"@sveltejs/kit": "^2.61.1",
 		"@sveltejs/vite-plugin-svelte": "^5.1.1",
 		"@tailwindcss/typography": "^0.5.19",
 		"@types/d3": "^7.4.3",
@@ -79,7 +79,7 @@
 		"prism-themes": "^1.9.0",
 		"prismjs": "^1.30.0",
 		"process": "^0.11.10",
-		"protobufjs": "^7.5.6",
+		"protobufjs": "^7.5.8",
 		"svelte-tiptap": "^3.0.1",
 		"svg-pan-zoom": "^3.6.2",
 		"turndown": "^7.2.4"
@@ -103,7 +103,7 @@
 			"dompurify": ">=3.4.2",
 			"markdown-it": ">=14.1.1",
 			"lodash-es": ">=4.18.1",
-			"qs": ">=6.14.2",
+			"qs": ">=6.15.2",
 			"bn.js": ">=5.2.3",
 			"picomatch": ">=4.0.4",
 			"uuid": ">=14.0.0"

@@ -345,19 +345,19 @@
 				};
 			});
 
-		// Agent-focal optimisation: when this asset is an agent, observed
-		// neighbours (AGENT_LOOKUP sources) can number in the hundreds. Group
-		// them by (provider, type) into cluster nodes when a group is large
-		// enough that listing each member would crowd the graph.
-		const isAgentFocal =
-			currentAsset.type?.toLowerCase() === 'agent' &&
-			modifiedEdges.some((e) => e.data?.edgeType === 'AGENT_LOOKUP');
+		// Agent-focal optimisation: when this asset is an agent, its upstream
+		// neighbours (whether declared via the SDK or observed at runtime) can
+		// number in the dozens. Group them by (provider, type) into cluster
+		// cards so the graph stays scannable. Origin is preserved per-edge so
+		// the cluster→agent style still distinguishes "declared dependency"
+		// from "observed at runtime".
+		const isAgentFocal = currentAsset.type?.toLowerCase() === 'agent';
 
 		let finalNodes = nodeArray as Node[];
 		let finalEdges = modifiedEdges;
 
 		if (isAgentFocal) {
-			const clustered = clusterAgentObserved(finalNodes, finalEdges, data, focalId);
+			const clustered = clusterAgentNeighbours(finalNodes, finalEdges, data, focalId);
 			finalNodes = clustered.nodes;
 			finalEdges = clustered.edges;
 		}
@@ -381,10 +381,10 @@
 		return { nodes: layoutedNodes, edges: finalEdges };
 	}
 
-	// Always cluster observed neighbours by (provider, type) on agent-focal
-	// views — even single-member groups — so the graph layout is uniform and
-	// the user can drill into any group via click-to-expand.
-	const CLUSTER_THRESHOLD = 1;
+	// Cluster a group only when there are multiple neighbours of the same
+	// (provider, type). A lone postgres table or lone agent doesn't benefit
+	// from being wrapped in a cluster card.
+	const CLUSTER_THRESHOLD = 2;
 
 	// Cluster keys (provider::type) the user has clicked to expand. Expanded
 	// clusters render their member nodes individually instead of collapsing
@@ -411,7 +411,7 @@
 		}
 	}
 
-	function clusterAgentObserved(
+	function clusterAgentNeighbours(
 		nodeArray: Node[],
 		edges: Edge[],
 		data: LineageResponse,
@@ -421,26 +421,40 @@
 		const assetById = new SvelteMap<string, LineageResponse['nodes'][number]>();
 		for (const n of data.nodes) assetById.set(n.id, n);
 
-		// Identify nodes that are *only* connected to the focal via observed edges.
-		// Nodes with any declared edge stay as-is.
-		const declaredCounterparts = new SvelteSet<string>();
-		const observedCounterparts = new SvelteMap<string, number>(); // node id → max observation_count
+		// Walk every edge touching the focal agent. For each neighbour, track:
+		//   - the max observation_count from any observed edge,
+		//   - whether at least one declared edge touched it,
+		//   - whether at least one observed edge touched it.
+		// We keep all neighbours — declared, observed, or mixed. The styling
+		// downstream uses the declared/observed flags to pick the cluster→agent
+		// stroke.
+		type Neighbour = {
+			observationCount: number;
+			hasDeclared: boolean;
+			hasObserved: boolean;
+		};
+		const neighbours = new SvelteMap<string, Neighbour>();
 		for (const edge of edges) {
 			if (edge.source !== focalId && edge.target !== focalId) continue;
 			const other = edge.source === focalId ? edge.target : edge.source;
+			const cur: Neighbour = neighbours.get(other) ?? {
+				observationCount: 0,
+				hasDeclared: false,
+				hasObserved: false
+			};
 			if (edge.data?.edgeOrigin === 'observed') {
-				const prev = observedCounterparts.get(other) ?? 0;
+				cur.hasObserved = true;
 				const c = Number(edge.data?.observationCount ?? 1);
-				observedCounterparts.set(other, Math.max(prev, c));
+				cur.observationCount = Math.max(cur.observationCount, c);
 			} else {
-				declaredCounterparts.add(other);
+				cur.hasDeclared = true;
 			}
+			neighbours.set(other, cur);
 		}
 
-		// Group purely-observed neighbours by (provider, type)
+		// Group neighbours by (provider, type).
 		const groups = new SvelteMap<string, string[]>();
-		for (const [nodeId] of observedCounterparts) {
-			if (declaredCounterparts.has(nodeId)) continue;
+		for (const [nodeId] of neighbours) {
 			const asset = assetById.get(nodeId)?.asset;
 			if (!asset) continue;
 			const provider = asset.providers?.[0] || asset.type || 'asset';
@@ -465,14 +479,30 @@
 		for (const [key, memberIds] of groups) {
 			if (memberIds.length < CLUSTER_THRESHOLD) continue;
 			const [provider, type] = key.split('::');
-			const totalObservations = memberIds.reduce(
-				(sum, id) => sum + (observedCounterparts.get(id) ?? 1),
-				0
-			);
+			// Aggregate observation count + origin flags across the cluster so
+			// the synthetic edge style can reflect whether this is a declared
+			// dependency, an observed runtime access, or a mix of both.
+			let totalObservations = 0;
+			let clusterHasDeclared = false;
+			let clusterHasObserved = false;
+			for (const id of memberIds) {
+				const n = neighbours.get(id);
+				if (!n) continue;
+				totalObservations += n.observationCount || (n.hasObserved ? 1 : 0);
+				clusterHasDeclared ||= n.hasDeclared;
+				clusterHasObserved ||= n.hasObserved;
+			}
 			const memberMRNs = memberIds
 				.map((id) => assetById.get(id)?.asset?.mrn || id)
 				.filter(Boolean) as string[];
 			const clusterId = `cluster::${focalId}::${key}`;
+
+			const originKind: 'declared' | 'observed' | 'mixed' =
+				clusterHasDeclared && clusterHasObserved
+					? 'mixed'
+					: clusterHasDeclared
+						? 'declared'
+						: 'observed';
 
 			if (expandedClusters.has(key)) {
 				// Expanded → sized container with members in a grid. Each slot
@@ -504,6 +534,7 @@
 						assetType: type,
 						count: memberIds.length,
 						totalObservations,
+						originKind,
 						clusterKey: key,
 						onCollapse: toggleClusterExpansion
 					},
@@ -544,6 +575,7 @@
 						assetType: type,
 						count: memberIds.length,
 						totalObservations,
+						originKind,
 						memberMRNs,
 						clusterKey: key,
 						onToggleExpand: toggleClusterExpansion
@@ -560,17 +592,22 @@
 			// Single synthetic edge from cluster → focal, in both states. The
 			// suppressLabel flag tells CustomEdge not to draw the redundant
 			// "observed · Nx" chip — count is already on the cluster header.
+			// Style mirrors origin: solid when the cluster contains any
+			// declared edge; dashed when every member is observed-only.
+			const clusterEdgeStyle = clusterHasDeclared
+				? `stroke: #94a3b8; stroke-width: 1.5px;`
+				: `stroke: #607b60; stroke-dasharray: 5,4; opacity: 0.85;`;
 			clusterEdges.push({
 				id: `${clusterId}-${focalId}`,
 				source: clusterId,
 				target: focalId,
 				type: 'custom',
 				animated: true,
-				style: `stroke: #607b60; stroke-dasharray: 5,4; opacity: 0.85;`,
-				markerEnd: '',
+				style: clusterEdgeStyle,
+				...(clusterHasDeclared ? {} : { markerEnd: '' }),
 				data: {
-					edgeType: 'AGENT_LOOKUP',
-					edgeOrigin: 'observed',
+					edgeType: clusterHasDeclared ? 'DIRECT' : 'AGENT_LOOKUP',
+					edgeOrigin: clusterHasObserved && !clusterHasDeclared ? 'observed' : 'declared',
 					observationCount: totalObservations,
 					suppressLabel: true
 				}

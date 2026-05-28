@@ -3,6 +3,7 @@ import type { Serialized } from "@langchain/core/load/serializable";
 import { tool } from "@langchain/core/tools";
 import type { ChainValues } from "@langchain/core/utils/types";
 import type { Client } from "../../client.js";
+import { extractMrns, sha256Hex } from "../_shared.js";
 
 type JsonObjectSchema = {
   type: "object";
@@ -301,39 +302,8 @@ export function marmotTool<TInput = Record<string, unknown>>(args: {
   });
 }
 
-function extractMrns(value: unknown): Set<string> {
-  const out = new Set<string>();
-  walkForMrns(value, out, 0);
-  return out;
-}
-
-function walkForMrns(value: unknown, out: Set<string>, depth: number): void {
-  if (depth > 4) return;
-  if (value === null || value === undefined) return;
-  if (Array.isArray(value)) {
-    for (const v of value) walkForMrns(v, out, depth + 1);
-    return;
-  }
-  if (typeof value === "object") {
-    const obj = value as Record<string, unknown>;
-    const mrn = obj.mrn;
-    if (typeof mrn === "string" && mrn) out.add(mrn);
-    for (const v of Object.values(obj)) {
-      if (v !== null && (typeof v === "object" || Array.isArray(v))) {
-        walkForMrns(v, out, depth + 1);
-      }
-    }
-  }
-}
-
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 function asUuid(value: string | undefined): string | undefined {
   return value && UUID_RE.test(value) ? value : undefined;
-}
-
-async function sha256Hex(input: string): Promise<string> {
-  const data = new TextEncoder().encode(input);
-  const buf = await crypto.subtle.digest("SHA-256", data);
-  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("");
 }

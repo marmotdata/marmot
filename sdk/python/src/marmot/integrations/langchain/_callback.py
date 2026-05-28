@@ -4,13 +4,17 @@ lineage edges for the data sources it touches during a run."""
 from __future__ import annotations
 
 import functools
-import hashlib
-import json
 import logging
-import re
 from datetime import datetime, timezone
 from typing import TYPE_CHECKING, Any
 from uuid import UUID
+
+from marmot.integrations._shared import (
+    extract_mrns as _extract_mrns_shared,
+)
+from marmot.integrations._shared import (
+    sha256_hex as _sha256_hex,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -23,7 +27,7 @@ try:
     from langchain_core.callbacks import BaseCallbackHandler as _BaseCallbackHandler
 
     _LANGCHAIN_AVAILABLE = True
-except ImportError:  # pragma: no cover - exercised only when extra missing
+except ImportError:
     _BaseCallbackHandler = object  # type: ignore[assignment,misc]
     _LANGCHAIN_AVAILABLE = False
 
@@ -99,9 +103,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
         self._owner = owner
         self._tools = tools
         self._tool_names = [t.name for t in tools] if tools else None
-        self._system_prompt_hash = (
-            hashlib.sha256(system_prompt.encode()).hexdigest()[:16] if system_prompt else None
-        )
+        self._system_prompt_hash = _sha256_hex(system_prompt)[:16] if system_prompt else None
         self._extra_metadata = extra_metadata or {}
 
         self._agent_mrn: str | None = None
@@ -339,7 +341,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
                 tool_calls=tool_calls or None,
                 observed_assets=observed_extras or None,
             )
-        except Exception as e:  # pragma: no cover - best-effort telemetry
+        except Exception as e:
             _LOG.warning("failed to record Marmot agent run: %s", e)
 
     def _ensure_agent_registered(self) -> None:
@@ -349,7 +351,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             existing = self._client.assets.find(
                 type=_AGENT_ASSET_TYPE, service=self._service, name=self._name
             )
-        except Exception as e:  # pragma: no cover - best-effort
+        except Exception as e:
             _LOG.warning("failed to look up Marmot agent asset: %s", e)
             return
 
@@ -364,7 +366,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
                 self._agent_mrn = _str_or_none(existing.mrn)
                 if self._agent_id:
                     self._client.assets.update(self._agent_id, payload)
-        except Exception as e:  # pragma: no cover - best-effort
+        except Exception as e:
             _LOG.warning("failed to upsert Marmot agent asset: %s", e)
             return
 
@@ -394,7 +396,7 @@ class MarmotCallbackHandler(_BaseCallbackHandler):  # type: ignore[misc,valid-ty
             return
         try:
             self._client.lineage.batch(edges)
-        except Exception as e:  # pragma: no cover - best-effort
+        except Exception as e:
             _LOG.warning("failed to write AGENT_INVOKES edges: %s", e)
 
     def _build_asset_payload(self) -> dict[str, Any]:
@@ -495,17 +497,11 @@ def _str_or_none(v: Any) -> str | None:
 
 
 def _extract_mrns(output: Any) -> set[str]:
-    """Best-effort extraction of asset MRNs from a tool's output.
+    """Best-effort extraction of asset MRNs from a LangChain tool's output.
 
-    Recognises:
-    - dicts with an ``mrn`` key (e.g. results from ``get_asset`` /
-      ``lookup_asset``);
-    - dicts with a ``results`` list of such dicts (e.g. ``search_catalog``);
-    - dicts with a ``nodes`` / ``upstream`` list (lineage responses);
-    - JSON-encoded strings of any of the above (LangChain often stringifies
-      tool outputs before showing them to the LLM);
-    - ``ToolMessage`` / similar wrappers — the JSON payload lives on
-      ``output.content``.
+    Unwraps LangChain's ``ToolMessage`` (whose payload lives on ``content``)
+    before deferring to the shared walker, which handles structured dicts,
+    JSON-encoded strings and free-text MRN URIs uniformly.
     """
     # LangChain 1.x wraps structured tool output in ToolMessage; older agent
     # types may pass the raw return value. Normalise both into ``output``.
@@ -513,59 +509,19 @@ def _extract_mrns(output: Any) -> set[str]:
     if isinstance(content, (str, list, dict)):
         output = content
 
-    found: set[str] = set()
-    _walk_for_mrns(output, found, depth=0)
+    found = _extract_mrns_shared(output)
 
-    # ``content`` can be a list of content blocks (multimodal). Walk each.
+    # ``content`` can be a list of content blocks (multimodal) where each item
+    # exposes ``.text`` as an attribute rather than a dict key. The shared
+    # walker handles dict-shaped blocks; the attribute case is LangChain-only.
     if isinstance(output, list):
         for item in output:
-            text = getattr(item, "text", None) if not isinstance(item, dict) else item.get("text")
-            if isinstance(text, str):
-                _walk_string(text, found)
-
-    if isinstance(output, str):
-        _walk_string(output, found)
+            if not isinstance(item, (dict, str, list)):
+                text = getattr(item, "text", None)
+                if isinstance(text, str):
+                    found |= _extract_mrns_shared(text)
 
     return found
-
-
-def _walk_string(s: str, out: set[str]) -> None:
-    """Try JSON-decode first (most tool outputs are JSON-encoded structured
-    data) then fall back to regex for prose.
-    """
-    try:
-        parsed = json.loads(s)
-        _walk_for_mrns(parsed, out, depth=0)
-    except (ValueError, TypeError):
-        pass
-    for match in _MRN_PATTERN.findall(s):
-        out.add(match)
-
-
-# MRN schemes Marmot is known to emit. Conservative — anything matching
-# ``<scheme>://`` would catch arbitrary URLs (HTTP, etc.); we only mine for
-# schemes we control or know land in the catalog.
-_MRN_PATTERN = re.compile(
-    r"\b(?:mrn|postgres|mysql|kafka|s3|gcs|bigquery|snowflake|redis|"
-    r"clickhouse|elasticsearch|opensearch|mongodb|dynamodb|airflow|"
-    r"dbt|marmot)://[^\s\"'<>,)\]}]+"
-)
-
-
-def _walk_for_mrns(value: Any, out: set[str], *, depth: int) -> None:
-    if depth > 4:
-        return
-    if isinstance(value, dict):
-        mrn = value.get("mrn")
-        if isinstance(mrn, str) and mrn:
-            out.add(mrn)
-        for v in value.values():
-            if isinstance(v, (dict, list)):
-                _walk_for_mrns(v, out, depth=depth + 1)
-    elif isinstance(value, list):
-        for v in value:
-            if isinstance(v, (dict, list)):
-                _walk_for_mrns(v, out, depth=depth + 1)
 
 
 def _tool_asset_mrn(tool: Any) -> str | None:
@@ -620,6 +576,6 @@ def _extract_tokens(response: Any) -> tuple[int, int]:
                 tout = info.get("eval_count") or info.get("output_tokens") or 0
                 if tin or tout:
                     return int(tin), int(tout)
-    except Exception:  # pragma: no cover — best-effort
+    except Exception:
         return 0, 0
     return 0, 0
