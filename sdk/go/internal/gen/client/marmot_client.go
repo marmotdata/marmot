@@ -23,7 +23,6 @@ import (
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/runs"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/search"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/sso"
-	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/tags"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/teams"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/ui"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/users"
@@ -87,7 +86,6 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *Marmot {
 	cli.Runs = runs.New(transport, formats)
 	cli.Search = search.New(transport, formats)
 	cli.Sso = sso.New(transport, formats)
-	cli.Tags = tags.New(transport, formats)
 	cli.Teams = teams.New(transport, formats)
 	cli.UI = ui.New(transport, formats)
 	cli.Users = users.New(transport, formats)
@@ -167,8 +165,6 @@ type Marmot struct {
 
 	Sso sso.ClientService
 
-	Tags tags.ClientService
-
 	Teams teams.ClientService
 
 	UI ui.ClientService
@@ -197,7 +193,6 @@ func (c *Marmot) SetTransport(transport runtime.ClientTransport) {
 	c.Runs.SetTransport(transport)
 	c.Search.SetTransport(transport)
 	c.Sso.SetTransport(transport)
-	c.Tags.SetTransport(transport)
 	c.Teams.SetTransport(transport)
 	c.UI.SetTransport(transport)
 	c.Users.SetTransport(transport)

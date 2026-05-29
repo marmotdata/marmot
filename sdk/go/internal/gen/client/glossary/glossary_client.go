@@ -55,8 +55,6 @@ type ClientOption func(*runtime.ClientOperation)
 type ClientService interface {
 	DeleteGlossaryID(params *DeleteGlossaryIDParams, opts ...ClientOption) (*DeleteGlossaryIDOK, error)
 
-	DeleteGlossaryTagsID(params *DeleteGlossaryTagsIDParams, opts ...ClientOption) (*DeleteGlossaryTagsIDOK, error)
-
 	GetGlossaryAncestorsID(params *GetGlossaryAncestorsIDParams, opts ...ClientOption) (*GetGlossaryAncestorsIDOK, error)
 
 	GetGlossaryChildrenID(params *GetGlossaryChildrenIDParams, opts ...ClientOption) (*GetGlossaryChildrenIDOK, error)
@@ -67,15 +65,9 @@ type ClientService interface {
 
 	GetGlossarySearch(params *GetGlossarySearchParams, opts ...ClientOption) (*GetGlossarySearchOK, error)
 
-	GetGlossaryTagsID(params *GetGlossaryTagsIDParams, opts ...ClientOption) (*GetGlossaryTagsIDOK, error)
-
 	PostGlossary(params *PostGlossaryParams, opts ...ClientOption) (*PostGlossaryCreated, error)
 
-	PostGlossaryTagsID(params *PostGlossaryTagsIDParams, opts ...ClientOption) (*PostGlossaryTagsIDCreated, error)
-
 	PutGlossaryID(params *PutGlossaryIDParams, opts ...ClientOption) (*PutGlossaryIDOK, error)
-
-	PutGlossaryTagsID(params *PutGlossaryTagsIDParams, opts ...ClientOption) (*PutGlossaryTagsIDOK, error)
 
 	SetTransport(transport runtime.ClientTransport)
 }
@@ -122,51 +114,6 @@ func (a *Client) DeleteGlossaryID(params *DeleteGlossaryIDParams, opts ...Client
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for DeleteGlossaryID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-DeleteGlossaryTagsID removes glossary term tag
-
-Remove a single tag association from a glossary term
-*/
-func (a *Client) DeleteGlossaryTagsID(params *DeleteGlossaryTagsIDParams, opts ...ClientOption) (*DeleteGlossaryTagsIDOK, error) {
-	// NOTE: parameters are not validated before sending
-	if params == nil {
-		params = NewDeleteGlossaryTagsIDParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "DeleteGlossaryTagsID",
-		Method:             "DELETE",
-		PathPattern:        "/glossary/tags/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &DeleteGlossaryTagsIDReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-
-	// only one success response has to be checked
-	success, ok := result.(*DeleteGlossaryTagsIDOK)
-	if ok {
-		return success, nil
-	}
-
-	// unexpected success response.
-
-	// no default response is defined.
-	//
-	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for DeleteGlossaryTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -396,51 +343,6 @@ func (a *Client) GetGlossarySearch(params *GetGlossarySearchParams, opts ...Clie
 }
 
 /*
-GetGlossaryTagsID lists glossary term tags
-
-Get all tags associated with a glossary term
-*/
-func (a *Client) GetGlossaryTagsID(params *GetGlossaryTagsIDParams, opts ...ClientOption) (*GetGlossaryTagsIDOK, error) {
-	// NOTE: parameters are not validated before sending
-	if params == nil {
-		params = NewGetGlossaryTagsIDParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "GetGlossaryTagsID",
-		Method:             "GET",
-		PathPattern:        "/glossary/tags/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetGlossaryTagsIDReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-
-	// only one success response has to be checked
-	success, ok := result.(*GetGlossaryTagsIDOK)
-	if ok {
-		return success, nil
-	}
-
-	// unexpected success response.
-
-	// no default response is defined.
-	//
-	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetGlossaryTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
 PostGlossary creates glossary term
 
 Create a new glossary term with name, definition, and optional metadata
@@ -486,51 +388,6 @@ func (a *Client) PostGlossary(params *PostGlossaryParams, opts ...ClientOption) 
 }
 
 /*
-PostGlossaryTagsID adds a tag to a glossary term
-
-Add a single tag association to a glossary term
-*/
-func (a *Client) PostGlossaryTagsID(params *PostGlossaryTagsIDParams, opts ...ClientOption) (*PostGlossaryTagsIDCreated, error) {
-	// NOTE: parameters are not validated before sending
-	if params == nil {
-		params = NewPostGlossaryTagsIDParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "PostGlossaryTagsID",
-		Method:             "POST",
-		PathPattern:        "/glossary/tags/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &PostGlossaryTagsIDReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-
-	// only one success response has to be checked
-	success, ok := result.(*PostGlossaryTagsIDCreated)
-	if ok {
-		return success, nil
-	}
-
-	// unexpected success response.
-
-	// no default response is defined.
-	//
-	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostGlossaryTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
 PutGlossaryID updates glossary term
 
 Update an existing glossary term by its ID
@@ -572,51 +429,6 @@ func (a *Client) PutGlossaryID(params *PutGlossaryIDParams, opts ...ClientOption
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for PutGlossaryID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-/*
-PutGlossaryTagsID replaces glossary term tags
-
-Atomically replace all tag associations for a glossary term
-*/
-func (a *Client) PutGlossaryTagsID(params *PutGlossaryTagsIDParams, opts ...ClientOption) (*PutGlossaryTagsIDOK, error) {
-	// NOTE: parameters are not validated before sending
-	if params == nil {
-		params = NewPutGlossaryTagsIDParams()
-	}
-	op := &runtime.ClientOperation{
-		ID:                 "PutGlossaryTagsID",
-		Method:             "PUT",
-		PathPattern:        "/glossary/tags/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &PutGlossaryTagsIDReader{formats: a.formats},
-		Context:            params.Context,
-		Client:             params.HTTPClient,
-	}
-	for _, opt := range opts {
-		opt(op)
-	}
-	result, err := a.transport.Submit(op)
-	if err != nil {
-		return nil, err
-	}
-
-	// only one success response has to be checked
-	success, ok := result.(*PutGlossaryTagsIDOK)
-	if ok {
-		return success, nil
-	}
-
-	// unexpected success response.
-
-	// no default response is defined.
-	//
-	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PutGlossaryTagsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

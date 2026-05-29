@@ -22,8 +22,8 @@ type PostAssetsTagsIDReader struct {
 // ReadResponse reads a server response into the received o.
 func (o *PostAssetsTagsIDReader) ReadResponse(response runtime.ClientResponse, consumer runtime.Consumer) (any, error) {
 	switch response.Code() {
-	case 201:
-		result := NewPostAssetsTagsIDCreated()
+	case 200:
+		result := NewPostAssetsTagsIDOK()
 		if err := result.readResponse(response, consumer, o.formats); err != nil {
 			return nil, err
 		}
@@ -40,79 +40,75 @@ func (o *PostAssetsTagsIDReader) ReadResponse(response runtime.ClientResponse, c
 			return nil, err
 		}
 		return nil, result
-	case 500:
-		result := NewPostAssetsTagsIDInternalServerError()
-		if err := result.readResponse(response, consumer, o.formats); err != nil {
-			return nil, err
-		}
-		return nil, result
 	default:
 		return nil, runtime.NewAPIError("[POST /assets/tags/{id}] PostAssetsTagsID", response, response.Code())
 	}
 }
 
-// NewPostAssetsTagsIDCreated creates a PostAssetsTagsIDCreated with default headers values
-func NewPostAssetsTagsIDCreated() *PostAssetsTagsIDCreated {
-	return &PostAssetsTagsIDCreated{}
+// NewPostAssetsTagsIDOK creates a PostAssetsTagsIDOK with default headers values
+func NewPostAssetsTagsIDOK() *PostAssetsTagsIDOK {
+	return &PostAssetsTagsIDOK{}
 }
 
 /*
-PostAssetsTagsIDCreated describes a response with status code 201, with default header values.
+PostAssetsTagsIDOK describes a response with status code 200, with default header values.
 
-Created
+OK
 */
-type PostAssetsTagsIDCreated struct {
-	Payload []*models.Tag
+type PostAssetsTagsIDOK struct {
+	Payload *models.Asset
 }
 
-// IsSuccess returns true when this post assets tags Id created response has a 2xx status code
-func (o *PostAssetsTagsIDCreated) IsSuccess() bool {
+// IsSuccess returns true when this post assets tags Id o k response has a 2xx status code
+func (o *PostAssetsTagsIDOK) IsSuccess() bool {
 	return true
 }
 
-// IsRedirect returns true when this post assets tags Id created response has a 3xx status code
-func (o *PostAssetsTagsIDCreated) IsRedirect() bool {
+// IsRedirect returns true when this post assets tags Id o k response has a 3xx status code
+func (o *PostAssetsTagsIDOK) IsRedirect() bool {
 	return false
 }
 
-// IsClientError returns true when this post assets tags Id created response has a 4xx status code
-func (o *PostAssetsTagsIDCreated) IsClientError() bool {
+// IsClientError returns true when this post assets tags Id o k response has a 4xx status code
+func (o *PostAssetsTagsIDOK) IsClientError() bool {
 	return false
 }
 
-// IsServerError returns true when this post assets tags Id created response has a 5xx status code
-func (o *PostAssetsTagsIDCreated) IsServerError() bool {
+// IsServerError returns true when this post assets tags Id o k response has a 5xx status code
+func (o *PostAssetsTagsIDOK) IsServerError() bool {
 	return false
 }
 
-// IsCode returns true when this post assets tags Id created response a status code equal to that given
-func (o *PostAssetsTagsIDCreated) IsCode(code int) bool {
-	return code == 201
+// IsCode returns true when this post assets tags Id o k response a status code equal to that given
+func (o *PostAssetsTagsIDOK) IsCode(code int) bool {
+	return code == 200
 }
 
-// Code gets the status code for the post assets tags Id created response
-func (o *PostAssetsTagsIDCreated) Code() int {
-	return 201
+// Code gets the status code for the post assets tags Id o k response
+func (o *PostAssetsTagsIDOK) Code() int {
+	return 200
 }
 
-func (o *PostAssetsTagsIDCreated) Error() string {
+func (o *PostAssetsTagsIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdOK %s", 200, payload)
 }
 
-func (o *PostAssetsTagsIDCreated) String() string {
+func (o *PostAssetsTagsIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdOK %s", 200, payload)
 }
 
-func (o *PostAssetsTagsIDCreated) GetPayload() []*models.Tag {
+func (o *PostAssetsTagsIDOK) GetPayload() *models.Asset {
 	return o.Payload
 }
 
-func (o *PostAssetsTagsIDCreated) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+func (o *PostAssetsTagsIDOK) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
+
+	o.Payload = new(models.Asset)
 
 	// response payload
-	if err := consumer.Consume(response.Body(), &o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
+	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
 		return err
 	}
 
@@ -248,76 +244,6 @@ func (o *PostAssetsTagsIDNotFound) GetPayload() *models.ErrorResponse {
 }
 
 func (o *PostAssetsTagsIDNotFound) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
-
-	o.Payload = new(models.ErrorResponse)
-
-	// response payload
-	if err := consumer.Consume(response.Body(), o.Payload); err != nil && !stderrors.Is(err, io.EOF) {
-		return err
-	}
-
-	return nil
-}
-
-// NewPostAssetsTagsIDInternalServerError creates a PostAssetsTagsIDInternalServerError with default headers values
-func NewPostAssetsTagsIDInternalServerError() *PostAssetsTagsIDInternalServerError {
-	return &PostAssetsTagsIDInternalServerError{}
-}
-
-/*
-PostAssetsTagsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
-type PostAssetsTagsIDInternalServerError struct {
-	Payload *models.ErrorResponse
-}
-
-// IsSuccess returns true when this post assets tags Id internal server error response has a 2xx status code
-func (o *PostAssetsTagsIDInternalServerError) IsSuccess() bool {
-	return false
-}
-
-// IsRedirect returns true when this post assets tags Id internal server error response has a 3xx status code
-func (o *PostAssetsTagsIDInternalServerError) IsRedirect() bool {
-	return false
-}
-
-// IsClientError returns true when this post assets tags Id internal server error response has a 4xx status code
-func (o *PostAssetsTagsIDInternalServerError) IsClientError() bool {
-	return false
-}
-
-// IsServerError returns true when this post assets tags Id internal server error response has a 5xx status code
-func (o *PostAssetsTagsIDInternalServerError) IsServerError() bool {
-	return true
-}
-
-// IsCode returns true when this post assets tags Id internal server error response a status code equal to that given
-func (o *PostAssetsTagsIDInternalServerError) IsCode(code int) bool {
-	return code == 500
-}
-
-// Code gets the status code for the post assets tags Id internal server error response
-func (o *PostAssetsTagsIDInternalServerError) Code() int {
-	return 500
-}
-
-func (o *PostAssetsTagsIDInternalServerError) Error() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdInternalServerError %s", 500, payload)
-}
-
-func (o *PostAssetsTagsIDInternalServerError) String() string {
-	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /assets/tags/{id}][%d] postAssetsTagsIdInternalServerError %s", 500, payload)
-}
-
-func (o *PostAssetsTagsIDInternalServerError) GetPayload() *models.ErrorResponse {
-	return o.Payload
-}
-
-func (o *PostAssetsTagsIDInternalServerError) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
 
 	o.Payload = new(models.ErrorResponse)
 
