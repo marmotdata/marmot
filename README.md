@@ -61,6 +61,69 @@ All types of contributions are encouraged and valued!
 
 Before contributing, please check out the [Contributing Guide](CONTRIBUTING.md).
 
+
+
+## FAQ
+
+### What is Marmot?
+
+Marmot is an **open-source data catalog** for teams who want powerful data discovery without enterprise complexity. It catalogs every data asset (tables, topics, queues, APIs), enriches it with context, and makes it accessible to both your team and AI tools. Unlike traditional catalogs requiring extensive infrastructure, Marmot ships as a **single binary** with an intuitive UI.
+
+### Why Use Marmot?
+
+| Feature | Benefit |
+|---------|---------|
+| **Search Everything** | Find any data asset in seconds with full-text search, structured queries, boolean logic, and metadata filters |
+| **Interactive Lineage** | Trace data flows from source to destination, analyze impact before making changes |
+| **Metadata-First** | Store rich metadata for any asset type (tables, topics, APIs, dashboards) |
+| **Team Collaboration** | Assign ownership, document business context, maintain shared glossaries |
+| **AI-Ready** | Expose certified context through MCP, API, and UI |
+| **Single Binary** | No complex infrastructure required, deploy in minutes |
+
+### How Does Marmot Integrate with AI Agents?
+
+Marmot exposes certified context through **MCP (Model Context Protocol)**, enabling AI agents to query real metadata about your data assets. This allows AI tools to understand your data landscape, trace lineage, and make informed decisions based on actual metadata rather than guessing.
+
+### What Data Sources Can I Catalog?
+
+Marmot supports cataloging various data asset types through its plugin system:
+- **Tables** (databases, data warehouses)
+- **Topics** (message queues, event streams)
+- **Queues** (job queues, messaging systems)
+- **APIs** (REST, GraphQL, internal services)
+- **Dashboards** (visualization tools, BI platforms)
+
+### How Do I Deploy Marmot?
+
+**Quick Start Options:**
+
+| Method | Description |
+|--------|-------------|
+| **Documentation Guide** | Follow the [Deploy](https://marmotdata.io/docs/Deploy) guide for step-by-step setup |
+| **Live Demo** | Try the [live demo](https://demo.marmotdata.io) before deploying |
+| **Single Binary** | Download and run the single binary for your platform |
+
+### Is Marmot Free?
+
+Yes! Marmot is **open-source software** licensed under the **MIT License**. You can use, modify, and distribute it freely. Self-hosting is completely free with no licensing costs.
+
+### How Can I Contribute?
+
+All contributions are welcome:
+- **Report bugs** or suggest features via [GitHub Issues](https://github.com/marmotdata/marmot/issues)
+- **Improve documentation** (README, guides, API docs)
+- **Build new plugins** for additional data sources
+- **Check the [Contributing Guide](CONTRIBUTING.md)** before contributing
+
+### Where Can I Get Help?
+
+| Resource | Link |
+|----------|------|
+| **Documentation** | [marmotdata.io/docs](https://marmotdata.io/docs/introduction) |
+| **Discord Community** | [Join Discord](https://discord.gg/TWCk7hVFN4) |
+| **GitHub Issues** | [Report issues](https://github.com/marmotdata/marmot/issues) |
+| **Live Demo** | [Try demo](https://demo.marmotdata.io) |
+
 ## License
 
 Marmot is open-source software licensed under the [MIT License](LICENSE).
