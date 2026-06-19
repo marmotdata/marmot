@@ -4,7 +4,9 @@ sidebar_position: 1
 
 # Introduction
 
-Marmot is an open-source data catalog designed for teams who want powerful data discovery without enterprise complexity. Built with a focus on simplicity and speed, Marmot helps you catalog assets across your entire data stack - from databases and APIs to message queues and data pipelines.
+Marmot is the open source **context layer** for your whole stack: a single catalog for every asset your systems and teams depend on, from services, APIs, queues, topics and brokers to databases, tables and pipelines. It exists to solve **context starvation**, the moment an engineer or an AI agent has to act without knowing what exists, who owns it, what it means, or what it connects to.
+
+Marmot is built so both **humans and agents** can ask that question and get a real answer. [Catalog your assets](Populating/index.md) once, enrich them with ownership and business context, and expose them through the UI, a [REST API](api-reference.md), and a built-in [MCP server](MCP/index.md) that lets AI agents read your catalog, then write back the [lineage](open-lineage.md) they generate.
 
 <div style={{maxWidth: '480px'}}>
 <iframe width="100%" style={{aspectRatio: '16 / 9', border: 'none', borderRadius: '12px'}} src="https://www.youtube.com/embed/_JBcQGj_bFU" title="Marmot Demo" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen></iframe>
@@ -20,32 +22,30 @@ import { CalloutCard, DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@si
   icon="mdi:rocket-launch"
 />
 
+## Built for agents
+
+AI agents are only as good as the context they can reach. Through a built-in MCP server and our SDKs, Marmot gives your agents a live, governed map of every asset in your stack: what exists, who owns it, what it means, and how it all connects.
+
+<DocCardGrid>
+  <DocCard
+    title="Marmot for Agents"
+    description="Plug your LLM agents into the catalog: they read it for context and write back the lineage they generate."
+    docId="Agents/index"
+    icon="mdi:robot-outline"
+  />
+  <DocCard
+    title="MCP Server"
+    description="Let Claude, Cursor, ChatGPT and any MCP client answer questions backed by your real catalog."
+    docId="MCP/index"
+    icon="mdi:protocol"
+  />
+</DocCardGrid>
+
 ## Why Marmot?
 
-Unlike traditional catalogs that require extensive infrastructure and configuration, Marmot ships as a **single binary** with an intuitive UI, making it easy to deploy and start cataloging in minutes.
+Most catalogs were built to help a data team document tables. Marmot is built to feed context to whoever needs it, human or agent, across every kind of asset: services, APIs, queues, topics, brokers, databases, tables and pipelines.
 
-<FeatureGrid>
-  <FeatureCard
-    title="Deploy in Minutes"
-    description="Single binary, Docker, or Kubernetes - no complex setup required"
-    icon="mdi:lightning-bolt"
-  />
-  <FeatureCard
-    title="Powerful Search"
-    description="Query language with full-text, metadata, and boolean operators"
-    icon="mdi:magnify"
-  />
-  <FeatureCard
-    title="Track Lineage"
-    description="Interactive dependency graphs to understand data flows and impact"
-    icon="mdi:source-branch"
-  />
-  <FeatureCard
-    title="Flexible Integrations"
-    description="CLI, REST API, Terraform, and Pulumi - catalog assets your way"
-    icon="mdi:puzzle"
-  />
-</FeatureGrid>
+That means agents are first class, not an afterthought. A native MCP server and our SDKs are part of the core, so your agents read the same governed context your team does. And Marmot stays light enough to actually adopt: a single binary backed only by PostgreSQL, with no platform team required.
 
 ## Architecture
 
@@ -55,62 +55,80 @@ Marmot is built entirely in Go with PostgreSQL being the only external dependenc
   <img src="/img/marmot-diagram.png" alt="Marmot architecture diagram" style={{maxWidth: '100%', borderRadius: '8px'}} />
 </div>
 
+## What Marmot stores
+
+Marmot is a context layer, so it stores **metadata about your assets**, not the data inside them. That means schemas, field names and types, ownership, descriptions, tags, lineage and statistics. The rows in your tables, the messages on your topics and the payloads behind your APIs never enter Marmot.
+
+Plugins read a source's structure and metadata into PostgreSQL; the data itself never moves. The easiest path is to run it on our platform, isolated per customer and under strict access controls. Need everything to stay within your control? Run Marmot yourself, free or with an enterprise license, in your own cloud on AWS, Google Cloud, Azure, OVHcloud or anywhere else.
+
+<CalloutCard
+  title="Building for a regulated environment?"
+  description="Run it yourself so nothing leaves your VPC, and read the source to verify exactly what is collected."
+  href="/pricing#contact"
+  buttonText="Talk to us"
+  variant="secondary"
+  icon="mdi:shield-check-outline"
+/>
+
 ## Features
 
-### Search Everything
+Everything you need to turn scattered assets into a context layer that humans and agents can both query.
 
-Find any data asset across your entire organisation in seconds. Combine full-text search with structured queries using metadata filters, boolean logic, and comparison operators.
+<FeatureGrid>
+  <FeatureCard
+    title="Discovery for humans and agents"
+    description="Find any asset across your whole stack in seconds, from the UI or straight through MCP."
+    icon="mdi:magnify"
+    docId="queries"
+  />
+  <FeatureCard
+    title="Lineage and impact"
+    description="Trace how data flows and what depends on what, so people and agents can reason about change before they make it."
+    icon="mdi:source-branch"
+    docId="open-lineage"
+  />
+  <FeatureCard
+    title="Context that gives meaning"
+    description="Ownership, business definitions, tags and custom fields turn raw assets into answers, not guesses."
+    icon="mdi:tag-text-outline"
+    docId="glossary"
+  />
+  <FeatureCard
+    title="Every asset, one catalog"
+    description="Services, APIs, queues, topics, brokers, databases, tables and pipelines, all in a single context layer."
+    icon="mdi:shape-outline"
+    docId="Populating/index"
+  />
+  <FeatureCard
+    title="Built for agents"
+    description="A native MCP server and our SDKs let your agents read context and write back the lineage they generate."
+    icon="mdi:robot-outline"
+    docId="Agents/index"
+  />
+  <FeatureCard
+    title="Data products"
+    description="Group related assets into curated bundles or dynamic rules that grow with your catalog."
+    icon="mdi:package-variant-closed"
+    docId="data-products"
+  />
+</FeatureGrid>
 
-### Interactive Lineage Visualisation
+## Get started
 
-Trace data flows from source to destination with interactive dependency graphs. Understand upstream and downstream dependencies, identify bottlenecks, and analyse impact before making changes.
-
-### Metadata-First Architecture
-
-Store rich metadata for any asset type. From tables and topics to APIs and dashboards - if it matters to your data stack, you can catalog it in Marmot.
-
-### Team Collaboration
-
-Assign ownership, document business context, and create glossaries. Keep your entire team aligned with centralised knowledge about your data assets.
-
-### Data Products
-
-Group related assets into logical collections. Use manual assignment for curated bundles or dynamic rules that use the query language to automatically include matching assets as your catalog grows.
-
-## Getting Started
-
-Ready to dive in? Here's where to go next:
+Pick a starting point. The [Quick Start](quick-start.md) walks you from an empty deployment to a populated catalog, step by step.
 
 <DocCardGrid>
   <DocCard
-    title="Populating Your Catalog"
-    description="Learn how to add assets using plugins, CLI, or API"
-    docId="Populating/index"
-    icon="mdi:database-plus"
+    title="Quick Start"
+    description="Spin up Marmot with Docker Compose in a couple of minutes, then start cataloging."
+    docId="quick-start"
+    icon="mdi:rocket-launch-outline"
   />
   <DocCard
-    title="Data Products"
-    description="Group assets into logical collections with manual or dynamic rules"
-    docId="data-products"
-    icon="mdi:package-variant-closed"
-  />
-  <DocCard
-    title="Glossary"
-    description="Define business terms and create a shared vocabulary"
-    docId="glossary"
-    icon="mdi:book-alphabet"
-  />
-  <DocCard
-    title="Query Language"
-    description="Use Marmot's powerful search capabilities"
-    docId="queries"
-    icon="mdi:code-tags"
-  />
-  <DocCard
-    title="Deployment Options"
-    description="Deploy to production with Docker, Helm, or the CLI"
-    docId="Deploy/index"
-    icon="mdi:cloud-upload"
+    title="Marmot for agents"
+    description="Connect your agents through the built-in MCP server and our SDKs."
+    docId="Agents/index"
+    icon="mdi:robot-outline"
   />
 </DocCardGrid>
 
