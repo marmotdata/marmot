@@ -57,5 +57,11 @@
   "engines": {
     "node": ">=20.0"
   },
-  "packageManager": "pnpm@11.3.0"
+  "packageManager": "pnpm@11.3.0",
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "core-js",
+      "core-js-pure"
+    ]
+  }
 }
