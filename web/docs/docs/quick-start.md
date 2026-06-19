@@ -8,6 +8,7 @@ title: Quick Start
 Get Marmot running in seconds with Docker Compose.
 
 import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard';
+import { Steps, Step } from '@site/src/components/Steps';
 
 <CalloutCard
   title="Just Want to Explore?"
@@ -17,11 +18,13 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
   icon="mdi:rocket-launch"
 />
 
-## Prerequisites
+<Steps>
+  <Step title="Install the prerequisites">
 
 [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed.
 
-## Create Your Docker Compose File
+  </Step>
+  <Step title="Create your Docker Compose file">
 
 Create a `docker-compose.yaml`:
 
@@ -61,13 +64,17 @@ volumes:
   marmot_data:
 ```
 
-## Start Marmot
+  </Step>
+  <Step title="Start Marmot">
 
 ```bash
 docker compose up -d
 ```
 
 Open [http://localhost:8080](http://localhost:8080) and log in with `admin` / `admin`.
+
+  </Step>
+</Steps>
 
 ## Next Steps
 

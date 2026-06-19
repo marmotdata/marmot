@@ -196,9 +196,9 @@ export default function Hero(): JSX.Element {
           data-animate-delay="2"
           className="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-gray-900 dark:text-white mb-5 tracking-tight leading-[1.1]"
         >
-          Discover any data asset in seconds.
+          AI agents are only as good as
           <br />
-          <span className="gradient-text">Then let your AI do the same</span>
+          <span className="gradient-text">the context they can reach.</span>
         </h1>
 
         <p
@@ -206,8 +206,10 @@ export default function Hero(): JSX.Element {
           data-animate-delay="3"
           className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed"
         >
-          The <b>open-source context layer for your AI</b>. Catalog your tables,
-          topics, queues and APIs then expose real metadata to your AI agents.
+          Marmot is the <b>open source context layer</b> for agents and
+          humans. Catalog every service, API, queue, topic, database and
+          pipeline then expose real, governed context to your AI agents and your
+          team.
         </p>
 
         <div

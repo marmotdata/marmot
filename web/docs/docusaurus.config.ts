@@ -21,7 +21,7 @@ try {
 
 const config: Config = {
   title: "Marmot",
-  tagline: "Modern Data Discovery for Modern Teams",
+  tagline: "The open source context layer for agents and humans",
   favicon: "img/favicon.ico",
 
   // Set the production url of your site here
