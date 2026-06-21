@@ -246,7 +246,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		}
 
 		mrnValue := mrn.New("Database", "ClickHouse", name)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
 			Name:      &name,
@@ -254,7 +253,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 			Type:      "Database",
 			Providers: []string{"ClickHouse"},
 			Metadata:  metadata,
-			Tags:      processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "ClickHouse",
 				LastSyncAt: time.Now(),
@@ -334,7 +332,6 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]asset.Ass
 		tableNames = append(tableNames, name)
 
 		mrnValue := mrn.New(assetType, "ClickHouse", fmt.Sprintf("%s.%s", dbName, name))
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		a := asset.Asset{
 			Name:      &name,
@@ -342,7 +339,6 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]asset.Ass
 			Type:      assetType,
 			Providers: []string{"ClickHouse"},
 			Metadata:  metadata,
-			Tags:      processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "ClickHouse",
 				LastSyncAt: time.Now(),

@@ -8,6 +8,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/search"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/core/user"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
@@ -15,6 +16,7 @@ import (
 type GlossaryService interface {
 	Get(ctx context.Context, id string) (*glossary.GlossaryTerm, error)
 	Search(ctx context.Context, filter glossary.SearchFilter) (*glossary.ListResult, error)
+	ListGlossaryTermTags(ctx context.Context, id string) ([]tag.Tag, error)
 }
 
 type TeamService interface {

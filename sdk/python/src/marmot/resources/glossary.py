@@ -2,21 +2,30 @@
 
 from __future__ import annotations
 
-from typing import cast
+# mypy doesn't allow to use list type if the class has a method with the same name e.g. list()
+from typing import List, cast  # noqa: UP035
 
 from marmot._adapter import unwrap
 from marmot._gen.api.glossary import (
     delete_glossary_id,
+    delete_glossary_tags_id,
     get_glossary_id,
     get_glossary_list,
     get_glossary_search,
+    get_glossary_tags_id,
     post_glossary,
+    post_glossary_tags_id,
     put_glossary_id,
+    put_glossary_tags_id,
 )
 from marmot._gen.client import AuthenticatedClient
+from marmot._gen.models.add_glossary_term_tag_request import AddGlossaryTermTagRequest
 from marmot._gen.models.create_term_request import CreateTermRequest
 from marmot._gen.models.glossary_list_result import GlossaryListResult
 from marmot._gen.models.glossary_term import GlossaryTerm
+from marmot._gen.models.remove_glossary_term_tag_request import RemoveGlossaryTermTagRequest
+from marmot._gen.models.replace_glossary_term_tags_request import ReplaceGlossaryTermTagsRequest
+from marmot._gen.models.tag import Tag
 from marmot._gen.models.update_term_request import UpdateTermRequest
 from marmot._gen.types import UNSET, Unset
 
@@ -113,3 +122,34 @@ class GlossaryResource:
     def delete(self, term_id: str) -> None:
         """Delete a glossary term."""
         unwrap(delete_glossary_id.sync_detailed(id=term_id, client=self._c))
+
+    def list_term_tags(self, term_id: str) -> List[Tag]:  # noqa: UP006
+        """List all tags associated with a glossary term."""
+        return cast(
+            List[Tag],  # noqa: UP006
+            unwrap(get_glossary_tags_id.sync_detailed(id=term_id, client=self._c)),
+        )
+
+    def add_term_tag(self, term_id: str, tag_id: str) -> List[Tag]:  # noqa: UP006
+        """Add a single tag association to a glossary term."""
+        body = AddGlossaryTermTagRequest(tag_id=tag_id)
+        return cast(
+            List[Tag],  # noqa: UP006
+            unwrap(post_glossary_tags_id.sync_detailed(id=term_id, client=self._c, body=body)),
+        )
+
+    def remove_term_tag(self, term_id: str, tag_id: str) -> dict[str, str]:
+        """Remove a single tag association from a glossary term."""
+        body = RemoveGlossaryTermTagRequest(tag_id=tag_id)
+        return cast(
+            dict[str, str],
+            unwrap(delete_glossary_tags_id.sync_detailed(id=term_id, client=self._c, body=body)),
+        )
+
+    def set_term_tags(self, term_id: str, tag_ids: List[str]) -> GlossaryTerm:  # noqa: UP006
+        """Atomically replace all tag associations for a glossary term."""
+        body = ReplaceGlossaryTermTagsRequest(tag_ids=tag_ids)
+        return cast(
+            GlossaryTerm,
+            unwrap(put_glossary_tags_id.sync_detailed(id=term_id, client=self._c, body=body)),
+        )

@@ -1,8 +1,12 @@
 import type { Transport } from "../_http.js";
 import type {
+  AddGlossaryTermTagRequest,
   CreateTermRequest,
   GlossaryListResult,
   GlossaryTerm,
+  RemoveGlossaryTermTagRequest,
+  ReplaceGlossaryTermTagsRequest,
+  Tag,
   UpdateTermRequest,
 } from "../_models.js";
 import { API_PREFIX } from "./index.js";
@@ -75,5 +79,27 @@ export class GlossaryResource {
 
   async delete(termId: string): Promise<void> {
     await this.transport.delete(`${API_PREFIX}/glossary/${termId}`);
+  }
+
+  async listTermTags(termId: string): Promise<Tag[]> {
+    return this.transport.get<Tag[]>(`${API_PREFIX}/glossary/tags/${termId}`);
+  }
+
+  async addTermTag(termId: string, tagId: string): Promise<Tag[]> {
+    const body: AddGlossaryTermTagRequest = { tag_id: tagId };
+    return this.transport.post<Tag[]>(`${API_PREFIX}/glossary/tags/${termId}`, body);
+  }
+
+  async removeTermTag(termId: string, tagId: string): Promise<Record<string, string>> {
+    const body: RemoveGlossaryTermTagRequest = { tag_id: tagId };
+    return this.transport.delete<Record<string, string>>(
+      `${API_PREFIX}/glossary/tags/${termId}`,
+      body,
+    );
+  }
+
+  async setTermTags(termId: string, tagIds: string[]): Promise<GlossaryTerm> {
+    const body: ReplaceGlossaryTermTagsRequest = { tag_ids: tagIds };
+    return this.transport.put<GlossaryTerm>(`${API_PREFIX}/glossary/tags/${termId}`, body);
   }
 }

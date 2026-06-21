@@ -125,7 +125,7 @@
 							{#each node.asset.tags as tag (tag)}
 								<span
 									class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full"
-									>{tag}</span
+									>{tag.name}</span
 								>
 							{/each}
 						</div>

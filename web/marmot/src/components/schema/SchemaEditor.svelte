@@ -411,7 +411,11 @@
 			<!-- View mode -->
 			<div>
 				{#key activeTab}
-					<SchemaSummary schema={{ [activeTab]: schemas[activeTab] }} {showRawSchema} />
+					<SchemaSummary
+						schema={{ [activeTab]: schemas[activeTab] }}
+						{showRawSchema}
+						assetId={asset.id}
+					/>
 				{/key}
 			</div>
 		{/if}

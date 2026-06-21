@@ -80,7 +80,8 @@ export function processSqlColumnSchema(schemaSection: unknown): Field[] {
 			description: descParts.length > 0 ? descParts.join(' · ') : undefined,
 			required,
 			default: col.default_expression,
-			indentLevel: 0
+			indentLevel: 0,
+			isLeaf: true
 		});
 	}
 

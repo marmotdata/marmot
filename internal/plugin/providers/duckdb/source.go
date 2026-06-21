@@ -246,7 +246,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]asset.Asset, err
 		}
 
 		mrnValue := mrn.New(assetType, "DuckDB", qualifiedName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		a := asset.Asset{
 			Name:      &tableName,
@@ -255,7 +254,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]asset.Asset, err
 			Providers: []string{"DuckDB"},
 			Metadata:  metadata,
 			Schema:    make(map[string]string),
-			Tags:      processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "DuckDB",
 				LastSyncAt: time.Now(),

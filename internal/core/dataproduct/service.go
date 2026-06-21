@@ -9,6 +9,7 @@ import (
 
 	validator "github.com/go-playground/validator/v10"
 	"github.com/marmotdata/marmot/internal/core/imageproc"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/query"
 	"github.com/rs/zerolog/log"
 )
@@ -68,6 +69,11 @@ type Service interface {
 
 	SetRuleObserver(observer RuleObserver)
 	SetSearchObserver(observer SearchObserver)
+
+	ListDataProductTags(ctx context.Context, id string) ([]tag.Tag, error)
+	SetProductTags(ctx context.Context, id string, tagIDs []string) error
+	AddProductTag(ctx context.Context, id string, tagID string) error
+	RemoveProductTag(ctx context.Context, id string, tagID string) error
 }
 
 // RuleObserver is notified when rules are created, updated, or deleted.
@@ -88,12 +94,14 @@ type service struct {
 	validator      *validator.Validate
 	ruleObserver   RuleObserver
 	searchObserver SearchObserver
+	tagService     tag.Service
 }
 
-func NewService(repo Repository) Service {
+func NewService(repo Repository, tagSvc tag.Service) Service {
 	return &service{
-		repo:      repo,
-		validator: validator.New(),
+		repo:       repo,
+		validator:  validator.New(),
+		tagService: tagSvc,
 	}
 }
 
@@ -125,13 +133,22 @@ func (s *service) Create(ctx context.Context, input CreateInput) (*DataProduct, 
 		Name:        input.Name,
 		Description: input.Description,
 		Metadata:    input.Metadata,
-		Tags:        input.Tags,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
 
 	if err := s.repo.Create(ctx, dp, input.Owners); err != nil {
 		return nil, err
+	}
+
+	if len(input.Tags) > 0 {
+		tagIDs, err := s.tagService.ResolveNames(ctx, input.Tags)
+		if err != nil {
+			return nil, fmt.Errorf("resolving tags: %w", err)
+		}
+		if err := s.repo.SetTags(ctx, dp.ID, tagIDs); err != nil {
+			return nil, fmt.Errorf("setting tags: %w", err)
+		}
 	}
 
 	for _, ruleInput := range input.Rules {
@@ -176,14 +193,27 @@ func (s *service) Update(ctx context.Context, id string, input UpdateInput) (*Da
 	if input.Metadata != nil {
 		existing.Metadata = input.Metadata
 	}
-	if input.Tags != nil {
-		existing.Tags = input.Tags
-	}
 
 	existing.UpdatedAt = time.Now().UTC()
 
 	if err := s.repo.Update(ctx, existing, input.Owners); err != nil {
 		return nil, err
+	}
+
+	if input.Tags != nil {
+		if len(input.Tags) > 0 {
+			tagIDs, err := s.tagService.ResolveNames(ctx, input.Tags)
+			if err != nil {
+				return nil, fmt.Errorf("resolving tags: %w", err)
+			}
+			if err := s.repo.SetTags(ctx, id, tagIDs); err != nil {
+				return nil, fmt.Errorf("setting tags: %w", err)
+			}
+		} else {
+			if err := s.repo.SetTags(ctx, id, []string{}); err != nil {
+				return nil, fmt.Errorf("clearing tags: %w", err)
+			}
+		}
 	}
 
 	if s.searchObserver != nil {
@@ -199,6 +229,40 @@ func (s *service) Delete(ctx context.Context, id string) error {
 	}
 	if s.searchObserver != nil {
 		s.searchObserver.OnEntityDeleted(ctx, "data_product", id)
+	}
+	return nil
+}
+
+func (s *service) ListDataProductTags(ctx context.Context, id string) ([]tag.Tag, error) {
+	return s.repo.ListDataProductTags(ctx, id)
+}
+
+func (s *service) SetProductTags(ctx context.Context, id string, tagIDs []string) error {
+	if err := s.repo.SetTags(ctx, id, tagIDs); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "data_product", id)
+	}
+	return nil
+}
+
+func (s *service) AddProductTag(ctx context.Context, id string, tagID string) error {
+	if err := s.repo.AddTag(ctx, id, tagID); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "data_product", id)
+	}
+	return nil
+}
+
+func (s *service) RemoveProductTag(ctx context.Context, id string, tagID string) error {
+	if err := s.repo.RemoveTag(ctx, id, tagID); err != nil {
+		return err
+	}
+	if s.searchObserver != nil {
+		s.searchObserver.OnEntityChanged(ctx, "data_product", id)
 	}
 	return nil
 }

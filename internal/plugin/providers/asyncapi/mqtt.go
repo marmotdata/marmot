@@ -8,7 +8,6 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/mqtt"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 func (s *Source) createMQTTTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *mqtt.ChannelBinding) asset.Asset {
@@ -41,7 +40,6 @@ func (s *Source) createMQTTTopic(doc *asyncapi3.Document, channelName string, ch
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &name,
@@ -50,7 +48,6 @@ func (s *Source) createMQTTTopic(doc *asyncapi3.Document, channelName string, ch
 		Providers:   []string{"MQTT"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),

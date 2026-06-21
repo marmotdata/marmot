@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -49,14 +50,13 @@ func searchAssets(cmd *cobra.Command, query string) error {
 		return p.PrintRaw(data)
 	}
 
-	t := output.NewTable("ID", "NAME", "TYPE", "PROVIDERS", "TAGS")
+	t := output.NewTable("ID", "NAME", "TYPE", "PROVIDERS")
 	for _, a := range resp.Assets {
 		t.AddRow(
 			a.ID,
 			formatAssetName(a),
 			a.Type,
 			strings.Join(a.Providers, ", "),
-			strings.Join(a.Tags, ", "),
 		)
 	}
 	label := "assets"
@@ -106,7 +106,6 @@ var assetsGetCmd = &cobra.Command{
 		t.AddRow("Type", a.Type)
 		t.AddRow("Providers", strings.Join(a.Providers, ", "))
 		t.AddRow("Description", a.Description)
-		t.AddRow("Tags", strings.Join(a.Tags, ", "))
 		t.AddRow("MRN", a.Mrn)
 		t.AddRow("Created", a.CreatedAt)
 		t.AddRow("Updated", a.UpdatedAt)
@@ -204,45 +203,6 @@ var assetsSummaryCmd = &cobra.Command{
 	},
 }
 
-var assetsTagsCmd = &cobra.Command{
-	Use:   "tags",
-	Short: "Manage asset tags",
-}
-
-var assetsTagsAddCmd = &cobra.Command{
-	Use:   "add <asset-id> <tag>",
-	Short: "Add a tag to an asset",
-	Args:  cobra.ExactArgs(2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := newClient()
-		if err != nil {
-			return err
-		}
-		if err := c.Assets.AddTag(cmd.Context(), args[0], args[1]); err != nil {
-			return err
-		}
-		fmt.Printf("Tag %q added to asset %s.\n", args[1], args[0])
-		return nil
-	},
-}
-
-var assetsTagsRemoveCmd = &cobra.Command{
-	Use:   "remove <asset-id> <tag>",
-	Short: "Remove a tag from an asset",
-	Args:  cobra.ExactArgs(2),
-	RunE: func(cmd *cobra.Command, args []string) error {
-		c, err := newClient()
-		if err != nil {
-			return err
-		}
-		if err := c.Assets.RemoveTag(cmd.Context(), args[0], args[1]); err != nil {
-			return err
-		}
-		fmt.Printf("Tag %q removed from asset %s.\n", args[1], args[0])
-		return nil
-	},
-}
-
 var assetsOwnersCmd = &cobra.Command{
 	Use:   "owners <asset-id>",
 	Short: "List owners of an asset",
@@ -281,6 +241,170 @@ var assetsOwnersCmd = &cobra.Command{
 	},
 }
 
+var assetsTagsCmd = &cobra.Command{
+	Use:   "tags <asset-id>",
+	Short: "Manage tags on an asset",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return cmd.Help()
+		}
+		return listAssetTags(cmd.Context(), args[0])
+	},
+}
+
+func listAssetTags(ctx context.Context, assetID string) error {
+	p := getPrinter()
+	c, err := newClient()
+	if err != nil {
+		return err
+	}
+
+	tags, err := c.Assets.ListTags(ctx, assetID)
+	if err != nil {
+		return err
+	}
+
+	if p.IsRaw() {
+		return p.PrintJSON(tags)
+	}
+
+	if len(tags) == 0 {
+		fmt.Println("No tags found on this asset.")
+		return nil
+	}
+
+	t := output.NewTable("ID", "NAME", "DESCRIPTION")
+	for _, tag := range tags {
+		t.AddRow(tag.ID, tag.Name, tag.Description)
+	}
+	p.PrintTable(t)
+	return nil
+}
+
+var assetsTagsAddCmd = &cobra.Command{
+	Use:   "add <asset-id>",
+	Short: "Add a tag to an asset",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		tagID, _ := cmd.Flags().GetString("tag-id")
+		if tagID == "" {
+			return fmt.Errorf("--tag-id is required")
+		}
+
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+
+		if err := c.Assets.AddTag(cmd.Context(), args[0], tagID); err != nil {
+			return err
+		}
+
+		fmt.Printf("Tag added to asset %s.\n", args[0])
+		return nil
+	},
+}
+
+var assetsTagsRemoveCmd = &cobra.Command{
+	Use:   "remove <asset-id>",
+	Short: "Remove a tag from an asset",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		tagID, _ := cmd.Flags().GetString("tag-id")
+		if tagID == "" {
+			return fmt.Errorf("--tag-id is required")
+		}
+
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+
+		if err := c.Assets.RemoveTag(cmd.Context(), args[0], tagID); err != nil {
+			return err
+		}
+
+		fmt.Printf("Tag removed from asset %s.\n", args[0])
+		return nil
+	},
+}
+
+var assetsTagsSetCmd = &cobra.Command{
+	Use:   "set <asset-id>",
+	Short: "Replace all tags on an asset",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		tagIDs, _ := cmd.Flags().GetStringSlice("tag-ids")
+
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+
+		if err := c.Assets.SetTags(cmd.Context(), args[0], tagIDs); err != nil {
+			return err
+		}
+
+		fmt.Printf("Tags replaced on asset %s.\n", args[0])
+		return nil
+	},
+}
+
+var assetsColumnTagsCmd = &cobra.Command{
+	Use:   "column-tags <asset-id>",
+	Short: "Manage column tags on an asset",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return cmd.Help()
+		}
+		return nil
+	},
+}
+
+var assetsColumnTagsSetCmd = &cobra.Command{
+	Use:   "set <asset-id>",
+	Short: "Replace all tags on a specific column of an asset",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		columnPath, _ := cmd.Flags().GetString("column")
+		tagIDs, _ := cmd.Flags().GetStringSlice("tag-ids")
+
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+
+		if err := c.Assets.SetColumnTags(cmd.Context(), args[0], columnPath, tagIDs); err != nil {
+			return err
+		}
+
+		fmt.Printf("Column tags replaced on asset %s.\n", args[0])
+		return nil
+	},
+}
+
+var assetsColumnTagsRemoveCmd = &cobra.Command{
+	Use:   "remove <asset-id>",
+	Short: "Remove a tag from a specific column of an asset",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		columnPath, _ := cmd.Flags().GetString("column")
+		tagID, _ := cmd.Flags().GetString("tag-id")
+
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+
+		if err := c.Assets.RemoveColumnTag(cmd.Context(), args[0], columnPath, tagID); err != nil {
+			return err
+		}
+
+		fmt.Printf("Column tag removed from asset %s.\n", args[0])
+		return nil
+	},
+}
+
 func init() {
 	assetsListCmd.Flags().Int("limit", 20, "Maximum number of results")
 	assetsListCmd.Flags().Int("offset", 0, "Offset for pagination")
@@ -296,15 +420,37 @@ func init() {
 
 	assetsDeleteCmd.Flags().BoolP("yes", "y", false, "Skip confirmation prompt")
 
+	// tags
+	assetsTagsAddCmd.Flags().String("tag-id", "", "Tag ID to add (required)")
+	assetsTagsAddCmd.MarkFlagRequired("tag-id")
+	assetsTagsRemoveCmd.Flags().String("tag-id", "", "Tag ID to remove (required)")
+	assetsTagsRemoveCmd.MarkFlagRequired("tag-id")
+	assetsTagsSetCmd.Flags().StringSlice("tag-ids", nil, "Tag IDs to set (replaces all existing tags)")
+
 	assetsTagsCmd.AddCommand(assetsTagsAddCmd)
 	assetsTagsCmd.AddCommand(assetsTagsRemoveCmd)
+	assetsTagsCmd.AddCommand(assetsTagsSetCmd)
+
+	// column tags
+	assetsColumnTagsSetCmd.Flags().String("column", "", "Column path (required)")
+	assetsColumnTagsSetCmd.MarkFlagRequired("column")
+	assetsColumnTagsSetCmd.Flags().StringSlice("tag-ids", nil, "Tag IDs to set (replaces all existing tags)")
+	assetsColumnTagsSetCmd.MarkFlagRequired("tag-ids")
+	assetsColumnTagsRemoveCmd.Flags().String("column", "", "Column path (required)")
+	assetsColumnTagsRemoveCmd.MarkFlagRequired("column")
+	assetsColumnTagsRemoveCmd.Flags().String("tag-id", "", "Tag ID to remove (required)")
+	assetsColumnTagsRemoveCmd.MarkFlagRequired("tag-id")
+
+	assetsColumnTagsCmd.AddCommand(assetsColumnTagsSetCmd)
+	assetsColumnTagsCmd.AddCommand(assetsColumnTagsRemoveCmd)
 
 	assetsCmd.AddCommand(assetsListCmd)
 	assetsCmd.AddCommand(assetsGetCmd)
 	assetsCmd.AddCommand(assetsSearchCmd)
 	assetsCmd.AddCommand(assetsDeleteCmd)
 	assetsCmd.AddCommand(assetsSummaryCmd)
-	assetsCmd.AddCommand(assetsTagsCmd)
 	assetsCmd.AddCommand(assetsOwnersCmd)
+	assetsCmd.AddCommand(assetsTagsCmd)
+	assetsCmd.AddCommand(assetsColumnTagsCmd)
 	rootCmd.AddCommand(assetsCmd)
 }

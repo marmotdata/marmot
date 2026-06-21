@@ -17,8 +17,10 @@ from marmot.resources.glossary import GlossaryResource
 from marmot.resources.lineage import LineageResource
 from marmot.resources.metrics import MetricsResource
 from marmot.resources.owners import OwnersResource
+from marmot.resources.products import ProductsResource
 from marmot.resources.runs import RunsResource
 from marmot.resources.search import SearchResource
+from marmot.resources.tags import TagsResource
 from marmot.resources.teams import TeamsResource
 from marmot.resources.users import UsersResource
 
@@ -53,8 +55,10 @@ class Client:
         self.lineage = LineageResource(self._gen)
         self.metrics = MetricsResource(self._gen)
         self.owners = OwnersResource(self._gen)
+        self.products = ProductsResource(self._gen)
         self.runs = RunsResource(self._gen)
         self.search = SearchResource(self._gen)
+        self.tags = TagsResource(self._gen)
         self.teams = TeamsResource(self._gen)
         self.users = UsersResource(self._gen)
 

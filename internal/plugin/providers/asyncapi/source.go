@@ -292,7 +292,6 @@ func (s *Source) createServiceAsset(doc *asyncapi3.Document) asset.Asset {
 	metadata["channel_count"] = len(doc.Channels)
 	metadata["operation_count"] = len(doc.Operations)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &serviceName,
@@ -301,7 +300,6 @@ func (s *Source) createServiceAsset(doc *asyncapi3.Document) asset.Asset {
 		Providers:   []string{"AsyncAPI"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
@@ -508,7 +506,6 @@ func (s *Source) createGenericChannelAsset(doc *asyncapi3.Document, channelName 
 		metadata["title"] = channel.Title
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	a := asset.Asset{
 		Name:        &name,
@@ -517,7 +514,6 @@ func (s *Source) createGenericChannelAsset(doc *asyncapi3.Document, channelName 
 		Providers:   []string{"AsyncAPI"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),

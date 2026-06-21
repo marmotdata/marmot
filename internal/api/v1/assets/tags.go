@@ -7,101 +7,195 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/rs/zerolog/log"
 )
 
-type TagRequest struct {
-	Tag string `json:"tag" validate:"required"`
-} // @name TagRequest
+type ReplaceTagsRequest struct {
+	TagIDs []string `json:"tag_ids"`
+} // @name ReplaceAssetTagsRequest
 
-// @Summary Add tag to asset
-// @Description Add a new tag to an existing asset
+type AddTagRequest struct {
+	TagID string `json:"tag_id"`
+} // @name AddAssetTagRequest
+
+type RemoveTagRequest struct {
+	TagID string `json:"tag_id"`
+} // @name RemoveAssetTagRequest
+
+// @Summary Add a tag to an asset
+// @Description Add a single tag association to an asset
 // @Tags assets
 // @Accept json
 // @Produce json
 // @Param id path string true "Asset ID"
-// @Param tag body TagRequest true "Tag to add"
-// @Success 200 {object} asset.Asset
+// @Param body body AddTagRequest true "Tag ID to add"
+// @Success 201 {array} tag.Tag
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
 // @Router /assets/tags/{id} [post]
-func (h *Handler) addTag(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) addAssetTag(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
-		common.RespondError(w, http.StatusBadRequest, "Asset ID is required")
+		common.RespondError(w, http.StatusBadRequest, "asset id is required")
 		return
 	}
 
-	var input TagRequest
+	var input AddTagRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-
-	if input.Tag == "" {
-		common.RespondError(w, http.StatusBadRequest, "Tag is required")
+	if input.TagID == "" {
+		common.RespondError(w, http.StatusBadRequest, "tag_id is required")
 		return
 	}
 
-	updated, err := h.assetService.AddTag(r.Context(), id, input.Tag)
-	if err != nil {
+	if err := h.assetService.AddTag(r.Context(), id, input.TagID); err != nil {
 		switch {
-		case errors.Is(err, asset.ErrAssetNotFound):
-			common.RespondError(w, http.StatusNotFound, "Asset not found")
-		case errors.Is(err, asset.ErrInvalidInput):
-			common.RespondError(w, http.StatusBadRequest, err.Error())
+		case errors.Is(err, asset.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Asset or tag not found")
 		default:
-			log.Error().Err(err).Str("id", id).Str("tag", input.Tag).Msg("Failed to add tag")
+			log.Error().Err(err).Str("id", id).Str("tag_id", input.TagID).Msg("Failed to add asset tag")
 			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
 		}
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, updated)
+	tags, err := h.assetService.ListAssetTags(r.Context(), id)
+	if err != nil {
+		common.RespondError(w, http.StatusInternalServerError, "Failed to fetch updated tags")
+		return
+	}
+	if tags == nil {
+		tags = []tag.Tag{}
+	}
+	common.RespondJSON(w, http.StatusCreated, tags)
 }
 
-// @Summary Remove tag from asset
-// @Description Remove a tag from an existing asset
+// @Summary Replace all tags on an asset
+// @Description Atomically replace all tag associations for an asset
 // @Tags assets
 // @Accept json
 // @Produce json
 // @Param id path string true "Asset ID"
-// @Param tag body TagRequest true "Tag to remove"
-// @Success 200 {object} asset.Asset
+// @Param body body ReplaceTagsRequest true "Tag IDs to assign"
+// @Success 200 {array} tag.Tag
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/tags/{id} [delete]
-func (h *Handler) removeTag(w http.ResponseWriter, r *http.Request) {
+// @Failure 500 {object} common.ErrorResponse
+// @Router /assets/tags/{id} [put]
+func (h *Handler) replaceAssetTags(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
-		common.RespondError(w, http.StatusBadRequest, "Asset ID is required")
+		common.RespondError(w, http.StatusBadRequest, "asset id is required")
 		return
 	}
 
-	var input TagRequest
+	var input ReplaceTagsRequest
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
 		return
 	}
-
-	if input.Tag == "" {
-		common.RespondError(w, http.StatusBadRequest, "Tag is required")
-		return
+	if input.TagIDs == nil {
+		input.TagIDs = []string{}
 	}
 
-	updated, err := h.assetService.RemoveTag(r.Context(), id, input.Tag)
-	if err != nil {
+	if err := h.assetService.SetTags(r.Context(), id, input.TagIDs); err != nil {
 		switch {
-		case errors.Is(err, asset.ErrAssetNotFound):
+		case errors.Is(err, asset.ErrNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset not found")
 		default:
-			log.Error().Err(err).Str("id", id).Str("tag", input.Tag).Msg("Failed to remove tag")
+			log.Error().Err(err).Str("id", id).Msg("Failed to replace asset tags")
 			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
 		}
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, updated)
+	tags, err := h.assetService.ListAssetTags(r.Context(), id)
+	if err != nil {
+		common.RespondError(w, http.StatusInternalServerError, "Failed to fetch updated tags")
+		return
+	}
+	if tags == nil {
+		tags = []tag.Tag{}
+	}
+	common.RespondJSON(w, http.StatusOK, tags)
+}
+
+// @Summary List asset tags
+// @Description Get all tags associated with an asset
+// @Tags assets
+// @Produce json
+// @Param id path string true "Asset ID"
+// @Success 200 {array} tag.Tag
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /assets/tags/{id} [get]
+func (h *Handler) listAssetTags(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "asset id is required")
+		return
+	}
+
+	tags, err := h.assetService.ListAssetTags(r.Context(), id)
+	if err != nil {
+		log.Error().Err(err).Str("id", id).Msg("Failed to get asset tags")
+		common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		return
+	}
+
+	if tags == nil {
+		tags = []tag.Tag{}
+	}
+
+	common.RespondJSON(w, http.StatusOK, tags)
+}
+
+// @Summary Remove a tag from an asset
+// @Description Remove a single tag association from an asset
+// @Tags assets
+// @Accept json
+// @Produce json
+// @Param id path string true "Asset ID"
+// @Param body body RemoveTagRequest true "Tag ID to remove"
+// @Success 204
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /assets/tags/{id} [delete]
+func (h *Handler) removeAssetTag(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "asset id is required")
+		return
+	}
+
+	var input RemoveTagRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if input.TagID == "" {
+		common.RespondError(w, http.StatusBadRequest, "tag_id is required")
+		return
+	}
+
+	if err := h.assetService.RemoveTag(r.Context(), id, input.TagID); err != nil {
+		switch {
+		case errors.Is(err, asset.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Asset or tag association not found")
+		default:
+			log.Error().Err(err).Str("id", id).Str("tag_id", input.TagID).Msg("Failed to remove asset tag")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // @Summary Get tag suggestions

@@ -17,9 +17,6 @@ type AvailableFilters struct {
 	// providers
 	Providers map[string]int64 `json:"providers,omitempty"`
 
-	// tags
-	Tags map[string]int64 `json:"tags,omitempty"`
-
 	// types
 	Types map[string]int64 `json:"types,omitempty"`
 }

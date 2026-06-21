@@ -42,9 +42,6 @@ type UpdateAssetRequest struct {
 	// sources
 	Sources []*AssetSource `json:"sources"`
 
-	// tags
-	Tags []string `json:"tags"`
-
 	// type
 	Type string `json:"type,omitempty"`
 

@@ -7,7 +7,11 @@
 	import { fetchApi } from '$lib/api';
 	import { encryptionConfigured } from '$lib/stores/encryption';
 	import { toasts } from '$lib/stores/toast';
+	import { listTags } from '$lib/tags/api';
+	import type { Tag } from '$lib/tags/types';
 	import Button from '$components/ui/Button.svelte';
+	import TagPicker from '$components/shared/TagPicker.svelte';
+	import TagBadge from '$components/shared/TagBadge.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import cronstrue from 'cronstrue';
@@ -71,6 +75,18 @@
 		error?: string;
 	} | null>(null);
 	let loadingAwsStatus = $state(false);
+	let availableTags = $state<Tag[]>([]);
+	let tagsById = $state<Record<string, Tag>>({});
+	let tagPickerAnchor = $state<DOMRect | null>(null);
+	let assignedTagIds = $derived(
+		(config.tags || [])
+			.filter((name: string) => typeof name === 'string')
+			.map((name: string) => {
+				const tag = availableTags.find((t) => t.name === name);
+				return tag ? tag.id : '';
+			})
+			.filter(Boolean)
+	);
 
 	let selectedPlugin = $derived(plugins.find((p) => p.id === selectedPluginId) || null);
 
@@ -323,6 +339,23 @@
 		config.source_type = detected;
 	}
 
+	async function fetchTags() {
+		try {
+			const tags = await listTags();
+			availableTags = tags;
+			const byId: Record<string, Tag> = {};
+			for (const t of tags) byId[t.id] = t;
+			tagsById = byId;
+		} catch (err) {
+			console.error('Error fetching tags:', err);
+		}
+	}
+
+	async function handleTagPickerSave(tagIds: string[]) {
+		const names = tagIds.map((id) => tagsById[id]?.name).filter(Boolean);
+		config.tags = names;
+	}
+
 	onMount(async () => {
 		if (!get(encryptionConfigured)) {
 			toasts.error(
@@ -334,6 +367,7 @@
 		await fetchPlugins();
 		await fetchPipeline();
 		autoDetectSourceType();
+		await fetchTags();
 		// Check if this is an AWS plugin and fetch credential status
 		if (
 			selectedPluginId &&
@@ -419,56 +453,28 @@
 					<p class="text-xs text-gray-500 dark:text-gray-400 mb-2">
 						Tags to apply to discovered assets
 					</p>
-					{#if true}
-						{@const tagsValue = config.tags || []}
-						<div class="space-y-2">
-							{#each tagsValue as item, index (index)}
-								<div class="flex items-center gap-2">
-									<input
-										type="text"
-										value={item}
-										oninput={(e) => {
-											const target = e.target as HTMLInputElement;
-											tagsValue[index] = target.value;
-											config.tags = [...tagsValue];
-										}}
-										class="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all"
-									/>
-									<button
-										type="button"
-										onclick={(e) => {
-											e.preventDefault();
-											tagsValue.splice(index, 1);
-											config.tags = [...tagsValue];
-										}}
-										class="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-										aria-label="Remove tag"
-									>
-										<IconifyIcon icon="material-symbols:close" class="h-5 w-5" />
-									</button>
-								</div>
-							{/each}
-							<div class="flex items-center gap-2">
-								<input
-									type="text"
-									placeholder="Type to add tags..."
-									onkeydown={(e) => {
-										if (e.key === 'Enter') {
-											e.preventDefault();
-											const target = e.target as HTMLInputElement;
-											const value = target.value.trim();
-											if (value) {
-												config.tags = [...(config.tags || []), value];
-												target.value = '';
-											}
-										}
-									}}
-									class="flex-1 px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-600 transition-all"
-								/>
-							</div>
-							<p class="text-xs text-gray-500 dark:text-gray-400">Press Enter to add items</p>
-						</div>
-					{/if}
+					<div class="flex flex-wrap items-center gap-2">
+						{#each config.tags || [] as tagName, index (index)}
+							<TagBadge
+								name={tagName}
+								onRemove={() => {
+									const tags = [...(config.tags || [])];
+									tags.splice(index, 1);
+									config.tags = tags;
+								}}
+							/>
+						{/each}
+						<button
+							type="button"
+							onclick={(e) => {
+								tagPickerAnchor = (e.currentTarget as HTMLElement).getBoundingClientRect();
+							}}
+							class="w-full px-4 py-2.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-600 dark:text-gray-400 hover:border-earthy-terracotta-600 hover:text-earthy-terracotta-600 dark:hover:text-earthy-terracotta-400 transition-colors flex items-center justify-center gap-2"
+						>
+							<IconifyIcon icon="material-symbols:add" class="h-5 w-5" />
+							Add Tags
+						</button>
+					</div>
 				</div>
 
 				<!-- External Links -->
@@ -1341,6 +1347,24 @@
 				</div>
 			</div>
 		</div>
+
+		<TagPicker
+			anchorRect={tagPickerAnchor}
+			title="Pipeline Tags"
+			{assignedTagIds}
+			onSave={async (tagIds) => {
+				handleTagPickerSave(tagIds);
+			}}
+			onClose={() => {
+				tagPickerAnchor = null;
+			}}
+			onTagCreated={(tag) => {
+				if (!tagsById[tag.id]) {
+					availableTags = [...availableTags, tag];
+					tagsById = { ...tagsById, [tag.id]: tag };
+				}
+			}}
+		/>
 
 		<!-- Footer Actions -->
 		<div class="mt-8 flex items-center justify-between">

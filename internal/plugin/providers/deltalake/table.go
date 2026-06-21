@@ -9,7 +9,6 @@ import (
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
 )
 
 func createTableAsset(snapshot *deltaSnapshot, tablePath string, config *Config) asset.Asset {
@@ -68,7 +67,6 @@ func createTableAsset(snapshot *deltaSnapshot, tablePath string, config *Config)
 	}
 
 	mrnValue := mrn.New("Table", "DeltaLake", tableName)
-	processedTags := plugin.InterpolateTags(config.Tags, metadata)
 
 	return asset.Asset{
 		Name:        &tableName,
@@ -78,7 +76,6 @@ func createTableAsset(snapshot *deltaSnapshot, tablePath string, config *Config)
 		Description: description,
 		Schema:      schemaMap,
 		Metadata:    metadata,
-		Tags:        processedTags,
 		Sources: []asset.AssetSource{{
 			Name:       "Delta Lake",
 			LastSyncAt: time.Now(),

@@ -9,6 +9,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/glossary"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/rs/zerolog/log"
 )
@@ -382,4 +383,197 @@ func (h *Handler) getAncestors(w http.ResponseWriter, r *http.Request) {
 		"ancestors": ancestors,
 		"total":     len(ancestors),
 	})
+}
+
+type AddTermTagRequest struct {
+	TagID string `json:"tag_id"`
+} // @name AddGlossaryTermTagRequest
+
+type ReplaceTermTagsRequest struct {
+	TagIDs []string `json:"tag_ids"`
+} // @name ReplaceGlossaryTermTagsRequest
+
+type RemoveTermTagRequest struct {
+	TagID string `json:"tag_id"`
+} // @name RemoveGlossaryTermTagRequest
+
+// @Summary Add a tag to a glossary term
+// @Description Add a single tag association to a glossary term
+// @Tags glossary
+// @Accept json
+// @Produce json
+// @Param id path string true "Glossary Term ID"
+// @Param body body AddTermTagRequest true "Tag ID to add"
+// @Success 201 {array} tag.Tag
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /glossary/tags/{id} [post]
+func (h *Handler) addTermTag(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Term ID required")
+		return
+	}
+
+	var input AddTermTagRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if input.TagID == "" {
+		common.RespondError(w, http.StatusBadRequest, "tag_id is required")
+		return
+	}
+
+	if err := h.glossaryService.AddTermTag(r.Context(), id, input.TagID); err != nil {
+		switch {
+		case errors.Is(err, glossary.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Glossary term or tag not found")
+		default:
+			log.Error().Err(err).Str("id", id).Str("tag_id", input.TagID).Msg("Failed to add term tag")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	tags, err := h.glossaryService.ListGlossaryTermTags(r.Context(), id)
+	if err != nil {
+		common.RespondError(w, http.StatusInternalServerError, "Failed to fetch updated tags")
+		return
+	}
+	if tags == nil {
+		tags = []tag.Tag{}
+	}
+	common.RespondJSON(w, http.StatusCreated, tags)
+}
+
+// ListTermTags retrieves all tags for a glossary term
+// @Summary List glossary term tags
+// @Description Get all tags associated with a glossary term
+// @Tags glossary
+// @Produce json
+// @Param id path string true "Glossary Term ID"
+// @Success 200 {array} tag.Tag
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /glossary/tags/{id} [get]
+func (h *Handler) listTermTags(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Term ID required")
+		return
+	}
+
+	tags, err := h.glossaryService.ListGlossaryTermTags(r.Context(), id)
+	if err != nil {
+		switch {
+		case errors.Is(err, glossary.ErrTermNotFound):
+			common.RespondError(w, http.StatusNotFound, "Glossary term not found")
+		default:
+			log.Error().Err(err).Str("id", id).Msg("Failed to get term tags")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	if tags == nil {
+		tags = []tag.Tag{}
+	}
+
+	common.RespondJSON(w, http.StatusOK, tags)
+}
+
+// ReplaceTermTags replaces all tags on a glossary term
+// @Summary Replace glossary term tags
+// @Description Atomically replace all tag associations for a glossary term
+// @Tags glossary
+// @Accept json
+// @Produce json
+// @Param id path string true "Glossary Term ID"
+// @Param body body ReplaceTermTagsRequest true "Tag IDs to assign"
+// @Success 200 {object} glossary.GlossaryTerm
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /glossary/tags/{id} [put]
+func (h *Handler) replaceTermTags(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Term ID required")
+		return
+	}
+
+	var input ReplaceTermTagsRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+	if input.TagIDs == nil {
+		input.TagIDs = []string{}
+	}
+
+	if err := h.glossaryService.SetTermTags(r.Context(), id, input.TagIDs); err != nil {
+		switch {
+		case errors.Is(err, glossary.ErrTermNotFound):
+			common.RespondError(w, http.StatusNotFound, "Glossary term not found")
+		default:
+			log.Error().Err(err).Str("id", id).Msg("Failed to replace term tags")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	updatedTerm, err := h.glossaryService.Get(r.Context(), id)
+	if err != nil {
+		common.RespondError(w, http.StatusInternalServerError, "Failed to fetch updated term")
+		return
+	}
+	common.RespondJSON(w, http.StatusOK, updatedTerm)
+}
+
+// RemoveTermTag removes a single tag from a glossary term
+// @Summary Remove glossary term tag
+// @Description Remove a single tag association from a glossary term
+// @Tags glossary
+// @Accept json
+// @Produce json
+// @Param id path string true "Glossary Term ID"
+// @Param body body RemoveTermTagRequest true "Tag ID to remove"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /glossary/tags/{id} [delete]
+func (h *Handler) removeTermTag(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		common.RespondError(w, http.StatusBadRequest, "Term ID required")
+		return
+	}
+
+	var input RemoveTermTagRequest
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
+		return
+	}
+
+	if input.TagID == "" {
+		common.RespondError(w, http.StatusBadRequest, "tag_id is required")
+		return
+	}
+
+	if err := h.glossaryService.RemoveTermTag(r.Context(), id, input.TagID); err != nil {
+		switch {
+		case errors.Is(err, glossary.ErrNotFound):
+			common.RespondError(w, http.StatusNotFound, "Glossary term or tag association not found")
+		default:
+			log.Error().Err(err).Str("id", id).Str("tag_id", input.TagID).Msg("Failed to remove term tag")
+			common.RespondError(w, http.StatusInternalServerError, "Internal server error")
+		}
+		return
+	}
+
+	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Tag removed"})
 }

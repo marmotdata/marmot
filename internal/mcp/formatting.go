@@ -6,10 +6,11 @@ import (
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/glossary"
+	"github.com/marmotdata/marmot/internal/core/tag"
 )
 
-// FormatAssetCard creates a visually appealing card for an asset
-func FormatAssetCard(a *asset.Asset, marmotURL string) string {
+// FormatAssetCard creates a visually appealing card for an asset.
+func FormatAssetCard(a *asset.Asset, marmotURL string, tags []tag.Tag) string {
 	var parts []string
 
 	// Header with icon
@@ -39,9 +40,13 @@ func FormatAssetCard(a *asset.Asset, marmotURL string) string {
 	}
 
 	// Tags
-	if len(a.Tags) > 0 {
+	if len(tags) > 0 {
+		tagNames := make([]string, 0, len(tags))
+		for _, t := range tags {
+			tagNames = append(tagNames, t.Name)
+		}
 		parts = append(parts, "")
-		parts = append(parts, fmt.Sprintf("🏷️  %s", strings.Join(a.Tags, " · ")))
+		parts = append(parts, fmt.Sprintf("🏷️  %s", strings.Join(tagNames, " · ")))
 	}
 
 	// Schema (columns and types)
@@ -251,7 +256,11 @@ func FormatTermCard(term *glossary.GlossaryTerm, marmotURL string) string {
 
 	// Tags
 	if len(term.Tags) > 0 {
-		parts = append(parts, fmt.Sprintf("🏷️  %s", strings.Join(term.Tags, " · ")))
+		tagNames := make([]string, len(term.Tags))
+		for i, t := range term.Tags {
+			tagNames[i] = t.Name
+		}
+		parts = append(parts, fmt.Sprintf("🏷️  %s", strings.Join(tagNames, " · ")))
 		parts = append(parts, "")
 	}
 

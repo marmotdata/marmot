@@ -9,6 +9,7 @@
 	import IconifyIcon from '@iconify/svelte';
 	import AuthenticatedImage from '$components/ui/AuthenticatedImage.svelte';
 	import Button from '$components/ui/Button.svelte';
+	import TagBadge from '$components/shared/TagBadge.svelte';
 	import { auth } from '$lib/stores/auth';
 
 	const recentProducts: Writable<DataProduct[]> = writable([]);
@@ -341,12 +342,8 @@
 								</span>
 								{#if product.tags && product.tags.length > 0}
 									<div class="hidden sm:flex items-center gap-1">
-										{#each product.tags.slice(0, 2) as tag (tag)}
-											<span
-												class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-0.5 rounded"
-											>
-												{tag}
-											</span>
+										{#each product.tags.slice(0, 2) as tag (tag.name)}
+											<TagBadge name={tag.name} />
 										{/each}
 										{#if product.tags.length > 2}
 											<span class="text-xs text-gray-400 dark:text-gray-500">

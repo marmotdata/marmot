@@ -109,7 +109,7 @@ func (h *Handler) removeTerm(w http.ResponseWriter, r *http.Request) {
 
 	if err := h.assetService.RemoveTerm(r.Context(), id, input.TermID); err != nil {
 		switch {
-		case errors.Is(err, asset.ErrAssetNotFound):
+		case errors.Is(err, asset.ErrNotFound):
 			common.RespondError(w, http.StatusNotFound, "Asset or term association not found")
 		default:
 			log.Error().Err(err).Str("id", id).Str("term_id", input.TermID).Msg("Failed to remove term from asset")
