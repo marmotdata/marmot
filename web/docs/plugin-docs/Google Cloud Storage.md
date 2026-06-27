@@ -79,7 +79,7 @@ When multiple credential options are set, the plugin resolves them in this order
 3. `credentials_file`: service account key file.
 4. **Application Default Credentials**: used when none of the above are set (recommended).
 
-`impersonate_service_account` is independent: whichever identity is resolved above is used only to issue temporary tokens for the target account; no key is ever exported.
+`impersonate_service_account` is independent: whichever identity is resolved above is used only to issue temporary tokens for the target account (the base identity must have `roles/iam.serviceAccountTokenCreator` on the target service account); no key is ever exported.
 
 <TipBox variant="warning" title="Avoid service account keys">
 Exported keys are persistent secrets that Google <a href="https://cloud.google.com/iam/docs/best-practices-for-managing-service-account-keys">recommends against</a>.
