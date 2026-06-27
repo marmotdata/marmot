@@ -2,7 +2,8 @@
 sidebar_position: 2
 ---
 
-import { Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
+import { TipBox } from '@site/src/components/Steps';
+import { CliInstall } from '@site/src/components/CliInstall';
 
 # CLI
 
@@ -10,27 +11,7 @@ The `ingest` command discovers metadata from configured data sources and catalog
 
 ## Installation
 
-<Tabs items={[
-{ label: "Automatic", value: "auto", icon: "mdi:download" },
-{ label: "Manual", value: "manual", icon: "mdi:folder-download" }
-]}>
-<TabPanel>
-
-```bash
-curl -fsSL get.marmotdata.io | sh
-```
-
-</TabPanel>
-<TabPanel>
-
-Download the latest binary for your platform from [GitHub Releases](https://github.com/marmotdata/marmot/releases), then:
-
-```bash
-chmod +x marmot && sudo mv marmot /usr/local/bin/
-```
-
-</TabPanel>
-</Tabs>
+<CliInstall />
 
 See the [CLI Reference](/docs/cli) for configuring the host, API key and other global options.
 
