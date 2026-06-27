@@ -159,7 +159,7 @@ The following configuration options are available:
 | endpoint | string | false | Custom endpoint URL (for fake-gcs-server or other emulators) |
 | external_links | []ExternalLink | false | External links to show on all assets |
 | filter | Filter | false | Filter discovered assets by name (regex) |
-| impersonate_service_account | string | false | Email of a service account to impersonate. |
+| impersonate_service_account | string | false | Email of a service account to impersonate (requires the base identity to have `roles/iam.serviceAccountTokenCreator` on the target service account). |
 | include_metadata | bool | false | Include bucket metadata like labels |
 | include_object_count | bool | false | Count objects in each bucket (can be slow for large buckets) |
 | project_id | string | false | Google Cloud project ID |
