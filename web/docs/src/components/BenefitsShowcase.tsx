@@ -8,7 +8,7 @@ const capabilities = [
     icon: "mdi:magnify",
     title: "Discover",
     description:
-      "One place for AI and engineers to find every table, topic, queue and API.",
+      "One place for agents and humans to find every service, API, queue, topic and database.",
   },
   {
     icon: "mdi:graph-outline",

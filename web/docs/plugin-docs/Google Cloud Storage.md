@@ -39,7 +39,7 @@ tags:
 
 The service account needs the following IAM roles:
 
-- **Storage Object Viewer** (`roles/storage.objectViewer`) - For listing buckets and objects
+- **Storage Bucket Viewer** (`roles/storage.bucketViewer`) - For discovering and listing buckets
 
 Or use a custom role with these permissions:
 - `storage.buckets.list`

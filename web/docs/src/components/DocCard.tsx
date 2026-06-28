@@ -163,32 +163,57 @@ interface FeatureCardProps {
   title: string;
   description: string;
   icon: string;
+  docId?: string;
+  href?: string;
 }
 
 export function FeatureCard({
   title,
   description,
   icon,
+  docId,
+  href,
 }: FeatureCardProps): JSX.Element {
-  return (
-    <div className="p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
-      <div className="flex items-start gap-4">
-        <div className="flex-shrink-0 p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-          <Icon
-            icon={icon}
-            className="w-6 h-6 text-[var(--ifm-color-primary)]"
-          />
-        </div>
-        <div className="flex-1 min-w-0">
-          <h3 className="text-base font-semibold text-gray-900 dark:text-white m-0">
-            {title}
-          </h3>
-          <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 m-0">
-            {description}
-          </p>
-        </div>
+  const to = useDocHref(docId, href);
+  const linked = Boolean(docId || href);
+
+  const inner = (
+    <div className="flex items-start gap-4">
+      <div className="flex-shrink-0 p-2 bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+        <Icon icon={icon} className="w-6 h-6 text-[var(--ifm-color-primary)]" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white m-0 flex items-center gap-1.5">
+          {title}
+          {linked && (
+            <Icon
+              icon="mdi:arrow-right"
+              className="w-4 h-4 text-[var(--ifm-color-primary)] transition-transform duration-200 group-hover:translate-x-0.5"
+            />
+          )}
+        </h3>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-400 m-0">
+          {description}
+        </p>
       </div>
     </div>
+  );
+
+  if (!linked) {
+    return (
+      <div className="p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+        {inner}
+      </div>
+    );
+  }
+
+  return (
+    <a
+      href={to}
+      className="group block p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 no-underline hover:no-underline hover:border-[var(--ifm-color-primary)] hover:shadow-sm transition-all duration-200"
+    >
+      {inner}
+    </a>
   );
 }
 

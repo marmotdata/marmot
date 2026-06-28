@@ -25,6 +25,7 @@
     "@mdx-js/react": "^3.1.1",
     "clsx": "^2.1.1",
     "prism-react-renderer": "^2.4.1",
+    "prismjs": "^1.30.0",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
     "redocusaurus": "^2.5.0",
@@ -42,39 +43,6 @@
     "typescript": "~5.8.3",
     "unplugin-icons": "~22.1.0"
   },
-  "pnpm": {
-    "overrides": {
-      "node-forge": ">=1.4.0",
-      "image-size": ">=1.4.0",
-      "webpack-dev-server": ">=4.16.0",
-      "estree-util-value-to-estree": ">=3.4.1",
-      "mdast-util-to-hast": ">=13.2.1",
-      "@babel/runtime-corejs3": ">=7.27.1",
-      "@babel/runtime": ">=7.27.1",
-      "@babel/helpers": ">=7.27.1",
-      "glob": ">=10.5.0",
-      "brace-expansion": ">=5.0.6",
-      "@isaacs/brace-expansion": ">=5.0.5",
-      "picomatch": ">=4.0.4",
-      "yaml": ">=2.8.3",
-      "minimatch": ">=10.2.3",
-      "on-headers": ">=1.1.0",
-      "compression": ">=1.8.1",
-      "mermaid": ">=11.10.0",
-      "cookie": ">=0.7.0",
-      "serialize-javascript": ">=7.0.5",
-      "fast-xml-parser": ">=5.5.7",
-      "svgo": ">=3.3.3",
-      "dompurify": ">=3.3.2",
-      "lodash": ">=4.18.1",
-      "qs": ">=6.14.2",
-      "ajv": ">=8.18.0",
-      "path-to-regexp": "~0.1.13",
-      "webpack": "~5.104.1",
-      "uuid": ">=9.0.1",
-      "ws": ">=8.20.1"
-    }
-  },
   "browserslist": {
     "production": [
       ">0.5%",
@@ -89,5 +57,12 @@
   },
   "engines": {
     "node": ">=20.0"
+  },
+  "packageManager": "pnpm@11.3.0",
+  "pnpm": {
+    "ignoredBuiltDependencies": [
+      "core-js",
+      "core-js-pure"
+    ]
   }
 }

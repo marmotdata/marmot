@@ -12,7 +12,7 @@ FROM golang:1.26 AS builder
 
 WORKDIR /app
 COPY go.mod go.sum ./
-COPY client/ client/
+COPY sdk/ sdk/
 RUN go mod download
 
 COPY . .
