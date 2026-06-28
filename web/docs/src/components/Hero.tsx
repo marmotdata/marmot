@@ -258,6 +258,31 @@ export default function Hero(): JSX.Element {
             Live Demo
           </a>
         </div>
+
+        {/* Built-by credibility strip */}
+        <p
+          data-animate
+          data-animate-delay="5"
+          className="mt-10 text-sm text-gray-400 dark:text-gray-500 max-w-2xl mx-auto leading-relaxed"
+        >
+          Built by engineers who've shipped at{" "}
+          <span className="text-gray-500 dark:text-gray-400 font-medium">
+            HashiCorp, Adidas, Just Eat Takeaway.com
+          </span>{" "}
+          and{" "}
+          <span className="text-gray-500 dark:text-gray-400 font-medium">
+            Traefik
+          </span>
+          , and help maintain{" "}
+          <span className="text-gray-500 dark:text-gray-400 font-medium">
+            Kubernetes, Terraform, Redpanda
+          </span>{" "}
+          and the{" "}
+          <span className="text-gray-500 dark:text-gray-400 font-medium">
+            Cloud Native Computing Foundation
+          </span>
+          .
+        </p>
       </div>
 
       {/* Context Flow diagram */}
