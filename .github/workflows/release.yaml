@@ -43,7 +43,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v2
         with:
-          version: 9
+          version: 11.3.0
           run_install: false
 
       - name: Install frontend dependencies
