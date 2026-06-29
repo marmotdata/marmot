@@ -86,14 +86,74 @@ const config: Config = {
         content: "strict-origin-when-cross-origin",
       },
     },
+    // Site-wide Schema.org structured data for search engines and AI assistants.
+    {
+      tagName: "script",
+      attributes: { type: "application/ld+json" },
+      innerHTML: JSON.stringify({
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://marmotdata.io/#organization",
+            name: "Marmot",
+            url: "https://marmotdata.io",
+            logo: "https://marmotdata.io/img/social-card.png",
+            sameAs: [
+              "https://github.com/marmotdata/marmot",
+              "https://discord.gg/TWCk7hVFN4",
+            ],
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://marmotdata.io/#website",
+            url: "https://marmotdata.io",
+            name: "Marmot",
+            description:
+              "The open source context layer for agents and humans.",
+            publisher: { "@id": "https://marmotdata.io/#organization" },
+          },
+          {
+            "@type": "SoftwareApplication",
+            name: "Marmot",
+            description:
+              "The open source context layer for your whole stack. Catalog every service, API, queue, topic, database and pipeline, then expose real, governed context to AI agents through MCP and to your team.",
+            url: "https://marmotdata.io",
+            applicationCategory: "DeveloperApplication",
+            operatingSystem: "Linux, macOS, Windows",
+            license: "https://github.com/marmotdata/marmot/blob/main/LICENSE",
+            offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+            publisher: { "@id": "https://marmotdata.io/#organization" },
+          },
+        ],
+      }),
+    },
   ],
-  plugins: [tailwindPlugin, unpluginIconsPlugin],
+  plugins: [
+    tailwindPlugin,
+    unpluginIconsPlugin,
+    [
+      "docusaurus-plugin-llms",
+      {
+        title: "Marmot",
+        description:
+          "The open source context layer for agents and humans. Catalog every service, API, queue, topic, database and pipeline, then expose real, governed context to AI agents and your team.",
+        includeBlog: true,
+        generateLLMsTxt: true,
+        generateLLMsFullTxt: true,
+        excludeImports: true,
+        removeDuplicateHeadings: true,
+      },
+    ],
+  ],
   presets: [
     [
       "classic",
       {
         docs: {
           sidebarPath: "./sidebars.ts",
+          showLastUpdateTime: true,
+          showLastUpdateAuthor: true,
           lastVersion: versions.length > 0 ? versions[0] : "current",
           versions: {
             current: {
@@ -107,6 +167,7 @@ const config: Config = {
         },
         blog: {
           showReadingTime: true,
+          showLastUpdateTime: true,
           feedOptions: {
             type: ["rss", "atom"],
             xslt: true,
@@ -190,7 +251,7 @@ const config: Config = {
             },
             {
               label: "Plugins",
-              to: "/docs/plugins",
+              to: "/docs/Plugins",
             },
             {
               label: "MCP",

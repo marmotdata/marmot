@@ -1,0 +1,8 @@
+# Marmot documentation — https://marmotdata.io
+# All crawlers, including AI assistants, are welcome. Structured, LLM-friendly
+# copies of the docs are available at /llms.txt and /llms-full.txt.
+
+User-agent: *
+Allow: /
+
+Sitemap: https://marmotdata.io/sitemap.xml

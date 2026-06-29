@@ -14,7 +14,7 @@ const options: DeployOption[] = [
     title: "Terraform",
     description:
       "Define your catalog as code alongside the rest of your infrastructure",
-    href: "/docs/populating/terraform",
+    href: "/docs/Populating/Terraform",
     icon: (
       <img
         src="/img/terraform.svg"
@@ -26,7 +26,7 @@ const options: DeployOption[] = [
   {
     title: "Pulumi",
     description: "Use TypeScript, Python, Go, or any language Pulumi supports",
-    href: "/docs/populating/pulumi",
+    href: "/docs/Populating/Pulumi",
     icon: (
       <img
         src="/img/pulumi.svg"

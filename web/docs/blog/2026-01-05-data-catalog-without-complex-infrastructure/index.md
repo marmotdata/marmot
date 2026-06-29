@@ -102,7 +102,7 @@ Works with Claude Desktop, Claude Code, Cursor, Cline and other MCP-compatible t
 Marmot is still early and I'm actively looking for feedback to shape the roadmap. Get involved on GitHub, reach out on Discord or just try the demo and let me know what you think.
 
 - **Live demo:** [demo.marmotdata.io](https://demo.marmotdata.io)
-- **Documentation:** [marmotdata.io/docs](https://marmotdata.io/docs)
+- **Documentation:** [marmotdata.io/docs](https://marmotdata.io/docs/introduction)
 - **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)
 
 <CalloutCard

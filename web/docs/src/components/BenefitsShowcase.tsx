@@ -33,7 +33,7 @@ const capabilities = [
 const populateMethods = [
   {
     title: "Terraform",
-    href: "/docs/populating/terraform",
+    href: "/docs/Populating/Terraform",
     icon: (
       <img
         src="/img/terraform.svg"
@@ -44,7 +44,7 @@ const populateMethods = [
   },
   {
     title: "Pulumi",
-    href: "/docs/populating/pulumi",
+    href: "/docs/Populating/Pulumi",
     icon: (
       <img
         src="/img/pulumi.svg"
