@@ -6,10 +6,40 @@ import React, {
   type FormEvent,
 } from "react";
 import Layout from "@theme/Layout";
+import Head from "@docusaurus/Head";
 import { Icon } from "@iconify/react";
 
 const API_BASE = "https://api.marmotdata.io";
 const TURNSTILE_SITE_KEY = "0x4AAAAAAC14j-gGk5wzDj2N";
+
+const FAQ_ITEMS = [
+  {
+    q: "Is Marmot really free?",
+    a: "Yes. MIT licensed with no feature gating, no usage limits, and no telemetry. Self-host it for free, forever.",
+  },
+  {
+    q: "Self-hosted vs Marmot Cloud?",
+    a: "Same software. Cloud just handles hosting, upgrades, and backups. If you're comfortable running containers, self-hosting works great.",
+  },
+  {
+    q: "When will Marmot Cloud be available?",
+    a: "Currently in early development. Join the waitlist and you'll be among the first to get access.",
+  },
+  {
+    q: "What professional services do you offer?",
+    a: "Anything from building a custom connector to helping you deploy Marmot across your organization. Scoped to what you actually need.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map(({ q, a }) => ({
+    "@type": "Question",
+    name: q,
+    acceptedAnswer: { "@type": "Answer", text: a },
+  })),
+};
 
 // Preload the Turnstile script so it's ready when needed
 function useTurnstileScript() {
@@ -419,6 +449,9 @@ export default function Pricing(): JSX.Element {
       title="Pricing"
       description="Marmot is free and open source. Self-host for free or join the waitlist for Marmot Cloud."
     >
+      <Head>
+        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+      </Head>
       <div className="bg-earthy-brown-50 dark:bg-gray-900 min-h-screen">
         {/* Open Source Hero — two-column */}
         <section className="pt-16 pb-12 px-4 sm:px-6 lg:px-8 gradient-mesh-hero">
@@ -539,9 +572,10 @@ export default function Pricing(): JSX.Element {
 
               {/* Professional Services */}
               <div
+                id="contact"
                 data-animate
                 data-animate-delay="2"
-                className="glass-card rounded-2xl p-7 flex flex-col"
+                className="glass-card rounded-2xl p-7 flex flex-col scroll-mt-24"
               >
                 <div className="flex items-center gap-2.5 mb-2">
                   <div className="w-8 h-8 rounded-lg bg-earthy-green-100 dark:bg-earthy-green-900/30 flex items-center justify-center">
@@ -584,24 +618,7 @@ export default function Pricing(): JSX.Element {
               Frequently asked questions
             </h2>
             <div data-animate className="max-w-3xl mx-auto">
-              {[
-                {
-                  q: "Is Marmot really free?",
-                  a: "Yes. MIT licensed with no feature gating, no usage limits, and no telemetry. Self-host it for free, forever.",
-                },
-                {
-                  q: "Self-hosted vs Marmot Cloud?",
-                  a: "Same software. Cloud just handles hosting, upgrades, and backups. If you're comfortable running containers, self-hosting works great.",
-                },
-                {
-                  q: "When will Marmot Cloud be available?",
-                  a: "Currently in early development. Join the waitlist and you'll be among the first to get access.",
-                },
-                {
-                  q: "What professional services do you offer?",
-                  a: "Anything from building a custom connector to helping you deploy Marmot across your organization. Scoped to what you actually need.",
-                },
-              ].map(({ q, a }) => (
+              {FAQ_ITEMS.map(({ q, a }) => (
                 <FAQItem key={q} question={q} answer={a} />
               ))}
             </div>

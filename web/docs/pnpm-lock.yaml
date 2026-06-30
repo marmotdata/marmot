@@ -103,6 +103,9 @@ importers:
       autoprefixer:
         specifier: ^10.5.0
         version: 10.5.0(postcss@8.5.10)
+      docusaurus-plugin-llms:
+        specifier: ^0.4.0
+        version: 0.4.0(@docusaurus/core@3.9.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@5.8.3))
       postcss:
         specifier: ^8.5.10
         version: 8.5.10
@@ -2601,6 +2604,12 @@ packages:
   dns-packet@5.6.1:
     resolution: {integrity: sha512-l4gcSouhcgIKRvyy99RNVOgxXiicE+2jZoNmaNmZ6JXiGajBOJAesk1OBlJuM5k2c+eudGdLxDqXuPCKIj6kpw==}
     engines: {node: '>=6'}
+
+  docusaurus-plugin-llms@0.4.0:
+    resolution: {integrity: sha512-jYlj2HJ5+gu7oJZuJ83Hk8KlB65YlZZ/7UpHXiL7Qr+qpNBkVocmt2Molc6F3HNr5RqcfhWD/98CvgyNztg/ow==}
+    engines: {node: '>=18.0'}
+    peerDependencies:
+      '@docusaurus/core': ^3.0.0
 
   docusaurus-plugin-redoc@2.5.0:
     resolution: {integrity: sha512-44sDhuXvItHnUuPdKswF3cRhiN5UW3YZxmMBsQLSfCYKcYr9tgWF2qvDfQoZO9i1DwpaYbIZ/RKMrSgny/iWYA==}
@@ -9125,6 +9134,13 @@ snapshots:
   dns-packet@5.6.1:
     dependencies:
       '@leichtgewicht/ip-codec': 2.0.5
+
+  docusaurus-plugin-llms@0.4.0(@docusaurus/core@3.9.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@5.8.3)):
+    dependencies:
+      '@docusaurus/core': 3.9.2(@mdx-js/react@3.1.1(@types/react@19.2.14)(react@19.2.5))(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(typescript@5.8.3)
+      gray-matter: 4.0.3
+      minimatch: 10.2.5
+      yaml: 2.8.3
 
   docusaurus-plugin-redoc@2.5.0(@docusaurus/utils@3.9.2(react-dom@19.2.5(react@19.2.5))(react@19.2.5))(core-js@3.49.0)(mobx@6.15.0)(react-dom@19.2.5(react@19.2.5))(react@19.2.5)(styled-components@6.4.1(react-dom@19.2.5(react@19.2.5))(react@19.2.5)):
     dependencies:
