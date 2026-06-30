@@ -7,6 +7,7 @@ import type {
 	TermChildrenResponse,
 	TermAncestorsResponse
 } from './types';
+import type { Tag } from '$lib/tags/types';
 
 export async function listTerms(
 	offset: number = 0,
@@ -108,4 +109,27 @@ export async function getAncestors(id: string): Promise<TermAncestorsResponse> {
 		throw new Error('Failed to get term ancestors');
 	}
 	return response.json();
+}
+
+export async function listGlossaryTermTags(termId: string): Promise<Tag[]> {
+	const response = await fetchApi(`/glossary/tags/${termId}`);
+	if (!response.ok) {
+		throw new Error('Failed to fetch term tags');
+	}
+	return response.json();
+}
+
+export async function replaceGlossaryTermTags(
+	termId: string,
+	tagIds: string[]
+): Promise<GlossaryTerm> {
+	const res = await fetchApi(`/glossary/tags/${termId}`, {
+		method: 'PUT',
+		body: JSON.stringify({ tag_ids: tagIds })
+	});
+	if (!res.ok) {
+		const e = await res.json();
+		throw new Error(e.error || 'Failed to update term tags');
+	}
+	return res.json();
 }

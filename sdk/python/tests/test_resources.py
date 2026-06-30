@@ -167,3 +167,362 @@ def test_refresh_on_401(httpx_mock: object) -> None:
 
     c.search("x")
     assert refreshed == [1]
+
+
+def test_tags_list(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="GET",
+        url="http://m/api/v1/tags",
+        json=[
+            {
+                "id": "tag-1",
+                "name": "pii",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            }
+        ],
+    )
+    tags = client.tags.list()
+    assert isinstance(tags, list)
+    assert tags[0].id == "tag-1"
+    assert tags[0].name == "pii"
+
+
+def test_tags_get(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="GET",
+        url="http://m/api/v1/tags/tag-1",
+        json={
+            "id": "tag-1",
+            "name": "pii",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+        },
+    )
+    tag = client.tags.get("tag-1")
+    assert tag.id == "tag-1"
+    assert tag.name == "pii"
+
+
+def test_tags_create(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="POST",
+        url="http://m/api/v1/tags",
+        status_code=201,
+        json={
+            "id": "tag-1",
+            "name": "pii",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+        },
+        match_json={"name": "pii", "description": "sensitive data"},
+    )
+    tag = client.tags.create(name="pii", description="sensitive data")
+    assert tag.id == "tag-1"
+    assert tag.name == "pii"
+
+
+def test_tags_create_without_description(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="POST",
+        url="http://m/api/v1/tags",
+        status_code=201,
+        json={
+            "id": "tag-1",
+            "name": "pii",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+        },
+    )
+    tag = client.tags.create(name="pii")
+    assert tag.name == "pii"
+
+
+def test_tags_update(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="PUT",
+        url="http://m/api/v1/tags/tag-1",
+        json={
+            "id": "tag-1",
+            "name": "pii-updated",
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+        },
+        match_json={"name": "pii-updated"},
+    )
+    tag = client.tags.update("tag-1", name="pii-updated")
+    assert tag.name == "pii-updated"
+
+
+def test_tags_delete(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="DELETE",
+        url="http://m/api/v1/tags/tag-1",
+        status_code=204,
+    )
+    result = client.tags.delete("tag-1")
+    assert result is None
+
+
+def test_assets_list_tags(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="GET",
+        url="http://m/api/v1/assets/tags/asset-1",
+        json=[
+            {
+                "id": "tag-1",
+                "name": "pii",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            }
+        ],
+    )
+    tags = client.assets.list_tags("asset-1")
+    assert isinstance(tags, list)
+    assert tags[0].id == "tag-1"
+
+
+def test_assets_add_tag(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="POST",
+        url="http://m/api/v1/assets/tags/asset-1",
+        status_code=201,
+        json=[
+            {
+                "id": "tag-1",
+                "name": "pii",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            }
+        ],
+        match_json={"tag_id": "tag-1"},
+    )
+    result = client.assets.add_tag("asset-1", "tag-1")
+    assert isinstance(result, list)
+    assert result[0].id == "tag-1"
+
+
+def test_assets_remove_tag(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="DELETE",
+        url="http://m/api/v1/assets/tags/asset-1",
+        status_code=204,
+        match_json={"tag_id": "tag-1"},
+    )
+    result = client.assets.remove_tag("asset-1", "tag-1")
+    assert result is None
+
+
+def test_assets_set_tags(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="PUT",
+        url="http://m/api/v1/assets/tags/asset-1",
+        json=[
+            {
+                "id": "tag-1",
+                "name": "pii",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            }
+        ],
+        match_json={"tag_ids": ["tag-1"]},
+    )
+    tags = client.assets.set_tags("asset-1", ["tag-1"])
+    assert isinstance(tags, list)
+    assert tags[0].id == "tag-1"
+
+
+def test_assets_set_column_tags(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="PUT",
+        url="http://m/api/v1/assets/column-tags/asset-1",
+        status_code=204,
+        match_json={"column_path": "schema.table.column", "tag_ids": ["tag-1"]},
+    )
+    result = client.assets.set_column_tags("asset-1", "schema.table.column", ["tag-1"])
+    assert result is None
+
+
+def test_assets_remove_column_tag(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="DELETE",
+        url="http://m/api/v1/assets/column-tags/asset-1",
+        status_code=204,
+        match_json={"column_path": "schema.table.column", "tag_id": "tag-1"},
+    )
+    result = client.assets.remove_column_tag("asset-1", "schema.table.column", "tag-1")
+    assert result is None
+
+
+def test_glossary_list_term_tags(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="GET",
+        url="http://m/api/v1/glossary/tags/term-1",
+        json=[
+            {
+                "id": "tag-1",
+                "name": "pii",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            }
+        ],
+    )
+    tags = client.glossary.list_term_tags("term-1")
+    assert isinstance(tags, list)
+    assert tags[0].id == "tag-1"
+
+
+def test_glossary_add_term_tag(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="POST",
+        url="http://m/api/v1/glossary/tags/term-1",
+        status_code=201,
+        json=[
+            {
+                "id": "tag-1",
+                "name": "pii",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            }
+        ],
+        match_json={"tag_id": "tag-1"},
+    )
+    tags = client.glossary.add_term_tag("term-1", "tag-1")
+    assert isinstance(tags, list)
+    assert tags[0].id == "tag-1"
+
+
+def test_glossary_remove_term_tag(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="DELETE",
+        url="http://m/api/v1/glossary/tags/term-1",
+        json={"message": "tag removed"},
+        match_json={"tag_id": "tag-1"},
+    )
+    client.glossary.remove_term_tag("term-1", "tag-1")
+
+
+def test_glossary_set_term_tags(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="PUT",
+        url="http://m/api/v1/glossary/tags/term-1",
+        json={"id": "term-1", "name": "PII", "definition": "Personally Identifiable Information"},
+        match_json={"tag_ids": ["tag-1"]},
+    )
+    term = client.glossary.set_term_tags("term-1", ["tag-1"])
+    assert term.id == "term-1"
+    assert term.name == "PII"
+
+
+def test_products_list(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="GET",
+        url="http://m/api/v1/products/list",
+        json={
+            "data_products": [
+                {
+                    "id": "product-1",
+                    "name": "Orders",
+                    "owners": [],
+                    "created_at": "2024-01-01T00:00:00Z",
+                    "updated_at": "2024-01-01T00:00:00Z",
+                }
+            ],
+            "total": 1,
+        },
+    )
+    result = client.products.list()
+    assert result.total == 1
+    assert result.data_products[0].id == "product-1"  # type: ignore[index]
+
+
+def test_products_list_pagination(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="GET",
+        url="http://m/api/v1/products/list?limit=10&offset=20",
+        json={"data_products": [], "total": 0},
+    )
+    result = client.products.list(limit=10, offset=20)
+    assert result.total == 0
+
+
+def test_products_get(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="GET",
+        url="http://m/api/v1/products/product-1",
+        json={
+            "id": "product-1",
+            "name": "Orders",
+            "owners": [],
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+        },
+    )
+    product = client.products.get("product-1")
+    assert product.id == "product-1"
+    assert product.name == "Orders"
+
+
+def test_products_list_tags(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="GET",
+        url="http://m/api/v1/products/tags/product-1",
+        json=[
+            {
+                "id": "tag-1",
+                "name": "pii",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            }
+        ],
+    )
+    tags = client.products.list_tags("product-1")
+    assert isinstance(tags, list)
+    assert tags[0].id == "tag-1"
+
+
+def test_products_add_tag(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="POST",
+        url="http://m/api/v1/products/tags/product-1",
+        status_code=201,
+        json=[
+            {
+                "id": "tag-1",
+                "name": "pii",
+                "created_at": "2024-01-01T00:00:00Z",
+                "updated_at": "2024-01-01T00:00:00Z",
+            }
+        ],
+        match_json={"tag_id": "tag-1"},
+    )
+    tags = client.products.add_tag("product-1", "tag-1")
+    assert isinstance(tags, list)
+    assert tags[0].id == "tag-1"
+
+
+def test_products_remove_tag(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="DELETE",
+        url="http://m/api/v1/products/tags/product-1",
+        json={"message": "tag removed"},
+        match_json={"tag_id": "tag-1"},
+    )
+    client.products.remove_tag("product-1", "tag-1")
+
+
+def test_products_set_tags(client: Client, httpx_mock: object) -> None:
+    httpx_mock.add_response(  # type: ignore[attr-defined]
+        method="PUT",
+        url="http://m/api/v1/products/tags/product-1",
+        json={
+            "id": "product-1",
+            "name": "Orders",
+            "owners": [],
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z",
+        },
+        match_json={"tag_ids": ["tag-1"]},
+    )
+    product = client.products.set_tags("product-1", ["tag-1"])
+    assert product.id == "product-1"

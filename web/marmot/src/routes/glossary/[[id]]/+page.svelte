@@ -18,7 +18,10 @@
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
 	import Button from '$components/ui/Button.svelte';
 	import Icon from '@iconify/svelte';
-	import Tags from '$components/shared/Tags.svelte';
+	import IconifyIcon from '@iconify/svelte';
+	import TagPicker from '$components/shared/TagPicker.svelte';
+	import TagBadge from '$components/shared/TagBadge.svelte';
+	import { replaceGlossaryTermTags } from '$lib/glossary/api';
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import { auth } from '$lib/stores/auth';
 
@@ -43,6 +46,8 @@
 
 	let isEditing = false;
 	let editedTerm: GlossaryTerm | null = null;
+
+	let tagPickerAnchor: DOMRect | null = null;
 
 	const canManageGlossary = auth.hasPermission('glossary', 'manage');
 	let didAutoSelect = false;
@@ -157,14 +162,22 @@
 			const response = await fetchApi(`/glossary/${termId}`);
 			if (response.ok) {
 				const term: GlossaryTerm = await response.json();
-				// Initialize tags and metadata if they don't exist
-				if (!term.tags) term.tags = [];
+				term.tags = term.tags || [];
 				if (!term.metadata) term.metadata = {};
 				selectedTerm = term;
 			}
 		} catch (err) {
 			console.error('Failed to load term:', err);
 		}
+	}
+
+	async function replaceTermTags(tagIds: string[]): Promise<void> {
+		if (!selectedTerm) return;
+		const updated = await replaceGlossaryTermTags(selectedTerm.id, tagIds);
+		updated.tags = updated.tags || [];
+		selectedTerm = updated;
+		// Also update in the terms list
+		terms.update((list) => list.map((t) => (t.id === selectedTerm!.id ? updated : t)));
 	}
 
 	function handleNewTerm() {
@@ -499,11 +512,34 @@
 											Tags
 										</h3>
 									</div>
-									<Tags
-										tags={selectedTerm.tags ?? []}
-										endpoint="/glossary"
-										id={selectedTerm.id}
-										canEdit={canManageGlossary && isEditing}
+									<div class="flex items-center gap-1.5 flex-wrap group">
+										{#each selectedTerm.tags ?? [] as tag (tag.name)}
+											<TagBadge name={tag.name} title={tag.description || tag.name} />
+										{/each}
+										{#if canManageGlossary}
+											<button
+												on:click={(e) => {
+													tagPickerAnchor = (
+														e.currentTarget as HTMLElement
+													).getBoundingClientRect();
+												}}
+												class="flex-shrink-0 p-0.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"
+												title={(selectedTerm.tags ?? []).length === 0 ? 'Add tags' : 'Edit tags'}
+											>
+												<IconifyIcon icon="material-symbols:edit" class="w-3.5 h-3.5" />
+											</button>
+										{/if}
+									</div>
+									<TagPicker
+										anchorRect={tagPickerAnchor}
+										title={selectedTerm.name}
+										assignedTagIds={(selectedTerm.tags ?? []).map((t) => t.id)}
+										onSave={async (ids) => {
+											await replaceTermTags(ids);
+										}}
+										onClose={() => {
+											tagPickerAnchor = null;
+										}}
 									/>
 								</div>
 

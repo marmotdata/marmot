@@ -1,6 +1,8 @@
 <script lang="ts">
 	import CodeBlock from '$components/editor/CodeBlock.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import TagPicker from '$components/shared/TagPicker.svelte';
+	import TagBadge from '$components/shared/TagBadge.svelte';
 	import {
 		parseSchemaResponse,
 		processSchema,
@@ -8,17 +10,31 @@
 		prettyPrintSchema
 	} from '$lib/schema/utils';
 	import type { SchemaSection, Field } from '$lib/schema/types';
+	import { listColumnTags, replaceColumnTags } from '$lib/columntags/api';
+	import { listTags } from '$lib/tags/api';
+	import type { ColumnTagMap } from '$lib/columntags/types';
+	import type { Tag } from '$lib/tags/types';
+	import { auth } from '$lib/stores/auth';
+
+	let {
+		schema = undefined,
+		showRawSchema = false,
+		assetId
+	}: { schema?: Record<string, unknown>; showRawSchema?: boolean; assetId: string } = $props();
 
 	type JsonValue = string | number | boolean | null | JsonValue[] | { [key: string]: JsonValue };
 	type SchemaValidationError = { message?: string } & Record<string, JsonValue>;
 
-	let { schema = undefined, showRawSchema = false }: { schema?: unknown; showRawSchema?: boolean } =
-		$props();
 	let activeTab = $state('');
 	let schemaSections = $state<SchemaSection[]>([]);
 	let processedSchemas = $state<Record<string, { fields: Field[]; example: unknown }>>({});
 	let validationErrors = $state<Record<string, SchemaValidationError[]>>({});
 	let expandedFields = new SvelteSet<string>();
+	let columnTagsMap = $state<ColumnTagMap>({});
+	let tagsById = $state<Record<string, Tag>>({});
+	let canManageTags = $derived(auth.hasPermission('assets', 'manage'));
+	let editTagsAnchorRect = $state<DOMRect | null>(null);
+	let editTagsColumnPath = $state<string | null>(null);
 
 	$effect(() => {
 		if (schema && schema !== null && schema !== undefined) {
@@ -49,9 +65,37 @@
 		}
 	});
 
+	$effect(async () => {
+		try {
+			const [ctags, tags] = await Promise.all([listColumnTags(assetId), listTags()]);
+			columnTagsMap = ctags || {};
+			tagsById = (tags ?? []).reduce(
+				(acc, t) => {
+					acc[t.id] = t;
+					return acc;
+				},
+				{} as Record<string, Tag>
+			);
+		} catch (error) {
+			console.warn('Failed to load column tags:', error);
+			columnTagsMap = {};
+			tagsById = {};
+		}
+	});
+
+	async function handleSaveColumnTags(tagIds: string[]) {
+		if (!editTagsColumnPath) {
+			throw new Error('Missing columnPath');
+		}
+		await replaceColumnTags(assetId, editTagsColumnPath, tagIds);
+		columnTagsMap = (await listColumnTags(assetId)) || {};
+	}
+
 	function setActiveTab(tabName: string) {
 		activeTab = tabName;
 		expandedFields.clear();
+		editTagsAnchorRect = null;
+		editTagsColumnPath = null;
 	}
 
 	function toggleFieldExpansion(fieldPath: string) {
@@ -331,8 +375,11 @@
 
 										<!-- Field content -->
 										<div class="min-w-0 flex-1">
-											<div class="flex items-start justify-between gap-3">
-												<div class="min-w-0 flex-1">
+											<div
+												class="grid items-start gap-4"
+												style="grid-template-columns: 1fr 1fr 1fr;"
+											>
+												<div class="min-w-0 text-left">
 													<div class="flex items-center gap-2 mb-2">
 														<h4
 															class="text-sm font-semibold text-gray-900 dark:text-gray-100 font-mono"
@@ -361,7 +408,7 @@
 														</p>
 													{/if}
 
-													<div class="flex flex-wrap gap-2 text-xs">
+													<div class="flex flex-wrap gap-2 text-xs mb-2">
 														{#if field.format}
 															<span
 																class="inline-flex items-center px-2 py-1 rounded bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300"
@@ -409,9 +456,10 @@
 													</div>
 												</div>
 
-												<div class="flex-shrink-0">
+												<!-- Right Column: Type, Const, Enum -->
+												<div class="flex flex-col items-start gap-1">
 													<span
-														class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold {getTypeStyle(
+														class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap {getTypeStyle(
 															field.type
 														)}"
 													>
@@ -420,22 +468,22 @@
 
 													{#if field.const !== undefined}
 														<div
-															class="mt-2 font-mono text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded"
+															class="font-mono text-xs text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-2 py-1 rounded whitespace-nowrap"
 														>
 															{typeof field.const === 'string'
 																? `"${field.const}"`
 																: JSON.stringify(field.const)}
 														</div>
 													{:else if field.enum}
-														<div class="mt-2 text-xs">
+														<div class="text-xs">
 															<div class="cursor-help group relative">
 																<div
-																	class="bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded text-gray-600 dark:text-gray-400"
+																	class="bg-gray-50 dark:bg-gray-800 px-2 py-1 rounded text-gray-600 dark:text-gray-400 whitespace-nowrap"
 																>
 																	{formatEnumDisplay(field.enum)}
 																</div>
 																<div
-																	class="absolute z-10 invisible group-hover:visible bg-gray-900 dark:bg-gray-700 text-white text-xs rounded px-3 py-2 mt-1 left-0 min-w-max max-w-sm shadow-lg"
+																	class="absolute z-10 invisible group-hover:visible bg-gray-900 dark:bg-gray-700 text-white text-xs rounded px-3 py-2 mt-1 right-0 min-w-max max-w-sm shadow-lg"
 																>
 																	{#each field.enum as value, i (i)}
 																		<div class="py-0.5">{value}</div>
@@ -443,6 +491,79 @@
 																</div>
 															</div>
 														</div>
+													{/if}
+												</div>
+
+												<!-- Third Column: Tags -->
+												<div class="group/tags flex flex-col items-start gap-2">
+													<!-- Column Tags Display -->
+													{#if columnTagsMap[field.name] && columnTagsMap[field.name].length > 0}
+														{@const fieldAssignments = columnTagsMap[field.name]}
+														<div>
+															<div class="flex flex-wrap gap-2 items-center">
+																{#each fieldAssignments as assignment (assignment.tag_id)}
+																	{@const tag = tagsById[assignment.tag_id]}
+																	{#if tag}
+																		<TagBadge name={tag.name} title={tag.description || tag.name} />
+																	{/if}
+																{/each}
+																{#if field.isLeaf && canManageTags}
+																	<span
+																		class="opacity-0 group-hover/tags:opacity-100 transition-opacity"
+																	>
+																		<button
+																			onclick={(e) => {
+																				editTagsAnchorRect =
+																					e.currentTarget.getBoundingClientRect();
+																				editTagsColumnPath = field.name;
+																			}}
+																			aria-label="Edit tags for {field.name}"
+																			style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: #8A8070; white-space: nowrap;"
+																		>
+																			<svg
+																				width="11"
+																				height="11"
+																				viewBox="0 0 24 24"
+																				fill="none"
+																				stroke="currentColor"
+																				stroke-width="1.5"
+																				stroke-linecap="round"
+																				stroke-linejoin="round"
+																				aria-hidden="true"
+																				><path d="M4 20h4l10-10-4-4L4 16v4Z" /><path
+																					d="m14 6 4 4"
+																				/></svg
+																			>
+																			Edit tags
+																		</button>
+																	</span>
+																{/if}
+															</div>
+														</div>
+													{:else if field.isLeaf && canManageTags}
+														<span class="opacity-0 group-hover/tags:opacity-100 transition-opacity">
+															<button
+																onclick={(e) => {
+																	editTagsAnchorRect = e.currentTarget.getBoundingClientRect();
+																	editTagsColumnPath = field.name;
+																}}
+																aria-label="Add tag to {field.name}"
+																style="all: unset; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 500; color: #8A8070; white-space: nowrap;"
+															>
+																<svg
+																	width="11"
+																	height="11"
+																	viewBox="0 0 24 24"
+																	fill="none"
+																	stroke="currentColor"
+																	stroke-width="2"
+																	stroke-linecap="round"
+																	stroke-linejoin="round"
+																	aria-hidden="true"><path d="M12 5v14M5 12h14" /></svg
+																>
+																Add tag
+															</button>
+														</span>
 													{/if}
 												</div>
 											</div>
@@ -482,3 +603,21 @@
 		</div>
 	{/if}
 </div>
+
+<TagPicker
+	anchorRect={editTagsAnchorRect}
+	title={editTagsColumnPath || ''}
+	assignedTagIds={editTagsColumnPath
+		? (columnTagsMap[editTagsColumnPath] || []).map((a) => a.tag_id)
+		: []}
+	onSave={handleSaveColumnTags}
+	onClose={() => {
+		editTagsAnchorRect = null;
+		editTagsColumnPath = null;
+	}}
+	onTagCreated={(tag) => {
+		if (!tagsById[tag.id]) {
+			tagsById = { ...tagsById, [tag.id]: tag };
+		}
+	}}
+/>

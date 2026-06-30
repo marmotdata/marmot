@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { fetchApi } from '$lib/api';
 	import IconifyIcon from '@iconify/svelte';
+	import TagBadge from '$components/shared/TagBadge.svelte';
 
 	let {
 		tags = $bindable([]),
@@ -103,25 +104,11 @@
 <div class="space-y-2">
 	<div class="flex flex-wrap gap-1.5">
 		{#each tags as tag (tag)}
-			<span
-				class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100"
-			>
-				{tag}
-				{#if canEdit}
-					<button
-						onclick={() => removeTag(tag)}
-						disabled={saving}
-						class="hover:text-red-600 dark:hover:text-red-400 disabled:opacity-50"
-						aria-label="Remove tag {tag}"
-					>
-						<IconifyIcon
-							icon="material-symbols:close-small-rounded"
-							class="w-4 h-4"
-							aria-hidden="true"
-						/>
-					</button>
-				{/if}
-			</span>
+			<TagBadge
+				name={tag}
+				onRemove={canEdit ? () => removeTag(tag) : undefined}
+				disabled={saving}
+			/>
 		{/each}
 
 		{#if showTagInput}

@@ -307,7 +307,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 
 		mrnValue := mrn.New("Database", "PostgreSQL", name)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
 			Name:      &name,
@@ -315,7 +314,6 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 			Type:      "Database",
 			Providers: []string{"PostgreSQL"},
 			Metadata:    metadata,
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "PostgreSQL",
 				LastSyncAt: time.Now(),
@@ -449,7 +447,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 
 		mrnValue := mrn.New(assetType, "PostgreSQL", objectName)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, asset.Asset{
 			Name:        &objectName,
@@ -459,7 +456,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			Description: &assetDesc,
 			Metadata:    metadata,
 			Schema:      make(map[string]string),
-			Tags:        processedTags,
 			Sources: []asset.AssetSource{{
 				Name:       "PostgreSQL",
 				LastSyncAt: time.Now(),

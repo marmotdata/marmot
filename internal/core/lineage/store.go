@@ -274,7 +274,7 @@ func (r *PostgresRepository) GetAssetLineage(ctx context.Context, assetID string
 
 	nodes, err := r.scanLineageNodes(ctx, tx, `
 	SELECT id, name, mrn, type, providers, description,
-	metadata, schema, sources, tags,
+	metadata, schema, sources,
 	created_by, created_at, updated_at, last_sync_at, is_stub,
 	0 as depth
 	FROM assets WHERE mrn = $1`, mrn)
@@ -337,7 +337,7 @@ func (r *PostgresRepository) getUpstreamNodes(ctx context.Context, tx pgx.Tx, mr
 	CYCLE mrn SET is_cycle USING path
 	SELECT DISTINCT ON (a.mrn)
 		a.id, a.name, a.mrn, a.type, a.providers, a.description,
-		a.metadata, a.schema, a.sources, a.tags,
+		a.metadata, a.schema, a.sources,
 		a.created_by, a.created_at, a.updated_at, a.last_sync_at, a.is_stub,
 		u.depth
 	FROM upstream u
@@ -370,7 +370,7 @@ func (r *PostgresRepository) getDownstreamNodes(ctx context.Context, tx pgx.Tx, 
 	CYCLE mrn SET is_cycle USING path
 	SELECT DISTINCT ON (a.mrn)
 		a.id, a.name, a.mrn, a.type, a.providers, a.description,
-		a.metadata, a.schema, a.sources, a.tags,
+		a.metadata, a.schema, a.sources,
 		a.created_by, a.created_at, a.updated_at, a.last_sync_at, a.is_stub,
 		d.depth
 	FROM downstream d
@@ -461,7 +461,6 @@ func (r *PostgresRepository) scanLineageNodes(ctx context.Context, tx pgx.Tx, qu
 			&a.Metadata,
 			&a.Schema,
 			&a.Sources,
-			&a.Tags,
 			&a.CreatedBy,
 			&a.CreatedAt,
 			&a.UpdatedAt,
@@ -655,3 +654,4 @@ func (r *PostgresRepository) GetImmediateNeighbors(ctx context.Context, assetMRN
 
 	return mrns, nil
 }
+

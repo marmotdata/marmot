@@ -6,15 +6,17 @@ import (
 
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/enrichment"
+	"github.com/marmotdata/marmot/internal/core/tag"
 	"github.com/marmotdata/marmot/internal/worker"
 	"github.com/rs/zerolog/log"
 )
 
 // MembershipService evaluates asset rules and maintains rule-to-asset memberships.
 type MembershipService struct {
-	repo       Repository
-	memberRepo MembershipRepository
-	evaluator  *enrichment.Evaluator
+	repo         Repository
+	memberRepo   MembershipRepository
+	evaluator    *enrichment.Evaluator
+	listAssetTags func(ctx context.Context, assetID string) ([]tag.Tag, error)
 
 	workerPool *worker.Pool
 	batcher    *worker.BatchProcessor[*asset.Asset]
@@ -33,6 +35,7 @@ func NewMembershipService(
 	repo Repository,
 	memberRepo MembershipRepository,
 	evaluator *enrichment.Evaluator,
+	listAssetTags func(ctx context.Context, assetID string) ([]tag.Tag, error),
 	config *MembershipConfig,
 ) *MembershipService {
 	if config == nil {
@@ -49,9 +52,10 @@ func NewMembershipService(
 	}
 
 	svc := &MembershipService{
-		repo:       repo,
-		memberRepo: memberRepo,
-		evaluator:  evaluator,
+		repo:          repo,
+		memberRepo:    memberRepo,
+		evaluator:     evaluator,
+		listAssetTags: listAssetTags,
 	}
 
 	svc.workerPool = worker.NewPool(worker.PoolConfig{
@@ -293,11 +297,20 @@ func (s *MembershipService) processBatch(ctx context.Context, assets []*asset.As
 }
 
 func (s *MembershipService) evaluateAsset(ctx context.Context, ast *asset.Asset) error {
+	var tagNames []string
+	if tags, err := s.listAssetTags(ctx, ast.ID); err == nil {
+		tagNames = make([]string, 0, len(tags))
+		for _, t := range tags {
+			tagNames = append(tagNames, t.Name)
+		}
+	} else {
+		log.Warn().Err(err).Str("asset_id", ast.ID).Msg("Failed to load tags for membership evaluation")
+	}
 	sig := enrichment.AssetSignature{
 		ID:           ast.ID,
 		Type:         ast.Type,
 		Providers:    ast.Providers,
-		Tags:         ast.Tags,
+		Tags:         tagNames,
 		MetadataKeys: enrichment.ExtractMetadataKeys(ast.Metadata),
 	}
 

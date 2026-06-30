@@ -87,7 +87,6 @@ type CreateAssetRequest struct {
 	Description   *string                `json:"description"`
 	Metadata      map[string]interface{} `json:"metadata"`
 	Schema        map[string]interface{} `json:"schema"`
-	Tags          []string               `json:"tags"`
 	Sources       []string               `json:"sources"`
 	ExternalLinks []map[string]string    `json:"external_links"`
 } // @name RunCreateAssetRequest
@@ -224,7 +223,6 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 			Description:   asset.Description,
 			Metadata:      asset.Metadata,
 			Schema:        asset.Schema,
-			Tags:          asset.Tags,
 			Sources:       asset.Sources,
 			ExternalLinks: asset.ExternalLinks,
 		}

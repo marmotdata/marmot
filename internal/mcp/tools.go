@@ -98,7 +98,8 @@ func (tc *ToolContext) getAssetByID(ctx context.Context, id string) (*mcpsdk.Cal
 		), nil, nil
 	}
 
-	formatted := FormatAssetCard(asset, tc.config.Server.RootURL)
+	assetTags, _ := tc.assetService.ListAssetTags(ctx, asset.ID)
+	formatted := FormatAssetCard(asset, tc.config.Server.RootURL, assetTags)
 
 	lineageResp, err := tc.lineageService.GetAssetLineage(ctx, id, 5, "both")
 	if err == nil && lineageResp != nil {
@@ -133,7 +134,8 @@ func (tc *ToolContext) getAssetByMRN(ctx context.Context, mrn string) (*mcpsdk.C
 		), nil, nil
 	}
 
-	formatted := FormatAssetCard(asset, tc.config.Server.RootURL)
+	assetTags, _ := tc.assetService.ListAssetTags(ctx, asset.ID)
+	formatted := FormatAssetCard(asset, tc.config.Server.RootURL, assetTags)
 
 	lineageResp, err := tc.lineageService.GetAssetLineage(ctx, asset.ID, 5, "both")
 	if err == nil && lineageResp != nil {
@@ -257,7 +259,6 @@ func (tc *ToolContext) searchAssetsPG(ctx context.Context, args DiscoverDataInpu
 		Query:        query,
 		Types:        args.Types,
 		Providers:    args.Providers,
-		Tags:         args.Tags,
 		Limit:        args.Limit,
 		Offset:       args.Offset,
 		IncludeStubs: true,
@@ -277,7 +278,7 @@ func (tc *ToolContext) searchAssetsPG(ctx context.Context, args DiscoverDataInpu
 	shouldShowSummary := query == "" && args.Offset == 0 && (total > 20 || (len(args.Types) == 0 && len(args.Providers) == 0 && len(args.Tags) == 0))
 
 	if shouldShowSummary && total > 0 {
-		return tc.formatCatalogSummary(total, availableFilters, args)
+		return tc.formatCatalogSummary(ctx, total, availableFilters, args)
 	}
 
 	if len(args.MetadataFilters) > 0 {
@@ -666,6 +667,8 @@ func (tc *ToolContext) getTermByID(ctx context.Context, termID string) (*mcpsdk.
 		), nil, nil
 	}
 
+	term.Tags, _ = tc.glossaryService.ListGlossaryTermTags(ctx, termID)
+
 	formatted := FormatTermCard(term, tc.config.Server.RootURL)
 
 	nextActions := map[string]string{}
@@ -684,7 +687,7 @@ func (tc *ToolContext) getTermByID(ctx context.Context, termID string) (*mcpsdk.
 	}
 
 	if len(term.Tags) > 0 {
-		nextActions["Find similar terms"] = fmt.Sprintf(`{"query": "%s"}`, term.Tags[0])
+		nextActions["Find similar terms"] = fmt.Sprintf(`{"query": "%s"}`, term.Tags[0].Name)
 	}
 
 	formatted += "\n\n" + FormatNextActions(nextActions)
@@ -907,7 +910,7 @@ func (tc *ToolContext) formatLineage(lineageResp *lineage.LineageResponse) strin
 }
 
 // formatCatalogSummary creates a summary overview of the catalog
-func (tc *ToolContext) formatCatalogSummary(total int, filters asset.AvailableFilters, args DiscoverDataInput) (*mcpsdk.CallToolResult, any, error) {
+func (tc *ToolContext) formatCatalogSummary(ctx context.Context, total int, filters asset.AvailableFilters, args DiscoverDataInput) (*mcpsdk.CallToolResult, any, error) {
 	var parts []string
 
 	if len(args.Types) > 0 || len(args.Providers) > 0 || len(args.Tags) > 0 {
@@ -952,13 +955,13 @@ func (tc *ToolContext) formatCatalogSummary(total int, filters asset.AvailableFi
 		parts = append(parts, "")
 	}
 
-	if len(filters.Tags) > 0 {
-		parts = append(parts, "## 🏷️  Top Tags")
+	if summary, err := tc.assetService.Summary(ctx); err == nil && len(summary.Tags) > 0 {
+		parts = append(parts, "## 🏷️ Top Tags")
 		parts = append(parts, "")
 		count := 0
-		for tag, tagCount := range filters.Tags {
+		for tag, tagCount := range summary.Tags {
 			if count >= 10 {
-				parts = append(parts, fmt.Sprintf("_...and %d more tags_", len(filters.Tags)-10))
+				parts = append(parts, fmt.Sprintf("_...and %d more tags_", len(summary.Tags)-10))
 				break
 			}
 			parts = append(parts, fmt.Sprintf("- **%s**: %d", tag, tagCount))

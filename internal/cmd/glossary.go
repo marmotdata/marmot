@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"os"
 	"strings"
@@ -230,6 +231,115 @@ var glossarySearchCmd = &cobra.Command{
 	},
 }
 
+var glossaryTagsCmd = &cobra.Command{
+	Use:   "tags <term-id>",
+	Short: "Manage tags on a glossary term",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		if len(args) == 0 {
+			return cmd.Help()
+		}
+		return listGlossaryTermTags(cmd.Context(), args[0])
+	},
+}
+
+func listGlossaryTermTags(ctx context.Context, termID string) error {
+	p := getPrinter()
+	c, err := newClient()
+	if err != nil {
+		return err
+	}
+
+	tags, err := c.Glossary.ListTermTags(ctx, termID)
+	if err != nil {
+		return err
+	}
+
+	if p.IsRaw() {
+		return p.PrintJSON(tags)
+	}
+
+	if len(tags) == 0 {
+		fmt.Println("No tags found on this glossary term.")
+		return nil
+	}
+
+	t := output.NewTable("ID", "NAME", "DESCRIPTION")
+	for _, tag := range tags {
+		t.AddRow(tag.ID, tag.Name, tag.Description)
+	}
+	p.PrintTable(t)
+	return nil
+}
+
+var glossaryTagsAddCmd = &cobra.Command{
+	Use:   "add <term-id>",
+	Short: "Add a tag to a glossary term",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		tagID, _ := cmd.Flags().GetString("tag-id")
+		if tagID == "" {
+			return fmt.Errorf("--tag-id is required")
+		}
+
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+
+		if err := c.Glossary.AddTermTag(cmd.Context(), args[0], tagID); err != nil {
+			return err
+		}
+
+		fmt.Printf("Tag added to glossary term %s.\n", args[0])
+		return nil
+	},
+}
+
+var glossaryTagsRemoveCmd = &cobra.Command{
+	Use:   "remove <term-id>",
+	Short: "Remove a tag from a glossary term",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		tagID, _ := cmd.Flags().GetString("tag-id")
+		if tagID == "" {
+			return fmt.Errorf("--tag-id is required")
+		}
+
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+
+		if err := c.Glossary.RemoveTermTag(cmd.Context(), args[0], tagID); err != nil {
+			return err
+		}
+
+		fmt.Printf("Tag removed from glossary term %s.\n", args[0])
+		return nil
+	},
+}
+
+var glossaryTagsSetCmd = &cobra.Command{
+	Use:   "set <term-id>",
+	Short: "Replace all tags on a glossary term",
+	Args:  cobra.ExactArgs(1),
+	RunE: func(cmd *cobra.Command, args []string) error {
+		tagIDs, _ := cmd.Flags().GetStringSlice("tag-ids")
+
+		c, err := newClient()
+		if err != nil {
+			return err
+		}
+
+		if err := c.Glossary.SetTermTags(cmd.Context(), args[0], tagIDs); err != nil {
+			return err
+		}
+
+		fmt.Printf("Tags replaced on glossary term %s.\n", args[0])
+		return nil
+	},
+}
+
 func init() {
 	glossaryListCmd.Flags().Int("limit", 20, "Maximum number of results")
 	glossaryListCmd.Flags().Int("offset", 0, "Offset for pagination")
@@ -251,11 +361,23 @@ func init() {
 	glossarySearchCmd.Flags().Int("limit", 20, "Maximum number of results")
 	glossarySearchCmd.Flags().Int("offset", 0, "Offset for pagination")
 
+	// tags
+	glossaryTagsAddCmd.Flags().String("tag-id", "", "Tag ID to add (required)")
+	glossaryTagsAddCmd.MarkFlagRequired("tag-id")
+	glossaryTagsRemoveCmd.Flags().String("tag-id", "", "Tag ID to remove (required)")
+	glossaryTagsRemoveCmd.MarkFlagRequired("tag-id")
+	glossaryTagsSetCmd.Flags().StringSlice("tag-ids", nil, "Tag IDs to set (replaces all existing tags)")
+
+	glossaryTagsCmd.AddCommand(glossaryTagsAddCmd)
+	glossaryTagsCmd.AddCommand(glossaryTagsRemoveCmd)
+	glossaryTagsCmd.AddCommand(glossaryTagsSetCmd)
+
 	glossaryCmd.AddCommand(glossaryListCmd)
 	glossaryCmd.AddCommand(glossaryGetCmd)
 	glossaryCmd.AddCommand(glossaryCreateCmd)
 	glossaryCmd.AddCommand(glossaryUpdateCmd)
 	glossaryCmd.AddCommand(glossaryDeleteCmd)
 	glossaryCmd.AddCommand(glossarySearchCmd)
+	glossaryCmd.AddCommand(glossaryTagsCmd)
 	rootCmd.AddCommand(glossaryCmd)
 }

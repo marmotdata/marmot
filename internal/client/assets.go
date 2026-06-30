@@ -28,6 +28,13 @@ type AssetOwnerEntry struct {
 	ProfilePicture *string `json:"profile_picture,omitempty"`
 }
 
+// TagEntry represents a tag associated with an asset.
+type TagEntry struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 // ListAssets searches assets with optional query, pagination, and filters.
 func (c *Client) ListAssets(ctx context.Context, query string, limit, offset int, assetTypes, providers, tags []string) (*AssetsSearchResponse, error) {
 	q := url.Values{}
@@ -76,22 +83,29 @@ func (c *Client) GetAssetSummary(ctx context.Context) (*asset.AssetSummary, erro
 	return &s, nil
 }
 
-// AddTag adds a tag to an asset.
-func (c *Client) AddTag(ctx context.Context, assetID, tag string) error {
-	body := map[string]string{
-		"asset_id": assetID,
-		"tag":      tag,
+// ReplaceTags replaces all tags on an asset with the given tag IDs.
+func (c *Client) ReplaceTags(ctx context.Context, assetID string, tagIDs []string) error {
+	body := map[string]interface{}{
+		"tag_ids": tagIDs,
 	}
-	return c.post(ctx, "/assets/tags/", body, nil)
+	return c.put(ctx, "/assets/tags/"+url.PathEscape(assetID), body, nil)
 }
 
-// RemoveTag removes a tag from an asset.
-func (c *Client) RemoveTag(ctx context.Context, assetID, tag string) error {
-	body := map[string]string{
-		"asset_id": assetID,
-		"tag":      tag,
+// ListAssetTags returns all tags associated with an asset.
+func (c *Client) ListAssetTags(ctx context.Context, assetID string) ([]TagEntry, error) {
+	var tags []TagEntry
+	if err := c.get(ctx, "/assets/tags/"+url.PathEscape(assetID), nil, &tags); err != nil {
+		return nil, err
 	}
-	return c.delWithBody(ctx, "/assets/tags/", body, nil)
+	return tags, nil
+}
+
+// RemoveAssetTag removes a single tag association from an asset.
+func (c *Client) RemoveAssetTag(ctx context.Context, assetID string, tagID string) error {
+	body := map[string]interface{}{
+		"tag_id": tagID,
+	}
+	return c.delWithBody(ctx, "/assets/tags/"+url.PathEscape(assetID), body, nil)
 }
 
 // ListAssetOwners lists the owners of an asset.

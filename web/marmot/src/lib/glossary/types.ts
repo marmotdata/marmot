@@ -1,3 +1,5 @@
+import type { Tag } from '$lib/tags/types';
+
 export interface Owner {
 	id: string;
 	username?: string;
@@ -15,7 +17,7 @@ export interface GlossaryTerm {
 	parent_term_id?: string;
 	owners: Owner[];
 	metadata: Record<string, unknown>;
-	tags: string[];
+	tags: Tag[];
 	created_at: string;
 	updated_at: string;
 	deleted_at?: string;

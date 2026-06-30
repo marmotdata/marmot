@@ -60,8 +60,12 @@ marmot assets list                        # list assets (paginated)
 marmot assets search <query>              # search assets
 marmot assets get <id>                    # get asset details
 marmot assets summary                     # counts by type, provider, tag
-marmot assets tags add <id> <tag>         # add a tag
-marmot assets tags remove <id> <tag>      # remove a tag
+marmot assets tags <id>                   # list tags on an asset
+marmot assets tags add <id> --tag-id <id> # add a tag to an asset
+marmot assets tags remove <id> --tag-id   # remove a tag from an asset
+marmot assets tags set <id> --tag-ids     # replace all tags on an asset
+marmot assets column-tags set <id> --column <path> --tag-ids  # replace column tags
+marmot assets column-tags remove <id> --column <path> --tag-id # remove a column tag
 marmot assets owners <id>                 # list owners
 marmot assets delete <id>                 # delete (prompts for confirmation)
 ```
@@ -76,6 +80,16 @@ marmot search <query>                     # unified search (assets, glossary, te
 
 Filter by type with `--types asset,glossary`.
 
+### Tags
+
+```bash
+marmot tags list                           # list all tags in the catalog
+marmot tags get <id>                       # get a tag by ID
+marmot tags create --name "name" [--description]  # create a tag
+marmot tags update <id> --name "new-name" [--description]  # update a tag
+marmot tags delete <id>                    # delete a tag (prompts for confirmation)
+```
+
 ### Glossary
 
 ```bash
@@ -85,7 +99,24 @@ marmot glossary create --name "Term" --definition "What it means"
 marmot glossary update <id> --definition "New definition"
 marmot glossary delete <id>
 marmot glossary search <query>
+marmot glossary tags <id>                  # list tags on a glossary term
+marmot glossary tags add <id> --tag-id     # add a tag to a glossary term
+marmot glossary tags remove <id> --tag-id  # remove a tag from a glossary term
+marmot glossary tags set <id> --tag-ids    # replace all tags on a glossary term
 ```
+
+### Products
+
+```bash
+marmot products list                       # list data products (paginated)
+marmot products get <id>                   # get data product details
+marmot products tags <id>                  # list tags on a data product
+marmot products tags add <id> --tag-id     # add a tag to a data product
+marmot products tags remove <id> --tag-id  # remove a tag from a data product
+marmot products tags set <id> --tag-ids    # replace all tags on a data product
+```
+
+Pagination: `--limit`, `--offset`.
 
 ### Lineage
 

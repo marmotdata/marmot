@@ -9,7 +9,7 @@
 	import LineageViewNode from '$components/lineage/LineageViewNode.svelte';
 	import Icon from '$components/ui/Icon.svelte';
 	import RunHistory from '$components/runs/RunHistory.svelte';
-	import Tags from '$components/shared/Tags.svelte';
+	import TagBadge from '$components/shared/TagBadge.svelte';
 	import AssetGlossaryTerms from './AssetGlossaryTerms.svelte';
 	import AssetDescriptions from './AssetDescriptions.svelte';
 	import OwnerSelector from '$components/shared/OwnerSelector.svelte';
@@ -290,12 +290,14 @@
 												Tags
 											</h4>
 										</div>
-										<Tags
-											tags={asset.tags ?? []}
-											endpoint="/assets"
-											id={asset.id}
-											canEdit={false}
-										/>
+										<div class="flex flex-wrap gap-1.5">
+											{#each asset.tags ?? [] as tag (tag.name)}
+												<TagBadge name={tag.name} title={tag.description || tag.name} />
+											{/each}
+											{#if (asset.tags ?? []).length === 0}
+												<p class="text-sm text-gray-400 dark:text-gray-500 italic">No tags</p>
+											{/if}
+										</div>
 									</div>
 									<div>
 										<div class="flex items-center gap-2 mb-2">
@@ -502,9 +504,7 @@
 								{#if asset.parent_mrn}
 									<div>
 										<dt class="text-xs text-gray-500 dark:text-gray-400">Parent Asset</dt>
-										<dd
-											class="text-sm text-gray-900 dark:text-gray-100 mt-0.5 font-mono text-xs break-all"
-										>
+										<dd class="text-xs text-gray-900 dark:text-gray-100 mt-0.5 font-mono break-all">
 											{asset.parent_mrn}
 										</dd>
 									</div>

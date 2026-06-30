@@ -86,6 +86,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	var assets []asset.Asset
 	var lineages []lineage.LineageEdge
 	seenAssets := make(map[string]bool)
+	assetTags := make(map[string][]string)
 
 	err = filepath.Walk(localPath, func(path string, info os.FileInfo, err error) error {
 		if err != nil || info.IsDir() {
@@ -126,9 +127,12 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		serviceAsset := s.createServiceAsset(spec, config)
 		addUniqueAsset(&assets, serviceAsset, seenAssets)
 
-		endpointAssets := s.createEndpointAssets(spec, config)
+		endpointAssets, endpointTags := s.createEndpointAssets(spec, config)
 		for _, asset := range endpointAssets {
 			addUniqueAsset(&assets, asset, seenAssets)
+		}
+		for mrn, tags := range endpointTags {
+			assetTags[mrn] = tags
 		}
 
 		return nil
@@ -139,8 +143,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 
 	return &plugin.DiscoveryResult{
-		Assets:  assets,
-		Lineage: lineages,
+		Assets:    assets,
+		Lineage:   lineages,
+		AssetTags: assetTags,
 	}, nil
 }
 
@@ -197,7 +202,6 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 	}
 	metadata := plugin.MapToMetadata(serviceFields)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
 
 	externalLinks := []asset.ExternalLink{}
 	if spec.Model.ExternalDocs != nil {
@@ -218,14 +222,14 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		Providers:     []string{openapiProvider},
 		Description:   &description,
 		Metadata:      metadata,
-		Tags:          processedTags,
 		Sources:       []asset.AssetSource{},
 		ExternalLinks: externalLinks,
 	}
 }
 
-func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document], config *Config) []asset.Asset {
+func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document], config *Config) ([]asset.Asset, map[string][]string) {
 	assets := []asset.Asset{}
+	tags := make(map[string][]string)
 	parentMrn := serviceMrnValue(spec)
 	serviceName := spec.Model.Info.Title
 
@@ -261,12 +265,6 @@ func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document
 				endpointField.Description = item.Description
 			}
 			metadata := plugin.MapToMetadata(endpointField)
-			processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
-			processedTags = append(processedTags, serviceName)
-			processedTags = append(processedTags, op.Tags...)
-			if op.Deprecated != nil && *op.Deprecated {
-				processedTags = append(processedTags, "deprecated")
-			}
 
 			externalLinks := []asset.ExternalLink{}
 			if op.ExternalDocs != nil {
@@ -305,16 +303,22 @@ func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document
 				Providers:     []string{openapiProvider},
 				Description:   &description,
 				Metadata:      metadata,
-				Tags:          processedTags,
 				Sources:       []asset.AssetSource{},
 				ExternalLinks: externalLinks,
 				Schema:        schema,
 			}
 			assets = append(assets, asset)
+
+			endpointTags := []string{serviceName}
+			endpointTags = append(endpointTags, op.Tags...)
+			if op.Deprecated != nil && *op.Deprecated {
+				endpointTags = append(endpointTags, "deprecated")
+			}
+			tags[mrnValue] = endpointTags
 		}
 	}
 
-	return assets
+	return assets, tags
 }
 
 func addUniqueAsset(assets *[]asset.Asset, newAsset asset.Asset, seen map[string]bool) {

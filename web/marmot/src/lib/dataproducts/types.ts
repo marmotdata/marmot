@@ -1,3 +1,5 @@
+import type { Tag } from '$lib/tags/types';
+
 export interface Owner {
 	id: string;
 	username?: string;
@@ -41,7 +43,7 @@ export interface DataProduct {
 	name: string;
 	description?: string;
 	metadata: Record<string, unknown>;
-	tags: string[];
+	tags: Tag[];
 	owners: Owner[];
 	rules: Rule[];
 	created_by?: string;
