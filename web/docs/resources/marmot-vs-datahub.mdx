@@ -1,0 +1,265 @@
+---
+slug: /marmot-vs-datahub
+title: "Marmot vs DataHub: AI Context Layer Comparison (2026)"
+description: "Marmot vs DataHub compared as AI context layers for agents. Native built-in MCP on a single binary versus DataHub's official MCP server on a Kafka, graph and Elasticsearch stack."
+keywords:
+  - marmot vs datahub
+  - datahub alternative
+  - datahub mcp
+  - data catalog for AI agents
+  - open source data catalog comparison
+image: /img/ai-context-layer-banner.png
+date: 2026-06-29
+hide_table_of_contents: false
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import { ResourceBanner } from '@site/src/components/ResourceCard';
+import { ComparisonTable } from '@site/src/components/ComparisonTable';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/marmot-vs-datahub" />
+  <meta property="article:published_time" content="2026-06-29" />
+  <meta property="article:modified_time" content="2026-06-29" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Marmot vs DataHub: AI Context Layer Comparison (2026)" />
+  <meta name="twitter:description" content="Native built-in MCP on a single binary versus DataHub's official MCP server on a Kafka, graph and Elasticsearch stack." />
+  <meta name="twitter:image" content="https://marmotdata.io/img/ai-context-layer-banner.png" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Marmot vs DataHub: AI Context Layer Comparison (2026)" />
+  <meta property="og:description" content="Marmot vs DataHub compared as AI context layers for agents, on MCP, deployment footprint, connectors and lineage." />
+  <meta property="og:image" content="https://marmotdata.io/img/ai-context-layer-banner.png" />
+  <meta property="og:url" content="https://marmotdata.io/resources/marmot-vs-datahub" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is Marmot a DataHub alternative?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, for teams that want an open source data catalog and AI context layer without DataHub's infrastructure. Marmot runs as a single Go binary on Postgres with a built-in MCP server, where DataHub expects Kafka, a graph store and Elasticsearch. Marmot scales to large catalogs on Postgres and is far lighter to run; DataHub's edge is a broader pre-built integration ecosystem and column-level lineage."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does DataHub need Kafka?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A full DataHub deployment uses Kafka for its metadata change log, plus a graph store and Elasticsearch for search. That architecture suits streaming metadata but is heavier to run and maintain than a single-process catalog. Marmot avoids it entirely, scaling to large catalogs on Postgres alone, so the difference is operational complexity rather than capability."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which has better MCP support, Marmot or DataHub?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Both expose metadata to AI agents over MCP. Marmot's MCP server is built into the binary, so there is nothing extra to deploy. DataHub's MCP server is an official but separate package you run alongside the platform. Marmot wins on simplicity; DataHub's server exposes a broader surface including SQL generation across a larger ecosystem."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which is better for AI agents in 2026?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For most teams standing up an AI context layer, Marmot is the faster path: native MCP, governed context and vendor-neutral coverage from one binary on Postgres, and it scales to large catalogs without a Kafka and search stack. DataHub is the better fit when you already run that stack, prefer GraphQL or streaming-based ingestion, or want its broader pre-built integration ecosystem."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do Marmot and DataHub both have a CLI?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Both ship a full command line interface, which sets them apart from catalogs that offer only an ingestion or admin utility. DataHub's datahub CLI ingests from YAML recipes and lets you get, update and explore entities. Marmot's marmot CLI covers search, lineage, glossary and ownership. Marmot also ships a packaged agent Skill, a ready-made instruction set that lets an assistant drive the catalog over the CLI, REST API or MCP without custom wiring."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I connect Marmot or DataHub to Claude and Cursor?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, both expose an MCP server that MCP clients like Claude Desktop, Claude Code and Cursor can connect to. With Marmot the server is built into the binary, so you point the client at the catalog and authenticate with an API key. With DataHub you deploy and connect its separate MCP server package alongside the platform. Either way the assistant can then query assets, ownership and lineage in natural language."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+[← All resources](/resources)
+
+<ResourceBanner href="/resources/marmot-vs-datahub" />
+
+How Marmot and DataHub compare as AI context layers: native MCP on a single binary versus an official MCP server on a Kafka, graph and Elasticsearch stack.
+
+Both are open source data catalogs, both expose metadata to AI agents over the Model Context Protocol, and both serve lineage to tools like Claude and Cursor. The real difference is what you have to run to get there, and how much of your stack each one can see. This page compares them on exactly that. For the full field, see [the data catalog AI context layer comparison](/resources/data-catalogs-for-ai-agents).
+
+---
+
+## At a glance {#at-a-glance}
+
+<ComparisonTable
+  columns={["Marmot", "DataHub"]}
+  highlightColumn={0}
+  caption="Marmot versus DataHub as AI context layers, compared across MCP support, CLI, dependencies, deployment footprint, lineage, connectors, catalog-as-code, scaling, governed context and licence."
+  rows={[
+    { feature: "MCP support", cells: [
+      { status: "yes", text: "Native, built into the binary" },
+      { status: "partial", text: "Official, separate server package" },
+    ]},
+    { feature: "CLI", cells: [
+      { status: "yes", text: "Full, plus a packaged agent Skill" },
+      { status: "yes", text: "Full" },
+    ]},
+    { feature: "SDKs", cells: [
+      { status: "yes", text: "Go, TypeScript and Python" },
+      { status: "partial", text: "Python and Java" },
+    ]},
+    { feature: "Core dependencies", cells: [
+      { status: "yes", text: "Postgres only (Elasticsearch optional)" },
+      { status: "partial", text: "Kafka, graph store, Elasticsearch" },
+    ]},
+    { feature: "Deploy footprint", cells: [
+      { status: "yes", text: "Single Go binary" },
+      { status: "partial", text: "Heavy, multi-service" },
+    ]},
+    { feature: "Lineage to agents", cells: [
+      { status: "yes", text: "Via MCP, CLI, SDK and REST" },
+      { status: "partial", text: "Via MCP and API, with column-level lineage" },
+    ]},
+    { feature: "Connectors", cells: [
+      "~28 plugins, plus catalog-as-code",
+      "Broad pre-built ecosystem",
+    ]},
+    { feature: "Ingestion methods", cells: [
+      { status: "yes", text: "Plugins and YAML via CLI, Kubernetes operator, Terraform, Pulumi, SDKs and API" },
+      { status: "partial", text: "YAML recipes, SDK and API" },
+    ]},
+    { feature: "Scales to large catalogs", cells: [
+      { status: "yes", text: "On Postgres, with optional Elasticsearch" },
+      { status: "yes", text: "On its Kafka and search stack" },
+    ]},
+    { feature: "Governed context", cells: [
+      "RBAC-scoped per API key",
+      "Policies and access controls",
+    ]},
+    { feature: "Licence", cells: ["MIT", "Apache 2.0"] },
+    { feature: "Best for", cells: [
+      "Native MCP with the smallest footprint",
+      "Existing Kafka stacks and a broad ecosystem",
+    ]},
+  ]}
+/>
+
+---
+
+## Deployment and footprint {#deployment}
+
+**This is the clearest difference between the two.** Marmot is a single Go binary that needs nothing but Postgres. There is no message bus, no graph database and no required search cluster, with Elasticsearch available only if you want it. You can run it on a small VM or scale it to zero on serverless.
+
+DataHub's full deployment leans on Kafka for its metadata change log, a graph store for relationships and Elasticsearch for search. That architecture suits streaming metadata, but it is several stateful services to provision, secure and keep healthy. Marmot reaches large catalogs on Postgres without any of it, so this is a difference in operational complexity, not in how much either tool can hold. For a small team it is the difference between running one process and running a platform.
+
+---
+
+## MCP and AI context {#mcp}
+
+**Both serve context to agents over MCP, but they package it differently.** Marmot's MCP server is part of the binary, so the moment Marmot is running it is already an AI context layer. It exposes three focused tools: `discover_data` for natural language and qualified-identifier lookups with lineage traversal, `find_ownership` for "who owns this", and `lookup_term` for glossary definitions. Every query is scoped to the permissions of the API key behind it.
+
+DataHub ships an official MCP server, published as a separate package by Acryl. It lets agents search assets, traverse lineage, inspect schemas and generate SQL through Cursor, Claude Desktop, Windsurf and others, and it has real production use behind it, including Block's Goose agent. The trade-off is operational: it is one more component to deploy and version against the platform, rather than something built into the core.
+
+---
+
+## CLI and tooling {#cli}
+
+**Both ship a full command line interface, which puts them ahead of catalogs that offer only an ingestion or admin utility.** DataHub's `datahub` CLI ingests metadata from YAML recipes and lets you get, update and explore entities from the terminal. Marmot's `marmot` CLI covers search, lineage, glossary and ownership, with OAuth or API-key authentication.
+
+Both also ship SDKs, and this is one of Marmot's quieter strengths. Marmot has fully featured Go, TypeScript and Python SDKs, where DataHub offers Python and Java. That breadth is part of a wider point: between plugins with YAML ingestion through the CLI, a Kubernetes-native operator, Terraform and Pulumi providers, three SDKs, a REST API and MCP, Marmot gives you an unusually large set of first-party integration paths to get data in and out.
+
+Marmot adds one more thing DataHub does not: a packaged agent Skill. It is a ready-made instruction set that teaches an assistant how to drive Marmot over the CLI, REST API or MCP, so an agent can work the catalog without bespoke wiring. Together with native MCP, it means Marmot is usable by an agent the moment it is installed, not after you stand up and connect a separate server.
+
+---
+
+## Governed context {#governed-context}
+
+**For agents, governance is not a nice-to-have.** An agent takes whatever metadata it retrieves at face value and acts on it, so the context has to be scoped and trustworthy or the agent confidently acts on the wrong thing.
+
+Marmot runs every MCP and API query with the permissions of the API key behind it, so an agent sees only what that key is allowed to see, never a raw dump of the whole catalog. DataHub enforces access through policies and access controls across the platform. Both can keep an agent inside its lane. The difference is shape: Marmot's governance is one access layer in one process, where DataHub's spans the wider platform and its services.
+
+---
+
+## Connectors and coverage {#connectors}
+
+**DataHub has the broader pre-built connector ecosystem today; Marmot covers the rest with catalog-as-code.** DataHub's integration library is extensive, covering a wide range of warehouses, orchestrators and BI tools.
+
+Marmot ships around 28 plugins in a fast-growing ecosystem. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. DataHub leans on YAML ingestion recipes and its SDK instead. If raw pre-built connector count is your deciding factor, DataHub leads. If you provision with Terraform or Pulumi, the gap closes quickly.
+
+---
+
+## Lineage {#lineage}
+
+Both expose lineage to agents rather than just rendering it in a UI, and both hold large lineage graphs without trouble. Marmot serves lineage through MCP (`discover_data`), the `marmot` CLI, its Go, TypeScript and Python SDKs and a REST API, answers "what feeds this, and what breaks if I change it" for agents and humans, and stores the graph in Postgres alongside the rest of the catalog. DataHub adds column-level lineage and a GraphQL surface for traversing it, which is the thing to reach for if you need field-level impact analysis across many sources. Both store lineage at scale; the difference is the shape of the query surface, not how much either can hold.
+
+---
+
+## Which should you choose? {#which-to-choose}
+
+**Choose Marmot if:**
+
+- You want native MCP and governed context with the smallest possible footprint.
+- You would rather run one binary on Postgres than a Kafka and search stack.
+- You provision with Terraform or Pulumi and want catalog-as-code.
+- You want a catalog an agent can use out of the box, through native MCP, a full CLI and a packaged Skill.
+- You value simplicity and fast setup over breadth.
+
+**Choose DataHub if:**
+
+- You need a specific source DataHub already ships a connector for and would rather not provision it as code.
+- You want a GraphQL metadata API or event and streaming-based ingestion as first-class building blocks.
+- You have the resource to manage Kafka, a graph store, Elasticsearch and the rest of the stack it expects.
+
+For most teams standing up an AI context layer in 2026, Marmot is the faster path to a governed, agent-ready catalog, and it scales to large catalogs without the extra infrastructure. DataHub is the stronger choice when you already run its stack or want its broad integration ecosystem.
+
+---
+
+## Frequently asked questions {#faq}
+
+### Is Marmot a DataHub alternative? {#faq-alternative}
+
+Yes, for teams that want an open source data catalog and AI context layer without DataHub's infrastructure. Marmot runs as a single Go binary on Postgres with a built-in MCP server, where DataHub expects Kafka, a graph store and Elasticsearch. Marmot scales to large catalogs on Postgres and is far lighter to run. DataHub's edge is a broader pre-built integration ecosystem and column-level lineage.
+
+### Does DataHub need Kafka? {#faq-kafka}
+
+A full DataHub deployment uses Kafka for its metadata change log, plus a graph store and Elasticsearch for search. That architecture suits streaming metadata but is heavier to run and maintain than a single-process catalog. Marmot avoids it entirely, scaling to large catalogs on Postgres alone, so the difference is operational complexity rather than capability.
+
+### Which has better MCP support, Marmot or DataHub? {#faq-mcp}
+
+Both expose metadata to AI agents over MCP. Marmot's MCP server is built into the binary, so there is nothing extra to deploy. DataHub's MCP server is an official but separate package you run alongside the platform. Marmot wins on simplicity. DataHub's server exposes a broader surface, including SQL generation across a larger ecosystem.
+
+### Do Marmot and DataHub both have a CLI? {#faq-cli}
+
+Yes. Both ship a full command line interface, which sets them apart from catalogs that offer only an ingestion or admin utility. DataHub's `datahub` CLI ingests from YAML recipes and lets you get, update and explore entities. Marmot's `marmot` CLI covers search, lineage, glossary and ownership. Marmot also ships a packaged agent Skill, a ready-made instruction set that lets an assistant drive the catalog over the CLI, REST API or MCP without custom wiring.
+
+### Can I connect Marmot or DataHub to Claude and Cursor? {#faq-claude-cursor}
+
+Yes, both expose an MCP server that MCP clients like Claude Desktop, Claude Code and Cursor can connect to. With Marmot the server is built into the binary, so you point the client at the catalog and authenticate with an API key. With DataHub you deploy and connect its separate MCP server package alongside the platform. Either way the assistant can then query assets, ownership and lineage in natural language.
+
+### Which is better for AI agents in 2026? {#faq-which-better}
+
+For most teams standing up an AI context layer, Marmot is the faster path: native MCP, governed context and vendor-neutral coverage from one binary on Postgres, and it scales to large catalogs without a Kafka and search stack. DataHub is the better fit when you already run that stack, prefer GraphQL or streaming-based ingestion, or want its broader pre-built integration ecosystem.
+
+<CalloutCard
+  title="Try Marmot with your AI assistant"
+  description="Connect Claude, Cursor or any MCP-compatible tool to your data catalog in minutes."
+  href="https://marmotdata.io/docs/MCP/"
+  buttonText="Set up MCP"
+  icon="mdi:robot"
+/>
+
+---
+
+- **Live demo:** [demo.marmotdata.io](https://demo.marmotdata.io)
+- **Docs:** [marmotdata.io/docs](/docs/introduction)
+- **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)

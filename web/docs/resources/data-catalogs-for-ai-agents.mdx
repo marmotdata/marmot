@@ -1,0 +1,394 @@
+---
+slug: /data-catalogs-for-ai-agents
+title: "Best Data Catalogs for AI Agents in 2026: The AI Context Layer Compared"
+description: "The best data catalogs for AI agents in 2026, compared on native MCP, governed context and footprint. Marmot, OpenMetadata, DataHub, Atlan, Collibra and more."
+keywords:
+  - best data catalog for AI agents
+  - data catalog for AI agents
+  - data catalog for LLMs
+  - AI context layer
+  - MCP data catalog
+  - data catalog comparison 2026
+  - model context protocol data catalog
+  - open source data catalog AI
+image: /img/ai-context-layer-banner.png
+date: 2026-06-29
+hide_table_of_contents: false
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import { ResourceBanner } from '@site/src/components/ResourceCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/data-catalogs-for-ai-agents" />
+  <meta property="article:published_time" content="2026-06-29" />
+  <meta property="article:modified_time" content="2026-06-29" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Best Data Catalogs for AI Agents in 2026: The AI Context Layer Compared" />
+  <meta name="twitter:description" content="The best data catalogs for AI agents in 2026, compared on native MCP, governed context and footprint. Marmot, OpenMetadata, DataHub, Atlan and more." />
+  <meta name="twitter:image" content="https://marmotdata.io/img/ai-context-layer-banner.png" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Best Data Catalogs for AI Agents in 2026: The AI Context Layer Compared" />
+  <meta property="og:description" content="The best data catalogs for AI agents in 2026, compared on native MCP, governed context and footprint. Marmot, OpenMetadata, DataHub, Atlan and more." />
+  <meta property="og:image" content="https://marmotdata.io/img/ai-context-layer-banner.png" />
+  <meta property="og:url" content="https://marmotdata.io/resources/data-catalogs-for-ai-agents" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is an AI context layer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An AI context layer is the governed source of metadata that an AI agent queries at runtime to understand a data landscape. It exposes schemas, ownership, lineage, tags and business glossary terms through an interface an agent can call, usually the Model Context Protocol or a REST API. In 2026 this is the primary job of a data catalog: the agent, not just the human, is now the consumer."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does my data catalog need MCP support?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "If you want AI assistants like Claude, Cursor or ChatGPT to read your catalog directly, MCP is the path of least resistance. MCP is a standard interface that tools already understand, so you avoid writing and maintaining a custom integration per assistant. A catalog with a clean REST API can still be wrapped in MCP, but native MCP support means there is nothing extra to build or run."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "MCP vs API for AI agents: which should a catalog expose?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Both, and they serve different callers. A REST API is best for deterministic automation and code you control, where you know exactly which endpoint to call. MCP is best for AI assistants, because the tools are described to the model and it chooses which to call from natural language. A good catalog exposes a stable API and an MCP server that wraps it, so the same governed metadata is reachable either way."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I expose a data catalog to Claude or Cursor?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Any catalog with an MCP server can be connected to Claude Desktop, Claude Code, Cursor, Cline and other MCP clients. You point the client at the catalog's MCP endpoint and authenticate with an API key. The assistant then queries assets, ownership and lineage in natural language, scoped to the permissions of the key you gave it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Open source or commercial catalog for AI context?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Open source catalogs like Marmot, OpenMetadata and DataHub let you self-host and avoid per-seat fees, which matters when an agent makes far more queries than a human. Commercial platforms like Atlan, Collibra and Secoda offer hosted MCP, broad managed connectors and enterprise governance controls out of the box. The split is the usual one: control and cost against managed breadth and support."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does governed context matter more for agents than for humans?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A human reading a catalog applies judgement and notices when something looks stale. An agent takes the metadata at face value and acts on it. If the catalog hands back raw, uncertified or out of date context, the agent produces confident, wrong output. Governed context, with ownership, certification status and access controls enforced at query time, is what keeps an agent from hallucinating on top of bad metadata."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which data catalog is best for AI agents in 2026?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For most teams in 2026, Marmot is the best open source data catalog for AI agents. It gives you native MCP and governed, vendor-neutral context from a single Go binary on Postgres, with no Kafka, graph store or search cluster to run. OpenMetadata and DataHub fit teams that need the widest connector coverage and can run more infrastructure. Atlan, Collibra and Secoda fit enterprises that want a fully managed, hosted context layer. Marmot is the fastest path to an AI context layer you can actually run and keep current."
+          }
+        }
+      ]
+    })}
+  </script>
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Data catalogs as the AI context layer, 2026",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Marmot", "url": "https://github.com/marmotdata/marmot" },
+        { "@type": "ListItem", "position": 2, "name": "OpenMetadata", "url": "https://open-metadata.org" },
+        { "@type": "ListItem", "position": 3, "name": "DataHub", "url": "https://datahub.com" },
+        { "@type": "ListItem", "position": 4, "name": "Atlan", "url": "https://atlan.com" },
+        { "@type": "ListItem", "position": 5, "name": "Collibra", "url": "https://www.collibra.com" },
+        { "@type": "ListItem", "position": 6, "name": "Secoda", "url": "https://www.secoda.co" },
+        { "@type": "ListItem", "position": 7, "name": "Amundsen", "url": "https://www.amundsen.io" },
+        { "@type": "ListItem", "position": 8, "name": "Apache Atlas", "url": "https://atlas.apache.org" }
+      ]
+    })}
+  </script>
+</Head>
+
+[← All resources](/resources)
+
+<ResourceBanner href="/resources/data-catalogs-for-ai-agents" />
+
+The job of a data catalog changed in 2026. The consumer is no longer just a human browsing a UI, it is an agent querying metadata at runtime.
+
+This guide compares the main data catalogs on exactly that axis: how each one exposes context to AI. We cover Marmot, OpenMetadata, DataHub, Atlan, Collibra, Secoda, Amundsen and Apache Atlas. By 2026 almost all of these tools can talk to an agent, so native MCP is no longer what separates them. The real differences are quieter: how much infrastructure you have to run to keep the context flowing, whether it is governed at the point an agent queries it, and how much of your stack the catalog can actually see.
+
+
+---
+
+## Why "context layer" is the new frame {#why-context-layer}
+
+**The catalog is now infrastructure for AI, not just a directory for people.** When agents are the consumer, metadata stops being documentation you read and becomes context an agent retrieves to avoid guessing. The catalog's value is measured by how cleanly it can serve that context to a model.
+
+We made the underlying argument in [AI is making assumptions about your data, and getting them wrong](/blog/ai-is-making-assumptions-about-your-data). An LLM with no context about your data landscape will hallucinate table names, invent schemas and guess at ownership. It produces output that looks plausible and costs you more time to correct than to write yourself. The model is not the limit. The context is.
+
+Gartner analyst Andres Garcia-Rodeja put a number on the risk in 2026, predicting that 60% of agentic analytics projects relying solely on connectivity will fail by 2028 for lack of a consistent semantic layer underneath. MCP solves the connectivity problem, how an agent reaches your data. The context layer solves the meaning problem, what your data actually is. Connectivity without context just lets the agent be wrong faster.
+
+---
+
+## What makes a catalog an AI context layer? {#evaluation-criteria}
+
+**A catalog earns the name when an agent can retrieve governed context from it at runtime through a standard interface, without a human in the loop.** Here are the criteria we use to judge that, and they are the columns in the matrix below.
+
+- **Native MCP support.** Does the catalog ship a Model Context Protocol server, so AI assistants can call it with no glue code? Native means built into the product. Official means the vendor ships a separate server. Community (unofficial) means a third-party server exists but is not maintained by the project. None means you build the integration yourself.
+- **Agent-queryable API.** Is there a clean, documented REST or GraphQL API an agent or automation can hit directly? MCP usually wraps this, so a good API is the foundation.
+- **Command line interface.** Is there a first-party CLI for searching, updating and scripting against the catalog, or only an ingestion or admin utility? A full CLI makes the catalog easy to wire into pipelines, CI and developer workflows, and gives agents another governed way in.
+- **Lineage exposed to AI.** Can an agent traverse upstream and downstream dependencies through the interface, not just see them rendered in a UI? Lineage is the highest-value context for "what breaks if I change this".
+- **Governed context, not raw access.** Does the interface enforce ownership, certification and access controls at query time, so the agent gets trusted context scoped to its permissions rather than a raw dump? This is what stops an agent confidently citing a deprecated table.
+- **Deployment footprint.** What do you have to run and keep alive? A single binary is a different operational reality from Kafka, a graph database and a search cluster.
+- **Connector coverage.** How much of your real stack can it actually see? Context is only as complete as the metadata it ingests.
+
+Defining the criteria up front matters because an AI context layer is only useful if it is complete, current and trusted. A catalog that nails MCP but only sees a third of your stack still leaves the agent guessing about the rest.
+
+---
+
+## Comparison matrix {#comparison-matrix}
+
+**Here is how the eight catalogs compare as AI context layers, as of June 2026.** MCP cells reflect what we could confirm from each vendor's current documentation and repositories. Where a vendor is actively shipping MCP, we say so; we have not assumed any tool "can't" just to flatter the column.
+
+| Tool | MCP support | CLI | Agent-queryable API | Lineage exposed to AI | Core dependencies | Deploy footprint | Connectors | Open source | Best for |
+|------|-------------|-----|---------------------|------------------------|-------------------|------------------|------------|-------------|----------|
+| **[Marmot](https://github.com/marmotdata/marmot)** | Native (built in) | Full | Yes, REST | Yes, via MCP, CLI, SDK and API | Postgres only (Elasticsearch optional) | Single Go binary | ~28 plugins + IaC | Yes (MIT) | Native MCP with the smallest footprint |
+| **[OpenMetadata](https://open-metadata.org)** | Native (built in) | Partial (ingestion) | Yes, REST | Yes | Elasticsearch or OpenSearch, ingestion framework | Multi-service | 120+ | Yes (Apache 2.0) | Broad coverage, open source |
+| **[DataHub](https://datahub.com)** | Official (separate server) | Full | Yes, REST and GraphQL | Yes, via MCP and API | Kafka, graph store, Elasticsearch | Heavy, multi-service | Extensive | Yes (Apache 2.0) | Broad ecosystem, existing Kafka stacks |
+| **[Atlan](https://atlan.com)** | Native (hosted) | Partial (contracts) | Yes, REST | Yes | SaaS (managed) | Hosted, none to run | Large managed library | No | Enterprise hosted context layer |
+| **[Collibra](https://www.collibra.com)** | Official (server) | Partial | Yes, REST | Yes | SaaS (managed) | Hosted, none to run | Extensive enterprise | No | Regulated, governance-heavy orgs |
+| **[Secoda](https://www.secoda.co)** | Native (hosted) | None | Yes, REST | Yes | SaaS (managed) | Hosted, none to run | Broad managed | No | AI-first hosted catalog |
+| **[Amundsen](https://www.amundsen.io)** | Community (unofficial) | None | Yes, REST | Yes (in UI), limited via API | Neo4j or Atlas, Elasticsearch | Multi-service | Community-driven | Yes (Apache 2.0) | Search-led discovery, existing users |
+| **[Apache Atlas](https://atlas.apache.org)** | Community (unofficial) | Partial (admin/import) | Yes, REST | Yes | JanusGraph, HBase, Solr, Kafka | Heavy, Hadoop-era | Hadoop ecosystem | Yes (Apache 2.0) | Hadoop and Cloudera estates |
+
+---
+
+## The tools, one by one {#per-tool}
+
+Each entry below follows the same shape: who it is best for, a short take, pros and cons, and when to choose it. Read the matrix for the overview, read these for the detail.
+
+### Marmot {#marmot}
+
+**Best for:** teams that want native MCP context across their whole stack with the smallest operational footprint.
+
+Marmot is the open source catalog built for the AI context job from the ground up, and it does it with less to run than anything else here. A single Go binary on Postgres becomes an AI context layer the moment it starts, because the MCP server is part of the binary rather than a separate service to deploy.
+
+**Marmot pros:**
+
+- **Native MCP, built in.** The MCP server ships in the binary. Nothing extra to deploy, run or keep alive.
+- **Smallest footprint here.** One Go binary, Postgres only. No Kafka, no graph database, no required search cluster. Elasticsearch is optional, not a dependency.
+- **Governed by default.** Every agent query runs with the permissions of the API key behind it, so the agent gets role-scoped context, never a raw dump.
+- **Vendor-neutral coverage.** Catalogs Postgres, Kafka, S3, BigQuery, dbt, Airflow and more in one place, so an agent sees the whole landscape rather than one vendor's slice.
+- **Catalog as code.** Official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) let you populate assets and lineage straight from the pipelines you already run.
+- **Three focused MCP tools:** `discover_data` (natural language and qualified-identifier lookups, with lineage traversal and suggested next actions), `find_ownership` and `lookup_term`.
+- **CLI and packaged agent Skill.** A full-featured `marmot` CLI for search, lineage and glossary, plus a ready-made agent Skill so assistants can drive the catalog over the CLI, REST API or MCP without bespoke wiring.
+- **The widest set of integration paths here.** Plugins driven by YAML ingestion through the CLI, a Kubernetes-native operator, Terraform and Pulumi providers, fully featured Go, TypeScript and Python SDKs, a REST API and MCP. There is almost always a first-party way to get data in or out, in the language or workflow your team already uses.
+- **MIT licensed.**
+
+**Marmot cons:**
+
+- **Smaller connector library today.** Around 28 plugins against 120+ for OpenMetadata, in a fast-growing ecosystem. For anything without a plugin yet, the Terraform and Pulumi providers or the Go, TypeScript and Python SDKs populate assets and lineage straight from your existing infrastructure and code, so the gap is bridged rather than left open.
+
+If a source has no plugin yet, you populate it from the Terraform you are writing anyway, so the catalog grows with your existing infrastructure rather than waiting on a connector. We cover why Postgres alone is enough to back a catalog in [Postgres: One Database to Rule Them All](/blog/postgres-one-database-to-rule-them-all), and the low-infrastructure goal in [Data catalog without the complex infrastructure](/blog/data-catalog-without-complex-infrastructure).
+
+**Choose Marmot if:** you want the best open source AI context layer you can actually run, native MCP and governed context over your whole stack, stood up in minutes with no platform team to keep it alive.
+
+### OpenMetadata {#openmetadata}
+
+**Best for:** teams that want the broadest open source coverage and have rebuilt around AI context.
+
+OpenMetadata is one of the most complete open source catalogs and has moved hard into the AI context space, branding itself an open source context layer.
+
+**OpenMetadata pros:**
+
+- **Native MCP, built into the platform.** As of June 2026 MCP is a first-class service category; clients can read and write the configured integrations, assuming the platform's roles and policies.
+- **Widest open source connector library**, well past 120 sources.
+- **Mature knowledge graph and lineage.**
+- **Apache 2.0 licensed.**
+
+**OpenMetadata cons:**
+
+- **Operational weight.** Expects a search backend (Elasticsearch or OpenSearch) and an ingestion framework, so you run several moving parts, not one binary.
+- **Heavier to stand up and maintain** than a single-process catalog.
+
+### DataHub {#datahub}
+
+**Best for:** teams already invested in Kafka and a search stack who want a broad integration ecosystem.
+
+DataHub has a broad ecosystem and an official MCP server, published as a separate package by Acryl, with real production use behind it. Block wired its open source Goose agent to DataHub's MCP server to cut metadata lookups from hours to minutes.
+
+**DataHub pros:**
+
+- **Official MCP server.** Agents can search assets, traverse lineage, inspect schemas and generate SQL through Cursor, Claude Desktop, Windsurf and others.
+- **Mature lineage tooling**, including column-level lineage built up over years.
+- **Extensive ecosystem and integrations**, plus a GraphQL API.
+- **Apache 2.0 licensed.**
+
+**DataHub cons:**
+
+- **Heavy architecture.** A full deployment leans on Kafka, a graph store and Elasticsearch, more to run than a single-process catalog of the same size.
+- **MCP server is a separate component**, not built into the core, so it is one more thing to run and version.
+
+### Atlan {#atlan}
+
+**Best for:** enterprises that want a fully managed, hosted context layer.
+
+Atlan has been one of the loudest voices defining the "context layer for AI agents" frame, and its product backs it.
+
+**Atlan pros:**
+
+- **Hosted, native MCP.** Connects Claude, Cursor, ChatGPT, Gemini and automation platforms like LangChain and n8n in real time.
+- **Read and write context:** search, lineage, metadata updates, classification and glossary management.
+- **Broad managed connector library**, nothing for you to deploy.
+
+**Atlan cons:**
+
+- **Closed source** and enterprise-priced.
+- **Query economics need scrutiny.** Per-seat or per-usage costs add up fast when an agent issues far more queries than a person.
+
+### Collibra {#collibra}
+
+**Best for:** regulated organisations where governance is the point.
+
+Collibra approaches AI context from the governance side, and in May 2026 launched an AI Command Center as a governance control plane for agents that call tools and trigger actions.
+
+**Collibra pros:**
+
+- **MCP server** (`chip`, available in the Databricks Marketplace) exposing governed metadata, glossary queries and asset details, with more than 100 customers reported using it.
+- **Governance-first.** Built for auditability and control over what an agent can access.
+- **Strong fit for regulated industries** like banking and healthcare.
+
+**Collibra cons:**
+
+- **Heavyweight and enterprise-priced.**
+- **Overkill for fast technical discovery** if formal governance is not your driver.
+- **Closed source.**
+
+### Secoda {#secoda}
+
+**Best for:** teams that want an AI-first hosted catalog without running infrastructure.
+
+Secoda is a hosted catalog built around AI from the start, with MCP support and a polished assistant.
+
+**Secoda pros:**
+
+- **Native, hosted MCP.** Tools like Claude and Cursor connect to trusted metadata including lineage, glossary terms, documentation and SQL context.
+- **Governed access.** Connections authenticate against workspace permissions.
+- **Easy to connect** from Cursor, Claude Desktop, VS Code or JetBrains.
+
+**Secoda cons:**
+
+- **Closed source**, no self-hosting.
+- **Commercial SaaS** with the usual per-seat considerations.
+
+### Amundsen {#amundsen}
+
+**Best for:** existing users running it for search-led discovery.
+
+Amundsen, originally from Lyft, helped define modern data discovery with strong search over a metadata graph.
+
+**Amundsen pros:**
+
+- **Strong search-led discovery** over a graph backed by Neo4j or Atlas and Elasticsearch.
+- **REST API and lineage** rendered in the UI.
+- **Apache 2.0 licensed.**
+
+**Amundsen cons:**
+
+- **No first-class MCP.** There is a community MCP server (the unofficial [`amundsen-mcp`](https://github.com/BrianLondon/amundsen-mcp) project), but nothing maintained by the project itself, so exposing Amundsen to agents means relying on a third-party tool or building your own.
+- **Slower development pace** relative to OpenMetadata and DataHub.
+- **Multi-service deployment.**
+
+### Apache Atlas {#apache-atlas}
+
+**Best for:** Hadoop and Cloudera estates that already depend on it.
+
+Apache Atlas is the metadata and governance backbone of the Hadoop world, with deep hooks into Hive, Spark and the rest of that ecosystem.
+
+**Apache Atlas pros:**
+
+- **Strong lineage and governance** within the Hadoop domain.
+- **REST API** for programmatic access.
+- **Apache 2.0 licensed**, and the metadata you likely already have if you run Hadoop.
+
+**Apache Atlas cons:**
+
+- **No first-class AI or MCP support.** A community MCP server exists (the unofficial [`apache-atlas-mcp`](https://github.com/DanMeon/apache-atlas-mcp) project), but there is nothing official, so agent access means relying on a third-party tool or wrapping the API yourself.
+- **Heavy, multi-component stack** (JanusGraph, HBase, Solr, Kafka) that can take months to stand up.
+- **Wrong starting point for greenfield AI context work.**
+
+---
+
+## The verdict: which data catalog is best for AI agents? {#verdict}
+
+**For most teams standing up an AI context layer in 2026, Marmot is the strongest open source starting point.**
+
+Native MCP is no longer the differentiator. Most catalogs here ship it now, so connectivity is close to solved. What separates them is everything around it: how much of your stack the catalog can see, how much infrastructure you have to run to keep that context flowing, and whether the metadata it serves is governed and current.
+
+Marmot is built around those three things. You get native MCP and governed, vendor-neutral context from a single Go binary on Postgres, populated by plugins or by the Terraform and Pulumi you already write, with no Kafka, graph store, search cluster or platform team to keep it alive. It scales to large catalogs on the same Postgres, with optional Elasticsearch for search at scale, so it is a starting point you do not outgrow.
+
+If you need the widest connector library out of the box, a fully managed hosted platform or vendor-held compliance certifications such as SOC 2 and HIPAA, the managed and enterprise options covered above are the better fit. For most teams, Marmot gives you a governed, agent-ready context layer with the least to run, and it is the one to try first.
+
+<CalloutCard
+  title="Try Marmot with your AI assistant"
+  description="Connect Claude, Cursor or any MCP-compatible tool to your data catalog in minutes."
+  href="https://marmotdata.io/docs/MCP/"
+  buttonText="Set up MCP"
+  icon="mdi:robot"
+/>
+
+---
+
+## Frequently asked questions {#faq}
+
+### What is an AI context layer? {#faq-what-is}
+
+An AI context layer is the governed source of metadata that an AI agent queries at runtime to understand a data landscape. It exposes schemas, ownership, lineage, tags and business glossary terms through an interface an agent can call, usually MCP or a REST API. In 2026 this is the primary job of a data catalog, because the agent, not just the human, is now the consumer.
+
+### Does my data catalog need MCP support? {#faq-need-mcp}
+
+If you want AI assistants like Claude, Cursor or ChatGPT to read your catalog directly, MCP is the path of least resistance. It is a standard interface those tools already understand, so you avoid writing and maintaining a custom integration per assistant. A catalog with a clean REST API can still be wrapped in MCP yourself, but native MCP means there is nothing extra to build or run.
+
+### MCP vs API for AI agents: which should a catalog expose? {#faq-mcp-vs-api}
+
+Both, and they serve different callers. A REST API is best for deterministic automation and code you control, where you know exactly which endpoint to call. MCP is best for AI assistants, because the tools are described to the model and it chooses which to call from natural language. A good catalog exposes a stable API and an MCP server that wraps it, so the same governed metadata is reachable either way.
+
+### Can I expose a data catalog to Claude or Cursor? {#faq-claude-cursor}
+
+Yes. Any catalog with an MCP server can be connected to Claude Desktop, Claude Code, Cursor, Cline and other MCP clients. You point the client at the catalog's MCP endpoint and authenticate with an API key. The assistant then queries assets, ownership and lineage in natural language, scoped to the permissions of the key you gave it. Marmot's [MCP docs](/docs/MCP) walk through the setup per client.
+
+### Open source or commercial catalog for AI context? {#faq-oss-vs-commercial}
+
+Open source catalogs like Marmot, OpenMetadata and DataHub let you self-host and avoid per-seat fees, which matters when an agent makes far more queries than a human. Commercial platforms like Atlan, Collibra and Secoda offer hosted MCP, broad managed connectors and enterprise governance out of the box. The split is the usual one: control and cost against managed breadth and support.
+
+### Why does governed context matter more for agents than for humans? {#faq-governed-context}
+
+A human reading a catalog applies judgement and notices when something looks stale. An agent takes the metadata at face value and acts on it. If the catalog hands back raw, uncertified or out of date context, the agent produces confident, wrong output. Governed context, with ownership, certification status and access controls enforced at query time, is what keeps an agent from hallucinating on top of bad metadata.
+
+### Which data catalog is best for AI agents in 2026? {#faq-best-catalog}
+
+For most teams in 2026, Marmot is the best open source data catalog for AI agents. It gives you native MCP and governed, vendor-neutral context from a single Go binary on Postgres, with no Kafka, graph store or search cluster to run. OpenMetadata and DataHub fit teams that need the widest connector coverage and can run more infrastructure. Atlan, Collibra and Secoda fit enterprises that want a fully managed, hosted context layer. Marmot is the fastest path to an AI context layer you can actually run and keep current.
+
+---
+
+The connectivity problem is close to solved. The catalog that wins as your AI context layer is the one that covers your stack, serves governed and current metadata, and does not cost you a platform team to keep running. Pick on those terms.
+
+- **Live demo:** [demo.marmotdata.io](https://demo.marmotdata.io)
+- **Docs:** [marmotdata.io/docs](/docs/introduction)
+- **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)
+
+<CalloutCard
+  title="Join the Community"
+  description="Get help, share feedback and connect with other Marmot users on Discord."
+  href="https://discord.gg/TWCk7hVFN4"
+  buttonText="Join Discord"
+  variant="secondary"
+  icon="mdi:account-group"
+/>

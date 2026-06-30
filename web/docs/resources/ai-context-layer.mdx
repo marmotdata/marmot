@@ -1,0 +1,201 @@
+---
+slug: /ai-context-layer
+title: "What Is an AI Context Layer? A 2026 Guide"
+description: "What an AI context layer is, why AI agents need one, how it differs from RAG, and how to build one on a data catalog with MCP. A plain, vendor-neutral guide."
+keywords:
+  - AI context layer
+  - what is an AI context layer
+  - context layer for AI
+  - AI context layer for agents
+  - context layer MCP
+  - governed context for AI
+  - AI context layer vs RAG
+image: /img/ai-context-layer-banner.png
+date: 2026-06-30
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import { ResourceBanner } from '@site/src/components/ResourceCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/ai-context-layer" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is an AI context layer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An AI context layer is the governed source of truth that tells AI agents what your data means before they act. It exposes structured metadata, schemas, ownership, lineage, glossary terms and quality signals, over an interface like an API or MCP, so an agent can ask what exists, what it means and who owns it, and get an answer scoped to its permissions. In practice it is usually built on a data catalog."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why do AI agents need a context layer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An AI agent is only as good as the context it is given. Without one it guesses about your schemas, ownership and meaning, and a confident wrong answer is worse than no answer. A context layer gives the agent real, governed information about your data at runtime, so it stops hallucinating about your stack and acts on facts instead. The model is rarely the limit; the context usually is."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does an AI context layer serve data or just metadata?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Both, depending on the layer. At minimum it serves metadata context: the structure, meaning, ownership, lineage and governance of your data. The most capable context layers also serve data context, brokering governed access to the actual data in the underlying sources, so an agent can read real values rather than only descriptions of them. A request like 'show me last week's failed orders' needs both: metadata to find the right table and data access to return the rows. Either way, access stays scoped to the caller's permissions."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between an AI context layer and RAG?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "RAG retrieves unstructured documents and pastes relevant passages into the prompt. An AI context layer serves structured, governed metadata about your data estate, schemas, ownership, lineage and definitions, that an agent queries on demand. RAG is about text; a context layer is about the shape and governance of your data. They are complementary: RAG answers from documents, the context layer tells the agent what the underlying data actually is."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is an AI context layer the same as a data catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Not quite. A data catalog is the inventory of metadata. An AI context layer is what that catalog becomes when it exposes its metadata to agents in a governed, queryable way, usually over MCP. A modern data catalog with native MCP is the most practical way to build an AI context layer, because it already holds the schemas, ownership and lineage an agent needs."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you build an AI context layer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Build it on a data catalog that collects metadata from across your stack and exposes it to agents over an API and MCP, with access scoped to each caller. Populate it with schemas, ownership, lineage, glossary terms and quality signals, then connect your AI tools to it. The lighter the catalog is to run and the more native its MCP support, the faster you have a context layer in production."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What role does MCP play in an AI context layer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "MCP, the Model Context Protocol, is the standard interface that lets AI tools reach a context layer. The catalog runs an MCP server that exposes tools such as search, find ownership and traverse lineage, and assistants like Claude and Cursor call them in natural language. MCP is how the context layer becomes available to agents without a bespoke integration per tool."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+[← All resources](/resources)
+
+<ResourceBanner href="/resources/ai-context-layer" />
+
+An AI context layer is the governed source of truth that tells AI agents what your data means before they act. It is the difference between an agent that guesses about your schemas and ownership, and one that asks, gets a real answer scoped to its permissions, and acts on facts.
+
+This guide explains what an AI context layer is, why agents need one, how it differs from RAG, and how to build one on a data catalog with MCP.
+
+## What is an AI context layer? {#what-is}
+
+**An AI context layer is the layer that gives AI agents real, governed context about your data at the moment they need it.** It exposes structured metadata, schemas, descriptions, ownership, lineage, glossary terms and quality signals, over an interface an agent can call, usually a plain API and [MCP](/resources/mcp-for-data).
+
+When an agent is about to write a query, answer a question or trigger an action, it queries the context layer first. It asks what exists, what a field means, who owns it and what it connects to, and gets an answer limited to what its credentials are allowed to see. At its core the layer holds the meaning and governance around your data, which is exactly what an agent is missing on its own. The richer context layers go further and broker governed access to the underlying data itself, so an agent can move from understanding your data to working with it through the same permission model.
+
+## Metadata context and data context {#metadata-and-data}
+
+**An AI context layer comes in two scopes, and the most capable ones cover both.** The first is metadata context: the structure, meaning, ownership, lineage and governance of your data. This is what an agent needs to understand a landscape and decide what to use.
+
+The second is data context: governed access to the actual data in the underlying sources, so an agent can read real values rather than only descriptions of them, through the same permissions and policies. A request like "show me last week's failed orders" needs both, metadata to know which table to use and what the fields mean, and data access to return the rows.
+
+The strongest context layers govern both kinds of access behind one interface, so an agent moves from understanding your data to working with it without ever stepping outside what it is allowed to see.
+
+## Why AI agents need a context layer {#why}
+
+**The model is rarely the limit. The context is.** A capable model still has no idea that your `orders` table excludes refunds, that `customer_id` joins to a different system, or that a dashboard is owned by a team that deprecated it last quarter. Left to guess, it produces a confident, plausible, wrong answer.
+
+A context layer closes that gap. It gives the agent the same facts a careful engineer would check first: the schema, the definition, the owner, the lineage and whether the data can be trusted. With that in hand the agent stops hallucinating about your stack and starts acting on what is actually there. As agents take on more real work, this is the part that decides whether they are useful or dangerous. We go deeper on what agents actually need in [AI data engineering](/resources/ai-data-engineering).
+
+## What an AI context layer provides {#what-it-provides}
+
+A useful context layer serves more than a list of table names. It provides:
+
+- **Structure.** Schemas and field-level detail, so an agent knows the shape of the data.
+- **Meaning.** Descriptions and a business glossary, so "active customer" resolves to one definition.
+- **Ownership.** Who is responsible for an asset, so an agent can attribute and escalate correctly.
+- **Lineage.** What feeds what, so the agent understands dependencies and impact.
+- **Trust signals.** Freshness, certification and quality, so the agent knows what to rely on.
+- **Governance.** Every answer scoped to the caller's permissions, so an agent sees only what it should.
+
+## How an AI context layer works {#how-it-works}
+
+**The context layer sits between your data estate and your AI tools, and answers questions at runtime.** Metadata flows in from across the stack, databases, warehouses, queues, pipelines and dashboards, and is exposed to agents through two interfaces:
+
+- A **plain API**, for programmatic access from any tool or script.
+- **[MCP](/resources/mcp-for-data)**, the Model Context Protocol, so assistants like Claude and Cursor discover and call the layer's tools in natural language without bespoke wiring.
+
+The critical detail is that access is governed at the point of the query. The agent authenticates, usually with an API key, and every response is scoped to that key's permissions. It never gets a raw dump of the whole estate, only the context it is allowed to see. That is what makes a context layer safe to put in front of an autonomous agent.
+
+## AI context layer vs RAG {#vs-rag}
+
+**RAG and a context layer solve different problems, and the best systems use both.** Retrieval-augmented generation finds relevant passages in unstructured documents and pastes them into the prompt. It is excellent for "what does this policy say" or "summarise these tickets".
+
+An AI context layer is about the structure and governance of your data, not free text. It tells the agent what tables exist, what their columns mean, who owns them and how they connect, on demand and scoped to permissions. RAG answers from documents; the context layer tells the agent what the underlying data actually is. An agent answering a data question well often needs both: RAG for the prose, the context layer for the facts about the data itself.
+
+## Building an AI context layer {#building}
+
+**The most practical way to build an AI context layer is on a data catalog with native MCP.** A [data catalog](/resources/data-catalog) already collects the metadata an agent needs, schemas, ownership, lineage, glossary and quality, from across your stack. Adding a governed, agent-queryable interface turns that inventory into a context layer.
+
+When you evaluate options, weigh the things that decide whether the layer is actually usable:
+
+- **Native MCP support**, so agents connect without a separate integration per tool.
+- **Governed context**, with every query scoped to the caller rather than handing back the whole catalog.
+- **Coverage**, so the layer can see enough of your stack to be worth querying, through connectors, SDKs and infrastructure-as-code.
+- **A small footprint**, so you can stand the layer up and keep it current without operating a platform.
+- **Sane cost under agent load**, because agents query far more often than people, and per-usage pricing adds up fast.
+
+We compare the main catalogs on exactly these terms in [Data Catalogs as the AI Context Layer](/resources/data-catalogs-for-ai-agents).
+
+## Frequently asked questions {#faq}
+
+### What is an AI context layer? {#faq-what}
+
+An AI context layer is the governed source of truth that tells AI agents what your data means before they act. It exposes structured metadata, schemas, ownership, lineage, glossary terms and quality signals, over an interface like an API or MCP, so an agent can ask what exists, what it means and who owns it, and get an answer scoped to its permissions. In practice it is usually built on a data catalog.
+
+### Why do AI agents need a context layer? {#faq-why}
+
+An AI agent is only as good as the context it is given. Without one it guesses about your schemas, ownership and meaning, and a confident wrong answer is worse than no answer. A context layer gives the agent real, governed information about your data at runtime, so it stops hallucinating about your stack and acts on facts instead. The model is rarely the limit; the context usually is.
+
+### Does an AI context layer serve data or just metadata? {#faq-data-or-metadata}
+
+Both, depending on the layer. At minimum it serves metadata context: the structure, meaning, ownership, lineage and governance of your data. The most capable context layers also serve data context, brokering governed access to the actual data in the underlying sources, so an agent can read real values rather than only descriptions of them. A request like "show me last week's failed orders" needs both: metadata to find the right table and data access to return the rows. Either way, access stays scoped to the caller's permissions.
+
+### What is the difference between an AI context layer and RAG? {#faq-vs-rag}
+
+RAG retrieves unstructured documents and pastes relevant passages into the prompt. An AI context layer serves structured, governed metadata about your data estate, schemas, ownership, lineage and definitions, that an agent queries on demand. RAG is about text; a context layer is about the shape and governance of your data. They are complementary: RAG answers from documents, the context layer tells the agent what the underlying data actually is.
+
+### Is an AI context layer the same as a data catalog? {#faq-vs-catalog}
+
+Not quite. A data catalog is the inventory of metadata. An AI context layer is what that catalog becomes when it exposes its metadata to agents in a governed, queryable way, usually over MCP. A modern data catalog with native MCP is the most practical way to build an AI context layer, because it already holds the schemas, ownership and lineage an agent needs.
+
+### How do you build an AI context layer? {#faq-build}
+
+Build it on a data catalog that collects metadata from across your stack and exposes it to agents over an API and MCP, with access scoped to each caller. Populate it with schemas, ownership, lineage, glossary terms and quality signals, then connect your AI tools to it. The lighter the catalog is to run and the more native its MCP support, the faster you have a context layer in production.
+
+### What role does MCP play in an AI context layer? {#faq-mcp}
+
+MCP, the Model Context Protocol, is the standard interface that lets AI tools reach a context layer. The catalog runs an MCP server that exposes tools such as search, find ownership and traverse lineage, and assistants like Claude and Cursor call them in natural language. MCP is how the context layer becomes available to agents without a bespoke integration per tool.
+
+## Related {#related}
+
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+- [What Is a Data Catalog?](/resources/data-catalog)
+- [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
+- [AI Data Engineering](/resources/ai-data-engineering)
+
+<CalloutCard
+  title="Build your AI context layer with Marmot"
+  description="An open source data catalog that needs only Postgres, with a built-in MCP server for AI agents."
+  href="https://marmotdata.io/docs/introduction"
+  buttonText="Get started"
+  variant="external"
+  icon="mdi:rocket-launch"
+/>

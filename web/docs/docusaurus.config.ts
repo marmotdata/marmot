@@ -133,11 +133,26 @@ const config: Config = {
     tailwindPlugin,
     unpluginIconsPlugin,
     [
+      "@docusaurus/plugin-content-docs",
+      {
+        id: "resources",
+        path: "resources",
+        routeBasePath: "resources",
+        sidebarPath: "./sidebarsResources.ts",
+        showLastUpdateTime: true,
+        editUrl: undefined,
+      },
+    ],
+    [
       "docusaurus-plugin-llms",
       {
         title: "Marmot",
         description:
           "The open source context layer for agents and humans. Catalog every service, API, queue, topic, database and pipeline, then expose real, governed context to AI agents and your team.",
+        docsDir: [
+          { path: "docs", routeBasePath: "docs", label: "Documentation" },
+          { path: "resources", routeBasePath: "resources", label: "Resources" },
+        ],
         includeBlog: true,
         generateLLMsTxt: true,
         generateLLMsFullTxt: true,
@@ -166,6 +181,10 @@ const config: Config = {
           },
         },
         blog: {
+          blogTitle:
+            "Marmot Blog: Data Catalogs, AI Context and Open Source Metadata",
+          blogDescription:
+            "Engineering writing from the Marmot team on data catalogs, AI context layers, MCP, lineage and running metadata infrastructure on just Postgres.",
           showReadingTime: true,
           showLastUpdateTime: true,
           feedOptions: {
@@ -178,6 +197,12 @@ const config: Config = {
         },
         theme: {
           customCss: "./src/css/custom.css",
+        },
+        sitemap: {
+          lastmod: "date",
+          changefreq: "weekly",
+          priority: 0.5,
+          filename: "sitemap.xml",
         },
       } satisfies Preset.Options,
     ],
@@ -216,6 +241,7 @@ const config: Config = {
       items: [
         { to: "/docs/introduction", label: "Docs", position: "left" },
         { to: "/pricing", label: "Pricing", position: "left" },
+        { to: "/resources", label: "Resources", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
         {
           href: "https://discord.gg/TWCk7hVFN4",
@@ -257,6 +283,19 @@ const config: Config = {
               label: "MCP",
               to: "/docs/MCP",
             },
+          ],
+        },
+        {
+          title: "Topics",
+          items: [
+            { label: "Data Catalog", to: "/resources/data-catalog" },
+            { label: "Data Governance", to: "/resources/data-governance" },
+            { label: "Data Quality", to: "/resources/data-quality" },
+            {
+              label: "AI Data Engineering",
+              to: "/resources/ai-data-engineering",
+            },
+            { label: "MCP for Data", to: "/resources/mcp-for-data" },
           ],
         },
         {

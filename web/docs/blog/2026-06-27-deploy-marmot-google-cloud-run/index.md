@@ -5,6 +5,13 @@ authors:
   - name: Bruno Schaatsbergen
     url: https://github.com/bschaatsbergen
 image: /img/marmot-on-google-cloud-run-banner.png
+description: "A step-by-step guide to deploying Marmot on Google Cloud Run with Cloud SQL for PostgreSQL, defined in Terraform. A serverless data catalog that scales to zero when idle, with no Kubernetes or sidecars to manage."
+tags: [deployment, google-cloud-run, terraform, postgres, serverless]
+keywords:
+  - deploy marmot google cloud run
+  - data catalog cloud run
+  - serverless data catalog
+  - cloud sql postgres terraform
 ---
 
 import { CalloutCard } from '@site/src/components/DocCard';

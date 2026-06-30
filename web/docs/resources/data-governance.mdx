@@ -1,0 +1,188 @@
+---
+slug: /data-governance
+title: "Data Governance for the AI Era: A 2026 Guide"
+description: "What data governance is, what it covers, best practices, and how it works when AI agents act on your data: ownership, policies and access control enforced at query time."
+keywords:
+  - data governance
+  - what is data governance
+  - data governance 2026
+  - data governance framework
+  - data governance best practices
+  - data governance vs data management
+  - AI data governance
+  - access control metadata
+image: /img/resources/data-governance.png
+date: 2026-06-30
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import { ResourceBanner } from '@site/src/components/ResourceCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/data-governance" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is data governance?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Data governance is the set of owners, policies and controls that decide who can see and use what data, and on what terms. It covers ownership, access control, classification, retention and auditability, so data stays trustworthy, compliant and used correctly. In 2026 governance also has to apply to AI agents, which query data and act on it the same way a person would."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does data governance cover?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Good data governance covers ownership, so every asset has a responsible owner; access control, so permissions are enforced when data is queried; policies for classification, retention and sensitive data; data quality and lineage, so people and agents can judge what to trust; and auditability, a record of who accessed what. Together these make data safe to use rather than just documented."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between data governance and data management?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Data management is the practice of storing, moving and processing data: pipelines, warehouses and the systems that run them. Data governance is the layer of ownership, policy and control that decides who may use that data and how. Management is about making data available; governance is about making it safe and trustworthy to use. You need both, and a data catalog is where governance is usually applied."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does data governance matter for AI agents?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An AI agent queries data and acts on the result without a human checking each step, so it takes whatever it is given at face value. If access is not scoped, the agent can read data it should not. If context is not governed, it can cite a deprecated or uncertified table as fact. Governance enforced at query time is what keeps an agent inside its lane and stops it acting confidently on the wrong data."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are data governance best practices?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Start by assigning a clear owner to every important asset. Enforce access control at query time rather than by copying data into walled gardens. Classify sensitive data and attach retention rules. Make ownership, definitions and quality visible in a catalog so people and agents can self-serve. Keep an audit trail of access. And scope every agent and API query to the caller's permissions, so nothing returns a raw dump of the whole estate."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need a data governance tool?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Most teams apply governance through a data catalog rather than a standalone tool. The catalog already holds ownership, classification, lineage and quality, and a good one enforces access control at the point a person or agent queries it. If you run AI agents against your data, a catalog that scopes each query to the caller is close to essential, because that is where governance is actually enforced."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+[← All resources](/resources)
+
+<ResourceBanner href="/resources/data-governance" />
+
+Data governance is the set of owners, policies and controls that decide who can see and use what data, and on what terms. For years it was treated as paperwork. In 2026 it is the thing that decides whether an AI agent acting on your data is safe or dangerous.
+
+This guide explains what data governance is, what it covers, how it differs from data management, why it matters more once agents are involved, and the practices that make it work.
+
+## What is data governance? {#what-is}
+
+**Data governance is the practice of managing the ownership, access, quality and policy around your data so it stays trustworthy and is used correctly.** It answers four questions for every asset: who owns it, who can use it, what it means and what rules apply to it.
+
+It is not a single product or a one-off project. It is an ongoing discipline, usually applied through a [data catalog](/resources/data-catalog) that already holds the ownership, classification and lineage governance depends on. Done well, governance is mostly invisible: people and agents get the data they are allowed to use, with the context to use it correctly, and nothing else.
+
+## What does data governance cover? {#what-it-covers}
+
+Good governance covers a handful of things, and the value comes from doing them together.
+
+- **Ownership.** Every asset has a clear owner and contact, so people and agents know who is responsible and where to escalate.
+- **Access control.** Permissions enforced at query time, so a caller sees only what its credentials allow, never a raw dump of everything.
+- **Policies.** Rules for classification, retention and handling of sensitive or regulated data.
+- **Quality and lineage.** Freshness, certification and how data flows, so a consumer can judge what to trust and what a change will break.
+- **Auditability.** A record of who accessed what, which matters far more once agents act autonomously.
+
+## Why data governance matters in 2026 {#why}
+
+**The stakes rose the moment agents started acting on data.** A person reading a catalog applies judgement and notices when something looks stale or out of bounds. An agent does not. It queries, takes the answer at face value and acts, so the controls have to live in the data layer, not in a human's head.
+
+That changes governance from documentation into enforcement. If access is not scoped, an agent can read data it should never see. If context is not governed, it can present a deprecated or uncertified table as fact and build a confident, wrong answer on top of it. Governance is what turns a catalog from a liability into a safe source of context for autonomous tools. We cover the agent side of this in [the AI context layer guide](/resources/ai-context-layer).
+
+## Data governance vs data management {#vs-management}
+
+**Data management makes data available. Data governance makes it safe to use.** The two are often confused, but they answer different questions.
+
+Data management is the operational work of storing, moving and processing data: the pipelines, warehouses, lakes and the systems that keep them running. Data governance is the layer of ownership, policy and control on top, deciding who may use that data, for what, and how it is classified and retained.
+
+You need both. Management without governance gives you data nobody trusts or can use safely. Governance without management is policy with nothing to apply it to. In practice the catalog is where the two meet: it sits over your managed data and applies governance at the point of access.
+
+## How data governance works with AI agents {#agents}
+
+**The key shift is governed context rather than raw access.** A catalog that hands an agent everything is a liability. One that scopes each query to a role, the way [Marmot scopes MCP queries to the API key behind them](/resources/mcp-for-data), gives the agent trusted context without overreach.
+
+In practice this means three things. Access is enforced when the agent queries, not assumed from where the data sits. Every response is scoped to the caller's permissions, so an agent never receives more than it is entitled to. And the context it does get carries ownership, certification and quality signals, so it can tell a trusted asset from a deprecated one. That is the difference between an agent that works from facts and one that hallucinates on top of whatever it could reach.
+
+## Data governance best practices {#best-practices}
+
+You do not need a heavyweight programme to govern data well. A few practices carry most of the weight:
+
+- **Assign an owner to every important asset.** Governance without accountable owners is just documentation.
+- **Enforce access at query time.** Scope each request to the caller rather than copying data into walled gardens.
+- **Classify sensitive data and set retention.** Tag regulated data and attach the rules that apply to it.
+- **Make governance self-serve.** Surface ownership, definitions, lineage and quality in a catalog so people and agents find them without asking.
+- **Keep an audit trail.** Record who accessed what, so autonomous activity stays accountable.
+- **Govern agents like users.** Give each agent scoped credentials and treat its access exactly as you would a person's.
+
+## How to choose a governance-ready catalog {#how-to-choose}
+
+Because governance is usually applied through a [data catalog](/resources/data-catalog), the catalog you pick decides how well you can enforce it. Look for:
+
+- **Access control enforced at query time**, across both the API and any MCP interface, scoped per caller.
+- **Ownership, classification and lineage as first-class metadata**, not bolted-on fields.
+- **Governed context for agents**, so an MCP query returns only what the key allows.
+- **An audit trail** of access for both people and agents.
+
+We compare the main catalogs on how they expose governed context to AI in [Data Catalogs as the AI Context Layer](/resources/data-catalogs-for-ai-agents).
+
+## Frequently asked questions {#faq}
+
+### What is data governance? {#faq-what}
+
+Data governance is the set of owners, policies and controls that decide who can see and use what data, and on what terms. It covers ownership, access control, classification, retention and auditability, so data stays trustworthy, compliant and used correctly. In 2026 governance also has to apply to AI agents, which query data and act on it the same way a person would.
+
+### What does data governance cover? {#faq-covers}
+
+Good data governance covers ownership, so every asset has a responsible owner; access control, so permissions are enforced when data is queried; policies for classification, retention and sensitive data; data quality and lineage, so people and agents can judge what to trust; and auditability, a record of who accessed what. Together these make data safe to use rather than just documented.
+
+### What is the difference between data governance and data management? {#faq-vs-management}
+
+Data management is the practice of storing, moving and processing data: pipelines, warehouses and the systems that run them. Data governance is the layer of ownership, policy and control that decides who may use that data and how. Management is about making data available; governance is about making it safe and trustworthy to use. You need both, and a data catalog is where governance is usually applied.
+
+### Why does data governance matter for AI agents? {#faq-agents}
+
+An AI agent queries data and acts on the result without a human checking each step, so it takes whatever it is given at face value. If access is not scoped, the agent can read data it should not. If context is not governed, it can cite a deprecated or uncertified table as fact. Governance enforced at query time is what keeps an agent inside its lane and stops it acting confidently on the wrong data.
+
+### What are data governance best practices? {#faq-best-practices}
+
+Start by assigning a clear owner to every important asset. Enforce access control at query time rather than by copying data into walled gardens. Classify sensitive data and attach retention rules. Make ownership, definitions and quality visible in a catalog so people and agents can self-serve. Keep an audit trail of access. And scope every agent and API query to the caller's permissions, so nothing returns a raw dump of the whole estate.
+
+### Do I need a data governance tool? {#faq-tool}
+
+Most teams apply governance through a data catalog rather than a standalone tool. The catalog already holds ownership, classification, lineage and quality, and a good one enforces access control at the point a person or agent queries it. If you run AI agents against your data, a catalog that scopes each query to the caller is close to essential, because that is where governance is actually enforced.
+
+## Related {#related}
+
+- [What Is a Data Catalog?](/resources/data-catalog)
+- [What Is an AI Context Layer?](/resources/ai-context-layer)
+- [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+
+<CalloutCard
+  title="Try Marmot"
+  description="Open source cataloguing with role-based access control, exposed to agents over MCP."
+  href="https://marmotdata.io/docs/introduction"
+  buttonText="Get started"
+  variant="external"
+  icon="mdi:rocket-launch"
+/>

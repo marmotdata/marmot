@@ -5,6 +5,13 @@ authors:
   - name: Charlie Haley
     url: https://github.com/charlie-haley
 image: /img/marmot-banner.png
+description: "Data catalogs shouldn't need a platform team to run. Meet Marmot, an open source data catalog that needs only PostgreSQL, ships as a single Go binary, and deploys in minutes with no Kafka, Elasticsearch or Airflow."
+tags: [data-catalog, open-source, infrastructure, getting-started]
+keywords:
+  - open source data catalog
+  - lightweight data catalog
+  - data catalog without infrastructure
+  - single binary data catalog
 ---
 
 import { CalloutCard } from '@site/src/components/DocCard';

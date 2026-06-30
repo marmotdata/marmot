@@ -1,0 +1,187 @@
+---
+slug: /data-quality
+title: "Data Quality for AI Agents: A 2026 Guide"
+description: "What data quality is, its dimensions, the tools that measure it, and why freshness and certification matter more when an AI agent acts on metadata at face value."
+keywords:
+  - data quality
+  - what is data quality
+  - data quality dimensions
+  - data quality tools
+  - data quality vs data observability
+  - data freshness
+  - data certification
+  - great expectations
+image: /img/resources/data-quality.png
+date: 2026-06-30
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import { ResourceBanner } from '@site/src/components/ResourceCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/data-quality" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is data quality?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Data quality is the degree to which your data is accurate, complete, consistent, fresh and trustworthy enough to act on. It is measured across dimensions like accuracy, completeness, timeliness and validity, and surfaced through signals such as test results, freshness and certification. In 2026 it matters more than ever, because AI agents act on data at face value rather than applying human judgement."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the dimensions of data quality?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The common dimensions are accuracy, whether the data reflects reality; completeness, whether anything is missing; consistency, whether it agrees across systems; timeliness or freshness, whether it is current enough; validity, whether it conforms to expected formats and rules; and uniqueness, whether records are duplicated. A dataset can be strong on some and weak on others, which is why quality is tracked per dimension rather than as a single score."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between data quality and data observability?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Data quality is the property you care about: is this data fit to use. Data observability is how you monitor for it, automatically watching pipelines and tables for freshness, volume, schema and anomaly issues so problems surface before they reach a consumer. Quality is the goal, observability is one way to keep an eye on it. Tests, observability and certification all feed the same picture of how trustworthy an asset is."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are the best data quality tools?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Common open source options include Great Expectations, which validates data against declared expectations, dbt tests, which check models inside a dbt project, and Soda, which runs checks written in its own check language. Commercial data observability platforms such as Monte Carlo, Bigeye and Anomalo add automated anomaly detection across pipelines. These tools produce the signals; a data catalog is where those results become visible context for people and agents."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why does data quality matter for AI agents?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A human reading a dashboard applies judgement and notices when a number looks wrong. An AI agent takes the metadata and data at face value and acts on it, so stale or uncertified context turns straight into confident, wrong output. Quality signals like freshness and certification let an agent prefer trusted sources and avoid deprecated ones, which is the difference between an agent that works from reliable data and one that does not."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you improve data quality?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Start by defining what good looks like for your most important datasets, then test for it with a tool like Great Expectations, dbt tests or Soda. Monitor freshness and anomalies with observability where it pays off. Assign owners so issues have someone accountable, certify the datasets that are trusted, and surface all of those signals in a catalog so people and agents can see at a glance what to rely on."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+[← All resources](/resources)
+
+<ResourceBanner href="/resources/data-quality" />
+
+Data quality is the degree to which your data is accurate, fresh, complete and trustworthy enough to act on. It has always mattered. What changed in 2026 is who consumes it: an AI agent takes your data at face value, so poor quality no longer just misleads a person, it drives an autonomous action.
+
+This guide explains what data quality is, the dimensions it breaks into, the tools that measure it, how it differs from data observability, and why it is the foundation an AI context layer is built on.
+
+## What is data quality? {#what-is}
+
+**Data quality is how fit your data is for the purpose it will be used for.** It is not an abstract score. It is a practical judgement: can someone, or something, rely on this dataset to make the decision in front of them.
+
+Quality is tracked across several dimensions and surfaced through signals: test results, freshness timestamps, and certification that says an asset is trusted and maintained. Those signals are themselves metadata, which means a [data catalog](/resources/data-catalog) can carry them alongside the schema and ownership, and expose them to whoever, or whatever, is about to use the data.
+
+## Data quality dimensions {#dimensions}
+
+Quality breaks into a handful of dimensions. A dataset can be strong on some and weak on others, which is why it is worth tracking each one rather than collapsing it to a single number.
+
+- **Accuracy.** The data reflects reality.
+- **Completeness.** No missing rows, columns or relationships that matter.
+- **Consistency.** It agrees with itself and with other systems.
+- **Timeliness.** It is fresh enough for the decision at hand.
+- **Validity.** It conforms to the expected formats, types and rules.
+- **Uniqueness.** Records are not duplicated.
+
+## Why data quality matters more for AI agents in 2026 {#why}
+
+**Agents raise the bar because they remove the human safety net.** A person reading a dashboard applies judgement and notices when a number looks off. An agent does not. It reads the metadata and the data, takes both at face value, and acts, so stale or uncertified context turns straight into confident, wrong output.
+
+That makes quality signals part of the context an agent needs, not a back-office concern. An agent that can see "this table is certified and updated hourly" will prefer it over a forgotten copy. An agent that cannot tell the difference will happily build an answer on the wrong one. Quality is the foundation the rest of the [AI context layer](/resources/ai-context-layer) sits on.
+
+## Data quality tools {#tools}
+
+**Most teams measure quality with a testing or observability tool, then surface the results in a catalog.** The common options:
+
+- **Great Expectations.** An open source framework that validates data against declared "expectations", for example that a column is never null or falls within a range.
+- **dbt tests.** Built into dbt, these check models inside a project for conditions like uniqueness, not-null and referential integrity as part of the build.
+- **Soda.** Runs data quality checks written in its own check language, on a schedule or in a pipeline.
+- **Data observability platforms.** Commercial tools such as Monte Carlo, Bigeye and Anomalo add automated monitoring and anomaly detection across pipelines, catching freshness, volume and schema issues without hand-written tests.
+
+These tools produce the signals. A [data catalog](/resources/data-catalog) is where those signals become visible context, so the result of a test or a freshness check is attached to the asset and readable by people and agents alike.
+
+## Data quality vs data observability {#vs-observability}
+
+**Data quality is the property you want. Data observability is one way you keep watch on it.** Quality asks "is this data fit to use". Observability is the practice of automatically monitoring pipelines and tables for freshness, volume, schema and anomaly problems, so issues surface before they reach a consumer.
+
+The two are complementary. Tests assert the conditions you already know to check. Observability catches the problems you did not predict. Certification records a human judgement that an asset is trusted. All three feed the same picture: how much can this data be relied on, expressed as signals a catalog can carry.
+
+## How to improve data quality {#best-practices}
+
+You do not fix quality by buying a tool. You fix it with a few habits the tool supports:
+
+- **Define what good looks like** for your most important datasets, then test for it.
+- **Test where it counts** with Great Expectations, dbt tests or Soda, rather than trying to cover everything at once.
+- **Monitor freshness and anomalies** with observability where the cost of a silent failure is high.
+- **Assign owners**, so a failing check has someone accountable for it.
+- **Certify trusted datasets**, and let that certification be visible.
+- **Surface every signal in a catalog**, so people and agents can see at a glance what to rely on and what to avoid.
+
+## Quality as context for agents {#agents}
+
+**Certification and freshness are themselves metadata an agent should be able to read.** A catalog that surfaces "this table is certified and updated hourly" lets an agent prefer trusted sources and steer around deprecated ones. Without it, the agent cannot tell a golden table from a forgotten one, and every quality problem in your stack becomes a potential agent mistake.
+
+This is why quality belongs in the same governed context an agent queries for schema and ownership. When freshness, test results and certification travel with the asset, an agent has what it needs to choose the right data, not just any data that matches the question.
+
+## Frequently asked questions {#faq}
+
+### What is data quality? {#faq-what}
+
+Data quality is the degree to which your data is accurate, complete, consistent, fresh and trustworthy enough to act on. It is measured across dimensions like accuracy, completeness, timeliness and validity, and surfaced through signals such as test results, freshness and certification. In 2026 it matters more than ever, because AI agents act on data at face value rather than applying human judgement.
+
+### What are the dimensions of data quality? {#faq-dimensions}
+
+The common dimensions are accuracy, whether the data reflects reality; completeness, whether anything is missing; consistency, whether it agrees across systems; timeliness or freshness, whether it is current enough; validity, whether it conforms to expected formats and rules; and uniqueness, whether records are duplicated. A dataset can be strong on some and weak on others, which is why quality is tracked per dimension rather than as a single score.
+
+### What is the difference between data quality and data observability? {#faq-vs-observability}
+
+Data quality is the property you care about: is this data fit to use. Data observability is how you monitor for it, automatically watching pipelines and tables for freshness, volume, schema and anomaly issues so problems surface before they reach a consumer. Quality is the goal, observability is one way to keep an eye on it. Tests, observability and certification all feed the same picture of how trustworthy an asset is.
+
+### What are the best data quality tools? {#faq-tools}
+
+Common open source options include Great Expectations, which validates data against declared expectations, dbt tests, which check models inside a dbt project, and Soda, which runs checks written in its own check language. Commercial data observability platforms such as Monte Carlo, Bigeye and Anomalo add automated anomaly detection across pipelines. These tools produce the signals; a data catalog is where those results become visible context for people and agents.
+
+### Why does data quality matter for AI agents? {#faq-agents}
+
+A human reading a dashboard applies judgement and notices when a number looks wrong. An AI agent takes the metadata and data at face value and acts on it, so stale or uncertified context turns straight into confident, wrong output. Quality signals like freshness and certification let an agent prefer trusted sources and avoid deprecated ones, which is the difference between an agent that works from reliable data and one that does not.
+
+### How do you improve data quality? {#faq-improve}
+
+Start by defining what good looks like for your most important datasets, then test for it with a tool like Great Expectations, dbt tests or Soda. Monitor freshness and anomalies with observability where it pays off. Assign owners so issues have someone accountable, certify the datasets that are trusted, and surface all of those signals in a catalog so people and agents can see at a glance what to rely on.
+
+## Related {#related}
+
+- [What Is a Data Catalog?](/resources/data-catalog)
+- [Data Governance](/resources/data-governance)
+- [What Is an AI Context Layer?](/resources/ai-context-layer)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+
+<CalloutCard
+  title="Try Marmot"
+  description="Catalog your stack and expose trusted, governed context to AI agents over MCP."
+  href="https://marmotdata.io/docs/introduction"
+  buttonText="Get started"
+  variant="external"
+  icon="mdi:rocket-launch"
+/>

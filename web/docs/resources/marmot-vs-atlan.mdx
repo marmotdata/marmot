@@ -1,0 +1,282 @@
+---
+slug: /marmot-vs-atlan
+title: "Marmot vs Atlan: AI Context Layer Comparison (2026)"
+description: "Marmot vs Atlan compared as AI context layers for agents. An open source catalog you self-host as a single Go binary versus Atlan's fully managed, enterprise SaaS context layer."
+keywords:
+  - marmot vs atlan
+  - atlan alternative
+  - open source atlan alternative
+  - atlan mcp
+  - data catalog for AI agents
+image: /img/ai-context-layer-banner.png
+date: 2026-06-30
+hide_table_of_contents: false
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import { ResourceBanner } from '@site/src/components/ResourceCard';
+import { ComparisonTable } from '@site/src/components/ComparisonTable';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/marmot-vs-atlan" />
+  <meta property="article:published_time" content="2026-06-30" />
+  <meta property="article:modified_time" content="2026-06-30" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Marmot vs Atlan: AI Context Layer Comparison (2026)" />
+  <meta name="twitter:description" content="An open source catalog you self-host as a single Go binary versus Atlan's fully managed, enterprise SaaS context layer." />
+  <meta name="twitter:image" content="https://marmotdata.io/img/ai-context-layer-banner.png" />
+  <meta property="og:type" content="article" />
+  <meta property="og:title" content="Marmot vs Atlan: AI Context Layer Comparison (2026)" />
+  <meta property="og:description" content="Marmot vs Atlan compared as AI context layers for agents, on MCP, hosting, cost, connectors and compliance." />
+  <meta property="og:image" content="https://marmotdata.io/img/ai-context-layer-banner.png" />
+  <meta property="og:url" content="https://marmotdata.io/resources/marmot-vs-atlan" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Is Marmot an open source Atlan alternative?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Both expose governed metadata to AI agents over a native MCP server, so both work as an AI context layer. The difference is the model. Marmot is open source and MIT licensed, runs as a single Go binary on Postgres and is self-hosted, so you own the stack and pay no per-seat fees. Atlan is a proprietary, fully managed SaaS platform. Marmot's edge is control, footprint and cost; Atlan's is a managed service with vendor-held compliance certifications."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between Marmot and Atlan?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Marmot is an open source catalog you run yourself: one Go binary on Postgres with native MCP, a full CLI, three SDKs and catalog-as-code. Atlan is a fully managed enterprise SaaS platform with a hosted MCP server, a large managed connector library and vendor-held certifications such as SOC 2 Type II, ISO 27001 and HIPAA. The decision is whether you want to own and run the catalog, or buy it as a managed service."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Atlan open source?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "No. Atlan is a proprietary, commercial SaaS platform, priced per enterprise agreement. Marmot is open source under the MIT licence, so you can self-host it for free, inspect the code and avoid per-seat or per-usage fees. If you need an open source catalog you can run in your own infrastructure, Marmot is the closer fit; if you want a managed platform and are comfortable with commercial licensing, Atlan is built for that."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Atlan support MCP, and how does it compare to Marmot?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Both have a native MCP server. Atlan hosts its MCP server as part of the managed platform, exposing search, lineage and metadata operations to tools like Claude, Cursor, ChatGPT and Gemini, governed by its policies. Marmot's MCP server is built into the binary, so the catalog is agent-ready the moment it starts and every query is scoped to the API key behind it. The capability is similar; the difference is self-hosted in your own infrastructure versus hosted by the vendor."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Marmot cheaper than Atlan for AI agents?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For most teams, yes. Marmot is MIT licensed and self-hosted, so there are no per-seat or per-query fees. That matters because an agent issues far more queries than a person, and per-usage pricing is hard to predict under agent workloads. Atlan is enterprise-priced as a managed service, so you trade that cost for hosting, scale and support you do not have to run yourself."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Which is better for AI agents in 2026?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For most teams standing up an AI context layer, Marmot is the faster path: native MCP, governed context and a full CLI from one binary you own, with no per-seat fees as agents scale up their queries. Atlan is the better fit when you want a fully managed platform with nothing to run and need vendor-held compliance certifications such as SOC 2 Type II, ISO 27001 and HIPAA."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+[← All resources](/resources)
+
+<ResourceBanner href="/resources/marmot-vs-atlan" />
+
+How Marmot and Atlan compare as AI context layers: an open source catalog you self-host as a single Go binary versus Atlan's fully managed, enterprise SaaS context layer.
+
+Both expose governed metadata to AI agents over a native MCP server, so on the agent-facing capability they are closer than they look. The real decision is a different one: whether you want to own and run the catalog yourself, or hand hosting, scale and compliance to a vendor. This page compares them on exactly that. For the full field, see [the data catalog AI context layer comparison](/resources/data-catalogs-for-ai-agents).
+
+---
+
+## At a glance {#at-a-glance}
+
+<ComparisonTable
+  columns={["Marmot", "Atlan"]}
+  highlightColumn={0}
+  caption="Marmot versus Atlan as AI context layers, compared across MCP support, CLI, SDKs, hosting model, deployment footprint, lineage, connectors, governed context, compliance, pricing and licence."
+  rows={[
+    { feature: "MCP support", cells: [
+      { status: "yes", text: "Native, built into the binary" },
+      { status: "yes", text: "Native, hosted by the vendor" },
+    ]},
+    { feature: "CLI", cells: [
+      { status: "yes", text: "Full, plus a packaged agent Skill" },
+      { status: "partial", text: "Data contracts, closed preview" },
+    ]},
+    { feature: "SDKs", cells: [
+      { status: "yes", text: "Go, TypeScript and Python" },
+      { status: "partial", text: "Python and Java (Go experimental)" },
+    ]},
+    { feature: "Hosting model", cells: [
+      "Self-hosted, you own the stack",
+      "Fully managed SaaS",
+    ]},
+    { feature: "Deploy footprint", cells: [
+      "Single Go binary on Postgres",
+      "Nothing to run, hosted for you",
+    ]},
+    { feature: "Lineage to agents", cells: [
+      { status: "yes", text: "Via MCP, CLI, SDK and REST" },
+      { status: "yes", text: "Via MCP and API, column-level" },
+    ]},
+    { feature: "Connectors", cells: [
+      "~28 plugins, plus catalog-as-code",
+      "Large managed library",
+    ]},
+    { feature: "Ingestion methods", cells: [
+      { status: "yes", text: "Plugins and YAML via CLI, Kubernetes operator, Terraform, Pulumi, SDKs and API" },
+      "Managed connectors, SDK and API",
+    ]},
+    { feature: "Governed context", cells: [
+      "RBAC-scoped per API key",
+      "Enterprise roles and policies",
+    ]},
+    { feature: "Compliance certifications", cells: [
+      "Self-managed, in your own infrastructure",
+      { status: "yes", text: "SOC 2 Type II, ISO 27001, HIPAA, GDPR" },
+    ]},
+    { feature: "Pricing", cells: [
+      { status: "yes", text: "Free, MIT, self-host with no per-seat fees" },
+      { status: "partial", text: "Commercial, enterprise quote" },
+    ]},
+    { feature: "Open source", cells: [
+      { status: "yes", text: "Yes, MIT" },
+      { status: "no", text: "No, proprietary" },
+    ]},
+    { feature: "Best for", cells: [
+      "Native MCP, self-hosted, smallest footprint",
+      "Fully managed enterprise context layer",
+    ]},
+  ]}
+/>
+
+---
+
+## Hosting and footprint {#hosting}
+
+**This is the clearest difference between the two.** Marmot is open source and self-hosted: a single Go binary that needs nothing but Postgres. You run it in your own infrastructure, your metadata never leaves it, and there is no vendor in the data path. You can run it on a small VM or scale it to zero on serverless.
+
+Atlan is a fully managed SaaS platform. There is nothing for you to deploy, patch or scale, because the vendor handles hosting, upgrades and uptime. That is a genuine advantage if you would rather not run a catalog at all. The trade is the usual one for managed software: less control over where the data sits, and a commercial relationship instead of a binary you own. If self-hosting and data residency matter to you, Marmot fits; if you want the catalog handed to you as a service, Atlan does.
+
+---
+
+## MCP and AI context {#mcp}
+
+**Both serve context to agents over a native MCP server, so neither makes you bolt on a third-party package.** What differs is where the server runs.
+
+Marmot's MCP server is part of the binary, so the moment Marmot is running it is already an AI context layer. It exposes three focused tools: `discover_data` for natural language and qualified-identifier lookups with lineage traversal, `find_ownership` for "who owns this", and `lookup_term` for glossary definitions. Every query runs with the permissions of the API key behind it, in infrastructure you control.
+
+Atlan hosts its MCP server as part of the managed platform. It exposes search, lineage traversal and metadata operations to tools like Claude, Cursor, ChatGPT and Gemini, with access governed by Atlan's roles and policies. It is well-integrated and there is nothing for you to run, with the trade-off that the context flows through the vendor's hosted service rather than your own.
+
+---
+
+## CLI and tooling {#cli}
+
+**Marmot's command line and developer tooling are broader and openly available.** The `marmot` CLI covers search, lineage, glossary and ownership from the terminal, with OAuth or API-key authentication. On top of that Marmot ships a packaged agent Skill, a ready-made instruction set that teaches an assistant how to drive the catalog over the CLI, REST API or MCP without bespoke wiring. Together with native MCP, an agent can work a Marmot catalog the moment it is installed.
+
+Atlan's CLI is in closed preview and focused on data contracts and limited metadata sync, available through your account team rather than as a public download.
+
+Both offer SDKs, and Marmot's coverage is wider in the open: fully featured Go, TypeScript and Python SDKs, against Python and Java for Atlan, with an experimental Go SDK. It is part of a broader pattern. Between plugins with YAML ingestion through the CLI, a Kubernetes-native operator, Terraform and Pulumi providers, three SDKs, a REST API and MCP, Marmot gives you an unusually large set of first-party integration paths, all open source, which is how a smaller plugin library still reaches most of a stack.
+
+---
+
+## Governed context and compliance {#governed-context}
+
+**For agents, governance is not a nice-to-have.** An agent takes whatever metadata it retrieves at face value and acts on it, so the context has to be scoped and trustworthy or the agent confidently acts on the wrong thing.
+
+Marmot runs every MCP and API query with the permissions of the API key behind it, so an agent sees only what that key is allowed to see, never a raw dump of the whole catalog. Because you self-host, your governance and compliance posture is yours to define inside your own infrastructure. Atlan enforces access through enterprise roles and policies, and its MCP server respects them. Where Atlan has a clear edge is vendor-held compliance: it carries certifications such as SOC 2 Type II, ISO 27001, HIPAA and GDPR, audited and maintained by the vendor. If you need a provider to hold those certifications for you rather than managing the controls yourself, that is a real reason to choose Atlan.
+
+---
+
+## Connectors and coverage {#connectors}
+
+**Atlan ships a large managed connector library with nothing for you to deploy.** Its hosted connectors span warehouses, databases, dashboards and pipelines, and because the platform is managed, keeping them running is the vendor's job rather than yours.
+
+Marmot ships around 28 plugins in a fast-growing ecosystem. For anything without a plugin yet, Marmot's official Terraform and Pulumi providers (`marmot_asset`, `marmot_lineage`) populate assets and lineage straight from the infrastructure you already define, so a source still lands in the catalog from code you are writing anyway. The trade is real: if you want the most of your stack catalogued by a managed service with no work, Atlan leads on out-of-the-box breadth. If you provision with Terraform or Pulumi, the gap closes quickly, and you keep the whole thing in your own infrastructure.
+
+---
+
+## Lineage {#lineage}
+
+Both expose lineage to agents rather than just rendering it in a UI, and both hold large lineage graphs without trouble. Marmot serves lineage through MCP (`discover_data`), the `marmot` CLI, its Go, TypeScript and Python SDKs and a REST API, answers "what feeds this, and what breaks if I change it" for agents and humans, and stores the graph in Postgres alongside the rest of the catalog. Atlan offers column-level lineage and active metadata as part of its managed platform, which is the thing to reach for if you need field-level impact analysis maintained for you. Both store lineage at scale; the difference is the shape of the query surface, not how much either can hold.
+
+---
+
+## Cost and query economics {#cost}
+
+**This is where the open source model tells, especially for agents.** Marmot is MIT licensed and self-hosted, so there are no per-seat or per-query fees. You pay for the infrastructure it runs on and nothing else. That matters because an agent issues far more queries than a person, and usage-based pricing is hard to predict once agents are doing real work against the catalog.
+
+Atlan is priced as an enterprise SaaS agreement, typically per seat or per usage. For that you get a managed service, support and the compliance posture above, which is a fair trade if you would rather buy the capability than run it. The point worth scrutinising is how the pricing behaves under agent workloads, where query volume is high and growing.
+
+---
+
+## Which should you choose? {#which-to-choose}
+
+**Choose Marmot if:**
+
+- You want an open source catalog you self-host and fully control.
+- You want native MCP and governed context from a single binary, with no per-seat fees as agents scale up their queries.
+- You would rather keep metadata in your own infrastructure than route it through a vendor.
+- You provision with Terraform or Pulumi and want catalog-as-code.
+- You want a catalog an agent can use out of the box, through native MCP, a full CLI and a packaged Skill.
+
+**Choose Atlan if:**
+
+- You want a fully managed platform with nothing to run or maintain.
+- You need vendor-held compliance certifications such as SOC 2 Type II, ISO 27001 and HIPAA.
+- You have the budget for an enterprise SaaS agreement and want a large managed connector library with vendor support.
+
+For most teams standing up an AI context layer in 2026, Marmot is the faster path to a governed, agent-ready catalog you own and run yourself, with no per-seat fees as agents scale up their queries. Atlan is the stronger choice when you want a fully managed platform and vendor-held compliance certifications, and are happy to buy that as a service.
+
+<CalloutCard
+  title="Try Marmot with your AI assistant"
+  description="Connect Claude, Cursor or any MCP-compatible tool to your data catalog in minutes."
+  href="https://marmotdata.io/docs/MCP/"
+  buttonText="Set up MCP"
+  icon="mdi:robot"
+/>
+
+---
+
+## Frequently asked questions {#faq}
+
+### Is Marmot an open source Atlan alternative? {#faq-alternative}
+
+Yes. Both expose governed metadata to AI agents over a native MCP server, so both work as an AI context layer. The difference is the model. Marmot is open source and MIT licensed, runs as a single Go binary on Postgres and is self-hosted, so you own the stack and pay no per-seat fees. Atlan is a proprietary, fully managed SaaS platform. Marmot's edge is control, footprint and cost. Atlan's is a managed service with vendor-held compliance certifications.
+
+### What is the difference between Marmot and Atlan? {#faq-difference}
+
+Marmot is an open source catalog you run yourself: one Go binary on Postgres with native MCP, a full CLI, three SDKs and catalog-as-code. Atlan is a fully managed enterprise SaaS platform with a hosted MCP server, a large managed connector library and vendor-held certifications such as SOC 2 Type II, ISO 27001 and HIPAA. The decision is whether you want to own and run the catalog, or buy it as a managed service.
+
+### Is Atlan open source? {#faq-open-source}
+
+No. Atlan is a proprietary, commercial SaaS platform, priced per enterprise agreement. Marmot is open source under the MIT licence, so you can self-host it for free, inspect the code and avoid per-seat or per-usage fees. If you need an open source catalog you can run in your own infrastructure, Marmot is the closer fit. If you want a managed platform and are comfortable with commercial licensing, Atlan is built for that.
+
+### Does Atlan support MCP, and how does it compare to Marmot? {#faq-mcp}
+
+Both have a native MCP server. Atlan hosts its MCP server as part of the managed platform, exposing search, lineage and metadata operations to tools like Claude, Cursor, ChatGPT and Gemini, governed by its policies. Marmot's MCP server is built into the binary, so the catalog is agent-ready the moment it starts and every query is scoped to the API key behind it. The capability is similar; the difference is self-hosted in your own infrastructure versus hosted by the vendor.
+
+### Is Marmot cheaper than Atlan for AI agents? {#faq-cost}
+
+For most teams, yes. Marmot is MIT licensed and self-hosted, so there are no per-seat or per-query fees. That matters because an agent issues far more queries than a person, and per-usage pricing is hard to predict under agent workloads. Atlan is enterprise-priced as a managed service, so you trade that cost for hosting, scale and support you do not have to run yourself.
+
+### Which is better for AI agents in 2026? {#faq-which-better}
+
+For most teams standing up an AI context layer, Marmot is the faster path: native MCP, governed context and a full CLI from one binary you own, with no per-seat fees as agents scale up their queries. Atlan is the better fit when you want a fully managed platform with nothing to run and need vendor-held compliance certifications such as SOC 2 Type II, ISO 27001 and HIPAA.
+
+---
+
+- **Live demo:** [demo.marmotdata.io](https://demo.marmotdata.io)
+- **Docs:** [marmotdata.io/docs](/docs/introduction)
+- **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)
