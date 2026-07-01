@@ -92,6 +92,23 @@ func (s *LineageService) Write(ctx context.Context, in WriteEdgeInput) (*Lineage
 	return resp.Payload, nil
 }
 
+// Edge returns a single direct lineage edge by its ID.
+func (s *LineageService) Edge(ctx context.Context, id string) (*LineageEdge, error) {
+	p := lineage.NewGetLineageDirectIDParams().WithContext(ctx).WithID(strfmt.UUID(id))
+	resp, err := s.gen.Lineage.GetLineageDirectID(p)
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return resp.Payload, nil
+}
+
+// Delete removes a direct lineage edge by its ID.
+func (s *LineageService) Delete(ctx context.Context, id string) error {
+	p := lineage.NewDeleteLineageDirectIDParams().WithContext(ctx).WithID(strfmt.UUID(id))
+	_, err := s.gen.Lineage.DeleteLineageDirectID(p)
+	return mapErr(err)
+}
+
 // Batch creates many lineage edges in one HTTP call. Edges with empty Type
 // are filled in with DefaultEdgeType.
 func (s *LineageService) Batch(ctx context.Context, edges []WriteEdgeInput) ([]*BatchLineageResult, error) {
