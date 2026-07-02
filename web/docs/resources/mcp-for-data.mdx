@@ -1,0 +1,178 @@
+---
+slug: /mcp-for-data
+title: "MCP for Data: Connecting AI Agents to Your Catalog"
+description: "What the Model Context Protocol (MCP) is, how a data catalog uses it to expose governed context to AI tools like Claude and Cursor, and how it compares to a plain API."
+keywords:
+  - MCP for data
+  - model context protocol
+  - MCP data catalog
+  - MCP server
+  - connect catalog to Claude
+  - MCP vs API
+  - MCP for AI agents
+image: /img/resources/mcp-for-data.png
+date: 2026-06-30
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import { ResourceBanner } from '@site/src/components/ResourceCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/mcp-for-data" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is the Model Context Protocol (MCP)?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The Model Context Protocol (MCP) is an open standard for connecting AI assistants to external systems, including data catalogs, through a common interface. The system runs an MCP server that describes the tools it offers, and the assistant's MCP client connects and calls them. It means a tool like Claude or Cursor can reach your data context without a bespoke integration built for each one."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How does MCP work with a data catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The catalog runs an MCP server that exposes tools such as search assets, find ownership and traverse lineage. An MCP client inside the assistant connects and authenticates, usually with an API key. The model chooses which tools to call from a natural language request, and the catalog returns context scoped to that key's permissions, so the assistant can answer questions about your data without a custom connector."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between MCP and a REST API?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A REST API is best for deterministic automation you control, where your code knows exactly which endpoint to call. MCP is best for AI assistants, because the tools are described to the model and it decides which to call from natural language. They are complementary: a good catalog exposes a stable API and an MCP server that wraps the same governed data, so both callers reach it."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I connect a data catalog to Claude or Cursor?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "If the catalog has an MCP server, you point the MCP client in Claude Desktop, Claude Code, Cursor or Cline at the catalog's MCP endpoint and authenticate with an API key. The assistant then discovers the catalog's tools and can query assets, ownership and lineage in natural language, scoped to the permissions of the key you provided."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between native MCP and a separate MCP server?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Native MCP means the server is built into the catalog, so it is available the moment the catalog runs, with nothing extra to deploy. A separate MCP server is a distinct package you install and version alongside the platform. Both expose the same protocol to assistants; the difference is operational, one fewer moving part with native MCP versus an additional component to run and keep in step."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is MCP access to a data catalog secure?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "It can be, when access is scoped at the point of the query. A well-designed catalog authenticates the MCP client with an API key and returns only what that key is permitted to see, never a raw dump of the whole catalog. That means an agent connected over MCP stays inside the same permissions a person with that key would have."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+[← All resources](/resources)
+
+<ResourceBanner href="/resources/mcp-for-data" />
+
+The Model Context Protocol (MCP) is an open standard for connecting AI assistants to external systems, including data catalogs, through a common interface. For data teams it is the cleanest way to let tools like Claude and Cursor read governed context about your stack.
+
+This guide explains what MCP is, how it works with a data catalog, how it compares to a plain API, and how to connect an assistant to your catalog.
+
+## What is MCP (Model Context Protocol)? {#what-is}
+
+**MCP is an open standard that lets AI assistants discover and call tools exposed by an external system, over one common interface.** Before MCP, wiring an assistant to your metadata meant a bespoke integration per tool. MCP standardises it: the system exposes tools the model can discover and call, so Claude, Cursor, ChatGPT and others reach the same context without custom glue for each.
+
+For a [data catalog](/resources/data-catalog), this is what turns it into a live context source for agents rather than a UI people log into. The catalog publishes its capabilities as MCP tools, and any MCP-aware assistant can use them.
+
+## How MCP works with a data catalog {#how-it-works}
+
+**A catalog exposes its context as MCP tools, and the assistant calls them on demand.** In practice there are three moving parts:
+
+- The catalog runs an **MCP server** that describes its tools, for example search assets, find ownership and traverse lineage.
+- An **MCP client** inside the assistant connects and authenticates, usually with an API key.
+- The model **chooses which tools to call** from a natural language request, and the catalog returns context scoped to the key's permissions.
+
+So a question like "who owns the orders table and what feeds it" becomes a couple of tool calls against the catalog, answered from live metadata rather than the model's guesses.
+
+## What an MCP server for a catalog exposes {#tools}
+
+The exact tools vary by product, but a catalog's MCP server typically offers:
+
+- **Search and discovery**, to find assets by name, type or domain.
+- **Ownership lookup**, to answer "who is responsible for this".
+- **Lineage traversal**, to follow what feeds an asset and what depends on it.
+- **Glossary lookup**, to resolve business terms to their agreed meaning.
+
+Each call returns context scoped to the caller, so the assistant works with governed data, not a raw export.
+
+## MCP vs API {#mcp-vs-api}
+
+**Both matter, and they serve different callers.** A REST API is best for deterministic automation you control, where your code knows exactly which endpoint to hit. MCP is best for AI assistants, because the tools are described to the model and it decides what to call from a natural language request.
+
+A good catalog offers both, with the MCP server wrapping the same API and the same governance. That way a pipeline can call the API directly while an assistant reaches the identical context over MCP, and neither sees more than its credentials allow. We go deeper on giving agents context in [AI data engineering](/resources/ai-data-engineering).
+
+## Native MCP vs a separate MCP server {#native-vs-separate}
+
+**Some catalogs build MCP into the product, others ship it as a separate package.** With native MCP the server is part of the catalog, so it is available the moment the catalog runs, with nothing extra to deploy or version. A separate MCP server is a distinct component you install and keep in step with the platform.
+
+Both speak the same protocol to assistants, so the difference is operational rather than functional: one fewer moving part against an additional service to run. It is one of the axes we compare across tools in [Data Catalogs as the AI Context Layer](/resources/data-catalogs-for-ai-agents).
+
+## How to connect a data catalog to Claude or Cursor {#connect}
+
+**If the catalog has an MCP server, connecting an assistant is a short, standard setup.** The shape is the same across clients:
+
+- Get an **API key** from the catalog, scoped to what you want the assistant to access.
+- Point the **MCP client** in Claude Desktop, Claude Code, Cursor or Cline at the catalog's MCP endpoint.
+- **Authenticate** with the key, and the assistant discovers the catalog's tools.
+
+From there the assistant can query assets, ownership and lineage in natural language, scoped to that key. Marmot ships its MCP server in the binary, so there is no separate package to run; the [Marmot MCP docs](https://marmotdata.io/docs/MCP/) walk through the exact steps.
+
+## Frequently asked questions {#faq}
+
+### What is the Model Context Protocol (MCP)? {#faq-what}
+
+The Model Context Protocol (MCP) is an open standard for connecting AI assistants to external systems, including data catalogs, through a common interface. The system runs an MCP server that describes the tools it offers, and the assistant's MCP client connects and calls them. It means a tool like Claude or Cursor can reach your data context without a bespoke integration built for each one.
+
+### How does MCP work with a data catalog? {#faq-how}
+
+The catalog runs an MCP server that exposes tools such as search assets, find ownership and traverse lineage. An MCP client inside the assistant connects and authenticates, usually with an API key. The model chooses which tools to call from a natural language request, and the catalog returns context scoped to that key's permissions, so the assistant can answer questions about your data without a custom connector.
+
+### What is the difference between MCP and a REST API? {#faq-vs-api}
+
+A REST API is best for deterministic automation you control, where your code knows exactly which endpoint to call. MCP is best for AI assistants, because the tools are described to the model and it decides which to call from natural language. They are complementary: a good catalog exposes a stable API and an MCP server that wraps the same governed data, so both callers reach it.
+
+### How do I connect a data catalog to Claude or Cursor? {#faq-connect}
+
+If the catalog has an MCP server, you point the MCP client in Claude Desktop, Claude Code, Cursor or Cline at the catalog's MCP endpoint and authenticate with an API key. The assistant then discovers the catalog's tools and can query assets, ownership and lineage in natural language, scoped to the permissions of the key you provided.
+
+### What is the difference between native MCP and a separate MCP server? {#faq-native-vs-separate}
+
+Native MCP means the server is built into the catalog, so it is available the moment the catalog runs, with nothing extra to deploy. A separate MCP server is a distinct package you install and version alongside the platform. Both expose the same protocol to assistants; the difference is operational, one fewer moving part with native MCP versus an additional component to run and keep in step.
+
+### Is MCP access to a data catalog secure? {#faq-secure}
+
+It can be, when access is scoped at the point of the query. A well-designed catalog authenticates the MCP client with an API key and returns only what that key is permitted to see, never a raw dump of the whole catalog. That means an agent connected over MCP stays inside the same permissions a person with that key would have.
+
+## Related {#related}
+
+- [What Is an AI Context Layer?](/resources/ai-context-layer)
+- [AI Data Engineering: Giving Agents Real Context](/resources/ai-data-engineering)
+- [Data Governance](/resources/data-governance)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+
+<CalloutCard
+  title="Marmot's built-in MCP server"
+  description="Marmot ships MCP in the binary. Connect Claude, Cursor or Cline in minutes."
+  href="https://marmotdata.io/docs/MCP/"
+  buttonText="Read the MCP docs"
+  variant="external"
+  icon="mdi:protocol"
+/>

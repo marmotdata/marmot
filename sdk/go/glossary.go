@@ -34,6 +34,8 @@ type CreateTermInput struct {
 	Definition   string
 	Description  string
 	ParentTermID string
+	Owners       []TermOwner
+	Metadata     map[string]any
 }
 
 // UpdateTermInput is the input for GlossaryService.Update.
@@ -42,6 +44,26 @@ type UpdateTermInput struct {
 	Definition   string
 	Description  string
 	ParentTermID string
+	Owners       []TermOwner
+	Metadata     map[string]any
+}
+
+// TermOwner references a user or team that owns a glossary term.
+type TermOwner struct {
+	ID   string
+	Type string
+}
+
+func ownerRequests(owners []TermOwner) []*models.OwnerRequest {
+	if len(owners) == 0 {
+		return nil
+	}
+	out := make([]*models.OwnerRequest, len(owners))
+	for i, o := range owners {
+		id, typ := o.ID, o.Type
+		out[i] = &models.OwnerRequest{ID: &id, Type: &typ}
+	}
+	return out
 }
 
 // GlossaryService manages glossary terms.
@@ -104,6 +126,10 @@ func (s *GlossaryService) Create(ctx context.Context, in CreateTermInput) (*Glos
 		Definition:   &in.Definition,
 		Description:  in.Description,
 		ParentTermID: in.ParentTermID,
+		Owners:       ownerRequests(in.Owners),
+	}
+	if len(in.Metadata) > 0 {
+		body.Metadata = in.Metadata
 	}
 	p := glossary.NewPostGlossaryParams().WithContext(ctx).WithTerm(body)
 	resp, err := s.gen.Glossary.PostGlossary(p)
@@ -120,6 +146,10 @@ func (s *GlossaryService) Update(ctx context.Context, id string, in UpdateTermIn
 		Definition:   in.Definition,
 		Description:  in.Description,
 		ParentTermID: in.ParentTermID,
+		Owners:       ownerRequests(in.Owners),
+	}
+	if len(in.Metadata) > 0 {
+		body.Metadata = in.Metadata
 	}
 	p := glossary.NewPutGlossaryIDParams().WithContext(ctx).WithID(id).WithTerm(body)
 	resp, err := s.gen.Glossary.PutGlossaryID(p)

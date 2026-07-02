@@ -15,11 +15,11 @@ const TURNSTILE_SITE_KEY = "0x4AAAAAAC14j-gGk5wzDj2N";
 const FAQ_ITEMS = [
   {
     q: "Is Marmot really free?",
-    a: "Yes. MIT licensed with no feature gating, no usage limits, and no telemetry. Self-host it for free, forever.",
+    a: "Yes. The open source core is MIT licensed with no usage limits. Self-host it for free, forever.",
   },
   {
     q: "Self-hosted vs Marmot Cloud?",
-    a: "Same software. Cloud just handles hosting, upgrades, and backups. If you're comfortable running containers, self-hosting works great.",
+    a: "Cloud handles hosting, upgrades and backups for you. If you're comfortable running containers, self-hosting works great.",
   },
   {
     q: "When will Marmot Cloud be available?",
@@ -470,7 +470,7 @@ export default function Pricing(): JSX.Element {
                   data-animate-delay="1"
                   className="text-lg text-gray-500 dark:text-gray-400 leading-relaxed mb-7"
                 >
-                  Marmot is MIT licensed. Self-host it for free, no limits.
+                  Marmot is MIT licensed. Self-host it for free.
                 </p>
                 <div
                   data-animate

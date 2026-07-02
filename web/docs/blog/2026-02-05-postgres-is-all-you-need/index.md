@@ -5,6 +5,13 @@ authors:
   - name: Charlie Haley
     url: https://github.com/charlie-haley
 image: /img/postgres-banner.png
+description: "Why PostgreSQL alone can back a production data catalog. How Marmot replaces Kafka, Elasticsearch and a search cluster with one Postgres database, and the infrastructure tax you avoid by doing so."
+tags: [postgres, architecture, data-catalog, infrastructure]
+keywords:
+  - postgres data catalog
+  - one database
+  - reduce infrastructure
+  - postgresql full text search
 ---
 
 import { CalloutCard } from '@site/src/components/DocCard';
