@@ -1608,6 +1608,19 @@ definitions:
           $ref: '#/definitions/Permission'
         type: array
     type: object
+  RolePermission:
+    properties:
+      action:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      resource_type:
+        type: string
+    type: object
   RulePreview:
     properties:
       asset_count:
@@ -2275,6 +2288,31 @@ definitions:
       field:
         type: string
       message:
+        type: string
+    type: object
+  v1_roles.createRoleRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      permission_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_roles.replacePermissionsRequest:
+    properties:
+      permission_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_roles.updateRoleRequest:
+    properties:
+      description:
+        type: string
+      name:
         type: string
     type: object
 info:
@@ -4697,6 +4735,25 @@ paths:
       summary: Search owners
       tags:
       - owners
+  /permissions:
+    get:
+      description: List all defined permissions grouped by resource type
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/RolePermission'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List all permissions
+      tags:
+      - roles
   /pipelines/{pipelineName}:
     delete:
       description: Delete all resources ever created by a pipeline (across all sources)
@@ -5415,6 +5472,180 @@ paths:
       summary: Search data products
       tags:
       - products
+  /roles:
+    get:
+      description: List all active roles with user counts and permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/Role'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List roles
+      tags:
+      - roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role with optional initial permissions
+      parameters:
+      - description: Role creation request
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/v1_roles.createRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Create a role
+      tags:
+      - roles
+  /roles/{id}:
+    delete:
+      description: Soft-delete a role. Fails if the role is a system role or has active
+        user assignments.
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Delete a role
+      tags:
+      - roles
+    get:
+      description: Get a role by ID with its permissions
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Role'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get a role
+      tags:
+      - roles
+    patch:
+      consumes:
+      - application/json
+      description: Update a role's name or description. System roles cannot be renamed.
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role update request
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/v1_roles.updateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Update a role
+      tags:
+      - roles
+  /roles/{id}/permissions:
+    post:
+      consumes:
+      - application/json
+      description: Atomically replace all permissions on a role. System roles enforce
+        a minimum permission floor.
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_roles.replacePermissionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Replace role permissions
+      tags:
+      - roles
   /runs:
     get:
       description: Get paginated list of runs with filtering

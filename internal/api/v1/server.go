@@ -59,6 +59,7 @@ import (
 	metricsAPI "github.com/marmotdata/marmot/internal/api/v1/metrics"
 	notificationsAPI "github.com/marmotdata/marmot/internal/api/v1/notifications"
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
+	rolesAPI "github.com/marmotdata/marmot/internal/api/v1/roles"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
 	searchAPI "github.com/marmotdata/marmot/internal/api/v1/search"
@@ -70,6 +71,7 @@ import (
 	"github.com/marmotdata/marmot/pkg/config"
 	agentService "github.com/marmotdata/marmot/internal/core/agent"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	roleService "github.com/marmotdata/marmot/internal/core/role"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
@@ -148,6 +150,8 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	assetSvc := asset.NewService(assetRepo)
 	userSvc := userService.NewService(userRepo)
+	roleStore := roleService.NewPostgresStore(db)
+	roleSvc := roleService.NewService(roleStore)
 	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
 	agentRepo := agentService.NewPostgresRepository(db)
 	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)
@@ -544,6 +548,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		searchAPI.NewHandler(finalSearchSvc, userSvc, authSvc, metricsService, config),
 		schedulesHandler,
 		websocket.NewHandler(wsHub, config),
+		rolesAPI.NewHandler(roleSvc, userSvc, authSvc, config),
 		plugins.NewHandler(),
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),
