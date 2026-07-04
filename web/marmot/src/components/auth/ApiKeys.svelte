@@ -4,17 +4,32 @@
 	import { toasts, handleApiError } from '$lib/stores/toast';
 	import DeleteModal from '$components/ui/DeleteModal.svelte';
 	import Button from '$components/ui/Button.svelte';
+	import DatePicker from '$components/ui/DatePicker.svelte';
 
 	interface ApiKey {
 		id: string;
 		name: string;
 		key?: string;
 		created_at: string;
+		expires_at?: string | null;
 		last_used_at: string | null;
 	}
 
+	const expirationOptions = [
+		{ value: '1', label: '1 day' },
+		{ value: '7', label: '7 days' },
+		{ value: '30', label: '30 days' },
+		{ value: '90', label: '90 days' },
+		{ value: '180', label: '180 days' },
+		{ value: '365', label: '365 days' },
+		{ value: 'custom', label: 'Custom' },
+		{ value: 'never', label: 'No expiration' }
+	];
+
 	let apiKeys: ApiKey[] | null = null;
 	let newKeyName = '';
+	let expiration = '90';
+	let customDate = '';
 	let keyToDelete: ApiKey | null = null;
 	let showDeleteDialog = false;
 	let newlyCreatedKey: string | null = null;
@@ -43,6 +58,33 @@
 		}
 	}
 
+	function startOfToday(): Date {
+		const now = new Date();
+		return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+	}
+
+	function toDateInputValue(date: Date): string {
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const day = String(date.getDate()).padStart(2, '0');
+		return `${date.getFullYear()}-${month}-${day}`;
+	}
+
+	function daysUntil(dateValue: string): number | null {
+		const [year, month, day] = dateValue.split('-').map(Number);
+		if (!year || !month || !day) return null;
+		const picked = new Date(year, month - 1, day);
+		const days = Math.round((picked.getTime() - startOfToday().getTime()) / 86400000);
+		return days > 0 ? days : null;
+	}
+
+	function resolveExpiresInDays(): number | null {
+		if (expiration === 'never') return 0;
+		if (expiration === 'custom') {
+			return customDate ? daysUntil(customDate) : null;
+		}
+		return Number(expiration);
+	}
+
 	async function createApiKey() {
 		if (!newKeyName.trim()) {
 			toasts.warning('Key name cannot be empty');
@@ -54,11 +96,17 @@
 			return;
 		}
 
+		const expiresInDays = resolveExpiresInDays();
+		if (expiresInDays === null) {
+			toasts.warning('Custom expiration must be a date in the future');
+			return;
+		}
+
 		try {
 			isGenerating = true;
 			const response = await fetchApi('/users/apikeys', {
 				method: 'POST',
-				body: JSON.stringify({ name: newKeyName })
+				body: JSON.stringify({ name: newKeyName, expires_in_days: expiresInDays })
 			});
 
 			if (!response.ok) {
@@ -72,6 +120,8 @@
 			apiKeys = [...(apiKeys || []), result];
 			newlyCreatedKey = result.key;
 			newKeyName = '';
+			expiration = '90';
+			customDate = '';
 			creatingKey = false;
 			toasts.success('API key created successfully');
 		} catch (err) {
@@ -144,15 +194,51 @@
 							id="key-name"
 							bind:value={newKeyName}
 							onkeydown={handleKeydown}
-							class="block w-full px-4 py-3 bg-white dark:bg-gray-800 rounded-md shadow-sm focus:ring-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600 focus:border-earthy-terracotta-700 dark:focus:border-earthy-terracotta-500 sm:text-sm border-gray-300 dark:border-gray-600"
+							class="block w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 focus:border-transparent"
 							placeholder="Enter a descriptive name for your key"
 						/>
+					</div>
+					<div>
+						<label
+							for="key-expiration"
+							class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+							>Expiration</label
+						>
+						<div class="flex items-center gap-3">
+							<select
+								id="key-expiration"
+								bind:value={expiration}
+								class="block w-44 px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 focus:border-transparent"
+							>
+								{#each expirationOptions as option (option.value)}
+									<option value={option.value}>{option.label}</option>
+								{/each}
+							</select>
+							{#if expiration === 'custom'}
+								<DatePicker
+									id="key-custom-date"
+									bind:value={customDate}
+									min={toDateInputValue(new Date(startOfToday().getTime() + 86400000))}
+								/>
+								{#if customDate && daysUntil(customDate) !== null}
+									<span class="text-sm text-gray-600 dark:text-gray-400">
+										expires in {daysUntil(customDate)}
+										{daysUntil(customDate) === 1 ? 'day' : 'days'}
+									</span>
+								{/if}
+							{/if}
+						</div>
+						{#if expiration === 'never'}
+							<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+								This key will remain valid until you delete it.
+							</p>
+						{/if}
 					</div>
 					<Button
 						variant="filled"
 						text={isGenerating ? 'Generating...' : 'Generate Key'}
 						loading={isGenerating}
-						disabled={!newKeyName || isGenerating}
+						disabled={!newKeyName || isGenerating || (expiration === 'custom' && !customDate)}
 						click={createApiKey}
 					/>
 				</div>
@@ -206,6 +292,10 @@
 							>
 							<th
 								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
+								>Expires</th
+							>
+							<th
+								class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
 								>Last Used</th
 							>
 							<th
@@ -225,6 +315,9 @@
 								>
 								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
 									{new Date(key.created_at).toLocaleString()}
+								</td>
+								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+									{key.expires_at ? new Date(key.expires_at).toLocaleString() : 'Never'}
 								</td>
 								<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
 									{key.last_used_at ? new Date(key.last_used_at).toLocaleString() : 'Never'}
