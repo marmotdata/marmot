@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostUsersUpdatePasswordOK() *PostUsersUpdatePasswordOK {
 	return &PostUsersUpdatePasswordOK{}
 }
 
-/*
-PostUsersUpdatePasswordOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostUsersUpdatePasswordOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostUsersUpdatePasswordOK struct {
 	Payload *models.TokenResponse
 }
@@ -120,11 +117,9 @@ func NewPostUsersUpdatePasswordBadRequest() *PostUsersUpdatePasswordBadRequest {
 	return &PostUsersUpdatePasswordBadRequest{}
 }
 
-/*
-PostUsersUpdatePasswordBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostUsersUpdatePasswordBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostUsersUpdatePasswordBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPostUsersUpdatePasswordUnauthorized() *PostUsersUpdatePasswordUnauthoriz
 	return &PostUsersUpdatePasswordUnauthorized{}
 }
 
-/*
-PostUsersUpdatePasswordUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PostUsersUpdatePasswordUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PostUsersUpdatePasswordUnauthorized struct {
 	Payload *models.ErrorResponse
 }

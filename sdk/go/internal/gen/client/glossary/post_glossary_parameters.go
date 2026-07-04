@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostGlossaryParams() *PostGlossaryParams {
-	return &PostGlossaryParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostGlossaryParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostGlossaryParamsWithTimeout creates a new PostGlossaryParams object
 // with the ability to set a timeout on a request.
 func NewPostGlossaryParamsWithTimeout(timeout time.Duration) *PostGlossaryParams {
 	return &PostGlossaryParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostGlossaryParamsWithContext creates a new PostGlossaryParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostGlossaryParams].
 func NewPostGlossaryParamsWithContext(ctx context.Context) *PostGlossaryParams {
 	return &PostGlossaryParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostGlossaryParams contains all the parameters to send to the API endpoint
 */
 type PostGlossaryParams struct {
 
-	/* Term.
-
-	   Glossary term to create
-	*/
+	// Term.
+	//
+	// Glossary term to create
 	Term *models.CreateTermRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post glossary params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostGlossaryParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post glossary params
+// WithTimeout adds the timeout to the post glossary params.
 func (o *PostGlossaryParams) WithTimeout(timeout time.Duration) *PostGlossaryParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post glossary params
+// SetTimeout adds the timeout to the post glossary params.
 func (o *PostGlossaryParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post glossary params
+// WithContext adds the context to the post glossary params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostGlossaryParams].
 func (o *PostGlossaryParams) WithContext(ctx context.Context) *PostGlossaryParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post glossary params
+// SetContext adds the context to the post glossary params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostGlossaryParams].
 func (o *PostGlossaryParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post glossary params
+// WithHTTPClient adds the HTTPClient to the post glossary params.
 func (o *PostGlossaryParams) WithHTTPClient(client *http.Client) *PostGlossaryParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post glossary params
+// SetHTTPClient adds the HTTPClient to the post glossary params.
 func (o *PostGlossaryParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithTerm adds the term to the post glossary params
+// WithTerm adds the term to the post glossary params.
 func (o *PostGlossaryParams) WithTerm(term *models.CreateTermRequest) *PostGlossaryParams {
 	o.SetTerm(term)
 	return o
 }
 
-// SetTerm adds the term to the post glossary params
+// SetTerm adds the term to the post glossary params.
 func (o *PostGlossaryParams) SetTerm(term *models.CreateTermRequest) {
 	o.Term = term
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostGlossaryParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

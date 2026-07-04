@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewGetAPIV1IngestionRunsIDOK() *GetAPIV1IngestionRunsIDOK {
 	return &GetAPIV1IngestionRunsIDOK{}
 }
 
-/*
-GetAPIV1IngestionRunsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAPIV1IngestionRunsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAPIV1IngestionRunsIDOK struct {
 	Payload *models.JobRun
 }
@@ -126,11 +123,9 @@ func NewGetAPIV1IngestionRunsIDUnauthorized() *GetAPIV1IngestionRunsIDUnauthoriz
 	return &GetAPIV1IngestionRunsIDUnauthorized{}
 }
 
-/*
-GetAPIV1IngestionRunsIDUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// GetAPIV1IngestionRunsIDUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type GetAPIV1IngestionRunsIDUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewGetAPIV1IngestionRunsIDNotFound() *GetAPIV1IngestionRunsIDNotFound {
 	return &GetAPIV1IngestionRunsIDNotFound{}
 }
 
-/*
-GetAPIV1IngestionRunsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetAPIV1IngestionRunsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetAPIV1IngestionRunsIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewGetAPIV1IngestionRunsIDInternalServerError() *GetAPIV1IngestionRunsIDInt
 	return &GetAPIV1IngestionRunsIDInternalServerError{}
 }
 
-/*
-GetAPIV1IngestionRunsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAPIV1IngestionRunsIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAPIV1IngestionRunsIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

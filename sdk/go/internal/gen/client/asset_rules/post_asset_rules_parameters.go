@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAssetRulesParams() *PostAssetRulesParams {
-	return &PostAssetRulesParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAssetRulesParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAssetRulesParamsWithTimeout creates a new PostAssetRulesParams object
 // with the ability to set a timeout on a request.
 func NewPostAssetRulesParamsWithTimeout(timeout time.Duration) *PostAssetRulesParams {
 	return &PostAssetRulesParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAssetRulesParamsWithContext creates a new PostAssetRulesParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetRulesParams].
 func NewPostAssetRulesParamsWithContext(ctx context.Context) *PostAssetRulesParams {
 	return &PostAssetRulesParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostAssetRulesParams contains all the parameters to send to the API endpoint
 */
 type PostAssetRulesParams struct {
 
-	/* Rule.
-
-	   Asset rule creation request
-	*/
+	// Rule.
+	//
+	// Asset rule creation request
 	Rule *models.CreateAssetRuleRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post asset rules params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostAssetRulesParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post asset rules params
+// WithTimeout adds the timeout to the post asset rules params.
 func (o *PostAssetRulesParams) WithTimeout(timeout time.Duration) *PostAssetRulesParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post asset rules params
+// SetTimeout adds the timeout to the post asset rules params.
 func (o *PostAssetRulesParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post asset rules params
+// WithContext adds the context to the post asset rules params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetRulesParams].
 func (o *PostAssetRulesParams) WithContext(ctx context.Context) *PostAssetRulesParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post asset rules params
+// SetContext adds the context to the post asset rules params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetRulesParams].
 func (o *PostAssetRulesParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post asset rules params
+// WithHTTPClient adds the HTTPClient to the post asset rules params.
 func (o *PostAssetRulesParams) WithHTTPClient(client *http.Client) *PostAssetRulesParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post asset rules params
+// SetHTTPClient adds the HTTPClient to the post asset rules params.
 func (o *PostAssetRulesParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithRule adds the rule to the post asset rules params
+// WithRule adds the rule to the post asset rules params.
 func (o *PostAssetRulesParams) WithRule(rule *models.CreateAssetRuleRequest) *PostAssetRulesParams {
 	o.SetRule(rule)
 	return o
 }
 
-// SetRule adds the rule to the post asset rules params
+// SetRule adds the rule to the post asset rules params.
 func (o *PostAssetRulesParams) SetRule(rule *models.CreateAssetRuleRequest) {
 	o.Rule = rule
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAssetRulesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

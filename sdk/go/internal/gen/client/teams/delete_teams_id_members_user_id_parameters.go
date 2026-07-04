@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteTeamsIDMembersUserIDParams() *DeleteTeamsIDMembersUserIDParams {
-	return &DeleteTeamsIDMembersUserIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteTeamsIDMembersUserIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteTeamsIDMembersUserIDParamsWithTimeout creates a new DeleteTeamsIDMembersUserIDParams object
 // with the ability to set a timeout on a request.
 func NewDeleteTeamsIDMembersUserIDParamsWithTimeout(timeout time.Duration) *DeleteTeamsIDMembersUserIDParams {
 	return &DeleteTeamsIDMembersUserIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteTeamsIDMembersUserIDParamsWithContext creates a new DeleteTeamsIDMembersUserIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteTeamsIDMembersUserIDParams].
 func NewDeleteTeamsIDMembersUserIDParamsWithContext(ctx context.Context) *DeleteTeamsIDMembersUserIDParams {
 	return &DeleteTeamsIDMembersUserIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,21 +62,19 @@ DeleteTeamsIDMembersUserIDParams contains all the parameters to send to the API 
 */
 type DeleteTeamsIDMembersUserIDParams struct {
 
-	/* ID.
-
-	   Team ID
-	*/
+	// ID.
+	//
+	// Team ID
 	ID string
 
-	/* UserID.
-
-	   User ID
-	*/
+	// UserID.
+	//
+	// User ID
 	UserID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete teams ID members user ID params (not the query body).
@@ -90,65 +92,68 @@ func (o *DeleteTeamsIDMembersUserIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete teams ID members user ID params
+// WithTimeout adds the timeout to the delete teams ID members user ID params.
 func (o *DeleteTeamsIDMembersUserIDParams) WithTimeout(timeout time.Duration) *DeleteTeamsIDMembersUserIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete teams ID members user ID params
+// SetTimeout adds the timeout to the delete teams ID members user ID params.
 func (o *DeleteTeamsIDMembersUserIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete teams ID members user ID params
+// WithContext adds the context to the delete teams ID members user ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteTeamsIDMembersUserIDParams].
 func (o *DeleteTeamsIDMembersUserIDParams) WithContext(ctx context.Context) *DeleteTeamsIDMembersUserIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete teams ID members user ID params
+// SetContext adds the context to the delete teams ID members user ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteTeamsIDMembersUserIDParams].
 func (o *DeleteTeamsIDMembersUserIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete teams ID members user ID params
+// WithHTTPClient adds the HTTPClient to the delete teams ID members user ID params.
 func (o *DeleteTeamsIDMembersUserIDParams) WithHTTPClient(client *http.Client) *DeleteTeamsIDMembersUserIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete teams ID members user ID params
+// SetHTTPClient adds the HTTPClient to the delete teams ID members user ID params.
 func (o *DeleteTeamsIDMembersUserIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete teams ID members user ID params
+// WithID adds the id to the delete teams ID members user ID params.
 func (o *DeleteTeamsIDMembersUserIDParams) WithID(id string) *DeleteTeamsIDMembersUserIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete teams ID members user ID params
+// SetID adds the id to the delete teams ID members user ID params.
 func (o *DeleteTeamsIDMembersUserIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithUserID adds the userID to the delete teams ID members user ID params
+// WithUserID adds the userID to the delete teams ID members user ID params.
 func (o *DeleteTeamsIDMembersUserIDParams) WithUserID(userID string) *DeleteTeamsIDMembersUserIDParams {
 	o.SetUserID(userID)
 	return o
 }
 
-// SetUserID adds the userId to the delete teams ID members user ID params
+// SetUserID adds the userId to the delete teams ID members user ID params.
 func (o *DeleteTeamsIDMembersUserIDParams) SetUserID(userID string) {
 	o.UserID = userID
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteTeamsIDMembersUserIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

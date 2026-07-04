@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsDocumentationMrnParams() *GetAssetsDocumentationMrnParams {
-	return &GetAssetsDocumentationMrnParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsDocumentationMrnParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsDocumentationMrnParamsWithTimeout creates a new GetAssetsDocumentationMrnParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsDocumentationMrnParamsWithTimeout(timeout time.Duration) *GetAssetsDocumentationMrnParams {
 	return &GetAssetsDocumentationMrnParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsDocumentationMrnParamsWithContext creates a new GetAssetsDocumentationMrnParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsDocumentationMrnParams].
 func NewGetAssetsDocumentationMrnParamsWithContext(ctx context.Context) *GetAssetsDocumentationMrnParams {
 	return &GetAssetsDocumentationMrnParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,17 +62,16 @@ GetAssetsDocumentationMrnParams contains all the parameters to send to the API e
 */
 type GetAssetsDocumentationMrnParams struct {
 
-	/* Mrn.
-
-	   Asset MRN
-
-	   Format: url
-	*/
+	// Mrn.
+	//
+	// Asset MRN
+	//
+	// Format: url
 	Mrn string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets documentation mrn params (not the query body).
@@ -86,54 +89,57 @@ func (o *GetAssetsDocumentationMrnParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get assets documentation mrn params
+// WithTimeout adds the timeout to the get assets documentation mrn params.
 func (o *GetAssetsDocumentationMrnParams) WithTimeout(timeout time.Duration) *GetAssetsDocumentationMrnParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets documentation mrn params
+// SetTimeout adds the timeout to the get assets documentation mrn params.
 func (o *GetAssetsDocumentationMrnParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets documentation mrn params
+// WithContext adds the context to the get assets documentation mrn params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsDocumentationMrnParams].
 func (o *GetAssetsDocumentationMrnParams) WithContext(ctx context.Context) *GetAssetsDocumentationMrnParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets documentation mrn params
+// SetContext adds the context to the get assets documentation mrn params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsDocumentationMrnParams].
 func (o *GetAssetsDocumentationMrnParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets documentation mrn params
+// WithHTTPClient adds the HTTPClient to the get assets documentation mrn params.
 func (o *GetAssetsDocumentationMrnParams) WithHTTPClient(client *http.Client) *GetAssetsDocumentationMrnParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets documentation mrn params
+// SetHTTPClient adds the HTTPClient to the get assets documentation mrn params.
 func (o *GetAssetsDocumentationMrnParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithMrn adds the mrn to the get assets documentation mrn params
+// WithMrn adds the mrn to the get assets documentation mrn params.
 func (o *GetAssetsDocumentationMrnParams) WithMrn(mrn string) *GetAssetsDocumentationMrnParams {
 	o.SetMrn(mrn)
 	return o
 }
 
-// SetMrn adds the mrn to the get assets documentation mrn params
+// SetMrn adds the mrn to the get assets documentation mrn params.
 func (o *GetAssetsDocumentationMrnParams) SetMrn(mrn string) {
 	o.Mrn = mrn
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsDocumentationMrnParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPutUsersIDOK() *PutUsersIDOK {
 	return &PutUsersIDOK{}
 }
 
-/*
-PutUsersIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PutUsersIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type PutUsersIDOK struct {
 	Payload *models.User
 }
@@ -120,11 +117,9 @@ func NewPutUsersIDBadRequest() *PutUsersIDBadRequest {
 	return &PutUsersIDBadRequest{}
 }
 
-/*
-PutUsersIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PutUsersIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PutUsersIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPutUsersIDNotFound() *PutUsersIDNotFound {
 	return &PutUsersIDNotFound{}
 }
 
-/*
-PutUsersIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PutUsersIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PutUsersIDNotFound struct {
 	Payload *models.ErrorResponse
 }

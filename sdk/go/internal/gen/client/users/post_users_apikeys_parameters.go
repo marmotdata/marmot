@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostUsersApikeysParams() *PostUsersApikeysParams {
-	return &PostUsersApikeysParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostUsersApikeysParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostUsersApikeysParamsWithTimeout creates a new PostUsersApikeysParams object
 // with the ability to set a timeout on a request.
 func NewPostUsersApikeysParamsWithTimeout(timeout time.Duration) *PostUsersApikeysParams {
 	return &PostUsersApikeysParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostUsersApikeysParamsWithContext creates a new PostUsersApikeysParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersApikeysParams].
 func NewPostUsersApikeysParamsWithContext(ctx context.Context) *PostUsersApikeysParams {
 	return &PostUsersApikeysParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostUsersApikeysParams contains all the parameters to send to the API endpoint
 */
 type PostUsersApikeysParams struct {
 
-	/* Key.
-
-	   API key creation request
-	*/
+	// Key.
+	//
+	// API key creation request
 	Key *models.CreateAPIKeyRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post users apikeys params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostUsersApikeysParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post users apikeys params
+// WithTimeout adds the timeout to the post users apikeys params.
 func (o *PostUsersApikeysParams) WithTimeout(timeout time.Duration) *PostUsersApikeysParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post users apikeys params
+// SetTimeout adds the timeout to the post users apikeys params.
 func (o *PostUsersApikeysParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post users apikeys params
+// WithContext adds the context to the post users apikeys params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersApikeysParams].
 func (o *PostUsersApikeysParams) WithContext(ctx context.Context) *PostUsersApikeysParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post users apikeys params
+// SetContext adds the context to the post users apikeys params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersApikeysParams].
 func (o *PostUsersApikeysParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post users apikeys params
+// WithHTTPClient adds the HTTPClient to the post users apikeys params.
 func (o *PostUsersApikeysParams) WithHTTPClient(client *http.Client) *PostUsersApikeysParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post users apikeys params
+// SetHTTPClient adds the HTTPClient to the post users apikeys params.
 func (o *PostUsersApikeysParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithKey adds the key to the post users apikeys params
+// WithKey adds the key to the post users apikeys params.
 func (o *PostUsersApikeysParams) WithKey(key *models.CreateAPIKeyRequest) *PostUsersApikeysParams {
 	o.SetKey(key)
 	return o
 }
 
-// SetKey adds the key to the post users apikeys params
+// SetKey adds the key to the post users apikeys params.
 func (o *PostUsersApikeysParams) SetKey(key *models.CreateAPIKeyRequest) {
 	o.Key = key
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostUsersApikeysParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

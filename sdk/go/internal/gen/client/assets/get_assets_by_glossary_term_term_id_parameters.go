@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetAssetsByGlossaryTermTermIDParams creates a new GetAssetsByGlossaryTermTermIDParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsByGlossaryTermTermIDParams() *GetAssetsByGlossaryTermTermIDParams {
-	return &GetAssetsByGlossaryTermTermIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsByGlossaryTermTermIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsByGlossaryTermTermIDParamsWithTimeout creates a new GetAssetsByGlossaryTermTermIDParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsByGlossaryTermTermIDParamsWithTimeout(timeout time.Duration) *GetAssetsByGlossaryTermTermIDParams {
 	return &GetAssetsByGlossaryTermTermIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsByGlossaryTermTermIDParamsWithContext creates a new GetAssetsByGlossaryTermTermIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsByGlossaryTermTermIDParams].
 func NewGetAssetsByGlossaryTermTermIDParamsWithContext(ctx context.Context) *GetAssetsByGlossaryTermTermIDParams {
 	return &GetAssetsByGlossaryTermTermIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,29 +63,26 @@ GetAssetsByGlossaryTermTermIDParams contains all the parameters to send to the A
 */
 type GetAssetsByGlossaryTermTermIDParams struct {
 
-	/* Limit.
-
-	   Maximum number of assets
-
-	   Default: 20
-	*/
+	// Limit.
+	//
+	// Maximum number of assets
+	//
+	// Default: 20
 	Limit *int64
 
-	/* Offset.
-
-	   Pagination offset
-	*/
+	// Offset.
+	//
+	// Pagination offset
 	Offset *int64
 
-	/* TermID.
-
-	   Glossary Term ID
-	*/
+	// TermID.
+	//
+	// Glossary Term ID
 	TermID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets by glossary term term ID params (not the query body).
@@ -107,82 +108,85 @@ func (o *GetAssetsByGlossaryTermTermIDParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get assets by glossary term term ID params
+// WithTimeout adds the timeout to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) WithTimeout(timeout time.Duration) *GetAssetsByGlossaryTermTermIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets by glossary term term ID params
+// SetTimeout adds the timeout to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets by glossary term term ID params
+// WithContext adds the context to the get assets by glossary term term ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsByGlossaryTermTermIDParams].
 func (o *GetAssetsByGlossaryTermTermIDParams) WithContext(ctx context.Context) *GetAssetsByGlossaryTermTermIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets by glossary term term ID params
+// SetContext adds the context to the get assets by glossary term term ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsByGlossaryTermTermIDParams].
 func (o *GetAssetsByGlossaryTermTermIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets by glossary term term ID params
+// WithHTTPClient adds the HTTPClient to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) WithHTTPClient(client *http.Client) *GetAssetsByGlossaryTermTermIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets by glossary term term ID params
+// SetHTTPClient adds the HTTPClient to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get assets by glossary term term ID params
+// WithLimit adds the limit to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) WithLimit(limit *int64) *GetAssetsByGlossaryTermTermIDParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get assets by glossary term term ID params
+// SetLimit adds the limit to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get assets by glossary term term ID params
+// WithOffset adds the offset to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) WithOffset(offset *int64) *GetAssetsByGlossaryTermTermIDParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get assets by glossary term term ID params
+// SetOffset adds the offset to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WithTermID adds the termID to the get assets by glossary term term ID params
+// WithTermID adds the termID to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) WithTermID(termID string) *GetAssetsByGlossaryTermTermIDParams {
 	o.SetTermID(termID)
 	return o
 }
 
-// SetTermID adds the termId to the get assets by glossary term term ID params
+// SetTermID adds the termId to the get assets by glossary term term ID params.
 func (o *GetAssetsByGlossaryTermTermIDParams) SetTermID(termID string) {
 	o.TermID = termID
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsByGlossaryTermTermIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -195,7 +199,7 @@ func (o *GetAssetsByGlossaryTermTermIDParams) WriteToRequest(r runtime.ClientReq
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -212,7 +216,7 @@ func (o *GetAssetsByGlossaryTermTermIDParams) WriteToRequest(r runtime.ClientReq
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

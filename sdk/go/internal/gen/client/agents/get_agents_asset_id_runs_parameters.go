@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetAgentsAssetIDRunsParams creates a new GetAgentsAssetIDRunsParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAgentsAssetIDRunsParams() *GetAgentsAssetIDRunsParams {
-	return &GetAgentsAssetIDRunsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAgentsAssetIDRunsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAgentsAssetIDRunsParamsWithTimeout creates a new GetAgentsAssetIDRunsParams object
 // with the ability to set a timeout on a request.
 func NewGetAgentsAssetIDRunsParamsWithTimeout(timeout time.Duration) *GetAgentsAssetIDRunsParams {
 	return &GetAgentsAssetIDRunsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAgentsAssetIDRunsParamsWithContext creates a new GetAgentsAssetIDRunsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAgentsAssetIDRunsParams].
 func NewGetAgentsAssetIDRunsParamsWithContext(ctx context.Context) *GetAgentsAssetIDRunsParams {
 	return &GetAgentsAssetIDRunsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,27 +63,24 @@ GetAgentsAssetIDRunsParams contains all the parameters to send to the API endpoi
 */
 type GetAgentsAssetIDRunsParams struct {
 
-	/* AssetID.
-
-	   Agent asset id
-	*/
+	// AssetID.
+	//
+	// Agent asset id
 	AssetID string
 
-	/* Limit.
-
-	   Max number of runs to return
-	*/
+	// Limit.
+	//
+	// Max number of runs to return
 	Limit *int64
 
-	/* Period.
-
-	   Lookback window (e.g. 24h, 7d). Default 24h.
-	*/
+	// Period.
+	//
+	// Lookback window (e.g. 24h, 7d). Default 24h.
 	Period *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get agents asset ID runs params (not the query body).
@@ -97,76 +98,79 @@ func (o *GetAgentsAssetIDRunsParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get agents asset ID runs params
+// WithTimeout adds the timeout to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) WithTimeout(timeout time.Duration) *GetAgentsAssetIDRunsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get agents asset ID runs params
+// SetTimeout adds the timeout to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get agents asset ID runs params
+// WithContext adds the context to the get agents asset ID runs params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAgentsAssetIDRunsParams].
 func (o *GetAgentsAssetIDRunsParams) WithContext(ctx context.Context) *GetAgentsAssetIDRunsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get agents asset ID runs params
+// SetContext adds the context to the get agents asset ID runs params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAgentsAssetIDRunsParams].
 func (o *GetAgentsAssetIDRunsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get agents asset ID runs params
+// WithHTTPClient adds the HTTPClient to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) WithHTTPClient(client *http.Client) *GetAgentsAssetIDRunsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get agents asset ID runs params
+// SetHTTPClient adds the HTTPClient to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithAssetID adds the assetID to the get agents asset ID runs params
+// WithAssetID adds the assetID to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) WithAssetID(assetID string) *GetAgentsAssetIDRunsParams {
 	o.SetAssetID(assetID)
 	return o
 }
 
-// SetAssetID adds the assetId to the get agents asset ID runs params
+// SetAssetID adds the assetId to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) SetAssetID(assetID string) {
 	o.AssetID = assetID
 }
 
-// WithLimit adds the limit to the get agents asset ID runs params
+// WithLimit adds the limit to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) WithLimit(limit *int64) *GetAgentsAssetIDRunsParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get agents asset ID runs params
+// SetLimit adds the limit to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithPeriod adds the period to the get agents asset ID runs params
+// WithPeriod adds the period to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) WithPeriod(period *string) *GetAgentsAssetIDRunsParams {
 	o.SetPeriod(period)
 	return o
 }
 
-// SetPeriod adds the period to the get agents asset ID runs params
+// SetPeriod adds the period to the get agents asset ID runs params.
 func (o *GetAgentsAssetIDRunsParams) SetPeriod(period *string) {
 	o.Period = period
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAgentsAssetIDRunsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -184,7 +188,7 @@ func (o *GetAgentsAssetIDRunsParams) WriteToRequest(r runtime.ClientRequest, reg
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {

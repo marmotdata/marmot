@@ -8,7 +8,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // BatchDocumentationResult batch documentation result
@@ -41,7 +42,7 @@ func (m *BatchDocumentationResult) Validate(formats strfmt.Registry) error {
 }
 
 func (m *BatchDocumentationResult) validateDocumentation(formats strfmt.Registry) error {
-	if swag.IsZero(m.Documentation) { // not required
+	if typeutils.IsZero(m.Documentation) { // not required
 		return nil
 	}
 
@@ -81,7 +82,7 @@ func (m *BatchDocumentationResult) contextValidateDocumentation(ctx context.Cont
 
 	if m.Documentation != nil {
 
-		if swag.IsZero(m.Documentation) { // not required
+		if typeutils.IsZero(m.Documentation) { // not required
 			return nil
 		}
 
@@ -107,13 +108,13 @@ func (m *BatchDocumentationResult) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *BatchDocumentationResult) UnmarshalBinary(b []byte) error {
 	var res BatchDocumentationResult
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

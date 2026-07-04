@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAssetRulesPreviewParams() *PostAssetRulesPreviewParams {
-	return &PostAssetRulesPreviewParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAssetRulesPreviewParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAssetRulesPreviewParamsWithTimeout creates a new PostAssetRulesPreviewParams object
 // with the ability to set a timeout on a request.
 func NewPostAssetRulesPreviewParamsWithTimeout(timeout time.Duration) *PostAssetRulesPreviewParams {
 	return &PostAssetRulesPreviewParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAssetRulesPreviewParamsWithContext creates a new PostAssetRulesPreviewParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetRulesPreviewParams].
 func NewPostAssetRulesPreviewParamsWithContext(ctx context.Context) *PostAssetRulesPreviewParams {
 	return &PostAssetRulesPreviewParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostAssetRulesPreviewParams contains all the parameters to send to the API endpo
 */
 type PostAssetRulesPreviewParams struct {
 
-	/* Rule.
-
-	   Rule preview request
-	*/
+	// Rule.
+	//
+	// Rule preview request
 	Rule *models.PreviewRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post asset rules preview params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostAssetRulesPreviewParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post asset rules preview params
+// WithTimeout adds the timeout to the post asset rules preview params.
 func (o *PostAssetRulesPreviewParams) WithTimeout(timeout time.Duration) *PostAssetRulesPreviewParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post asset rules preview params
+// SetTimeout adds the timeout to the post asset rules preview params.
 func (o *PostAssetRulesPreviewParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post asset rules preview params
+// WithContext adds the context to the post asset rules preview params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetRulesPreviewParams].
 func (o *PostAssetRulesPreviewParams) WithContext(ctx context.Context) *PostAssetRulesPreviewParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post asset rules preview params
+// SetContext adds the context to the post asset rules preview params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetRulesPreviewParams].
 func (o *PostAssetRulesPreviewParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post asset rules preview params
+// WithHTTPClient adds the HTTPClient to the post asset rules preview params.
 func (o *PostAssetRulesPreviewParams) WithHTTPClient(client *http.Client) *PostAssetRulesPreviewParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post asset rules preview params
+// SetHTTPClient adds the HTTPClient to the post asset rules preview params.
 func (o *PostAssetRulesPreviewParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithRule adds the rule to the post asset rules preview params
+// WithRule adds the rule to the post asset rules preview params.
 func (o *PostAssetRulesPreviewParams) WithRule(rule *models.PreviewRequest) *PostAssetRulesPreviewParams {
 	o.SetRule(rule)
 	return o
 }
 
-// SetRule adds the rule to the post asset rules preview params
+// SetRule adds the rule to the post asset rules preview params.
 func (o *PostAssetRulesPreviewParams) SetRule(rule *models.PreviewRequest) {
 	o.Rule = rule
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAssetRulesPreviewParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

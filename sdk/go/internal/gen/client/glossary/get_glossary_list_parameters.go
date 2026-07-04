@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetGlossaryListParams creates a new GetGlossaryListParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetGlossaryListParams() *GetGlossaryListParams {
-	return &GetGlossaryListParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetGlossaryListParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetGlossaryListParamsWithTimeout creates a new GetGlossaryListParams object
 // with the ability to set a timeout on a request.
 func NewGetGlossaryListParamsWithTimeout(timeout time.Duration) *GetGlossaryListParams {
 	return &GetGlossaryListParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetGlossaryListParamsWithContext creates a new GetGlossaryListParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryListParams].
 func NewGetGlossaryListParamsWithContext(ctx context.Context) *GetGlossaryListParams {
 	return &GetGlossaryListParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,23 +63,21 @@ GetGlossaryListParams contains all the parameters to send to the API endpoint
 */
 type GetGlossaryListParams struct {
 
-	/* Limit.
-
-	   Maximum number of terms to return
-
-	   Default: 20
-	*/
+	// Limit.
+	//
+	// Maximum number of terms to return
+	//
+	// Default: 20
 	Limit *int64
 
-	/* Offset.
-
-	   Number of terms to skip
-	*/
+	// Offset.
+	//
+	// Number of terms to skip
 	Offset *int64
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get glossary list params (not the query body).
@@ -101,71 +103,74 @@ func (o *GetGlossaryListParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get glossary list params
+// WithTimeout adds the timeout to the get glossary list params.
 func (o *GetGlossaryListParams) WithTimeout(timeout time.Duration) *GetGlossaryListParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get glossary list params
+// SetTimeout adds the timeout to the get glossary list params.
 func (o *GetGlossaryListParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get glossary list params
+// WithContext adds the context to the get glossary list params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryListParams].
 func (o *GetGlossaryListParams) WithContext(ctx context.Context) *GetGlossaryListParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get glossary list params
+// SetContext adds the context to the get glossary list params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryListParams].
 func (o *GetGlossaryListParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get glossary list params
+// WithHTTPClient adds the HTTPClient to the get glossary list params.
 func (o *GetGlossaryListParams) WithHTTPClient(client *http.Client) *GetGlossaryListParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get glossary list params
+// SetHTTPClient adds the HTTPClient to the get glossary list params.
 func (o *GetGlossaryListParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get glossary list params
+// WithLimit adds the limit to the get glossary list params.
 func (o *GetGlossaryListParams) WithLimit(limit *int64) *GetGlossaryListParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get glossary list params
+// SetLimit adds the limit to the get glossary list params.
 func (o *GetGlossaryListParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get glossary list params
+// WithOffset adds the offset to the get glossary list params.
 func (o *GetGlossaryListParams) WithOffset(offset *int64) *GetGlossaryListParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get glossary list params
+// SetOffset adds the offset to the get glossary list params.
 func (o *GetGlossaryListParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetGlossaryListParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -178,7 +183,7 @@ func (o *GetGlossaryListParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -195,7 +200,7 @@ func (o *GetGlossaryListParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

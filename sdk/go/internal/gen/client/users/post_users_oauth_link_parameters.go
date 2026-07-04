@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostUsersOauthLinkParams() *PostUsersOauthLinkParams {
-	return &PostUsersOauthLinkParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostUsersOauthLinkParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostUsersOauthLinkParamsWithTimeout creates a new PostUsersOauthLinkParams object
 // with the ability to set a timeout on a request.
 func NewPostUsersOauthLinkParamsWithTimeout(timeout time.Duration) *PostUsersOauthLinkParams {
 	return &PostUsersOauthLinkParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostUsersOauthLinkParamsWithContext creates a new PostUsersOauthLinkParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersOauthLinkParams].
 func NewPostUsersOauthLinkParamsWithContext(ctx context.Context) *PostUsersOauthLinkParams {
 	return &PostUsersOauthLinkParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostUsersOauthLinkParams contains all the parameters to send to the API endpoint
 */
 type PostUsersOauthLinkParams struct {
 
-	/* Link.
-
-	   OAuth account link request
-	*/
+	// Link.
+	//
+	// OAuth account link request
 	Link *models.OAuthLinkRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post users oauth link params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostUsersOauthLinkParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post users oauth link params
+// WithTimeout adds the timeout to the post users oauth link params.
 func (o *PostUsersOauthLinkParams) WithTimeout(timeout time.Duration) *PostUsersOauthLinkParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post users oauth link params
+// SetTimeout adds the timeout to the post users oauth link params.
 func (o *PostUsersOauthLinkParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post users oauth link params
+// WithContext adds the context to the post users oauth link params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersOauthLinkParams].
 func (o *PostUsersOauthLinkParams) WithContext(ctx context.Context) *PostUsersOauthLinkParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post users oauth link params
+// SetContext adds the context to the post users oauth link params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersOauthLinkParams].
 func (o *PostUsersOauthLinkParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post users oauth link params
+// WithHTTPClient adds the HTTPClient to the post users oauth link params.
 func (o *PostUsersOauthLinkParams) WithHTTPClient(client *http.Client) *PostUsersOauthLinkParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post users oauth link params
+// SetHTTPClient adds the HTTPClient to the post users oauth link params.
 func (o *PostUsersOauthLinkParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLink adds the link to the post users oauth link params
+// WithLink adds the link to the post users oauth link params.
 func (o *PostUsersOauthLinkParams) WithLink(link *models.OAuthLinkRequest) *PostUsersOauthLinkParams {
 	o.SetLink(link)
 	return o
 }
 
-// SetLink adds the link to the post users oauth link params
+// SetLink adds the link to the post users oauth link params.
 func (o *PostUsersOauthLinkParams) SetLink(link *models.OAuthLinkRequest) {
 	o.Link = link
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostUsersOauthLinkParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

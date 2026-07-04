@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetOwnersSearchParams creates a new GetOwnersSearchParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetOwnersSearchParams() *GetOwnersSearchParams {
-	return &GetOwnersSearchParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetOwnersSearchParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetOwnersSearchParamsWithTimeout creates a new GetOwnersSearchParams object
 // with the ability to set a timeout on a request.
 func NewGetOwnersSearchParamsWithTimeout(timeout time.Duration) *GetOwnersSearchParams {
 	return &GetOwnersSearchParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetOwnersSearchParamsWithContext creates a new GetOwnersSearchParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetOwnersSearchParams].
 func NewGetOwnersSearchParamsWithContext(ctx context.Context) *GetOwnersSearchParams {
 	return &GetOwnersSearchParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,23 +63,21 @@ GetOwnersSearchParams contains all the parameters to send to the API endpoint
 */
 type GetOwnersSearchParams struct {
 
-	/* Limit.
-
-	   Maximum number of results
-
-	   Default: 20
-	*/
+	// Limit.
+	//
+	// Maximum number of results
+	//
+	// Default: 20
 	Limit *int64
 
-	/* Q.
-
-	   Search query
-	*/
+	// Q.
+	//
+	// Search query
 	Q string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get owners search params (not the query body).
@@ -98,71 +100,74 @@ func (o *GetOwnersSearchParams) SetDefaults() {
 		Limit: &limitDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get owners search params
+// WithTimeout adds the timeout to the get owners search params.
 func (o *GetOwnersSearchParams) WithTimeout(timeout time.Duration) *GetOwnersSearchParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get owners search params
+// SetTimeout adds the timeout to the get owners search params.
 func (o *GetOwnersSearchParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get owners search params
+// WithContext adds the context to the get owners search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetOwnersSearchParams].
 func (o *GetOwnersSearchParams) WithContext(ctx context.Context) *GetOwnersSearchParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get owners search params
+// SetContext adds the context to the get owners search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetOwnersSearchParams].
 func (o *GetOwnersSearchParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get owners search params
+// WithHTTPClient adds the HTTPClient to the get owners search params.
 func (o *GetOwnersSearchParams) WithHTTPClient(client *http.Client) *GetOwnersSearchParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get owners search params
+// SetHTTPClient adds the HTTPClient to the get owners search params.
 func (o *GetOwnersSearchParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get owners search params
+// WithLimit adds the limit to the get owners search params.
 func (o *GetOwnersSearchParams) WithLimit(limit *int64) *GetOwnersSearchParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get owners search params
+// SetLimit adds the limit to the get owners search params.
 func (o *GetOwnersSearchParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithQ adds the q to the get owners search params
+// WithQ adds the q to the get owners search params.
 func (o *GetOwnersSearchParams) WithQ(q string) *GetOwnersSearchParams {
 	o.SetQ(q)
 	return o
 }
 
-// SetQ adds the q to the get owners search params
+// SetQ adds the q to the get owners search params.
 func (o *GetOwnersSearchParams) SetQ(q string) {
 	o.Q = q
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetOwnersSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -175,7 +180,7 @@ func (o *GetOwnersSearchParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {

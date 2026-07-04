@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAPIV1AssetsPreviewIDParams() *GetAPIV1AssetsPreviewIDParams {
-	return &GetAPIV1AssetsPreviewIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAPIV1AssetsPreviewIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAPIV1AssetsPreviewIDParamsWithTimeout creates a new GetAPIV1AssetsPreviewIDParams object
 // with the ability to set a timeout on a request.
 func NewGetAPIV1AssetsPreviewIDParamsWithTimeout(timeout time.Duration) *GetAPIV1AssetsPreviewIDParams {
 	return &GetAPIV1AssetsPreviewIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAPIV1AssetsPreviewIDParamsWithContext creates a new GetAPIV1AssetsPreviewIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1AssetsPreviewIDParams].
 func NewGetAPIV1AssetsPreviewIDParamsWithContext(ctx context.Context) *GetAPIV1AssetsPreviewIDParams {
 	return &GetAPIV1AssetsPreviewIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetAPIV1AssetsPreviewIDParams contains all the parameters to send to the API end
 */
 type GetAPIV1AssetsPreviewIDParams struct {
 
-	/* ID.
-
-	   Asset ID
-	*/
+	// ID.
+	//
+	// Asset ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get API v1 assets preview ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetAPIV1AssetsPreviewIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get API v1 assets preview ID params
+// WithTimeout adds the timeout to the get API v1 assets preview ID params.
 func (o *GetAPIV1AssetsPreviewIDParams) WithTimeout(timeout time.Duration) *GetAPIV1AssetsPreviewIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get API v1 assets preview ID params
+// SetTimeout adds the timeout to the get API v1 assets preview ID params.
 func (o *GetAPIV1AssetsPreviewIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get API v1 assets preview ID params
+// WithContext adds the context to the get API v1 assets preview ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1AssetsPreviewIDParams].
 func (o *GetAPIV1AssetsPreviewIDParams) WithContext(ctx context.Context) *GetAPIV1AssetsPreviewIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get API v1 assets preview ID params
+// SetContext adds the context to the get API v1 assets preview ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1AssetsPreviewIDParams].
 func (o *GetAPIV1AssetsPreviewIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get API v1 assets preview ID params
+// WithHTTPClient adds the HTTPClient to the get API v1 assets preview ID params.
 func (o *GetAPIV1AssetsPreviewIDParams) WithHTTPClient(client *http.Client) *GetAPIV1AssetsPreviewIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get API v1 assets preview ID params
+// SetHTTPClient adds the HTTPClient to the get API v1 assets preview ID params.
 func (o *GetAPIV1AssetsPreviewIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get API v1 assets preview ID params
+// WithID adds the id to the get API v1 assets preview ID params.
 func (o *GetAPIV1AssetsPreviewIDParams) WithID(id string) *GetAPIV1AssetsPreviewIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get API v1 assets preview ID params
+// SetID adds the id to the get API v1 assets preview ID params.
 func (o *GetAPIV1AssetsPreviewIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAPIV1AssetsPreviewIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

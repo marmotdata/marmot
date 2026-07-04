@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetMetricsAssetsByTypeParams() *GetMetricsAssetsByTypeParams {
-	return &GetMetricsAssetsByTypeParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetMetricsAssetsByTypeParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetMetricsAssetsByTypeParamsWithTimeout creates a new GetMetricsAssetsByTypeParams object
 // with the ability to set a timeout on a request.
 func NewGetMetricsAssetsByTypeParamsWithTimeout(timeout time.Duration) *GetMetricsAssetsByTypeParams {
 	return &GetMetricsAssetsByTypeParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetMetricsAssetsByTypeParamsWithContext creates a new GetMetricsAssetsByTypeParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsAssetsByTypeParams].
 func NewGetMetricsAssetsByTypeParamsWithContext(ctx context.Context) *GetMetricsAssetsByTypeParams {
 	return &GetMetricsAssetsByTypeParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -57,9 +61,9 @@ GetMetricsAssetsByTypeParams contains all the parameters to send to the API endp
 	Typically these are written to a http.Request.
 */
 type GetMetricsAssetsByTypeParams struct {
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get metrics assets by type params (not the query body).
@@ -77,43 +81,46 @@ func (o *GetMetricsAssetsByTypeParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get metrics assets by type params
+// WithTimeout adds the timeout to the get metrics assets by type params.
 func (o *GetMetricsAssetsByTypeParams) WithTimeout(timeout time.Duration) *GetMetricsAssetsByTypeParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get metrics assets by type params
+// SetTimeout adds the timeout to the get metrics assets by type params.
 func (o *GetMetricsAssetsByTypeParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get metrics assets by type params
+// WithContext adds the context to the get metrics assets by type params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsAssetsByTypeParams].
 func (o *GetMetricsAssetsByTypeParams) WithContext(ctx context.Context) *GetMetricsAssetsByTypeParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get metrics assets by type params
+// SetContext adds the context to the get metrics assets by type params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsAssetsByTypeParams].
 func (o *GetMetricsAssetsByTypeParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get metrics assets by type params
+// WithHTTPClient adds the HTTPClient to the get metrics assets by type params.
 func (o *GetMetricsAssetsByTypeParams) WithHTTPClient(client *http.Client) *GetMetricsAssetsByTypeParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get metrics assets by type params
+// SetHTTPClient adds the HTTPClient to the get metrics assets by type params.
 func (o *GetMetricsAssetsByTypeParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetMetricsAssetsByTypeParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteLineageDirectIDParams() *DeleteLineageDirectIDParams {
-	return &DeleteLineageDirectIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteLineageDirectIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteLineageDirectIDParamsWithTimeout creates a new DeleteLineageDirectIDParams object
 // with the ability to set a timeout on a request.
 func NewDeleteLineageDirectIDParamsWithTimeout(timeout time.Duration) *DeleteLineageDirectIDParams {
 	return &DeleteLineageDirectIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteLineageDirectIDParamsWithContext creates a new DeleteLineageDirectIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteLineageDirectIDParams].
 func NewDeleteLineageDirectIDParamsWithContext(ctx context.Context) *DeleteLineageDirectIDParams {
 	return &DeleteLineageDirectIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,17 +62,16 @@ DeleteLineageDirectIDParams contains all the parameters to send to the API endpo
 */
 type DeleteLineageDirectIDParams struct {
 
-	/* ID.
-
-	   Edge ID
-
-	   Format: uuid
-	*/
+	// ID.
+	//
+	// Edge ID
+	//
+	// Format: uuid
 	ID strfmt.UUID
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete lineage direct ID params (not the query body).
@@ -86,54 +89,57 @@ func (o *DeleteLineageDirectIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete lineage direct ID params
+// WithTimeout adds the timeout to the delete lineage direct ID params.
 func (o *DeleteLineageDirectIDParams) WithTimeout(timeout time.Duration) *DeleteLineageDirectIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete lineage direct ID params
+// SetTimeout adds the timeout to the delete lineage direct ID params.
 func (o *DeleteLineageDirectIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete lineage direct ID params
+// WithContext adds the context to the delete lineage direct ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteLineageDirectIDParams].
 func (o *DeleteLineageDirectIDParams) WithContext(ctx context.Context) *DeleteLineageDirectIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete lineage direct ID params
+// SetContext adds the context to the delete lineage direct ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteLineageDirectIDParams].
 func (o *DeleteLineageDirectIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete lineage direct ID params
+// WithHTTPClient adds the HTTPClient to the delete lineage direct ID params.
 func (o *DeleteLineageDirectIDParams) WithHTTPClient(client *http.Client) *DeleteLineageDirectIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete lineage direct ID params
+// SetHTTPClient adds the HTTPClient to the delete lineage direct ID params.
 func (o *DeleteLineageDirectIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete lineage direct ID params
+// WithID adds the id to the delete lineage direct ID params.
 func (o *DeleteLineageDirectIDParams) WithID(id strfmt.UUID) *DeleteLineageDirectIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete lineage direct ID params
+// SetID adds the id to the delete lineage direct ID params.
 func (o *DeleteLineageDirectIDParams) SetID(id strfmt.UUID) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteLineageDirectIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

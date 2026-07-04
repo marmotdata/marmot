@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostRunsCompleteParams() *PostRunsCompleteParams {
-	return &PostRunsCompleteParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostRunsCompleteParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostRunsCompleteParamsWithTimeout creates a new PostRunsCompleteParams object
 // with the ability to set a timeout on a request.
 func NewPostRunsCompleteParamsWithTimeout(timeout time.Duration) *PostRunsCompleteParams {
 	return &PostRunsCompleteParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostRunsCompleteParamsWithContext creates a new PostRunsCompleteParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsCompleteParams].
 func NewPostRunsCompleteParamsWithContext(ctx context.Context) *PostRunsCompleteParams {
 	return &PostRunsCompleteParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostRunsCompleteParams contains all the parameters to send to the API endpoint
 */
 type PostRunsCompleteParams struct {
 
-	/* Request.
-
-	   Complete run request
-	*/
+	// Request.
+	//
+	// Complete run request
 	Request *models.CompleteRunRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post runs complete params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostRunsCompleteParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post runs complete params
+// WithTimeout adds the timeout to the post runs complete params.
 func (o *PostRunsCompleteParams) WithTimeout(timeout time.Duration) *PostRunsCompleteParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post runs complete params
+// SetTimeout adds the timeout to the post runs complete params.
 func (o *PostRunsCompleteParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post runs complete params
+// WithContext adds the context to the post runs complete params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsCompleteParams].
 func (o *PostRunsCompleteParams) WithContext(ctx context.Context) *PostRunsCompleteParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post runs complete params
+// SetContext adds the context to the post runs complete params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsCompleteParams].
 func (o *PostRunsCompleteParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post runs complete params
+// WithHTTPClient adds the HTTPClient to the post runs complete params.
 func (o *PostRunsCompleteParams) WithHTTPClient(client *http.Client) *PostRunsCompleteParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post runs complete params
+// SetHTTPClient adds the HTTPClient to the post runs complete params.
 func (o *PostRunsCompleteParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithRequest adds the request to the post runs complete params
+// WithRequest adds the request to the post runs complete params.
 func (o *PostRunsCompleteParams) WithRequest(request *models.CompleteRunRequest) *PostRunsCompleteParams {
 	o.SetRequest(request)
 	return o
 }
 
-// SetRequest adds the request to the post runs complete params
+// SetRequest adds the request to the post runs complete params.
 func (o *PostRunsCompleteParams) SetRequest(request *models.CompleteRunRequest) {
 	o.Request = request
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostRunsCompleteParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

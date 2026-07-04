@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAgentsAssetIDStatsParams() *GetAgentsAssetIDStatsParams {
-	return &GetAgentsAssetIDStatsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAgentsAssetIDStatsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAgentsAssetIDStatsParamsWithTimeout creates a new GetAgentsAssetIDStatsParams object
 // with the ability to set a timeout on a request.
 func NewGetAgentsAssetIDStatsParamsWithTimeout(timeout time.Duration) *GetAgentsAssetIDStatsParams {
 	return &GetAgentsAssetIDStatsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAgentsAssetIDStatsParamsWithContext creates a new GetAgentsAssetIDStatsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAgentsAssetIDStatsParams].
 func NewGetAgentsAssetIDStatsParamsWithContext(ctx context.Context) *GetAgentsAssetIDStatsParams {
 	return &GetAgentsAssetIDStatsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,21 +62,19 @@ GetAgentsAssetIDStatsParams contains all the parameters to send to the API endpo
 */
 type GetAgentsAssetIDStatsParams struct {
 
-	/* AssetID.
-
-	   Agent asset id
-	*/
+	// AssetID.
+	//
+	// Agent asset id
 	AssetID string
 
-	/* Period.
-
-	   Lookback window (e.g. 24h, 7d). Default 24h.
-	*/
+	// Period.
+	//
+	// Lookback window (e.g. 24h, 7d). Default 24h.
 	Period *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get agents asset ID stats params (not the query body).
@@ -90,65 +92,68 @@ func (o *GetAgentsAssetIDStatsParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get agents asset ID stats params
+// WithTimeout adds the timeout to the get agents asset ID stats params.
 func (o *GetAgentsAssetIDStatsParams) WithTimeout(timeout time.Duration) *GetAgentsAssetIDStatsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get agents asset ID stats params
+// SetTimeout adds the timeout to the get agents asset ID stats params.
 func (o *GetAgentsAssetIDStatsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get agents asset ID stats params
+// WithContext adds the context to the get agents asset ID stats params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAgentsAssetIDStatsParams].
 func (o *GetAgentsAssetIDStatsParams) WithContext(ctx context.Context) *GetAgentsAssetIDStatsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get agents asset ID stats params
+// SetContext adds the context to the get agents asset ID stats params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAgentsAssetIDStatsParams].
 func (o *GetAgentsAssetIDStatsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get agents asset ID stats params
+// WithHTTPClient adds the HTTPClient to the get agents asset ID stats params.
 func (o *GetAgentsAssetIDStatsParams) WithHTTPClient(client *http.Client) *GetAgentsAssetIDStatsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get agents asset ID stats params
+// SetHTTPClient adds the HTTPClient to the get agents asset ID stats params.
 func (o *GetAgentsAssetIDStatsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithAssetID adds the assetID to the get agents asset ID stats params
+// WithAssetID adds the assetID to the get agents asset ID stats params.
 func (o *GetAgentsAssetIDStatsParams) WithAssetID(assetID string) *GetAgentsAssetIDStatsParams {
 	o.SetAssetID(assetID)
 	return o
 }
 
-// SetAssetID adds the assetId to the get agents asset ID stats params
+// SetAssetID adds the assetId to the get agents asset ID stats params.
 func (o *GetAgentsAssetIDStatsParams) SetAssetID(assetID string) {
 	o.AssetID = assetID
 }
 
-// WithPeriod adds the period to the get agents asset ID stats params
+// WithPeriod adds the period to the get agents asset ID stats params.
 func (o *GetAgentsAssetIDStatsParams) WithPeriod(period *string) *GetAgentsAssetIDStatsParams {
 	o.SetPeriod(period)
 	return o
 }
 
-// SetPeriod adds the period to the get agents asset ID stats params
+// SetPeriod adds the period to the get agents asset ID stats params.
 func (o *GetAgentsAssetIDStatsParams) SetPeriod(period *string) {
 	o.Period = period
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAgentsAssetIDStatsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

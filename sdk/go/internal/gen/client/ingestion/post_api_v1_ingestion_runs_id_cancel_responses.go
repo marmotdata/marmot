@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPostAPIV1IngestionRunsIDCancelNoContent() *PostAPIV1IngestionRunsIDCance
 	return &PostAPIV1IngestionRunsIDCancelNoContent{}
 }
 
-/*
-PostAPIV1IngestionRunsIDCancelNoContent describes a response with status code 204, with default header values.
-
-No Content
-*/
+// PostAPIV1IngestionRunsIDCancelNoContent describes a response with status code 204, with default header values.
+//
+// No Content
 type PostAPIV1IngestionRunsIDCancelNoContent struct {
 }
 
@@ -112,11 +109,9 @@ func NewPostAPIV1IngestionRunsIDCancelUnauthorized() *PostAPIV1IngestionRunsIDCa
 	return &PostAPIV1IngestionRunsIDCancelUnauthorized{}
 }
 
-/*
-PostAPIV1IngestionRunsIDCancelUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PostAPIV1IngestionRunsIDCancelUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PostAPIV1IngestionRunsIDCancelUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -182,11 +177,9 @@ func NewPostAPIV1IngestionRunsIDCancelNotFound() *PostAPIV1IngestionRunsIDCancel
 	return &PostAPIV1IngestionRunsIDCancelNotFound{}
 }
 
-/*
-PostAPIV1IngestionRunsIDCancelNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PostAPIV1IngestionRunsIDCancelNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PostAPIV1IngestionRunsIDCancelNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -252,11 +245,9 @@ func NewPostAPIV1IngestionRunsIDCancelInternalServerError() *PostAPIV1IngestionR
 	return &PostAPIV1IngestionRunsIDCancelInternalServerError{}
 }
 
-/*
-PostAPIV1IngestionRunsIDCancelInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostAPIV1IngestionRunsIDCancelInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostAPIV1IngestionRunsIDCancelInternalServerError struct {
 	Payload *models.ErrorResponse
 }

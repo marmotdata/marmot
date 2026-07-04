@@ -36,11 +36,9 @@ func NewPostRunsCleanupOK() *PostRunsCleanupOK {
 	return &PostRunsCleanupOK{}
 }
 
-/*
-PostRunsCleanupOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostRunsCleanupOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostRunsCleanupOK struct {
 	Payload map[string]int64
 }

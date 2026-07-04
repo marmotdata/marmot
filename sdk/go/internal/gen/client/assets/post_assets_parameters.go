@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAssetsParams() *PostAssetsParams {
-	return &PostAssetsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAssetsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAssetsParamsWithTimeout creates a new PostAssetsParams object
 // with the ability to set a timeout on a request.
 func NewPostAssetsParamsWithTimeout(timeout time.Duration) *PostAssetsParams {
 	return &PostAssetsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAssetsParamsWithContext creates a new PostAssetsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsParams].
 func NewPostAssetsParamsWithContext(ctx context.Context) *PostAssetsParams {
 	return &PostAssetsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostAssetsParams contains all the parameters to send to the API endpoint
 */
 type PostAssetsParams struct {
 
-	/* Asset.
-
-	   Asset creation request
-	*/
+	// Asset.
+	//
+	// Asset creation request
 	Asset *models.CreateAssetRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post assets params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostAssetsParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post assets params
+// WithTimeout adds the timeout to the post assets params.
 func (o *PostAssetsParams) WithTimeout(timeout time.Duration) *PostAssetsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post assets params
+// SetTimeout adds the timeout to the post assets params.
 func (o *PostAssetsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post assets params
+// WithContext adds the context to the post assets params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsParams].
 func (o *PostAssetsParams) WithContext(ctx context.Context) *PostAssetsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post assets params
+// SetContext adds the context to the post assets params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsParams].
 func (o *PostAssetsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post assets params
+// WithHTTPClient adds the HTTPClient to the post assets params.
 func (o *PostAssetsParams) WithHTTPClient(client *http.Client) *PostAssetsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post assets params
+// SetHTTPClient adds the HTTPClient to the post assets params.
 func (o *PostAssetsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithAsset adds the asset to the post assets params
+// WithAsset adds the asset to the post assets params.
 func (o *PostAssetsParams) WithAsset(asset *models.CreateAssetRequest) *PostAssetsParams {
 	o.SetAsset(asset)
 	return o
 }
 
-// SetAsset adds the asset to the post assets params
+// SetAsset adds the asset to the post assets params.
 func (o *PostAssetsParams) SetAsset(asset *models.CreateAssetRequest) {
 	o.Asset = asset
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAssetsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

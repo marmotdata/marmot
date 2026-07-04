@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostAssetsDocumentationBatchOK() *PostAssetsDocumentationBatchOK {
 	return &PostAssetsDocumentationBatchOK{}
 }
 
-/*
-PostAssetsDocumentationBatchOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostAssetsDocumentationBatchOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostAssetsDocumentationBatchOK struct {
 	Payload *models.BatchDocumentationResponse
 }
@@ -120,11 +117,9 @@ func NewPostAssetsDocumentationBatchBadRequest() *PostAssetsDocumentationBatchBa
 	return &PostAssetsDocumentationBatchBadRequest{}
 }
 
-/*
-PostAssetsDocumentationBatchBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostAssetsDocumentationBatchBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostAssetsDocumentationBatchBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPostAssetsDocumentationBatchInternalServerError() *PostAssetsDocumentati
 	return &PostAssetsDocumentationBatchInternalServerError{}
 }
 
-/*
-PostAssetsDocumentationBatchInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostAssetsDocumentationBatchInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostAssetsDocumentationBatchInternalServerError struct {
 	Payload *models.ErrorResponse
 }

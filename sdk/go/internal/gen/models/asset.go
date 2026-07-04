@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -108,7 +109,7 @@ func (m *Asset) Validate(formats strfmt.Registry) error {
 }
 
 func (m *Asset) validateEnvironments(formats strfmt.Registry) error {
-	if swag.IsZero(m.Environments) { // not required
+	if typeutils.IsZero(m.Environments) { // not required
 		return nil
 	}
 
@@ -138,12 +139,12 @@ func (m *Asset) validateEnvironments(formats strfmt.Registry) error {
 }
 
 func (m *Asset) validateExternalLinks(formats strfmt.Registry) error {
-	if swag.IsZero(m.ExternalLinks) { // not required
+	if typeutils.IsZero(m.ExternalLinks) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.ExternalLinks); i++ {
-		if swag.IsZero(m.ExternalLinks[i]) { // not required
+		if typeutils.IsZero(m.ExternalLinks[i]) { // not required
 			continue
 		}
 
@@ -168,12 +169,12 @@ func (m *Asset) validateExternalLinks(formats strfmt.Registry) error {
 }
 
 func (m *Asset) validateSources(formats strfmt.Registry) error {
-	if swag.IsZero(m.Sources) { // not required
+	if typeutils.IsZero(m.Sources) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Sources); i++ {
-		if swag.IsZero(m.Sources[i]) { // not required
+		if typeutils.IsZero(m.Sources[i]) { // not required
 			continue
 		}
 
@@ -240,7 +241,7 @@ func (m *Asset) contextValidateExternalLinks(ctx context.Context, formats strfmt
 
 		if m.ExternalLinks[i] != nil {
 
-			if swag.IsZero(m.ExternalLinks[i]) { // not required
+			if typeutils.IsZero(m.ExternalLinks[i]) { // not required
 				return nil
 			}
 
@@ -269,7 +270,7 @@ func (m *Asset) contextValidateSources(ctx context.Context, formats strfmt.Regis
 
 		if m.Sources[i] != nil {
 
-			if swag.IsZero(m.Sources[i]) { // not required
+			if typeutils.IsZero(m.Sources[i]) { // not required
 				return nil
 			}
 
@@ -297,13 +298,13 @@ func (m *Asset) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *Asset) UnmarshalBinary(b []byte) error {
 	var res Asset
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

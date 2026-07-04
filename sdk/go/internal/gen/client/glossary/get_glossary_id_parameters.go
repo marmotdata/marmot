@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetGlossaryIDParams() *GetGlossaryIDParams {
-	return &GetGlossaryIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetGlossaryIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetGlossaryIDParamsWithTimeout creates a new GetGlossaryIDParams object
 // with the ability to set a timeout on a request.
 func NewGetGlossaryIDParamsWithTimeout(timeout time.Duration) *GetGlossaryIDParams {
 	return &GetGlossaryIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetGlossaryIDParamsWithContext creates a new GetGlossaryIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryIDParams].
 func NewGetGlossaryIDParamsWithContext(ctx context.Context) *GetGlossaryIDParams {
 	return &GetGlossaryIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetGlossaryIDParams contains all the parameters to send to the API endpoint
 */
 type GetGlossaryIDParams struct {
 
-	/* ID.
-
-	   Glossary Term ID
-	*/
+	// ID.
+	//
+	// Glossary Term ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get glossary ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetGlossaryIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get glossary ID params
+// WithTimeout adds the timeout to the get glossary ID params.
 func (o *GetGlossaryIDParams) WithTimeout(timeout time.Duration) *GetGlossaryIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get glossary ID params
+// SetTimeout adds the timeout to the get glossary ID params.
 func (o *GetGlossaryIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get glossary ID params
+// WithContext adds the context to the get glossary ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryIDParams].
 func (o *GetGlossaryIDParams) WithContext(ctx context.Context) *GetGlossaryIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get glossary ID params
+// SetContext adds the context to the get glossary ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryIDParams].
 func (o *GetGlossaryIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get glossary ID params
+// WithHTTPClient adds the HTTPClient to the get glossary ID params.
 func (o *GetGlossaryIDParams) WithHTTPClient(client *http.Client) *GetGlossaryIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get glossary ID params
+// SetHTTPClient adds the HTTPClient to the get glossary ID params.
 func (o *GetGlossaryIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get glossary ID params
+// WithID adds the id to the get glossary ID params.
 func (o *GetGlossaryIDParams) WithID(id string) *GetGlossaryIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get glossary ID params
+// SetID adds the id to the get glossary ID params.
 func (o *GetGlossaryIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetGlossaryIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

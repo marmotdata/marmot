@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPostAPIV1IngestionSchedulesCreated() *PostAPIV1IngestionSchedulesCreated
 	return &PostAPIV1IngestionSchedulesCreated{}
 }
 
-/*
-PostAPIV1IngestionSchedulesCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostAPIV1IngestionSchedulesCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostAPIV1IngestionSchedulesCreated struct {
 	Payload *models.Schedule
 }
@@ -126,11 +123,9 @@ func NewPostAPIV1IngestionSchedulesBadRequest() *PostAPIV1IngestionSchedulesBadR
 	return &PostAPIV1IngestionSchedulesBadRequest{}
 }
 
-/*
-PostAPIV1IngestionSchedulesBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostAPIV1IngestionSchedulesBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostAPIV1IngestionSchedulesBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPostAPIV1IngestionSchedulesUnauthorized() *PostAPIV1IngestionSchedulesUn
 	return &PostAPIV1IngestionSchedulesUnauthorized{}
 }
 
-/*
-PostAPIV1IngestionSchedulesUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PostAPIV1IngestionSchedulesUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PostAPIV1IngestionSchedulesUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPostAPIV1IngestionSchedulesInternalServerError() *PostAPIV1IngestionSche
 	return &PostAPIV1IngestionSchedulesInternalServerError{}
 }
 
-/*
-PostAPIV1IngestionSchedulesInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostAPIV1IngestionSchedulesInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostAPIV1IngestionSchedulesInternalServerError struct {
 	Payload *models.ErrorResponse
 }

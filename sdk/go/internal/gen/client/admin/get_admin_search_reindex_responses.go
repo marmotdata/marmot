@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetAdminSearchReindexOK() *GetAdminSearchReindexOK {
 	return &GetAdminSearchReindexOK{}
 }
 
-/*
-GetAdminSearchReindexOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAdminSearchReindexOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAdminSearchReindexOK struct {
 	Payload *models.ReindexStatusResponse
 }
@@ -120,11 +117,9 @@ func NewGetAdminSearchReindexUnauthorized() *GetAdminSearchReindexUnauthorized {
 	return &GetAdminSearchReindexUnauthorized{}
 }
 
-/*
-GetAdminSearchReindexUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// GetAdminSearchReindexUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type GetAdminSearchReindexUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewGetAdminSearchReindexForbidden() *GetAdminSearchReindexForbidden {
 	return &GetAdminSearchReindexForbidden{}
 }
 
-/*
-GetAdminSearchReindexForbidden describes a response with status code 403, with default header values.
-
-Forbidden
-*/
+// GetAdminSearchReindexForbidden describes a response with status code 403, with default header values.
+//
+// Forbidden
 type GetAdminSearchReindexForbidden struct {
 	Payload *models.ErrorResponse
 }

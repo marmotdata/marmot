@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsLookupTypeServiceNameParams() *GetAssetsLookupTypeServiceNameParams {
-	return &GetAssetsLookupTypeServiceNameParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsLookupTypeServiceNameParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsLookupTypeServiceNameParamsWithTimeout creates a new GetAssetsLookupTypeServiceNameParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsLookupTypeServiceNameParamsWithTimeout(timeout time.Duration) *GetAssetsLookupTypeServiceNameParams {
 	return &GetAssetsLookupTypeServiceNameParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsLookupTypeServiceNameParamsWithContext creates a new GetAssetsLookupTypeServiceNameParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsLookupTypeServiceNameParams].
 func NewGetAssetsLookupTypeServiceNameParamsWithContext(ctx context.Context) *GetAssetsLookupTypeServiceNameParams {
 	return &GetAssetsLookupTypeServiceNameParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,27 +62,24 @@ GetAssetsLookupTypeServiceNameParams contains all the parameters to send to the 
 */
 type GetAssetsLookupTypeServiceNameParams struct {
 
-	/* Name.
-
-	   Asset name
-	*/
+	// Name.
+	//
+	// Asset name
 	Name string
 
-	/* Service.
-
-	   Service/Provider name
-	*/
+	// Service.
+	//
+	// Service/Provider name
 	Service string
 
-	/* Type.
-
-	   Asset type
-	*/
+	// Type.
+	//
+	// Asset type
 	Type string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets lookup type service name params (not the query body).
@@ -96,76 +97,79 @@ func (o *GetAssetsLookupTypeServiceNameParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get assets lookup type service name params
+// WithTimeout adds the timeout to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) WithTimeout(timeout time.Duration) *GetAssetsLookupTypeServiceNameParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets lookup type service name params
+// SetTimeout adds the timeout to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets lookup type service name params
+// WithContext adds the context to the get assets lookup type service name params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsLookupTypeServiceNameParams].
 func (o *GetAssetsLookupTypeServiceNameParams) WithContext(ctx context.Context) *GetAssetsLookupTypeServiceNameParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets lookup type service name params
+// SetContext adds the context to the get assets lookup type service name params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsLookupTypeServiceNameParams].
 func (o *GetAssetsLookupTypeServiceNameParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets lookup type service name params
+// WithHTTPClient adds the HTTPClient to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) WithHTTPClient(client *http.Client) *GetAssetsLookupTypeServiceNameParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets lookup type service name params
+// SetHTTPClient adds the HTTPClient to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithName adds the name to the get assets lookup type service name params
+// WithName adds the name to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) WithName(name string) *GetAssetsLookupTypeServiceNameParams {
 	o.SetName(name)
 	return o
 }
 
-// SetName adds the name to the get assets lookup type service name params
+// SetName adds the name to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) SetName(name string) {
 	o.Name = name
 }
 
-// WithService adds the service to the get assets lookup type service name params
+// WithService adds the service to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) WithService(service string) *GetAssetsLookupTypeServiceNameParams {
 	o.SetService(service)
 	return o
 }
 
-// SetService adds the service to the get assets lookup type service name params
+// SetService adds the service to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) SetService(service string) {
 	o.Service = service
 }
 
-// WithType adds the typeVar to the get assets lookup type service name params
+// WithType adds the typeVar to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) WithType(typeVar string) *GetAssetsLookupTypeServiceNameParams {
 	o.SetType(typeVar)
 	return o
 }
 
-// SetType adds the type to the get assets lookup type service name params
+// SetType adds the type to the get assets lookup type service name params.
 func (o *GetAssetsLookupTypeServiceNameParams) SetType(typeVar string) {
 	o.Type = typeVar
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsLookupTypeServiceNameParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

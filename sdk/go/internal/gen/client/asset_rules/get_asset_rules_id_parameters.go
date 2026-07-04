@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetRulesIDParams() *GetAssetRulesIDParams {
-	return &GetAssetRulesIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetRulesIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetRulesIDParamsWithTimeout creates a new GetAssetRulesIDParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetRulesIDParamsWithTimeout(timeout time.Duration) *GetAssetRulesIDParams {
 	return &GetAssetRulesIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetRulesIDParamsWithContext creates a new GetAssetRulesIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetRulesIDParams].
 func NewGetAssetRulesIDParamsWithContext(ctx context.Context) *GetAssetRulesIDParams {
 	return &GetAssetRulesIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetAssetRulesIDParams contains all the parameters to send to the API endpoint
 */
 type GetAssetRulesIDParams struct {
 
-	/* ID.
-
-	   Asset rule ID
-	*/
+	// ID.
+	//
+	// Asset rule ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get asset rules ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetAssetRulesIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get asset rules ID params
+// WithTimeout adds the timeout to the get asset rules ID params.
 func (o *GetAssetRulesIDParams) WithTimeout(timeout time.Duration) *GetAssetRulesIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get asset rules ID params
+// SetTimeout adds the timeout to the get asset rules ID params.
 func (o *GetAssetRulesIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get asset rules ID params
+// WithContext adds the context to the get asset rules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetRulesIDParams].
 func (o *GetAssetRulesIDParams) WithContext(ctx context.Context) *GetAssetRulesIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get asset rules ID params
+// SetContext adds the context to the get asset rules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetRulesIDParams].
 func (o *GetAssetRulesIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get asset rules ID params
+// WithHTTPClient adds the HTTPClient to the get asset rules ID params.
 func (o *GetAssetRulesIDParams) WithHTTPClient(client *http.Client) *GetAssetRulesIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get asset rules ID params
+// SetHTTPClient adds the HTTPClient to the get asset rules ID params.
 func (o *GetAssetRulesIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get asset rules ID params
+// WithID adds the id to the get asset rules ID params.
 func (o *GetAssetRulesIDParams) WithID(id string) *GetAssetRulesIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get asset rules ID params
+// SetID adds the id to the get asset rules ID params.
 func (o *GetAssetRulesIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetRulesIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewDeleteGlossaryIDOK() *DeleteGlossaryIDOK {
 	return &DeleteGlossaryIDOK{}
 }
 
-/*
-DeleteGlossaryIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// DeleteGlossaryIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type DeleteGlossaryIDOK struct {
 	Payload map[string]string
 }
@@ -124,11 +121,9 @@ func NewDeleteGlossaryIDBadRequest() *DeleteGlossaryIDBadRequest {
 	return &DeleteGlossaryIDBadRequest{}
 }
 
-/*
-DeleteGlossaryIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// DeleteGlossaryIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type DeleteGlossaryIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -194,11 +189,9 @@ func NewDeleteGlossaryIDNotFound() *DeleteGlossaryIDNotFound {
 	return &DeleteGlossaryIDNotFound{}
 }
 
-/*
-DeleteGlossaryIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// DeleteGlossaryIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type DeleteGlossaryIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -264,11 +257,9 @@ func NewDeleteGlossaryIDInternalServerError() *DeleteGlossaryIDInternalServerErr
 	return &DeleteGlossaryIDInternalServerError{}
 }
 
-/*
-DeleteGlossaryIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// DeleteGlossaryIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type DeleteGlossaryIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

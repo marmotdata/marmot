@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetGlossarySearchParams creates a new GetGlossarySearchParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetGlossarySearchParams() *GetGlossarySearchParams {
-	return &GetGlossarySearchParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetGlossarySearchParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetGlossarySearchParamsWithTimeout creates a new GetGlossarySearchParams object
 // with the ability to set a timeout on a request.
 func NewGetGlossarySearchParamsWithTimeout(timeout time.Duration) *GetGlossarySearchParams {
 	return &GetGlossarySearchParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetGlossarySearchParamsWithContext creates a new GetGlossarySearchParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossarySearchParams].
 func NewGetGlossarySearchParamsWithContext(ctx context.Context) *GetGlossarySearchParams {
 	return &GetGlossarySearchParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,35 +63,31 @@ GetGlossarySearchParams contains all the parameters to send to the API endpoint
 */
 type GetGlossarySearchParams struct {
 
-	/* Limit.
-
-	   Maximum number of terms to return
-
-	   Default: 20
-	*/
+	// Limit.
+	//
+	// Maximum number of terms to return
+	//
+	// Default: 20
 	Limit *int64
 
-	/* Offset.
-
-	   Number of terms to skip
-	*/
+	// Offset.
+	//
+	// Number of terms to skip
 	Offset *int64
 
-	/* ParentTermID.
-
-	   Filter by parent term ID
-	*/
+	// ParentTermID.
+	//
+	// Filter by parent term ID
 	ParentTermID *string
 
-	/* Q.
-
-	   Search query
-	*/
+	// Q.
+	//
+	// Search query
 	Q *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get glossary search params (not the query body).
@@ -113,93 +113,96 @@ func (o *GetGlossarySearchParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get glossary search params
+// WithTimeout adds the timeout to the get glossary search params.
 func (o *GetGlossarySearchParams) WithTimeout(timeout time.Duration) *GetGlossarySearchParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get glossary search params
+// SetTimeout adds the timeout to the get glossary search params.
 func (o *GetGlossarySearchParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get glossary search params
+// WithContext adds the context to the get glossary search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossarySearchParams].
 func (o *GetGlossarySearchParams) WithContext(ctx context.Context) *GetGlossarySearchParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get glossary search params
+// SetContext adds the context to the get glossary search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossarySearchParams].
 func (o *GetGlossarySearchParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get glossary search params
+// WithHTTPClient adds the HTTPClient to the get glossary search params.
 func (o *GetGlossarySearchParams) WithHTTPClient(client *http.Client) *GetGlossarySearchParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get glossary search params
+// SetHTTPClient adds the HTTPClient to the get glossary search params.
 func (o *GetGlossarySearchParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get glossary search params
+// WithLimit adds the limit to the get glossary search params.
 func (o *GetGlossarySearchParams) WithLimit(limit *int64) *GetGlossarySearchParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get glossary search params
+// SetLimit adds the limit to the get glossary search params.
 func (o *GetGlossarySearchParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get glossary search params
+// WithOffset adds the offset to the get glossary search params.
 func (o *GetGlossarySearchParams) WithOffset(offset *int64) *GetGlossarySearchParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get glossary search params
+// SetOffset adds the offset to the get glossary search params.
 func (o *GetGlossarySearchParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WithParentTermID adds the parentTermID to the get glossary search params
+// WithParentTermID adds the parentTermID to the get glossary search params.
 func (o *GetGlossarySearchParams) WithParentTermID(parentTermID *string) *GetGlossarySearchParams {
 	o.SetParentTermID(parentTermID)
 	return o
 }
 
-// SetParentTermID adds the parentTermId to the get glossary search params
+// SetParentTermID adds the parentTermId to the get glossary search params.
 func (o *GetGlossarySearchParams) SetParentTermID(parentTermID *string) {
 	o.ParentTermID = parentTermID
 }
 
-// WithQ adds the q to the get glossary search params
+// WithQ adds the q to the get glossary search params.
 func (o *GetGlossarySearchParams) WithQ(q *string) *GetGlossarySearchParams {
 	o.SetQ(q)
 	return o
 }
 
-// SetQ adds the q to the get glossary search params
+// SetQ adds the q to the get glossary search params.
 func (o *GetGlossarySearchParams) SetQ(q *string) {
 	o.Q = q
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetGlossarySearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -212,7 +215,7 @@ func (o *GetGlossarySearchParams) WriteToRequest(r runtime.ClientRequest, reg st
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -229,7 +232,7 @@ func (o *GetGlossarySearchParams) WriteToRequest(r runtime.ClientRequest, reg st
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

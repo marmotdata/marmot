@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetAssetsMyAssetsOK() *GetAssetsMyAssetsOK {
 	return &GetAssetsMyAssetsOK{}
 }
 
-/*
-GetAssetsMyAssetsOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAssetsMyAssetsOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAssetsMyAssetsOK struct {
 	Payload *models.AssetSearchResponse
 }
@@ -120,11 +117,9 @@ func NewGetAssetsMyAssetsUnauthorized() *GetAssetsMyAssetsUnauthorized {
 	return &GetAssetsMyAssetsUnauthorized{}
 }
 
-/*
-GetAssetsMyAssetsUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// GetAssetsMyAssetsUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type GetAssetsMyAssetsUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewGetAssetsMyAssetsInternalServerError() *GetAssetsMyAssetsInternalServerE
 	return &GetAssetsMyAssetsInternalServerError{}
 }
 
-/*
-GetAssetsMyAssetsInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAssetsMyAssetsInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAssetsMyAssetsInternalServerError struct {
 	Payload *models.ErrorResponse
 }

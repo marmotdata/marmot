@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // AssetSearchResponse asset search response
@@ -52,12 +53,12 @@ func (m *AssetSearchResponse) Validate(formats strfmt.Registry) error {
 }
 
 func (m *AssetSearchResponse) validateAssets(formats strfmt.Registry) error {
-	if swag.IsZero(m.Assets) { // not required
+	if typeutils.IsZero(m.Assets) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Assets); i++ {
-		if swag.IsZero(m.Assets[i]) { // not required
+		if typeutils.IsZero(m.Assets[i]) { // not required
 			continue
 		}
 
@@ -82,7 +83,7 @@ func (m *AssetSearchResponse) validateAssets(formats strfmt.Registry) error {
 }
 
 func (m *AssetSearchResponse) validateFilters(formats strfmt.Registry) error {
-	if swag.IsZero(m.Filters) { // not required
+	if typeutils.IsZero(m.Filters) { // not required
 		return nil
 	}
 
@@ -128,7 +129,7 @@ func (m *AssetSearchResponse) contextValidateAssets(ctx context.Context, formats
 
 		if m.Assets[i] != nil {
 
-			if swag.IsZero(m.Assets[i]) { // not required
+			if typeutils.IsZero(m.Assets[i]) { // not required
 				return nil
 			}
 
@@ -155,7 +156,7 @@ func (m *AssetSearchResponse) contextValidateFilters(ctx context.Context, format
 
 	if m.Filters != nil {
 
-		if swag.IsZero(m.Filters) { // not required
+		if typeutils.IsZero(m.Filters) { // not required
 			return nil
 		}
 
@@ -181,13 +182,13 @@ func (m *AssetSearchResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *AssetSearchResponse) UnmarshalBinary(b []byte) error {
 	var res AssetSearchResponse
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAssetsDocumentationParams() *PostAssetsDocumentationParams {
-	return &PostAssetsDocumentationParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAssetsDocumentationParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAssetsDocumentationParamsWithTimeout creates a new PostAssetsDocumentationParams object
 // with the ability to set a timeout on a request.
 func NewPostAssetsDocumentationParamsWithTimeout(timeout time.Duration) *PostAssetsDocumentationParams {
 	return &PostAssetsDocumentationParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAssetsDocumentationParamsWithContext creates a new PostAssetsDocumentationParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsDocumentationParams].
 func NewPostAssetsDocumentationParamsWithContext(ctx context.Context) *PostAssetsDocumentationParams {
 	return &PostAssetsDocumentationParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostAssetsDocumentationParams contains all the parameters to send to the API end
 */
 type PostAssetsDocumentationParams struct {
 
-	/* Request.
-
-	   Documentation creation request
-	*/
+	// Request.
+	//
+	// Documentation creation request
 	Request *models.DocumentationCreateRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post assets documentation params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostAssetsDocumentationParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post assets documentation params
+// WithTimeout adds the timeout to the post assets documentation params.
 func (o *PostAssetsDocumentationParams) WithTimeout(timeout time.Duration) *PostAssetsDocumentationParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post assets documentation params
+// SetTimeout adds the timeout to the post assets documentation params.
 func (o *PostAssetsDocumentationParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post assets documentation params
+// WithContext adds the context to the post assets documentation params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsDocumentationParams].
 func (o *PostAssetsDocumentationParams) WithContext(ctx context.Context) *PostAssetsDocumentationParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post assets documentation params
+// SetContext adds the context to the post assets documentation params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsDocumentationParams].
 func (o *PostAssetsDocumentationParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post assets documentation params
+// WithHTTPClient adds the HTTPClient to the post assets documentation params.
 func (o *PostAssetsDocumentationParams) WithHTTPClient(client *http.Client) *PostAssetsDocumentationParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post assets documentation params
+// SetHTTPClient adds the HTTPClient to the post assets documentation params.
 func (o *PostAssetsDocumentationParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithRequest adds the request to the post assets documentation params
+// WithRequest adds the request to the post assets documentation params.
 func (o *PostAssetsDocumentationParams) WithRequest(request *models.DocumentationCreateRequest) *PostAssetsDocumentationParams {
 	o.SetRequest(request)
 	return o
 }
 
-// SetRequest adds the request to the post assets documentation params
+// SetRequest adds the request to the post assets documentation params.
 func (o *PostAssetsDocumentationParams) SetRequest(request *models.DocumentationCreateRequest) {
 	o.Request = request
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAssetsDocumentationParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

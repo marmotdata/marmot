@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetMetricsAssetsTotalParams() *GetMetricsAssetsTotalParams {
-	return &GetMetricsAssetsTotalParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetMetricsAssetsTotalParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetMetricsAssetsTotalParamsWithTimeout creates a new GetMetricsAssetsTotalParams object
 // with the ability to set a timeout on a request.
 func NewGetMetricsAssetsTotalParamsWithTimeout(timeout time.Duration) *GetMetricsAssetsTotalParams {
 	return &GetMetricsAssetsTotalParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetMetricsAssetsTotalParamsWithContext creates a new GetMetricsAssetsTotalParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsAssetsTotalParams].
 func NewGetMetricsAssetsTotalParamsWithContext(ctx context.Context) *GetMetricsAssetsTotalParams {
 	return &GetMetricsAssetsTotalParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -57,9 +61,9 @@ GetMetricsAssetsTotalParams contains all the parameters to send to the API endpo
 	Typically these are written to a http.Request.
 */
 type GetMetricsAssetsTotalParams struct {
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get metrics assets total params (not the query body).
@@ -77,43 +81,46 @@ func (o *GetMetricsAssetsTotalParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get metrics assets total params
+// WithTimeout adds the timeout to the get metrics assets total params.
 func (o *GetMetricsAssetsTotalParams) WithTimeout(timeout time.Duration) *GetMetricsAssetsTotalParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get metrics assets total params
+// SetTimeout adds the timeout to the get metrics assets total params.
 func (o *GetMetricsAssetsTotalParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get metrics assets total params
+// WithContext adds the context to the get metrics assets total params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsAssetsTotalParams].
 func (o *GetMetricsAssetsTotalParams) WithContext(ctx context.Context) *GetMetricsAssetsTotalParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get metrics assets total params
+// SetContext adds the context to the get metrics assets total params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsAssetsTotalParams].
 func (o *GetMetricsAssetsTotalParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get metrics assets total params
+// WithHTTPClient adds the HTTPClient to the get metrics assets total params.
 func (o *GetMetricsAssetsTotalParams) WithHTTPClient(client *http.Client) *GetMetricsAssetsTotalParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get metrics assets total params
+// SetHTTPClient adds the HTTPClient to the get metrics assets total params.
 func (o *GetMetricsAssetsTotalParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetMetricsAssetsTotalParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

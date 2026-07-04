@@ -8,7 +8,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // MetadataValueSuggestion metadata value suggestion
@@ -41,7 +42,7 @@ func (m *MetadataValueSuggestion) Validate(formats strfmt.Registry) error {
 }
 
 func (m *MetadataValueSuggestion) validateExample(formats strfmt.Registry) error {
-	if swag.IsZero(m.Example) { // not required
+	if typeutils.IsZero(m.Example) { // not required
 		return nil
 	}
 
@@ -81,7 +82,7 @@ func (m *MetadataValueSuggestion) contextValidateExample(ctx context.Context, fo
 
 	if m.Example != nil {
 
-		if swag.IsZero(m.Example) { // not required
+		if typeutils.IsZero(m.Example) { // not required
 			return nil
 		}
 
@@ -107,13 +108,13 @@ func (m *MetadataValueSuggestion) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *MetadataValueSuggestion) UnmarshalBinary(b []byte) error {
 	var res MetadataValueSuggestion
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

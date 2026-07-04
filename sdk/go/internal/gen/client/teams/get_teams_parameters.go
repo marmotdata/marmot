@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetTeamsParams creates a new GetTeamsParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetTeamsParams() *GetTeamsParams {
-	return &GetTeamsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetTeamsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetTeamsParamsWithTimeout creates a new GetTeamsParams object
 // with the ability to set a timeout on a request.
 func NewGetTeamsParamsWithTimeout(timeout time.Duration) *GetTeamsParams {
 	return &GetTeamsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetTeamsParamsWithContext creates a new GetTeamsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetTeamsParams].
 func NewGetTeamsParamsWithContext(ctx context.Context) *GetTeamsParams {
 	return &GetTeamsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,23 +63,21 @@ GetTeamsParams contains all the parameters to send to the API endpoint
 */
 type GetTeamsParams struct {
 
-	/* Limit.
-
-	   Number of items to return
-
-	   Default: 50
-	*/
+	// Limit.
+	//
+	// Number of items to return
+	//
+	// Default: 50
 	Limit *int64
 
-	/* Offset.
-
-	   Number of items to skip
-	*/
+	// Offset.
+	//
+	// Number of items to skip
 	Offset *int64
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get teams params (not the query body).
@@ -101,71 +103,74 @@ func (o *GetTeamsParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get teams params
+// WithTimeout adds the timeout to the get teams params.
 func (o *GetTeamsParams) WithTimeout(timeout time.Duration) *GetTeamsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get teams params
+// SetTimeout adds the timeout to the get teams params.
 func (o *GetTeamsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get teams params
+// WithContext adds the context to the get teams params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetTeamsParams].
 func (o *GetTeamsParams) WithContext(ctx context.Context) *GetTeamsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get teams params
+// SetContext adds the context to the get teams params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetTeamsParams].
 func (o *GetTeamsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get teams params
+// WithHTTPClient adds the HTTPClient to the get teams params.
 func (o *GetTeamsParams) WithHTTPClient(client *http.Client) *GetTeamsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get teams params
+// SetHTTPClient adds the HTTPClient to the get teams params.
 func (o *GetTeamsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get teams params
+// WithLimit adds the limit to the get teams params.
 func (o *GetTeamsParams) WithLimit(limit *int64) *GetTeamsParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get teams params
+// SetLimit adds the limit to the get teams params.
 func (o *GetTeamsParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get teams params
+// WithOffset adds the offset to the get teams params.
 func (o *GetTeamsParams) WithOffset(offset *int64) *GetTeamsParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get teams params
+// SetOffset adds the offset to the get teams params.
 func (o *GetTeamsParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetTeamsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -178,7 +183,7 @@ func (o *GetTeamsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regi
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -195,7 +200,7 @@ func (o *GetTeamsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regi
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

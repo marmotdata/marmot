@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetTeamsIDOK() *GetTeamsIDOK {
 	return &GetTeamsIDOK{}
 }
 
-/*
-GetTeamsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetTeamsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetTeamsIDOK struct {
 	Payload *models.Team
 }
@@ -120,11 +117,9 @@ func NewGetTeamsIDNotFound() *GetTeamsIDNotFound {
 	return &GetTeamsIDNotFound{}
 }
 
-/*
-GetTeamsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetTeamsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetTeamsIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewGetTeamsIDInternalServerError() *GetTeamsIDInternalServerError {
 	return &GetTeamsIDInternalServerError{}
 }
 
-/*
-GetTeamsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetTeamsIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetTeamsIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

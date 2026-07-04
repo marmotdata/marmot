@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteAssetRulesIDParams() *DeleteAssetRulesIDParams {
-	return &DeleteAssetRulesIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteAssetRulesIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteAssetRulesIDParamsWithTimeout creates a new DeleteAssetRulesIDParams object
 // with the ability to set a timeout on a request.
 func NewDeleteAssetRulesIDParamsWithTimeout(timeout time.Duration) *DeleteAssetRulesIDParams {
 	return &DeleteAssetRulesIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteAssetRulesIDParamsWithContext creates a new DeleteAssetRulesIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAssetRulesIDParams].
 func NewDeleteAssetRulesIDParamsWithContext(ctx context.Context) *DeleteAssetRulesIDParams {
 	return &DeleteAssetRulesIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ DeleteAssetRulesIDParams contains all the parameters to send to the API endpoint
 */
 type DeleteAssetRulesIDParams struct {
 
-	/* ID.
-
-	   Asset rule ID
-	*/
+	// ID.
+	//
+	// Asset rule ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete asset rules ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *DeleteAssetRulesIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete asset rules ID params
+// WithTimeout adds the timeout to the delete asset rules ID params.
 func (o *DeleteAssetRulesIDParams) WithTimeout(timeout time.Duration) *DeleteAssetRulesIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete asset rules ID params
+// SetTimeout adds the timeout to the delete asset rules ID params.
 func (o *DeleteAssetRulesIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete asset rules ID params
+// WithContext adds the context to the delete asset rules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAssetRulesIDParams].
 func (o *DeleteAssetRulesIDParams) WithContext(ctx context.Context) *DeleteAssetRulesIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete asset rules ID params
+// SetContext adds the context to the delete asset rules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAssetRulesIDParams].
 func (o *DeleteAssetRulesIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete asset rules ID params
+// WithHTTPClient adds the HTTPClient to the delete asset rules ID params.
 func (o *DeleteAssetRulesIDParams) WithHTTPClient(client *http.Client) *DeleteAssetRulesIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete asset rules ID params
+// SetHTTPClient adds the HTTPClient to the delete asset rules ID params.
 func (o *DeleteAssetRulesIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete asset rules ID params
+// WithID adds the id to the delete asset rules ID params.
 func (o *DeleteAssetRulesIDParams) WithID(id string) *DeleteAssetRulesIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete asset rules ID params
+// SetID adds the id to the delete asset rules ID params.
 func (o *DeleteAssetRulesIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteAssetRulesIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

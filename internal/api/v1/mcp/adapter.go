@@ -12,12 +12,21 @@ type teamServiceAdapter struct {
 	teamService *team.Service
 }
 
+func toMCPTeam(t *team.Team) *mcp.Team {
+	return &mcp.Team{
+		ID:          t.ID,
+		Name:        t.Name,
+		Description: t.Description,
+		Tags:        t.Tags,
+	}
+}
+
 func (a *teamServiceAdapter) GetTeam(ctx context.Context, id string) (*mcp.Team, error) {
 	t, err := a.teamService.GetTeam(ctx, id)
 	if err != nil {
 		return nil, err
 	}
-	return &mcp.Team{ID: t.ID, Name: t.Name}, nil
+	return toMCPTeam(t), nil
 }
 
 func (a *teamServiceAdapter) GetTeamByName(ctx context.Context, name string) (*mcp.Team, error) {
@@ -25,7 +34,52 @@ func (a *teamServiceAdapter) GetTeamByName(ctx context.Context, name string) (*m
 	if err != nil {
 		return nil, err
 	}
-	return &mcp.Team{ID: t.ID, Name: t.Name}, nil
+	return toMCPTeam(t), nil
+}
+
+func (a *teamServiceAdapter) ListTeams(ctx context.Context, limit, offset int) ([]*mcp.Team, int, error) {
+	teams, total, err := a.teamService.ListTeams(ctx, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	mcpTeams := make([]*mcp.Team, len(teams))
+	for i, t := range teams {
+		mcpTeams[i] = toMCPTeam(t)
+	}
+	return mcpTeams, total, nil
+}
+
+func (a *teamServiceAdapter) ListMembers(ctx context.Context, teamID string) ([]*mcp.TeamMember, error) {
+	members, err := a.teamService.ListMembers(ctx, teamID)
+	if err != nil {
+		return nil, err
+	}
+
+	mcpMembers := make([]*mcp.TeamMember, len(members))
+	for i, m := range members {
+		mcpMembers[i] = &mcp.TeamMember{
+			UserID:   m.UserID,
+			Username: m.Username,
+			Name:     m.Name,
+			Email:    m.Email,
+			Role:     m.Role,
+		}
+	}
+	return mcpMembers, nil
+}
+
+func (a *teamServiceAdapter) ListUserTeams(ctx context.Context, userID string) ([]*mcp.Team, error) {
+	teams, err := a.teamService.ListUserTeams(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	mcpTeams := make([]*mcp.Team, len(teams))
+	for i, t := range teams {
+		mcpTeams[i] = toMCPTeam(t)
+	}
+	return mcpTeams, nil
 }
 
 func (a *teamServiceAdapter) FindSimilarTeamNames(ctx context.Context, searchTerm string, limit int) ([]string, error) {

@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // SearchResponse search response
@@ -52,7 +53,7 @@ func (m *SearchResponse) Validate(formats strfmt.Registry) error {
 }
 
 func (m *SearchResponse) validateFacets(formats strfmt.Registry) error {
-	if swag.IsZero(m.Facets) { // not required
+	if typeutils.IsZero(m.Facets) { // not required
 		return nil
 	}
 
@@ -75,12 +76,12 @@ func (m *SearchResponse) validateFacets(formats strfmt.Registry) error {
 }
 
 func (m *SearchResponse) validateResults(formats strfmt.Registry) error {
-	if swag.IsZero(m.Results) { // not required
+	if typeutils.IsZero(m.Results) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Results); i++ {
-		if swag.IsZero(m.Results[i]) { // not required
+		if typeutils.IsZero(m.Results[i]) { // not required
 			continue
 		}
 
@@ -126,7 +127,7 @@ func (m *SearchResponse) contextValidateFacets(ctx context.Context, formats strf
 
 	if m.Facets != nil {
 
-		if swag.IsZero(m.Facets) { // not required
+		if typeutils.IsZero(m.Facets) { // not required
 			return nil
 		}
 
@@ -153,7 +154,7 @@ func (m *SearchResponse) contextValidateResults(ctx context.Context, formats str
 
 		if m.Results[i] != nil {
 
-			if swag.IsZero(m.Results[i]) { // not required
+			if typeutils.IsZero(m.Results[i]) { // not required
 				return nil
 			}
 
@@ -181,13 +182,13 @@ func (m *SearchResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *SearchResponse) UnmarshalBinary(b []byte) error {
 	var res SearchResponse
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

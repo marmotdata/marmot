@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostAPIV1LineageOK() *PostAPIV1LineageOK {
 	return &PostAPIV1LineageOK{}
 }
 
-/*
-PostAPIV1LineageOK describes a response with status code 200, with default header values.
-
-Event processed successfully
-*/
+// PostAPIV1LineageOK describes a response with status code 200, with default header values.
+//
+// Event processed successfully
 type PostAPIV1LineageOK struct {
 }
 
@@ -106,11 +103,9 @@ func NewPostAPIV1LineageBadRequest() *PostAPIV1LineageBadRequest {
 	return &PostAPIV1LineageBadRequest{}
 }
 
-/*
-PostAPIV1LineageBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostAPIV1LineageBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostAPIV1LineageBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -176,11 +171,9 @@ func NewPostAPIV1LineageInternalServerError() *PostAPIV1LineageInternalServerErr
 	return &PostAPIV1LineageInternalServerError{}
 }
 
-/*
-PostAPIV1LineageInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostAPIV1LineageInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostAPIV1LineageInternalServerError struct {
 	Payload *models.ErrorResponse
 }

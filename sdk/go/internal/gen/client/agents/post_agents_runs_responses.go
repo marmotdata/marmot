@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -38,11 +37,9 @@ func NewPostAgentsRunsCreated() *PostAgentsRunsCreated {
 	return &PostAgentsRunsCreated{}
 }
 
-/*
-PostAgentsRunsCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostAgentsRunsCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostAgentsRunsCreated struct {
 	Payload *models.AgentRun
 }

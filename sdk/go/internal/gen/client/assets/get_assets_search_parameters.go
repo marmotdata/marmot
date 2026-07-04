@@ -11,7 +11,8 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
+	"github.com/go-openapi/swag/stringutils"
 )
 
 // NewGetAssetsSearchParams creates a new GetAssetsSearchParams object,
@@ -21,24 +22,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsSearchParams() *GetAssetsSearchParams {
-	return &GetAssetsSearchParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsSearchParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsSearchParamsWithTimeout creates a new GetAssetsSearchParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsSearchParamsWithTimeout(timeout time.Duration) *GetAssetsSearchParams {
 	return &GetAssetsSearchParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsSearchParamsWithContext creates a new GetAssetsSearchParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSearchParams].
 func NewGetAssetsSearchParamsWithContext(ctx context.Context) *GetAssetsSearchParams {
 	return &GetAssetsSearchParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,53 +64,46 @@ GetAssetsSearchParams contains all the parameters to send to the API endpoint
 */
 type GetAssetsSearchParams struct {
 
-	/* CalculateCounts.
-
-	   Calculate filter counts
-	*/
+	// CalculateCounts.
+	//
+	// Calculate filter counts
 	CalculateCounts *bool
 
-	/* Limit.
-
-	   Number of items to return
-
-	   Default: 50
-	*/
+	// Limit.
+	//
+	// Number of items to return
+	//
+	// Default: 50
 	Limit *int64
 
-	/* Offset.
-
-	   Number of items to skip
-	*/
+	// Offset.
+	//
+	// Number of items to skip
 	Offset *int64
 
-	/* Q.
-
-	   Search query
-	*/
+	// Q.
+	//
+	// Search query
 	Q *string
 
-	/* Services.
-
-	   Filter by services
-	*/
+	// Services.
+	//
+	// Filter by services
 	Services []string
 
-	/* Tags.
-
-	   Filter by tags
-	*/
+	// Tags.
+	//
+	// Filter by tags
 	Tags []string
 
-	/* Types.
-
-	   Filter by asset types
-	*/
+	// Types.
+	//
+	// Filter by asset types
 	Types []string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets search params (not the query body).
@@ -134,126 +132,129 @@ func (o *GetAssetsSearchParams) SetDefaults() {
 		Offset:          &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get assets search params
+// WithTimeout adds the timeout to the get assets search params.
 func (o *GetAssetsSearchParams) WithTimeout(timeout time.Duration) *GetAssetsSearchParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets search params
+// SetTimeout adds the timeout to the get assets search params.
 func (o *GetAssetsSearchParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets search params
+// WithContext adds the context to the get assets search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSearchParams].
 func (o *GetAssetsSearchParams) WithContext(ctx context.Context) *GetAssetsSearchParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets search params
+// SetContext adds the context to the get assets search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSearchParams].
 func (o *GetAssetsSearchParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets search params
+// WithHTTPClient adds the HTTPClient to the get assets search params.
 func (o *GetAssetsSearchParams) WithHTTPClient(client *http.Client) *GetAssetsSearchParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets search params
+// SetHTTPClient adds the HTTPClient to the get assets search params.
 func (o *GetAssetsSearchParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithCalculateCounts adds the calculateCounts to the get assets search params
+// WithCalculateCounts adds the calculateCounts to the get assets search params.
 func (o *GetAssetsSearchParams) WithCalculateCounts(calculateCounts *bool) *GetAssetsSearchParams {
 	o.SetCalculateCounts(calculateCounts)
 	return o
 }
 
-// SetCalculateCounts adds the calculateCounts to the get assets search params
+// SetCalculateCounts adds the calculateCounts to the get assets search params.
 func (o *GetAssetsSearchParams) SetCalculateCounts(calculateCounts *bool) {
 	o.CalculateCounts = calculateCounts
 }
 
-// WithLimit adds the limit to the get assets search params
+// WithLimit adds the limit to the get assets search params.
 func (o *GetAssetsSearchParams) WithLimit(limit *int64) *GetAssetsSearchParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get assets search params
+// SetLimit adds the limit to the get assets search params.
 func (o *GetAssetsSearchParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get assets search params
+// WithOffset adds the offset to the get assets search params.
 func (o *GetAssetsSearchParams) WithOffset(offset *int64) *GetAssetsSearchParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get assets search params
+// SetOffset adds the offset to the get assets search params.
 func (o *GetAssetsSearchParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WithQ adds the q to the get assets search params
+// WithQ adds the q to the get assets search params.
 func (o *GetAssetsSearchParams) WithQ(q *string) *GetAssetsSearchParams {
 	o.SetQ(q)
 	return o
 }
 
-// SetQ adds the q to the get assets search params
+// SetQ adds the q to the get assets search params.
 func (o *GetAssetsSearchParams) SetQ(q *string) {
 	o.Q = q
 }
 
-// WithServices adds the services to the get assets search params
+// WithServices adds the services to the get assets search params.
 func (o *GetAssetsSearchParams) WithServices(services []string) *GetAssetsSearchParams {
 	o.SetServices(services)
 	return o
 }
 
-// SetServices adds the services to the get assets search params
+// SetServices adds the services to the get assets search params.
 func (o *GetAssetsSearchParams) SetServices(services []string) {
 	o.Services = services
 }
 
-// WithTags adds the tags to the get assets search params
+// WithTags adds the tags to the get assets search params.
 func (o *GetAssetsSearchParams) WithTags(tags []string) *GetAssetsSearchParams {
 	o.SetTags(tags)
 	return o
 }
 
-// SetTags adds the tags to the get assets search params
+// SetTags adds the tags to the get assets search params.
 func (o *GetAssetsSearchParams) SetTags(tags []string) {
 	o.Tags = tags
 }
 
-// WithTypes adds the types to the get assets search params
+// WithTypes adds the types to the get assets search params.
 func (o *GetAssetsSearchParams) WithTypes(types []string) *GetAssetsSearchParams {
 	o.SetTypes(types)
 	return o
 }
 
-// SetTypes adds the types to the get assets search params
+// SetTypes adds the types to the get assets search params.
 func (o *GetAssetsSearchParams) SetTypes(types []string) {
 	o.Types = types
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -266,7 +267,7 @@ func (o *GetAssetsSearchParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		if o.CalculateCounts != nil {
 			qrCalculateCounts = *o.CalculateCounts
 		}
-		qCalculateCounts := swag.FormatBool(qrCalculateCounts)
+		qCalculateCounts := conv.FormatBool(qrCalculateCounts)
 		if qCalculateCounts != "" {
 
 			if err := r.SetQueryParam("calculateCounts", qCalculateCounts); err != nil {
@@ -283,7 +284,7 @@ func (o *GetAssetsSearchParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -300,7 +301,7 @@ func (o *GetAssetsSearchParams) WriteToRequest(r runtime.ClientRequest, reg strf
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {
@@ -365,7 +366,7 @@ func (o *GetAssetsSearchParams) WriteToRequest(r runtime.ClientRequest, reg strf
 	return nil
 }
 
-// bindParamGetAssetsSearch binds the parameter services
+// bindParamGetAssetsSearch binds the parameter services.
 func (o *GetAssetsSearchParams) bindParamServices(formats strfmt.Registry) []string {
 	servicesIR := o.Services
 
@@ -377,12 +378,12 @@ func (o *GetAssetsSearchParams) bindParamServices(formats strfmt.Registry) []str
 	}
 
 	// items.CollectionFormat: "csv"
-	servicesIS := swag.JoinByFormat(servicesIC, "csv")
+	servicesIS := stringutils.JoinByFormat(servicesIC, "csv")
 
 	return servicesIS
 }
 
-// bindParamGetAssetsSearch binds the parameter tags
+// bindParamGetAssetsSearch binds the parameter tags.
 func (o *GetAssetsSearchParams) bindParamTags(formats strfmt.Registry) []string {
 	tagsIR := o.Tags
 
@@ -394,12 +395,12 @@ func (o *GetAssetsSearchParams) bindParamTags(formats strfmt.Registry) []string 
 	}
 
 	// items.CollectionFormat: "csv"
-	tagsIS := swag.JoinByFormat(tagsIC, "csv")
+	tagsIS := stringutils.JoinByFormat(tagsIC, "csv")
 
 	return tagsIS
 }
 
-// bindParamGetAssetsSearch binds the parameter types
+// bindParamGetAssetsSearch binds the parameter types.
 func (o *GetAssetsSearchParams) bindParamTypes(formats strfmt.Registry) []string {
 	typesIR := o.Types
 
@@ -411,7 +412,7 @@ func (o *GetAssetsSearchParams) bindParamTypes(formats strfmt.Registry) []string
 	}
 
 	// items.CollectionFormat: "csv"
-	typesIS := swag.JoinByFormat(typesIC, "csv")
+	typesIS := stringutils.JoinByFormat(typesIC, "csv")
 
 	return typesIS
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetLineageDirectIDOK() *GetLineageDirectIDOK {
 	return &GetLineageDirectIDOK{}
 }
 
-/*
-GetLineageDirectIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetLineageDirectIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetLineageDirectIDOK struct {
 	Payload *models.LineageEdge
 }
@@ -120,11 +117,9 @@ func NewGetLineageDirectIDNotFound() *GetLineageDirectIDNotFound {
 	return &GetLineageDirectIDNotFound{}
 }
 
-/*
-GetLineageDirectIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetLineageDirectIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetLineageDirectIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewGetLineageDirectIDInternalServerError() *GetLineageDirectIDInternalServe
 	return &GetLineageDirectIDInternalServerError{}
 }
 
-/*
-GetLineageDirectIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetLineageDirectIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetLineageDirectIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

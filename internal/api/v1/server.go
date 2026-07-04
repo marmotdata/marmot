@@ -530,7 +530,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		users.NewHandler(userSvc, authSvc, config),
 		authHandler,
 		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
-		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, lineageSvc, finalSearchSvc, authSvc, config),
+		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),

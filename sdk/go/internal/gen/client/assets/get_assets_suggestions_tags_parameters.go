@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetAssetsSuggestionsTagsParams creates a new GetAssetsSuggestionsTagsParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsSuggestionsTagsParams() *GetAssetsSuggestionsTagsParams {
-	return &GetAssetsSuggestionsTagsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsSuggestionsTagsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsSuggestionsTagsParamsWithTimeout creates a new GetAssetsSuggestionsTagsParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsSuggestionsTagsParamsWithTimeout(timeout time.Duration) *GetAssetsSuggestionsTagsParams {
 	return &GetAssetsSuggestionsTagsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsSuggestionsTagsParamsWithContext creates a new GetAssetsSuggestionsTagsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSuggestionsTagsParams].
 func NewGetAssetsSuggestionsTagsParamsWithContext(ctx context.Context) *GetAssetsSuggestionsTagsParams {
 	return &GetAssetsSuggestionsTagsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,23 +63,21 @@ GetAssetsSuggestionsTagsParams contains all the parameters to send to the API en
 */
 type GetAssetsSuggestionsTagsParams struct {
 
-	/* Limit.
-
-	   Maximum number of suggestions
-
-	   Default: 10
-	*/
+	// Limit.
+	//
+	// Maximum number of suggestions
+	//
+	// Default: 10
 	Limit *int64
 
-	/* Prefix.
-
-	   Tag prefix to filter by
-	*/
+	// Prefix.
+	//
+	// Tag prefix to filter by
 	Prefix *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets suggestions tags params (not the query body).
@@ -98,71 +100,74 @@ func (o *GetAssetsSuggestionsTagsParams) SetDefaults() {
 		Limit: &limitDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get assets suggestions tags params
+// WithTimeout adds the timeout to the get assets suggestions tags params.
 func (o *GetAssetsSuggestionsTagsParams) WithTimeout(timeout time.Duration) *GetAssetsSuggestionsTagsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets suggestions tags params
+// SetTimeout adds the timeout to the get assets suggestions tags params.
 func (o *GetAssetsSuggestionsTagsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets suggestions tags params
+// WithContext adds the context to the get assets suggestions tags params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSuggestionsTagsParams].
 func (o *GetAssetsSuggestionsTagsParams) WithContext(ctx context.Context) *GetAssetsSuggestionsTagsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets suggestions tags params
+// SetContext adds the context to the get assets suggestions tags params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSuggestionsTagsParams].
 func (o *GetAssetsSuggestionsTagsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets suggestions tags params
+// WithHTTPClient adds the HTTPClient to the get assets suggestions tags params.
 func (o *GetAssetsSuggestionsTagsParams) WithHTTPClient(client *http.Client) *GetAssetsSuggestionsTagsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets suggestions tags params
+// SetHTTPClient adds the HTTPClient to the get assets suggestions tags params.
 func (o *GetAssetsSuggestionsTagsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get assets suggestions tags params
+// WithLimit adds the limit to the get assets suggestions tags params.
 func (o *GetAssetsSuggestionsTagsParams) WithLimit(limit *int64) *GetAssetsSuggestionsTagsParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get assets suggestions tags params
+// SetLimit adds the limit to the get assets suggestions tags params.
 func (o *GetAssetsSuggestionsTagsParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithPrefix adds the prefix to the get assets suggestions tags params
+// WithPrefix adds the prefix to the get assets suggestions tags params.
 func (o *GetAssetsSuggestionsTagsParams) WithPrefix(prefix *string) *GetAssetsSuggestionsTagsParams {
 	o.SetPrefix(prefix)
 	return o
 }
 
-// SetPrefix adds the prefix to the get assets suggestions tags params
+// SetPrefix adds the prefix to the get assets suggestions tags params.
 func (o *GetAssetsSuggestionsTagsParams) SetPrefix(prefix *string) {
 	o.Prefix = prefix
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsSuggestionsTagsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -175,7 +180,7 @@ func (o *GetAssetsSuggestionsTagsParams) WriteToRequest(r runtime.ClientRequest,
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {

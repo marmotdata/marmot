@@ -3,7 +3,9 @@
 package plugins
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new plugins API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new plugins API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new plugins API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,34 +44,57 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for plugins API
-*/
+// Client for plugins API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// GetAPIV1PluginsAwsCredentialsStatus get a w s credential detection status.
 	GetAPIV1PluginsAwsCredentialsStatus(params *GetAPIV1PluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetAPIV1PluginsAwsCredentialsStatusOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// GetAPIV1PluginsAwsCredentialsStatusContext get a w s credential detection status.
+	GetAPIV1PluginsAwsCredentialsStatusContext(ctx context.Context, params *GetAPIV1PluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetAPIV1PluginsAwsCredentialsStatusOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-GetAPIV1PluginsAwsCredentialsStatus gets a w s credential detection status
-
-Detects if AWS credentials are available from environment or config files
-*/
+// GetAPIV1PluginsAwsCredentialsStatus gets a w s credential detection status.
+//
+// Detects if AWS credentials are available from environment or config files.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1PluginsAwsCredentialsStatusContext] instead.
 func (a *Client) GetAPIV1PluginsAwsCredentialsStatus(params *GetAPIV1PluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetAPIV1PluginsAwsCredentialsStatusOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1PluginsAwsCredentialsStatusContext(ctx, params, opts...)
+}
+
+// GetAPIV1PluginsAwsCredentialsStatusContext gets a w s credential detection status.
+//
+// Detects if AWS credentials are available from environment or config files.
+//
+// Do not use the deprecated [GetAPIV1PluginsAwsCredentialsStatusParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1PluginsAwsCredentialsStatusContext(ctx context.Context, params *GetAPIV1PluginsAwsCredentialsStatusParams, opts ...ClientOption) (*GetAPIV1PluginsAwsCredentialsStatusOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPIV1PluginsAwsCredentialsStatusParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPIV1PluginsAwsCredentialsStatus",
 		Method:             "GET",
@@ -77,13 +104,14 @@ func (a *Client) GetAPIV1PluginsAwsCredentialsStatus(params *GetAPIV1PluginsAwsC
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPIV1PluginsAwsCredentialsStatusReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +132,14 @@ func (a *Client) GetAPIV1PluginsAwsCredentialsStatus(params *GetAPIV1PluginsAwsC
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [PluginsParams].
+	ctx context.Context
 }

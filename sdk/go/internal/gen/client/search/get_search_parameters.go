@@ -11,7 +11,8 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
+	"github.com/go-openapi/swag/stringutils"
 )
 
 // NewGetSearchParams creates a new GetSearchParams object,
@@ -21,24 +22,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetSearchParams() *GetSearchParams {
-	return &GetSearchParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetSearchParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetSearchParamsWithTimeout creates a new GetSearchParams object
 // with the ability to set a timeout on a request.
 func NewGetSearchParamsWithTimeout(timeout time.Duration) *GetSearchParams {
 	return &GetSearchParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetSearchParamsWithContext creates a new GetSearchParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetSearchParams].
 func NewGetSearchParamsWithContext(ctx context.Context) *GetSearchParams {
 	return &GetSearchParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,35 +64,31 @@ GetSearchParams contains all the parameters to send to the API endpoint
 */
 type GetSearchParams struct {
 
-	/* Limit.
-
-	   Limit
-
-	   Default: 20
-	*/
+	// Limit.
+	//
+	// Limit
+	//
+	// Default: 20
 	Limit *int64
 
-	/* Offset.
-
-	   Offset
-	*/
+	// Offset.
+	//
+	// Offset
 	Offset *int64
 
-	/* Q.
-
-	   Search query
-	*/
+	// Q.
+	//
+	// Search query
 	Q string
 
-	/* Types.
-
-	   Filter by result types (asset, glossary, team, user)
-	*/
+	// Types.
+	//
+	// Filter by result types (asset, glossary, team, user)
 	Types []string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get search params (not the query body).
@@ -113,93 +114,96 @@ func (o *GetSearchParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get search params
+// WithTimeout adds the timeout to the get search params.
 func (o *GetSearchParams) WithTimeout(timeout time.Duration) *GetSearchParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get search params
+// SetTimeout adds the timeout to the get search params.
 func (o *GetSearchParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get search params
+// WithContext adds the context to the get search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetSearchParams].
 func (o *GetSearchParams) WithContext(ctx context.Context) *GetSearchParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get search params
+// SetContext adds the context to the get search params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetSearchParams].
 func (o *GetSearchParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get search params
+// WithHTTPClient adds the HTTPClient to the get search params.
 func (o *GetSearchParams) WithHTTPClient(client *http.Client) *GetSearchParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get search params
+// SetHTTPClient adds the HTTPClient to the get search params.
 func (o *GetSearchParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get search params
+// WithLimit adds the limit to the get search params.
 func (o *GetSearchParams) WithLimit(limit *int64) *GetSearchParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get search params
+// SetLimit adds the limit to the get search params.
 func (o *GetSearchParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get search params
+// WithOffset adds the offset to the get search params.
 func (o *GetSearchParams) WithOffset(offset *int64) *GetSearchParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get search params
+// SetOffset adds the offset to the get search params.
 func (o *GetSearchParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WithQ adds the q to the get search params
+// WithQ adds the q to the get search params.
 func (o *GetSearchParams) WithQ(q string) *GetSearchParams {
 	o.SetQ(q)
 	return o
 }
 
-// SetQ adds the q to the get search params
+// SetQ adds the q to the get search params.
 func (o *GetSearchParams) SetQ(q string) {
 	o.Q = q
 }
 
-// WithTypes adds the types to the get search params
+// WithTypes adds the types to the get search params.
 func (o *GetSearchParams) WithTypes(types []string) *GetSearchParams {
 	o.SetTypes(types)
 	return o
 }
 
-// SetTypes adds the types to the get search params
+// SetTypes adds the types to the get search params.
 func (o *GetSearchParams) SetTypes(types []string) {
 	o.Types = types
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -212,7 +216,7 @@ func (o *GetSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -229,7 +233,7 @@ func (o *GetSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {
@@ -265,7 +269,7 @@ func (o *GetSearchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Reg
 	return nil
 }
 
-// bindParamGetSearch binds the parameter types
+// bindParamGetSearch binds the parameter types.
 func (o *GetSearchParams) bindParamTypes(formats strfmt.Registry) []string {
 	typesIR := o.Types
 
@@ -277,7 +281,7 @@ func (o *GetSearchParams) bindParamTypes(formats strfmt.Registry) []string {
 	}
 
 	// items.CollectionFormat: "csv"
-	typesIS := swag.JoinByFormat(typesIC, "csv")
+	typesIS := stringutils.JoinByFormat(typesIC, "csv")
 
 	return typesIS
 }

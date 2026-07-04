@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewGetAssetsIDRunHistoryHistogramOK() *GetAssetsIDRunHistoryHistogramOK {
 	return &GetAssetsIDRunHistoryHistogramOK{}
 }
 
-/*
-GetAssetsIDRunHistoryHistogramOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAssetsIDRunHistoryHistogramOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAssetsIDRunHistoryHistogramOK struct {
 	Payload *models.HistogramResponse
 }
@@ -126,11 +123,9 @@ func NewGetAssetsIDRunHistoryHistogramBadRequest() *GetAssetsIDRunHistoryHistogr
 	return &GetAssetsIDRunHistoryHistogramBadRequest{}
 }
 
-/*
-GetAssetsIDRunHistoryHistogramBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetAssetsIDRunHistoryHistogramBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetAssetsIDRunHistoryHistogramBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewGetAssetsIDRunHistoryHistogramNotFound() *GetAssetsIDRunHistoryHistogram
 	return &GetAssetsIDRunHistoryHistogramNotFound{}
 }
 
-/*
-GetAssetsIDRunHistoryHistogramNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetAssetsIDRunHistoryHistogramNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetAssetsIDRunHistoryHistogramNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewGetAssetsIDRunHistoryHistogramInternalServerError() *GetAssetsIDRunHisto
 	return &GetAssetsIDRunHistoryHistogramInternalServerError{}
 }
 
-/*
-GetAssetsIDRunHistoryHistogramInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAssetsIDRunHistoryHistogramInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAssetsIDRunHistoryHistogramInternalServerError struct {
 	Payload *models.ErrorResponse
 }
