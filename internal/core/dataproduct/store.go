@@ -322,8 +322,9 @@ func (r *PostgresRepository) Create(ctx context.Context, dp *DataProduct, owners
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`
 
-	// tags is NOT NULL; a nil slice would encode as SQL NULL and violate the
-	// constraint, so send an empty array when no tags were provided.
+	// TODO: consider making data_products.tags nullable so an unset value is a
+	// genuine NULL rather than the empty array coerced below, letting us tell
+	// "no tags set" apart from "explicitly empty".
 	tags := dp.Tags
 	if tags == nil {
 		tags = []string{}
