@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
 )
 
@@ -60,6 +61,12 @@ func WithAnonymousContext(ctx context.Context, role string) context.Context {
 func GetAnonymousContext(ctx context.Context) (AnonymousContext, bool) {
 	val, ok := ctx.Value("anonymous_role").(AnonymousContext)
 	return val, ok
+}
+
+// PrincipalFromContext retrieves the authenticated Principal from the request context.
+func PrincipalFromContext(ctx context.Context) (auth.Principal, bool) {
+	p, ok := ctx.Value(PrincipalContextKey).(auth.Principal)
+	return p, ok
 }
 
 // GetOperatorUser returns a singleton system user for operator token authentication.

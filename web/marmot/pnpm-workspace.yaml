@@ -14,7 +14,7 @@ overrides:
   '@eslint/plugin-kit': '>=0.3.4'
   mermaid: '>=11.10.0'
   js-yaml: '>=4.1.1'
-  cookie: '>=0.7.0'
+  cookie: ^0.7.0
   flatted: '>=3.4.0'
   rollup: '>=4.59.0'
   dompurify: '>=3.4.11'
