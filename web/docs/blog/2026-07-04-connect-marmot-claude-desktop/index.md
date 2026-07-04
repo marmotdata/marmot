@@ -1,6 +1,6 @@
 ---
 slug: connect-marmot-to-claude-desktop
-title: "Connect Marmot to Claude Desktop"
+title: "Connect Claude Desktop to Marmot"
 authors:
   - name: Bruno Schaatsbergen
     url: https://github.com/bschaatsbergen
