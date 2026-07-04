@@ -3,7 +3,7 @@ sidebar_position: 2
 toc_max_heading_level: 4
 ---
 
-Using Terraform, you can manage Marmot as code, declaring your assets, lineage, and glossary terms and automating them alongside the rest of your infrastructure.
+Using Terraform, you can manage Marmot as code, declaring your Marmot resources and automating them alongside the rest of your infrastructure.
 
 ## Getting Started
 
@@ -160,7 +160,7 @@ resource "marmot_asset" "orders" {
 }
 ```
 
-See the [`marmot_asset` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.3.0/docs/resources/asset) for all available configuration options.
+See the [`marmot_asset` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/asset) for all available configuration options.
 
 ### Lineage
 
@@ -179,7 +179,7 @@ resource "marmot_lineage" "orders_to_processor" {
 }
 ```
 
-See the [`marmot_lineage` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.3.0/docs/resources/lineage) for all available configuration options.
+See the [`marmot_lineage` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/lineage) for all available configuration options.
 
 ### Glossary Terms
 
@@ -195,9 +195,81 @@ resource "marmot_glossary_term" "active_customer" {
 }
 ```
 
-See the [`marmot_glossary_term` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.3.0/docs/resources/glossary_term) for all available configuration options.
+See the [`marmot_glossary_term` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/glossary_term) for all available configuration options.
+
+### Teams
+
+Manage the teams that own catalog entities:
+
+```hcl
+resource "marmot_team" "analytics" {
+  name        = "analytics"
+  description = "Owns the reporting datasets"
+}
+```
+
+See the [`marmot_team` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/team) for all available configuration options.
+
+### Users
+
+Manage user accounts. The password is set through the write-only `password_wo` attribute (Terraform >= 1.11), so it never lands in state:
+
+```hcl
+ephemeral "random_password" "alice" {
+  length = 24
+}
+
+resource "marmot_user" "alice" {
+  name                = "Alice Nguyen"
+  username            = "alice"
+  password_wo         = ephemeral.random_password.alice.result
+  password_wo_version = "1"
+  role_names          = ["admin"]
+}
+```
+
+Change `password_wo_version` to push a new password on a later apply.
+
+See the [`marmot_user` documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/user) for all available configuration options.
+
+### Data Products
+
+Group related assets into a data product. Teams and users own it through `owner_team_ids` and `owner_user_ids`:
+
+```hcl
+resource "marmot_data_product" "orders" {
+  name        = "orders"
+  description = "Order events and the tables derived from them"
+  tags        = ["orders"]
+
+  owner_team_ids = [marmot_team.analytics.id]
+}
+```
+
+Assets join a data product directly with `marmot_data_product_asset`:
+
+```hcl
+resource "marmot_data_product_asset" "orders_customer" {
+  data_product_id = marmot_data_product.orders.id
+  asset_id        = marmot_asset.customer_orders.id
+}
+```
+
+Or dynamically with `marmot_data_product_rule`, which matches assets by a search query or a metadata pattern:
+
+```hcl
+resource "marmot_data_product_rule" "order_datasets" {
+  data_product_id = marmot_data_product.orders.id
+
+  name             = "order-datasets"
+  type             = "query"
+  query_expression = "tag:orders"
+}
+```
+
+See the [`marmot_data_product`](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/data_product), [`marmot_data_product_asset`](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/data_product_asset), and [`marmot_data_product_rule`](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/data_product_rule) documentation for all available configuration options.
 
 ## Learn More
 
-- Full documentation for [the Marmot provider on the Terraform Registry](https://registry.terraform.io/providers/marmotdata/marmot/0.3.0/docs)
+- Full documentation for [the Marmot provider on the Terraform Registry](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs)
 - A [full example](https://github.com/marmotdata/terraform-provider-marmot/tree/main/examples/full) in the provider repository
