@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAuthProviderCallbackParams() *GetAuthProviderCallbackParams {
-	return &GetAuthProviderCallbackParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAuthProviderCallbackParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAuthProviderCallbackParamsWithTimeout creates a new GetAuthProviderCallbackParams object
 // with the ability to set a timeout on a request.
 func NewGetAuthProviderCallbackParamsWithTimeout(timeout time.Duration) *GetAuthProviderCallbackParams {
 	return &GetAuthProviderCallbackParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAuthProviderCallbackParamsWithContext creates a new GetAuthProviderCallbackParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAuthProviderCallbackParams].
 func NewGetAuthProviderCallbackParamsWithContext(ctx context.Context) *GetAuthProviderCallbackParams {
 	return &GetAuthProviderCallbackParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,27 +62,24 @@ GetAuthProviderCallbackParams contains all the parameters to send to the API end
 */
 type GetAuthProviderCallbackParams struct {
 
-	/* Code.
-
-	   Authorization code
-	*/
+	// Code.
+	//
+	// Authorization code
 	Code string
 
-	/* Provider.
-
-	   OAuth provider (okta, google, github, etc.)
-	*/
+	// Provider.
+	//
+	// OAuth provider (okta, google, github, etc.)
 	Provider string
 
-	/* State.
-
-	   State parameter for CSRF protection
-	*/
+	// State.
+	//
+	// State parameter for CSRF protection
 	State string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get auth provider callback params (not the query body).
@@ -96,76 +97,79 @@ func (o *GetAuthProviderCallbackParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get auth provider callback params
+// WithTimeout adds the timeout to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) WithTimeout(timeout time.Duration) *GetAuthProviderCallbackParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get auth provider callback params
+// SetTimeout adds the timeout to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get auth provider callback params
+// WithContext adds the context to the get auth provider callback params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAuthProviderCallbackParams].
 func (o *GetAuthProviderCallbackParams) WithContext(ctx context.Context) *GetAuthProviderCallbackParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get auth provider callback params
+// SetContext adds the context to the get auth provider callback params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAuthProviderCallbackParams].
 func (o *GetAuthProviderCallbackParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get auth provider callback params
+// WithHTTPClient adds the HTTPClient to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) WithHTTPClient(client *http.Client) *GetAuthProviderCallbackParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get auth provider callback params
+// SetHTTPClient adds the HTTPClient to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithCode adds the code to the get auth provider callback params
+// WithCode adds the code to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) WithCode(code string) *GetAuthProviderCallbackParams {
 	o.SetCode(code)
 	return o
 }
 
-// SetCode adds the code to the get auth provider callback params
+// SetCode adds the code to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) SetCode(code string) {
 	o.Code = code
 }
 
-// WithProvider adds the provider to the get auth provider callback params
+// WithProvider adds the provider to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) WithProvider(provider string) *GetAuthProviderCallbackParams {
 	o.SetProvider(provider)
 	return o
 }
 
-// SetProvider adds the provider to the get auth provider callback params
+// SetProvider adds the provider to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) SetProvider(provider string) {
 	o.Provider = provider
 }
 
-// WithState adds the state to the get auth provider callback params
+// WithState adds the state to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) WithState(state string) *GetAuthProviderCallbackParams {
 	o.SetState(state)
 	return o
 }
 
-// SetState adds the state to the get auth provider callback params
+// SetState adds the state to the get auth provider callback params.
 func (o *GetAuthProviderCallbackParams) SetState(state string) {
 	o.State = state
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAuthProviderCallbackParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

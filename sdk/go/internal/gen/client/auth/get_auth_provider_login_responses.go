@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetAuthProviderLoginTemporaryRedirect() *GetAuthProviderLoginTemporaryRe
 	return &GetAuthProviderLoginTemporaryRedirect{}
 }
 
-/*
-GetAuthProviderLoginTemporaryRedirect describes a response with status code 307, with default header values.
-
-Temporary Redirect
-*/
+// GetAuthProviderLoginTemporaryRedirect describes a response with status code 307, with default header values.
+//
+// Temporary Redirect
 type GetAuthProviderLoginTemporaryRedirect struct {
 	Payload string
 }
@@ -118,11 +115,9 @@ func NewGetAuthProviderLoginNotFound() *GetAuthProviderLoginNotFound {
 	return &GetAuthProviderLoginNotFound{}
 }
 
-/*
-GetAuthProviderLoginNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetAuthProviderLoginNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetAuthProviderLoginNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -188,11 +183,9 @@ func NewGetAuthProviderLoginInternalServerError() *GetAuthProviderLoginInternalS
 	return &GetAuthProviderLoginInternalServerError{}
 }
 
-/*
-GetAuthProviderLoginInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAuthProviderLoginInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAuthProviderLoginInternalServerError struct {
 	Payload *models.ErrorResponse
 }

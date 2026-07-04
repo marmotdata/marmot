@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewDeleteAssetRulesIDNoContent() *DeleteAssetRulesIDNoContent {
 	return &DeleteAssetRulesIDNoContent{}
 }
 
-/*
-DeleteAssetRulesIDNoContent describes a response with status code 204, with default header values.
-
-No Content
-*/
+// DeleteAssetRulesIDNoContent describes a response with status code 204, with default header values.
+//
+// No Content
 type DeleteAssetRulesIDNoContent struct {
 }
 
@@ -106,11 +103,9 @@ func NewDeleteAssetRulesIDNotFound() *DeleteAssetRulesIDNotFound {
 	return &DeleteAssetRulesIDNotFound{}
 }
 
-/*
-DeleteAssetRulesIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// DeleteAssetRulesIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type DeleteAssetRulesIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -176,11 +171,9 @@ func NewDeleteAssetRulesIDInternalServerError() *DeleteAssetRulesIDInternalServe
 	return &DeleteAssetRulesIDInternalServerError{}
 }
 
-/*
-DeleteAssetRulesIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// DeleteAssetRulesIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type DeleteAssetRulesIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

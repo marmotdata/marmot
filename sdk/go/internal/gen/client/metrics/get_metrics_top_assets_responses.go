@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -38,11 +37,9 @@ func NewGetMetricsTopAssetsOK() *GetMetricsTopAssetsOK {
 	return &GetMetricsTopAssetsOK{}
 }
 
-/*
-GetMetricsTopAssetsOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetMetricsTopAssetsOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetMetricsTopAssetsOK struct {
 	Payload []*models.AssetCount
 }

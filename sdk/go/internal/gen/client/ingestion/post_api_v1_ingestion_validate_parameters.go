@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAPIV1IngestionValidateParams() *PostAPIV1IngestionValidateParams {
-	return &PostAPIV1IngestionValidateParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAPIV1IngestionValidateParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAPIV1IngestionValidateParamsWithTimeout creates a new PostAPIV1IngestionValidateParams object
 // with the ability to set a timeout on a request.
 func NewPostAPIV1IngestionValidateParamsWithTimeout(timeout time.Duration) *PostAPIV1IngestionValidateParams {
 	return &PostAPIV1IngestionValidateParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAPIV1IngestionValidateParamsWithContext creates a new PostAPIV1IngestionValidateParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1IngestionValidateParams].
 func NewPostAPIV1IngestionValidateParamsWithContext(ctx context.Context) *PostAPIV1IngestionValidateParams {
 	return &PostAPIV1IngestionValidateParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostAPIV1IngestionValidateParams contains all the parameters to send to the API 
 */
 type PostAPIV1IngestionValidateParams struct {
 
-	/* Config.
-
-	   Config to validate
-	*/
+	// Config.
+	//
+	// Config to validate
 	Config *models.ValidateConfigRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post API v1 ingestion validate params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostAPIV1IngestionValidateParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post API v1 ingestion validate params
+// WithTimeout adds the timeout to the post API v1 ingestion validate params.
 func (o *PostAPIV1IngestionValidateParams) WithTimeout(timeout time.Duration) *PostAPIV1IngestionValidateParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post API v1 ingestion validate params
+// SetTimeout adds the timeout to the post API v1 ingestion validate params.
 func (o *PostAPIV1IngestionValidateParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post API v1 ingestion validate params
+// WithContext adds the context to the post API v1 ingestion validate params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1IngestionValidateParams].
 func (o *PostAPIV1IngestionValidateParams) WithContext(ctx context.Context) *PostAPIV1IngestionValidateParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post API v1 ingestion validate params
+// SetContext adds the context to the post API v1 ingestion validate params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1IngestionValidateParams].
 func (o *PostAPIV1IngestionValidateParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post API v1 ingestion validate params
+// WithHTTPClient adds the HTTPClient to the post API v1 ingestion validate params.
 func (o *PostAPIV1IngestionValidateParams) WithHTTPClient(client *http.Client) *PostAPIV1IngestionValidateParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post API v1 ingestion validate params
+// SetHTTPClient adds the HTTPClient to the post API v1 ingestion validate params.
 func (o *PostAPIV1IngestionValidateParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithConfig adds the config to the post API v1 ingestion validate params
+// WithConfig adds the config to the post API v1 ingestion validate params.
 func (o *PostAPIV1IngestionValidateParams) WithConfig(config *models.ValidateConfigRequest) *PostAPIV1IngestionValidateParams {
 	o.SetConfig(config)
 	return o
 }
 
-// SetConfig adds the config to the post API v1 ingestion validate params
+// SetConfig adds the config to the post API v1 ingestion validate params.
 func (o *PostAPIV1IngestionValidateParams) SetConfig(config *models.ValidateConfigRequest) {
 	o.Config = config
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAPIV1IngestionValidateParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

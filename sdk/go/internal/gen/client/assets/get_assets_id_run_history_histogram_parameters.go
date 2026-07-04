@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsIDRunHistoryHistogramParams() *GetAssetsIDRunHistoryHistogramParams {
-	return &GetAssetsIDRunHistoryHistogramParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsIDRunHistoryHistogramParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsIDRunHistoryHistogramParamsWithTimeout creates a new GetAssetsIDRunHistoryHistogramParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsIDRunHistoryHistogramParamsWithTimeout(timeout time.Duration) *GetAssetsIDRunHistoryHistogramParams {
 	return &GetAssetsIDRunHistoryHistogramParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsIDRunHistoryHistogramParamsWithContext creates a new GetAssetsIDRunHistoryHistogramParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsIDRunHistoryHistogramParams].
 func NewGetAssetsIDRunHistoryHistogramParamsWithContext(ctx context.Context) *GetAssetsIDRunHistoryHistogramParams {
 	return &GetAssetsIDRunHistoryHistogramParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,23 +62,21 @@ GetAssetsIDRunHistoryHistogramParams contains all the parameters to send to the 
 */
 type GetAssetsIDRunHistoryHistogramParams struct {
 
-	/* ID.
-
-	   Asset ID
-	*/
+	// ID.
+	//
+	// Asset ID
 	ID string
 
-	/* Period.
-
-	   Time period (7d, 30d, 90d)
-
-	   Default: "30d"
-	*/
+	// Period.
+	//
+	// Time period (7d, 30d, 90d)
+	//
+	// Default: "30d"
 	Period *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets ID run history histogram params (not the query body).
@@ -97,71 +99,74 @@ func (o *GetAssetsIDRunHistoryHistogramParams) SetDefaults() {
 		Period: &periodDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get assets ID run history histogram params
+// WithTimeout adds the timeout to the get assets ID run history histogram params.
 func (o *GetAssetsIDRunHistoryHistogramParams) WithTimeout(timeout time.Duration) *GetAssetsIDRunHistoryHistogramParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets ID run history histogram params
+// SetTimeout adds the timeout to the get assets ID run history histogram params.
 func (o *GetAssetsIDRunHistoryHistogramParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets ID run history histogram params
+// WithContext adds the context to the get assets ID run history histogram params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsIDRunHistoryHistogramParams].
 func (o *GetAssetsIDRunHistoryHistogramParams) WithContext(ctx context.Context) *GetAssetsIDRunHistoryHistogramParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets ID run history histogram params
+// SetContext adds the context to the get assets ID run history histogram params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsIDRunHistoryHistogramParams].
 func (o *GetAssetsIDRunHistoryHistogramParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets ID run history histogram params
+// WithHTTPClient adds the HTTPClient to the get assets ID run history histogram params.
 func (o *GetAssetsIDRunHistoryHistogramParams) WithHTTPClient(client *http.Client) *GetAssetsIDRunHistoryHistogramParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets ID run history histogram params
+// SetHTTPClient adds the HTTPClient to the get assets ID run history histogram params.
 func (o *GetAssetsIDRunHistoryHistogramParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get assets ID run history histogram params
+// WithID adds the id to the get assets ID run history histogram params.
 func (o *GetAssetsIDRunHistoryHistogramParams) WithID(id string) *GetAssetsIDRunHistoryHistogramParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get assets ID run history histogram params
+// SetID adds the id to the get assets ID run history histogram params.
 func (o *GetAssetsIDRunHistoryHistogramParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithPeriod adds the period to the get assets ID run history histogram params
+// WithPeriod adds the period to the get assets ID run history histogram params.
 func (o *GetAssetsIDRunHistoryHistogramParams) WithPeriod(period *string) *GetAssetsIDRunHistoryHistogramParams {
 	o.SetPeriod(period)
 	return o
 }
 
-// SetPeriod adds the period to the get assets ID run history histogram params
+// SetPeriod adds the period to the get assets ID run history histogram params.
 func (o *GetAssetsIDRunHistoryHistogramParams) SetPeriod(period *string) {
 	o.Period = period
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsIDRunHistoryHistogramParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

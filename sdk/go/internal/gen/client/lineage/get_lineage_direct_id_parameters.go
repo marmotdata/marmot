@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetLineageDirectIDParams() *GetLineageDirectIDParams {
-	return &GetLineageDirectIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetLineageDirectIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetLineageDirectIDParamsWithTimeout creates a new GetLineageDirectIDParams object
 // with the ability to set a timeout on a request.
 func NewGetLineageDirectIDParamsWithTimeout(timeout time.Duration) *GetLineageDirectIDParams {
 	return &GetLineageDirectIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetLineageDirectIDParamsWithContext creates a new GetLineageDirectIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetLineageDirectIDParams].
 func NewGetLineageDirectIDParamsWithContext(ctx context.Context) *GetLineageDirectIDParams {
 	return &GetLineageDirectIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,17 +62,16 @@ GetLineageDirectIDParams contains all the parameters to send to the API endpoint
 */
 type GetLineageDirectIDParams struct {
 
-	/* ID.
-
-	   Edge ID
-
-	   Format: uuid
-	*/
+	// ID.
+	//
+	// Edge ID
+	//
+	// Format: uuid
 	ID strfmt.UUID
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get lineage direct ID params (not the query body).
@@ -86,54 +89,57 @@ func (o *GetLineageDirectIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get lineage direct ID params
+// WithTimeout adds the timeout to the get lineage direct ID params.
 func (o *GetLineageDirectIDParams) WithTimeout(timeout time.Duration) *GetLineageDirectIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get lineage direct ID params
+// SetTimeout adds the timeout to the get lineage direct ID params.
 func (o *GetLineageDirectIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get lineage direct ID params
+// WithContext adds the context to the get lineage direct ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetLineageDirectIDParams].
 func (o *GetLineageDirectIDParams) WithContext(ctx context.Context) *GetLineageDirectIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get lineage direct ID params
+// SetContext adds the context to the get lineage direct ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetLineageDirectIDParams].
 func (o *GetLineageDirectIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get lineage direct ID params
+// WithHTTPClient adds the HTTPClient to the get lineage direct ID params.
 func (o *GetLineageDirectIDParams) WithHTTPClient(client *http.Client) *GetLineageDirectIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get lineage direct ID params
+// SetHTTPClient adds the HTTPClient to the get lineage direct ID params.
 func (o *GetLineageDirectIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get lineage direct ID params
+// WithID adds the id to the get lineage direct ID params.
 func (o *GetLineageDirectIDParams) WithID(id strfmt.UUID) *GetLineageDirectIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get lineage direct ID params
+// SetID adds the id to the get lineage direct ID params.
 func (o *GetLineageDirectIDParams) SetID(id strfmt.UUID) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetLineageDirectIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

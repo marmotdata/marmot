@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteUsersOauthUnlinkIDProviderParams() *DeleteUsersOauthUnlinkIDProviderParams {
-	return &DeleteUsersOauthUnlinkIDProviderParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteUsersOauthUnlinkIDProviderParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteUsersOauthUnlinkIDProviderParamsWithTimeout creates a new DeleteUsersOauthUnlinkIDProviderParams object
 // with the ability to set a timeout on a request.
 func NewDeleteUsersOauthUnlinkIDProviderParamsWithTimeout(timeout time.Duration) *DeleteUsersOauthUnlinkIDProviderParams {
 	return &DeleteUsersOauthUnlinkIDProviderParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteUsersOauthUnlinkIDProviderParamsWithContext creates a new DeleteUsersOauthUnlinkIDProviderParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteUsersOauthUnlinkIDProviderParams].
 func NewDeleteUsersOauthUnlinkIDProviderParamsWithContext(ctx context.Context) *DeleteUsersOauthUnlinkIDProviderParams {
 	return &DeleteUsersOauthUnlinkIDProviderParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,21 +62,19 @@ DeleteUsersOauthUnlinkIDProviderParams contains all the parameters to send to th
 */
 type DeleteUsersOauthUnlinkIDProviderParams struct {
 
-	/* ID.
-
-	   User ID
-	*/
+	// ID.
+	//
+	// User ID
 	ID string
 
-	/* Provider.
-
-	   OAuth provider
-	*/
+	// Provider.
+	//
+	// OAuth provider
 	Provider string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete users oauth unlink ID provider params (not the query body).
@@ -90,65 +92,68 @@ func (o *DeleteUsersOauthUnlinkIDProviderParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete users oauth unlink ID provider params
+// WithTimeout adds the timeout to the delete users oauth unlink ID provider params.
 func (o *DeleteUsersOauthUnlinkIDProviderParams) WithTimeout(timeout time.Duration) *DeleteUsersOauthUnlinkIDProviderParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete users oauth unlink ID provider params
+// SetTimeout adds the timeout to the delete users oauth unlink ID provider params.
 func (o *DeleteUsersOauthUnlinkIDProviderParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete users oauth unlink ID provider params
+// WithContext adds the context to the delete users oauth unlink ID provider params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteUsersOauthUnlinkIDProviderParams].
 func (o *DeleteUsersOauthUnlinkIDProviderParams) WithContext(ctx context.Context) *DeleteUsersOauthUnlinkIDProviderParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete users oauth unlink ID provider params
+// SetContext adds the context to the delete users oauth unlink ID provider params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteUsersOauthUnlinkIDProviderParams].
 func (o *DeleteUsersOauthUnlinkIDProviderParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete users oauth unlink ID provider params
+// WithHTTPClient adds the HTTPClient to the delete users oauth unlink ID provider params.
 func (o *DeleteUsersOauthUnlinkIDProviderParams) WithHTTPClient(client *http.Client) *DeleteUsersOauthUnlinkIDProviderParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete users oauth unlink ID provider params
+// SetHTTPClient adds the HTTPClient to the delete users oauth unlink ID provider params.
 func (o *DeleteUsersOauthUnlinkIDProviderParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete users oauth unlink ID provider params
+// WithID adds the id to the delete users oauth unlink ID provider params.
 func (o *DeleteUsersOauthUnlinkIDProviderParams) WithID(id string) *DeleteUsersOauthUnlinkIDProviderParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete users oauth unlink ID provider params
+// SetID adds the id to the delete users oauth unlink ID provider params.
 func (o *DeleteUsersOauthUnlinkIDProviderParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithProvider adds the provider to the delete users oauth unlink ID provider params
+// WithProvider adds the provider to the delete users oauth unlink ID provider params.
 func (o *DeleteUsersOauthUnlinkIDProviderParams) WithProvider(provider string) *DeleteUsersOauthUnlinkIDProviderParams {
 	o.SetProvider(provider)
 	return o
 }
 
-// SetProvider adds the provider to the delete users oauth unlink ID provider params
+// SetProvider adds the provider to the delete users oauth unlink ID provider params.
 func (o *DeleteUsersOauthUnlinkIDProviderParams) SetProvider(provider string) {
 	o.Provider = provider
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteUsersOauthUnlinkIDProviderParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

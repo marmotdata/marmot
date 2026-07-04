@@ -13,8 +13,8 @@ import (
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
-
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -42,11 +42,9 @@ func NewGetRunsOK() *GetRunsOK {
 	return &GetRunsOK{}
 }
 
-/*
-GetRunsOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetRunsOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetRunsOK struct {
 	Payload *GetRunsOKBody
 }
@@ -107,10 +105,9 @@ func (o *GetRunsOK) readResponse(response runtime.ClientResponse, consumer runti
 	return nil
 }
 
-/*
-GetRunsOKBody get runs o k body
-swagger:model GetRunsOKBody
-*/
+// GetRunsOKBody get runs o k body
+//
+// swagger:model GetRunsOKBody
 type GetRunsOKBody struct {
 
 	// limit
@@ -144,12 +141,12 @@ func (o *GetRunsOKBody) Validate(formats strfmt.Registry) error {
 }
 
 func (o *GetRunsOKBody) validateRuns(formats strfmt.Registry) error {
-	if swag.IsZero(o.Runs) { // not required
+	if typeutils.IsZero(o.Runs) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(o.Runs); i++ {
-		if swag.IsZero(o.Runs[i]) { // not required
+		if typeutils.IsZero(o.Runs[i]) { // not required
 			continue
 		}
 
@@ -193,7 +190,7 @@ func (o *GetRunsOKBody) contextValidateRuns(ctx context.Context, formats strfmt.
 
 		if o.Runs[i] != nil {
 
-			if swag.IsZero(o.Runs[i]) { // not required
+			if typeutils.IsZero(o.Runs[i]) { // not required
 				return nil
 			}
 
@@ -221,13 +218,13 @@ func (o *GetRunsOKBody) MarshalBinary() ([]byte, error) {
 	if o == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(o)
+	return jsonutils.WriteJSON(o)
 }
 
 // UnmarshalBinary interface implementation
 func (o *GetRunsOKBody) UnmarshalBinary(b []byte) error {
 	var res GetRunsOKBody
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*o = res

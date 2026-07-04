@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetAPIV1IngestionRunsParams creates a new GetAPIV1IngestionRunsParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAPIV1IngestionRunsParams() *GetAPIV1IngestionRunsParams {
-	return &GetAPIV1IngestionRunsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAPIV1IngestionRunsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAPIV1IngestionRunsParamsWithTimeout creates a new GetAPIV1IngestionRunsParams object
 // with the ability to set a timeout on a request.
 func NewGetAPIV1IngestionRunsParamsWithTimeout(timeout time.Duration) *GetAPIV1IngestionRunsParams {
 	return &GetAPIV1IngestionRunsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAPIV1IngestionRunsParamsWithContext creates a new GetAPIV1IngestionRunsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1IngestionRunsParams].
 func NewGetAPIV1IngestionRunsParamsWithContext(ctx context.Context) *GetAPIV1IngestionRunsParams {
 	return &GetAPIV1IngestionRunsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,33 +63,29 @@ GetAPIV1IngestionRunsParams contains all the parameters to send to the API endpo
 */
 type GetAPIV1IngestionRunsParams struct {
 
-	/* Limit.
-
-	   Limit
-	*/
+	// Limit.
+	//
+	// Limit
 	Limit *int64
 
-	/* Offset.
-
-	   Offset
-	*/
+	// Offset.
+	//
+	// Offset
 	Offset *int64
 
-	/* ScheduleID.
-
-	   Filter by schedule ID
-	*/
+	// ScheduleID.
+	//
+	// Filter by schedule ID
 	ScheduleID *string
 
-	/* Status.
-
-	   Filter by status
-	*/
+	// Status.
+	//
+	// Filter by status
 	Status *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get API v1 ingestion runs params (not the query body).
@@ -103,87 +103,90 @@ func (o *GetAPIV1IngestionRunsParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get API v1 ingestion runs params
+// WithTimeout adds the timeout to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) WithTimeout(timeout time.Duration) *GetAPIV1IngestionRunsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get API v1 ingestion runs params
+// SetTimeout adds the timeout to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get API v1 ingestion runs params
+// WithContext adds the context to the get API v1 ingestion runs params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1IngestionRunsParams].
 func (o *GetAPIV1IngestionRunsParams) WithContext(ctx context.Context) *GetAPIV1IngestionRunsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get API v1 ingestion runs params
+// SetContext adds the context to the get API v1 ingestion runs params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1IngestionRunsParams].
 func (o *GetAPIV1IngestionRunsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get API v1 ingestion runs params
+// WithHTTPClient adds the HTTPClient to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) WithHTTPClient(client *http.Client) *GetAPIV1IngestionRunsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get API v1 ingestion runs params
+// SetHTTPClient adds the HTTPClient to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get API v1 ingestion runs params
+// WithLimit adds the limit to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) WithLimit(limit *int64) *GetAPIV1IngestionRunsParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get API v1 ingestion runs params
+// SetLimit adds the limit to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get API v1 ingestion runs params
+// WithOffset adds the offset to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) WithOffset(offset *int64) *GetAPIV1IngestionRunsParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get API v1 ingestion runs params
+// SetOffset adds the offset to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WithScheduleID adds the scheduleID to the get API v1 ingestion runs params
+// WithScheduleID adds the scheduleID to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) WithScheduleID(scheduleID *string) *GetAPIV1IngestionRunsParams {
 	o.SetScheduleID(scheduleID)
 	return o
 }
 
-// SetScheduleID adds the scheduleId to the get API v1 ingestion runs params
+// SetScheduleID adds the scheduleId to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) SetScheduleID(scheduleID *string) {
 	o.ScheduleID = scheduleID
 }
 
-// WithStatus adds the status to the get API v1 ingestion runs params
+// WithStatus adds the status to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) WithStatus(status *string) *GetAPIV1IngestionRunsParams {
 	o.SetStatus(status)
 	return o
 }
 
-// SetStatus adds the status to the get API v1 ingestion runs params
+// SetStatus adds the status to the get API v1 ingestion runs params.
 func (o *GetAPIV1IngestionRunsParams) SetStatus(status *string) {
 	o.Status = status
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAPIV1IngestionRunsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -196,7 +199,7 @@ func (o *GetAPIV1IngestionRunsParams) WriteToRequest(r runtime.ClientRequest, re
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -213,7 +216,7 @@ func (o *GetAPIV1IngestionRunsParams) WriteToRequest(r runtime.ClientRequest, re
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

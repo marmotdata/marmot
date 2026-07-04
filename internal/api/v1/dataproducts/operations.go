@@ -18,7 +18,7 @@ import (
 type OwnerRequest struct {
 	ID   string `json:"id" validate:"required"`
 	Type string `json:"type" validate:"required,oneof=user team"`
-}
+} // @name DataProductOwnerRequest
 
 type RuleRequest struct {
 	Name            string  `json:"name" validate:"required"`
@@ -30,7 +30,7 @@ type RuleRequest struct {
 	PatternValue    *string `json:"pattern_value,omitempty"`
 	Priority        int     `json:"priority"`
 	IsEnabled       bool    `json:"is_enabled"`
-}
+} // @name DataProductRuleRequest
 
 type CreateRequest struct {
 	Name        string                 `json:"name" validate:"required"`
@@ -39,7 +39,7 @@ type CreateRequest struct {
 	Tags        []string               `json:"tags,omitempty"`
 	Owners      []OwnerRequest         `json:"owners,omitempty"`
 	Rules       []RuleRequest          `json:"rules,omitempty"`
-}
+} // @name CreateDataProductRequest
 
 type UpdateRequest struct {
 	Name        *string                `json:"name,omitempty"`
@@ -47,12 +47,29 @@ type UpdateRequest struct {
 	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 	Tags        []string               `json:"tags,omitempty"`
 	Owners      []OwnerRequest         `json:"owners,omitempty"`
-}
+} // @name UpdateDataProductRequest
 
 type AddAssetsRequest struct {
 	AssetIDs []string `json:"asset_ids" validate:"required,min=1"`
-}
+} // @name AddDataProductAssetsRequest
 
+type RulesResponse struct {
+	Rules []dataproduct.Rule `json:"rules"`
+	Total int                `json:"total"`
+} // @name DataProductRulesResponse
+
+// @Summary Create data product
+// @Description Create a new data product with owners and optional membership rules
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param product body CreateRequest true "Data product to create"
+// @Success 201 {object} dataproduct.DataProduct
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 401 {object} common.ErrorResponse
+// @Failure 409 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/ [post]
 func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	var req CreateRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -121,6 +138,16 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusCreated, dp)
 }
 
+// @Summary Get data product
+// @Description Get a data product by ID
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Success 200 {object} dataproduct.DataProduct
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/{id} [get]
 func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/")
 	if id == "" {
@@ -143,6 +170,19 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, dp)
 }
 
+// @Summary Update data product
+// @Description Update an existing data product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param product body UpdateRequest true "Fields to update"
+// @Success 200 {object} dataproduct.DataProduct
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 409 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/{id} [put]
 func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/")
 	if id == "" {
@@ -195,6 +235,16 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, dp)
 }
 
+// @Summary Delete data product
+// @Description Delete a data product by ID
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/{id} [delete]
 func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/")
 	if id == "" {
@@ -217,6 +267,15 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Data product deleted successfully"})
 }
 
+// @Summary List data products
+// @Description Retrieve a paginated list of data products
+// @Tags products
+// @Produce json
+// @Param limit query int false "Maximum number of data products to return" default(20)
+// @Param offset query int false "Number of data products to skip" default(0)
+// @Success 200 {object} dataproduct.ListResult
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/list [get]
 func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
 	offset, _ := strconv.Atoi(r.URL.Query().Get("offset"))
@@ -231,6 +290,18 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, result)
 }
 
+// @Summary Search data products
+// @Description Search data products by name, description, and tags
+// @Tags products
+// @Produce json
+// @Param q query string false "Search query"
+// @Param tags query string false "Comma-separated list of tags to filter by"
+// @Param limit query int false "Maximum number of data products to return" default(20)
+// @Param offset query int false "Number of data products to skip" default(0)
+// @Success 200 {object} dataproduct.ListResult
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/search [get]
 func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
@@ -263,6 +334,18 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, result)
 }
 
+// @Summary Get data product assets
+// @Description Get the manually added assets of a data product
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param limit query int false "Maximum number of assets to return" default(20)
+// @Param offset query int false "Number of assets to skip" default(0)
+// @Success 200 {object} dataproduct.AssetsResult
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/assets/{id} [get]
 func (h *Handler) getAssets(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/assets/")
 	if id == "" {
@@ -288,6 +371,19 @@ func (h *Handler) getAssets(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, result)
 }
 
+// @Summary Add data product assets
+// @Description Manually add assets to a data product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param assets body AddAssetsRequest true "Asset IDs to add"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 401 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/assets/{id} [post]
 func (h *Handler) addAssets(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/assets/")
 	if id == "" {
@@ -324,6 +420,17 @@ func (h *Handler) addAssets(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Assets added successfully"})
 }
 
+// @Summary Remove data product asset
+// @Description Remove a manually added asset from a data product
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param assetId path string true "Asset ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/assets/{id}/{assetId} [delete]
 func (h *Handler) removeAsset(w http.ResponseWriter, r *http.Request) {
 	// URL format: /api/v1/products/assets/{productId}/{assetId}
 	// After trimming prefix: assets/{productId}/{assetId}
@@ -351,6 +458,16 @@ func (h *Handler) removeAsset(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Asset removed successfully"})
 }
 
+// @Summary Get data product rules
+// @Description Get the membership rules of a data product
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Success 200 {object} RulesResponse
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/rules/{id} [get]
 func (h *Handler) getRules(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/rules/")
 	if id == "" {
@@ -370,12 +487,24 @@ func (h *Handler) getRules(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, map[string]interface{}{
-		"rules": rules,
-		"total": len(rules),
+	common.RespondJSON(w, http.StatusOK, RulesResponse{
+		Rules: rules,
+		Total: len(rules),
 	})
 }
 
+// @Summary Create data product rule
+// @Description Create a membership rule for a data product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param rule body RuleRequest true "Rule to create"
+// @Success 201 {object} dataproduct.Rule
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/rules/{id} [post]
 func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/rules/")
 	if id == "" {
@@ -418,6 +547,19 @@ func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusCreated, rule)
 }
 
+// @Summary Update data product rule
+// @Description Update a membership rule of a data product
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param ruleId path string true "Rule ID"
+// @Param rule body RuleRequest true "Rule fields to update"
+// @Success 200 {object} dataproduct.Rule
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/rules/{id}/{ruleId} [put]
 func (h *Handler) updateRule(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/"), "/")
 	if len(parts) < 3 {
@@ -462,6 +604,17 @@ func (h *Handler) updateRule(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, rule)
 }
 
+// @Summary Delete data product rule
+// @Description Delete a membership rule from a data product
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param ruleId path string true "Rule ID"
+// @Success 200 {object} map[string]string
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/rules/{id}/{ruleId} [delete]
 func (h *Handler) deleteRule(w http.ResponseWriter, r *http.Request) {
 	parts := strings.Split(strings.TrimPrefix(r.URL.Path, "/api/v1/products/"), "/")
 	if len(parts) < 3 {
@@ -486,6 +639,17 @@ func (h *Handler) deleteRule(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, map[string]string{"message": "Rule deleted successfully"})
 }
 
+// @Summary Preview data product rule
+// @Description Preview which assets would match a rule configuration
+// @Tags products
+// @Accept json
+// @Produce json
+// @Param rule body RuleRequest true "Rule to preview"
+// @Param limit query int false "Maximum number of matching assets to return" default(20)
+// @Success 200 {object} dataproduct.RulePreview
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/rule-preview [post]
 func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 	var req RuleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -517,6 +681,18 @@ func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, preview)
 }
 
+// @Summary Get resolved data product assets
+// @Description Get all assets of a data product, both manually added and matched by rules
+// @Tags products
+// @Produce json
+// @Param id path string true "Data Product ID"
+// @Param limit query int false "Maximum number of assets to return" default(20)
+// @Param offset query int false "Number of assets to skip" default(0)
+// @Success 200 {object} dataproduct.ResolvedAssets
+// @Failure 400 {object} common.ErrorResponse
+// @Failure 404 {object} common.ErrorResponse
+// @Failure 500 {object} common.ErrorResponse
+// @Router /products/resolved-assets/{id} [get]
 func (h *Handler) getResolvedAssets(w http.ResponseWriter, r *http.Request) {
 	id := extractIDFromPath(r.URL.Path, "/api/v1/products/resolved-assets/")
 	if id == "" {

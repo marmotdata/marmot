@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetAssetsMatchPatternOK() *GetAssetsMatchPatternOK {
 	return &GetAssetsMatchPatternOK{}
 }
 
-/*
-GetAssetsMatchPatternOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAssetsMatchPatternOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAssetsMatchPatternOK struct {
 	Payload []*models.Asset
 }
@@ -118,11 +115,9 @@ func NewGetAssetsMatchPatternBadRequest() *GetAssetsMatchPatternBadRequest {
 	return &GetAssetsMatchPatternBadRequest{}
 }
 
-/*
-GetAssetsMatchPatternBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetAssetsMatchPatternBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetAssetsMatchPatternBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -188,11 +183,9 @@ func NewGetAssetsMatchPatternInternalServerError() *GetAssetsMatchPatternInterna
 	return &GetAssetsMatchPatternInternalServerError{}
 }
 
-/*
-GetAssetsMatchPatternInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAssetsMatchPatternInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAssetsMatchPatternInternalServerError struct {
 	Payload *models.ErrorResponse
 }

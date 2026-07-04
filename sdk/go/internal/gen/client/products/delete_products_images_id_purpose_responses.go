@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewDeleteProductsImagesIDPurposeOK() *DeleteProductsImagesIDPurposeOK {
 	return &DeleteProductsImagesIDPurposeOK{}
 }
 
-/*
-DeleteProductsImagesIDPurposeOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// DeleteProductsImagesIDPurposeOK describes a response with status code 200, with default header values.
+//
+// OK
 type DeleteProductsImagesIDPurposeOK struct {
 	Payload map[string]string
 }
@@ -118,11 +115,9 @@ func NewDeleteProductsImagesIDPurposeNotFound() *DeleteProductsImagesIDPurposeNo
 	return &DeleteProductsImagesIDPurposeNotFound{}
 }
 
-/*
-DeleteProductsImagesIDPurposeNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// DeleteProductsImagesIDPurposeNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type DeleteProductsImagesIDPurposeNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -188,11 +183,9 @@ func NewDeleteProductsImagesIDPurposeInternalServerError() *DeleteProductsImages
 	return &DeleteProductsImagesIDPurposeInternalServerError{}
 }
 
-/*
-DeleteProductsImagesIDPurposeInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// DeleteProductsImagesIDPurposeInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type DeleteProductsImagesIDPurposeInternalServerError struct {
 	Payload *models.ErrorResponse
 }

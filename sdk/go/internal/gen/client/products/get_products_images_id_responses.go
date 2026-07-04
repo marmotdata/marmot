@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetProductsImagesIDOK() *GetProductsImagesIDOK {
 	return &GetProductsImagesIDOK{}
 }
 
-/*
-GetProductsImagesIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetProductsImagesIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetProductsImagesIDOK struct {
 	Payload any
 }
@@ -118,11 +115,9 @@ func NewGetProductsImagesIDNotFound() *GetProductsImagesIDNotFound {
 	return &GetProductsImagesIDNotFound{}
 }
 
-/*
-GetProductsImagesIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetProductsImagesIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetProductsImagesIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -188,11 +183,9 @@ func NewGetProductsImagesIDInternalServerError() *GetProductsImagesIDInternalSer
 	return &GetProductsImagesIDInternalServerError{}
 }
 
-/*
-GetProductsImagesIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetProductsImagesIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetProductsImagesIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

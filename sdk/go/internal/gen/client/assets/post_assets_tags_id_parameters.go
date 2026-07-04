@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAssetsTagsIDParams() *PostAssetsTagsIDParams {
-	return &PostAssetsTagsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAssetsTagsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAssetsTagsIDParamsWithTimeout creates a new PostAssetsTagsIDParams object
 // with the ability to set a timeout on a request.
 func NewPostAssetsTagsIDParamsWithTimeout(timeout time.Duration) *PostAssetsTagsIDParams {
 	return &PostAssetsTagsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAssetsTagsIDParamsWithContext creates a new PostAssetsTagsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsTagsIDParams].
 func NewPostAssetsTagsIDParamsWithContext(ctx context.Context) *PostAssetsTagsIDParams {
 	return &PostAssetsTagsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,21 +63,19 @@ PostAssetsTagsIDParams contains all the parameters to send to the API endpoint
 */
 type PostAssetsTagsIDParams struct {
 
-	/* ID.
-
-	   Asset ID
-	*/
+	// ID.
+	//
+	// Asset ID
 	ID string
 
-	/* Tag.
-
-	   Tag to add
-	*/
+	// Tag.
+	//
+	// Tag to add
 	Tag *models.TagRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post assets tags ID params (not the query body).
@@ -92,65 +93,68 @@ func (o *PostAssetsTagsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post assets tags ID params
+// WithTimeout adds the timeout to the post assets tags ID params.
 func (o *PostAssetsTagsIDParams) WithTimeout(timeout time.Duration) *PostAssetsTagsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post assets tags ID params
+// SetTimeout adds the timeout to the post assets tags ID params.
 func (o *PostAssetsTagsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post assets tags ID params
+// WithContext adds the context to the post assets tags ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsTagsIDParams].
 func (o *PostAssetsTagsIDParams) WithContext(ctx context.Context) *PostAssetsTagsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post assets tags ID params
+// SetContext adds the context to the post assets tags ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsTagsIDParams].
 func (o *PostAssetsTagsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post assets tags ID params
+// WithHTTPClient adds the HTTPClient to the post assets tags ID params.
 func (o *PostAssetsTagsIDParams) WithHTTPClient(client *http.Client) *PostAssetsTagsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post assets tags ID params
+// SetHTTPClient adds the HTTPClient to the post assets tags ID params.
 func (o *PostAssetsTagsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the post assets tags ID params
+// WithID adds the id to the post assets tags ID params.
 func (o *PostAssetsTagsIDParams) WithID(id string) *PostAssetsTagsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the post assets tags ID params
+// SetID adds the id to the post assets tags ID params.
 func (o *PostAssetsTagsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithTag adds the tag to the post assets tags ID params
+// WithTag adds the tag to the post assets tags ID params.
 func (o *PostAssetsTagsIDParams) WithTag(tag *models.TagRequest) *PostAssetsTagsIDParams {
 	o.SetTag(tag)
 	return o
 }
 
-// SetTag adds the tag to the post assets tags ID params
+// SetTag adds the tag to the post assets tags ID params.
 func (o *PostAssetsTagsIDParams) SetTag(tag *models.TagRequest) {
 	o.Tag = tag
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAssetsTagsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

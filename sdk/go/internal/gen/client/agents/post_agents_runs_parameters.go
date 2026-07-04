@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAgentsRunsParams() *PostAgentsRunsParams {
-	return &PostAgentsRunsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAgentsRunsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAgentsRunsParamsWithTimeout creates a new PostAgentsRunsParams object
 // with the ability to set a timeout on a request.
 func NewPostAgentsRunsParamsWithTimeout(timeout time.Duration) *PostAgentsRunsParams {
 	return &PostAgentsRunsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAgentsRunsParamsWithContext creates a new PostAgentsRunsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAgentsRunsParams].
 func NewPostAgentsRunsParamsWithContext(ctx context.Context) *PostAgentsRunsParams {
 	return &PostAgentsRunsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostAgentsRunsParams contains all the parameters to send to the API endpoint
 */
 type PostAgentsRunsParams struct {
 
-	/* Request.
-
-	   Agent run record
-	*/
+	// Request.
+	//
+	// Agent run record
 	Request *models.RecordRunRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post agents runs params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostAgentsRunsParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post agents runs params
+// WithTimeout adds the timeout to the post agents runs params.
 func (o *PostAgentsRunsParams) WithTimeout(timeout time.Duration) *PostAgentsRunsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post agents runs params
+// SetTimeout adds the timeout to the post agents runs params.
 func (o *PostAgentsRunsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post agents runs params
+// WithContext adds the context to the post agents runs params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAgentsRunsParams].
 func (o *PostAgentsRunsParams) WithContext(ctx context.Context) *PostAgentsRunsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post agents runs params
+// SetContext adds the context to the post agents runs params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAgentsRunsParams].
 func (o *PostAgentsRunsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post agents runs params
+// WithHTTPClient adds the HTTPClient to the post agents runs params.
 func (o *PostAgentsRunsParams) WithHTTPClient(client *http.Client) *PostAgentsRunsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post agents runs params
+// SetHTTPClient adds the HTTPClient to the post agents runs params.
 func (o *PostAgentsRunsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithRequest adds the request to the post agents runs params
+// WithRequest adds the request to the post agents runs params.
 func (o *PostAgentsRunsParams) WithRequest(request *models.RecordRunRequest) *PostAgentsRunsParams {
 	o.SetRequest(request)
 	return o
 }
 
-// SetRequest adds the request to the post agents runs params
+// SetRequest adds the request to the post agents runs params.
 func (o *PostAgentsRunsParams) SetRequest(request *models.RecordRunRequest) {
 	o.Request = request
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAgentsRunsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

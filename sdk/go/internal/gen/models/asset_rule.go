@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // AssetRule asset rule
@@ -91,12 +92,12 @@ func (m *AssetRule) Validate(formats strfmt.Registry) error {
 }
 
 func (m *AssetRule) validateLinks(formats strfmt.Registry) error {
-	if swag.IsZero(m.Links) { // not required
+	if typeutils.IsZero(m.Links) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Links); i++ {
-		if swag.IsZero(m.Links[i]) { // not required
+		if typeutils.IsZero(m.Links[i]) { // not required
 			continue
 		}
 
@@ -121,7 +122,7 @@ func (m *AssetRule) validateLinks(formats strfmt.Registry) error {
 }
 
 func (m *AssetRule) validateRuleType(formats strfmt.Registry) error {
-	if swag.IsZero(m.RuleType) { // not required
+	if typeutils.IsZero(m.RuleType) { // not required
 		return nil
 	}
 
@@ -165,7 +166,7 @@ func (m *AssetRule) contextValidateLinks(ctx context.Context, formats strfmt.Reg
 
 		if m.Links[i] != nil {
 
-			if swag.IsZero(m.Links[i]) { // not required
+			if typeutils.IsZero(m.Links[i]) { // not required
 				return nil
 			}
 
@@ -190,7 +191,7 @@ func (m *AssetRule) contextValidateLinks(ctx context.Context, formats strfmt.Reg
 
 func (m *AssetRule) contextValidateRuleType(ctx context.Context, formats strfmt.Registry) error {
 
-	if swag.IsZero(m.RuleType) { // not required
+	if typeutils.IsZero(m.RuleType) { // not required
 		return nil
 	}
 
@@ -215,13 +216,13 @@ func (m *AssetRule) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *AssetRule) UnmarshalBinary(b []byte) error {
 	var res AssetRule
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

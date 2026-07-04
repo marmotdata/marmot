@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // AssetRuleListResult asset rule list result
@@ -39,12 +40,12 @@ func (m *AssetRuleListResult) Validate(formats strfmt.Registry) error {
 }
 
 func (m *AssetRuleListResult) validateAssetRules(formats strfmt.Registry) error {
-	if swag.IsZero(m.AssetRules) { // not required
+	if typeutils.IsZero(m.AssetRules) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.AssetRules); i++ {
-		if swag.IsZero(m.AssetRules[i]) { // not required
+		if typeutils.IsZero(m.AssetRules[i]) { // not required
 			continue
 		}
 
@@ -88,7 +89,7 @@ func (m *AssetRuleListResult) contextValidateAssetRules(ctx context.Context, for
 
 		if m.AssetRules[i] != nil {
 
-			if swag.IsZero(m.AssetRules[i]) { // not required
+			if typeutils.IsZero(m.AssetRules[i]) { // not required
 				return nil
 			}
 
@@ -116,13 +117,13 @@ func (m *AssetRuleListResult) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *AssetRuleListResult) UnmarshalBinary(b []byte) error {
 	var res AssetRuleListResult
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

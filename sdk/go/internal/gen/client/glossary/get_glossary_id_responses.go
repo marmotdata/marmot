@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewGetGlossaryIDOK() *GetGlossaryIDOK {
 	return &GetGlossaryIDOK{}
 }
 
-/*
-GetGlossaryIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetGlossaryIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetGlossaryIDOK struct {
 	Payload *models.GlossaryTerm
 }
@@ -126,11 +123,9 @@ func NewGetGlossaryIDBadRequest() *GetGlossaryIDBadRequest {
 	return &GetGlossaryIDBadRequest{}
 }
 
-/*
-GetGlossaryIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetGlossaryIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetGlossaryIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewGetGlossaryIDNotFound() *GetGlossaryIDNotFound {
 	return &GetGlossaryIDNotFound{}
 }
 
-/*
-GetGlossaryIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetGlossaryIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetGlossaryIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewGetGlossaryIDInternalServerError() *GetGlossaryIDInternalServerError {
 	return &GetGlossaryIDInternalServerError{}
 }
 
-/*
-GetGlossaryIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetGlossaryIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetGlossaryIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

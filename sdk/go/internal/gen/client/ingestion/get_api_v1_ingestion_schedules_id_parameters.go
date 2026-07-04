@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAPIV1IngestionSchedulesIDParams() *GetAPIV1IngestionSchedulesIDParams {
-	return &GetAPIV1IngestionSchedulesIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAPIV1IngestionSchedulesIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAPIV1IngestionSchedulesIDParamsWithTimeout creates a new GetAPIV1IngestionSchedulesIDParams object
 // with the ability to set a timeout on a request.
 func NewGetAPIV1IngestionSchedulesIDParamsWithTimeout(timeout time.Duration) *GetAPIV1IngestionSchedulesIDParams {
 	return &GetAPIV1IngestionSchedulesIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAPIV1IngestionSchedulesIDParamsWithContext creates a new GetAPIV1IngestionSchedulesIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1IngestionSchedulesIDParams].
 func NewGetAPIV1IngestionSchedulesIDParamsWithContext(ctx context.Context) *GetAPIV1IngestionSchedulesIDParams {
 	return &GetAPIV1IngestionSchedulesIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetAPIV1IngestionSchedulesIDParams contains all the parameters to send to the AP
 */
 type GetAPIV1IngestionSchedulesIDParams struct {
 
-	/* ID.
-
-	   Schedule ID
-	*/
+	// ID.
+	//
+	// Schedule ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get API v1 ingestion schedules ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetAPIV1IngestionSchedulesIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get API v1 ingestion schedules ID params
+// WithTimeout adds the timeout to the get API v1 ingestion schedules ID params.
 func (o *GetAPIV1IngestionSchedulesIDParams) WithTimeout(timeout time.Duration) *GetAPIV1IngestionSchedulesIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get API v1 ingestion schedules ID params
+// SetTimeout adds the timeout to the get API v1 ingestion schedules ID params.
 func (o *GetAPIV1IngestionSchedulesIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get API v1 ingestion schedules ID params
+// WithContext adds the context to the get API v1 ingestion schedules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1IngestionSchedulesIDParams].
 func (o *GetAPIV1IngestionSchedulesIDParams) WithContext(ctx context.Context) *GetAPIV1IngestionSchedulesIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get API v1 ingestion schedules ID params
+// SetContext adds the context to the get API v1 ingestion schedules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1IngestionSchedulesIDParams].
 func (o *GetAPIV1IngestionSchedulesIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get API v1 ingestion schedules ID params
+// WithHTTPClient adds the HTTPClient to the get API v1 ingestion schedules ID params.
 func (o *GetAPIV1IngestionSchedulesIDParams) WithHTTPClient(client *http.Client) *GetAPIV1IngestionSchedulesIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get API v1 ingestion schedules ID params
+// SetHTTPClient adds the HTTPClient to the get API v1 ingestion schedules ID params.
 func (o *GetAPIV1IngestionSchedulesIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get API v1 ingestion schedules ID params
+// WithID adds the id to the get API v1 ingestion schedules ID params.
 func (o *GetAPIV1IngestionSchedulesIDParams) WithID(id string) *GetAPIV1IngestionSchedulesIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get API v1 ingestion schedules ID params
+// SetID adds the id to the get API v1 ingestion schedules ID params.
 func (o *GetAPIV1IngestionSchedulesIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAPIV1IngestionSchedulesIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPutSsoTeamMappingsIDOK() *PutSsoTeamMappingsIDOK {
 	return &PutSsoTeamMappingsIDOK{}
 }
 
-/*
-PutSsoTeamMappingsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PutSsoTeamMappingsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type PutSsoTeamMappingsIDOK struct {
 	Payload *models.MessageResponse
 }
@@ -126,11 +123,9 @@ func NewPutSsoTeamMappingsIDBadRequest() *PutSsoTeamMappingsIDBadRequest {
 	return &PutSsoTeamMappingsIDBadRequest{}
 }
 
-/*
-PutSsoTeamMappingsIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PutSsoTeamMappingsIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PutSsoTeamMappingsIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPutSsoTeamMappingsIDNotFound() *PutSsoTeamMappingsIDNotFound {
 	return &PutSsoTeamMappingsIDNotFound{}
 }
 
-/*
-PutSsoTeamMappingsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PutSsoTeamMappingsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PutSsoTeamMappingsIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPutSsoTeamMappingsIDInternalServerError() *PutSsoTeamMappingsIDInternalS
 	return &PutSsoTeamMappingsIDInternalServerError{}
 }
 
-/*
-PutSsoTeamMappingsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PutSsoTeamMappingsIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PutSsoTeamMappingsIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

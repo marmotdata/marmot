@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -80,12 +81,12 @@ func (m *CreateTermRequest) validateName(formats strfmt.Registry) error {
 }
 
 func (m *CreateTermRequest) validateOwners(formats strfmt.Registry) error {
-	if swag.IsZero(m.Owners) { // not required
+	if typeutils.IsZero(m.Owners) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Owners); i++ {
-		if swag.IsZero(m.Owners[i]) { // not required
+		if typeutils.IsZero(m.Owners[i]) { // not required
 			continue
 		}
 
@@ -129,7 +130,7 @@ func (m *CreateTermRequest) contextValidateOwners(ctx context.Context, formats s
 
 		if m.Owners[i] != nil {
 
-			if swag.IsZero(m.Owners[i]) { // not required
+			if typeutils.IsZero(m.Owners[i]) { // not required
 				return nil
 			}
 
@@ -157,13 +158,13 @@ func (m *CreateTermRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *CreateTermRequest) UnmarshalBinary(b []byte) error {
 	var res CreateTermRequest
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

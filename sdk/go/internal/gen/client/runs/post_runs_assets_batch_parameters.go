@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostRunsAssetsBatchParams() *PostRunsAssetsBatchParams {
-	return &PostRunsAssetsBatchParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostRunsAssetsBatchParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostRunsAssetsBatchParamsWithTimeout creates a new PostRunsAssetsBatchParams object
 // with the ability to set a timeout on a request.
 func NewPostRunsAssetsBatchParamsWithTimeout(timeout time.Duration) *PostRunsAssetsBatchParams {
 	return &PostRunsAssetsBatchParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostRunsAssetsBatchParamsWithContext creates a new PostRunsAssetsBatchParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsAssetsBatchParams].
 func NewPostRunsAssetsBatchParamsWithContext(ctx context.Context) *PostRunsAssetsBatchParams {
 	return &PostRunsAssetsBatchParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostRunsAssetsBatchParams contains all the parameters to send to the API endpoin
 */
 type PostRunsAssetsBatchParams struct {
 
-	/* Request.
-
-	   Batch create request
-	*/
+	// Request.
+	//
+	// Batch create request
 	Request *models.BatchCreateRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post runs assets batch params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostRunsAssetsBatchParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post runs assets batch params
+// WithTimeout adds the timeout to the post runs assets batch params.
 func (o *PostRunsAssetsBatchParams) WithTimeout(timeout time.Duration) *PostRunsAssetsBatchParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post runs assets batch params
+// SetTimeout adds the timeout to the post runs assets batch params.
 func (o *PostRunsAssetsBatchParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post runs assets batch params
+// WithContext adds the context to the post runs assets batch params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsAssetsBatchParams].
 func (o *PostRunsAssetsBatchParams) WithContext(ctx context.Context) *PostRunsAssetsBatchParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post runs assets batch params
+// SetContext adds the context to the post runs assets batch params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsAssetsBatchParams].
 func (o *PostRunsAssetsBatchParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post runs assets batch params
+// WithHTTPClient adds the HTTPClient to the post runs assets batch params.
 func (o *PostRunsAssetsBatchParams) WithHTTPClient(client *http.Client) *PostRunsAssetsBatchParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post runs assets batch params
+// SetHTTPClient adds the HTTPClient to the post runs assets batch params.
 func (o *PostRunsAssetsBatchParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithRequest adds the request to the post runs assets batch params
+// WithRequest adds the request to the post runs assets batch params.
 func (o *PostRunsAssetsBatchParams) WithRequest(request *models.BatchCreateRequest) *PostRunsAssetsBatchParams {
 	o.SetRequest(request)
 	return o
 }
 
-// SetRequest adds the request to the post runs assets batch params
+// SetRequest adds the request to the post runs assets batch params.
 func (o *PostRunsAssetsBatchParams) SetRequest(request *models.BatchCreateRequest) {
 	o.Request = request
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostRunsAssetsBatchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

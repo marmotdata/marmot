@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetAssetsLookupTypeServiceNameOK() *GetAssetsLookupTypeServiceNameOK {
 	return &GetAssetsLookupTypeServiceNameOK{}
 }
 
-/*
-GetAssetsLookupTypeServiceNameOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAssetsLookupTypeServiceNameOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAssetsLookupTypeServiceNameOK struct {
 	Payload *models.Asset
 }
@@ -120,11 +117,9 @@ func NewGetAssetsLookupTypeServiceNameNotFound() *GetAssetsLookupTypeServiceName
 	return &GetAssetsLookupTypeServiceNameNotFound{}
 }
 
-/*
-GetAssetsLookupTypeServiceNameNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetAssetsLookupTypeServiceNameNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetAssetsLookupTypeServiceNameNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewGetAssetsLookupTypeServiceNameInternalServerError() *GetAssetsLookupType
 	return &GetAssetsLookupTypeServiceNameInternalServerError{}
 }
 
-/*
-GetAssetsLookupTypeServiceNameInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAssetsLookupTypeServiceNameInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAssetsLookupTypeServiceNameInternalServerError struct {
 	Payload *models.ErrorResponse
 }

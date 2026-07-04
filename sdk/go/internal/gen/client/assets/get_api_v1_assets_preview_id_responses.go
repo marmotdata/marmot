@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -68,11 +67,9 @@ func NewGetAPIV1AssetsPreviewIDOK() *GetAPIV1AssetsPreviewIDOK {
 	return &GetAPIV1AssetsPreviewIDOK{}
 }
 
-/*
-GetAPIV1AssetsPreviewIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAPIV1AssetsPreviewIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAPIV1AssetsPreviewIDOK struct {
 	Payload *models.PreviewResponse
 }
@@ -138,11 +135,9 @@ func NewGetAPIV1AssetsPreviewIDBadRequest() *GetAPIV1AssetsPreviewIDBadRequest {
 	return &GetAPIV1AssetsPreviewIDBadRequest{}
 }
 
-/*
-GetAPIV1AssetsPreviewIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetAPIV1AssetsPreviewIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetAPIV1AssetsPreviewIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -208,11 +203,9 @@ func NewGetAPIV1AssetsPreviewIDForbidden() *GetAPIV1AssetsPreviewIDForbidden {
 	return &GetAPIV1AssetsPreviewIDForbidden{}
 }
 
-/*
-GetAPIV1AssetsPreviewIDForbidden describes a response with status code 403, with default header values.
-
-Missing assets:preview permission
-*/
+// GetAPIV1AssetsPreviewIDForbidden describes a response with status code 403, with default header values.
+//
+// Missing assets:preview permission
 type GetAPIV1AssetsPreviewIDForbidden struct {
 	Payload *models.ErrorResponse
 }
@@ -278,11 +271,9 @@ func NewGetAPIV1AssetsPreviewIDNotFound() *GetAPIV1AssetsPreviewIDNotFound {
 	return &GetAPIV1AssetsPreviewIDNotFound{}
 }
 
-/*
-GetAPIV1AssetsPreviewIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetAPIV1AssetsPreviewIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetAPIV1AssetsPreviewIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -348,11 +339,9 @@ func NewGetAPIV1AssetsPreviewIDInternalServerError() *GetAPIV1AssetsPreviewIDInt
 	return &GetAPIV1AssetsPreviewIDInternalServerError{}
 }
 
-/*
-GetAPIV1AssetsPreviewIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAPIV1AssetsPreviewIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAPIV1AssetsPreviewIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }
@@ -418,11 +407,9 @@ func NewGetAPIV1AssetsPreviewIDNotImplemented() *GetAPIV1AssetsPreviewIDNotImple
 	return &GetAPIV1AssetsPreviewIDNotImplemented{}
 }
 
-/*
-GetAPIV1AssetsPreviewIDNotImplemented describes a response with status code 501, with default header values.
-
-Data preview not supported for this asset
-*/
+// GetAPIV1AssetsPreviewIDNotImplemented describes a response with status code 501, with default header values.
+//
+// Data preview not supported for this asset
 type GetAPIV1AssetsPreviewIDNotImplemented struct {
 	Payload *models.ErrorResponse
 }

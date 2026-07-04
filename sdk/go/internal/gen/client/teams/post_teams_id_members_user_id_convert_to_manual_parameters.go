@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostTeamsIDMembersUserIDConvertToManualParams() *PostTeamsIDMembersUserIDConvertToManualParams {
-	return &PostTeamsIDMembersUserIDConvertToManualParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostTeamsIDMembersUserIDConvertToManualParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostTeamsIDMembersUserIDConvertToManualParamsWithTimeout creates a new PostTeamsIDMembersUserIDConvertToManualParams object
 // with the ability to set a timeout on a request.
 func NewPostTeamsIDMembersUserIDConvertToManualParamsWithTimeout(timeout time.Duration) *PostTeamsIDMembersUserIDConvertToManualParams {
 	return &PostTeamsIDMembersUserIDConvertToManualParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostTeamsIDMembersUserIDConvertToManualParamsWithContext creates a new PostTeamsIDMembersUserIDConvertToManualParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostTeamsIDMembersUserIDConvertToManualParams].
 func NewPostTeamsIDMembersUserIDConvertToManualParamsWithContext(ctx context.Context) *PostTeamsIDMembersUserIDConvertToManualParams {
 	return &PostTeamsIDMembersUserIDConvertToManualParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,21 +62,19 @@ PostTeamsIDMembersUserIDConvertToManualParams contains all the parameters to sen
 */
 type PostTeamsIDMembersUserIDConvertToManualParams struct {
 
-	/* ID.
-
-	   Team ID
-	*/
+	// ID.
+	//
+	// Team ID
 	ID string
 
-	/* UserID.
-
-	   User ID
-	*/
+	// UserID.
+	//
+	// User ID
 	UserID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post teams ID members user ID convert to manual params (not the query body).
@@ -90,65 +92,68 @@ func (o *PostTeamsIDMembersUserIDConvertToManualParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post teams ID members user ID convert to manual params
+// WithTimeout adds the timeout to the post teams ID members user ID convert to manual params.
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) WithTimeout(timeout time.Duration) *PostTeamsIDMembersUserIDConvertToManualParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post teams ID members user ID convert to manual params
+// SetTimeout adds the timeout to the post teams ID members user ID convert to manual params.
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post teams ID members user ID convert to manual params
+// WithContext adds the context to the post teams ID members user ID convert to manual params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostTeamsIDMembersUserIDConvertToManualParams].
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) WithContext(ctx context.Context) *PostTeamsIDMembersUserIDConvertToManualParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post teams ID members user ID convert to manual params
+// SetContext adds the context to the post teams ID members user ID convert to manual params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostTeamsIDMembersUserIDConvertToManualParams].
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post teams ID members user ID convert to manual params
+// WithHTTPClient adds the HTTPClient to the post teams ID members user ID convert to manual params.
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) WithHTTPClient(client *http.Client) *PostTeamsIDMembersUserIDConvertToManualParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post teams ID members user ID convert to manual params
+// SetHTTPClient adds the HTTPClient to the post teams ID members user ID convert to manual params.
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the post teams ID members user ID convert to manual params
+// WithID adds the id to the post teams ID members user ID convert to manual params.
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) WithID(id string) *PostTeamsIDMembersUserIDConvertToManualParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the post teams ID members user ID convert to manual params
+// SetID adds the id to the post teams ID members user ID convert to manual params.
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithUserID adds the userID to the post teams ID members user ID convert to manual params
+// WithUserID adds the userID to the post teams ID members user ID convert to manual params.
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) WithUserID(userID string) *PostTeamsIDMembersUserIDConvertToManualParams {
 	o.SetUserID(userID)
 	return o
 }
 
-// SetUserID adds the userId to the post teams ID members user ID convert to manual params
+// SetUserID adds the userId to the post teams ID members user ID convert to manual params.
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) SetUserID(userID string) {
 	o.UserID = userID
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostTeamsIDMembersUserIDConvertToManualParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

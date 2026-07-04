@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostProductsImagesIDPurposeParams() *PostProductsImagesIDPurposeParams {
-	return &PostProductsImagesIDPurposeParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostProductsImagesIDPurposeParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostProductsImagesIDPurposeParamsWithTimeout creates a new PostProductsImagesIDPurposeParams object
 // with the ability to set a timeout on a request.
 func NewPostProductsImagesIDPurposeParamsWithTimeout(timeout time.Duration) *PostProductsImagesIDPurposeParams {
 	return &PostProductsImagesIDPurposeParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostProductsImagesIDPurposeParamsWithContext creates a new PostProductsImagesIDPurposeParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostProductsImagesIDPurposeParams].
 func NewPostProductsImagesIDPurposeParamsWithContext(ctx context.Context) *PostProductsImagesIDPurposeParams {
 	return &PostProductsImagesIDPurposeParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,27 +62,24 @@ PostProductsImagesIDPurposeParams contains all the parameters to send to the API
 */
 type PostProductsImagesIDPurposeParams struct {
 
-	/* File.
-
-	   Image file
-	*/
+	// File.
+	//
+	// Image file
 	File runtime.NamedReadCloser
 
-	/* ID.
-
-	   Data Product ID
-	*/
+	// ID.
+	//
+	// Data Product ID
 	ID string
 
-	/* Purpose.
-
-	   Image purpose (icon or header)
-	*/
+	// Purpose.
+	//
+	// Image purpose (icon or header)
 	Purpose string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post products images ID purpose params (not the query body).
@@ -96,76 +97,79 @@ func (o *PostProductsImagesIDPurposeParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post products images ID purpose params
+// WithTimeout adds the timeout to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) WithTimeout(timeout time.Duration) *PostProductsImagesIDPurposeParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post products images ID purpose params
+// SetTimeout adds the timeout to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post products images ID purpose params
+// WithContext adds the context to the post products images ID purpose params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostProductsImagesIDPurposeParams].
 func (o *PostProductsImagesIDPurposeParams) WithContext(ctx context.Context) *PostProductsImagesIDPurposeParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post products images ID purpose params
+// SetContext adds the context to the post products images ID purpose params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostProductsImagesIDPurposeParams].
 func (o *PostProductsImagesIDPurposeParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post products images ID purpose params
+// WithHTTPClient adds the HTTPClient to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) WithHTTPClient(client *http.Client) *PostProductsImagesIDPurposeParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post products images ID purpose params
+// SetHTTPClient adds the HTTPClient to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithFile adds the file to the post products images ID purpose params
+// WithFile adds the file to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) WithFile(file runtime.NamedReadCloser) *PostProductsImagesIDPurposeParams {
 	o.SetFile(file)
 	return o
 }
 
-// SetFile adds the file to the post products images ID purpose params
+// SetFile adds the file to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) SetFile(file runtime.NamedReadCloser) {
 	o.File = file
 }
 
-// WithID adds the id to the post products images ID purpose params
+// WithID adds the id to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) WithID(id string) *PostProductsImagesIDPurposeParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the post products images ID purpose params
+// SetID adds the id to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithPurpose adds the purpose to the post products images ID purpose params
+// WithPurpose adds the purpose to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) WithPurpose(purpose string) *PostProductsImagesIDPurposeParams {
 	o.SetPurpose(purpose)
 	return o
 }
 
-// SetPurpose adds the purpose to the post products images ID purpose params
+// SetPurpose adds the purpose to the post products images ID purpose params.
 func (o *PostProductsImagesIDPurposeParams) SetPurpose(purpose string) {
 	o.Purpose = purpose
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostProductsImagesIDPurposeParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

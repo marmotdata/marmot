@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -44,11 +43,9 @@ func NewPostLineageBatchOK() *PostLineageBatchOK {
 	return &PostLineageBatchOK{}
 }
 
-/*
-PostLineageBatchOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostLineageBatchOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostLineageBatchOK struct {
 	Payload []*models.BatchLineageResult
 }
@@ -112,11 +109,9 @@ func NewPostLineageBatchBadRequest() *PostLineageBatchBadRequest {
 	return &PostLineageBatchBadRequest{}
 }
 
-/*
-PostLineageBatchBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostLineageBatchBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostLineageBatchBadRequest struct {
 	Payload *models.ErrorResponse
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -44,11 +43,9 @@ func NewGetGlossaryListOK() *GetGlossaryListOK {
 	return &GetGlossaryListOK{}
 }
 
-/*
-GetGlossaryListOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetGlossaryListOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetGlossaryListOK struct {
 	Payload *models.GlossaryListResult
 }
@@ -114,11 +111,9 @@ func NewGetGlossaryListInternalServerError() *GetGlossaryListInternalServerError
 	return &GetGlossaryListInternalServerError{}
 }
 
-/*
-GetGlossaryListInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetGlossaryListInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetGlossaryListInternalServerError struct {
 	Payload *models.ErrorResponse
 }

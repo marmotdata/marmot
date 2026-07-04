@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/stringutils"
 )
 
 // NewGetMetricsParams creates a new GetMetricsParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetMetricsParams() *GetMetricsParams {
-	return &GetMetricsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetMetricsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetMetricsParamsWithTimeout creates a new GetMetricsParams object
 // with the ability to set a timeout on a request.
 func NewGetMetricsParamsWithTimeout(timeout time.Duration) *GetMetricsParams {
 	return &GetMetricsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetMetricsParamsWithContext creates a new GetMetricsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsParams].
 func NewGetMetricsParamsWithContext(ctx context.Context) *GetMetricsParams {
 	return &GetMetricsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,41 +63,36 @@ GetMetricsParams contains all the parameters to send to the API endpoint
 */
 type GetMetricsParams struct {
 
-	/* Aggregation.
-
-	   Aggregation type
-
-	   Default: "avg"
-	*/
+	// Aggregation.
+	//
+	// Aggregation type
+	//
+	// Default: "avg"
 	Aggregation *string
 
-	/* BucketSize.
-
-	   Time bucket size
-	*/
+	// BucketSize.
+	//
+	// Time bucket size
 	BucketSize *string
 
-	/* End.
-
-	   End time (ISO 8601)
-	*/
+	// End.
+	//
+	// End time (ISO 8601)
 	End string
 
-	/* MetricNames.
-
-	   Filter by metric names
-	*/
+	// MetricNames.
+	//
+	// Filter by metric names
 	MetricNames []string
 
-	/* Start.
-
-	   Start time (ISO 8601)
-	*/
+	// Start.
+	//
+	// Start time (ISO 8601)
 	Start string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get metrics params (not the query body).
@@ -116,104 +115,107 @@ func (o *GetMetricsParams) SetDefaults() {
 		Aggregation: &aggregationDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get metrics params
+// WithTimeout adds the timeout to the get metrics params.
 func (o *GetMetricsParams) WithTimeout(timeout time.Duration) *GetMetricsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get metrics params
+// SetTimeout adds the timeout to the get metrics params.
 func (o *GetMetricsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get metrics params
+// WithContext adds the context to the get metrics params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsParams].
 func (o *GetMetricsParams) WithContext(ctx context.Context) *GetMetricsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get metrics params
+// SetContext adds the context to the get metrics params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsParams].
 func (o *GetMetricsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get metrics params
+// WithHTTPClient adds the HTTPClient to the get metrics params.
 func (o *GetMetricsParams) WithHTTPClient(client *http.Client) *GetMetricsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get metrics params
+// SetHTTPClient adds the HTTPClient to the get metrics params.
 func (o *GetMetricsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithAggregation adds the aggregation to the get metrics params
+// WithAggregation adds the aggregation to the get metrics params.
 func (o *GetMetricsParams) WithAggregation(aggregation *string) *GetMetricsParams {
 	o.SetAggregation(aggregation)
 	return o
 }
 
-// SetAggregation adds the aggregation to the get metrics params
+// SetAggregation adds the aggregation to the get metrics params.
 func (o *GetMetricsParams) SetAggregation(aggregation *string) {
 	o.Aggregation = aggregation
 }
 
-// WithBucketSize adds the bucketSize to the get metrics params
+// WithBucketSize adds the bucketSize to the get metrics params.
 func (o *GetMetricsParams) WithBucketSize(bucketSize *string) *GetMetricsParams {
 	o.SetBucketSize(bucketSize)
 	return o
 }
 
-// SetBucketSize adds the bucketSize to the get metrics params
+// SetBucketSize adds the bucketSize to the get metrics params.
 func (o *GetMetricsParams) SetBucketSize(bucketSize *string) {
 	o.BucketSize = bucketSize
 }
 
-// WithEnd adds the end to the get metrics params
+// WithEnd adds the end to the get metrics params.
 func (o *GetMetricsParams) WithEnd(end string) *GetMetricsParams {
 	o.SetEnd(end)
 	return o
 }
 
-// SetEnd adds the end to the get metrics params
+// SetEnd adds the end to the get metrics params.
 func (o *GetMetricsParams) SetEnd(end string) {
 	o.End = end
 }
 
-// WithMetricNames adds the metricNames to the get metrics params
+// WithMetricNames adds the metricNames to the get metrics params.
 func (o *GetMetricsParams) WithMetricNames(metricNames []string) *GetMetricsParams {
 	o.SetMetricNames(metricNames)
 	return o
 }
 
-// SetMetricNames adds the metricNames to the get metrics params
+// SetMetricNames adds the metricNames to the get metrics params.
 func (o *GetMetricsParams) SetMetricNames(metricNames []string) {
 	o.MetricNames = metricNames
 }
 
-// WithStart adds the start to the get metrics params
+// WithStart adds the start to the get metrics params.
 func (o *GetMetricsParams) WithStart(start string) *GetMetricsParams {
 	o.SetStart(start)
 	return o
 }
 
-// SetStart adds the start to the get metrics params
+// SetStart adds the start to the get metrics params.
 func (o *GetMetricsParams) SetStart(start string) {
 	o.Start = start
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetMetricsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -289,7 +291,7 @@ func (o *GetMetricsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Re
 	return nil
 }
 
-// bindParamGetMetrics binds the parameter metric_names
+// bindParamGetMetrics binds the parameter metric_names.
 func (o *GetMetricsParams) bindParamMetricNames(formats strfmt.Registry) []string {
 	metricNamesIR := o.MetricNames
 
@@ -301,7 +303,7 @@ func (o *GetMetricsParams) bindParamMetricNames(formats strfmt.Registry) []strin
 	}
 
 	// items.CollectionFormat: "csv"
-	metricNamesIS := swag.JoinByFormat(metricNamesIC, "csv")
+	metricNamesIS := stringutils.JoinByFormat(metricNamesIC, "csv")
 
 	return metricNamesIS
 }

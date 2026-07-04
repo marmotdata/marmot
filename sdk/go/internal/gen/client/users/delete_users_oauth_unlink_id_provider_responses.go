@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -44,11 +43,9 @@ func NewDeleteUsersOauthUnlinkIDProviderNoContent() *DeleteUsersOauthUnlinkIDPro
 	return &DeleteUsersOauthUnlinkIDProviderNoContent{}
 }
 
-/*
-DeleteUsersOauthUnlinkIDProviderNoContent describes a response with status code 204, with default header values.
-
-No Content
-*/
+// DeleteUsersOauthUnlinkIDProviderNoContent describes a response with status code 204, with default header values.
+//
+// No Content
 type DeleteUsersOauthUnlinkIDProviderNoContent struct {
 }
 
@@ -100,11 +97,9 @@ func NewDeleteUsersOauthUnlinkIDProviderBadRequest() *DeleteUsersOauthUnlinkIDPr
 	return &DeleteUsersOauthUnlinkIDProviderBadRequest{}
 }
 
-/*
-DeleteUsersOauthUnlinkIDProviderBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// DeleteUsersOauthUnlinkIDProviderBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type DeleteUsersOauthUnlinkIDProviderBadRequest struct {
 	Payload *models.ErrorResponse
 }

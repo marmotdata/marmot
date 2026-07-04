@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewGetAPIV1IngestionRunsIDEntitiesOK() *GetAPIV1IngestionRunsIDEntitiesOK {
 	return &GetAPIV1IngestionRunsIDEntitiesOK{}
 }
 
-/*
-GetAPIV1IngestionRunsIDEntitiesOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAPIV1IngestionRunsIDEntitiesOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAPIV1IngestionRunsIDEntitiesOK struct {
 	Payload any
 }
@@ -124,11 +121,9 @@ func NewGetAPIV1IngestionRunsIDEntitiesUnauthorized() *GetAPIV1IngestionRunsIDEn
 	return &GetAPIV1IngestionRunsIDEntitiesUnauthorized{}
 }
 
-/*
-GetAPIV1IngestionRunsIDEntitiesUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// GetAPIV1IngestionRunsIDEntitiesUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type GetAPIV1IngestionRunsIDEntitiesUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -194,11 +189,9 @@ func NewGetAPIV1IngestionRunsIDEntitiesNotFound() *GetAPIV1IngestionRunsIDEntiti
 	return &GetAPIV1IngestionRunsIDEntitiesNotFound{}
 }
 
-/*
-GetAPIV1IngestionRunsIDEntitiesNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetAPIV1IngestionRunsIDEntitiesNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetAPIV1IngestionRunsIDEntitiesNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -264,11 +257,9 @@ func NewGetAPIV1IngestionRunsIDEntitiesInternalServerError() *GetAPIV1IngestionR
 	return &GetAPIV1IngestionRunsIDEntitiesInternalServerError{}
 }
 
-/*
-GetAPIV1IngestionRunsIDEntitiesInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAPIV1IngestionRunsIDEntitiesInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAPIV1IngestionRunsIDEntitiesInternalServerError struct {
 	Payload *models.ErrorResponse
 }

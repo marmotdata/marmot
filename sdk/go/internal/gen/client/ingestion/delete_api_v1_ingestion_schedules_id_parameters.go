@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteAPIV1IngestionSchedulesIDParams() *DeleteAPIV1IngestionSchedulesIDParams {
-	return &DeleteAPIV1IngestionSchedulesIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteAPIV1IngestionSchedulesIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteAPIV1IngestionSchedulesIDParamsWithTimeout creates a new DeleteAPIV1IngestionSchedulesIDParams object
 // with the ability to set a timeout on a request.
 func NewDeleteAPIV1IngestionSchedulesIDParamsWithTimeout(timeout time.Duration) *DeleteAPIV1IngestionSchedulesIDParams {
 	return &DeleteAPIV1IngestionSchedulesIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteAPIV1IngestionSchedulesIDParamsWithContext creates a new DeleteAPIV1IngestionSchedulesIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAPIV1IngestionSchedulesIDParams].
 func NewDeleteAPIV1IngestionSchedulesIDParamsWithContext(ctx context.Context) *DeleteAPIV1IngestionSchedulesIDParams {
 	return &DeleteAPIV1IngestionSchedulesIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ DeleteAPIV1IngestionSchedulesIDParams contains all the parameters to send to the
 */
 type DeleteAPIV1IngestionSchedulesIDParams struct {
 
-	/* ID.
-
-	   Schedule ID
-	*/
+	// ID.
+	//
+	// Schedule ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete API v1 ingestion schedules ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *DeleteAPIV1IngestionSchedulesIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete API v1 ingestion schedules ID params
+// WithTimeout adds the timeout to the delete API v1 ingestion schedules ID params.
 func (o *DeleteAPIV1IngestionSchedulesIDParams) WithTimeout(timeout time.Duration) *DeleteAPIV1IngestionSchedulesIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete API v1 ingestion schedules ID params
+// SetTimeout adds the timeout to the delete API v1 ingestion schedules ID params.
 func (o *DeleteAPIV1IngestionSchedulesIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete API v1 ingestion schedules ID params
+// WithContext adds the context to the delete API v1 ingestion schedules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAPIV1IngestionSchedulesIDParams].
 func (o *DeleteAPIV1IngestionSchedulesIDParams) WithContext(ctx context.Context) *DeleteAPIV1IngestionSchedulesIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete API v1 ingestion schedules ID params
+// SetContext adds the context to the delete API v1 ingestion schedules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAPIV1IngestionSchedulesIDParams].
 func (o *DeleteAPIV1IngestionSchedulesIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete API v1 ingestion schedules ID params
+// WithHTTPClient adds the HTTPClient to the delete API v1 ingestion schedules ID params.
 func (o *DeleteAPIV1IngestionSchedulesIDParams) WithHTTPClient(client *http.Client) *DeleteAPIV1IngestionSchedulesIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete API v1 ingestion schedules ID params
+// SetHTTPClient adds the HTTPClient to the delete API v1 ingestion schedules ID params.
 func (o *DeleteAPIV1IngestionSchedulesIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete API v1 ingestion schedules ID params
+// WithID adds the id to the delete API v1 ingestion schedules ID params.
 func (o *DeleteAPIV1IngestionSchedulesIDParams) WithID(id string) *DeleteAPIV1IngestionSchedulesIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete API v1 ingestion schedules ID params
+// SetID adds the id to the delete API v1 ingestion schedules ID params.
 func (o *DeleteAPIV1IngestionSchedulesIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteAPIV1IngestionSchedulesIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

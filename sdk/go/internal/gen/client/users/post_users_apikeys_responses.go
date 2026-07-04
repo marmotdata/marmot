@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -44,11 +43,9 @@ func NewPostUsersApikeysOK() *PostUsersApikeysOK {
 	return &PostUsersApikeysOK{}
 }
 
-/*
-PostUsersApikeysOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostUsersApikeysOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostUsersApikeysOK struct {
 	Payload *models.APIKey
 }
@@ -114,11 +111,9 @@ func NewPostUsersApikeysBadRequest() *PostUsersApikeysBadRequest {
 	return &PostUsersApikeysBadRequest{}
 }
 
-/*
-PostUsersApikeysBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostUsersApikeysBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostUsersApikeysBadRequest struct {
 	Payload *models.ErrorResponse
 }

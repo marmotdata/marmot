@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetAssetsSuggestionsMetadataValuesParams creates a new GetAssetsSuggestionsMetadataValuesParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsSuggestionsMetadataValuesParams() *GetAssetsSuggestionsMetadataValuesParams {
-	return &GetAssetsSuggestionsMetadataValuesParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsSuggestionsMetadataValuesParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsSuggestionsMetadataValuesParamsWithTimeout creates a new GetAssetsSuggestionsMetadataValuesParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsSuggestionsMetadataValuesParamsWithTimeout(timeout time.Duration) *GetAssetsSuggestionsMetadataValuesParams {
 	return &GetAssetsSuggestionsMetadataValuesParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsSuggestionsMetadataValuesParamsWithContext creates a new GetAssetsSuggestionsMetadataValuesParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSuggestionsMetadataValuesParams].
 func NewGetAssetsSuggestionsMetadataValuesParamsWithContext(ctx context.Context) *GetAssetsSuggestionsMetadataValuesParams {
 	return &GetAssetsSuggestionsMetadataValuesParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,29 +63,26 @@ GetAssetsSuggestionsMetadataValuesParams contains all the parameters to send to 
 */
 type GetAssetsSuggestionsMetadataValuesParams struct {
 
-	/* Field.
-
-	   Metadata field name
-	*/
+	// Field.
+	//
+	// Metadata field name
 	Field string
 
-	/* Limit.
-
-	   Maximum number of suggestions
-
-	   Default: 10
-	*/
+	// Limit.
+	//
+	// Maximum number of suggestions
+	//
+	// Default: 10
 	Limit *int64
 
-	/* Prefix.
-
-	   Value prefix to filter by
-	*/
+	// Prefix.
+	//
+	// Value prefix to filter by
 	Prefix *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets suggestions metadata values params (not the query body).
@@ -104,82 +105,85 @@ func (o *GetAssetsSuggestionsMetadataValuesParams) SetDefaults() {
 		Limit: &limitDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get assets suggestions metadata values params
+// WithTimeout adds the timeout to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) WithTimeout(timeout time.Duration) *GetAssetsSuggestionsMetadataValuesParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets suggestions metadata values params
+// SetTimeout adds the timeout to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets suggestions metadata values params
+// WithContext adds the context to the get assets suggestions metadata values params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSuggestionsMetadataValuesParams].
 func (o *GetAssetsSuggestionsMetadataValuesParams) WithContext(ctx context.Context) *GetAssetsSuggestionsMetadataValuesParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets suggestions metadata values params
+// SetContext adds the context to the get assets suggestions metadata values params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSuggestionsMetadataValuesParams].
 func (o *GetAssetsSuggestionsMetadataValuesParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets suggestions metadata values params
+// WithHTTPClient adds the HTTPClient to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) WithHTTPClient(client *http.Client) *GetAssetsSuggestionsMetadataValuesParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets suggestions metadata values params
+// SetHTTPClient adds the HTTPClient to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithField adds the field to the get assets suggestions metadata values params
+// WithField adds the field to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) WithField(field string) *GetAssetsSuggestionsMetadataValuesParams {
 	o.SetField(field)
 	return o
 }
 
-// SetField adds the field to the get assets suggestions metadata values params
+// SetField adds the field to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) SetField(field string) {
 	o.Field = field
 }
 
-// WithLimit adds the limit to the get assets suggestions metadata values params
+// WithLimit adds the limit to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) WithLimit(limit *int64) *GetAssetsSuggestionsMetadataValuesParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get assets suggestions metadata values params
+// SetLimit adds the limit to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithPrefix adds the prefix to the get assets suggestions metadata values params
+// WithPrefix adds the prefix to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) WithPrefix(prefix *string) *GetAssetsSuggestionsMetadataValuesParams {
 	o.SetPrefix(prefix)
 	return o
 }
 
-// SetPrefix adds the prefix to the get assets suggestions metadata values params
+// SetPrefix adds the prefix to the get assets suggestions metadata values params.
 func (o *GetAssetsSuggestionsMetadataValuesParams) SetPrefix(prefix *string) {
 	o.Prefix = prefix
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsSuggestionsMetadataValuesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -202,7 +206,7 @@ func (o *GetAssetsSuggestionsMetadataValuesParams) WriteToRequest(r runtime.Clie
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {

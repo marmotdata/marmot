@@ -5,20 +5,20 @@ import (
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 )
 
-// FormatAssetCard creates a visually appealing card for an asset
+// FormatAssetCard creates a detailed view of an asset
 func FormatAssetCard(a *asset.Asset, marmotURL string) string {
 	var parts []string
 
-	// Header with icon
-	icon := getAssetIcon(a.Type)
-	parts = append(parts, fmt.Sprintf("## %s %s", icon, escapeMarkdown(*a.Name)))
+	// Header
+	parts = append(parts, fmt.Sprintf("## %s", escapeMarkdown(*a.Name)))
 
 	// Asset link
 	if marmotURL != "" {
-		parts = append(parts, fmt.Sprintf("🔗 [View in Marmot](%s/discover/%s/%s)", strings.TrimSuffix(marmotURL, "/"), a.Type, *a.Name))
+		parts = append(parts, fmt.Sprintf("[View in Marmot](%s/discover/%s/%s)", strings.TrimSuffix(marmotURL, "/"), a.Type, *a.Name))
 	}
 
 	// Type and provider
@@ -35,13 +35,13 @@ func FormatAssetCard(a *asset.Asset, marmotURL string) string {
 	// Description
 	if a.Description != nil && *a.Description != "" {
 		parts = append(parts, "")
-		parts = append(parts, fmt.Sprintf("📝 %s", *a.Description))
+		parts = append(parts, *a.Description)
 	}
 
 	// Tags
 	if len(a.Tags) > 0 {
 		parts = append(parts, "")
-		parts = append(parts, fmt.Sprintf("🏷️  %s", strings.Join(a.Tags, " · ")))
+		parts = append(parts, fmt.Sprintf("**Tags:** %s", strings.Join(a.Tags, ", ")))
 	}
 
 	// Schema (columns and types)
@@ -65,7 +65,7 @@ func FormatAssetCard(a *asset.Asset, marmotURL string) string {
 	}
 
 	// Metadata
-	if a.Metadata != nil && len(a.Metadata) > 0 {
+	if len(a.Metadata) > 0 {
 		parts = append(parts, "")
 		parts = append(parts, "**Metadata:**")
 		for key, value := range a.Metadata {
@@ -80,7 +80,7 @@ func FormatAssetCard(a *asset.Asset, marmotURL string) string {
 func FormatAssetList(assets []*asset.Asset, total int, marmotURL string) string {
 	var parts []string
 
-	parts = append(parts, fmt.Sprintf("# 📊 Found %d assets", total))
+	parts = append(parts, fmt.Sprintf("# Found %d assets", total))
 
 	if total > len(assets) {
 		parts = append(parts, fmt.Sprintf("_Showing %d of %d results (use pagination for more)_", len(assets), total))
@@ -100,8 +100,7 @@ func FormatAssetList(assets []*asset.Asset, total int, marmotURL string) string 
 
 	// Show each type group
 	for assetType, typeAssets := range byType {
-		icon := getAssetIcon(assetType)
-		parts = append(parts, fmt.Sprintf("### %s %s (%d)", icon, assetType, len(typeAssets)))
+		parts = append(parts, fmt.Sprintf("### %s (%d)", assetType, len(typeAssets)))
 		parts = append(parts, "")
 
 		for _, a := range typeAssets {
@@ -121,12 +120,12 @@ func FormatAssetList(assets []*asset.Asset, total int, marmotURL string) string 
 				inline = append(inline, a.Providers[0])
 			}
 			if len(inline) > 0 {
-				parts[len(parts)-1] += " · " + strings.Join(inline, " · ")
+				parts[len(parts)-1] += " — " + strings.Join(inline, ", ")
 			}
 
 			// Add description if short
 			if a.Description != nil && *a.Description != "" && len(*a.Description) < 100 {
-				parts = append(parts, fmt.Sprintf("  _↳ %s_", *a.Description))
+				parts = append(parts, fmt.Sprintf("  _%s_", *a.Description))
 			}
 		}
 		parts = append(parts, "")
@@ -140,16 +139,12 @@ func FormatOwnershipResult(ownerName, ownerType string, assets []*asset.Asset, t
 	var parts []string
 
 	// Header
-	icon := "👤"
-	if ownerType == "team" {
-		icon = "👥"
-	}
-	parts = append(parts, fmt.Sprintf("# %s %s's Data Catalog", icon, ownerName))
+	parts = append(parts, fmt.Sprintf("# Resources owned by %s (%s)", ownerName, ownerType))
 	parts = append(parts, "")
 
 	// Assets section
 	if len(assets) > 0 {
-		parts = append(parts, fmt.Sprintf("## 📦 Data Assets (%d)", len(assets)))
+		parts = append(parts, fmt.Sprintf("## Data Assets (%d)", len(assets)))
 		parts = append(parts, "")
 
 		// Group by type
@@ -159,8 +154,7 @@ func FormatOwnershipResult(ownerName, ownerType string, assets []*asset.Asset, t
 		}
 
 		for assetType, typeAssets := range byType {
-			icon := getAssetIcon(assetType)
-			parts = append(parts, fmt.Sprintf("### %s %s (%d)", icon, assetType, len(typeAssets)))
+			parts = append(parts, fmt.Sprintf("### %s (%d)", assetType, len(typeAssets)))
 			for _, a := range typeAssets {
 				name := *a.Name
 				if marmotURL != "" {
@@ -170,20 +164,20 @@ func FormatOwnershipResult(ownerName, ownerType string, assets []*asset.Asset, t
 				}
 
 				if a.Description != nil && *a.Description != "" && len(*a.Description) < 80 {
-					parts = append(parts, fmt.Sprintf("  _↳ %s_", *a.Description))
+					parts = append(parts, fmt.Sprintf("  _%s_", *a.Description))
 				}
 			}
 			parts = append(parts, "")
 		}
 	} else {
-		parts = append(parts, "## 📦 Data Assets")
+		parts = append(parts, "## Data Assets")
 		parts = append(parts, "_No data assets owned_")
 		parts = append(parts, "")
 	}
 
 	// Glossary terms section
 	if len(terms) > 0 {
-		parts = append(parts, fmt.Sprintf("## 📚 Glossary Terms (%d)", len(terms)))
+		parts = append(parts, fmt.Sprintf("## Glossary Terms (%d)", len(terms)))
 		parts = append(parts, "")
 
 		for _, term := range terms {
@@ -196,7 +190,7 @@ func FormatOwnershipResult(ownerName, ownerType string, assets []*asset.Asset, t
 			parts = append(parts, "")
 		}
 	} else {
-		parts = append(parts, "## 📚 Glossary Terms")
+		parts = append(parts, "## Glossary Terms")
 		parts = append(parts, "_No glossary terms owned_")
 		parts = append(parts, "")
 	}
@@ -209,12 +203,12 @@ func FormatTermCard(term *glossary.GlossaryTerm, marmotURL string) string {
 	var parts []string
 
 	// Header
-	parts = append(parts, fmt.Sprintf("# 📖 %s", escapeMarkdown(term.Name)))
+	parts = append(parts, fmt.Sprintf("# %s", escapeMarkdown(term.Name)))
 	parts = append(parts, "")
 
 	// Link
 	if marmotURL != "" {
-		parts = append(parts, fmt.Sprintf("🔗 [View in Marmot](%s/glossary/%s)", strings.TrimSuffix(marmotURL, "/"), term.ID))
+		parts = append(parts, fmt.Sprintf("[View in Marmot](%s/glossary/%s)", strings.TrimSuffix(marmotURL, "/"), term.ID))
 		parts = append(parts, "")
 	}
 
@@ -232,13 +226,9 @@ func FormatTermCard(term *glossary.GlossaryTerm, marmotURL string) string {
 
 	// Owners
 	if len(term.Owners) > 0 {
-		parts = append(parts, "## 👥 Owners")
+		parts = append(parts, "## Owners")
 		for _, owner := range term.Owners {
-			icon := "👤"
-			if owner.Type == "team" {
-				icon = "👥"
-			}
-			parts = append(parts, fmt.Sprintf("- %s %s", icon, owner.Name))
+			parts = append(parts, fmt.Sprintf("- %s (%s)", owner.Name, owner.Type))
 		}
 		parts = append(parts, "")
 	}
@@ -251,12 +241,12 @@ func FormatTermCard(term *glossary.GlossaryTerm, marmotURL string) string {
 
 	// Tags
 	if len(term.Tags) > 0 {
-		parts = append(parts, fmt.Sprintf("🏷️  %s", strings.Join(term.Tags, " · ")))
+		parts = append(parts, fmt.Sprintf("**Tags:** %s", strings.Join(term.Tags, ", ")))
 		parts = append(parts, "")
 	}
 
 	// Metadata
-	if term.Metadata != nil && len(term.Metadata) > 0 {
+	if len(term.Metadata) > 0 {
 		parts = append(parts, "## Additional Properties")
 		for key, value := range term.Metadata {
 			parts = append(parts, fmt.Sprintf("- **%s**: %v", key, value))
@@ -327,7 +317,7 @@ func FormatNextActions(actions map[string]string) string {
 	var parts []string
 	parts = append(parts, "---")
 	parts = append(parts, "")
-	parts = append(parts, "## 💡 What's Next?")
+	parts = append(parts, "## Next steps")
 	parts = append(parts, "")
 
 	for label, action := range actions {
@@ -339,26 +329,273 @@ func FormatNextActions(actions map[string]string) string {
 	return strings.Join(parts, "\n")
 }
 
-// getAssetIcon returns an emoji icon for the given asset type.
-func getAssetIcon(assetType string) string {
-	icons := map[string]string{
-		"table":     "📊",
-		"view":      "👁️",
-		"topic":     "📨",
-		"queue":     "📬",
-		"bucket":    "🪣",
-		"database":  "💾",
-		"schema":    "📐",
-		"dashboard": "📈",
-		"api":       "🔌",
-		"file":      "📄",
-		"stream":    "🌊",
+// FormatDataProductCard creates a rich data product display including member assets.
+func FormatDataProductCard(product *dataproduct.DataProduct, memberAssets []*asset.Asset, totalAssets int, marmotURL string) string {
+	var parts []string
+
+	parts = append(parts, fmt.Sprintf("# %s", escapeMarkdown(product.Name)))
+	parts = append(parts, "")
+
+	if marmotURL != "" {
+		parts = append(parts, fmt.Sprintf("[View in Marmot](%s/products/%s)", strings.TrimSuffix(marmotURL, "/"), product.ID))
+		parts = append(parts, "")
 	}
 
-	if icon, ok := icons[strings.ToLower(assetType)]; ok {
-		return icon
+	if product.Description != nil && *product.Description != "" {
+		parts = append(parts, *product.Description)
+		parts = append(parts, "")
 	}
-	return "📦" // default
+
+	if len(product.Owners) > 0 {
+		parts = append(parts, "## Owners")
+		for _, owner := range product.Owners {
+			ownerLine := fmt.Sprintf("- **%s** (%s)", escapeMarkdown(owner.Name), owner.Type)
+			if owner.Email != nil && *owner.Email != "" {
+				ownerLine += fmt.Sprintf(" — %s", *owner.Email)
+			}
+			parts = append(parts, ownerLine)
+		}
+		parts = append(parts, "")
+	}
+
+	if len(product.Rules) > 0 {
+		parts = append(parts, "## Membership Rules")
+		for _, rule := range product.Rules {
+			status := "enabled"
+			if !rule.IsEnabled {
+				status = "disabled"
+			}
+			ruleLine := fmt.Sprintf("- **%s** (%s, %s)", escapeMarkdown(rule.Name), rule.RuleType, status)
+			if rule.MatchedAssetCount > 0 {
+				ruleLine += fmt.Sprintf(" — %d matched assets", rule.MatchedAssetCount)
+			}
+			parts = append(parts, ruleLine)
+		}
+		parts = append(parts, "")
+	}
+
+	parts = append(parts, fmt.Sprintf("## Member Assets (%d)", totalAssets))
+	parts = append(parts, "")
+	if len(memberAssets) == 0 {
+		parts = append(parts, "_No assets in this data product_")
+	} else {
+		for _, a := range memberAssets {
+			name := *a.Name
+			if marmotURL != "" {
+				parts = append(parts, fmt.Sprintf("- [%s](%s/discover/%s/%s) (%s)", escapeMarkdown(name), strings.TrimSuffix(marmotURL, "/"), a.Type, name, a.Type))
+			} else {
+				parts = append(parts, fmt.Sprintf("- %s (%s)", escapeMarkdown(name), a.Type))
+			}
+		}
+		if totalAssets > len(memberAssets) {
+			parts = append(parts, fmt.Sprintf("_...and %d more assets_", totalAssets-len(memberAssets)))
+		}
+	}
+	parts = append(parts, "")
+
+	if len(product.Tags) > 0 {
+		parts = append(parts, fmt.Sprintf("**Tags:** %s", strings.Join(product.Tags, ", ")))
+		parts = append(parts, "")
+	}
+
+	return strings.Join(parts, "\n")
+}
+
+// FormatDataProductList creates a compact list of data products.
+func FormatDataProductList(products []*dataproduct.DataProduct, total int, marmotURL string) string {
+	var parts []string
+
+	parts = append(parts, fmt.Sprintf("# Found %d data products", total))
+
+	if total > len(products) {
+		parts = append(parts, fmt.Sprintf("_Showing %d of %d results (use pagination for more)_", len(products), total))
+	}
+	parts = append(parts, "")
+
+	if len(products) == 0 {
+		parts = append(parts, "No data products found matching your criteria.")
+		return strings.Join(parts, "\n")
+	}
+
+	for _, product := range products {
+		if marmotURL != "" {
+			parts = append(parts, fmt.Sprintf("- [%s](%s/products/%s) — %d assets", escapeMarkdown(product.Name), strings.TrimSuffix(marmotURL, "/"), product.ID, product.AssetCount))
+		} else {
+			parts = append(parts, fmt.Sprintf("- %s — %d assets", escapeMarkdown(product.Name), product.AssetCount))
+		}
+
+		if product.Description != nil && *product.Description != "" && len(*product.Description) < 100 {
+			parts = append(parts, fmt.Sprintf("  _%s_", *product.Description))
+		}
+	}
+
+	return strings.Join(parts, "\n")
+}
+
+// FormatAssetDataProducts formats the data products an asset belongs to.
+func FormatAssetDataProducts(products []*dataproduct.DataProduct, marmotURL string) string {
+	var parts []string
+	parts = append(parts, "## Data Products")
+	parts = append(parts, "")
+
+	for _, product := range products {
+		if marmotURL != "" {
+			parts = append(parts, fmt.Sprintf("- [%s](%s/products/%s)", escapeMarkdown(product.Name), strings.TrimSuffix(marmotURL, "/"), product.ID))
+		} else {
+			parts = append(parts, fmt.Sprintf("- %s", escapeMarkdown(product.Name)))
+		}
+	}
+
+	return strings.Join(parts, "\n")
+}
+
+// FormatTeamCard creates a rich team display including members.
+func FormatTeamCard(team *Team, members []*TeamMember, marmotURL string) string {
+	var parts []string
+
+	parts = append(parts, fmt.Sprintf("# %s", escapeMarkdown(team.Name)))
+	parts = append(parts, "")
+
+	if marmotURL != "" {
+		parts = append(parts, fmt.Sprintf("[View in Marmot](%s/teams/%s)", strings.TrimSuffix(marmotURL, "/"), team.ID))
+		parts = append(parts, "")
+	}
+
+	if team.Description != "" {
+		parts = append(parts, team.Description)
+		parts = append(parts, "")
+	}
+
+	parts = append(parts, fmt.Sprintf("## Members (%d)", len(members)))
+	parts = append(parts, "")
+	if len(members) == 0 {
+		parts = append(parts, "_No members in this team_")
+	} else {
+		for _, member := range members {
+			memberLine := fmt.Sprintf("- **%s** (@%s) — %s", escapeMarkdown(member.Name), member.Username, member.Role)
+			if member.Email != nil && *member.Email != "" {
+				memberLine += fmt.Sprintf(", %s", *member.Email)
+			}
+			parts = append(parts, memberLine)
+		}
+	}
+	parts = append(parts, "")
+
+	if len(team.Tags) > 0 {
+		parts = append(parts, fmt.Sprintf("**Tags:** %s", strings.Join(team.Tags, ", ")))
+		parts = append(parts, "")
+	}
+
+	return strings.Join(parts, "\n")
+}
+
+// FormatTeamList creates a compact list of teams.
+func FormatTeamList(teams []*Team, total int, marmotURL string) string {
+	var parts []string
+
+	parts = append(parts, fmt.Sprintf("# Found %d teams", total))
+
+	if total > len(teams) {
+		parts = append(parts, fmt.Sprintf("_Showing %d of %d results (use pagination for more)_", len(teams), total))
+	}
+	parts = append(parts, "")
+
+	if len(teams) == 0 {
+		parts = append(parts, "No teams found.")
+		return strings.Join(parts, "\n")
+	}
+
+	for _, team := range teams {
+		parts = append(parts, formatTeamListEntry(team, marmotURL))
+	}
+
+	return strings.Join(parts, "\n")
+}
+
+// formatTeamListEntry formats a single team as a list item.
+func formatTeamListEntry(team *Team, marmotURL string) string {
+	var entry string
+	if marmotURL != "" {
+		entry = fmt.Sprintf("- [%s](%s/teams/%s)", escapeMarkdown(team.Name), strings.TrimSuffix(marmotURL, "/"), team.ID)
+	} else {
+		entry = fmt.Sprintf("- %s", escapeMarkdown(team.Name))
+	}
+
+	if team.Description != "" && len(team.Description) < 100 {
+		entry += fmt.Sprintf("\n  _%s_", team.Description)
+	}
+
+	return entry
+}
+
+// FormatTermList creates a compact list of glossary terms.
+func FormatTermList(terms []*glossary.GlossaryTerm, total int, marmotURL string) string {
+	var parts []string
+
+	parts = append(parts, fmt.Sprintf("# Found %d glossary terms", total))
+
+	if total > len(terms) {
+		parts = append(parts, fmt.Sprintf("_Showing %d of %d results (use pagination for more)_", len(terms), total))
+	}
+	parts = append(parts, "")
+
+	if len(terms) == 0 {
+		parts = append(parts, "No glossary terms found matching your criteria.")
+		return strings.Join(parts, "\n")
+	}
+
+	for _, term := range terms {
+		if marmotURL != "" {
+			parts = append(parts, fmt.Sprintf("- [%s](%s/glossary/%s)", escapeMarkdown(term.Name), strings.TrimSuffix(marmotURL, "/"), term.ID))
+		} else {
+			parts = append(parts, fmt.Sprintf("- %s", escapeMarkdown(term.Name)))
+		}
+
+		definition := term.Definition
+		if len(definition) > 120 {
+			definition = definition[:117] + "..."
+		}
+		if definition != "" {
+			parts = append(parts, fmt.Sprintf("  _%s_", definition))
+		}
+	}
+
+	return strings.Join(parts, "\n")
+}
+
+// FormatTermHierarchy formats a set of related terms (ancestors or children) under a heading.
+func FormatTermHierarchy(heading string, terms []*glossary.GlossaryTerm) string {
+	var parts []string
+	parts = append(parts, fmt.Sprintf("## %s", heading))
+	parts = append(parts, "")
+
+	for _, term := range terms {
+		parts = append(parts, fmt.Sprintf("- **%s** (`%s`)", escapeMarkdown(term.Name), term.ID))
+	}
+
+	return strings.Join(parts, "\n")
+}
+
+// FormatTermAssets formats the assets linked to a glossary term.
+func FormatTermAssets(assets []*asset.Asset, total int, marmotURL string) string {
+	var parts []string
+	parts = append(parts, fmt.Sprintf("## Linked Assets (%d)", total))
+	parts = append(parts, "")
+
+	for _, a := range assets {
+		name := *a.Name
+		if marmotURL != "" {
+			parts = append(parts, fmt.Sprintf("- [%s](%s/discover/%s/%s) (%s)", escapeMarkdown(name), strings.TrimSuffix(marmotURL, "/"), a.Type, name, a.Type))
+		} else {
+			parts = append(parts, fmt.Sprintf("- %s (%s)", escapeMarkdown(name), a.Type))
+		}
+	}
+
+	if total > len(assets) {
+		parts = append(parts, fmt.Sprintf("_...and %d more assets_", total-len(assets)))
+	}
+
+	return strings.Join(parts, "\n")
 }
 
 // escapeMarkdown escapes markdown special characters in a string.

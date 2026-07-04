@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewDeleteUsersIDNoContent() *DeleteUsersIDNoContent {
 	return &DeleteUsersIDNoContent{}
 }
 
-/*
-DeleteUsersIDNoContent describes a response with status code 204, with default header values.
-
-No Content
-*/
+// DeleteUsersIDNoContent describes a response with status code 204, with default header values.
+//
+// No Content
 type DeleteUsersIDNoContent struct {
 }
 
@@ -106,11 +103,9 @@ func NewDeleteUsersIDNotFound() *DeleteUsersIDNotFound {
 	return &DeleteUsersIDNotFound{}
 }
 
-/*
-DeleteUsersIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// DeleteUsersIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type DeleteUsersIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -176,11 +171,9 @@ func NewDeleteUsersIDInternalServerError() *DeleteUsersIDInternalServerError {
 	return &DeleteUsersIDInternalServerError{}
 }
 
-/*
-DeleteUsersIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// DeleteUsersIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type DeleteUsersIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

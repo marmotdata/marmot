@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPutAPIV1IngestionSchedulesIDParams() *PutAPIV1IngestionSchedulesIDParams {
-	return &PutAPIV1IngestionSchedulesIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPutAPIV1IngestionSchedulesIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPutAPIV1IngestionSchedulesIDParamsWithTimeout creates a new PutAPIV1IngestionSchedulesIDParams object
 // with the ability to set a timeout on a request.
 func NewPutAPIV1IngestionSchedulesIDParamsWithTimeout(timeout time.Duration) *PutAPIV1IngestionSchedulesIDParams {
 	return &PutAPIV1IngestionSchedulesIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPutAPIV1IngestionSchedulesIDParamsWithContext creates a new PutAPIV1IngestionSchedulesIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutAPIV1IngestionSchedulesIDParams].
 func NewPutAPIV1IngestionSchedulesIDParamsWithContext(ctx context.Context) *PutAPIV1IngestionSchedulesIDParams {
 	return &PutAPIV1IngestionSchedulesIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,21 +63,19 @@ PutAPIV1IngestionSchedulesIDParams contains all the parameters to send to the AP
 */
 type PutAPIV1IngestionSchedulesIDParams struct {
 
-	/* ID.
-
-	   Schedule ID
-	*/
+	// ID.
+	//
+	// Schedule ID
 	ID string
 
-	/* Schedule.
-
-	   Updated schedule configuration
-	*/
+	// Schedule.
+	//
+	// Updated schedule configuration
 	Schedule *models.UpdateScheduleRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the put API v1 ingestion schedules ID params (not the query body).
@@ -92,65 +93,68 @@ func (o *PutAPIV1IngestionSchedulesIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the put API v1 ingestion schedules ID params
+// WithTimeout adds the timeout to the put API v1 ingestion schedules ID params.
 func (o *PutAPIV1IngestionSchedulesIDParams) WithTimeout(timeout time.Duration) *PutAPIV1IngestionSchedulesIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the put API v1 ingestion schedules ID params
+// SetTimeout adds the timeout to the put API v1 ingestion schedules ID params.
 func (o *PutAPIV1IngestionSchedulesIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the put API v1 ingestion schedules ID params
+// WithContext adds the context to the put API v1 ingestion schedules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutAPIV1IngestionSchedulesIDParams].
 func (o *PutAPIV1IngestionSchedulesIDParams) WithContext(ctx context.Context) *PutAPIV1IngestionSchedulesIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the put API v1 ingestion schedules ID params
+// SetContext adds the context to the put API v1 ingestion schedules ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutAPIV1IngestionSchedulesIDParams].
 func (o *PutAPIV1IngestionSchedulesIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the put API v1 ingestion schedules ID params
+// WithHTTPClient adds the HTTPClient to the put API v1 ingestion schedules ID params.
 func (o *PutAPIV1IngestionSchedulesIDParams) WithHTTPClient(client *http.Client) *PutAPIV1IngestionSchedulesIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the put API v1 ingestion schedules ID params
+// SetHTTPClient adds the HTTPClient to the put API v1 ingestion schedules ID params.
 func (o *PutAPIV1IngestionSchedulesIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the put API v1 ingestion schedules ID params
+// WithID adds the id to the put API v1 ingestion schedules ID params.
 func (o *PutAPIV1IngestionSchedulesIDParams) WithID(id string) *PutAPIV1IngestionSchedulesIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the put API v1 ingestion schedules ID params
+// SetID adds the id to the put API v1 ingestion schedules ID params.
 func (o *PutAPIV1IngestionSchedulesIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithSchedule adds the schedule to the put API v1 ingestion schedules ID params
+// WithSchedule adds the schedule to the put API v1 ingestion schedules ID params.
 func (o *PutAPIV1IngestionSchedulesIDParams) WithSchedule(schedule *models.UpdateScheduleRequest) *PutAPIV1IngestionSchedulesIDParams {
 	o.SetSchedule(schedule)
 	return o
 }
 
-// SetSchedule adds the schedule to the put API v1 ingestion schedules ID params
+// SetSchedule adds the schedule to the put API v1 ingestion schedules ID params.
 func (o *PutAPIV1IngestionSchedulesIDParams) SetSchedule(schedule *models.UpdateScheduleRequest) {
 	o.Schedule = schedule
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PutAPIV1IngestionSchedulesIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

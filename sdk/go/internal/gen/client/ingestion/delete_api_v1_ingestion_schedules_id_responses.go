@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewDeleteAPIV1IngestionSchedulesIDNoContent() *DeleteAPIV1IngestionSchedule
 	return &DeleteAPIV1IngestionSchedulesIDNoContent{}
 }
 
-/*
-DeleteAPIV1IngestionSchedulesIDNoContent describes a response with status code 204, with default header values.
-
-No Content
-*/
+// DeleteAPIV1IngestionSchedulesIDNoContent describes a response with status code 204, with default header values.
+//
+// No Content
 type DeleteAPIV1IngestionSchedulesIDNoContent struct {
 }
 
@@ -112,11 +109,9 @@ func NewDeleteAPIV1IngestionSchedulesIDUnauthorized() *DeleteAPIV1IngestionSched
 	return &DeleteAPIV1IngestionSchedulesIDUnauthorized{}
 }
 
-/*
-DeleteAPIV1IngestionSchedulesIDUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// DeleteAPIV1IngestionSchedulesIDUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type DeleteAPIV1IngestionSchedulesIDUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -182,11 +177,9 @@ func NewDeleteAPIV1IngestionSchedulesIDNotFound() *DeleteAPIV1IngestionSchedules
 	return &DeleteAPIV1IngestionSchedulesIDNotFound{}
 }
 
-/*
-DeleteAPIV1IngestionSchedulesIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// DeleteAPIV1IngestionSchedulesIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type DeleteAPIV1IngestionSchedulesIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -252,11 +245,9 @@ func NewDeleteAPIV1IngestionSchedulesIDInternalServerError() *DeleteAPIV1Ingesti
 	return &DeleteAPIV1IngestionSchedulesIDInternalServerError{}
 }
 
-/*
-DeleteAPIV1IngestionSchedulesIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// DeleteAPIV1IngestionSchedulesIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type DeleteAPIV1IngestionSchedulesIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetGlossaryAncestorsIDParams() *GetGlossaryAncestorsIDParams {
-	return &GetGlossaryAncestorsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetGlossaryAncestorsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetGlossaryAncestorsIDParamsWithTimeout creates a new GetGlossaryAncestorsIDParams object
 // with the ability to set a timeout on a request.
 func NewGetGlossaryAncestorsIDParamsWithTimeout(timeout time.Duration) *GetGlossaryAncestorsIDParams {
 	return &GetGlossaryAncestorsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetGlossaryAncestorsIDParamsWithContext creates a new GetGlossaryAncestorsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryAncestorsIDParams].
 func NewGetGlossaryAncestorsIDParamsWithContext(ctx context.Context) *GetGlossaryAncestorsIDParams {
 	return &GetGlossaryAncestorsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetGlossaryAncestorsIDParams contains all the parameters to send to the API endp
 */
 type GetGlossaryAncestorsIDParams struct {
 
-	/* ID.
-
-	   Term ID
-	*/
+	// ID.
+	//
+	// Term ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get glossary ancestors ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetGlossaryAncestorsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get glossary ancestors ID params
+// WithTimeout adds the timeout to the get glossary ancestors ID params.
 func (o *GetGlossaryAncestorsIDParams) WithTimeout(timeout time.Duration) *GetGlossaryAncestorsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get glossary ancestors ID params
+// SetTimeout adds the timeout to the get glossary ancestors ID params.
 func (o *GetGlossaryAncestorsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get glossary ancestors ID params
+// WithContext adds the context to the get glossary ancestors ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryAncestorsIDParams].
 func (o *GetGlossaryAncestorsIDParams) WithContext(ctx context.Context) *GetGlossaryAncestorsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get glossary ancestors ID params
+// SetContext adds the context to the get glossary ancestors ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryAncestorsIDParams].
 func (o *GetGlossaryAncestorsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get glossary ancestors ID params
+// WithHTTPClient adds the HTTPClient to the get glossary ancestors ID params.
 func (o *GetGlossaryAncestorsIDParams) WithHTTPClient(client *http.Client) *GetGlossaryAncestorsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get glossary ancestors ID params
+// SetHTTPClient adds the HTTPClient to the get glossary ancestors ID params.
 func (o *GetGlossaryAncestorsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get glossary ancestors ID params
+// WithID adds the id to the get glossary ancestors ID params.
 func (o *GetGlossaryAncestorsIDParams) WithID(id string) *GetGlossaryAncestorsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get glossary ancestors ID params
+// SetID adds the id to the get glossary ancestors ID params.
 func (o *GetGlossaryAncestorsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetGlossaryAncestorsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
