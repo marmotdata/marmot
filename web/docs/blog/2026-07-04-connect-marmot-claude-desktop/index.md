@@ -21,7 +21,9 @@ import { CalloutCard } from '@site/src/components/DocCard';
   <img src="/img/marmot-claude-desktop-banner.png" alt="Marmot connected to Claude Desktop" style={{maxWidth: '100%', borderRadius: '8px'}} />
 </div>
 
-Half the company already has Claude Desktop installed. That's a direct line to your data catalog sitting idle on every laptop. Hook it up to Marmot over MCP, which is one config file, and everyone who has Claude open can ask about your data the same way they ask about anything else. This post walks through the setup end to end.
+Most people at your company already have Claude, ChatGPT, Gemini or Cursor installed. These assistants know a lot, but not your organization: where revenue actually lives, which service collects customer analytics, who owns which database, what the schema behind a dashboard looks like.
+
+Marmot exposes all of that context through a single MCP server, so the assistants people already use can pull in your organization's metadata. The questions that used to land in a team's Slack channel get answered directly by the person or agent who had them, which is a huge autonomy boost. This post wires up Claude Desktop, end to end.
 
 <!-- truncate -->
 
