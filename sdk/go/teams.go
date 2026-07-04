@@ -23,6 +23,20 @@ type TeamsListOptions struct {
 	Offset int64
 }
 
+// CreateTeamInput is the input for TeamsService.Create.
+type CreateTeamInput struct {
+	Name        string
+	Description string
+}
+
+// UpdateTeamInput is the input for TeamsService.Update.
+type UpdateTeamInput struct {
+	Name        string
+	Description string
+	Metadata    map[string]any
+	Tags        []string
+}
+
 // TeamsService lists teams and their members.
 type TeamsService struct {
 	gen *apiclient.Marmot
@@ -62,4 +76,43 @@ func (s *TeamsService) Members(ctx context.Context, id string) (*TeamMembers, er
 		return nil, mapErr(err)
 	}
 	return resp.Payload, nil
+}
+
+// Create creates a new team.
+func (s *TeamsService) Create(ctx context.Context, in CreateTeamInput) (*Team, error) {
+	body := &models.CreateTeamRequest{
+		Name:        in.Name,
+		Description: in.Description,
+	}
+	p := teams.NewPostTeamsParams().WithContext(ctx).WithTeam(body)
+	resp, err := s.gen.Teams.PostTeams(p)
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return resp.Payload, nil
+}
+
+// Update modifies an existing team. The update endpoint returns only a status
+// message, so Update re-fetches the team to return its current state.
+func (s *TeamsService) Update(ctx context.Context, id string, in UpdateTeamInput) (*Team, error) {
+	body := &models.UpdateTeamRequest{
+		Name:        in.Name,
+		Description: in.Description,
+		Tags:        in.Tags,
+	}
+	if len(in.Metadata) > 0 {
+		body.Metadata = in.Metadata
+	}
+	p := teams.NewPutTeamsIDParams().WithContext(ctx).WithID(id).WithTeam(body)
+	if _, err := s.gen.Teams.PutTeamsID(p); err != nil {
+		return nil, mapErr(err)
+	}
+	return s.Get(ctx, id)
+}
+
+// Delete removes a team.
+func (s *TeamsService) Delete(ctx context.Context, id string) error {
+	p := teams.NewDeleteTeamsIDParams().WithContext(ctx).WithID(id)
+	_, err := s.gen.Teams.DeleteTeamsID(p)
+	return mapErr(err)
 }

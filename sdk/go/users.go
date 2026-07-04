@@ -23,6 +23,24 @@ type UsersListOptions struct {
 	Offset  int64
 }
 
+// CreateUserInput is the input for UsersService.Create.
+type CreateUserInput struct {
+	Name           string
+	Username       string
+	Password       string
+	RoleNames      []string
+	ProfilePicture string
+}
+
+// UpdateUserInput is the input for UsersService.Update.
+type UpdateUserInput struct {
+	Name           string
+	Email          string
+	Password       string
+	RoleNames      []string
+	ProfilePicture string
+}
+
 // UsersService exposes user listing and identity queries.
 type UsersService struct {
 	gen *apiclient.Marmot
@@ -71,4 +89,46 @@ func (s *UsersService) Me(ctx context.Context) (*User, error) {
 		return nil, mapErr(err)
 	}
 	return resp.Payload, nil
+}
+
+// Create creates a new user.
+func (s *UsersService) Create(ctx context.Context, in CreateUserInput) (*User, error) {
+	name, username := in.Name, in.Username
+	body := &models.CreateUserInput{
+		Name:           &name,
+		Username:       &username,
+		Password:       in.Password,
+		RoleNames:      in.RoleNames,
+		ProfilePicture: in.ProfilePicture,
+	}
+	p := users.NewPostUsersParams().WithContext(ctx).WithUser(body)
+	resp, err := s.gen.Users.PostUsers(p)
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return resp.Payload, nil
+}
+
+// Update modifies an existing user.
+func (s *UsersService) Update(ctx context.Context, id string, in UpdateUserInput) (*User, error) {
+	body := &models.UpdateUserInput{
+		Name:           in.Name,
+		Email:          in.Email,
+		Password:       in.Password,
+		RoleNames:      in.RoleNames,
+		ProfilePicture: in.ProfilePicture,
+	}
+	p := users.NewPutUsersIDParams().WithContext(ctx).WithID(id).WithUser(body)
+	resp, err := s.gen.Users.PutUsersID(p)
+	if err != nil {
+		return nil, mapErr(err)
+	}
+	return resp.Payload, nil
+}
+
+// Delete removes a user.
+func (s *UsersService) Delete(ctx context.Context, id string) error {
+	p := users.NewDeleteUsersIDParams().WithContext(ctx).WithID(id)
+	_, err := s.gen.Users.DeleteUsersID(p)
+	return mapErr(err)
 }
