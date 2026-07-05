@@ -4,9 +4,9 @@ import (
 	"net/http"
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/pkg/config"
 )
 
 type Handler struct {
@@ -74,6 +74,9 @@ func (h *Handler) Routes() []common.Route {
 			Path:    "/api/v1/users/login",
 			Method:  http.MethodPost,
 			Handler: h.login,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithRateLimit(h.config, 10, 60),
+			},
 		},
 		{
 			Path:    "/api/v1/users/oauth/link",
