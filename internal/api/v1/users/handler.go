@@ -81,6 +81,7 @@ func (h *Handler) Routes() []common.Route {
 			Handler: h.linkOAuthAccount,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "users", "manage"),
 			},
 		},
 		{
@@ -89,6 +90,7 @@ func (h *Handler) Routes() []common.Route {
 			Handler: h.unlinkOAuthAccount,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
+				common.RequirePermission(h.userService, "users", "manage"),
 			},
 		},
 		{
@@ -148,6 +150,7 @@ func (h *Handler) Routes() []common.Route {
 			Handler: h.updatePassword,
 			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
 				common.WithAuth(h.userService, h.authService, h.config),
+				common.WithRateLimit(h.config, 10, 60),
 			},
 		},
 	}
