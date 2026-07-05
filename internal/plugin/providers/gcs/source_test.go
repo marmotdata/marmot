@@ -102,3 +102,46 @@ func TestSource_ValidateDefaults(t *testing.T) {
 	assert.Equal(t, "test-project", s.config.ProjectID)
 	assert.Equal(t, "/path/to/creds.json", s.config.CredentialsFile)
 }
+
+func TestSource_ValidateParsesImpersonation(t *testing.T) {
+	s := &Source{}
+	config := map[string]interface{}{
+		"project_id":                  "test-project",
+		"impersonate_service_account": "marmot@test-project.iam.gserviceaccount.com",
+	}
+
+	_, err := s.Validate(plugin.RawPluginConfig(config))
+	require.NoError(t, err)
+	assert.Equal(t, "marmot@test-project.iam.gserviceaccount.com", s.config.ImpersonateServiceAccount)
+}
+
+func TestConfig_CredentialSourceDefaultsToADC(t *testing.T) {
+	c := &Config{ProjectID: "p"}
+	assert.Equal(t, "application default credentials", c.credentialSource())
+	assert.Nil(t, c.authOptions(), "keyless ADC must not set credential options")
+}
+
+func TestConfig_CredentialSourceWithFile(t *testing.T) {
+	c := &Config{ProjectID: "p", CredentialsFile: "/path/to/creds.json"}
+	assert.Equal(t, "Service Account file", c.credentialSource())
+	assert.Len(t, c.authOptions(), 1)
+}
+
+func TestConfig_CredentialSourceWithJSON(t *testing.T) {
+	c := &Config{ProjectID: "p", CredentialsJSON: `{"type":"service_account"}`}
+	assert.Equal(t, "Service Account JSON", c.credentialSource())
+	assert.Len(t, c.authOptions(), 1)
+}
+
+func TestConfig_CredentialSourceDisableAuthWins(t *testing.T) {
+	c := &Config{ProjectID: "p", DisableAuth: true, CredentialsFile: "/ignored.json"}
+	assert.Equal(t, "disabled", c.credentialSource())
+	assert.Len(t, c.authOptions(), 1)
+}
+
+func TestConfig_ImpersonationIsOrthogonalToCredentialSource(t *testing.T) {
+	c := &Config{ProjectID: "p", ImpersonateServiceAccount: "sa@p.iam.gserviceaccount.com"}
+	// Impersonation rides on top of the resolved base identity, which stays ADC here.
+	assert.Equal(t, "application default credentials", c.credentialSource())
+	assert.Nil(t, c.authOptions())
+}
