@@ -1,18 +1,18 @@
 ---
-sidebar_position: 4
+sidebar_position: 5
 title: Kubernetes Operator
 ---
 
 # Kubernetes Operator
 
-Manage ingestion pipelines declaratively using the Marmot Operator.
+Ingest assets into your catalog declaratively using the Marmot Operator.
 
 import { DocCard, DocCardGrid } from '@site/src/components/DocCard';
 import { Steps, Step, Tabs, TabPanel, TipBox } from '@site/src/components/Steps';
 
-Instead of running `marmot ingest` from the CLI scripts or UI, the operator lets you define pipelines as Kubernetes resources. The cluster handles scheduling, retries and lifecycle for you. Pipeline config lives alongside your other manifests, so changes go through the same review and GitOps workflow as everything else.
+Instead of running `marmot ingest` from a CLI script or the UI, the operator lets you define ingestion pipelines as Kubernetes resources. Each pipeline discovers assets from a data source and syncs them into Marmot, while the cluster handles scheduling, retries and lifecycle for you. Pipeline config lives alongside your other manifests, so changes go through the same review and GitOps workflow as everything else.
 
-The operator watches `Run` resources and reconciles them into Kubernetes Jobs or CronJobs. This allows you to run each job as a seperate pod on Kubernetes allowing for a more granular permisions model so you don't have to give Marmot acess to all your assets. It can also help with performance if you're ingesting a lot of assets regularly.
+The operator watches `Run` resources and reconciles them into Kubernetes Jobs or CronJobs. Each ingestion job runs as its own pod, so you can scope credentials per data source rather than giving a single Marmot instance access to all your assets. Separate pods also keep large or frequent ingestion runs from competing with each other.
 
 <TipBox variant="info" title="Prerequisites">
 The operator is deployed alongside Marmot via the Helm chart. See the [Helm / Kubernetes](/docs/Deploy/Helm) guide to install Marmot first.
