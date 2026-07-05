@@ -1731,3 +1731,98 @@ html[data-theme="dark"] .DocSearch-Button:hover {
 .DocSearch-Search-Icon {
   color: #9ca3af !important;
 }
+
+/* ============================================
+   Hero Demo Button
+   ============================================ */
+
+@property --demo-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes demoBorderSpin {
+  to {
+    --demo-angle: 360deg;
+  }
+}
+
+@keyframes demoSheen {
+  0%,
+  55% {
+    transform: translateX(-160%) skewX(-18deg);
+  }
+  100% {
+    transform: translateX(320%) skewX(-18deg);
+  }
+}
+
+.demo-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.demo-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(
+    from var(--demo-angle),
+    rgba(210, 90, 48, 0.1),
+    rgba(210, 90, 48, 0.75) 20%,
+    rgba(247, 136, 94, 0.25) 45%,
+    rgba(210, 90, 48, 0.1) 70%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: demoBorderSpin 3.5s linear infinite;
+  pointer-events: none;
+}
+
+.demo-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 45%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(210, 90, 48, 0.1),
+    transparent
+  );
+  animation: demoSheen 4s ease-in-out infinite;
+  pointer-events: none;
+}
+
+html[data-theme="dark"] .demo-btn::before {
+  background: conic-gradient(
+    from var(--demo-angle),
+    rgba(247, 136, 94, 0.12),
+    rgba(247, 136, 94, 0.8) 20%,
+    rgba(251, 184, 157, 0.3) 45%,
+    rgba(247, 136, 94, 0.12) 70%
+  );
+}
+
+html[data-theme="dark"] .demo-btn::after {
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(247, 136, 94, 0.12),
+    transparent
+  );
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-btn::before,
+  .demo-btn::after {
+    animation: none;
+  }
+}

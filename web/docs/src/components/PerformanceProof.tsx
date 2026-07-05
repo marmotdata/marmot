@@ -9,8 +9,9 @@ export default function PerformanceProof(): JSX.Element {
             Built to scale
           </h2>
           <p className="text-lg text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-            Simple architecture doesn't mean limited. Marmot handles real
-            workloads on modest infrastructure.
+            Simple architecture doesn't mean limited. Our largest open source
+            deployment serves 175+ active users, and load tests go well
+            beyond.
           </p>
         </div>
 
