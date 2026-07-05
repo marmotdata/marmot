@@ -46,11 +46,12 @@ func (s *service) AuthenticateOAuth(ctx context.Context, provider string, provid
 }
 
 func (s *service) LinkOAuthAccount(ctx context.Context, userID string, provider string, providerUserID string, userInfo map[string]interface{}) error {
+	email, _ := userInfo["email"].(string)
 	identity := &UserIdentity{
 		UserID:         userID,
 		Provider:       provider,
 		ProviderUserID: providerUserID,
-		ProviderEmail:  userInfo["email"].(string),
+		ProviderEmail:  email,
 		ProviderData:   userInfo,
 		CreatedAt:      time.Now(),
 		UpdatedAt:      time.Now(),
