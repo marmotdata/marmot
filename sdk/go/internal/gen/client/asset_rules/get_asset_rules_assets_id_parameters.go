@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetAssetRulesAssetsIDParams creates a new GetAssetRulesAssetsIDParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetRulesAssetsIDParams() *GetAssetRulesAssetsIDParams {
-	return &GetAssetRulesAssetsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetRulesAssetsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetRulesAssetsIDParamsWithTimeout creates a new GetAssetRulesAssetsIDParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetRulesAssetsIDParamsWithTimeout(timeout time.Duration) *GetAssetRulesAssetsIDParams {
 	return &GetAssetRulesAssetsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetRulesAssetsIDParamsWithContext creates a new GetAssetRulesAssetsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetRulesAssetsIDParams].
 func NewGetAssetRulesAssetsIDParamsWithContext(ctx context.Context) *GetAssetRulesAssetsIDParams {
 	return &GetAssetRulesAssetsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,29 +63,26 @@ GetAssetRulesAssetsIDParams contains all the parameters to send to the API endpo
 */
 type GetAssetRulesAssetsIDParams struct {
 
-	/* ID.
-
-	   Asset rule ID
-	*/
+	// ID.
+	//
+	// Asset rule ID
 	ID string
 
-	/* Limit.
-
-	   Number of items to return
-
-	   Default: 50
-	*/
+	// Limit.
+	//
+	// Number of items to return
+	//
+	// Default: 50
 	Limit *int64
 
-	/* Offset.
-
-	   Number of items to skip
-	*/
+	// Offset.
+	//
+	// Number of items to skip
 	Offset *int64
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get asset rules assets ID params (not the query body).
@@ -107,82 +108,85 @@ func (o *GetAssetRulesAssetsIDParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get asset rules assets ID params
+// WithTimeout adds the timeout to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) WithTimeout(timeout time.Duration) *GetAssetRulesAssetsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get asset rules assets ID params
+// SetTimeout adds the timeout to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get asset rules assets ID params
+// WithContext adds the context to the get asset rules assets ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetRulesAssetsIDParams].
 func (o *GetAssetRulesAssetsIDParams) WithContext(ctx context.Context) *GetAssetRulesAssetsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get asset rules assets ID params
+// SetContext adds the context to the get asset rules assets ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetRulesAssetsIDParams].
 func (o *GetAssetRulesAssetsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get asset rules assets ID params
+// WithHTTPClient adds the HTTPClient to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) WithHTTPClient(client *http.Client) *GetAssetRulesAssetsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get asset rules assets ID params
+// SetHTTPClient adds the HTTPClient to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get asset rules assets ID params
+// WithID adds the id to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) WithID(id string) *GetAssetRulesAssetsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get asset rules assets ID params
+// SetID adds the id to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithLimit adds the limit to the get asset rules assets ID params
+// WithLimit adds the limit to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) WithLimit(limit *int64) *GetAssetRulesAssetsIDParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get asset rules assets ID params
+// SetLimit adds the limit to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get asset rules assets ID params
+// WithOffset adds the offset to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) WithOffset(offset *int64) *GetAssetRulesAssetsIDParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get asset rules assets ID params
+// SetOffset adds the offset to the get asset rules assets ID params.
 func (o *GetAssetRulesAssetsIDParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetRulesAssetsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -200,7 +204,7 @@ func (o *GetAssetRulesAssetsIDParams) WriteToRequest(r runtime.ClientRequest, re
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -217,7 +221,7 @@ func (o *GetAssetRulesAssetsIDParams) WriteToRequest(r runtime.ClientRequest, re
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

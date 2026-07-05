@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetSearchOK() *GetSearchOK {
 	return &GetSearchOK{}
 }
 
-/*
-GetSearchOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetSearchOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetSearchOK struct {
 	Payload *models.SearchResponse
 }
@@ -120,11 +117,9 @@ func NewGetSearchBadRequest() *GetSearchBadRequest {
 	return &GetSearchBadRequest{}
 }
 
-/*
-GetSearchBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetSearchBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetSearchBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewGetSearchInternalServerError() *GetSearchInternalServerError {
 	return &GetSearchInternalServerError{}
 }
 
-/*
-GetSearchInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetSearchInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetSearchInternalServerError struct {
 	Payload *models.ErrorResponse
 }

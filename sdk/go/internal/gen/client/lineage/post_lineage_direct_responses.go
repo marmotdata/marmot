@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostLineageDirectOK() *PostLineageDirectOK {
 	return &PostLineageDirectOK{}
 }
 
-/*
-PostLineageDirectOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostLineageDirectOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostLineageDirectOK struct {
 	Payload *models.LineageEdge
 }
@@ -120,11 +117,9 @@ func NewPostLineageDirectBadRequest() *PostLineageDirectBadRequest {
 	return &PostLineageDirectBadRequest{}
 }
 
-/*
-PostLineageDirectBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostLineageDirectBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostLineageDirectBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPostLineageDirectInternalServerError() *PostLineageDirectInternalServerE
 	return &PostLineageDirectInternalServerError{}
 }
 
-/*
-PostLineageDirectInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostLineageDirectInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostLineageDirectInternalServerError struct {
 	Payload *models.ErrorResponse
 }

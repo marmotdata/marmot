@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPostProductsImagesIDPurposeOK() *PostProductsImagesIDPurposeOK {
 	return &PostProductsImagesIDPurposeOK{}
 }
 
-/*
-PostProductsImagesIDPurposeOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostProductsImagesIDPurposeOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostProductsImagesIDPurposeOK struct {
 	Payload *models.ProductImageMeta
 }
@@ -126,11 +123,9 @@ func NewPostProductsImagesIDPurposeBadRequest() *PostProductsImagesIDPurposeBadR
 	return &PostProductsImagesIDPurposeBadRequest{}
 }
 
-/*
-PostProductsImagesIDPurposeBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostProductsImagesIDPurposeBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostProductsImagesIDPurposeBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPostProductsImagesIDPurposeNotFound() *PostProductsImagesIDPurposeNotFou
 	return &PostProductsImagesIDPurposeNotFound{}
 }
 
-/*
-PostProductsImagesIDPurposeNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PostProductsImagesIDPurposeNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PostProductsImagesIDPurposeNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPostProductsImagesIDPurposeInternalServerError() *PostProductsImagesIDPu
 	return &PostProductsImagesIDPurposeInternalServerError{}
 }
 
-/*
-PostProductsImagesIDPurposeInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostProductsImagesIDPurposeInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostProductsImagesIDPurposeInternalServerError struct {
 	Payload *models.ErrorResponse
 }

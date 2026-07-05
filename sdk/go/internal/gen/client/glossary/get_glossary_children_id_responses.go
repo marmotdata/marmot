@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewGetGlossaryChildrenIDOK() *GetGlossaryChildrenIDOK {
 	return &GetGlossaryChildrenIDOK{}
 }
 
-/*
-GetGlossaryChildrenIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetGlossaryChildrenIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetGlossaryChildrenIDOK struct {
 	Payload any
 }
@@ -124,11 +121,9 @@ func NewGetGlossaryChildrenIDBadRequest() *GetGlossaryChildrenIDBadRequest {
 	return &GetGlossaryChildrenIDBadRequest{}
 }
 
-/*
-GetGlossaryChildrenIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetGlossaryChildrenIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetGlossaryChildrenIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -194,11 +189,9 @@ func NewGetGlossaryChildrenIDNotFound() *GetGlossaryChildrenIDNotFound {
 	return &GetGlossaryChildrenIDNotFound{}
 }
 
-/*
-GetGlossaryChildrenIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetGlossaryChildrenIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetGlossaryChildrenIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -264,11 +257,9 @@ func NewGetGlossaryChildrenIDInternalServerError() *GetGlossaryChildrenIDInterna
 	return &GetGlossaryChildrenIDInternalServerError{}
 }
 
-/*
-GetGlossaryChildrenIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetGlossaryChildrenIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetGlossaryChildrenIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

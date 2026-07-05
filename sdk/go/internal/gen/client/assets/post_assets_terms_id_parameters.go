@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAssetsTermsIDParams() *PostAssetsTermsIDParams {
-	return &PostAssetsTermsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAssetsTermsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAssetsTermsIDParamsWithTimeout creates a new PostAssetsTermsIDParams object
 // with the ability to set a timeout on a request.
 func NewPostAssetsTermsIDParamsWithTimeout(timeout time.Duration) *PostAssetsTermsIDParams {
 	return &PostAssetsTermsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAssetsTermsIDParamsWithContext creates a new PostAssetsTermsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsTermsIDParams].
 func NewPostAssetsTermsIDParamsWithContext(ctx context.Context) *PostAssetsTermsIDParams {
 	return &PostAssetsTermsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,21 +63,19 @@ PostAssetsTermsIDParams contains all the parameters to send to the API endpoint
 */
 type PostAssetsTermsIDParams struct {
 
-	/* ID.
-
-	   Asset ID
-	*/
+	// ID.
+	//
+	// Asset ID
 	ID string
 
-	/* Terms.
-
-	   Term IDs to add
-	*/
+	// Terms.
+	//
+	// Term IDs to add
 	Terms *models.AddTermsRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post assets terms ID params (not the query body).
@@ -92,65 +93,68 @@ func (o *PostAssetsTermsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post assets terms ID params
+// WithTimeout adds the timeout to the post assets terms ID params.
 func (o *PostAssetsTermsIDParams) WithTimeout(timeout time.Duration) *PostAssetsTermsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post assets terms ID params
+// SetTimeout adds the timeout to the post assets terms ID params.
 func (o *PostAssetsTermsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post assets terms ID params
+// WithContext adds the context to the post assets terms ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsTermsIDParams].
 func (o *PostAssetsTermsIDParams) WithContext(ctx context.Context) *PostAssetsTermsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post assets terms ID params
+// SetContext adds the context to the post assets terms ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsTermsIDParams].
 func (o *PostAssetsTermsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post assets terms ID params
+// WithHTTPClient adds the HTTPClient to the post assets terms ID params.
 func (o *PostAssetsTermsIDParams) WithHTTPClient(client *http.Client) *PostAssetsTermsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post assets terms ID params
+// SetHTTPClient adds the HTTPClient to the post assets terms ID params.
 func (o *PostAssetsTermsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the post assets terms ID params
+// WithID adds the id to the post assets terms ID params.
 func (o *PostAssetsTermsIDParams) WithID(id string) *PostAssetsTermsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the post assets terms ID params
+// SetID adds the id to the post assets terms ID params.
 func (o *PostAssetsTermsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithTerms adds the terms to the post assets terms ID params
+// WithTerms adds the terms to the post assets terms ID params.
 func (o *PostAssetsTermsIDParams) WithTerms(terms *models.AddTermsRequest) *PostAssetsTermsIDParams {
 	o.SetTerms(terms)
 	return o
 }
 
-// SetTerms adds the terms to the post assets terms ID params
+// SetTerms adds the terms to the post assets terms ID params.
 func (o *PostAssetsTermsIDParams) SetTerms(terms *models.AddTermsRequest) {
 	o.Terms = terms
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAssetsTermsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

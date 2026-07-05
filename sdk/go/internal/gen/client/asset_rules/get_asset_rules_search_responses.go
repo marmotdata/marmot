@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -44,11 +43,9 @@ func NewGetAssetRulesSearchOK() *GetAssetRulesSearchOK {
 	return &GetAssetRulesSearchOK{}
 }
 
-/*
-GetAssetRulesSearchOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAssetRulesSearchOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAssetRulesSearchOK struct {
 	Payload *models.AssetRuleListResult
 }
@@ -114,11 +111,9 @@ func NewGetAssetRulesSearchInternalServerError() *GetAssetRulesSearchInternalSer
 	return &GetAssetRulesSearchInternalServerError{}
 }
 
-/*
-GetAssetRulesSearchInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAssetRulesSearchInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAssetRulesSearchInternalServerError struct {
 	Payload *models.ErrorResponse
 }

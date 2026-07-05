@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // GetMetricsResponse get metrics response
@@ -43,12 +44,12 @@ func (m *GetMetricsResponse) Validate(formats strfmt.Registry) error {
 }
 
 func (m *GetMetricsResponse) validateMetrics(formats strfmt.Registry) error {
-	if swag.IsZero(m.Metrics) { // not required
+	if typeutils.IsZero(m.Metrics) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Metrics); i++ {
-		if swag.IsZero(m.Metrics[i]) { // not required
+		if typeutils.IsZero(m.Metrics[i]) { // not required
 			continue
 		}
 
@@ -73,7 +74,7 @@ func (m *GetMetricsResponse) validateMetrics(formats strfmt.Registry) error {
 }
 
 func (m *GetMetricsResponse) validateQuery(formats strfmt.Registry) error {
-	if swag.IsZero(m.Query) { // not required
+	if typeutils.IsZero(m.Query) { // not required
 		return nil
 	}
 
@@ -119,7 +120,7 @@ func (m *GetMetricsResponse) contextValidateMetrics(ctx context.Context, formats
 
 		if m.Metrics[i] != nil {
 
-			if swag.IsZero(m.Metrics[i]) { // not required
+			if typeutils.IsZero(m.Metrics[i]) { // not required
 				return nil
 			}
 
@@ -146,7 +147,7 @@ func (m *GetMetricsResponse) contextValidateQuery(ctx context.Context, formats s
 
 	if m.Query != nil {
 
-		if swag.IsZero(m.Query) { // not required
+		if typeutils.IsZero(m.Query) { // not required
 			return nil
 		}
 
@@ -172,13 +173,13 @@ func (m *GetMetricsResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *GetMetricsResponse) UnmarshalBinary(b []byte) error {
 	var res GetMetricsResponse
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

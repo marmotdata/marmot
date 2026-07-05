@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPutTeamsIDParams() *PutTeamsIDParams {
-	return &PutTeamsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPutTeamsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPutTeamsIDParamsWithTimeout creates a new PutTeamsIDParams object
 // with the ability to set a timeout on a request.
 func NewPutTeamsIDParamsWithTimeout(timeout time.Duration) *PutTeamsIDParams {
 	return &PutTeamsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPutTeamsIDParamsWithContext creates a new PutTeamsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutTeamsIDParams].
 func NewPutTeamsIDParamsWithContext(ctx context.Context) *PutTeamsIDParams {
 	return &PutTeamsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,21 +63,19 @@ PutTeamsIDParams contains all the parameters to send to the API endpoint
 */
 type PutTeamsIDParams struct {
 
-	/* ID.
-
-	   Team ID
-	*/
+	// ID.
+	//
+	// Team ID
 	ID string
 
-	/* Team.
-
-	   Team update request
-	*/
+	// Team.
+	//
+	// Team update request
 	Team *models.UpdateTeamRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the put teams ID params (not the query body).
@@ -92,65 +93,68 @@ func (o *PutTeamsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the put teams ID params
+// WithTimeout adds the timeout to the put teams ID params.
 func (o *PutTeamsIDParams) WithTimeout(timeout time.Duration) *PutTeamsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the put teams ID params
+// SetTimeout adds the timeout to the put teams ID params.
 func (o *PutTeamsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the put teams ID params
+// WithContext adds the context to the put teams ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutTeamsIDParams].
 func (o *PutTeamsIDParams) WithContext(ctx context.Context) *PutTeamsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the put teams ID params
+// SetContext adds the context to the put teams ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutTeamsIDParams].
 func (o *PutTeamsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the put teams ID params
+// WithHTTPClient adds the HTTPClient to the put teams ID params.
 func (o *PutTeamsIDParams) WithHTTPClient(client *http.Client) *PutTeamsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the put teams ID params
+// SetHTTPClient adds the HTTPClient to the put teams ID params.
 func (o *PutTeamsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the put teams ID params
+// WithID adds the id to the put teams ID params.
 func (o *PutTeamsIDParams) WithID(id string) *PutTeamsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the put teams ID params
+// SetID adds the id to the put teams ID params.
 func (o *PutTeamsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithTeam adds the team to the put teams ID params
+// WithTeam adds the team to the put teams ID params.
 func (o *PutTeamsIDParams) WithTeam(team *models.UpdateTeamRequest) *PutTeamsIDParams {
 	o.SetTeam(team)
 	return o
 }
 
-// SetTeam adds the team to the put teams ID params
+// SetTeam adds the team to the put teams ID params.
 func (o *PutTeamsIDParams) SetTeam(team *models.UpdateTeamRequest) {
 	o.Team = team
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PutTeamsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

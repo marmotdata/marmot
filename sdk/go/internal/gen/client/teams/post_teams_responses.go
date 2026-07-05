@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPostTeamsCreated() *PostTeamsCreated {
 	return &PostTeamsCreated{}
 }
 
-/*
-PostTeamsCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostTeamsCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostTeamsCreated struct {
 	Payload *models.Team
 }
@@ -126,11 +123,9 @@ func NewPostTeamsBadRequest() *PostTeamsBadRequest {
 	return &PostTeamsBadRequest{}
 }
 
-/*
-PostTeamsBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostTeamsBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostTeamsBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPostTeamsConflict() *PostTeamsConflict {
 	return &PostTeamsConflict{}
 }
 
-/*
-PostTeamsConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PostTeamsConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PostTeamsConflict struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPostTeamsInternalServerError() *PostTeamsInternalServerError {
 	return &PostTeamsInternalServerError{}
 }
 
-/*
-PostTeamsInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostTeamsInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostTeamsInternalServerError struct {
 	Payload *models.ErrorResponse
 }

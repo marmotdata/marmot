@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetAPIV1IngestionRunsOK() *GetAPIV1IngestionRunsOK {
 	return &GetAPIV1IngestionRunsOK{}
 }
 
-/*
-GetAPIV1IngestionRunsOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAPIV1IngestionRunsOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAPIV1IngestionRunsOK struct {
 	Payload *models.ListJobRunsResponse
 }
@@ -120,11 +117,9 @@ func NewGetAPIV1IngestionRunsUnauthorized() *GetAPIV1IngestionRunsUnauthorized {
 	return &GetAPIV1IngestionRunsUnauthorized{}
 }
 
-/*
-GetAPIV1IngestionRunsUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// GetAPIV1IngestionRunsUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type GetAPIV1IngestionRunsUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewGetAPIV1IngestionRunsInternalServerError() *GetAPIV1IngestionRunsInterna
 	return &GetAPIV1IngestionRunsInternalServerError{}
 }
 
-/*
-GetAPIV1IngestionRunsInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAPIV1IngestionRunsInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAPIV1IngestionRunsInternalServerError struct {
 	Payload *models.ErrorResponse
 }

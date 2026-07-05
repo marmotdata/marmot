@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteAssetsTagsIDParams() *DeleteAssetsTagsIDParams {
-	return &DeleteAssetsTagsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteAssetsTagsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteAssetsTagsIDParamsWithTimeout creates a new DeleteAssetsTagsIDParams object
 // with the ability to set a timeout on a request.
 func NewDeleteAssetsTagsIDParamsWithTimeout(timeout time.Duration) *DeleteAssetsTagsIDParams {
 	return &DeleteAssetsTagsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteAssetsTagsIDParamsWithContext creates a new DeleteAssetsTagsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAssetsTagsIDParams].
 func NewDeleteAssetsTagsIDParamsWithContext(ctx context.Context) *DeleteAssetsTagsIDParams {
 	return &DeleteAssetsTagsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,21 +63,19 @@ DeleteAssetsTagsIDParams contains all the parameters to send to the API endpoint
 */
 type DeleteAssetsTagsIDParams struct {
 
-	/* ID.
-
-	   Asset ID
-	*/
+	// ID.
+	//
+	// Asset ID
 	ID string
 
-	/* Tag.
-
-	   Tag to remove
-	*/
+	// Tag.
+	//
+	// Tag to remove
 	Tag *models.TagRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete assets tags ID params (not the query body).
@@ -92,65 +93,68 @@ func (o *DeleteAssetsTagsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete assets tags ID params
+// WithTimeout adds the timeout to the delete assets tags ID params.
 func (o *DeleteAssetsTagsIDParams) WithTimeout(timeout time.Duration) *DeleteAssetsTagsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete assets tags ID params
+// SetTimeout adds the timeout to the delete assets tags ID params.
 func (o *DeleteAssetsTagsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete assets tags ID params
+// WithContext adds the context to the delete assets tags ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAssetsTagsIDParams].
 func (o *DeleteAssetsTagsIDParams) WithContext(ctx context.Context) *DeleteAssetsTagsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete assets tags ID params
+// SetContext adds the context to the delete assets tags ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteAssetsTagsIDParams].
 func (o *DeleteAssetsTagsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete assets tags ID params
+// WithHTTPClient adds the HTTPClient to the delete assets tags ID params.
 func (o *DeleteAssetsTagsIDParams) WithHTTPClient(client *http.Client) *DeleteAssetsTagsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete assets tags ID params
+// SetHTTPClient adds the HTTPClient to the delete assets tags ID params.
 func (o *DeleteAssetsTagsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete assets tags ID params
+// WithID adds the id to the delete assets tags ID params.
 func (o *DeleteAssetsTagsIDParams) WithID(id string) *DeleteAssetsTagsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete assets tags ID params
+// SetID adds the id to the delete assets tags ID params.
 func (o *DeleteAssetsTagsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithTag adds the tag to the delete assets tags ID params
+// WithTag adds the tag to the delete assets tags ID params.
 func (o *DeleteAssetsTagsIDParams) WithTag(tag *models.TagRequest) *DeleteAssetsTagsIDParams {
 	o.SetTag(tag)
 	return o
 }
 
-// SetTag adds the tag to the delete assets tags ID params
+// SetTag adds the tag to the delete assets tags ID params.
 func (o *DeleteAssetsTagsIDParams) SetTag(tag *models.TagRequest) {
 	o.Tag = tag
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteAssetsTagsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

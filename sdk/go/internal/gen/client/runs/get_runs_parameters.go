@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetRunsParams creates a new GetRunsParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetRunsParams() *GetRunsParams {
-	return &GetRunsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetRunsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetRunsParamsWithTimeout creates a new GetRunsParams object
 // with the ability to set a timeout on a request.
 func NewGetRunsParamsWithTimeout(timeout time.Duration) *GetRunsParams {
 	return &GetRunsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetRunsParamsWithContext creates a new GetRunsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetRunsParams].
 func NewGetRunsParamsWithContext(ctx context.Context) *GetRunsParams {
 	return &GetRunsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,35 +63,31 @@ GetRunsParams contains all the parameters to send to the API endpoint
 */
 type GetRunsParams struct {
 
-	/* Limit.
-
-	   Number of results per page
-
-	   Default: 50
-	*/
+	// Limit.
+	//
+	// Number of results per page
+	//
+	// Default: 50
 	Limit *int64
 
-	/* Offset.
-
-	   Number of results to skip
-	*/
+	// Offset.
+	//
+	// Number of results to skip
 	Offset *int64
 
-	/* Pipelines.
-
-	   Comma-separated list of pipeline names
-	*/
+	// Pipelines.
+	//
+	// Comma-separated list of pipeline names
 	Pipelines *string
 
-	/* Statuses.
-
-	   Comma-separated list of statuses
-	*/
+	// Statuses.
+	//
+	// Comma-separated list of statuses
 	Statuses *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get runs params (not the query body).
@@ -113,93 +113,96 @@ func (o *GetRunsParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get runs params
+// WithTimeout adds the timeout to the get runs params.
 func (o *GetRunsParams) WithTimeout(timeout time.Duration) *GetRunsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get runs params
+// SetTimeout adds the timeout to the get runs params.
 func (o *GetRunsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get runs params
+// WithContext adds the context to the get runs params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetRunsParams].
 func (o *GetRunsParams) WithContext(ctx context.Context) *GetRunsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get runs params
+// SetContext adds the context to the get runs params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetRunsParams].
 func (o *GetRunsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get runs params
+// WithHTTPClient adds the HTTPClient to the get runs params.
 func (o *GetRunsParams) WithHTTPClient(client *http.Client) *GetRunsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get runs params
+// SetHTTPClient adds the HTTPClient to the get runs params.
 func (o *GetRunsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get runs params
+// WithLimit adds the limit to the get runs params.
 func (o *GetRunsParams) WithLimit(limit *int64) *GetRunsParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get runs params
+// SetLimit adds the limit to the get runs params.
 func (o *GetRunsParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get runs params
+// WithOffset adds the offset to the get runs params.
 func (o *GetRunsParams) WithOffset(offset *int64) *GetRunsParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get runs params
+// SetOffset adds the offset to the get runs params.
 func (o *GetRunsParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WithPipelines adds the pipelines to the get runs params
+// WithPipelines adds the pipelines to the get runs params.
 func (o *GetRunsParams) WithPipelines(pipelines *string) *GetRunsParams {
 	o.SetPipelines(pipelines)
 	return o
 }
 
-// SetPipelines adds the pipelines to the get runs params
+// SetPipelines adds the pipelines to the get runs params.
 func (o *GetRunsParams) SetPipelines(pipelines *string) {
 	o.Pipelines = pipelines
 }
 
-// WithStatuses adds the statuses to the get runs params
+// WithStatuses adds the statuses to the get runs params.
 func (o *GetRunsParams) WithStatuses(statuses *string) *GetRunsParams {
 	o.SetStatuses(statuses)
 	return o
 }
 
-// SetStatuses adds the statuses to the get runs params
+// SetStatuses adds the statuses to the get runs params.
 func (o *GetRunsParams) SetStatuses(statuses *string) {
 	o.Statuses = statuses
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetRunsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -212,7 +215,7 @@ func (o *GetRunsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regis
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -229,7 +232,7 @@ func (o *GetRunsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regis
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

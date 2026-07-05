@@ -1,8 +1,10 @@
-<!-- CreateUserForm.svelte -->
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
+	import { listRoles } from '$lib/roles/api';
 	import { User as UserIcon, Lock, Shield } from 'lucide-svelte';
 	import type { User } from '$lib/users/types';
+	import type { Role } from '$lib/roles/types';
 
 	export let onUserCreated: (user: User) => void = () => {};
 	export let onCancel: () => void = () => {};
@@ -11,14 +13,30 @@
 	let error: string | null = null;
 	let passwordError = '';
 
-	const roles = ['user', 'admin'];
+	let availableRoles: Role[] = [];
 
 	let newUser = {
 		username: '',
 		name: '',
 		password: '',
-		role_names: ['user']
+		role_names: ['user'] as string[]
 	};
+
+	onMount(async () => {
+		try {
+			availableRoles = await listRoles();
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load roles';
+		}
+	});
+
+	function toggleRole(name: string) {
+		if (newUser.role_names.includes(name)) {
+			newUser.role_names = newUser.role_names.filter((r) => r !== name);
+		} else {
+			newUser.role_names = [...newUser.role_names, name];
+		}
+	}
 
 	function validatePassword(password: string) {
 		if (password.length < 8) {
@@ -31,6 +49,10 @@
 
 	async function createUser() {
 		if (!validatePassword(newUser.password)) {
+			return;
+		}
+		if (newUser.role_names.length === 0) {
+			error = 'Select at least one role';
 			return;
 		}
 
@@ -128,17 +150,34 @@
 		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
 			<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center">
 				<Shield class="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
-				Role
+				Roles
 			</h4>
-			<select
-				id="role"
-				bind:value={newUser.role_names[0]}
-				class="w-full px-3 py-2 bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-600 rounded-md text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500 focus:border-transparent"
-			>
-				{#each roles as role (role)}
-					<option value={role}>{role.charAt(0).toUpperCase() + role.slice(1)}</option>
-				{/each}
-			</select>
+			{#if availableRoles.length === 0}
+				<p class="text-sm text-gray-500 dark:text-gray-400 italic">Loading roles...</p>
+			{:else}
+				<div class="space-y-2">
+					{#each availableRoles as role (role.id)}
+						<label
+							class="flex items-center p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+						>
+							<input
+								type="checkbox"
+								checked={newUser.role_names.includes(role.name)}
+								on:change={() => toggleRole(role.name)}
+								class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500"
+							/>
+							<span class="ml-3 text-sm text-gray-700 dark:text-gray-300">
+								{role.name}
+								{#if role.description}
+									<span class="text-xs text-gray-500 dark:text-gray-400 ml-1">
+										— {role.description}
+									</span>
+								{/if}
+							</span>
+						</label>
+					{/each}
+				</div>
+			{/if}
 		</div>
 	</div>
 

@@ -22,6 +22,9 @@ type mockAuthService struct{}
 func (m *mockAuthService) GenerateToken(_ context.Context, _ *user.User, _ map[string]interface{}) (string, error) {
 	return "", nil
 }
+func (m *mockAuthService) GenerateTokenForPrincipal(_ context.Context, _ auth.Principal, _ map[string]interface{}) (string, error) {
+	return "", nil
+}
 func (m *mockAuthService) ValidateToken(_ context.Context, _ string) (*auth.Claims, error) {
 	return nil, auth.ErrNotFound
 }

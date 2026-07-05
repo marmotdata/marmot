@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetAssetsSuggestionsMetadataValuesOK() *GetAssetsSuggestionsMetadataValu
 	return &GetAssetsSuggestionsMetadataValuesOK{}
 }
 
-/*
-GetAssetsSuggestionsMetadataValuesOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAssetsSuggestionsMetadataValuesOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAssetsSuggestionsMetadataValuesOK struct {
 	Payload []*models.MetadataValueSuggestion
 }
@@ -118,11 +115,9 @@ func NewGetAssetsSuggestionsMetadataValuesBadRequest() *GetAssetsSuggestionsMeta
 	return &GetAssetsSuggestionsMetadataValuesBadRequest{}
 }
 
-/*
-GetAssetsSuggestionsMetadataValuesBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetAssetsSuggestionsMetadataValuesBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetAssetsSuggestionsMetadataValuesBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -188,11 +183,9 @@ func NewGetAssetsSuggestionsMetadataValuesInternalServerError() *GetAssetsSugges
 	return &GetAssetsSuggestionsMetadataValuesInternalServerError{}
 }
 
-/*
-GetAssetsSuggestionsMetadataValuesInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAssetsSuggestionsMetadataValuesInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAssetsSuggestionsMetadataValuesInternalServerError struct {
 	Payload *models.ErrorResponse
 }

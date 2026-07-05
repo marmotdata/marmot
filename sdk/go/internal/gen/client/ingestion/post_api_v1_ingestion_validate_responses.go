@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostAPIV1IngestionValidateOK() *PostAPIV1IngestionValidateOK {
 	return &PostAPIV1IngestionValidateOK{}
 }
 
-/*
-PostAPIV1IngestionValidateOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostAPIV1IngestionValidateOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostAPIV1IngestionValidateOK struct {
 	Payload *models.ValidateConfigResponse
 }
@@ -120,11 +117,9 @@ func NewPostAPIV1IngestionValidateBadRequest() *PostAPIV1IngestionValidateBadReq
 	return &PostAPIV1IngestionValidateBadRequest{}
 }
 
-/*
-PostAPIV1IngestionValidateBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostAPIV1IngestionValidateBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostAPIV1IngestionValidateBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPostAPIV1IngestionValidateUnauthorized() *PostAPIV1IngestionValidateUnau
 	return &PostAPIV1IngestionValidateUnauthorized{}
 }
 
-/*
-PostAPIV1IngestionValidateUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PostAPIV1IngestionValidateUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PostAPIV1IngestionValidateUnauthorized struct {
 	Payload *models.ErrorResponse
 }

@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteGlossaryIDParams() *DeleteGlossaryIDParams {
-	return &DeleteGlossaryIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteGlossaryIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteGlossaryIDParamsWithTimeout creates a new DeleteGlossaryIDParams object
 // with the ability to set a timeout on a request.
 func NewDeleteGlossaryIDParamsWithTimeout(timeout time.Duration) *DeleteGlossaryIDParams {
 	return &DeleteGlossaryIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteGlossaryIDParamsWithContext creates a new DeleteGlossaryIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteGlossaryIDParams].
 func NewDeleteGlossaryIDParamsWithContext(ctx context.Context) *DeleteGlossaryIDParams {
 	return &DeleteGlossaryIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ DeleteGlossaryIDParams contains all the parameters to send to the API endpoint
 */
 type DeleteGlossaryIDParams struct {
 
-	/* ID.
-
-	   Glossary Term ID
-	*/
+	// ID.
+	//
+	// Glossary Term ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete glossary ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *DeleteGlossaryIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete glossary ID params
+// WithTimeout adds the timeout to the delete glossary ID params.
 func (o *DeleteGlossaryIDParams) WithTimeout(timeout time.Duration) *DeleteGlossaryIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete glossary ID params
+// SetTimeout adds the timeout to the delete glossary ID params.
 func (o *DeleteGlossaryIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete glossary ID params
+// WithContext adds the context to the delete glossary ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteGlossaryIDParams].
 func (o *DeleteGlossaryIDParams) WithContext(ctx context.Context) *DeleteGlossaryIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete glossary ID params
+// SetContext adds the context to the delete glossary ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteGlossaryIDParams].
 func (o *DeleteGlossaryIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete glossary ID params
+// WithHTTPClient adds the HTTPClient to the delete glossary ID params.
 func (o *DeleteGlossaryIDParams) WithHTTPClient(client *http.Client) *DeleteGlossaryIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete glossary ID params
+// SetHTTPClient adds the HTTPClient to the delete glossary ID params.
 func (o *DeleteGlossaryIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete glossary ID params
+// WithID adds the id to the delete glossary ID params.
 func (o *DeleteGlossaryIDParams) WithID(id string) *DeleteGlossaryIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete glossary ID params
+// SetID adds the id to the delete glossary ID params.
 func (o *DeleteGlossaryIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteGlossaryIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

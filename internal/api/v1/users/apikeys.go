@@ -66,6 +66,11 @@ func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if input.ExpiresInDays < 0 {
+		common.RespondError(w, http.StatusBadRequest, "expires_in_days must not be negative")
+		return
+	}
+
 	var expiresIn *time.Duration
 	if input.ExpiresInDays > 0 {
 		duration := time.Duration(input.ExpiresInDays) * 24 * time.Hour

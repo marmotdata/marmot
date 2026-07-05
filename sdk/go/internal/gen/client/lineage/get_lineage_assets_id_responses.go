@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewGetLineageAssetsIDOK() *GetLineageAssetsIDOK {
 	return &GetLineageAssetsIDOK{}
 }
 
-/*
-GetLineageAssetsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetLineageAssetsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetLineageAssetsIDOK struct {
 	Payload *models.LineageResponse
 }
@@ -126,11 +123,9 @@ func NewGetLineageAssetsIDBadRequest() *GetLineageAssetsIDBadRequest {
 	return &GetLineageAssetsIDBadRequest{}
 }
 
-/*
-GetLineageAssetsIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetLineageAssetsIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetLineageAssetsIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewGetLineageAssetsIDNotFound() *GetLineageAssetsIDNotFound {
 	return &GetLineageAssetsIDNotFound{}
 }
 
-/*
-GetLineageAssetsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetLineageAssetsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetLineageAssetsIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewGetLineageAssetsIDInternalServerError() *GetLineageAssetsIDInternalServe
 	return &GetLineageAssetsIDInternalServerError{}
 }
 
-/*
-GetLineageAssetsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetLineageAssetsIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetLineageAssetsIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

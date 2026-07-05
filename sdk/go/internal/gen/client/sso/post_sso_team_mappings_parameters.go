@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostSsoTeamMappingsParams() *PostSsoTeamMappingsParams {
-	return &PostSsoTeamMappingsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostSsoTeamMappingsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostSsoTeamMappingsParamsWithTimeout creates a new PostSsoTeamMappingsParams object
 // with the ability to set a timeout on a request.
 func NewPostSsoTeamMappingsParamsWithTimeout(timeout time.Duration) *PostSsoTeamMappingsParams {
 	return &PostSsoTeamMappingsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostSsoTeamMappingsParamsWithContext creates a new PostSsoTeamMappingsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostSsoTeamMappingsParams].
 func NewPostSsoTeamMappingsParamsWithContext(ctx context.Context) *PostSsoTeamMappingsParams {
 	return &PostSsoTeamMappingsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostSsoTeamMappingsParams contains all the parameters to send to the API endpoin
 */
 type PostSsoTeamMappingsParams struct {
 
-	/* Mapping.
-
-	   SSO mapping creation request
-	*/
+	// Mapping.
+	//
+	// SSO mapping creation request
 	Mapping *models.CreateSSOMappingRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post sso team mappings params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostSsoTeamMappingsParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post sso team mappings params
+// WithTimeout adds the timeout to the post sso team mappings params.
 func (o *PostSsoTeamMappingsParams) WithTimeout(timeout time.Duration) *PostSsoTeamMappingsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post sso team mappings params
+// SetTimeout adds the timeout to the post sso team mappings params.
 func (o *PostSsoTeamMappingsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post sso team mappings params
+// WithContext adds the context to the post sso team mappings params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostSsoTeamMappingsParams].
 func (o *PostSsoTeamMappingsParams) WithContext(ctx context.Context) *PostSsoTeamMappingsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post sso team mappings params
+// SetContext adds the context to the post sso team mappings params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostSsoTeamMappingsParams].
 func (o *PostSsoTeamMappingsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post sso team mappings params
+// WithHTTPClient adds the HTTPClient to the post sso team mappings params.
 func (o *PostSsoTeamMappingsParams) WithHTTPClient(client *http.Client) *PostSsoTeamMappingsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post sso team mappings params
+// SetHTTPClient adds the HTTPClient to the post sso team mappings params.
 func (o *PostSsoTeamMappingsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithMapping adds the mapping to the post sso team mappings params
+// WithMapping adds the mapping to the post sso team mappings params.
 func (o *PostSsoTeamMappingsParams) WithMapping(mapping *models.CreateSSOMappingRequest) *PostSsoTeamMappingsParams {
 	o.SetMapping(mapping)
 	return o
 }
 
-// SetMapping adds the mapping to the post sso team mappings params
+// SetMapping adds the mapping to the post sso team mappings params.
 func (o *PostSsoTeamMappingsParams) SetMapping(mapping *models.CreateSSOMappingRequest) {
 	o.Mapping = mapping
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostSsoTeamMappingsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

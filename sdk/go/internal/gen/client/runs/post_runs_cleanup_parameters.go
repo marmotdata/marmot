@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostRunsCleanupParams() *PostRunsCleanupParams {
-	return &PostRunsCleanupParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostRunsCleanupParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostRunsCleanupParamsWithTimeout creates a new PostRunsCleanupParams object
 // with the ability to set a timeout on a request.
 func NewPostRunsCleanupParamsWithTimeout(timeout time.Duration) *PostRunsCleanupParams {
 	return &PostRunsCleanupParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostRunsCleanupParamsWithContext creates a new PostRunsCleanupParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsCleanupParams].
 func NewPostRunsCleanupParamsWithContext(ctx context.Context) *PostRunsCleanupParams {
 	return &PostRunsCleanupParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -57,9 +61,9 @@ PostRunsCleanupParams contains all the parameters to send to the API endpoint
 	Typically these are written to a http.Request.
 */
 type PostRunsCleanupParams struct {
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post runs cleanup params (not the query body).
@@ -77,43 +81,46 @@ func (o *PostRunsCleanupParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post runs cleanup params
+// WithTimeout adds the timeout to the post runs cleanup params.
 func (o *PostRunsCleanupParams) WithTimeout(timeout time.Duration) *PostRunsCleanupParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post runs cleanup params
+// SetTimeout adds the timeout to the post runs cleanup params.
 func (o *PostRunsCleanupParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post runs cleanup params
+// WithContext adds the context to the post runs cleanup params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsCleanupParams].
 func (o *PostRunsCleanupParams) WithContext(ctx context.Context) *PostRunsCleanupParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post runs cleanup params
+// SetContext adds the context to the post runs cleanup params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsCleanupParams].
 func (o *PostRunsCleanupParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post runs cleanup params
+// WithHTTPClient adds the HTTPClient to the post runs cleanup params.
 func (o *PostRunsCleanupParams) WithHTTPClient(client *http.Client) *PostRunsCleanupParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post runs cleanup params
+// SetHTTPClient adds the HTTPClient to the post runs cleanup params.
 func (o *PostRunsCleanupParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostRunsCleanupParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

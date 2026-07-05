@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPostAPIV1IngestionSchedulesIDTriggerCreated() *PostAPIV1IngestionSchedul
 	return &PostAPIV1IngestionSchedulesIDTriggerCreated{}
 }
 
-/*
-PostAPIV1IngestionSchedulesIDTriggerCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostAPIV1IngestionSchedulesIDTriggerCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostAPIV1IngestionSchedulesIDTriggerCreated struct {
 	Payload *models.JobRun
 }
@@ -126,11 +123,9 @@ func NewPostAPIV1IngestionSchedulesIDTriggerUnauthorized() *PostAPIV1IngestionSc
 	return &PostAPIV1IngestionSchedulesIDTriggerUnauthorized{}
 }
 
-/*
-PostAPIV1IngestionSchedulesIDTriggerUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PostAPIV1IngestionSchedulesIDTriggerUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PostAPIV1IngestionSchedulesIDTriggerUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPostAPIV1IngestionSchedulesIDTriggerNotFound() *PostAPIV1IngestionSchedu
 	return &PostAPIV1IngestionSchedulesIDTriggerNotFound{}
 }
 
-/*
-PostAPIV1IngestionSchedulesIDTriggerNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PostAPIV1IngestionSchedulesIDTriggerNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PostAPIV1IngestionSchedulesIDTriggerNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPostAPIV1IngestionSchedulesIDTriggerInternalServerError() *PostAPIV1Inge
 	return &PostAPIV1IngestionSchedulesIDTriggerInternalServerError{}
 }
 
-/*
-PostAPIV1IngestionSchedulesIDTriggerInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostAPIV1IngestionSchedulesIDTriggerInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostAPIV1IngestionSchedulesIDTriggerInternalServerError struct {
 	Payload *models.ErrorResponse
 }

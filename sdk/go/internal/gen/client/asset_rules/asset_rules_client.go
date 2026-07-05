@@ -3,7 +3,9 @@
 package asset_rules
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new asset rules API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new asset rules API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new asset rules API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,48 +44,99 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for asset rules API
-*/
+// Client for asset rules API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// DeleteAssetRulesID delete an asset rule.
 	DeleteAssetRulesID(params *DeleteAssetRulesIDParams, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error)
 
+	// DeleteAssetRulesIDContext delete an asset rule.
+	DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAssetRulesIDParams, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error)
+
+	// GetAssetRulesAssetsID get assets matched by a rule.
 	GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error)
 
+	// GetAssetRulesAssetsIDContext get assets matched by a rule.
+	GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAssetRulesAssetsIDParams, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error)
+
+	// GetAssetRulesID get an asset rule.
 	GetAssetRulesID(params *GetAssetRulesIDParams, opts ...ClientOption) (*GetAssetRulesIDOK, error)
 
+	// GetAssetRulesIDContext get an asset rule.
+	GetAssetRulesIDContext(ctx context.Context, params *GetAssetRulesIDParams, opts ...ClientOption) (*GetAssetRulesIDOK, error)
+
+	// GetAssetRulesList list asset rules.
 	GetAssetRulesList(params *GetAssetRulesListParams, opts ...ClientOption) (*GetAssetRulesListOK, error)
 
+	// GetAssetRulesListContext list asset rules.
+	GetAssetRulesListContext(ctx context.Context, params *GetAssetRulesListParams, opts ...ClientOption) (*GetAssetRulesListOK, error)
+
+	// GetAssetRulesSearch search asset rules.
 	GetAssetRulesSearch(params *GetAssetRulesSearchParams, opts ...ClientOption) (*GetAssetRulesSearchOK, error)
 
+	// GetAssetRulesSearchContext search asset rules.
+	GetAssetRulesSearchContext(ctx context.Context, params *GetAssetRulesSearchParams, opts ...ClientOption) (*GetAssetRulesSearchOK, error)
+
+	// PostAssetRules create an asset rule.
 	PostAssetRules(params *PostAssetRulesParams, opts ...ClientOption) (*PostAssetRulesCreated, error)
 
+	// PostAssetRulesContext create an asset rule.
+	PostAssetRulesContext(ctx context.Context, params *PostAssetRulesParams, opts ...ClientOption) (*PostAssetRulesCreated, error)
+
+	// PostAssetRulesPreview preview an asset rule.
 	PostAssetRulesPreview(params *PostAssetRulesPreviewParams, opts ...ClientOption) (*PostAssetRulesPreviewOK, error)
 
+	// PostAssetRulesPreviewContext preview an asset rule.
+	PostAssetRulesPreviewContext(ctx context.Context, params *PostAssetRulesPreviewParams, opts ...ClientOption) (*PostAssetRulesPreviewOK, error)
+
+	// PutAssetRulesID update an asset rule.
 	PutAssetRulesID(params *PutAssetRulesIDParams, opts ...ClientOption) (*PutAssetRulesIDOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PutAssetRulesIDContext update an asset rule.
+	PutAssetRulesIDContext(ctx context.Context, params *PutAssetRulesIDParams, opts ...ClientOption) (*PutAssetRulesIDOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-DeleteAssetRulesID deletes an asset rule
-
-Delete an asset rule by ID
-*/
+// DeleteAssetRulesID deletes an asset rule.
+//
+// Delete an asset rule by ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteAssetRulesIDContext] instead.
 func (a *Client) DeleteAssetRulesID(params *DeleteAssetRulesIDParams, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteAssetRulesIDContext(ctx, params, opts...)
+}
+
+// DeleteAssetRulesIDContext deletes an asset rule.
+//
+// Delete an asset rule by ID.
+//
+// Do not use the deprecated [DeleteAssetRulesIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteAssetRulesIDContext(ctx context.Context, params *DeleteAssetRulesIDParams, opts ...ClientOption) (*DeleteAssetRulesIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAssetRulesIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteAssetRulesID",
 		Method:             "DELETE",
@@ -91,13 +146,14 @@ func (a *Client) DeleteAssetRulesID(params *DeleteAssetRulesIDParams, opts ...Cl
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAssetRulesIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -117,16 +173,36 @@ func (a *Client) DeleteAssetRulesID(params *DeleteAssetRulesIDParams, opts ...Cl
 	panic(msg)
 }
 
-/*
-GetAssetRulesAssetsID gets assets matched by a rule
-
-Get the list of asset IDs matched by an asset rule
-*/
+// GetAssetRulesAssetsID gets assets matched by a rule.
+//
+// Get the list of asset IDs matched by an asset rule.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetRulesAssetsIDContext] instead.
 func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetRulesAssetsIDContext(ctx, params, opts...)
+}
+
+// GetAssetRulesAssetsIDContext gets assets matched by a rule.
+//
+// Get the list of asset IDs matched by an asset rule.
+//
+// Do not use the deprecated [GetAssetRulesAssetsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetRulesAssetsIDContext(ctx context.Context, params *GetAssetRulesAssetsIDParams, opts ...ClientOption) (*GetAssetRulesAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetRulesAssetsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetRulesAssetsID",
 		Method:             "GET",
@@ -136,13 +212,14 @@ func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetRulesAssetsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -162,16 +239,36 @@ func (a *Client) GetAssetRulesAssetsID(params *GetAssetRulesAssetsIDParams, opts
 	panic(msg)
 }
 
-/*
-GetAssetRulesID gets an asset rule
-
-Get an asset rule by ID
-*/
+// GetAssetRulesID gets an asset rule.
+//
+// Get an asset rule by ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetRulesIDContext] instead.
 func (a *Client) GetAssetRulesID(params *GetAssetRulesIDParams, opts ...ClientOption) (*GetAssetRulesIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetRulesIDContext(ctx, params, opts...)
+}
+
+// GetAssetRulesIDContext gets an asset rule.
+//
+// Get an asset rule by ID.
+//
+// Do not use the deprecated [GetAssetRulesIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetRulesIDContext(ctx context.Context, params *GetAssetRulesIDParams, opts ...ClientOption) (*GetAssetRulesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetRulesIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetRulesID",
 		Method:             "GET",
@@ -181,13 +278,14 @@ func (a *Client) GetAssetRulesID(params *GetAssetRulesIDParams, opts ...ClientOp
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetRulesIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -207,16 +305,36 @@ func (a *Client) GetAssetRulesID(params *GetAssetRulesIDParams, opts ...ClientOp
 	panic(msg)
 }
 
-/*
-GetAssetRulesList lists asset rules
-
-List all asset rules with pagination
-*/
+// GetAssetRulesList lists asset rules.
+//
+// List all asset rules with pagination.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetRulesListContext] instead.
 func (a *Client) GetAssetRulesList(params *GetAssetRulesListParams, opts ...ClientOption) (*GetAssetRulesListOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetRulesListContext(ctx, params, opts...)
+}
+
+// GetAssetRulesListContext lists asset rules.
+//
+// List all asset rules with pagination.
+//
+// Do not use the deprecated [GetAssetRulesListParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetRulesListContext(ctx context.Context, params *GetAssetRulesListParams, opts ...ClientOption) (*GetAssetRulesListOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetRulesListParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetRulesList",
 		Method:             "GET",
@@ -226,13 +344,14 @@ func (a *Client) GetAssetRulesList(params *GetAssetRulesListParams, opts ...Clie
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetRulesListReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -252,16 +371,36 @@ func (a *Client) GetAssetRulesList(params *GetAssetRulesListParams, opts ...Clie
 	panic(msg)
 }
 
-/*
-GetAssetRulesSearch searches asset rules
-
-Search asset rules by name
-*/
+// GetAssetRulesSearch searches asset rules.
+//
+// Search asset rules by name.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetRulesSearchContext] instead.
 func (a *Client) GetAssetRulesSearch(params *GetAssetRulesSearchParams, opts ...ClientOption) (*GetAssetRulesSearchOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetRulesSearchContext(ctx, params, opts...)
+}
+
+// GetAssetRulesSearchContext searches asset rules.
+//
+// Search asset rules by name.
+//
+// Do not use the deprecated [GetAssetRulesSearchParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetRulesSearchContext(ctx context.Context, params *GetAssetRulesSearchParams, opts ...ClientOption) (*GetAssetRulesSearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetRulesSearchParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetRulesSearch",
 		Method:             "GET",
@@ -271,13 +410,14 @@ func (a *Client) GetAssetRulesSearch(params *GetAssetRulesSearchParams, opts ...
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetRulesSearchReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -297,16 +437,36 @@ func (a *Client) GetAssetRulesSearch(params *GetAssetRulesSearchParams, opts ...
 	panic(msg)
 }
 
-/*
-PostAssetRules creates an asset rule
-
-Create a new asset rule that applies enrichments to matching assets
-*/
+// PostAssetRules creates an asset rule.
+//
+// Create a new asset rule that applies enrichments to matching assets.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAssetRulesContext] instead.
 func (a *Client) PostAssetRules(params *PostAssetRulesParams, opts ...ClientOption) (*PostAssetRulesCreated, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAssetRulesContext(ctx, params, opts...)
+}
+
+// PostAssetRulesContext creates an asset rule.
+//
+// Create a new asset rule that applies enrichments to matching assets.
+//
+// Do not use the deprecated [PostAssetRulesParams.Context] with this method: it would be ignored.
+func (a *Client) PostAssetRulesContext(ctx context.Context, params *PostAssetRulesParams, opts ...ClientOption) (*PostAssetRulesCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetRulesParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAssetRules",
 		Method:             "POST",
@@ -316,13 +476,14 @@ func (a *Client) PostAssetRules(params *PostAssetRulesParams, opts ...ClientOpti
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetRulesReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -342,16 +503,36 @@ func (a *Client) PostAssetRules(params *PostAssetRulesParams, opts ...ClientOpti
 	panic(msg)
 }
 
-/*
-PostAssetRulesPreview previews an asset rule
-
-Preview which assets would match a rule configuration
-*/
+// PostAssetRulesPreview previews an asset rule.
+//
+// Preview which assets would match a rule configuration.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAssetRulesPreviewContext] instead.
 func (a *Client) PostAssetRulesPreview(params *PostAssetRulesPreviewParams, opts ...ClientOption) (*PostAssetRulesPreviewOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAssetRulesPreviewContext(ctx, params, opts...)
+}
+
+// PostAssetRulesPreviewContext previews an asset rule.
+//
+// Preview which assets would match a rule configuration.
+//
+// Do not use the deprecated [PostAssetRulesPreviewParams.Context] with this method: it would be ignored.
+func (a *Client) PostAssetRulesPreviewContext(ctx context.Context, params *PostAssetRulesPreviewParams, opts ...ClientOption) (*PostAssetRulesPreviewOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetRulesPreviewParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAssetRulesPreview",
 		Method:             "POST",
@@ -361,13 +542,14 @@ func (a *Client) PostAssetRulesPreview(params *PostAssetRulesPreviewParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetRulesPreviewReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -387,16 +569,36 @@ func (a *Client) PostAssetRulesPreview(params *PostAssetRulesPreviewParams, opts
 	panic(msg)
 }
 
-/*
-PutAssetRulesID updates an asset rule
-
-Update an existing asset rule
-*/
+// PutAssetRulesID updates an asset rule.
+//
+// Update an existing asset rule.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAssetRulesIDContext] instead.
 func (a *Client) PutAssetRulesID(params *PutAssetRulesIDParams, opts ...ClientOption) (*PutAssetRulesIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAssetRulesIDContext(ctx, params, opts...)
+}
+
+// PutAssetRulesIDContext updates an asset rule.
+//
+// Update an existing asset rule.
+//
+// Do not use the deprecated [PutAssetRulesIDParams.Context] with this method: it would be ignored.
+func (a *Client) PutAssetRulesIDContext(ctx context.Context, params *PutAssetRulesIDParams, opts ...ClientOption) (*PutAssetRulesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutAssetRulesIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PutAssetRulesID",
 		Method:             "PUT",
@@ -406,13 +608,14 @@ func (a *Client) PutAssetRulesID(params *PutAssetRulesIDParams, opts ...ClientOp
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutAssetRulesIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -433,6 +636,14 @@ func (a *Client) PutAssetRulesID(params *PutAssetRulesIDParams, opts ...ClientOp
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [AssetRulesParams].
+	ctx context.Context
 }

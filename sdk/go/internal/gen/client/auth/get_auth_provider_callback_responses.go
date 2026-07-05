@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewGetAuthProviderCallbackTemporaryRedirect() *GetAuthProviderCallbackTempo
 	return &GetAuthProviderCallbackTemporaryRedirect{}
 }
 
-/*
-GetAuthProviderCallbackTemporaryRedirect describes a response with status code 307, with default header values.
-
-Temporary Redirect
-*/
+// GetAuthProviderCallbackTemporaryRedirect describes a response with status code 307, with default header values.
+//
+// Temporary Redirect
 type GetAuthProviderCallbackTemporaryRedirect struct {
 	Payload string
 }
@@ -124,11 +121,9 @@ func NewGetAuthProviderCallbackBadRequest() *GetAuthProviderCallbackBadRequest {
 	return &GetAuthProviderCallbackBadRequest{}
 }
 
-/*
-GetAuthProviderCallbackBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetAuthProviderCallbackBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetAuthProviderCallbackBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -194,11 +189,9 @@ func NewGetAuthProviderCallbackNotFound() *GetAuthProviderCallbackNotFound {
 	return &GetAuthProviderCallbackNotFound{}
 }
 
-/*
-GetAuthProviderCallbackNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetAuthProviderCallbackNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetAuthProviderCallbackNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -264,11 +257,9 @@ func NewGetAuthProviderCallbackInternalServerError() *GetAuthProviderCallbackInt
 	return &GetAuthProviderCallbackInternalServerError{}
 }
 
-/*
-GetAuthProviderCallbackInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAuthProviderCallbackInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAuthProviderCallbackInternalServerError struct {
 	Payload *models.ErrorResponse
 }

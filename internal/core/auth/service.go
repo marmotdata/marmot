@@ -18,11 +18,14 @@ type Claims struct {
 	Roles       []string               `json:"roles"`
 	Permissions []string               `json:"permissions"`
 	Preferences map[string]interface{} `json:"preferences,omitempty"`
+	// Omitted for user principals; consumers must treat "" as PrincipalTypeUser.
+	PrincipalType string `json:"principal_type,omitempty"`
 	jwt.RegisteredClaims
 }
 
 type Service interface {
 	GenerateToken(ctx context.Context, user *user.User, preferencesClaims map[string]interface{}) (string, error)
+	GenerateTokenForPrincipal(ctx context.Context, p Principal, preferencesClaims map[string]interface{}) (string, error)
 	ValidateToken(ctx context.Context, tokenString string) (*Claims, error)
 	GetSigningKey(ctx context.Context) ([]byte, error)
 }
@@ -64,39 +67,35 @@ func (s *service) GetSigningKey(ctx context.Context) ([]byte, error) {
 	return []byte(value), nil
 }
 
-func (s *service) GenerateToken(ctx context.Context, user *user.User, preferencesClaims map[string]interface{}) (string, error) {
+// GenerateToken is a BC shim; use GenerateTokenForPrincipal for new callers.
+func (s *service) GenerateToken(ctx context.Context, u *user.User, preferencesClaims map[string]interface{}) (string, error) {
+	if u == nil || u.ID == "" {
+		return "", fmt.Errorf("cannot generate token for nil user")
+	}
+	p := NewUserPrincipal(u)
+	return s.GenerateTokenForPrincipal(ctx, p, preferencesClaims)
+}
+
+func (s *service) GenerateTokenForPrincipal(ctx context.Context, p Principal, preferencesClaims map[string]interface{}) (string, error) {
 	signingKey, err := s.GetSigningKey(ctx)
 	if err != nil {
 		return "", fmt.Errorf("getting signing key: %w", err)
 	}
 
-	roleNames := make([]string, len(user.Roles))
-	permissionSet := make(map[string]bool)
-
-	for i, role := range user.Roles {
-		roleNames[i] = role.Name
-
-		for _, perm := range role.Permissions {
-			permKey := perm.ResourceType + ":" + perm.Action
-			permissionSet[permKey] = true
-		}
-	}
-
-	permissions := make([]string, 0, len(permissionSet))
-	for perm := range permissionSet {
-		permissions = append(permissions, perm)
-	}
-
 	claims := &Claims{
-		Roles:       roleNames,
-		Permissions: permissions,
+		Roles:       p.Roles(),
+		Permissions: p.Permissions(),
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   user.ID,
+			Subject:   p.ID(),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			NotBefore: jwt.NewNumericDate(time.Now()),
 		},
 		Preferences: preferencesClaims,
+	}
+
+	if p.Type() != PrincipalTypeUser {
+		claims.PrincipalType = string(p.Type())
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)

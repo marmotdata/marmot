@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewDeleteAssetsTermsIDOK() *DeleteAssetsTermsIDOK {
 	return &DeleteAssetsTermsIDOK{}
 }
 
-/*
-DeleteAssetsTermsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// DeleteAssetsTermsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type DeleteAssetsTermsIDOK struct {
 	Payload []*models.AssetTerm
 }
@@ -118,11 +115,9 @@ func NewDeleteAssetsTermsIDBadRequest() *DeleteAssetsTermsIDBadRequest {
 	return &DeleteAssetsTermsIDBadRequest{}
 }
 
-/*
-DeleteAssetsTermsIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// DeleteAssetsTermsIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type DeleteAssetsTermsIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -188,11 +183,9 @@ func NewDeleteAssetsTermsIDNotFound() *DeleteAssetsTermsIDNotFound {
 	return &DeleteAssetsTermsIDNotFound{}
 }
 
-/*
-DeleteAssetsTermsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// DeleteAssetsTermsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type DeleteAssetsTermsIDNotFound struct {
 	Payload *models.ErrorResponse
 }

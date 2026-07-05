@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsSummaryParams() *GetAssetsSummaryParams {
-	return &GetAssetsSummaryParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsSummaryParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsSummaryParamsWithTimeout creates a new GetAssetsSummaryParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsSummaryParamsWithTimeout(timeout time.Duration) *GetAssetsSummaryParams {
 	return &GetAssetsSummaryParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsSummaryParamsWithContext creates a new GetAssetsSummaryParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSummaryParams].
 func NewGetAssetsSummaryParamsWithContext(ctx context.Context) *GetAssetsSummaryParams {
 	return &GetAssetsSummaryParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -57,9 +61,9 @@ GetAssetsSummaryParams contains all the parameters to send to the API endpoint
 	Typically these are written to a http.Request.
 */
 type GetAssetsSummaryParams struct {
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets summary params (not the query body).
@@ -77,43 +81,46 @@ func (o *GetAssetsSummaryParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get assets summary params
+// WithTimeout adds the timeout to the get assets summary params.
 func (o *GetAssetsSummaryParams) WithTimeout(timeout time.Duration) *GetAssetsSummaryParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets summary params
+// SetTimeout adds the timeout to the get assets summary params.
 func (o *GetAssetsSummaryParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets summary params
+// WithContext adds the context to the get assets summary params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSummaryParams].
 func (o *GetAssetsSummaryParams) WithContext(ctx context.Context) *GetAssetsSummaryParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets summary params
+// SetContext adds the context to the get assets summary params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSummaryParams].
 func (o *GetAssetsSummaryParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets summary params
+// WithHTTPClient adds the HTTPClient to the get assets summary params.
 func (o *GetAssetsSummaryParams) WithHTTPClient(client *http.Client) *GetAssetsSummaryParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets summary params
+// SetHTTPClient adds the HTTPClient to the get assets summary params.
 func (o *GetAssetsSummaryParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsSummaryParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

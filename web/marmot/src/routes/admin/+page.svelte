@@ -2,6 +2,7 @@
 	import Sidebar from '$components/ui/Sidebar.svelte';
 	import UserManagement from '$components/user/UserManagement.svelte';
 	import TeamManagement from '$components/team/TeamManagement.svelte';
+	import RoleManagement from '$components/role/RoleManagement.svelte';
 	import SearchManagement from '$components/admin/SearchManagement.svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
@@ -11,6 +12,7 @@
 	const tabs = [
 		{ id: 'users', label: 'Users' },
 		{ id: 'teams', label: 'Teams' },
+		{ id: 'roles', label: 'Roles' },
 		{ id: 'system', label: 'System' }
 	];
 
@@ -35,6 +37,10 @@
 			{:else if activeTab === 'teams'}
 				<div class="animate-slide-down">
 					<TeamManagement />
+				</div>
+			{:else if activeTab === 'roles'}
+				<div class="animate-slide-down">
+					<RoleManagement />
 				</div>
 			{:else if activeTab === 'system'}
 				<div class="animate-slide-down">

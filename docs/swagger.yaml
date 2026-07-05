@@ -35,6 +35,16 @@ definitions:
           $ref: '#/definitions/Bucket'
         type: array
     type: object
+  AddDataProductAssetsRequest:
+    properties:
+      asset_ids:
+        items:
+          type: string
+        minItems: 1
+        type: array
+    required:
+    - asset_ids
+    type: object
   AddMemberRequest:
     properties:
       role:
@@ -583,6 +593,30 @@ definitions:
           type: string
         type: array
     type: object
+  CreateDataProductRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/DataProductOwnerRequest'
+        type: array
+      rules:
+        items:
+          $ref: '#/definitions/DataProductRuleRequest'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+    required:
+    - name
+    type: object
   CreateDocRequest:
     properties:
       asset_mrn:
@@ -696,6 +730,192 @@ definitions:
     - name
     - role_names
     - username
+    type: object
+  DataProduct:
+    properties:
+      asset_count:
+        type: integer
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      icon_url:
+        type: string
+      id:
+        type: string
+      manual_asset_count:
+        type: integer
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/DataProductOwner'
+        type: array
+      rule_asset_count:
+        type: integer
+      rules:
+        items:
+          $ref: '#/definitions/DataProductRule'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+      updated_at:
+        type: string
+    type: object
+  DataProductAssetsResult:
+    properties:
+      asset_ids:
+        items:
+          type: string
+        type: array
+      total:
+        type: integer
+    type: object
+  DataProductListResult:
+    properties:
+      data_products:
+        items:
+          $ref: '#/definitions/DataProduct'
+        type: array
+      total:
+        type: integer
+    type: object
+  DataProductOwner:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      profile_picture:
+        type: string
+      type:
+        type: string
+      username:
+        type: string
+    type: object
+  DataProductOwnerRequest:
+    properties:
+      id:
+        type: string
+      type:
+        enum:
+        - user
+        - team
+        type: string
+    required:
+    - id
+    - type
+    type: object
+  DataProductResolvedAssets:
+    properties:
+      all_assets:
+        items:
+          type: string
+        type: array
+      dynamic_assets:
+        items:
+          type: string
+        type: array
+      manual_assets:
+        items:
+          type: string
+        type: array
+      total:
+        type: integer
+    type: object
+  DataProductRule:
+    properties:
+      created_at:
+        type: string
+      data_product_id:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      is_enabled:
+        type: boolean
+      matched_asset_count:
+        type: integer
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        $ref: '#/definitions/DataProductRuleType'
+      updated_at:
+        type: string
+    type: object
+  DataProductRulePreview:
+    properties:
+      asset_count:
+        type: integer
+      asset_ids:
+        items:
+          type: string
+        type: array
+      errors:
+        items:
+          type: string
+        type: array
+    type: object
+  DataProductRuleRequest:
+    properties:
+      description:
+        type: string
+      is_enabled:
+        type: boolean
+      metadata_field:
+        type: string
+      name:
+        type: string
+      pattern_type:
+        type: string
+      pattern_value:
+        type: string
+      priority:
+        type: integer
+      query_expression:
+        type: string
+      rule_type:
+        type: string
+    required:
+    - name
+    - rule_type
+    type: object
+  DataProductRuleType:
+    enum:
+    - query
+    - metadata_match
+    type: string
+    x-enum-varnames:
+    - RuleTypeQuery
+    - RuleTypeMetadataMatch
+  DataProductRulesResponse:
+    properties:
+      rules:
+        items:
+          $ref: '#/definitions/DataProductRule'
+        type: array
+      total:
+        type: integer
     type: object
   Dataset:
     properties:
@@ -1388,6 +1608,19 @@ definitions:
           $ref: '#/definitions/Permission'
         type: array
     type: object
+  RolePermission:
+    properties:
+      action:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      resource_type:
+        type: string
+    type: object
   RulePreview:
     properties:
       asset_count:
@@ -1877,6 +2110,24 @@ definitions:
           type: string
         type: array
     type: object
+  UpdateDataProductRequest:
+    properties:
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      owners:
+        items:
+          $ref: '#/definitions/DataProductOwnerRequest'
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
   UpdateMemberRoleRequest:
     properties:
       role:
@@ -2037,6 +2288,31 @@ definitions:
       field:
         type: string
       message:
+        type: string
+    type: object
+  v1_roles.createRoleRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      permission_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_roles.replacePermissionsRequest:
+    properties:
+      permission_ids:
+        items:
+          type: string
+        type: array
+    type: object
+  v1_roles.updateRoleRequest:
+    properties:
+      description:
+        type: string
+      name:
         type: string
     type: object
 info:
@@ -4459,6 +4735,25 @@ paths:
       summary: Search owners
       tags:
       - owners
+  /permissions:
+    get:
+      description: List all defined permissions grouped by resource type
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/RolePermission'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List all permissions
+      tags:
+      - roles
   /pipelines/{pipelineName}:
     delete:
       description: Delete all resources ever created by a pipeline (across all sources)
@@ -4478,6 +4773,272 @@ paths:
       summary: Destroy pipeline
       tags:
       - pipelines
+  /products/:
+    post:
+      consumes:
+      - application/json
+      description: Create a new data product with owners and optional membership rules
+      parameters:
+      - description: Data product to create
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/CreateDataProductRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Create data product
+      tags:
+      - products
+  /products/{id}:
+    delete:
+      description: Delete a data product by ID
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Delete data product
+      tags:
+      - products
+    get:
+      description: Get a data product by ID
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get data product
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Update an existing data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: product
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateDataProductRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProduct'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Update data product
+      tags:
+      - products
+  /products/assets/{id}:
+    get:
+      description: Get the manually added assets of a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 20
+        description: Maximum number of assets to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of assets to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductAssetsResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get data product assets
+      tags:
+      - products
+    post:
+      consumes:
+      - application/json
+      description: Manually add assets to a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Asset IDs to add
+        in: body
+        name: assets
+        required: true
+        schema:
+          $ref: '#/definitions/AddDataProductAssetsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Add data product assets
+      tags:
+      - products
+  /products/assets/{id}/{assetId}:
+    delete:
+      description: Remove a manually added asset from a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Asset ID
+        in: path
+        name: assetId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Remove data product asset
+      tags:
+      - products
   /products/images/{id}:
     get:
       description: List all images for a data product
@@ -4616,6 +5177,475 @@ paths:
       summary: Upload product image
       tags:
       - products
+  /products/list:
+    get:
+      description: Retrieve a paginated list of data products
+      parameters:
+      - default: 20
+        description: Maximum number of data products to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of data products to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductListResult'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List data products
+      tags:
+      - products
+  /products/resolved-assets/{id}:
+    get:
+      description: Get all assets of a data product, both manually added and matched
+        by rules
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - default: 20
+        description: Maximum number of assets to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of assets to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductResolvedAssets'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get resolved data product assets
+      tags:
+      - products
+  /products/rule-preview:
+    post:
+      consumes:
+      - application/json
+      description: Preview which assets would match a rule configuration
+      parameters:
+      - description: Rule to preview
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/DataProductRuleRequest'
+      - default: 20
+        description: Maximum number of matching assets to return
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductRulePreview'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Preview data product rule
+      tags:
+      - products
+  /products/rules/{id}:
+    get:
+      description: Get the membership rules of a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductRulesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get data product rules
+      tags:
+      - products
+    post:
+      consumes:
+      - application/json
+      description: Create a membership rule for a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rule to create
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/DataProductRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/DataProductRule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Create data product rule
+      tags:
+      - products
+  /products/rules/{id}/{ruleId}:
+    delete:
+      description: Delete a membership rule from a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rule ID
+        in: path
+        name: ruleId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Delete data product rule
+      tags:
+      - products
+    put:
+      consumes:
+      - application/json
+      description: Update a membership rule of a data product
+      parameters:
+      - description: Data Product ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Rule ID
+        in: path
+        name: ruleId
+        required: true
+        type: string
+      - description: Rule fields to update
+        in: body
+        name: rule
+        required: true
+        schema:
+          $ref: '#/definitions/DataProductRuleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductRule'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Update data product rule
+      tags:
+      - products
+  /products/search:
+    get:
+      description: Search data products by name, description, and tags
+      parameters:
+      - description: Search query
+        in: query
+        name: q
+        type: string
+      - description: Comma-separated list of tags to filter by
+        in: query
+        name: tags
+        type: string
+      - default: 20
+        description: Maximum number of data products to return
+        in: query
+        name: limit
+        type: integer
+      - default: 0
+        description: Number of data products to skip
+        in: query
+        name: offset
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/DataProductListResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Search data products
+      tags:
+      - products
+  /roles:
+    get:
+      description: List all active roles with user counts and permissions
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/Role'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List roles
+      tags:
+      - roles
+    post:
+      consumes:
+      - application/json
+      description: Create a new role with optional initial permissions
+      parameters:
+      - description: Role creation request
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/v1_roles.createRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Create a role
+      tags:
+      - roles
+  /roles/{id}:
+    delete:
+      description: Soft-delete a role. Fails if the role is a system role or has active
+        user assignments.
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Delete a role
+      tags:
+      - roles
+    get:
+      description: Get a role by ID with its permissions
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Role'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get a role
+      tags:
+      - roles
+    patch:
+      consumes:
+      - application/json
+      description: Update a role's name or description. System roles cannot be renamed.
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Role update request
+        in: body
+        name: role
+        required: true
+        schema:
+          $ref: '#/definitions/v1_roles.updateRoleRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Update a role
+      tags:
+      - roles
+  /roles/{id}/permissions:
+    post:
+      consumes:
+      - application/json
+      description: Atomically replace all permissions on a role. System roles enforce
+        a minimum permission floor.
+      parameters:
+      - description: Role ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Permission IDs to assign
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/v1_roles.replacePermissionsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/Role'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "422":
+          description: Unprocessable Entity
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Replace role permissions
+      tags:
+      - roles
   /runs:
     get:
       description: Get paginated list of runs with filtering

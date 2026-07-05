@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetAssetsIDRunHistoryParams creates a new GetAssetsIDRunHistoryParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsIDRunHistoryParams() *GetAssetsIDRunHistoryParams {
-	return &GetAssetsIDRunHistoryParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsIDRunHistoryParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsIDRunHistoryParamsWithTimeout creates a new GetAssetsIDRunHistoryParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsIDRunHistoryParamsWithTimeout(timeout time.Duration) *GetAssetsIDRunHistoryParams {
 	return &GetAssetsIDRunHistoryParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsIDRunHistoryParamsWithContext creates a new GetAssetsIDRunHistoryParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsIDRunHistoryParams].
 func NewGetAssetsIDRunHistoryParamsWithContext(ctx context.Context) *GetAssetsIDRunHistoryParams {
 	return &GetAssetsIDRunHistoryParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,29 +63,26 @@ GetAssetsIDRunHistoryParams contains all the parameters to send to the API endpo
 */
 type GetAssetsIDRunHistoryParams struct {
 
-	/* ID.
-
-	   Asset ID
-	*/
+	// ID.
+	//
+	// Asset ID
 	ID string
 
-	/* Limit.
-
-	   Number of items per page
-
-	   Default: 10
-	*/
+	// Limit.
+	//
+	// Number of items per page
+	//
+	// Default: 10
 	Limit *int64
 
-	/* Offset.
-
-	   Number of items to skip
-	*/
+	// Offset.
+	//
+	// Number of items to skip
 	Offset *int64
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets ID run history params (not the query body).
@@ -107,82 +108,85 @@ func (o *GetAssetsIDRunHistoryParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get assets ID run history params
+// WithTimeout adds the timeout to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) WithTimeout(timeout time.Duration) *GetAssetsIDRunHistoryParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets ID run history params
+// SetTimeout adds the timeout to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets ID run history params
+// WithContext adds the context to the get assets ID run history params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsIDRunHistoryParams].
 func (o *GetAssetsIDRunHistoryParams) WithContext(ctx context.Context) *GetAssetsIDRunHistoryParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets ID run history params
+// SetContext adds the context to the get assets ID run history params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsIDRunHistoryParams].
 func (o *GetAssetsIDRunHistoryParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets ID run history params
+// WithHTTPClient adds the HTTPClient to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) WithHTTPClient(client *http.Client) *GetAssetsIDRunHistoryParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets ID run history params
+// SetHTTPClient adds the HTTPClient to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get assets ID run history params
+// WithID adds the id to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) WithID(id string) *GetAssetsIDRunHistoryParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get assets ID run history params
+// SetID adds the id to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithLimit adds the limit to the get assets ID run history params
+// WithLimit adds the limit to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) WithLimit(limit *int64) *GetAssetsIDRunHistoryParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get assets ID run history params
+// SetLimit adds the limit to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get assets ID run history params
+// WithOffset adds the offset to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) WithOffset(offset *int64) *GetAssetsIDRunHistoryParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get assets ID run history params
+// SetOffset adds the offset to the get assets ID run history params.
 func (o *GetAssetsIDRunHistoryParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsIDRunHistoryParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -200,7 +204,7 @@ func (o *GetAssetsIDRunHistoryParams) WriteToRequest(r runtime.ClientRequest, re
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -217,7 +221,7 @@ func (o *GetAssetsIDRunHistoryParams) WriteToRequest(r runtime.ClientRequest, re
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

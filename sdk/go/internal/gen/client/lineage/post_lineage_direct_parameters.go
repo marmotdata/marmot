@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostLineageDirectParams() *PostLineageDirectParams {
-	return &PostLineageDirectParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostLineageDirectParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostLineageDirectParamsWithTimeout creates a new PostLineageDirectParams object
 // with the ability to set a timeout on a request.
 func NewPostLineageDirectParamsWithTimeout(timeout time.Duration) *PostLineageDirectParams {
 	return &PostLineageDirectParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostLineageDirectParamsWithContext creates a new PostLineageDirectParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostLineageDirectParams].
 func NewPostLineageDirectParamsWithContext(ctx context.Context) *PostLineageDirectParams {
 	return &PostLineageDirectParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostLineageDirectParams contains all the parameters to send to the API endpoint
 */
 type PostLineageDirectParams struct {
 
-	/* Edge.
-
-	   Lineage edge to create
-	*/
+	// Edge.
+	//
+	// Lineage edge to create
 	Edge *models.LineageEdge
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post lineage direct params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostLineageDirectParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post lineage direct params
+// WithTimeout adds the timeout to the post lineage direct params.
 func (o *PostLineageDirectParams) WithTimeout(timeout time.Duration) *PostLineageDirectParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post lineage direct params
+// SetTimeout adds the timeout to the post lineage direct params.
 func (o *PostLineageDirectParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post lineage direct params
+// WithContext adds the context to the post lineage direct params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostLineageDirectParams].
 func (o *PostLineageDirectParams) WithContext(ctx context.Context) *PostLineageDirectParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post lineage direct params
+// SetContext adds the context to the post lineage direct params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostLineageDirectParams].
 func (o *PostLineageDirectParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post lineage direct params
+// WithHTTPClient adds the HTTPClient to the post lineage direct params.
 func (o *PostLineageDirectParams) WithHTTPClient(client *http.Client) *PostLineageDirectParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post lineage direct params
+// SetHTTPClient adds the HTTPClient to the post lineage direct params.
 func (o *PostLineageDirectParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithEdge adds the edge to the post lineage direct params
+// WithEdge adds the edge to the post lineage direct params.
 func (o *PostLineageDirectParams) WithEdge(edge *models.LineageEdge) *PostLineageDirectParams {
 	o.SetEdge(edge)
 	return o
 }
 
-// SetEdge adds the edge to the post lineage direct params
+// SetEdge adds the edge to the post lineage direct params.
 func (o *PostLineageDirectParams) SetEdge(edge *models.LineageEdge) {
 	o.Edge = edge
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostLineageDirectParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

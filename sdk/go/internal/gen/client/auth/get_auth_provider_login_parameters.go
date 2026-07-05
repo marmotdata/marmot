@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAuthProviderLoginParams() *GetAuthProviderLoginParams {
-	return &GetAuthProviderLoginParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAuthProviderLoginParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAuthProviderLoginParamsWithTimeout creates a new GetAuthProviderLoginParams object
 // with the ability to set a timeout on a request.
 func NewGetAuthProviderLoginParamsWithTimeout(timeout time.Duration) *GetAuthProviderLoginParams {
 	return &GetAuthProviderLoginParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAuthProviderLoginParamsWithContext creates a new GetAuthProviderLoginParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAuthProviderLoginParams].
 func NewGetAuthProviderLoginParamsWithContext(ctx context.Context) *GetAuthProviderLoginParams {
 	return &GetAuthProviderLoginParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetAuthProviderLoginParams contains all the parameters to send to the API endpoi
 */
 type GetAuthProviderLoginParams struct {
 
-	/* Provider.
-
-	   OAuth provider (okta, google, github, etc.)
-	*/
+	// Provider.
+	//
+	// OAuth provider (okta, google, github, etc.)
 	Provider string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get auth provider login params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetAuthProviderLoginParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get auth provider login params
+// WithTimeout adds the timeout to the get auth provider login params.
 func (o *GetAuthProviderLoginParams) WithTimeout(timeout time.Duration) *GetAuthProviderLoginParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get auth provider login params
+// SetTimeout adds the timeout to the get auth provider login params.
 func (o *GetAuthProviderLoginParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get auth provider login params
+// WithContext adds the context to the get auth provider login params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAuthProviderLoginParams].
 func (o *GetAuthProviderLoginParams) WithContext(ctx context.Context) *GetAuthProviderLoginParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get auth provider login params
+// SetContext adds the context to the get auth provider login params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAuthProviderLoginParams].
 func (o *GetAuthProviderLoginParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get auth provider login params
+// WithHTTPClient adds the HTTPClient to the get auth provider login params.
 func (o *GetAuthProviderLoginParams) WithHTTPClient(client *http.Client) *GetAuthProviderLoginParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get auth provider login params
+// SetHTTPClient adds the HTTPClient to the get auth provider login params.
 func (o *GetAuthProviderLoginParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithProvider adds the provider to the get auth provider login params
+// WithProvider adds the provider to the get auth provider login params.
 func (o *GetAuthProviderLoginParams) WithProvider(provider string) *GetAuthProviderLoginParams {
 	o.SetProvider(provider)
 	return o
 }
 
-// SetProvider adds the provider to the get auth provider login params
+// SetProvider adds the provider to the get auth provider login params.
 func (o *GetAuthProviderLoginParams) SetProvider(provider string) {
 	o.Provider = provider
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAuthProviderLoginParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetUIConfigParams() *GetUIConfigParams {
-	return &GetUIConfigParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetUIConfigParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetUIConfigParamsWithTimeout creates a new GetUIConfigParams object
 // with the ability to set a timeout on a request.
 func NewGetUIConfigParamsWithTimeout(timeout time.Duration) *GetUIConfigParams {
 	return &GetUIConfigParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetUIConfigParamsWithContext creates a new GetUIConfigParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetUIConfigParams].
 func NewGetUIConfigParamsWithContext(ctx context.Context) *GetUIConfigParams {
 	return &GetUIConfigParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -57,9 +61,9 @@ GetUIConfigParams contains all the parameters to send to the API endpoint
 	Typically these are written to a http.Request.
 */
 type GetUIConfigParams struct {
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get UI config params (not the query body).
@@ -77,43 +81,46 @@ func (o *GetUIConfigParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get UI config params
+// WithTimeout adds the timeout to the get UI config params.
 func (o *GetUIConfigParams) WithTimeout(timeout time.Duration) *GetUIConfigParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get UI config params
+// SetTimeout adds the timeout to the get UI config params.
 func (o *GetUIConfigParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get UI config params
+// WithContext adds the context to the get UI config params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetUIConfigParams].
 func (o *GetUIConfigParams) WithContext(ctx context.Context) *GetUIConfigParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get UI config params
+// SetContext adds the context to the get UI config params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetUIConfigParams].
 func (o *GetUIConfigParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get UI config params
+// WithHTTPClient adds the HTTPClient to the get UI config params.
 func (o *GetUIConfigParams) WithHTTPClient(client *http.Client) *GetUIConfigParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get UI config params
+// SetHTTPClient adds the HTTPClient to the get UI config params.
 func (o *GetUIConfigParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetUIConfigParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

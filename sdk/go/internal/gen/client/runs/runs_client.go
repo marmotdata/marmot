@@ -3,7 +3,9 @@
 package runs
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new runs API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new runs API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new runs API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,46 +44,93 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for runs API
-*/
+// Client for runs API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// GetRuns list runs.
 	GetRuns(params *GetRunsParams, opts ...ClientOption) (*GetRunsOK, error)
 
+	// GetRunsContext list runs.
+	GetRunsContext(ctx context.Context, params *GetRunsParams, opts ...ClientOption) (*GetRunsOK, error)
+
+	// GetRunsID get run.
 	GetRunsID(params *GetRunsIDParams, opts ...ClientOption) (*GetRunsIDOK, error)
 
+	// GetRunsIDContext get run.
+	GetRunsIDContext(ctx context.Context, params *GetRunsIDParams, opts ...ClientOption) (*GetRunsIDOK, error)
+
+	// GetRunsIDEntities get run entities.
 	GetRunsIDEntities(params *GetRunsIDEntitiesParams, opts ...ClientOption) (*GetRunsIDEntitiesOK, error)
 
+	// GetRunsIDEntitiesContext get run entities.
+	GetRunsIDEntitiesContext(ctx context.Context, params *GetRunsIDEntitiesParams, opts ...ClientOption) (*GetRunsIDEntitiesOK, error)
+
+	// PostRunsAssetsBatch batch create assets.
 	PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, opts ...ClientOption) (*PostRunsAssetsBatchOK, error)
 
+	// PostRunsAssetsBatchContext batch create assets.
+	PostRunsAssetsBatchContext(ctx context.Context, params *PostRunsAssetsBatchParams, opts ...ClientOption) (*PostRunsAssetsBatchOK, error)
+
+	// PostRunsCleanup cleanup stale runs.
 	PostRunsCleanup(params *PostRunsCleanupParams, opts ...ClientOption) (*PostRunsCleanupOK, error)
 
+	// PostRunsCleanupContext cleanup stale runs.
+	PostRunsCleanupContext(ctx context.Context, params *PostRunsCleanupParams, opts ...ClientOption) (*PostRunsCleanupOK, error)
+
+	// PostRunsComplete complete run.
 	PostRunsComplete(params *PostRunsCompleteParams, opts ...ClientOption) (*PostRunsCompleteOK, error)
 
+	// PostRunsCompleteContext complete run.
+	PostRunsCompleteContext(ctx context.Context, params *PostRunsCompleteParams, opts ...ClientOption) (*PostRunsCompleteOK, error)
+
+	// PostRunsStart start run.
 	PostRunsStart(params *PostRunsStartParams, opts ...ClientOption) (*PostRunsStartOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PostRunsStartContext start run.
+	PostRunsStartContext(ctx context.Context, params *PostRunsStartParams, opts ...ClientOption) (*PostRunsStartOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-GetRuns lists runs
-
-Get paginated list of runs with filtering
-*/
+// GetRuns lists runs.
+//
+// Get paginated list of runs with filtering.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetRunsContext] instead.
 func (a *Client) GetRuns(params *GetRunsParams, opts ...ClientOption) (*GetRunsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetRunsContext(ctx, params, opts...)
+}
+
+// GetRunsContext lists runs.
+//
+// Get paginated list of runs with filtering.
+//
+// Do not use the deprecated [GetRunsParams.Context] with this method: it would be ignored.
+func (a *Client) GetRunsContext(ctx context.Context, params *GetRunsParams, opts ...ClientOption) (*GetRunsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetRunsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetRuns",
 		Method:             "GET",
@@ -89,13 +140,14 @@ func (a *Client) GetRuns(params *GetRunsParams, opts ...ClientOption) (*GetRunsO
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetRunsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -115,16 +167,36 @@ func (a *Client) GetRuns(params *GetRunsParams, opts ...ClientOption) (*GetRunsO
 	panic(msg)
 }
 
-/*
-GetRunsID gets run
-
-Get a specific run by ID
-*/
+// GetRunsID gets run.
+//
+// Get a specific run by ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetRunsIDContext] instead.
 func (a *Client) GetRunsID(params *GetRunsIDParams, opts ...ClientOption) (*GetRunsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetRunsIDContext(ctx, params, opts...)
+}
+
+// GetRunsIDContext gets run.
+//
+// Get a specific run by ID.
+//
+// Do not use the deprecated [GetRunsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetRunsIDContext(ctx context.Context, params *GetRunsIDParams, opts ...ClientOption) (*GetRunsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetRunsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetRunsID",
 		Method:             "GET",
@@ -134,13 +206,14 @@ func (a *Client) GetRunsID(params *GetRunsIDParams, opts ...ClientOption) (*GetR
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetRunsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -160,16 +233,36 @@ func (a *Client) GetRunsID(params *GetRunsIDParams, opts ...ClientOption) (*GetR
 	panic(msg)
 }
 
-/*
-GetRunsIDEntities gets run entities
-
-Get paginated list of entities for a specific run
-*/
+// GetRunsIDEntities gets run entities.
+//
+// Get paginated list of entities for a specific run.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetRunsIDEntitiesContext] instead.
 func (a *Client) GetRunsIDEntities(params *GetRunsIDEntitiesParams, opts ...ClientOption) (*GetRunsIDEntitiesOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetRunsIDEntitiesContext(ctx, params, opts...)
+}
+
+// GetRunsIDEntitiesContext gets run entities.
+//
+// Get paginated list of entities for a specific run.
+//
+// Do not use the deprecated [GetRunsIDEntitiesParams.Context] with this method: it would be ignored.
+func (a *Client) GetRunsIDEntitiesContext(ctx context.Context, params *GetRunsIDEntitiesParams, opts ...ClientOption) (*GetRunsIDEntitiesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetRunsIDEntitiesParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetRunsIDEntities",
 		Method:             "GET",
@@ -179,13 +272,14 @@ func (a *Client) GetRunsIDEntities(params *GetRunsIDEntitiesParams, opts ...Clie
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetRunsIDEntitiesReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -205,16 +299,36 @@ func (a *Client) GetRunsIDEntities(params *GetRunsIDEntitiesParams, opts ...Clie
 	panic(msg)
 }
 
-/*
-PostRunsAssetsBatch batches create assets
-
-Create/update assets within a run
-*/
+// PostRunsAssetsBatch batches create assets.
+//
+// Create/update assets within a run.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostRunsAssetsBatchContext] instead.
 func (a *Client) PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, opts ...ClientOption) (*PostRunsAssetsBatchOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostRunsAssetsBatchContext(ctx, params, opts...)
+}
+
+// PostRunsAssetsBatchContext batches create assets.
+//
+// Create/update assets within a run.
+//
+// Do not use the deprecated [PostRunsAssetsBatchParams.Context] with this method: it would be ignored.
+func (a *Client) PostRunsAssetsBatchContext(ctx context.Context, params *PostRunsAssetsBatchParams, opts ...ClientOption) (*PostRunsAssetsBatchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRunsAssetsBatchParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostRunsAssetsBatch",
 		Method:             "POST",
@@ -224,13 +338,14 @@ func (a *Client) PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, opts ...
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRunsAssetsBatchReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -250,16 +365,36 @@ func (a *Client) PostRunsAssetsBatch(params *PostRunsAssetsBatchParams, opts ...
 	panic(msg)
 }
 
-/*
-PostRunsCleanup cleanups stale runs
-
-Mark runs as failed if they've been running too long without updates
-*/
+// PostRunsCleanup cleanups stale runs.
+//
+// Mark runs as failed if they've been running too long without updates.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostRunsCleanupContext] instead.
 func (a *Client) PostRunsCleanup(params *PostRunsCleanupParams, opts ...ClientOption) (*PostRunsCleanupOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostRunsCleanupContext(ctx, params, opts...)
+}
+
+// PostRunsCleanupContext cleanups stale runs.
+//
+// Mark runs as failed if they've been running too long without updates.
+//
+// Do not use the deprecated [PostRunsCleanupParams.Context] with this method: it would be ignored.
+func (a *Client) PostRunsCleanupContext(ctx context.Context, params *PostRunsCleanupParams, opts ...ClientOption) (*PostRunsCleanupOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRunsCleanupParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostRunsCleanup",
 		Method:             "POST",
@@ -269,13 +404,14 @@ func (a *Client) PostRunsCleanup(params *PostRunsCleanupParams, opts ...ClientOp
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRunsCleanupReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -295,16 +431,36 @@ func (a *Client) PostRunsCleanup(params *PostRunsCleanupParams, opts ...ClientOp
 	panic(msg)
 }
 
-/*
-PostRunsComplete completes run
-
-Complete a run with results
-*/
+// PostRunsComplete completes run.
+//
+// Complete a run with results.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostRunsCompleteContext] instead.
 func (a *Client) PostRunsComplete(params *PostRunsCompleteParams, opts ...ClientOption) (*PostRunsCompleteOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostRunsCompleteContext(ctx, params, opts...)
+}
+
+// PostRunsCompleteContext completes run.
+//
+// Complete a run with results.
+//
+// Do not use the deprecated [PostRunsCompleteParams.Context] with this method: it would be ignored.
+func (a *Client) PostRunsCompleteContext(ctx context.Context, params *PostRunsCompleteParams, opts ...ClientOption) (*PostRunsCompleteOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRunsCompleteParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostRunsComplete",
 		Method:             "POST",
@@ -314,13 +470,14 @@ func (a *Client) PostRunsComplete(params *PostRunsCompleteParams, opts ...Client
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRunsCompleteReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -340,16 +497,36 @@ func (a *Client) PostRunsComplete(params *PostRunsCompleteParams, opts ...Client
 	panic(msg)
 }
 
-/*
-PostRunsStart starts run
-
-Start a new run for tracking
-*/
+// PostRunsStart starts run.
+//
+// Start a new run for tracking.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostRunsStartContext] instead.
 func (a *Client) PostRunsStart(params *PostRunsStartParams, opts ...ClientOption) (*PostRunsStartOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostRunsStartContext(ctx, params, opts...)
+}
+
+// PostRunsStartContext starts run.
+//
+// Start a new run for tracking.
+//
+// Do not use the deprecated [PostRunsStartParams.Context] with this method: it would be ignored.
+func (a *Client) PostRunsStartContext(ctx context.Context, params *PostRunsStartParams, opts ...ClientOption) (*PostRunsStartOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostRunsStartParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostRunsStart",
 		Method:             "POST",
@@ -359,13 +536,14 @@ func (a *Client) PostRunsStart(params *PostRunsStartParams, opts ...ClientOption
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostRunsStartReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -386,6 +564,14 @@ func (a *Client) PostRunsStart(params *PostRunsStartParams, opts ...ClientOption
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [RunsParams].
+	ctx context.Context
 }

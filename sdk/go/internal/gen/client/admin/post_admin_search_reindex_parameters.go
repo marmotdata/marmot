@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAdminSearchReindexParams() *PostAdminSearchReindexParams {
-	return &PostAdminSearchReindexParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAdminSearchReindexParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAdminSearchReindexParamsWithTimeout creates a new PostAdminSearchReindexParams object
 // with the ability to set a timeout on a request.
 func NewPostAdminSearchReindexParamsWithTimeout(timeout time.Duration) *PostAdminSearchReindexParams {
 	return &PostAdminSearchReindexParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAdminSearchReindexParamsWithContext creates a new PostAdminSearchReindexParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAdminSearchReindexParams].
 func NewPostAdminSearchReindexParamsWithContext(ctx context.Context) *PostAdminSearchReindexParams {
 	return &PostAdminSearchReindexParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -57,9 +61,9 @@ PostAdminSearchReindexParams contains all the parameters to send to the API endp
 	Typically these are written to a http.Request.
 */
 type PostAdminSearchReindexParams struct {
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post admin search reindex params (not the query body).
@@ -77,43 +81,46 @@ func (o *PostAdminSearchReindexParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post admin search reindex params
+// WithTimeout adds the timeout to the post admin search reindex params.
 func (o *PostAdminSearchReindexParams) WithTimeout(timeout time.Duration) *PostAdminSearchReindexParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post admin search reindex params
+// SetTimeout adds the timeout to the post admin search reindex params.
 func (o *PostAdminSearchReindexParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post admin search reindex params
+// WithContext adds the context to the post admin search reindex params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAdminSearchReindexParams].
 func (o *PostAdminSearchReindexParams) WithContext(ctx context.Context) *PostAdminSearchReindexParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post admin search reindex params
+// SetContext adds the context to the post admin search reindex params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAdminSearchReindexParams].
 func (o *PostAdminSearchReindexParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post admin search reindex params
+// WithHTTPClient adds the HTTPClient to the post admin search reindex params.
 func (o *PostAdminSearchReindexParams) WithHTTPClient(client *http.Client) *PostAdminSearchReindexParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post admin search reindex params
+// SetHTTPClient adds the HTTPClient to the post admin search reindex params.
 func (o *PostAdminSearchReindexParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAdminSearchReindexParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

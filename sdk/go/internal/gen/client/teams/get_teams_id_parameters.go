@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetTeamsIDParams() *GetTeamsIDParams {
-	return &GetTeamsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetTeamsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetTeamsIDParamsWithTimeout creates a new GetTeamsIDParams object
 // with the ability to set a timeout on a request.
 func NewGetTeamsIDParamsWithTimeout(timeout time.Duration) *GetTeamsIDParams {
 	return &GetTeamsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetTeamsIDParamsWithContext creates a new GetTeamsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetTeamsIDParams].
 func NewGetTeamsIDParamsWithContext(ctx context.Context) *GetTeamsIDParams {
 	return &GetTeamsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetTeamsIDParams contains all the parameters to send to the API endpoint
 */
 type GetTeamsIDParams struct {
 
-	/* ID.
-
-	   Team ID
-	*/
+	// ID.
+	//
+	// Team ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get teams ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetTeamsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get teams ID params
+// WithTimeout adds the timeout to the get teams ID params.
 func (o *GetTeamsIDParams) WithTimeout(timeout time.Duration) *GetTeamsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get teams ID params
+// SetTimeout adds the timeout to the get teams ID params.
 func (o *GetTeamsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get teams ID params
+// WithContext adds the context to the get teams ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetTeamsIDParams].
 func (o *GetTeamsIDParams) WithContext(ctx context.Context) *GetTeamsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get teams ID params
+// SetContext adds the context to the get teams ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetTeamsIDParams].
 func (o *GetTeamsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get teams ID params
+// WithHTTPClient adds the HTTPClient to the get teams ID params.
 func (o *GetTeamsIDParams) WithHTTPClient(client *http.Client) *GetTeamsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get teams ID params
+// SetHTTPClient adds the HTTPClient to the get teams ID params.
 func (o *GetTeamsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get teams ID params
+// WithID adds the id to the get teams ID params.
 func (o *GetTeamsIDParams) WithID(id string) *GetTeamsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get teams ID params
+// SetID adds the id to the get teams ID params.
 func (o *GetTeamsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetTeamsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

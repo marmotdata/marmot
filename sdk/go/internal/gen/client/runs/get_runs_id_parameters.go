@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetRunsIDParams() *GetRunsIDParams {
-	return &GetRunsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetRunsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetRunsIDParamsWithTimeout creates a new GetRunsIDParams object
 // with the ability to set a timeout on a request.
 func NewGetRunsIDParamsWithTimeout(timeout time.Duration) *GetRunsIDParams {
 	return &GetRunsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetRunsIDParamsWithContext creates a new GetRunsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetRunsIDParams].
 func NewGetRunsIDParamsWithContext(ctx context.Context) *GetRunsIDParams {
 	return &GetRunsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetRunsIDParams contains all the parameters to send to the API endpoint
 */
 type GetRunsIDParams struct {
 
-	/* ID.
-
-	   Run ID
-	*/
+	// ID.
+	//
+	// Run ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get runs ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetRunsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get runs ID params
+// WithTimeout adds the timeout to the get runs ID params.
 func (o *GetRunsIDParams) WithTimeout(timeout time.Duration) *GetRunsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get runs ID params
+// SetTimeout adds the timeout to the get runs ID params.
 func (o *GetRunsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get runs ID params
+// WithContext adds the context to the get runs ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetRunsIDParams].
 func (o *GetRunsIDParams) WithContext(ctx context.Context) *GetRunsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get runs ID params
+// SetContext adds the context to the get runs ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetRunsIDParams].
 func (o *GetRunsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get runs ID params
+// WithHTTPClient adds the HTTPClient to the get runs ID params.
 func (o *GetRunsIDParams) WithHTTPClient(client *http.Client) *GetRunsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get runs ID params
+// SetHTTPClient adds the HTTPClient to the get runs ID params.
 func (o *GetRunsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get runs ID params
+// WithID adds the id to the get runs ID params.
 func (o *GetRunsIDParams) WithID(id string) *GetRunsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get runs ID params
+// SetID adds the id to the get runs ID params.
 func (o *GetRunsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetRunsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

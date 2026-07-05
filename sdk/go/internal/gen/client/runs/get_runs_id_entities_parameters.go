@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetRunsIDEntitiesParams creates a new GetRunsIDEntitiesParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetRunsIDEntitiesParams() *GetRunsIDEntitiesParams {
-	return &GetRunsIDEntitiesParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetRunsIDEntitiesParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetRunsIDEntitiesParamsWithTimeout creates a new GetRunsIDEntitiesParams object
 // with the ability to set a timeout on a request.
 func NewGetRunsIDEntitiesParamsWithTimeout(timeout time.Duration) *GetRunsIDEntitiesParams {
 	return &GetRunsIDEntitiesParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetRunsIDEntitiesParamsWithContext creates a new GetRunsIDEntitiesParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetRunsIDEntitiesParams].
 func NewGetRunsIDEntitiesParamsWithContext(ctx context.Context) *GetRunsIDEntitiesParams {
 	return &GetRunsIDEntitiesParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,41 +63,36 @@ GetRunsIDEntitiesParams contains all the parameters to send to the API endpoint
 */
 type GetRunsIDEntitiesParams struct {
 
-	/* EntityType.
-
-	   Filter by entity type (asset, lineage, documentation)
-	*/
+	// EntityType.
+	//
+	// Filter by entity type (asset, lineage, documentation)
 	EntityType *string
 
-	/* ID.
-
-	   Run ID
-	*/
+	// ID.
+	//
+	// Run ID
 	ID string
 
-	/* Limit.
-
-	   Number of results per page
-
-	   Default: 100
-	*/
+	// Limit.
+	//
+	// Number of results per page
+	//
+	// Default: 100
 	Limit *int64
 
-	/* Offset.
-
-	   Number of results to skip
-	*/
+	// Offset.
+	//
+	// Number of results to skip
 	Offset *int64
 
-	/* Status.
-
-	   Filter by status (created, updated, deleted, failed)
-	*/
+	// Status.
+	//
+	// Filter by status (created, updated, deleted, failed)
 	Status *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get runs ID entities params (not the query body).
@@ -119,104 +118,107 @@ func (o *GetRunsIDEntitiesParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get runs ID entities params
+// WithTimeout adds the timeout to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) WithTimeout(timeout time.Duration) *GetRunsIDEntitiesParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get runs ID entities params
+// SetTimeout adds the timeout to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get runs ID entities params
+// WithContext adds the context to the get runs ID entities params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetRunsIDEntitiesParams].
 func (o *GetRunsIDEntitiesParams) WithContext(ctx context.Context) *GetRunsIDEntitiesParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get runs ID entities params
+// SetContext adds the context to the get runs ID entities params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetRunsIDEntitiesParams].
 func (o *GetRunsIDEntitiesParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get runs ID entities params
+// WithHTTPClient adds the HTTPClient to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) WithHTTPClient(client *http.Client) *GetRunsIDEntitiesParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get runs ID entities params
+// SetHTTPClient adds the HTTPClient to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithEntityType adds the entityType to the get runs ID entities params
+// WithEntityType adds the entityType to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) WithEntityType(entityType *string) *GetRunsIDEntitiesParams {
 	o.SetEntityType(entityType)
 	return o
 }
 
-// SetEntityType adds the entityType to the get runs ID entities params
+// SetEntityType adds the entityType to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) SetEntityType(entityType *string) {
 	o.EntityType = entityType
 }
 
-// WithID adds the id to the get runs ID entities params
+// WithID adds the id to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) WithID(id string) *GetRunsIDEntitiesParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get runs ID entities params
+// SetID adds the id to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithLimit adds the limit to the get runs ID entities params
+// WithLimit adds the limit to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) WithLimit(limit *int64) *GetRunsIDEntitiesParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get runs ID entities params
+// SetLimit adds the limit to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get runs ID entities params
+// WithOffset adds the offset to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) WithOffset(offset *int64) *GetRunsIDEntitiesParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get runs ID entities params
+// SetOffset adds the offset to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WithStatus adds the status to the get runs ID entities params
+// WithStatus adds the status to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) WithStatus(status *string) *GetRunsIDEntitiesParams {
 	o.SetStatus(status)
 	return o
 }
 
-// SetStatus adds the status to the get runs ID entities params
+// SetStatus adds the status to the get runs ID entities params.
 func (o *GetRunsIDEntitiesParams) SetStatus(status *string) {
 	o.Status = status
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetRunsIDEntitiesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -251,7 +253,7 @@ func (o *GetRunsIDEntitiesParams) WriteToRequest(r runtime.ClientRequest, reg st
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -268,7 +270,7 @@ func (o *GetRunsIDEntitiesParams) WriteToRequest(r runtime.ClientRequest, reg st
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

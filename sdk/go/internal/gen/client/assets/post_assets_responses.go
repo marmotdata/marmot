@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPostAssetsCreated() *PostAssetsCreated {
 	return &PostAssetsCreated{}
 }
 
-/*
-PostAssetsCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostAssetsCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostAssetsCreated struct {
 	Payload *models.Asset
 }
@@ -126,11 +123,9 @@ func NewPostAssetsBadRequest() *PostAssetsBadRequest {
 	return &PostAssetsBadRequest{}
 }
 
-/*
-PostAssetsBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostAssetsBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostAssetsBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPostAssetsUnauthorized() *PostAssetsUnauthorized {
 	return &PostAssetsUnauthorized{}
 }
 
-/*
-PostAssetsUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PostAssetsUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PostAssetsUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPostAssetsConflict() *PostAssetsConflict {
 	return &PostAssetsConflict{}
 }
 
-/*
-PostAssetsConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PostAssetsConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PostAssetsConflict struct {
 	Payload *models.ErrorResponse
 }

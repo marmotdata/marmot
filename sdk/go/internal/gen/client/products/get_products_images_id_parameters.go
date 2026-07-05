@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetProductsImagesIDParams() *GetProductsImagesIDParams {
-	return &GetProductsImagesIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetProductsImagesIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetProductsImagesIDParamsWithTimeout creates a new GetProductsImagesIDParams object
 // with the ability to set a timeout on a request.
 func NewGetProductsImagesIDParamsWithTimeout(timeout time.Duration) *GetProductsImagesIDParams {
 	return &GetProductsImagesIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetProductsImagesIDParamsWithContext creates a new GetProductsImagesIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetProductsImagesIDParams].
 func NewGetProductsImagesIDParamsWithContext(ctx context.Context) *GetProductsImagesIDParams {
 	return &GetProductsImagesIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetProductsImagesIDParams contains all the parameters to send to the API endpoin
 */
 type GetProductsImagesIDParams struct {
 
-	/* ID.
-
-	   Data Product ID
-	*/
+	// ID.
+	//
+	// Data Product ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get products images ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetProductsImagesIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get products images ID params
+// WithTimeout adds the timeout to the get products images ID params.
 func (o *GetProductsImagesIDParams) WithTimeout(timeout time.Duration) *GetProductsImagesIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get products images ID params
+// SetTimeout adds the timeout to the get products images ID params.
 func (o *GetProductsImagesIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get products images ID params
+// WithContext adds the context to the get products images ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetProductsImagesIDParams].
 func (o *GetProductsImagesIDParams) WithContext(ctx context.Context) *GetProductsImagesIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get products images ID params
+// SetContext adds the context to the get products images ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetProductsImagesIDParams].
 func (o *GetProductsImagesIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get products images ID params
+// WithHTTPClient adds the HTTPClient to the get products images ID params.
 func (o *GetProductsImagesIDParams) WithHTTPClient(client *http.Client) *GetProductsImagesIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get products images ID params
+// SetHTTPClient adds the HTTPClient to the get products images ID params.
 func (o *GetProductsImagesIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get products images ID params
+// WithID adds the id to the get products images ID params.
 func (o *GetProductsImagesIDParams) WithID(id string) *GetProductsImagesIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get products images ID params
+// SetID adds the id to the get products images ID params.
 func (o *GetProductsImagesIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetProductsImagesIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

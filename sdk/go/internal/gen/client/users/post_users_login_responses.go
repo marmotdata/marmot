@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostUsersLoginOK() *PostUsersLoginOK {
 	return &PostUsersLoginOK{}
 }
 
-/*
-PostUsersLoginOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostUsersLoginOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostUsersLoginOK struct {
 	Payload *models.TokenResponse
 }
@@ -120,11 +117,9 @@ func NewPostUsersLoginBadRequest() *PostUsersLoginBadRequest {
 	return &PostUsersLoginBadRequest{}
 }
 
-/*
-PostUsersLoginBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostUsersLoginBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostUsersLoginBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPostUsersLoginUnauthorized() *PostUsersLoginUnauthorized {
 	return &PostUsersLoginUnauthorized{}
 }
 
-/*
-PostUsersLoginUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PostUsersLoginUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PostUsersLoginUnauthorized struct {
 	Payload *models.ErrorResponse
 }

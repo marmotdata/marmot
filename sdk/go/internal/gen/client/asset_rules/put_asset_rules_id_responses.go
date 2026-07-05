@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -62,11 +61,9 @@ func NewPutAssetRulesIDOK() *PutAssetRulesIDOK {
 	return &PutAssetRulesIDOK{}
 }
 
-/*
-PutAssetRulesIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PutAssetRulesIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type PutAssetRulesIDOK struct {
 	Payload *models.AssetRule
 }
@@ -132,11 +129,9 @@ func NewPutAssetRulesIDBadRequest() *PutAssetRulesIDBadRequest {
 	return &PutAssetRulesIDBadRequest{}
 }
 
-/*
-PutAssetRulesIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PutAssetRulesIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PutAssetRulesIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -202,11 +197,9 @@ func NewPutAssetRulesIDNotFound() *PutAssetRulesIDNotFound {
 	return &PutAssetRulesIDNotFound{}
 }
 
-/*
-PutAssetRulesIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PutAssetRulesIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PutAssetRulesIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -272,11 +265,9 @@ func NewPutAssetRulesIDConflict() *PutAssetRulesIDConflict {
 	return &PutAssetRulesIDConflict{}
 }
 
-/*
-PutAssetRulesIDConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PutAssetRulesIDConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PutAssetRulesIDConflict struct {
 	Payload *models.ErrorResponse
 }
@@ -342,11 +333,9 @@ func NewPutAssetRulesIDInternalServerError() *PutAssetRulesIDInternalServerError
 	return &PutAssetRulesIDInternalServerError{}
 }
 
-/*
-PutAssetRulesIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PutAssetRulesIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PutAssetRulesIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

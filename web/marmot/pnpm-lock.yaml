@@ -16,7 +16,7 @@ overrides:
   '@eslint/plugin-kit': '>=0.3.4'
   mermaid: '>=11.10.0'
   js-yaml: '>=4.1.1'
-  cookie: '>=0.7.0'
+  cookie: ^0.7.0
   flatted: '>=3.4.0'
   rollup: '>=4.59.0'
   dompurify: '>=3.4.11'
@@ -1443,9 +1443,9 @@ packages:
   constants-browserify@1.0.0:
     resolution: {integrity: sha512-xFxOwqIzR/e1k1gLiWEophSCMqXcwVHIH7akf7b/vxcUeGunlj3hvZaaqxwHsTgn+IndtkQJgSztIDWeumWJDQ==}
 
-  cookie@2.0.0:
-    resolution: {integrity: sha512-hRSFuKJ6SYHrFVNltQdagQFMk7e0Q/VrORTGqZGyUAmmhA3EwPeldHCTg0HqUaDodQOfQDe7qXuOtpf4lwCsaA==}
-    engines: {node: '>=22'}
+  cookie@0.7.2:
+    resolution: {integrity: sha512-yki5XnKuf750l50uGTllt6kKILY4nQ1eNIQatoXEByZ5dWgnKqbnqmTrBE5B4N7lrMJKQ2ytWMiTO2o0v6Ew/w==}
+    engines: {node: '>= 0.6'}
 
   core-util-is@1.0.3:
     resolution: {integrity: sha512-ZQBvi1DcpJ4GDqanjucZ2Hj3wEO5pZDS89BWbkcrvdxksJorwUDDZamX9ldFkp9aw2lmBDLgkObEA4DWNJ9FYQ==}
@@ -3397,7 +3397,7 @@ snapshots:
       '@sveltejs/vite-plugin-svelte': 5.1.1(svelte@5.55.7(@typescript-eslint/types@8.33.1))(vite@6.4.3(@types/node@25.9.3)(jiti@1.21.7)(yaml@2.9.0))
       '@types/cookie': 0.6.0
       acorn: 8.16.0
-      cookie: 2.0.0
+      cookie: 0.7.2
       devalue: 5.8.1
       esm-env: 1.2.2
       kleur: 4.1.5
@@ -4167,7 +4167,7 @@ snapshots:
 
   constants-browserify@1.0.0: {}
 
-  cookie@2.0.0: {}
+  cookie@0.7.2: {}
 
   core-util-is@1.0.3: {}
 

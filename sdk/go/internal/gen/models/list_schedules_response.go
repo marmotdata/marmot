@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // ListSchedulesResponse list schedules response
@@ -45,12 +46,12 @@ func (m *ListSchedulesResponse) Validate(formats strfmt.Registry) error {
 }
 
 func (m *ListSchedulesResponse) validateSchedules(formats strfmt.Registry) error {
-	if swag.IsZero(m.Schedules) { // not required
+	if typeutils.IsZero(m.Schedules) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Schedules); i++ {
-		if swag.IsZero(m.Schedules[i]) { // not required
+		if typeutils.IsZero(m.Schedules[i]) { // not required
 			continue
 		}
 
@@ -94,7 +95,7 @@ func (m *ListSchedulesResponse) contextValidateSchedules(ctx context.Context, fo
 
 		if m.Schedules[i] != nil {
 
-			if swag.IsZero(m.Schedules[i]) { // not required
+			if typeutils.IsZero(m.Schedules[i]) { // not required
 				return nil
 			}
 
@@ -122,13 +123,13 @@ func (m *ListSchedulesResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *ListSchedulesResponse) UnmarshalBinary(b []byte) error {
 	var res ListSchedulesResponse
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

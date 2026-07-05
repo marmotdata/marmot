@@ -1,6 +1,5 @@
 import React from "react";
 import { useLocation } from "@docusaurus/router";
-import FloatingThemeToggle from "../../components/FloatingThemeToggle";
 import { TabSyncProvider } from "../../components/Steps";
 
 /**
@@ -18,7 +17,6 @@ export default function Root({
   return (
     <TabSyncProvider resetKey={pathname}>
       {children}
-      <FloatingThemeToggle />
     </TabSyncProvider>
   );
 }

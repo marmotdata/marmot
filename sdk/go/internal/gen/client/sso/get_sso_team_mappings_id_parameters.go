@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetSsoTeamMappingsIDParams() *GetSsoTeamMappingsIDParams {
-	return &GetSsoTeamMappingsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetSsoTeamMappingsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetSsoTeamMappingsIDParamsWithTimeout creates a new GetSsoTeamMappingsIDParams object
 // with the ability to set a timeout on a request.
 func NewGetSsoTeamMappingsIDParamsWithTimeout(timeout time.Duration) *GetSsoTeamMappingsIDParams {
 	return &GetSsoTeamMappingsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetSsoTeamMappingsIDParamsWithContext creates a new GetSsoTeamMappingsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetSsoTeamMappingsIDParams].
 func NewGetSsoTeamMappingsIDParamsWithContext(ctx context.Context) *GetSsoTeamMappingsIDParams {
 	return &GetSsoTeamMappingsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetSsoTeamMappingsIDParams contains all the parameters to send to the API endpoi
 */
 type GetSsoTeamMappingsIDParams struct {
 
-	/* ID.
-
-	   SSO mapping ID
-	*/
+	// ID.
+	//
+	// SSO mapping ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get sso team mappings ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetSsoTeamMappingsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get sso team mappings ID params
+// WithTimeout adds the timeout to the get sso team mappings ID params.
 func (o *GetSsoTeamMappingsIDParams) WithTimeout(timeout time.Duration) *GetSsoTeamMappingsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get sso team mappings ID params
+// SetTimeout adds the timeout to the get sso team mappings ID params.
 func (o *GetSsoTeamMappingsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get sso team mappings ID params
+// WithContext adds the context to the get sso team mappings ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetSsoTeamMappingsIDParams].
 func (o *GetSsoTeamMappingsIDParams) WithContext(ctx context.Context) *GetSsoTeamMappingsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get sso team mappings ID params
+// SetContext adds the context to the get sso team mappings ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetSsoTeamMappingsIDParams].
 func (o *GetSsoTeamMappingsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get sso team mappings ID params
+// WithHTTPClient adds the HTTPClient to the get sso team mappings ID params.
 func (o *GetSsoTeamMappingsIDParams) WithHTTPClient(client *http.Client) *GetSsoTeamMappingsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get sso team mappings ID params
+// SetHTTPClient adds the HTTPClient to the get sso team mappings ID params.
 func (o *GetSsoTeamMappingsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get sso team mappings ID params
+// WithID adds the id to the get sso team mappings ID params.
 func (o *GetSsoTeamMappingsIDParams) WithID(id string) *GetSsoTeamMappingsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get sso team mappings ID params
+// SetID adds the id to the get sso team mappings ID params.
 func (o *GetSsoTeamMappingsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetSsoTeamMappingsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

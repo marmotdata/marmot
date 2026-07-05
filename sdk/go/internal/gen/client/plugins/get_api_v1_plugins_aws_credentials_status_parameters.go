@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAPIV1PluginsAwsCredentialsStatusParams() *GetAPIV1PluginsAwsCredentialsStatusParams {
-	return &GetAPIV1PluginsAwsCredentialsStatusParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAPIV1PluginsAwsCredentialsStatusParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAPIV1PluginsAwsCredentialsStatusParamsWithTimeout creates a new GetAPIV1PluginsAwsCredentialsStatusParams object
 // with the ability to set a timeout on a request.
 func NewGetAPIV1PluginsAwsCredentialsStatusParamsWithTimeout(timeout time.Duration) *GetAPIV1PluginsAwsCredentialsStatusParams {
 	return &GetAPIV1PluginsAwsCredentialsStatusParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAPIV1PluginsAwsCredentialsStatusParamsWithContext creates a new GetAPIV1PluginsAwsCredentialsStatusParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1PluginsAwsCredentialsStatusParams].
 func NewGetAPIV1PluginsAwsCredentialsStatusParamsWithContext(ctx context.Context) *GetAPIV1PluginsAwsCredentialsStatusParams {
 	return &GetAPIV1PluginsAwsCredentialsStatusParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -57,9 +61,9 @@ GetAPIV1PluginsAwsCredentialsStatusParams contains all the parameters to send to
 	Typically these are written to a http.Request.
 */
 type GetAPIV1PluginsAwsCredentialsStatusParams struct {
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get API v1 plugins aws credentials status params (not the query body).
@@ -77,43 +81,46 @@ func (o *GetAPIV1PluginsAwsCredentialsStatusParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get API v1 plugins aws credentials status params
+// WithTimeout adds the timeout to the get API v1 plugins aws credentials status params.
 func (o *GetAPIV1PluginsAwsCredentialsStatusParams) WithTimeout(timeout time.Duration) *GetAPIV1PluginsAwsCredentialsStatusParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get API v1 plugins aws credentials status params
+// SetTimeout adds the timeout to the get API v1 plugins aws credentials status params.
 func (o *GetAPIV1PluginsAwsCredentialsStatusParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get API v1 plugins aws credentials status params
+// WithContext adds the context to the get API v1 plugins aws credentials status params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1PluginsAwsCredentialsStatusParams].
 func (o *GetAPIV1PluginsAwsCredentialsStatusParams) WithContext(ctx context.Context) *GetAPIV1PluginsAwsCredentialsStatusParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get API v1 plugins aws credentials status params
+// SetContext adds the context to the get API v1 plugins aws credentials status params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAPIV1PluginsAwsCredentialsStatusParams].
 func (o *GetAPIV1PluginsAwsCredentialsStatusParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get API v1 plugins aws credentials status params
+// WithHTTPClient adds the HTTPClient to the get API v1 plugins aws credentials status params.
 func (o *GetAPIV1PluginsAwsCredentialsStatusParams) WithHTTPClient(client *http.Client) *GetAPIV1PluginsAwsCredentialsStatusParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get API v1 plugins aws credentials status params
+// SetHTTPClient adds the HTTPClient to the get API v1 plugins aws credentials status params.
 func (o *GetAPIV1PluginsAwsCredentialsStatusParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAPIV1PluginsAwsCredentialsStatusParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

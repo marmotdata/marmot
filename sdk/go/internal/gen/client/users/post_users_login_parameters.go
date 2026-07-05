@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostUsersLoginParams() *PostUsersLoginParams {
-	return &PostUsersLoginParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostUsersLoginParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostUsersLoginParamsWithTimeout creates a new PostUsersLoginParams object
 // with the ability to set a timeout on a request.
 func NewPostUsersLoginParamsWithTimeout(timeout time.Duration) *PostUsersLoginParams {
 	return &PostUsersLoginParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostUsersLoginParamsWithContext creates a new PostUsersLoginParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersLoginParams].
 func NewPostUsersLoginParamsWithContext(ctx context.Context) *PostUsersLoginParams {
 	return &PostUsersLoginParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostUsersLoginParams contains all the parameters to send to the API endpoint
 */
 type PostUsersLoginParams struct {
 
-	/* Credentials.
-
-	   Login credentials
-	*/
+	// Credentials.
+	//
+	// Login credentials
 	Credentials *models.LoginRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post users login params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostUsersLoginParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post users login params
+// WithTimeout adds the timeout to the post users login params.
 func (o *PostUsersLoginParams) WithTimeout(timeout time.Duration) *PostUsersLoginParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post users login params
+// SetTimeout adds the timeout to the post users login params.
 func (o *PostUsersLoginParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post users login params
+// WithContext adds the context to the post users login params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersLoginParams].
 func (o *PostUsersLoginParams) WithContext(ctx context.Context) *PostUsersLoginParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post users login params
+// SetContext adds the context to the post users login params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersLoginParams].
 func (o *PostUsersLoginParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post users login params
+// WithHTTPClient adds the HTTPClient to the post users login params.
 func (o *PostUsersLoginParams) WithHTTPClient(client *http.Client) *PostUsersLoginParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post users login params
+// SetHTTPClient adds the HTTPClient to the post users login params.
 func (o *PostUsersLoginParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithCredentials adds the credentials to the post users login params
+// WithCredentials adds the credentials to the post users login params.
 func (o *PostUsersLoginParams) WithCredentials(credentials *models.LoginRequest) *PostUsersLoginParams {
 	o.SetCredentials(credentials)
 	return o
 }
 
-// SetCredentials adds the credentials to the post users login params
+// SetCredentials adds the credentials to the post users login params.
 func (o *PostUsersLoginParams) SetCredentials(credentials *models.LoginRequest) {
 	o.Credentials = credentials
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostUsersLoginParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

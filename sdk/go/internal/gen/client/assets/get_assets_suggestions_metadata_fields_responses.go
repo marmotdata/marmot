@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -44,11 +43,9 @@ func NewGetAssetsSuggestionsMetadataFieldsOK() *GetAssetsSuggestionsMetadataFiel
 	return &GetAssetsSuggestionsMetadataFieldsOK{}
 }
 
-/*
-GetAssetsSuggestionsMetadataFieldsOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAssetsSuggestionsMetadataFieldsOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAssetsSuggestionsMetadataFieldsOK struct {
 	Payload []*models.MetadataFieldSuggestion
 }
@@ -112,11 +109,9 @@ func NewGetAssetsSuggestionsMetadataFieldsInternalServerError() *GetAssetsSugges
 	return &GetAssetsSuggestionsMetadataFieldsInternalServerError{}
 }
 
-/*
-GetAssetsSuggestionsMetadataFieldsInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAssetsSuggestionsMetadataFieldsInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAssetsSuggestionsMetadataFieldsInternalServerError struct {
 	Payload *models.ErrorResponse
 }

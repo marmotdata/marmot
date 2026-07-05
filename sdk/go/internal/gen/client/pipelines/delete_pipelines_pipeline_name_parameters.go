@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeletePipelinesPipelineNameParams() *DeletePipelinesPipelineNameParams {
-	return &DeletePipelinesPipelineNameParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeletePipelinesPipelineNameParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeletePipelinesPipelineNameParamsWithTimeout creates a new DeletePipelinesPipelineNameParams object
 // with the ability to set a timeout on a request.
 func NewDeletePipelinesPipelineNameParamsWithTimeout(timeout time.Duration) *DeletePipelinesPipelineNameParams {
 	return &DeletePipelinesPipelineNameParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeletePipelinesPipelineNameParamsWithContext creates a new DeletePipelinesPipelineNameParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeletePipelinesPipelineNameParams].
 func NewDeletePipelinesPipelineNameParamsWithContext(ctx context.Context) *DeletePipelinesPipelineNameParams {
 	return &DeletePipelinesPipelineNameParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ DeletePipelinesPipelineNameParams contains all the parameters to send to the API
 */
 type DeletePipelinesPipelineNameParams struct {
 
-	/* PipelineName.
-
-	   Pipeline Name
-	*/
+	// PipelineName.
+	//
+	// Pipeline Name
 	PipelineName string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete pipelines pipeline name params (not the query body).
@@ -84,54 +87,57 @@ func (o *DeletePipelinesPipelineNameParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete pipelines pipeline name params
+// WithTimeout adds the timeout to the delete pipelines pipeline name params.
 func (o *DeletePipelinesPipelineNameParams) WithTimeout(timeout time.Duration) *DeletePipelinesPipelineNameParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete pipelines pipeline name params
+// SetTimeout adds the timeout to the delete pipelines pipeline name params.
 func (o *DeletePipelinesPipelineNameParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete pipelines pipeline name params
+// WithContext adds the context to the delete pipelines pipeline name params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeletePipelinesPipelineNameParams].
 func (o *DeletePipelinesPipelineNameParams) WithContext(ctx context.Context) *DeletePipelinesPipelineNameParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete pipelines pipeline name params
+// SetContext adds the context to the delete pipelines pipeline name params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeletePipelinesPipelineNameParams].
 func (o *DeletePipelinesPipelineNameParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete pipelines pipeline name params
+// WithHTTPClient adds the HTTPClient to the delete pipelines pipeline name params.
 func (o *DeletePipelinesPipelineNameParams) WithHTTPClient(client *http.Client) *DeletePipelinesPipelineNameParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete pipelines pipeline name params
+// SetHTTPClient adds the HTTPClient to the delete pipelines pipeline name params.
 func (o *DeletePipelinesPipelineNameParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithPipelineName adds the pipelineName to the delete pipelines pipeline name params
+// WithPipelineName adds the pipelineName to the delete pipelines pipeline name params.
 func (o *DeletePipelinesPipelineNameParams) WithPipelineName(pipelineName string) *DeletePipelinesPipelineNameParams {
 	o.SetPipelineName(pipelineName)
 	return o
 }
 
-// SetPipelineName adds the pipelineName to the delete pipelines pipeline name params
+// SetPipelineName adds the pipelineName to the delete pipelines pipeline name params.
 func (o *DeletePipelinesPipelineNameParams) SetPipelineName(pipelineName string) {
 	o.PipelineName = pipelineName
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeletePipelinesPipelineNameParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

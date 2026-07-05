@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPutTeamsIDMembersUserIDRoleOK() *PutTeamsIDMembersUserIDRoleOK {
 	return &PutTeamsIDMembersUserIDRoleOK{}
 }
 
-/*
-PutTeamsIDMembersUserIDRoleOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PutTeamsIDMembersUserIDRoleOK describes a response with status code 200, with default header values.
+//
+// OK
 type PutTeamsIDMembersUserIDRoleOK struct {
 	Payload *models.MessageResponse
 }
@@ -126,11 +123,9 @@ func NewPutTeamsIDMembersUserIDRoleBadRequest() *PutTeamsIDMembersUserIDRoleBadR
 	return &PutTeamsIDMembersUserIDRoleBadRequest{}
 }
 
-/*
-PutTeamsIDMembersUserIDRoleBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PutTeamsIDMembersUserIDRoleBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PutTeamsIDMembersUserIDRoleBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPutTeamsIDMembersUserIDRoleNotFound() *PutTeamsIDMembersUserIDRoleNotFou
 	return &PutTeamsIDMembersUserIDRoleNotFound{}
 }
 
-/*
-PutTeamsIDMembersUserIDRoleNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PutTeamsIDMembersUserIDRoleNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PutTeamsIDMembersUserIDRoleNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPutTeamsIDMembersUserIDRoleInternalServerError() *PutTeamsIDMembersUserI
 	return &PutTeamsIDMembersUserIDRoleInternalServerError{}
 }
 
-/*
-PutTeamsIDMembersUserIDRoleInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PutTeamsIDMembersUserIDRoleInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PutTeamsIDMembersUserIDRoleInternalServerError struct {
 	Payload *models.ErrorResponse
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewGetAssetsIDRunHistoryOK() *GetAssetsIDRunHistoryOK {
 	return &GetAssetsIDRunHistoryOK{}
 }
 
-/*
-GetAssetsIDRunHistoryOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAssetsIDRunHistoryOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAssetsIDRunHistoryOK struct {
 	Payload *models.RunHistoryResponse
 }
@@ -126,11 +123,9 @@ func NewGetAssetsIDRunHistoryBadRequest() *GetAssetsIDRunHistoryBadRequest {
 	return &GetAssetsIDRunHistoryBadRequest{}
 }
 
-/*
-GetAssetsIDRunHistoryBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// GetAssetsIDRunHistoryBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type GetAssetsIDRunHistoryBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewGetAssetsIDRunHistoryNotFound() *GetAssetsIDRunHistoryNotFound {
 	return &GetAssetsIDRunHistoryNotFound{}
 }
 
-/*
-GetAssetsIDRunHistoryNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetAssetsIDRunHistoryNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetAssetsIDRunHistoryNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewGetAssetsIDRunHistoryInternalServerError() *GetAssetsIDRunHistoryInterna
 	return &GetAssetsIDRunHistoryInternalServerError{}
 }
 
-/*
-GetAssetsIDRunHistoryInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAssetsIDRunHistoryInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAssetsIDRunHistoryInternalServerError struct {
 	Payload *models.ErrorResponse
 }

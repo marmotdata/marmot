@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteSsoTeamMappingsIDParams() *DeleteSsoTeamMappingsIDParams {
-	return &DeleteSsoTeamMappingsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteSsoTeamMappingsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteSsoTeamMappingsIDParamsWithTimeout creates a new DeleteSsoTeamMappingsIDParams object
 // with the ability to set a timeout on a request.
 func NewDeleteSsoTeamMappingsIDParamsWithTimeout(timeout time.Duration) *DeleteSsoTeamMappingsIDParams {
 	return &DeleteSsoTeamMappingsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteSsoTeamMappingsIDParamsWithContext creates a new DeleteSsoTeamMappingsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteSsoTeamMappingsIDParams].
 func NewDeleteSsoTeamMappingsIDParamsWithContext(ctx context.Context) *DeleteSsoTeamMappingsIDParams {
 	return &DeleteSsoTeamMappingsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ DeleteSsoTeamMappingsIDParams contains all the parameters to send to the API end
 */
 type DeleteSsoTeamMappingsIDParams struct {
 
-	/* ID.
-
-	   SSO mapping ID
-	*/
+	// ID.
+	//
+	// SSO mapping ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete sso team mappings ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *DeleteSsoTeamMappingsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete sso team mappings ID params
+// WithTimeout adds the timeout to the delete sso team mappings ID params.
 func (o *DeleteSsoTeamMappingsIDParams) WithTimeout(timeout time.Duration) *DeleteSsoTeamMappingsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete sso team mappings ID params
+// SetTimeout adds the timeout to the delete sso team mappings ID params.
 func (o *DeleteSsoTeamMappingsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete sso team mappings ID params
+// WithContext adds the context to the delete sso team mappings ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteSsoTeamMappingsIDParams].
 func (o *DeleteSsoTeamMappingsIDParams) WithContext(ctx context.Context) *DeleteSsoTeamMappingsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete sso team mappings ID params
+// SetContext adds the context to the delete sso team mappings ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteSsoTeamMappingsIDParams].
 func (o *DeleteSsoTeamMappingsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete sso team mappings ID params
+// WithHTTPClient adds the HTTPClient to the delete sso team mappings ID params.
 func (o *DeleteSsoTeamMappingsIDParams) WithHTTPClient(client *http.Client) *DeleteSsoTeamMappingsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete sso team mappings ID params
+// SetHTTPClient adds the HTTPClient to the delete sso team mappings ID params.
 func (o *DeleteSsoTeamMappingsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete sso team mappings ID params
+// WithID adds the id to the delete sso team mappings ID params.
 func (o *DeleteSsoTeamMappingsIDParams) WithID(id string) *DeleteSsoTeamMappingsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete sso team mappings ID params
+// SetID adds the id to the delete sso team mappings ID params.
 func (o *DeleteSsoTeamMappingsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteSsoTeamMappingsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

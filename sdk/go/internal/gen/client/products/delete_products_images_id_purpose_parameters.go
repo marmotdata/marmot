@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteProductsImagesIDPurposeParams() *DeleteProductsImagesIDPurposeParams {
-	return &DeleteProductsImagesIDPurposeParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteProductsImagesIDPurposeParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteProductsImagesIDPurposeParamsWithTimeout creates a new DeleteProductsImagesIDPurposeParams object
 // with the ability to set a timeout on a request.
 func NewDeleteProductsImagesIDPurposeParamsWithTimeout(timeout time.Duration) *DeleteProductsImagesIDPurposeParams {
 	return &DeleteProductsImagesIDPurposeParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteProductsImagesIDPurposeParamsWithContext creates a new DeleteProductsImagesIDPurposeParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteProductsImagesIDPurposeParams].
 func NewDeleteProductsImagesIDPurposeParamsWithContext(ctx context.Context) *DeleteProductsImagesIDPurposeParams {
 	return &DeleteProductsImagesIDPurposeParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,21 +62,19 @@ DeleteProductsImagesIDPurposeParams contains all the parameters to send to the A
 */
 type DeleteProductsImagesIDPurposeParams struct {
 
-	/* ID.
-
-	   Data Product ID
-	*/
+	// ID.
+	//
+	// Data Product ID
 	ID string
 
-	/* Purpose.
-
-	   Image purpose (icon or header)
-	*/
+	// Purpose.
+	//
+	// Image purpose (icon or header)
 	Purpose string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete products images ID purpose params (not the query body).
@@ -90,65 +92,68 @@ func (o *DeleteProductsImagesIDPurposeParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete products images ID purpose params
+// WithTimeout adds the timeout to the delete products images ID purpose params.
 func (o *DeleteProductsImagesIDPurposeParams) WithTimeout(timeout time.Duration) *DeleteProductsImagesIDPurposeParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete products images ID purpose params
+// SetTimeout adds the timeout to the delete products images ID purpose params.
 func (o *DeleteProductsImagesIDPurposeParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete products images ID purpose params
+// WithContext adds the context to the delete products images ID purpose params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteProductsImagesIDPurposeParams].
 func (o *DeleteProductsImagesIDPurposeParams) WithContext(ctx context.Context) *DeleteProductsImagesIDPurposeParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete products images ID purpose params
+// SetContext adds the context to the delete products images ID purpose params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteProductsImagesIDPurposeParams].
 func (o *DeleteProductsImagesIDPurposeParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete products images ID purpose params
+// WithHTTPClient adds the HTTPClient to the delete products images ID purpose params.
 func (o *DeleteProductsImagesIDPurposeParams) WithHTTPClient(client *http.Client) *DeleteProductsImagesIDPurposeParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete products images ID purpose params
+// SetHTTPClient adds the HTTPClient to the delete products images ID purpose params.
 func (o *DeleteProductsImagesIDPurposeParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete products images ID purpose params
+// WithID adds the id to the delete products images ID purpose params.
 func (o *DeleteProductsImagesIDPurposeParams) WithID(id string) *DeleteProductsImagesIDPurposeParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete products images ID purpose params
+// SetID adds the id to the delete products images ID purpose params.
 func (o *DeleteProductsImagesIDPurposeParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithPurpose adds the purpose to the delete products images ID purpose params
+// WithPurpose adds the purpose to the delete products images ID purpose params.
 func (o *DeleteProductsImagesIDPurposeParams) WithPurpose(purpose string) *DeleteProductsImagesIDPurposeParams {
 	o.SetPurpose(purpose)
 	return o
 }
 
-// SetPurpose adds the purpose to the delete products images ID purpose params
+// SetPurpose adds the purpose to the delete products images ID purpose params.
 func (o *DeleteProductsImagesIDPurposeParams) SetPurpose(purpose string) {
 	o.Purpose = purpose
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteProductsImagesIDPurposeParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetMetricsTopQueriesParams creates a new GetMetricsTopQueriesParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetMetricsTopQueriesParams() *GetMetricsTopQueriesParams {
-	return &GetMetricsTopQueriesParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetMetricsTopQueriesParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetMetricsTopQueriesParamsWithTimeout creates a new GetMetricsTopQueriesParams object
 // with the ability to set a timeout on a request.
 func NewGetMetricsTopQueriesParamsWithTimeout(timeout time.Duration) *GetMetricsTopQueriesParams {
 	return &GetMetricsTopQueriesParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetMetricsTopQueriesParamsWithContext creates a new GetMetricsTopQueriesParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsTopQueriesParams].
 func NewGetMetricsTopQueriesParamsWithContext(ctx context.Context) *GetMetricsTopQueriesParams {
 	return &GetMetricsTopQueriesParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,29 +63,26 @@ GetMetricsTopQueriesParams contains all the parameters to send to the API endpoi
 */
 type GetMetricsTopQueriesParams struct {
 
-	/* End.
-
-	   End time (ISO 8601)
-	*/
+	// End.
+	//
+	// End time (ISO 8601)
 	End string
 
-	/* Limit.
-
-	   Number of results
-
-	   Default: 10
-	*/
+	// Limit.
+	//
+	// Number of results
+	//
+	// Default: 10
 	Limit *int64
 
-	/* Start.
-
-	   Start time (ISO 8601)
-	*/
+	// Start.
+	//
+	// Start time (ISO 8601)
 	Start string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get metrics top queries params (not the query body).
@@ -104,82 +105,85 @@ func (o *GetMetricsTopQueriesParams) SetDefaults() {
 		Limit: &limitDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get metrics top queries params
+// WithTimeout adds the timeout to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) WithTimeout(timeout time.Duration) *GetMetricsTopQueriesParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get metrics top queries params
+// SetTimeout adds the timeout to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get metrics top queries params
+// WithContext adds the context to the get metrics top queries params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsTopQueriesParams].
 func (o *GetMetricsTopQueriesParams) WithContext(ctx context.Context) *GetMetricsTopQueriesParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get metrics top queries params
+// SetContext adds the context to the get metrics top queries params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsTopQueriesParams].
 func (o *GetMetricsTopQueriesParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get metrics top queries params
+// WithHTTPClient adds the HTTPClient to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) WithHTTPClient(client *http.Client) *GetMetricsTopQueriesParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get metrics top queries params
+// SetHTTPClient adds the HTTPClient to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithEnd adds the end to the get metrics top queries params
+// WithEnd adds the end to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) WithEnd(end string) *GetMetricsTopQueriesParams {
 	o.SetEnd(end)
 	return o
 }
 
-// SetEnd adds the end to the get metrics top queries params
+// SetEnd adds the end to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) SetEnd(end string) {
 	o.End = end
 }
 
-// WithLimit adds the limit to the get metrics top queries params
+// WithLimit adds the limit to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) WithLimit(limit *int64) *GetMetricsTopQueriesParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get metrics top queries params
+// SetLimit adds the limit to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithStart adds the start to the get metrics top queries params
+// WithStart adds the start to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) WithStart(start string) *GetMetricsTopQueriesParams {
 	o.SetStart(start)
 	return o
 }
 
-// SetStart adds the start to the get metrics top queries params
+// SetStart adds the start to the get metrics top queries params.
 func (o *GetMetricsTopQueriesParams) SetStart(start string) {
 	o.Start = start
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetMetricsTopQueriesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -202,7 +206,7 @@ func (o *GetMetricsTopQueriesParams) WriteToRequest(r runtime.ClientRequest, reg
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {

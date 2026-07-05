@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAPIV1IngestionSchedulesParams() *PostAPIV1IngestionSchedulesParams {
-	return &PostAPIV1IngestionSchedulesParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAPIV1IngestionSchedulesParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAPIV1IngestionSchedulesParamsWithTimeout creates a new PostAPIV1IngestionSchedulesParams object
 // with the ability to set a timeout on a request.
 func NewPostAPIV1IngestionSchedulesParamsWithTimeout(timeout time.Duration) *PostAPIV1IngestionSchedulesParams {
 	return &PostAPIV1IngestionSchedulesParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAPIV1IngestionSchedulesParamsWithContext creates a new PostAPIV1IngestionSchedulesParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1IngestionSchedulesParams].
 func NewPostAPIV1IngestionSchedulesParamsWithContext(ctx context.Context) *PostAPIV1IngestionSchedulesParams {
 	return &PostAPIV1IngestionSchedulesParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostAPIV1IngestionSchedulesParams contains all the parameters to send to the API
 */
 type PostAPIV1IngestionSchedulesParams struct {
 
-	/* Schedule.
-
-	   Schedule configuration
-	*/
+	// Schedule.
+	//
+	// Schedule configuration
 	Schedule *models.CreateScheduleRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post API v1 ingestion schedules params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostAPIV1IngestionSchedulesParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post API v1 ingestion schedules params
+// WithTimeout adds the timeout to the post API v1 ingestion schedules params.
 func (o *PostAPIV1IngestionSchedulesParams) WithTimeout(timeout time.Duration) *PostAPIV1IngestionSchedulesParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post API v1 ingestion schedules params
+// SetTimeout adds the timeout to the post API v1 ingestion schedules params.
 func (o *PostAPIV1IngestionSchedulesParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post API v1 ingestion schedules params
+// WithContext adds the context to the post API v1 ingestion schedules params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1IngestionSchedulesParams].
 func (o *PostAPIV1IngestionSchedulesParams) WithContext(ctx context.Context) *PostAPIV1IngestionSchedulesParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post API v1 ingestion schedules params
+// SetContext adds the context to the post API v1 ingestion schedules params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1IngestionSchedulesParams].
 func (o *PostAPIV1IngestionSchedulesParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post API v1 ingestion schedules params
+// WithHTTPClient adds the HTTPClient to the post API v1 ingestion schedules params.
 func (o *PostAPIV1IngestionSchedulesParams) WithHTTPClient(client *http.Client) *PostAPIV1IngestionSchedulesParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post API v1 ingestion schedules params
+// SetHTTPClient adds the HTTPClient to the post API v1 ingestion schedules params.
 func (o *PostAPIV1IngestionSchedulesParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithSchedule adds the schedule to the post API v1 ingestion schedules params
+// WithSchedule adds the schedule to the post API v1 ingestion schedules params.
 func (o *PostAPIV1IngestionSchedulesParams) WithSchedule(schedule *models.CreateScheduleRequest) *PostAPIV1IngestionSchedulesParams {
 	o.SetSchedule(schedule)
 	return o
 }
 
-// SetSchedule adds the schedule to the post API v1 ingestion schedules params
+// SetSchedule adds the schedule to the post API v1 ingestion schedules params.
 func (o *PostAPIV1IngestionSchedulesParams) SetSchedule(schedule *models.CreateScheduleRequest) {
 	o.Schedule = schedule
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAPIV1IngestionSchedulesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
