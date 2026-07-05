@@ -2,6 +2,7 @@ import React from "react";
 import { Icon } from "@iconify/react";
 import IconAPI from "~icons/material-symbols/api-rounded";
 import IconTerminal from "~icons/material-symbols/terminal";
+import IconDashboard from "~icons/material-symbols/space-dashboard-rounded";
 
 const capabilities = [
   {
@@ -62,6 +63,11 @@ const populateMethods = [
     title: "CLI",
     href: "/docs/populating/cli",
     icon: <IconTerminal className="w-6 h-6" />,
+  },
+  {
+    title: "UI",
+    href: "/docs/Populating/UI",
+    icon: <IconDashboard className="w-6 h-6" />,
   },
 ];
 
