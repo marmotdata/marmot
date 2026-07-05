@@ -206,10 +206,10 @@ export default function Hero(): JSX.Element {
           data-animate-delay="3"
           className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed"
         >
-          Claude, ChatGPT, Gemini, Copilot: your people use them every day,
-          but none of them can reach how your organization actually works:
-          the systems, the data, what it all means, and who owns it. Marmot
-          is the <b>open source context layer</b> that puts all of it within
+          Assistants, agents, copilots: your organization already uses them
+          every day, but none of them can reach how it actually works: the
+          systems, the data, what it all means, and who owns it. Marmot is
+          the <b>open source context layer</b> that puts all of it within
           reach of every assistant, agent, and person.
         </p>
 
