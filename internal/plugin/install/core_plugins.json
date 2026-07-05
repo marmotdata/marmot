@@ -1,0 +1,9 @@
+{
+  "registry": "ghcr.io/marmotdata/plugins",
+  "plugins": {
+    "gcs": {
+      "version": "0.1.0",
+      "digest": "sha256:69cc8497bfa293b5d6715e96d5971ffa9e2a9edb421a283529eeecc6f395f2e2"
+    }
+  }
+}

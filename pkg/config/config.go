@@ -145,6 +145,15 @@ type Config struct {
 	Experimental struct {
 		TablePreview bool `mapstructure:"table_preview"`
 	} `mapstructure:"experimental"`
+
+	Plugins struct {
+		// Registry overrides the OCI registry namespace core plugins
+		// are installed from, e.g. an internal mirror.
+		Registry string `mapstructure:"registry"`
+		// Autoinstall pulls missing core plugins from the registry at
+		// startup. Defaults to true.
+		Autoinstall bool `mapstructure:"autoinstall"`
+	} `mapstructure:"plugins"`
 }
 
 type BannerConfig struct {
@@ -416,6 +425,9 @@ func setDefaults(v *viper.Viper) {
 	// Logging defaults
 	v.SetDefault("logging.level", "info")
 	v.SetDefault("logging.format", "json")
+
+	v.SetDefault("plugins.autoinstall", true)
+	v.SetDefault("plugins.registry", "")
 
 	// Auth defaults
 	v.SetDefault("auth.okta.type", "okta")

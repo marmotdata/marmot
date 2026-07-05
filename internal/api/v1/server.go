@@ -27,7 +27,6 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/duckdb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dynamodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/elasticsearch"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/gcs"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/glue"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/iceberg"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/kafka"
@@ -90,6 +89,7 @@ import (
 	"github.com/marmotdata/marmot/internal/metrics"
 	operatorSync "github.com/marmotdata/marmot/internal/operator/sync"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/marmotdata/marmot/internal/plugin/install"
 	"github.com/marmotdata/marmot/internal/search/elasticsearch"
 	"github.com/marmotdata/marmot/internal/websocket"
 	"github.com/rs/zerolog/log"
@@ -300,6 +300,19 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		}
 	}
 
+	// Pull missing core plugins into the plugin cache, then load locally
+	// installed plugins and the manifest-pinned cached core plugins.
+	installOpts := install.Options{Registry: config.Plugins.Registry}
+	if config.Plugins.Autoinstall {
+		if err := install.EnsureCore(context.Background(), installOpts); err != nil {
+			log.Warn().Err(err).Msg("Failed to install core plugins; continuing with what is available")
+		}
+	}
+
+	if err := install.LoadPlugins(installOpts); err != nil {
+		log.Error().Err(err).Msg("Failed to load external plugins")
+	}
+
 	pluginRegistry := plugin.GetRegistry()
 
 	schedulerConfig := &runService.SchedulerConfig{
@@ -309,6 +322,9 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		ClaimExpiry:       time.Duration(config.Pipelines.ClaimExpiry) * time.Second,
 		LinkAssets:        config.Experimental.TablePreview,
 		DB:                db,
+	}
+	if config.Plugins.Autoinstall {
+		schedulerConfig.PluginInstall = &install.Options{Registry: config.Plugins.Registry}
 	}
 	scheduler := runService.NewScheduler(scheduleSvc, runsSvc, scheduleEncryptor, pluginRegistry, schedulerConfig)
 

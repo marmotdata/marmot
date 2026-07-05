@@ -6,7 +6,10 @@ import (
 	"path/filepath"
 	"strings"
 
+	"context"
+
 	"github.com/marmotdata/marmot/internal/cmd/output"
+	"github.com/marmotdata/marmot/internal/plugin/install"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -16,7 +19,6 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/bigquery"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/clickhouse"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dbt"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/gcs"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/kafka"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mongodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mysql"
@@ -118,6 +120,23 @@ func configDir() (string, error) {
 		return "", fmt.Errorf("cannot determine config directory: %w", err)
 	}
 	return filepath.Join(base, "marmot"), nil
+}
+
+// loadPlugins pulls missing core plugins into the local cache, then
+// loads locally installed plugins and the manifest-pinned cached core
+// plugins. Commands that run plugins, like ingest, call this before
+// doing their work; the server has its own startup equivalent driven by
+// its config file.
+func loadPlugins() {
+	opts := install.Options{Registry: os.Getenv("MARMOT_PLUGINS_REGISTRY")}
+	if os.Getenv("MARMOT_PLUGINS_AUTOINSTALL") != "false" {
+		if err := install.EnsureCore(context.Background(), opts); err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to install core plugins: %v\n", err)
+		}
+	}
+	if err := install.LoadPlugins(opts); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to load external plugins: %v\n", err)
+	}
 }
 
 func Execute() error {
