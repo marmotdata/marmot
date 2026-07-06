@@ -27,7 +27,6 @@ jobs:
         run: |
           set -euo pipefail
           ref="${GITHUB_REF_NAME}"
-          # ref looks like "plugins/kafka/v0.1.0"
           rest="${ref#plugins/}"
           plugin="${rest%%/*}"
           version="${rest#*/v}"
@@ -65,6 +64,7 @@ jobs:
           workdir: ${{ steps.meta.outputs.workdir }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
 
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
@@ -129,6 +129,50 @@ jobs:
             digest=$(oras manifest fetch --descriptor "${REPO}:${VERSION}-${os}-${arch}" | jq -r .digest)
             cosign sign --yes "${REPO}@${digest}"
           done
+
+      - name: Build changelog
+        id: changelog
+        env:
+          PLUGIN: ${{ steps.meta.outputs.plugin }}
+          CURRENT_TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          prev=$(git tag -l "plugins/${PLUGIN}/v*" --sort=-v:refname | grep -vFx "${CURRENT_TAG}" | head -n1 || true)
+          if [ -z "${prev}" ]; then
+            range="${CURRENT_TAG}"
+            header="Initial release."
+          else
+            range="${prev}..${CURRENT_TAG}"
+            header="Changes since \`${prev}\`:"
+          fi
+          log=$(git log --no-merges --pretty="format:- %s (%h)" "${range}" -- "plugins/${PLUGIN}/" \
+            | grep -vE "^- (docs|chore|test)(\(|:)" || true)
+          {
+            echo "${header}"
+            echo
+            if [ -n "${log}" ]; then
+              echo "${log}"
+            else
+              echo "_No user-facing changes._"
+            fi
+          } > /tmp/changelog.md
+          echo "path=/tmp/changelog.md" >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PLUGIN: ${{ steps.meta.outputs.plugin }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          WORKDIR: ${{ steps.meta.outputs.workdir }}
+        run: |
+          set -euo pipefail
+          gh release create "${GITHUB_REF_NAME}" \
+            --title "${PLUGIN} v${VERSION}" \
+            --notes-file "${{ steps.changelog.outputs.path }}" \
+            "${WORKDIR}/dist/"*.tar.gz \
+            "${WORKDIR}/dist/"*checksums.txt \
+            "${WORKDIR}/dist/"*checksums.txt.sig \
+            "${WORKDIR}/dist/"*checksums.txt.pem
 
       - name: Release summary
         env:

@@ -39,9 +39,7 @@ signs:
     output: true
 
 changelog:
-  sort: asc
-  filters:
-    exclude:
-      - "^docs:"
-      - "^chore:"
-      - "^test:"
+  disable: true
+
+release:
+  disable: true
