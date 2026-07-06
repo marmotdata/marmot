@@ -4,6 +4,8 @@
 	import TeamManagement from '$components/team/TeamManagement.svelte';
 	import RoleManagement from '$components/role/RoleManagement.svelte';
 	import SearchManagement from '$components/admin/SearchManagement.svelte';
+	import SSOProvidersView from '$components/sso/SSOProvidersView.svelte';
+	import ServiceAccountManagement from '$components/serviceaccount/ServiceAccountManagement.svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -13,6 +15,8 @@
 		{ id: 'users', label: 'Users' },
 		{ id: 'teams', label: 'Teams' },
 		{ id: 'roles', label: 'Roles' },
+		{ id: 'service_accounts', label: 'Service Accounts' },
+		{ id: 'federation', label: 'Authentication' },
 		{ id: 'system', label: 'System' }
 	];
 
@@ -41,6 +45,14 @@
 			{:else if activeTab === 'roles'}
 				<div class="animate-slide-down">
 					<RoleManagement />
+				</div>
+			{:else if activeTab === 'service_accounts'}
+				<div class="animate-slide-down">
+					<ServiceAccountManagement />
+				</div>
+			{:else if activeTab === 'federation'}
+				<div class="animate-slide-down">
+					<SSOProvidersView />
 				</div>
 			{:else if activeTab === 'system'}
 				<div class="animate-slide-down">

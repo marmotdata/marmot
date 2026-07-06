@@ -14,9 +14,10 @@ const AdminRoleName = "admin"
 type PrincipalType string
 
 const (
-	PrincipalTypeUser      PrincipalType = "user"
-	PrincipalTypeOperator  PrincipalType = "operator"
-	PrincipalTypeOIDCTrust PrincipalType = "oidc_trust"
+	PrincipalTypeUser           PrincipalType = "user"
+	PrincipalTypeOperator       PrincipalType = "operator"
+	PrincipalTypeOIDCTrust      PrincipalType = "oidc_trust"
+	PrincipalTypeServiceAccount PrincipalType = "service_account"
 )
 
 // Principal is any entity that can hold roles/permissions and act against the API.
@@ -149,3 +150,61 @@ func (operatorPrincipal) Permissions() []string          { return nil }
 func (operatorPrincipal) IsAdmin() bool                  { return true }
 func (operatorPrincipal) HasPermission(_, _ string) bool { return true }
 func (operatorPrincipal) AsUser() *user.User             { return nil }
+
+type serviceAccountPrincipal struct {
+	id          string
+	name        string
+	roleNames   []string
+	permissions map[string]struct{}
+	isAdmin     bool
+}
+
+func NewServiceAccountPrincipal(id, name string, roleNames []string, permKeys []string) Principal {
+	perms := make(map[string]struct{}, len(permKeys))
+	for _, k := range permKeys {
+		perms[k] = struct{}{}
+	}
+	admin := false
+	for _, r := range roleNames {
+		if r == AdminRoleName {
+			admin = true
+			break
+		}
+	}
+	return serviceAccountPrincipal{
+		id:          id,
+		name:        name,
+		roleNames:   roleNames,
+		permissions: perms,
+		isAdmin:     admin,
+	}
+}
+
+func (p serviceAccountPrincipal) ID() string          { return p.id }
+func (p serviceAccountPrincipal) Type() PrincipalType { return PrincipalTypeServiceAccount }
+func (p serviceAccountPrincipal) DisplayName() string { return p.name }
+func (p serviceAccountPrincipal) AuditSubject() string {
+	return "service_account:" + strings.ReplaceAll(p.name, ":", "%3A")
+}
+func (p serviceAccountPrincipal) Roles() []string { return p.roleNames }
+
+func (p serviceAccountPrincipal) Permissions() []string {
+	out := make([]string, 0, len(p.permissions))
+	for k := range p.permissions {
+		out = append(out, k)
+	}
+	return out
+}
+
+func (p serviceAccountPrincipal) IsAdmin() bool { return p.isAdmin }
+
+func (p serviceAccountPrincipal) HasPermission(resourceType, action string) bool {
+	if p.isAdmin {
+		return true
+	}
+	_, ok := p.permissions[resourceType+":"+action]
+	return ok
+}
+
+func (p serviceAccountPrincipal) AsUser() *user.User { return nil }
+

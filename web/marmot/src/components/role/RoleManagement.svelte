@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { listRoles } from '$lib/roles/api';
-	import CreateRoleForm from './CreateRoleForm.svelte';
 	import RoleTable from './RoleTable.svelte';
 	import type { Role } from '$lib/roles/types';
 
 	let roles: Role[] = [];
 	let filteredRoles: Role[] = [];
 	let roleQuery = '';
-	let creatingRole = false;
 	let editingRoleId: string | null = null;
 	let loading = false;
 	let error: string | null = null;
@@ -44,9 +44,8 @@
 
 	$: if (roleQuery !== undefined) scheduleSearch();
 
-	async function handleRoleCreated() {
-		creatingRole = false;
-		await fetchRoles();
+	function goCreate() {
+		goto(resolve('/roles/new'));
 	}
 
 	async function handleRoleUpdated(updatedRole: Role) {
@@ -78,18 +77,11 @@
 			</div>
 			<button
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
-				on:click={() => (creatingRole = !creatingRole)}
+				on:click={goCreate}
 			>
-				{creatingRole ? 'Cancel' : 'Add Role'}
+				Add Role
 			</button>
 		</div>
-
-		{#if creatingRole}
-			<CreateRoleForm
-				onRoleCreated={handleRoleCreated}
-				onCancel={() => (creatingRole = false)}
-			/>
-		{/if}
 
 		{#if loading && !roles.length}
 			<div class="flex justify-center p-8">

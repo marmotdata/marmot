@@ -50,6 +50,14 @@ func (h *Handler) Routes() []common.Route {
 			Handler: h.getAuthConfig,
 		},
 		{
+			Path:    "/api/v1/sso-providers",
+			Method:  http.MethodGet,
+			Handler: h.getSSOProviders,
+			Middleware: []func(http.HandlerFunc) http.HandlerFunc{
+				common.WithAuth(h.userService, h.authService, h.config),
+			},
+		},
+		{
 			Path:    "/auth/callback",
 			Method:  http.MethodGet,
 			Handler: h.handleAuthCallback,

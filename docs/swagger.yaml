@@ -660,6 +660,24 @@ definitions:
       plugin_id:
         type: string
     type: object
+  CreateServiceAccountAPIKeyRequest:
+    properties:
+      expires_in_days:
+        type: integer
+      name:
+        type: string
+    type: object
+  CreateServiceAccountRequest:
+    properties:
+      description:
+        type: string
+      name:
+        type: string
+      role_ids:
+        items:
+          type: string
+        type: array
+    type: object
   CreateStatRequest:
     properties:
       asset_mrn:
@@ -1808,6 +1826,22 @@ definitions:
       total:
         type: integer
     type: object
+  SSOProvider:
+    properties:
+      issuer_url:
+        type: string
+      name:
+        type: string
+      type:
+        type: string
+    type: object
+  SSOProvidersResponse:
+    properties:
+      providers:
+        items:
+          $ref: '#/definitions/SSOProvider'
+        type: array
+    type: object
   SSOTeamMapping:
     properties:
       created_at:
@@ -1876,6 +1910,44 @@ definitions:
         type: array
       total:
         type: integer
+    type: object
+  ServiceAccount:
+    properties:
+      active:
+        type: boolean
+      created_at:
+        type: string
+      created_by:
+        type: string
+      description:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      roles:
+        items:
+          $ref: '#/definitions/Role'
+        type: array
+      updated_at:
+        type: string
+    type: object
+  ServiceAccountAPIKey:
+    properties:
+      created_at:
+        type: string
+      expires_at:
+        type: string
+      id:
+        type: string
+      key:
+        type: string
+      last_used_at:
+        type: string
+      name:
+        type: string
+      service_account_id:
+        type: string
     type: object
   StartRunRequest:
     properties:
@@ -2161,6 +2233,19 @@ definitions:
         type: string
       plugin_id:
         type: string
+    type: object
+  UpdateServiceAccountRequest:
+    properties:
+      active:
+        type: boolean
+      description:
+        type: string
+      name:
+        type: string
+      role_ids:
+        items:
+          type: string
+        type: array
     type: object
   UpdateTeamRequest:
     properties:
@@ -5874,6 +5959,210 @@ paths:
       summary: Unified search
       tags:
       - search
+  /service-accounts:
+    get:
+      description: Get all service accounts
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ServiceAccount'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: List service accounts
+      tags:
+      - service_accounts
+    post:
+      consumes:
+      - application/json
+      description: Create a new service account
+      parameters:
+      - description: Service account
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/CreateServiceAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/ServiceAccount'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Create service account
+      tags:
+      - service_accounts
+  /service-accounts/{id}:
+    delete:
+      description: Soft-delete a service account
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Delete service account
+      tags:
+      - service_accounts
+    get:
+      description: Get a service account by ID
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ServiceAccount'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get service account
+      tags:
+      - service_accounts
+    patch:
+      consumes:
+      - application/json
+      description: Update a service account
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Update fields
+        in: body
+        name: account
+        required: true
+        schema:
+          $ref: '#/definitions/UpdateServiceAccountRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ServiceAccount'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Update service account
+      tags:
+      - service_accounts
+  /service-accounts/{id}/api-keys:
+    get:
+      description: Get all API keys for a service account
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/ServiceAccountAPIKey'
+            type: array
+      summary: List API keys for a service account
+      tags:
+      - service_accounts
+    post:
+      consumes:
+      - application/json
+      description: Create a new API key. The plaintext key is only returned once.
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: API key details
+        in: body
+        name: key
+        required: true
+        schema:
+          $ref: '#/definitions/CreateServiceAccountAPIKeyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/ServiceAccountAPIKey'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Create API key for a service account
+      tags:
+      - service_accounts
+  /service-accounts/{id}/api-keys/{keyId}:
+    delete:
+      description: Delete an API key for a service account
+      parameters:
+      - description: Service account ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: API key ID
+        in: path
+        name: keyId
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Delete an API key
+      tags:
+      - service_accounts
+  /sso-providers:
+    get:
+      description: Read-only view of SSO providers wired via server config. Editing
+        is done in config.yaml.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/SSOProvidersResponse'
+      summary: List configured SSO providers (admin)
+      tags:
+      - auth
   /sso/team-mappings:
     get:
       consumes:

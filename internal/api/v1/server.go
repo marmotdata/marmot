@@ -60,6 +60,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/plugins"
 	rolesAPI "github.com/marmotdata/marmot/internal/api/v1/roles"
 	"github.com/marmotdata/marmot/internal/api/v1/runs"
+	serviceaccountsAPI "github.com/marmotdata/marmot/internal/api/v1/serviceaccounts"
 	schedulesAPI "github.com/marmotdata/marmot/internal/api/v1/schedules"
 	searchAPI "github.com/marmotdata/marmot/internal/api/v1/search"
 	subscriptionsAPI "github.com/marmotdata/marmot/internal/api/v1/subscriptions"
@@ -71,6 +72,7 @@ import (
 	agentService "github.com/marmotdata/marmot/internal/core/agent"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	roleService "github.com/marmotdata/marmot/internal/core/role"
+	serviceaccountService "github.com/marmotdata/marmot/internal/core/serviceaccount"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	assetruleService "github.com/marmotdata/marmot/internal/core/assetrule"
 	authService "github.com/marmotdata/marmot/internal/core/auth"
@@ -152,6 +154,8 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	userSvc := userService.NewService(userRepo)
 	roleStore := roleService.NewPostgresStore(db)
 	roleSvc := roleService.NewService(roleStore)
+	serviceAccountStore := serviceaccountService.NewPostgresRepository(db)
+	serviceAccountSvc := serviceaccountService.NewService(serviceAccountStore, serviceaccountService.DefaultMaxAPIKeysPerAccount)
 	lineageSvc := lineageService.NewService(lineageRepo, assetSvc)
 	agentRepo := agentService.NewPostgresRepository(db)
 	agentSvc := agentService.NewService(agentRepo, assetSvc, lineageSvc)
@@ -440,6 +444,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 	}
 
 	common.SetOAuthManager(oauthManager)
+	common.SetServiceAccountService(serviceAccountSvc)
 
 	signingKey, signingKeyErr := authSvc.GetSigningKey(context.Background())
 	if signingKeyErr != nil {
@@ -566,6 +571,7 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		schedulesHandler,
 		websocket.NewHandler(wsHub, config),
 		rolesAPI.NewHandler(roleSvc, userSvc, authSvc, config),
+		serviceaccountsAPI.NewHandler(serviceAccountSvc, userSvc, authSvc, config),
 		plugins.NewHandler(),
 		ui.NewHandler(config, encryptionConfigured),
 		adminAPI.NewHandler(reindexer, userSvc, authSvc, config),

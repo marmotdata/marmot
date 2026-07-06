@@ -2,11 +2,9 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
-	import Button from '$components/ui/Button.svelte';
 	import IconifyIcon from '@iconify/svelte';
 	import Icon from '$components/ui/Icon.svelte';
-	import Stepper from '$components/ui/Stepper.svelte';
-	import Step from '$components/ui/Step.svelte';
+	import StepperPage from '$components/ui/StepperPage.svelte';
 	import TagsInput from '$components/shared/TagsInput.svelte';
 	import { providerIconMap, typeIconMap } from '$lib/iconloader';
 
@@ -18,7 +16,11 @@
 	let saving = $state(false);
 	let error = $state<string | null>(null);
 	let currentStep = $state(1);
-	let totalSteps = $state(0);
+	const stepperSteps = [
+		{ title: 'Basic Info', icon: 'material-symbols:info-outline' },
+		{ title: 'Type & Providers', icon: 'material-symbols:category' },
+		{ title: 'Details', icon: 'material-symbols:description' }
+	];
 
 	// Field-level validation
 	let fieldErrors = $state<Record<string, string>>({});
@@ -74,8 +76,6 @@
 	let selectedProviderIndex = $state(-1);
 	let typeDropdownElement = $state<HTMLDivElement>();
 	let providerDropdownElement = $state<HTMLDivElement>();
-
-	const steps = [{ title: 'Basic Info' }, { title: 'Type & Providers' }, { title: 'Details' }];
 
 	let canProceedToStep2 = $derived(validateName(name) === null);
 	let canProceedToStep3 = $derived(
@@ -289,49 +289,28 @@
 	}
 </script>
 
-<div class="min-h-screen">
-	<!-- Header -->
-	<div class="border-b border-gray-200 dark:border-gray-700">
-		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-			<div class="flex items-center gap-4">
-				<button
-					onclick={() => goto(resolve('/discover'))}
-					class="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
-				>
-					<IconifyIcon
-						icon="material-symbols:arrow-back"
-						class="h-6 w-6 text-gray-600 dark:text-gray-400"
-					/>
-				</button>
-				<div>
-					<h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Create Asset</h1>
-					<p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-						Step {currentStep} of {steps.length} — {steps[currentStep - 1].title}
-					</p>
-				</div>
-			</div>
-		</div>
-	</div>
-
-	<!-- Step Indicator -->
-	<div class="border-b border-gray-200 dark:border-gray-700">
-		<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-			<Stepper
-				{currentStep}
-				bind:totalSteps
-				onStepClick={(step) => (currentStep = step)}
-				{canNavigateToStep}
-			>
-				<Step title="Basic Info" icon="material-symbols:info-outline" />
-				<Step title="Type & Providers" icon="material-symbols:category" />
-				<Step title="Details" icon="material-symbols:description" />
-			</Stepper>
-		</div>
-	</div>
-
-	<!-- Main Content -->
-	<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-		<!-- Tip Banner -->
+<StepperPage
+	title="Create Asset"
+	steps={stepperSteps}
+	{currentStep}
+	onBack={() => goto(resolve('/discover'))}
+	onCancel={() => goto(resolve('/discover'))}
+	onPrevious={() => currentStep--}
+	onNext={handleNextStep}
+	onSave={handleSave}
+	canProceed={currentStep === 1
+		? canProceedToStep2
+		: currentStep === 2
+			? canProceedToStep3
+			: !!name.trim() && !!assetType.trim() && providers.length > 0}
+	{saving}
+	saveLabel="Create Asset"
+	savingLabel="Creating..."
+	{error}
+	{canNavigateToStep}
+	onStepClick={(step) => (currentStep = step)}
+>
+	{#snippet banner()}
 		<div
 			class="mb-6 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-800/50 rounded-lg p-5"
 		>
@@ -358,20 +337,7 @@
 				</div>
 			</div>
 		</div>
-
-		{#if error}
-			<div
-				class="mb-6 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50 rounded-lg p-4"
-			>
-				<div class="flex items-start">
-					<IconifyIcon
-						icon="material-symbols:error"
-						class="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0"
-					/>
-					<p class="ml-3 text-sm text-red-700 dark:text-red-300">{error}</p>
-				</div>
-			</div>
-		{/if}
+	{/snippet}
 
 		<!-- Step 1: Basic Information -->
 		{#if currentStep === 1}
@@ -696,42 +662,4 @@
 			</div>
 		{/if}
 
-		<!-- Footer Actions -->
-		<div
-			class="mt-8 flex items-center justify-between border-t border-gray-200 dark:border-gray-700 pt-6"
-		>
-			<div>
-				{#if currentStep > 1}
-					<Button
-						variant="clear"
-						click={() => currentStep--}
-						icon="material-symbols:arrow-back"
-						text="Previous"
-					/>
-				{:else}
-					<Button variant="clear" click={() => goto(resolve('/discover'))} text="Cancel" />
-				{/if}
-			</div>
-			<div class="flex items-center gap-3">
-				{#if currentStep < totalSteps}
-					<Button
-						variant="filled"
-						click={handleNextStep}
-						text="Next"
-						icon="material-symbols:arrow-forward"
-						disabled={(currentStep === 1 && !canProceedToStep2) ||
-							(currentStep === 2 && !canProceedToStep3)}
-					/>
-				{:else}
-					<Button
-						variant="filled"
-						click={handleSave}
-						text={saving ? 'Creating...' : 'Create Asset'}
-						disabled={saving || !name.trim() || !assetType.trim() || providers.length === 0}
-						icon="material-symbols:check"
-					/>
-				{/if}
-			</div>
-		</div>
-	</div>
-</div>
+</StepperPage>

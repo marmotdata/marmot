@@ -98,6 +98,12 @@ type ClientService interface {
 	// GetAuthProvidersContext get auth configuration.
 	GetAuthProvidersContext(ctx context.Context, params *GetAuthProvidersParams, opts ...ClientOption) (*GetAuthProvidersOK, error)
 
+	// GetSsoProviders list configured s s o providers admin.
+	GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error)
+
+	// GetSsoProvidersContext list configured s s o providers admin.
+	GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error)
+
 	// PostOauthToken o auth token endpoint.
 	PostOauthToken(params *PostOauthTokenParams, opts ...ClientOption) (*PostOauthTokenOK, error)
 
@@ -280,6 +286,72 @@ func (a *Client) GetAuthProvidersContext(ctx context.Context, params *GetAuthPro
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetAuthProviders: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetSsoProviders lists configured s s o providers admin.
+//
+// Read-only view of SSO providers wired via server config. Editing is done in config.yaml..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetSsoProvidersContext] instead.
+func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetSsoProvidersContext(ctx, params, opts...)
+}
+
+// GetSsoProvidersContext lists configured s s o providers admin.
+//
+// Read-only view of SSO providers wired via server config. Editing is done in config.yaml..
+//
+// Do not use the deprecated [GetSsoProvidersParams.Context] with this method: it would be ignored.
+func (a *Client) GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetSsoProvidersParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetSsoProviders",
+		Method:             "GET",
+		PathPattern:        "/sso-providers",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetSsoProvidersReader{formats: a.formats},
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetSsoProvidersOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetSsoProviders: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

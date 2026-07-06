@@ -5350,6 +5350,313 @@ const docTemplate = `{
                 }
             }
         },
+        "/service-accounts": {
+            "get": {
+                "description": "Get all service accounts",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service_accounts"
+                ],
+                "summary": "List service accounts",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ServiceAccount"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new service account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service_accounts"
+                ],
+                "summary": "Create service account",
+                "parameters": [
+                    {
+                        "description": "Service account",
+                        "name": "account",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateServiceAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/ServiceAccount"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/service-accounts/{id}": {
+            "get": {
+                "description": "Get a service account by ID",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service_accounts"
+                ],
+                "summary": "Get service account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ServiceAccount"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "description": "Soft-delete a service account",
+                "tags": [
+                    "service_accounts"
+                ],
+                "summary": "Delete service account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "description": "Update a service account",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service_accounts"
+                ],
+                "summary": "Update service account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Update fields",
+                        "name": "account",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UpdateServiceAccountRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ServiceAccount"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/service-accounts/{id}/api-keys": {
+            "get": {
+                "description": "Get all API keys for a service account",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service_accounts"
+                ],
+                "summary": "List API keys for a service account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/ServiceAccountAPIKey"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "Create a new API key. The plaintext key is only returned once.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "service_accounts"
+                ],
+                "summary": "Create API key for a service account",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "API key details",
+                        "name": "key",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/CreateServiceAccountAPIKeyRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/ServiceAccountAPIKey"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/service-accounts/{id}/api-keys/{keyId}": {
+            "delete": {
+                "description": "Delete an API key for a service account",
+                "tags": [
+                    "service_accounts"
+                ],
+                "summary": "Delete an API key",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Service account ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "API key ID",
+                        "name": "keyId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No Content"
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/sso-providers": {
+            "get": {
+                "description": "Read-only view of SSO providers wired via server config. Editing is done in config.yaml.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "List configured SSO providers (admin)",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/SSOProvidersResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/sso/team-mappings": {
             "get": {
                 "description": "Get a list of SSO group to team mappings",
@@ -7721,6 +8028,34 @@ const docTemplate = `{
                 }
             }
         },
+        "CreateServiceAccountAPIKeyRequest": {
+            "type": "object",
+            "properties": {
+                "expires_in_days": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "CreateServiceAccountRequest": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "CreateStatRequest": {
             "type": "object",
             "required": [
@@ -9449,6 +9784,31 @@ const docTemplate = `{
                 }
             }
         },
+        "SSOProvider": {
+            "type": "object",
+            "properties": {
+                "issuer_url": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "SSOProvidersResponse": {
+            "type": "object",
+            "properties": {
+                "providers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SSOProvider"
+                    }
+                }
+            }
+        },
         "SSOTeamMapping": {
             "type": "object",
             "properties": {
@@ -9551,6 +9911,64 @@ const docTemplate = `{
                 },
                 "total": {
                     "type": "integer"
+                }
+            }
+        },
+        "ServiceAccount": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "created_by": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "roles": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Role"
+                    }
+                },
+                "updated_at": {
+                    "type": "string"
+                }
+            }
+        },
+        "ServiceAccountAPIKey": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "key": {
+                    "type": "string"
+                },
+                "last_used_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "service_account_id": {
+                    "type": "string"
                 }
             }
         },
@@ -9985,6 +10403,26 @@ const docTemplate = `{
                 },
                 "plugin_id": {
                     "type": "string"
+                }
+            }
+        },
+        "UpdateServiceAccountRequest": {
+            "type": "object",
+            "properties": {
+                "active": {
+                    "type": "boolean"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "role_ids": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

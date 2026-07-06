@@ -46,18 +46,19 @@ type ClientOptions struct {
 
 // Client is the entry point. Use NewClient to construct one.
 type Client struct {
-	Admin        *AdminService
-	APIKeys      *APIKeysService
-	Assets       *AssetsService
-	DataProducts *DataProductsService
-	Glossary     *GlossaryService
-	Lineage      *LineageService
-	Metrics      *MetricsService
-	Owners       *OwnersService
-	Runs         *RunsService
-	Search       *SearchService
-	Teams        *TeamsService
-	Users        *UsersService
+	Admin           *AdminService
+	APIKeys         *APIKeysService
+	Assets          *AssetsService
+	DataProducts    *DataProductsService
+	Glossary        *GlossaryService
+	Lineage         *LineageService
+	Metrics         *MetricsService
+	Owners          *OwnersService
+	Runs            *RunsService
+	Search          *SearchService
+	ServiceAccounts *ServiceAccountsService
+	Teams           *TeamsService
+	Users           *UsersService
 
 	host string
 	cred auth.Credential
@@ -109,20 +110,21 @@ func NewClient(opts ClientOptions) (*Client, error) {
 	gen := client.New(transport, strfmt.Default)
 
 	return &Client{
-		Admin:        &AdminService{gen: gen},
-		APIKeys:      &APIKeysService{gen: gen},
-		Assets:       &AssetsService{gen: gen},
-		DataProducts: &DataProductsService{gen: gen},
-		Glossary:     &GlossaryService{gen: gen},
-		Lineage:      &LineageService{gen: gen},
-		Metrics:      &MetricsService{gen: gen},
-		Owners:       &OwnersService{gen: gen},
-		Runs:         &RunsService{gen: gen},
-		Search:       &SearchService{gen: gen},
-		Teams:        &TeamsService{gen: gen},
-		Users:        &UsersService{gen: gen},
-		host:         host,
-		cred:         cred,
+		Admin:           &AdminService{gen: gen},
+		APIKeys:         &APIKeysService{gen: gen},
+		Assets:          &AssetsService{gen: gen},
+		DataProducts:    &DataProductsService{gen: gen},
+		Glossary:        &GlossaryService{gen: gen},
+		Lineage:         &LineageService{gen: gen},
+		Metrics:         &MetricsService{gen: gen},
+		Owners:          &OwnersService{gen: gen},
+		Runs:            &RunsService{gen: gen},
+		Search:          &SearchService{gen: gen},
+		ServiceAccounts: &ServiceAccountsService{gen: gen},
+		Teams:           &TeamsService{gen: gen},
+		Users:           &UsersService{gen: gen},
+		host:            host,
+		cred:            cred,
 	}, nil
 }
 

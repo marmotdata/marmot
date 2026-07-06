@@ -27,7 +27,10 @@ func (m *mockAuthService) GenerateToken(ctx context.Context, u *user.User, prefs
 }
 
 func (m *mockAuthService) GenerateTokenForPrincipal(ctx context.Context, p coreauth.Principal, prefs map[string]interface{}) (string, error) {
-	return m.generateTokenFn(ctx, p.AsUser(), prefs)
+	if u := p.AsUser(); u != nil {
+		return m.generateTokenFn(ctx, u, prefs)
+	}
+	return "test-federation-token", nil
 }
 
 func (m *mockAuthService) ValidateToken(ctx context.Context, token string) (*coreauth.Claims, error) {
