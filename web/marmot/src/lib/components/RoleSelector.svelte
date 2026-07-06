@@ -34,9 +34,7 @@
 		const q = query.trim().toLowerCase();
 		if (!q) return allRoles;
 		return allRoles.filter(
-			(r) =>
-				r.name.toLowerCase().includes(q) ||
-				(r.description ?? '').toLowerCase().includes(q)
+			(r) => r.name.toLowerCase().includes(q) || (r.description ?? '').toLowerCase().includes(q)
 		);
 	});
 
@@ -49,13 +47,11 @@
 
 	// Reset to page 1 when the search query changes
 	$effect(() => {
-		query;
+		const _q = query;
 		page = 1;
 	});
 
-	let visible = $derived(
-		filtered.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize)
-	);
+	let visible = $derived(filtered.slice((page - 1) * pageSize, (page - 1) * pageSize + pageSize));
 
 	let showingFrom = $derived(filtered.length === 0 ? 0 : (page - 1) * pageSize + 1);
 	let showingTo = $derived(Math.min(page * pageSize, filtered.length));
@@ -152,7 +148,9 @@
 	>
 		{#if loading}
 			<div class="flex justify-center p-8">
-				<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"></div>
+				<div
+					class="animate-spin rounded-full h-6 w-6 border-b-2 border-earthy-terracotta-700"
+				></div>
 			</div>
 		{:else if error}
 			<div class="p-4 text-sm text-red-600 dark:text-red-400">{error}</div>

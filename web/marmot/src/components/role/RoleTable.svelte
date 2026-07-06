@@ -52,10 +52,7 @@
 	<table class="min-w-full">
 		<thead>
 			<tr>
-				<th
-					class="w-8 px-3 py-3 bg-earthy-brown-100 dark:bg-gray-800"
-					aria-label="Expand"
-				></th>
+				<th class="w-8 px-3 py-3 bg-earthy-brown-100 dark:bg-gray-800" aria-label="Expand"></th>
 				<th
 					class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider bg-earthy-brown-100 dark:bg-gray-800"
 					>Name</th

@@ -79,10 +79,7 @@
 
 		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
 			<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Permissions</h4>
-			<PermissionEditor
-				selectedIds={selectedPermIds}
-				onChange={(ids) => (selectedPermIds = ids)}
-			/>
+			<PermissionEditor selectedIds={selectedPermIds} onChange={(ids) => (selectedPermIds = ids)} />
 		</div>
 	</div>
 

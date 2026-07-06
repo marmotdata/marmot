@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { listRoles } from '$lib/roles/api';
 	import type { Role, Permission } from '$lib/roles/types';
 
@@ -23,7 +24,7 @@
 	$: effectivePermissions = computeEffective(allRoles, selectedIds);
 
 	function computeEffective(roles: Role[], ids: string[]): Permission[] {
-		const seen = new Set<string>();
+		const seen = new SvelteSet<string>();
 		const perms: Permission[] = [];
 		for (const r of roles) {
 			if (!ids.includes(r.id)) continue;
@@ -34,7 +35,9 @@
 				}
 			}
 		}
-		return perms.sort((a, b) => a.resource_type.localeCompare(b.resource_type) || a.name.localeCompare(b.name));
+		return perms.sort(
+			(a, b) => a.resource_type.localeCompare(b.resource_type) || a.name.localeCompare(b.name)
+		);
 	}
 
 	function isSelected(id: string): boolean {
@@ -82,7 +85,11 @@
 		>
 			{#each filtered as r (r.id)}
 				<div
-					class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 {isSelected(r.id) ? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/10' : ''}"
+					class="flex items-center gap-3 px-3 py-2 hover:bg-gray-50 dark:hover:bg-gray-800/50 {isSelected(
+						r.id
+					)
+						? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/10'
+						: ''}"
 				>
 					{#if !readonly}
 						<input

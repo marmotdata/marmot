@@ -93,7 +93,11 @@
 	onPrevious={() => currentStep--}
 	onNext={handleNext}
 	onSave={handleSave}
-	canProceed={currentStep === 1 ? canProceedToStep2 : currentStep === 2 ? canProceedToStep3 : !!name.trim()}
+	canProceed={currentStep === 1
+		? canProceedToStep2
+		: currentStep === 2
+			? canProceedToStep3
+			: !!name.trim()}
 	{saving}
 	saveLabel="Create Service Account"
 	savingLabel="Creating..."
@@ -176,7 +180,8 @@
 			</h3>
 
 			<p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
-				Grant this service account access by assigning one or more roles. You can change these later.
+				Grant this service account access by assigning one or more roles. You can change these
+				later.
 			</p>
 
 			<RoleSelector
@@ -205,9 +210,7 @@
 					<div class="text-xs uppercase tracking-wider text-gray-500 dark:text-gray-400 mb-0.5">
 						Ready to create
 					</div>
-					<h3
-						class="text-lg font-semibold text-gray-900 dark:text-gray-100 font-mono truncate"
-					>
+					<h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 font-mono truncate">
 						{name || 'unnamed'}
 					</h3>
 				</div>
@@ -216,7 +219,9 @@
 			<!-- Field grid -->
 			<div class="p-6 space-y-5">
 				<div>
-					<div class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+					<div
+						class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide"
+					>
 						<IconifyIcon icon="material-symbols:description-outline" class="h-3.5 w-3.5" />
 						Description
 					</div>
@@ -231,7 +236,9 @@
 
 				<div class="border-t border-gray-100 dark:border-gray-700/60 pt-5">
 					<div class="flex items-center justify-between mb-2.5">
-						<div class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+						<div
+							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+						>
 							<IconifyIcon icon="material-symbols:shield-outline" class="h-3.5 w-3.5" />
 							Roles
 						</div>
@@ -260,9 +267,7 @@
 										/>
 										<div class="min-w-0 flex-1">
 											<div class="flex items-center gap-2 flex-wrap">
-												<span
-													class="text-sm font-medium text-gray-900 dark:text-gray-100"
-												>
+												<span class="text-sm font-medium text-gray-900 dark:text-gray-100">
 													{role.name}
 												</span>
 												{#if role.is_system}

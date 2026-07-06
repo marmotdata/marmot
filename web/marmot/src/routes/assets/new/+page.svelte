@@ -339,327 +339,326 @@
 		</div>
 	{/snippet}
 
-		<!-- Step 1: Basic Information -->
-		{#if currentStep === 1}
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:info-outline"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					Basic Information
-				</h3>
+	<!-- Step 1: Basic Information -->
+	{#if currentStep === 1}
+		<div
+			class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+		>
+			<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+				<IconifyIcon
+					icon="material-symbols:info-outline"
+					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
+				/>
+				Basic Information
+			</h3>
+			<div>
+				<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+					Asset Name <span class="text-red-500">*</span>
+				</label>
+				<input
+					type="text"
+					bind:value={name}
+					placeholder="e.g., user_events, orders_table"
+					oninput={() => {
+						if (touched['name']) validateField('name');
+						else clearFieldError('name');
+					}}
+					onblur={() => validateField('name')}
+					onkeydown={(e) => {
+						if (e.key === 'Enter' && canProceedToStep2) {
+							e.preventDefault();
+							handleNextStep();
+						}
+					}}
+					class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {fieldErrors[
+						'name'
+					] && touched['name']
+						? 'border-red-500 dark:border-red-500'
+						: 'border-gray-300 dark:border-gray-600'}"
+					required
+				/>
+				{#if fieldErrors['name'] && touched['name']}
+					<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center">
+						<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-1 flex-shrink-0" />
+						{fieldErrors['name']}
+					</p>
+				{:else}
+					<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+						A unique identifier for this asset in your data catalog
+					</p>
+				{/if}
+			</div>
+		</div>
+	{/if}
+
+	<!-- Step 2: Type & Providers -->
+	{#if currentStep === 2}
+		<div
+			class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+		>
+			<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+				<IconifyIcon
+					icon="material-symbols:category"
+					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
+				/>
+				Type & Providers
+			</h3>
+
+			<div class="space-y-6">
+				<!-- Type -->
 				<div>
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-						Asset Name <span class="text-red-500">*</span>
+						Type <span class="text-red-500">*</span>
 					</label>
-					<input
-						type="text"
-						bind:value={name}
-						placeholder="e.g., user_events, orders_table"
-						oninput={() => {
-							if (touched['name']) validateField('name');
-							else clearFieldError('name');
-						}}
-						onblur={() => validateField('name')}
-						onkeydown={(e) => {
-							if (e.key === 'Enter' && canProceedToStep2) {
-								e.preventDefault();
-								handleNextStep();
-							}
-						}}
-						class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all {fieldErrors[
-							'name'
-						] && touched['name']
-							? 'border-red-500 dark:border-red-500'
-							: 'border-gray-300 dark:border-gray-600'}"
-						required
-					/>
-					{#if fieldErrors['name'] && touched['name']}
+					<div class="relative">
+						<input
+							type="text"
+							bind:value={typeSearch}
+							oninput={() => {
+								assetType = typeSearch;
+								showTypeDropdown = true;
+								if (touched['type']) validateField('type');
+								else clearFieldError('type');
+							}}
+							onfocus={() => (showTypeDropdown = true)}
+							onblur={() => {
+								setTimeout(() => (showTypeDropdown = false), 200);
+								validateField('type');
+							}}
+							onkeydown={handleTypeKeydown}
+							placeholder="e.g., Table, Queue, Topic, Database..."
+							class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all font-mono {fieldErrors[
+								'type'
+							] && touched['type']
+								? 'border-red-500 dark:border-red-500'
+								: 'border-gray-300 dark:border-gray-600'}"
+						/>
+						{#if showTypeDropdown && filteredTypes.length > 0}
+							<div
+								bind:this={typeDropdownElement}
+								class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+							>
+								{#each filteredTypes as typeObj, index (typeObj.key)}
+									<button
+										type="button"
+										onclick={() => {
+											selectType(typeObj);
+											clearFieldError('type');
+										}}
+										class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-left {index ===
+										selectedTypeIndex
+											? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/30'
+											: ''}"
+									>
+										<Icon name={typeObj.key} showLabel={false} size="md" />
+										<span class="text-gray-900 dark:text-gray-100">{typeObj.display}</span>
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+					{#if fieldErrors['type'] && touched['type']}
 						<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center">
 							<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-1 flex-shrink-0" />
-							{fieldErrors['name']}
+							{fieldErrors['type']}
 						</p>
 					{:else}
-						<p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-							A unique identifier for this asset in your data catalog
+						<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+							The type of asset: Table, Queue, Topic, Database, View, DAG, etc.
+						</p>
+					{/if}
+				</div>
+
+				<!-- Providers -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Providers <span class="text-red-500">*</span>
+					</label>
+
+					{#if providers.length > 0}
+						<div class="flex flex-wrap gap-2 mb-2">
+							{#each providers as provider, index (index)}
+								<span
+									class="inline-flex items-center gap-2 px-3 py-1.5 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 rounded-lg border border-earthy-terracotta-200 dark:border-earthy-terracotta-800"
+								>
+									<span class="text-sm font-medium">{provider}</span>
+									<button
+										type="button"
+										onclick={() => {
+											removeProvider(provider);
+											validateField('providers');
+										}}
+										class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200 transition-colors"
+									>
+										<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
+									</button>
+								</span>
+							{/each}
+						</div>
+					{/if}
+
+					<div class="relative">
+						<input
+							type="text"
+							bind:value={providerSearch}
+							onfocus={() => (showProviderDropdown = true)}
+							onblur={() => {
+								setTimeout(() => (showProviderDropdown = false), 200);
+								validateField('providers');
+							}}
+							onkeydown={handleProviderKeydown}
+							placeholder="e.g., Kafka, Snowflake, PostgreSQL, Airflow..."
+							class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all font-mono {fieldErrors[
+								'providers'
+							] &&
+							touched['providers'] &&
+							providers.length === 0
+								? 'border-red-500 dark:border-red-500'
+								: 'border-gray-300 dark:border-gray-600'}"
+						/>
+						{#if showProviderDropdown && filteredProviders.length > 0}
+							<div
+								bind:this={providerDropdownElement}
+								class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+							>
+								{#each filteredProviders as providerObj, index (providerObj.key)}
+									<button
+										type="button"
+										onclick={() => {
+											toggleProvider(providerObj);
+											clearFieldError('providers');
+										}}
+										class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-left {index ===
+										selectedProviderIndex
+											? 'bg-blue-50 dark:bg-blue-900/30'
+											: providers.includes(providerObj.display)
+												? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20'
+												: ''}"
+									>
+										<Icon name={providerObj.key} showLabel={false} size="md" />
+										<span class="text-gray-900 dark:text-gray-100 flex-1"
+											>{providerObj.display}</span
+										>
+										{#if providers.includes(providerObj.display)}
+											<IconifyIcon
+												icon="material-symbols:check"
+												class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
+											/>
+										{/if}
+									</button>
+								{/each}
+							</div>
+						{/if}
+					</div>
+					{#if fieldErrors['providers'] && touched['providers']}
+						<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center">
+							<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-1 flex-shrink-0" />
+							{fieldErrors['providers']}
+						</p>
+					{:else}
+						<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+							The data platform or service: Kafka, Snowflake, PostgreSQL, Airflow, dbt, S3, etc.
 						</p>
 					{/if}
 				</div>
 			</div>
-		{/if}
+		</div>
+	{/if}
 
-		<!-- Step 2: Type & Providers -->
-		{#if currentStep === 2}
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:category"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					Type & Providers
-				</h3>
+	<!-- Step 3: Details -->
+	{#if currentStep === 3}
+		<div
+			class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+		>
+			<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+				<IconifyIcon
+					icon="material-symbols:description"
+					class="h-5 w-5 mr-2 text-earthy-terracotta-600"
+				/>
+				Additional Details
+				<span class="ml-2 text-xs font-normal text-gray-500">(Optional)</span>
+			</h3>
 
-				<div class="space-y-6">
-					<!-- Type -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Type <span class="text-red-500">*</span>
-						</label>
-						<div class="relative">
-							<input
-								type="text"
-								bind:value={typeSearch}
-								oninput={() => {
-									assetType = typeSearch;
-									showTypeDropdown = true;
-									if (touched['type']) validateField('type');
-									else clearFieldError('type');
-								}}
-								onfocus={() => (showTypeDropdown = true)}
-								onblur={() => {
-									setTimeout(() => (showTypeDropdown = false), 200);
-									validateField('type');
-								}}
-								onkeydown={handleTypeKeydown}
-								placeholder="e.g., Table, Queue, Topic, Database..."
-								class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all font-mono {fieldErrors[
-									'type'
-								] && touched['type']
-									? 'border-red-500 dark:border-red-500'
-									: 'border-gray-300 dark:border-gray-600'}"
-							/>
-							{#if showTypeDropdown && filteredTypes.length > 0}
-								<div
-									bind:this={typeDropdownElement}
-									class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-								>
-									{#each filteredTypes as typeObj, index (typeObj.key)}
-										<button
-											type="button"
-											onclick={() => {
-												selectType(typeObj);
-												clearFieldError('type');
-											}}
-											class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-left {index ===
-											selectedTypeIndex
-												? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/30'
-												: ''}"
-										>
-											<Icon name={typeObj.key} showLabel={false} size="md" />
-											<span class="text-gray-900 dark:text-gray-100">{typeObj.display}</span>
-										</button>
-									{/each}
-								</div>
-							{/if}
-						</div>
-						{#if fieldErrors['type'] && touched['type']}
-							<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center">
-								<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-1 flex-shrink-0" />
-								{fieldErrors['type']}
-							</p>
-						{:else}
-							<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-								The type of asset: Table, Queue, Topic, Database, View, DAG, etc.
-							</p>
-						{/if}
-					</div>
+			<div class="space-y-6">
+				<!-- Description -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Description
+					</label>
+					<textarea
+						bind:value={userDescription}
+						placeholder="Add a description to provide context about this asset..."
+						rows="4"
+						class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all resize-none"
+					></textarea>
+					<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+						Help others understand what this asset is used for
+					</p>
+				</div>
 
-					<!-- Providers -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Providers <span class="text-red-500">*</span>
-						</label>
-
-						{#if providers.length > 0}
-							<div class="flex flex-wrap gap-2 mb-2">
-								{#each providers as provider, index (index)}
-									<span
-										class="inline-flex items-center gap-2 px-3 py-1.5 bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/30 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 rounded-lg border border-earthy-terracotta-200 dark:border-earthy-terracotta-800"
-									>
-										<span class="text-sm font-medium">{provider}</span>
-										<button
-											type="button"
-											onclick={() => {
-												removeProvider(provider);
-												validateField('providers');
-											}}
-											class="text-earthy-terracotta-700 dark:text-earthy-terracotta-700 hover:text-earthy-terracotta-700 dark:hover:text-earthy-terracotta-200 transition-colors"
-										>
-											<IconifyIcon icon="material-symbols:close" class="w-4 h-4" />
-										</button>
-									</span>
-								{/each}
-							</div>
-						{/if}
-
-						<div class="relative">
-							<input
-								type="text"
-								bind:value={providerSearch}
-								onfocus={() => (showProviderDropdown = true)}
-								onblur={() => {
-									setTimeout(() => (showProviderDropdown = false), 200);
-									validateField('providers');
-								}}
-								onkeydown={handleProviderKeydown}
-								placeholder="e.g., Kafka, Snowflake, PostgreSQL, Airflow..."
-								class="w-full px-4 py-2.5 border rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all font-mono {fieldErrors[
-									'providers'
-								] &&
-								touched['providers'] &&
-								providers.length === 0
-									? 'border-red-500 dark:border-red-500'
-									: 'border-gray-300 dark:border-gray-600'}"
-							/>
-							{#if showProviderDropdown && filteredProviders.length > 0}
-								<div
-									bind:this={providerDropdownElement}
-									class="absolute z-10 w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-y-auto"
-								>
-									{#each filteredProviders as providerObj, index (providerObj.key)}
-										<button
-											type="button"
-											onclick={() => {
-												toggleProvider(providerObj);
-												clearFieldError('providers');
-											}}
-											class="w-full px-4 py-3 flex items-center gap-3 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors text-left {index ===
-											selectedProviderIndex
-												? 'bg-blue-50 dark:bg-blue-900/30'
-												: providers.includes(providerObj.display)
-													? 'bg-earthy-terracotta-50 dark:bg-earthy-terracotta-900/20'
-													: ''}"
-										>
-											<Icon name={providerObj.key} showLabel={false} size="md" />
-											<span class="text-gray-900 dark:text-gray-100 flex-1"
-												>{providerObj.display}</span
-											>
-											{#if providers.includes(providerObj.display)}
-												<IconifyIcon
-													icon="material-symbols:check"
-													class="w-5 h-5 text-earthy-terracotta-700 dark:text-earthy-terracotta-700"
-												/>
-											{/if}
-										</button>
-									{/each}
-								</div>
-							{/if}
-						</div>
-						{#if fieldErrors['providers'] && touched['providers']}
-							<p class="mt-1.5 text-sm text-red-600 dark:text-red-400 flex items-center">
-								<IconifyIcon icon="material-symbols:error" class="h-4 w-4 mr-1 flex-shrink-0" />
-								{fieldErrors['providers']}
-							</p>
-						{:else}
-							<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-								The data platform or service: Kafka, Snowflake, PostgreSQL, Airflow, dbt, S3, etc.
-							</p>
-						{/if}
-					</div>
+				<!-- Tags -->
+				<div>
+					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+						Tags
+					</label>
+					<TagsInput bind:tags placeholder="Type a tag and press Enter..." />
+					<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+						Add tags for better organization and discovery
+					</p>
 				</div>
 			</div>
-		{/if}
+		</div>
 
-		<!-- Step 3: Details -->
-		{#if currentStep === 3}
-			<div
-				class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h3 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon
-						icon="material-symbols:description"
-						class="h-5 w-5 mr-2 text-earthy-terracotta-600"
-					/>
-					Additional Details
-					<span class="ml-2 text-xs font-normal text-gray-500">(Optional)</span>
-				</h3>
-
-				<div class="space-y-6">
-					<!-- Description -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Description
-						</label>
-						<textarea
-							bind:value={userDescription}
-							placeholder="Add a description to provide context about this asset..."
-							rows="4"
-							class="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-earthy-terracotta-600 focus:border-transparent transition-all resize-none"
-						></textarea>
-						<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-							Help others understand what this asset is used for
-						</p>
-					</div>
-
-					<!-- Tags -->
-					<div>
-						<label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-							Tags
-						</label>
-						<TagsInput bind:tags placeholder="Type a tag and press Enter..." />
-						<p class="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
-							Add tags for better organization and discovery
-						</p>
-					</div>
+		<!-- Summary Card -->
+		<div
+			class="mt-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
+		>
+			<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+				<IconifyIcon icon="material-symbols:summarize" class="h-5 w-5 mr-2 text-gray-500" />
+				Summary
+			</h4>
+			<dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+				<div>
+					<dt class="text-gray-500 dark:text-gray-400">Name</dt>
+					<dd class="font-medium text-gray-900 dark:text-gray-100 font-mono">{name}</dd>
 				</div>
-			</div>
-
-			<!-- Summary Card -->
-			<div
-				class="mt-6 bg-gray-50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
-			>
-				<h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-					<IconifyIcon icon="material-symbols:summarize" class="h-5 w-5 mr-2 text-gray-500" />
-					Summary
-				</h4>
-				<dl class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-					<div>
-						<dt class="text-gray-500 dark:text-gray-400">Name</dt>
-						<dd class="font-medium text-gray-900 dark:text-gray-100 font-mono">{name}</dd>
-					</div>
-					<div>
-						<dt class="text-gray-500 dark:text-gray-400">Type</dt>
-						<dd class="font-medium text-gray-900 dark:text-gray-100">{assetType}</dd>
-					</div>
+				<div>
+					<dt class="text-gray-500 dark:text-gray-400">Type</dt>
+					<dd class="font-medium text-gray-900 dark:text-gray-100">{assetType}</dd>
+				</div>
+				<div class="sm:col-span-2">
+					<dt class="text-gray-500 dark:text-gray-400">Providers</dt>
+					<dd class="flex flex-wrap gap-1.5 mt-1">
+						{#each providers as provider (provider)}
+							<span
+								class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+							>
+								{provider}
+							</span>
+						{/each}
+					</dd>
+				</div>
+				{#if userDescription}
 					<div class="sm:col-span-2">
-						<dt class="text-gray-500 dark:text-gray-400">Providers</dt>
+						<dt class="text-gray-500 dark:text-gray-400">Description</dt>
+						<dd class="font-medium text-gray-900 dark:text-gray-100">{userDescription}</dd>
+					</div>
+				{/if}
+				{#if tags.length > 0}
+					<div class="sm:col-span-2">
+						<dt class="text-gray-500 dark:text-gray-400">Tags</dt>
 						<dd class="flex flex-wrap gap-1.5 mt-1">
-							{#each providers as provider (provider)}
+							{#each tags as tag (tag)}
 								<span
-									class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+									class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
 								>
-									{provider}
+									{tag}
 								</span>
 							{/each}
 						</dd>
 					</div>
-					{#if userDescription}
-						<div class="sm:col-span-2">
-							<dt class="text-gray-500 dark:text-gray-400">Description</dt>
-							<dd class="font-medium text-gray-900 dark:text-gray-100">{userDescription}</dd>
-						</div>
-					{/if}
-					{#if tags.length > 0}
-						<div class="sm:col-span-2">
-							<dt class="text-gray-500 dark:text-gray-400">Tags</dt>
-							<dd class="flex flex-wrap gap-1.5 mt-1">
-								{#each tags as tag (tag)}
-									<span
-										class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300"
-									>
-										{tag}
-									</span>
-								{/each}
-							</dd>
-						</div>
-					{/if}
-				</dl>
-			</div>
-		{/if}
-
+				{/if}
+			</dl>
+		</div>
+	{/if}
 </StepperPage>

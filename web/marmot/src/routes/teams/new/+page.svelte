@@ -63,13 +63,11 @@
 	let canProceedToStep2 = $derived(name.trim().length >= 2);
 
 	// Filter search results to exclude already-added members
-	let availableResults = $derived(
-		memberResults.filter((r) => !members.some((m) => m.id === r.id))
-	);
+	let availableResults = $derived(memberResults.filter((r) => !members.some((m) => m.id === r.id)));
 
 	// Reset keyboard focus when results change
 	$effect(() => {
-		availableResults;
+		const _r = availableResults;
 		focusedMemberIndex = -1;
 	});
 
@@ -477,8 +475,12 @@
 						class="absolute z-10 mt-1 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-hidden max-h-64 overflow-y-auto"
 					>
 						{#if memberSearchLoading}
-							<div class="flex items-center justify-center gap-2 px-4 py-6 text-sm text-gray-500 dark:text-gray-400">
-								<div class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-earthy-terracotta-600"></div>
+							<div
+								class="flex items-center justify-center gap-2 px-4 py-6 text-sm text-gray-500 dark:text-gray-400"
+							>
+								<div
+									class="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-earthy-terracotta-600"
+								></div>
 								Searching...
 							</div>
 						{:else if availableResults.length === 0}
@@ -527,10 +529,7 @@
 					<div
 						class="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 px-4 py-6 rounded-lg bg-gray-50 dark:bg-gray-900/40 border border-dashed border-gray-200 dark:border-gray-700"
 					>
-						<IconifyIcon
-							icon="material-symbols:person-add-outline"
-							class="h-5 w-5 text-gray-400"
-						/>
+						<IconifyIcon icon="material-symbols:person-add-outline" class="h-5 w-5 text-gray-400" />
 						<span
 							>No members added yet. Search above to find people, or skip and add members later.</span
 						>
@@ -544,11 +543,7 @@
 							<li
 								class="flex items-center gap-3 px-4 py-3 border-b border-gray-100 dark:border-gray-700/60 last:border-b-0"
 							>
-								<Avatar
-									name={owner.name}
-									profilePicture={owner.profile_picture}
-									size="md"
-								/>
+								<Avatar name={owner.name} profilePicture={owner.profile_picture} size="md" />
 								<div class="flex-1 min-w-0">
 									<div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
 										{owner.name}
@@ -620,10 +615,7 @@
 				<div
 					class="flex flex-col items-center text-center gap-2 py-8 rounded-lg border border-dashed border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/40 mb-4"
 				>
-					<IconifyIcon
-						icon="material-symbols:webhook"
-						class="h-8 w-8 text-gray-400"
-					/>
+					<IconifyIcon icon="material-symbols:webhook" class="h-8 w-8 text-gray-400" />
 					<p class="text-sm font-medium text-gray-700 dark:text-gray-300">No integrations yet</p>
 					<p class="text-xs text-gray-500 dark:text-gray-400 max-w-sm">
 						Add a Slack or Discord webhook to keep this team informed about relevant events.
@@ -638,7 +630,9 @@
 							<div
 								class="flex items-center justify-between px-4 py-2.5 border-b border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/40"
 							>
-								<div class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+								<div
+									class="flex items-center gap-2 text-sm font-medium text-gray-900 dark:text-gray-100"
+								>
 									<IconifyIcon
 										icon={PROVIDER_OPTIONS.find((p) => p.value === w.provider)?.icon ??
 											'mdi:webhook'}
@@ -783,7 +777,9 @@
 			<div class="p-6 space-y-5">
 				<!-- Description -->
 				<div>
-					<div class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+					<div
+						class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide"
+					>
 						<IconifyIcon icon="material-symbols:description-outline" class="h-3.5 w-3.5" />
 						Description
 					</div>
@@ -799,7 +795,9 @@
 				<!-- Members -->
 				<div class="border-t border-gray-100 dark:border-gray-700/60 pt-5">
 					<div class="flex items-center justify-between mb-2.5">
-						<div class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+						<div
+							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+						>
 							<IconifyIcon icon="material-symbols:group-outline" class="h-3.5 w-3.5" />
 							Members
 						</div>
@@ -816,11 +814,7 @@
 								<li
 									class="flex items-center gap-3 px-3 py-2 rounded-md bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700/60"
 								>
-									<Avatar
-										name={owner.name}
-										profilePicture={owner.profile_picture}
-										size="sm"
-									/>
+									<Avatar name={owner.name} profilePicture={owner.profile_picture} size="sm" />
 									<div class="flex-1 min-w-0">
 										<div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
 											{owner.name}
@@ -854,7 +848,9 @@
 				<!-- Tags -->
 				<div class="border-t border-gray-100 dark:border-gray-700/60 pt-5">
 					<div class="flex items-center justify-between mb-2.5">
-						<div class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+						<div
+							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+						>
 							<IconifyIcon icon="material-symbols:sell-outline" class="h-3.5 w-3.5" />
 							Tags
 						</div>
@@ -878,7 +874,9 @@
 				<!-- Metadata -->
 				<div class="border-t border-gray-100 dark:border-gray-700/60 pt-5">
 					<div class="flex items-center justify-between mb-2.5">
-						<div class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+						<div
+							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+						>
 							<IconifyIcon icon="material-symbols:data-object" class="h-3.5 w-3.5" />
 							Metadata
 						</div>
@@ -893,7 +891,9 @@
 							<dl class="divide-y divide-gray-100 dark:divide-gray-700/60">
 								{#each Object.entries(metadata ?? {}) as [key, value] (key)}
 									<div class="flex items-start gap-3 px-3 py-2 text-xs">
-										<dt class="w-1/3 font-mono text-gray-500 dark:text-gray-400 break-all">{key}</dt>
+										<dt class="w-1/3 font-mono text-gray-500 dark:text-gray-400 break-all">
+											{key}
+										</dt>
 										<dd class="flex-1 text-gray-900 dark:text-gray-100 break-all">
 											{typeof value === 'string' ? value : JSON.stringify(value)}
 										</dd>
@@ -907,7 +907,9 @@
 				<!-- Integrations -->
 				<div class="border-t border-gray-100 dark:border-gray-700/60 pt-5">
 					<div class="flex items-center justify-between mb-2.5">
-						<div class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+						<div
+							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+						>
 							<IconifyIcon icon="material-symbols:webhook" class="h-3.5 w-3.5" />
 							Integrations
 						</div>

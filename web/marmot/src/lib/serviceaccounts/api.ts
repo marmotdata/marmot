@@ -19,7 +19,9 @@ export async function getServiceAccount(id: string): Promise<ServiceAccount> {
 	return res.json();
 }
 
-export async function createServiceAccount(input: CreateServiceAccountInput): Promise<ServiceAccount> {
+export async function createServiceAccount(
+	input: CreateServiceAccountInput
+): Promise<ServiceAccount> {
 	const res = await fetchApi('/service-accounts', {
 		method: 'POST',
 		body: JSON.stringify(input)
@@ -31,7 +33,10 @@ export async function createServiceAccount(input: CreateServiceAccountInput): Pr
 	return res.json();
 }
 
-export async function updateServiceAccount(id: string, input: UpdateServiceAccountInput): Promise<ServiceAccount> {
+export async function updateServiceAccount(
+	id: string,
+	input: UpdateServiceAccountInput
+): Promise<ServiceAccount> {
 	const res = await fetchApi(`/service-accounts/${id}`, {
 		method: 'PATCH',
 		body: JSON.stringify(input)
@@ -57,7 +62,10 @@ export async function listAPIKeys(saID: string): Promise<ServiceAccountAPIKey[]>
 	return res.json();
 }
 
-export async function createAPIKey(saID: string, input: CreateAPIKeyInput): Promise<ServiceAccountAPIKey> {
+export async function createAPIKey(
+	saID: string,
+	input: CreateAPIKeyInput
+): Promise<ServiceAccountAPIKey> {
 	const res = await fetchApi(`/service-accounts/${saID}/api-keys`, {
 		method: 'POST',
 		body: JSON.stringify(input)

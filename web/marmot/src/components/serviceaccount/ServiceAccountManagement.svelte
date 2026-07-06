@@ -29,9 +29,7 @@
 		const q = query.trim().toLowerCase();
 		filtered = q
 			? accounts.filter(
-					(a) =>
-						a.name.toLowerCase().includes(q) ||
-						(a.description ?? '').toLowerCase().includes(q)
+					(a) => a.name.toLowerCase().includes(q) || (a.description ?? '').toLowerCase().includes(q)
 				)
 			: accounts;
 	}
@@ -78,7 +76,9 @@
 
 		{#if loading && !accounts.length}
 			<div class="flex justify-center p-8">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
+				<div
+					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
+				></div>
 			</div>
 		{:else if error}
 			<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">

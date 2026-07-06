@@ -115,7 +115,8 @@
 								/>
 							{/if}
 							<div class="flex-1 min-w-0">
-								<span class="text-sm font-medium text-gray-900 dark:text-gray-100">{perm.name}</span>
+								<span class="text-sm font-medium text-gray-900 dark:text-gray-100">{perm.name}</span
+								>
 								{#if perm.description}
 									<p class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{perm.description}</p>
 								{/if}

@@ -39,10 +39,6 @@
 			return 'Only letters, numbers, dots, underscores, and hyphens';
 		return null;
 	});
-	let nameError = $derived.by(() => {
-		if (!name.trim()) return null;
-		return null;
-	});
 	let passwordError = $derived.by(() => {
 		if (!password) return null;
 		if (password.length < 8) return 'Password must be at least 8 characters';
@@ -57,9 +53,7 @@
 	let canProceedToStep2 = $derived(
 		username.trim().length >= 3 && name.trim().length > 0 && usernameError === null
 	);
-	let canProceedToStep3 = $derived(
-		password.length >= 8 && passwordConfirm === password
-	);
+	let canProceedToStep3 = $derived(password.length >= 8 && passwordConfirm === password);
 	let canProceedToStep4 = $derived(selectedRoleIds.length > 0);
 
 	function canNavigateToStep(step: number): boolean {
@@ -79,14 +73,10 @@
 		if (/\d/.test(password) && /[^A-Za-z0-9]/.test(password)) score++;
 		return score;
 	});
-	let strengthLabel = $derived(
-		['', 'Weak', 'Fair', 'Good', 'Strong'][passwordStrength] ?? ''
-	);
+	let strengthLabel = $derived(['', 'Weak', 'Fair', 'Good', 'Strong'][passwordStrength] ?? '');
 
 	// Convert selected IDs to role objects and names for review + submit
-	let selectedRoles = $derived(
-		availableRoles.filter((r) => selectedRoleIds.includes(r.id))
-	);
+	let selectedRoles = $derived(availableRoles.filter((r) => selectedRoleIds.includes(r.id)));
 
 	onMount(async () => {
 		try {
@@ -250,7 +240,6 @@
 						</p>
 					</div>
 				</div>
-
 			</div>
 		</div>
 	{/if}
@@ -453,22 +442,30 @@
 			<div class="p-6 space-y-5">
 				<!-- Credentials -->
 				<div>
-					<div class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide">
+					<div
+						class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 mb-1.5 uppercase tracking-wide"
+					>
 						<IconifyIcon icon="material-symbols:lock-outline" class="h-3.5 w-3.5" />
 						Password
 					</div>
 					<div class="flex items-center gap-2">
-						<code class="text-sm font-mono text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-900 rounded px-2 py-1">
+						<code
+							class="text-sm font-mono text-gray-900 dark:text-gray-100 bg-gray-100 dark:bg-gray-900 rounded px-2 py-1"
+						>
 							{'•'.repeat(Math.min(password.length, 16))}
 						</code>
-						<span class="text-xs text-gray-500 dark:text-gray-400">{password.length} chars · {strengthLabel}</span>
+						<span class="text-xs text-gray-500 dark:text-gray-400"
+							>{password.length} chars · {strengthLabel}</span
+						>
 					</div>
 				</div>
 
 				<!-- Roles -->
 				<div class="border-t border-gray-100 dark:border-gray-700/60 pt-5">
 					<div class="flex items-center justify-between mb-2.5">
-						<div class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+						<div
+							class="flex items-center gap-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide"
+						>
 							<IconifyIcon icon="material-symbols:shield-outline" class="h-3.5 w-3.5" />
 							Roles
 						</div>

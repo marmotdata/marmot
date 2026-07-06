@@ -1,5 +1,11 @@
 import { fetchApi } from '$lib/api';
-import type { Role, Permission, CreateRoleInput, UpdateRoleInput, ReplacePermissionsInput } from './types';
+import type {
+	Role,
+	Permission,
+	CreateRoleInput,
+	UpdateRoleInput,
+	ReplacePermissionsInput
+} from './types';
 
 export async function listRoles(): Promise<Role[]> {
 	const res = await fetchApi('/roles');
@@ -45,7 +51,10 @@ export async function deleteRole(id: string): Promise<void> {
 	}
 }
 
-export async function replacePermissions(id: string, input: ReplacePermissionsInput): Promise<Role> {
+export async function replacePermissions(
+	id: string,
+	input: ReplacePermissionsInput
+): Promise<Role> {
 	const res = await fetchApi(`/roles/${id}/permissions`, {
 		method: 'POST',
 		body: JSON.stringify(input)

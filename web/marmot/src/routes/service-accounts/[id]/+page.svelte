@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -202,7 +201,9 @@
 	<div class="container max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 		{#if loading}
 			<div class="flex justify-center py-16">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-600"></div>
+				<div
+					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-600"
+				></div>
 			</div>
 		{:else if error}
 			<div
@@ -242,7 +243,9 @@
 					<div
 						class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
 					>
-						<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+						<h2
+							class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
+						>
 							<IconifyIcon
 								icon="material-symbols:info-outline"
 								class="h-5 w-5 mr-2 text-earthy-terracotta-600"
@@ -287,7 +290,9 @@
 					<div
 						class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6"
 					>
-						<h2 class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+						<h2
+							class="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center"
+						>
 							<IconifyIcon
 								icon="material-symbols:shield-outline"
 								class="h-5 w-5 mr-2 text-earthy-terracotta-600"
@@ -396,11 +401,18 @@
 																: 'text-gray-400 dark:text-gray-500'}"
 													/>
 													<div class="min-w-0 flex-1">
-														<div class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+														<div
+															class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate"
+														>
 															{key.name}
 														</div>
-														<div class="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
-															<IconifyIcon icon="material-symbols:schedule-outline" class="h-3 w-3" />
+														<div
+															class="flex items-center gap-1.5 text-[11px] text-gray-500 dark:text-gray-400 mt-0.5"
+														>
+															<IconifyIcon
+																icon="material-symbols:schedule-outline"
+																class="h-3 w-3"
+															/>
 															<span>Created {formatDate(key.created_at)}</span>
 														</div>
 													</div>
@@ -424,28 +436,40 @@
 													<span
 														class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300"
 													>
-														<IconifyIcon icon="material-symbols:error-outline" class="h-2.5 w-2.5" />
+														<IconifyIcon
+															icon="material-symbols:error-outline"
+															class="h-2.5 w-2.5"
+														/>
 														Expired
 													</span>
 												{:else if status === 'expiring' && daysLeft !== null}
 													<span
 														class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-300"
 													>
-														<IconifyIcon icon="material-symbols:warning-outline" class="h-2.5 w-2.5" />
+														<IconifyIcon
+															icon="material-symbols:warning-outline"
+															class="h-2.5 w-2.5"
+														/>
 														Expires in {daysLeft}d
 													</span>
 												{:else if key.expires_at}
 													<span
 														class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
 													>
-														<IconifyIcon icon="material-symbols:event-outline" class="h-2.5 w-2.5" />
+														<IconifyIcon
+															icon="material-symbols:event-outline"
+															class="h-2.5 w-2.5"
+														/>
 														Expires {formatDate(key.expires_at)}
 													</span>
 												{:else}
 													<span
 														class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400"
 													>
-														<IconifyIcon icon="material-symbols:all-inclusive" class="h-2.5 w-2.5" />
+														<IconifyIcon
+															icon="material-symbols:all-inclusive"
+															class="h-2.5 w-2.5"
+														/>
 														No expiry
 													</span>
 												{/if}
@@ -454,14 +478,20 @@
 													<span
 														class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400"
 													>
-														<IconifyIcon icon="material-symbols:check-circle-outline" class="h-2.5 w-2.5" />
+														<IconifyIcon
+															icon="material-symbols:check-circle-outline"
+															class="h-2.5 w-2.5"
+														/>
 														Used {formatDate(key.last_used_at)}
 													</span>
 												{:else}
 													<span
 														class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400"
 													>
-														<IconifyIcon icon="material-symbols:circle-outline" class="h-2.5 w-2.5" />
+														<IconifyIcon
+															icon="material-symbols:circle-outline"
+															class="h-2.5 w-2.5"
+														/>
 														Unused
 													</span>
 												{/if}

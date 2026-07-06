@@ -77,9 +77,7 @@
 
 	function isToday(day: number): boolean {
 		return (
-			today.getFullYear() === viewYear &&
-			today.getMonth() === viewMonth &&
-			today.getDate() === day
+			today.getFullYear() === viewYear && today.getMonth() === viewMonth && today.getDate() === day
 		);
 	}
 
@@ -174,7 +172,9 @@
 							: isToday(day)
 								? 'text-earthy-terracotta-600 dark:text-earthy-terracotta-500 font-semibold hover:bg-earthy-brown-100 dark:hover:bg-gray-700'
 								: 'text-gray-700 dark:text-gray-300 hover:bg-earthy-brown-100 dark:hover:bg-gray-700'}
-							{isDisabled(day) ? 'opacity-40 cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent' : ''}"
+							{isDisabled(day)
+							? 'opacity-40 cursor-not-allowed hover:bg-transparent dark:hover:bg-transparent'
+							: ''}"
 					>
 						{day}
 					</button>

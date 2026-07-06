@@ -4,7 +4,6 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import IconifyIcon from '@iconify/svelte';
-	import Button from '$components/ui/Button.svelte';
 	import StepperPage from '$components/ui/StepperPage.svelte';
 	import { getServiceAccount, createAPIKey } from '$lib/serviceaccounts/api';
 	import type { ServiceAccount, ServiceAccountAPIKey } from '$lib/serviceaccounts/types';
@@ -125,7 +124,11 @@
 	onCancel={goBack}
 	onPrevious={currentStep === 2 && !plaintextKey ? () => (currentStep = 1) : undefined}
 	onNext={currentStep === 1 ? handleNext : undefined}
-	onSave={currentStep === 2 && !plaintextKey ? handleCreate : currentStep === 3 ? finish : undefined}
+	onSave={currentStep === 2 && !plaintextKey
+		? handleCreate
+		: currentStep === 3
+			? finish
+			: undefined}
 	canProceed={currentStep === 1 ? canProceedToStep2 : true}
 	{saving}
 	saveLabel={currentStep === 3 ? 'Done' : 'Create Key'}
@@ -335,13 +338,12 @@
 			</div>
 
 			<div class="rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-				<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-					Use the key
-				</h4>
+				<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Use the key</h4>
 				<p class="text-xs text-gray-500 dark:text-gray-400 mb-3">
 					Pass the key in the <code>X-API-Key</code> header on requests to the Marmot API.
 				</p>
-				<pre class="text-xs bg-gray-900 dark:bg-black text-gray-100 rounded-md p-3 overflow-x-auto"><code
+				<pre
+					class="text-xs bg-gray-900 dark:bg-black text-gray-100 rounded-md p-3 overflow-x-auto"><code
 						>curl -H "X-API-Key: {plaintextKey.key}" \
      {`\${MARMOT_HOST}`}/api/v1/service-accounts</code
 					></pre>

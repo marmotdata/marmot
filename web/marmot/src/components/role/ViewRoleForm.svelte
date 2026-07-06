@@ -39,7 +39,9 @@
 						{role.user_count ?? 0} user{(role.user_count ?? 0) === 1 ? '' : 's'} assigned
 					</span>
 					<span>
-						{(role.permissions ?? []).length} permission{(role.permissions ?? []).length === 1 ? '' : 's'} granted
+						{(role.permissions ?? []).length} permission{(role.permissions ?? []).length === 1
+							? ''
+							: 's'} granted
 					</span>
 				</div>
 			</div>
@@ -66,9 +68,7 @@
 	</div>
 
 	<div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-		<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
-			Granted permissions
-		</h4>
+		<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">Granted permissions</h4>
 		{#if (role.permissions ?? []).length === 0}
 			<p class="text-sm text-gray-500 dark:text-gray-400 italic">No permissions granted</p>
 		{:else}

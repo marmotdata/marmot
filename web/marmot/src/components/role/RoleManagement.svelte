@@ -30,9 +30,7 @@
 		const q = roleQuery.trim().toLowerCase();
 		filteredRoles = q
 			? roles.filter(
-					(r) =>
-						r.name.toLowerCase().includes(q) ||
-						(r.description ?? '').toLowerCase().includes(q)
+					(r) => r.name.toLowerCase().includes(q) || (r.description ?? '').toLowerCase().includes(q)
 				)
 			: roles;
 	}
@@ -85,7 +83,9 @@
 
 		{#if loading && !roles.length}
 			<div class="flex justify-center p-8">
-				<div class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"></div>
+				<div
+					class="animate-spin rounded-full h-8 w-8 border-b-2 border-earthy-terracotta-700"
+				></div>
 			</div>
 		{:else if error}
 			<div class="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700">

@@ -196,10 +196,7 @@
 				header.
 			</p>
 
-			<PermissionEditor
-				selectedIds={selectedPermIds}
-				onChange={(ids) => (selectedPermIds = ids)}
-			/>
+			<PermissionEditor selectedIds={selectedPermIds} onChange={(ids) => (selectedPermIds = ids)} />
 		</div>
 	{/if}
 
@@ -228,9 +225,7 @@
 
 			<div>
 				<div class="flex items-center justify-between mb-3">
-					<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">
-						Permissions
-					</h4>
+					<h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">Permissions</h4>
 					<span class="text-xs text-gray-500 dark:text-gray-400">
 						{selectedPermIds.length} of {allPermissions.length} granted
 					</span>
