@@ -169,6 +169,7 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" \
             --title "${PLUGIN} v${VERSION}" \
             --notes-file "${{ steps.changelog.outputs.path }}" \
+            --latest=false \
             "${WORKDIR}/dist/"*.tar.gz \
             "${WORKDIR}/dist/"*checksums.txt \
             "${WORKDIR}/dist/"*checksums.txt.sig \
