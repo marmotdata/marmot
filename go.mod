@@ -20,7 +20,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.6
 	github.com/centrifugal/centrifuge v0.38.0
 	github.com/charlie-haley/asyncapi-go v0.0.0-20260108213546-9782889bf371
-	github.com/confluentinc/confluent-kafka-go/v2 v2.13.0
 	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/duckdb/duckdb-go/v2 v2.10501.0
 	github.com/elastic/go-elasticsearch/v8 v8.19.3
@@ -54,9 +53,6 @@ require (
 	github.com/swaggo/http-swagger v1.3.4
 	github.com/swaggo/swag v1.16.6
 	github.com/trinodb/trino-go-client v0.333.0
-	github.com/twmb/franz-go v1.20.6
-	github.com/twmb/franz-go/pkg/kadm v1.17.2
-	github.com/twmb/franz-go/pkg/kmsg v1.12.0
 	go.mongodb.org/mongo-driver v1.17.9
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
 	golang.org/x/crypto v0.52.0
@@ -132,7 +128,6 @@ require (
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cockroachdb/apd/v3 v3.2.1 // indirect
 	github.com/containerd/console v1.0.5 // indirect
-	github.com/containerd/containerd/api v1.9.0 // indirect
 	github.com/creasty/defaults v1.8.0 // indirect
 	github.com/cristalhq/jwt/v4 v4.0.2 // indirect
 	github.com/cyphar/filepath-securejoin v0.6.1 // indirect

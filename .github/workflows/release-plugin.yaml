@@ -1,0 +1,152 @@
+name: Release Plugin
+
+on:
+  push:
+    tags:
+      - "plugins/*/v*"
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+env:
+  REGISTRY: ghcr.io/${{ github.repository_owner }}/plugins
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Parse tag
+        id: meta
+        run: |
+          set -euo pipefail
+          ref="${GITHUB_REF_NAME}"
+          # ref looks like "plugins/kafka/v0.1.0"
+          rest="${ref#plugins/}"
+          plugin="${rest%%/*}"
+          version="${rest#*/v}"
+          workdir="plugins/${plugin}"
+          if [ ! -d "${workdir}" ]; then
+            echo "No plugin directory at ${workdir}" >&2
+            exit 1
+          fi
+          echo "plugin=${plugin}"   >> "$GITHUB_OUTPUT"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          echo "workdir=${workdir}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: ${{ steps.meta.outputs.workdir }}/go.mod
+          cache: true
+          cache-dependency-path: ${{ steps.meta.outputs.workdir }}/go.sum
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v3
+
+      - name: Install ORAS
+        uses: oras-project/setup-oras@v1
+
+      - name: Run tests
+        working-directory: ${{ steps.meta.outputs.workdir }}
+        run: go test ./...
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
+          workdir: ${{ steps.meta.outputs.workdir }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Log in to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
+
+      - name: Push plugin artifacts to GHCR
+        id: push
+        env:
+          PLUGIN: ${{ steps.meta.outputs.plugin }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          WORKDIR: ${{ steps.meta.outputs.workdir }}
+        run: |
+          set -euo pipefail
+          REPO="${REGISTRY}/${PLUGIN}"
+
+          platform_tags=()
+          for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+            os="${platform%/*}"
+            arch="${platform#*/}"
+
+            binary=$(find "${WORKDIR}/dist" -type f -name "marmot-plugin-${PLUGIN}" -path "*_${os}_${arch}*" | head -n1)
+            if [ -z "$binary" ]; then
+              echo "No binary found for ${platform}" >&2
+              exit 1
+            fi
+
+            tmp=$(mktemp -d)
+            gzip -9 -c "$binary" > "${tmp}/marmot-plugin-${PLUGIN}.gz"
+
+            tag="${VERSION}-${os}-${arch}"
+            (
+              cd "$tmp"
+              oras push \
+                --artifact-type application/vnd.marmot.plugin.v1 \
+                --artifact-platform "${platform}" \
+                --annotation "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
+                --annotation "org.opencontainers.image.version=${VERSION}" \
+                "${REPO}:${tag}" \
+                "marmot-plugin-${PLUGIN}.gz:application/vnd.marmot.plugin.v1+gzip"
+            )
+            platform_tags+=("$tag")
+          done
+
+          oras manifest index create "${REPO}:${VERSION},latest" "${platform_tags[@]}"
+
+          digest=$(oras manifest fetch --descriptor "${REPO}:${VERSION}" | jq -r .digest)
+          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
+
+      - name: Sign plugin artifacts
+        env:
+          PLUGIN: ${{ steps.meta.outputs.plugin }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          set -euo pipefail
+          REPO="${REGISTRY}/${PLUGIN}"
+
+          cosign sign --yes "${REPO}@${DIGEST}"
+
+          for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
+            os="${platform%/*}"
+            arch="${platform#*/}"
+            digest=$(oras manifest fetch --descriptor "${REPO}:${VERSION}-${os}-${arch}" | jq -r .digest)
+            cosign sign --yes "${REPO}@${digest}"
+          done
+
+      - name: Release summary
+        env:
+          PLUGIN: ${{ steps.meta.outputs.plugin }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          {
+            echo "## Plugin published"
+            echo
+            echo '```'
+            echo "${REGISTRY}/${PLUGIN}:${VERSION}"
+            echo "${REGISTRY}/${PLUGIN}@${DIGEST}"
+            echo '```'
+            echo
+            echo "Update \`internal/plugin/install/core_plugins.json\` in marmotdata/marmot to pin this release:"
+            echo
+            echo '```json'
+            echo "\"${PLUGIN}\": { \"version\": \"${VERSION}\", \"digest\": \"${DIGEST}\" }"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
