@@ -60,7 +60,7 @@ require (
 	go.mongodb.org/mongo-driver v1.17.9
 	go.yaml.in/yaml/v4 v4.0.0-rc.4
 	golang.org/x/crypto v0.52.0
-	golang.org/x/image v0.38.0
+	golang.org/x/image v0.41.0
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/api v0.267.0
 	k8s.io/api v0.35.3
