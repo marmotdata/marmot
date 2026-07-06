@@ -16,12 +16,6 @@ import (
 // github.com/marmotdata/plugin-sdk. Marmot launches them on demand via
 // go-plugin and talks to them over gRPC: once at load time to read
 // their metadata, then once per Validate or Discover call.
-//
-// LoadBinary registers one external plugin binary at a time; deciding
-// which binaries to load — the local plugins directory plus the cached
-// core plugins pinned by the manifest — is the install package's job
-// (install.LoadPlugins). Built-in sources are unaffected: they register
-// themselves at startup from their provider packages.
 
 // PluginsDirEnvVar overrides the directory scanned for locally
 // installed plugins.

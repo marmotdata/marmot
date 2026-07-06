@@ -300,8 +300,9 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 		}
 	}
 
-	// Pull missing core plugins into the plugin cache, then load locally
-	// installed plugins and the manifest-pinned cached core plugins.
+	// Download core plugins that this build's manifest pins but the
+	// cache does not hold yet, then register plugins: locally installed
+	// ones first, so they shadow the pinned cached core plugins.
 	installOpts := install.Options{Registry: config.Plugins.Registry}
 	if config.Plugins.Autoinstall {
 		if err := install.EnsureCore(context.Background(), installOpts); err != nil {

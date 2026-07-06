@@ -122,11 +122,12 @@ func configDir() (string, error) {
 	return filepath.Join(base, "marmot"), nil
 }
 
-// loadPlugins pulls missing core plugins into the local cache, then
-// loads locally installed plugins and the manifest-pinned cached core
-// plugins. Commands that run plugins, like ingest, call this before
-// doing their work; the server has its own startup equivalent driven by
-// its config file.
+// loadPlugins downloads core plugins that this build's manifest pins
+// but the cache does not hold yet, then registers plugins: locally
+// installed ones first, so they shadow the pinned cached core plugins.
+// Commands that run plugins, like ingest, call this before doing their
+// work; the server has its own startup equivalent driven by its config
+// file.
 func loadPlugins() {
 	opts := install.Options{Registry: os.Getenv("MARMOT_PLUGINS_REGISTRY")}
 	if os.Getenv("MARMOT_PLUGINS_AUTOINSTALL") != "false" {
