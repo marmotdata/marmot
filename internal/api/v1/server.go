@@ -21,7 +21,6 @@ import (
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/azureblob"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/bigquery"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/clickhouse"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/dbt"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/deltalake"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/duckdb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dynamodb"

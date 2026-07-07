@@ -1,9 +1,6 @@
-// +marmot:name=DBT
-// +marmot:description=This plugin ingests metadata from DBT (Data Build Tool) projects, including models, tests, and lineage.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package dbt discovers models, sources, seeds and lineage from a DBT
+// (Data Build Tool) project's target artifacts.
 package dbt
-
 
 import (
 	"context"
@@ -14,18 +11,30 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/filesource"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "dbt",
+		Name:        "DBT",
+		Description: "Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage",
+		Icon:        "dbt",
+		Category:    "transformation",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for DBT plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig        `json:",inline"`
-	*plugin.FileSourceConfig `json:",inline"`
+	pluginsdk.BaseConfig        `json:",inline"`
+	*filesource.FileSourceConfig `json:",inline"`
 
 	TargetPath string `json:"target_path" description:"Path to DBT target directory containing manifest.json, catalog.json, etc. (local path, s3://bucket/prefix or git::url)" validate:"required"`
 
@@ -43,7 +52,6 @@ type Config struct {
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 target_path: "/path/to/dbt/project/target"
 project_name: "analytics"
@@ -182,8 +190,8 @@ type Source struct {
 	runResults *DBTRunResults
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -192,7 +200,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.Environment = "production"
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -200,14 +208,14 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 	s.config = config
 
-	localPath, cleanup, err := plugin.ResolveFilePath(ctx, config.FileSourceConfig, config.TargetPath)
+	localPath, cleanup, err := filesource.ResolveFilePath(ctx, config.FileSourceConfig, config.TargetPath)
 	if err != nil {
 		return nil, fmt.Errorf("resolving file path: %w", err)
 	}
@@ -221,8 +229,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("loading DBT artifacts: %w", err)
 	}
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	// Discover models
 	if config.DiscoverModels && s.manifest != nil {
@@ -248,7 +256,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		Int("lineages", len(lineages)).
 		Msg("DBT discovery completed")
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
@@ -338,9 +346,9 @@ func (s *Source) getMaterialization(node ManifestNode) string {
 	return ""
 }
 
-func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+func (s *Source) discoverModels() ([]pluginsdk.Asset, []pluginsdk.LineageEdge) {
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	for nodeID, node := range s.manifest.Nodes {
 		if node.ResourceType != "model" {
@@ -364,7 +372,7 @@ func (s *Source) discoverModels() ([]asset.Asset, []lineage.LineageEdge) {
 	return assets, lineages
 }
 
-func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset {
+func (s *Source) createModelAsset(node ManifestNode, nodeID string) pluginsdk.Asset {
 	modelName := node.Name
 	tableName := modelName
 	if node.Alias != "" {
@@ -379,7 +387,7 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 	}
 
 	if materialization == "ephemeral" {
-		return asset.Asset{}
+		return pluginsdk.Asset{}
 	}
 
 	metadata := make(map[string]interface{})
@@ -479,7 +487,7 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 
 	cleanMetadata := s.cleanMetadata(metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:          &modelName,
 		MRN:           &mrnValue,
 		Type:          "Model",
@@ -489,7 +497,7 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 		Tags:          allTags,
 		Query:         query,
 		QueryLanguage: queryLanguage,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
 			Properties: cleanMetadata,
@@ -498,7 +506,7 @@ func (s *Source) createModelAsset(node ManifestNode, nodeID string) asset.Asset 
 	}
 }
 
-func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) asset.Asset {
+func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) pluginsdk.Asset {
 	tableName := node.Name
 	if node.Alias != "" {
 		tableName = node.Alias
@@ -512,13 +520,13 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 	}
 
 	if materialization == "ephemeral" {
-		return asset.Asset{}
+		return pluginsdk.Asset{}
 	}
 
 	adapter := s.getAdapter()
 	assetType := adapter.AssetTypeForMaterialization(materialization)
 	if assetType == "Ephemeral" {
-		return asset.Asset{}
+		return pluginsdk.Asset{}
 	}
 
 	provider := adapter.Name()
@@ -603,7 +611,7 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 
 	cleanMetadata := s.cleanMetadata(metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &tableName,
 		MRN:         &mrnValue,
 		Type:        assetType,
@@ -612,7 +620,7 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 		Metadata:    cleanMetadata,
 		Tags:        allTags,
 		Schema:      schema,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
 			Properties: cleanMetadata,
@@ -641,8 +649,8 @@ func (s *Source) cleanMetadata(metadata map[string]interface{}) map[string]inter
 	return cleaned
 }
 
-func (s *Source) createModelLineage(node ManifestNode, nodeID string) []lineage.LineageEdge {
-	var lineages []lineage.LineageEdge
+func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsdk.LineageEdge {
+	var lineages []pluginsdk.LineageEdge
 
 	adapter := s.getAdapter()
 	provider := adapter.Name()
@@ -715,14 +723,14 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []lineage.
 			sourceMRN = mrn.New("Table", provider, sourceFQN)
 		}
 
-		lineages = append(lineages, lineage.LineageEdge{
+		lineages = append(lineages, pluginsdk.LineageEdge{
 			Source: sourceMRN,
 			Target: modelMRN,
 			Type:   "DEPENDS_ON",
 		})
 	}
 
-	lineages = append(lineages, lineage.LineageEdge{
+	lineages = append(lineages, pluginsdk.LineageEdge{
 		Source: modelMRN,
 		Target: outputMRN,
 		Type:   "CREATES",
@@ -731,8 +739,8 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []lineage.
 	return lineages
 }
 
-func (s *Source) discoverSources() []asset.Asset {
-	var assets []asset.Asset
+func (s *Source) discoverSources() []pluginsdk.Asset {
+	var assets []pluginsdk.Asset
 
 	for _, sourceNode := range s.manifest.Sources {
 		asset := s.createSourceAsset(sourceNode)
@@ -742,7 +750,7 @@ func (s *Source) discoverSources() []asset.Asset {
 	return assets
 }
 
-func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
+func (s *Source) createSourceAsset(node ManifestNode) pluginsdk.Asset {
 	tableName := node.Name
 	if node.Alias != "" {
 		tableName = node.Alias
@@ -793,7 +801,7 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 
 	cleanMetadata := s.cleanMetadata(metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &tableName,
 		MRN:         &mrnValue,
 		Type:        "Table",
@@ -802,7 +810,7 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 		Metadata:    cleanMetadata,
 		Tags:        allTags,
 		Schema:      schema,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
 			Properties: cleanMetadata,
@@ -811,8 +819,8 @@ func (s *Source) createSourceAsset(node ManifestNode) asset.Asset {
 	}
 }
 
-func (s *Source) discoverSeeds() []asset.Asset {
-	var assets []asset.Asset
+func (s *Source) discoverSeeds() []pluginsdk.Asset {
+	var assets []pluginsdk.Asset
 
 	for nodeID, node := range s.manifest.Nodes {
 		if node.ResourceType != "seed" {
@@ -826,7 +834,7 @@ func (s *Source) discoverSeeds() []asset.Asset {
 	return assets
 }
 
-func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
+func (s *Source) createSeedAsset(node ManifestNode, nodeID string) pluginsdk.Asset {
 	seedName := node.Name
 	if node.Alias != "" {
 		seedName = node.Alias
@@ -881,7 +889,7 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
 
 	cleanMetadata := s.cleanMetadata(metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &seedName,
 		MRN:         &mrnValue,
 		Type:        "Table",
@@ -890,7 +898,7 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
 		Metadata:    cleanMetadata,
 		Tags:        allTags,
 		Schema:      schema,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "DBT",
 			LastSyncAt: time.Now(),
 			Properties: cleanMetadata,
@@ -899,17 +907,3 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) asset.Asset {
 	}
 }
 
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "dbt",
-		Name:        "DBT",
-		Description: "Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage",
-		Icon:        "dbt",
-		Category:    "transformation",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register DBT plugin")
-	}
-}
