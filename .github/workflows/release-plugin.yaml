@@ -46,10 +46,16 @@ jobs:
           cache: true
           cache-dependency-path: ${{ steps.meta.outputs.workdir }}/go.sum
 
+      # Tool installs run in the background while the tests run; the steps
+      # that need them wait on the matching id below.
       - name: Install cosign
+        id: cosign
+        background: true
         uses: sigstore/cosign-installer@v3
 
       - name: Install ORAS
+        id: oras
+        background: true
         uses: oras-project/setup-oras@v1
 
       - name: Run tests
@@ -67,6 +73,7 @@ jobs:
 
       - name: Run GoReleaser
         if: steps.cgo.outputs.cgo != 'true'
+        wait: cosign
         uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"
@@ -82,6 +89,7 @@ jobs:
       # cosign keyless signing.
       - name: Run GoReleaser (cgo)
         if: steps.cgo.outputs.cgo == 'true'
+        wait: cosign
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
@@ -100,6 +108,7 @@ jobs:
             'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=validate'
 
       - name: Log in to GHCR
+        wait: oras
         run: echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
 
       - name: Push plugin artifacts to GHCR

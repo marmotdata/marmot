@@ -46,18 +46,24 @@ jobs:
           version: 11.3.0
           run_install: false
 
-      - name: Install frontend dependencies
-        run: |
-          cd web/marmot
-          pnpm install
+      - name: Clean build artifacts
+        run: make clean
 
-      - name: Install Swag for Swagger generation
-        run: go install github.com/swaggo/swag/cmd/swag@latest
-
-      - name: Build release prerequisites
+      # Swagger generation and the frontend build are independent, so they
+      # run as background steps while the Docker tooling is set up below.
+      # GoReleaser joins them with wait-all.
+      - name: Generate swagger docs
+        id: swagger
+        background: true
         run: |
-          make clean
+          go install github.com/swaggo/swag/cmd/swag@latest
           make swagger
+
+      - name: Build frontend
+        id: frontend
+        background: true
+        run: |
+          cd web/marmot && pnpm install && cd ../..
           make frontend-build
 
       - name: Set up QEMU
@@ -74,19 +80,13 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Run GoReleaser
+        wait-all: true
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean --skip=before
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          docker run --rm \
-            -e CGO_ENABLED=1 \
-            -e GITHUB_TOKEN \
-            -v /var/run/docker.sock:/var/run/docker.sock \
-            -v "$HOME/.docker:/root/.docker" \
-            -v "$PWD:/workspace" \
-            -w /workspace \
-            --entrypoint /bin/sh \
-            ghcr.io/goreleaser/goreleaser-cross:v1.26.0 -c \
-            'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=before'
 
       - name: Update server.json version
         run: |
