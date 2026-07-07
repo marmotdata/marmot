@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [kafka, confluent, redpanda]
+        plugin: [kafka, confluent, redpanda, airflow, duckdb]
     runs-on: ubuntu-latest
     defaults:
       run:

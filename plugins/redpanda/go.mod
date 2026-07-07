@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/marmotdata/marmot/plugins/kafka v0.0.0-00010101000000-000000000000
-	github.com/marmotdata/plugin-sdk v0.0.0-20260706214349-3ff7e5b7f38b
+	github.com/marmotdata/plugin-sdk v0.0.0-20260707202502-81128f1ec2e4
 )
 
 require (

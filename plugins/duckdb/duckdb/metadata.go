@@ -1,7 +1,8 @@
 package duckdb
 
-// DuckDBFields represents DuckDB-specific metadata fields.
-// +marmot:metadata
+// DuckDBFields describes the metadata fields DuckDB emits for table and
+// view assets. It is kept as a documentation-only struct so downstream
+// tooling can introspect the shape of the metadata map.
 type DuckDBFields struct {
 	Path       string `json:"path" metadata:"path" description:"Path to the DuckDB database file"`
 	Schema     string `json:"schema" metadata:"schema" description:"Schema name"`
@@ -12,8 +13,8 @@ type DuckDBFields struct {
 	Comment    string `json:"comment" metadata:"comment" description:"Object comment/description"`
 }
 
-// DuckDBColumnFields represents DuckDB column-specific metadata fields.
-// +marmot:metadata
+// DuckDBColumnFields describes the per-column fields embedded in an
+// asset's schema.
 type DuckDBColumnFields struct {
 	ColumnName    string `json:"column_name" metadata:"column_name" description:"Column name"`
 	DataType      string `json:"data_type" metadata:"data_type" description:"Column data type"`
@@ -21,8 +22,8 @@ type DuckDBColumnFields struct {
 	ColumnDefault string `json:"column_default" metadata:"column_default" description:"Default value expression"`
 }
 
-// DuckDBForeignKeyFields represents DuckDB foreign key relationship fields.
-// +marmot:metadata
+// DuckDBForeignKeyFields describes the fields of a discovered foreign key
+// relationship.
 type DuckDBForeignKeyFields struct {
 	ConstraintName string `json:"constraint_name" metadata:"constraint_name" description:"Foreign key constraint name"`
 	SourceSchema   string `json:"source_schema" metadata:"source_schema" description:"Schema of the referencing table"`

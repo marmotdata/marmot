@@ -56,7 +56,17 @@ jobs:
         working-directory: ${{ steps.meta.outputs.workdir }}
         run: go test ./...
 
+      - name: Detect cgo plugin
+        id: cgo
+        run: |
+          if grep -q "CGO_ENABLED=1" "${{ steps.meta.outputs.workdir }}/.goreleaser.yaml"; then
+            echo "cgo=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "cgo=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run GoReleaser
+        if: steps.cgo.outputs.cgo != 'true'
         uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"
@@ -65,6 +75,29 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
+
+      # cgo plugins need cross toolchains for the darwin builds, so run
+      # goreleaser inside the goreleaser-cross image, the same setup the
+      # main marmot release uses. The OIDC env vars are passed through for
+      # cosign keyless signing.
+      - name: Run GoReleaser (cgo)
+        if: steps.cgo.outputs.cgo == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
+        run: |
+          docker run --rm \
+            -e CGO_ENABLED=1 \
+            -e GITHUB_TOKEN \
+            -e GORELEASER_CURRENT_TAG \
+            -e ACTIONS_ID_TOKEN_REQUEST_URL \
+            -e ACTIONS_ID_TOKEN_REQUEST_TOKEN \
+            -e COSIGN_YES=true \
+            -v "$PWD:/workspace" \
+            -w "/workspace/${{ steps.meta.outputs.workdir }}" \
+            --entrypoint /bin/sh \
+            ghcr.io/goreleaser/goreleaser-cross:v1.26.0 -c \
+            'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=validate'
 
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin

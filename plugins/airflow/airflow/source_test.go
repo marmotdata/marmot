@@ -7,7 +7,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,13 +15,13 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name        string
-		config      plugin.RawPluginConfig
+		config      pluginsdk.RawConfig
 		wantErr     bool
 		errContains string
 	}{
 		{
 			name: "valid config with basic auth",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":     "http://localhost:8080",
 				"username": "admin",
 				"password": "admin",
@@ -30,7 +30,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with api token",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":      "http://localhost:8080",
 				"api_token": "my-api-token",
 			},
@@ -38,7 +38,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "missing host",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"username": "admin",
 				"password": "admin",
 			},
@@ -47,7 +47,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "missing authentication",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "http://localhost:8080",
 			},
 			wantErr:     true,
@@ -55,7 +55,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "trailing slash removed from host",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":     "http://localhost:8080/",
 				"username": "admin",
 				"password": "admin",
@@ -167,7 +167,7 @@ func TestSource_Discover(t *testing.T) {
 	}))
 	defer server.Close()
 
-	config := plugin.RawPluginConfig{
+	config := pluginsdk.RawConfig{
 		"host":                server.URL,
 		"username":            "admin",
 		"password":            "admin",
@@ -272,7 +272,7 @@ func TestSource_DiscoverWithFilter(t *testing.T) {
 	}))
 	defer server.Close()
 
-	config := plugin.RawPluginConfig{
+	config := pluginsdk.RawConfig{
 		"host":              server.URL,
 		"username":          "admin",
 		"password":          "admin",
@@ -291,13 +291,9 @@ func TestSource_DiscoverWithFilter(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
-	// Discover returns all 4 DAGs; central filter narrows to 2
-	plugin.FilterDiscoveryResult(result, config)
-	assert.Len(t, result.Assets, 2)
-
-	for _, a := range result.Assets {
-		assert.Contains(t, *a.Name, "analytics_")
-	}
+	// The plugin returns all 4 DAGs; name filtering is applied by the
+	// Marmot host after discovery.
+	assert.Len(t, result.Assets, 4)
 }
 
 func TestClient_ListDAGs(t *testing.T) {
@@ -395,7 +391,7 @@ func TestClient_APIError(t *testing.T) {
 func TestCreateDAGAsset(t *testing.T) {
 	s := &Source{
 		config: &Config{
-			BaseConfig: plugin.BaseConfig{
+			BaseConfig: pluginsdk.BaseConfig{
 				Tags: []string{"test-tag"},
 			},
 		},
@@ -437,7 +433,7 @@ func TestCreateDAGAsset(t *testing.T) {
 func TestCreateTaskAsset(t *testing.T) {
 	s := &Source{
 		config: &Config{
-			BaseConfig: plugin.BaseConfig{
+			BaseConfig: pluginsdk.BaseConfig{
 				Tags: []string{"airflow"},
 			},
 		},
@@ -470,7 +466,7 @@ func TestCreateTaskAsset(t *testing.T) {
 func TestCreateDatasetAsset(t *testing.T) {
 	s := &Source{
 		config: &Config{
-			BaseConfig: plugin.BaseConfig{
+			BaseConfig: pluginsdk.BaseConfig{
 				Tags: []string{"data-catalog"},
 			},
 		},

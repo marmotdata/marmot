@@ -1,7 +1,8 @@
 package airflow
 
-// AirflowDAGFields represents Airflow DAG-specific metadata fields
-// +marmot:metadata
+// AirflowDAGFields describes the metadata fields Airflow emits for a DAG
+// (Pipeline) asset. It is kept as a documentation-only struct so downstream
+// tooling can introspect the shape of the metadata map.
 type AirflowDAGFields struct {
 	DagID            string  `json:"dag_id" metadata:"dag_id" description:"Unique DAG identifier"`
 	Description      string  `json:"description" metadata:"description" description:"DAG description"`
@@ -19,8 +20,7 @@ type AirflowDAGFields struct {
 	RunCount         int     `json:"run_count" metadata:"run_count" description:"Number of runs in the lookback period"`
 }
 
-// AirflowTaskFields represents Airflow task-specific metadata fields
-// +marmot:metadata
+// AirflowTaskFields describes the metadata fields for a Task asset.
 type AirflowTaskFields struct {
 	TaskID          string   `json:"task_id" metadata:"task_id" description:"Task identifier within the DAG"`
 	DagID           string   `json:"dag_id" metadata:"dag_id" description:"Parent DAG ID"`
@@ -31,8 +31,7 @@ type AirflowTaskFields struct {
 	DownstreamTasks []string `json:"downstream_tasks" metadata:"downstream_tasks" description:"List of downstream task IDs"`
 }
 
-// AirflowDatasetFields represents Airflow Dataset-specific metadata fields
-// +marmot:metadata
+// AirflowDatasetFields describes the metadata fields for a Dataset asset.
 type AirflowDatasetFields struct {
 	URI           string `json:"uri" metadata:"uri" description:"Dataset URI identifier"`
 	CreatedAt     string `json:"created_at" metadata:"created_at" description:"Dataset creation timestamp"`
@@ -41,8 +40,8 @@ type AirflowDatasetFields struct {
 	ConsumerCount int    `json:"consumer_count" metadata:"consumer_count" description:"Number of DAGs that consume this dataset"`
 }
 
-// AirflowDAGRunFields represents Airflow DAG run-specific metadata fields
-// +marmot:metadata
+// AirflowDAGRunFields describes the run facet fields emitted for DAG run
+// history events.
 type AirflowDAGRunFields struct {
 	DagRunID      string `json:"dag_run_id" metadata:"dag_run_id" description:"Unique identifier for the DAG run"`
 	State         string `json:"state" metadata:"state" description:"Run state (queued, running, success, failed)"`

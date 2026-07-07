@@ -1,9 +1,6 @@
-// +marmot:name=DuckDB
-// +marmot:description=Discovers schemas, tables, views and foreign key relationships from DuckDB database files.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package duckdb discovers schemas, tables, views and foreign key
+// relationships from DuckDB database files.
 package duckdb
-
 
 import (
 	"context"
@@ -13,18 +10,16 @@ import (
 	"time"
 
 	_ "github.com/duckdb/duckdb-go/v2"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/filesource"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
-// Config for DuckDB plugin.
-// +marmot:config
+// Config for the DuckDB plugin.
 type Config struct {
-	plugin.BaseConfig        `json:",inline"`
-	*plugin.FileSourceConfig `json:",inline"`
+	pluginsdk.BaseConfig         `json:",inline"`
+	*filesource.FileSourceConfig `json:",inline"`
 
 	Path string `json:"path" description:"Path to the DuckDB database file (local path, s3://bucket/key or git::url)" validate:"required"`
 
@@ -34,22 +29,17 @@ type Config struct {
 	ExcludeSystemSchemas bool `json:"exclude_system_schemas" description:"Whether to exclude system schemas (information_schema, pg_catalog)" default:"true"`
 }
 
-// +marmot:example-config
-var _ = `
-path: "/data/analytics.duckdb"
-include_columns: true
-enable_metrics: true
-discover_foreign_keys: true
-exclude_system_schemas: true
-filter:
-  include:
-    - "^main\\..*"
-  exclude:
-    - ".*_temp$"
-tags:
-  - "duckdb"
-  - "analytics"
-`
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "duckdb",
+		Name:        "DuckDB",
+		Description: "Discover schemas, tables, views and foreign key relationships from DuckDB database files",
+		Icon:        "duckdb",
+		Category:    "database",
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
 
 // Source represents the DuckDB plugin.
 type Source struct {
@@ -58,8 +48,8 @@ type Source struct {
 }
 
 // Validate validates and normalises the plugin configuration.
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshalling config: %w", err)
 	}
@@ -78,7 +68,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.ExcludeSystemSchemas = true
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -87,11 +77,15 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 }
 
 // Discover discovers DuckDB tables, views and foreign key relationships.
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	if _, err := s.Validate(rawConfig); err != nil {
+		return nil, fmt.Errorf("validating config: %w", err)
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
-	localPath, cleanup, err := plugin.ResolveFilePath(ctx, s.config.FileSourceConfig, s.config.Path)
+	localPath, cleanup, err := filesource.ResolveFilePath(ctx, s.config.FileSourceConfig, s.config.Path)
 	if err != nil {
 		return nil, fmt.Errorf("resolving file path: %w", err)
 	}
@@ -106,9 +100,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	defer s.closeConnection()
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
-	var statistics []plugin.Statistic
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
+	var statistics []pluginsdk.Statistic
 
 	log.Debug().Str("path", s.config.Path).Msg("Starting DuckDB discovery")
 
@@ -141,7 +135,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		Int("statistics", len(statistics)).
 		Msg("DuckDB discovery completed")
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
@@ -180,7 +174,7 @@ func (s *Source) closeConnection() {
 	}
 }
 
-func (s *Source) discoverTablesAndViews(ctx context.Context) ([]asset.Asset, error) {
+func (s *Source) discoverTablesAndViews(ctx context.Context) ([]pluginsdk.Asset, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -205,7 +199,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]asset.Asset, err
 	}
 	defer rows.Close()
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 	var schemaTables []struct {
 		schema string
 		table  string
@@ -245,9 +239,9 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]asset.Asset, err
 		}
 
 		mrnValue := mrn.New(assetType, "DuckDB", qualifiedName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		a := asset.Asset{
+		a := pluginsdk.Asset{
 			Name:      &tableName,
 			MRN:       &mrnValue,
 			Type:      assetType,
@@ -255,7 +249,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]asset.Asset, err
 			Metadata:  metadata,
 			Schema:    make(map[string]string),
 			Tags:      processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "DuckDB",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -393,7 +387,7 @@ func (s *Source) getBulkColumnInfo(ctx context.Context, schemaTables []struct {
 	return result, nil
 }
 
-func (s *Source) discoverForeignKeys(ctx context.Context) ([]lineage.LineageEdge, error) {
+func (s *Source) discoverForeignKeys(ctx context.Context) ([]pluginsdk.LineageEdge, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -430,7 +424,7 @@ func (s *Source) discoverForeignKeys(ctx context.Context) ([]lineage.LineageEdge
 	}
 	defer rows.Close()
 
-	var lineages []lineage.LineageEdge
+	var lineages []pluginsdk.LineageEdge
 	uniqueRelations := make(map[string]struct{})
 
 	for rows.Next() {
@@ -472,7 +466,7 @@ func (s *Source) discoverForeignKeys(ctx context.Context) ([]lineage.LineageEdge
 		}
 		uniqueRelations[relationKey] = struct{}{}
 
-		lineages = append(lineages, lineage.LineageEdge{
+		lineages = append(lineages, pluginsdk.LineageEdge{
 			Source: sourceMRN,
 			Target: targetMRN,
 			Type:   "FOREIGN_KEY",
@@ -486,8 +480,8 @@ func (s *Source) discoverForeignKeys(ctx context.Context) ([]lineage.LineageEdge
 	return lineages, nil
 }
 
-func (s *Source) collectTableStatistics(ctx context.Context, assets []asset.Asset) []plugin.Statistic {
-	var statistics []plugin.Statistic
+func (s *Source) collectTableStatistics(ctx context.Context, assets []pluginsdk.Asset) []pluginsdk.Statistic {
+	var statistics []pluginsdk.Statistic
 
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
@@ -531,12 +525,12 @@ func (s *Source) collectTableStatistics(ctx context.Context, assets []asset.Asse
 		}
 
 		statistics = append(statistics,
-			plugin.Statistic{
+			pluginsdk.Statistic{
 				AssetMRN:   assetMRN,
 				MetricName: "asset.size_bytes",
 				Value:      float64(estimatedSize),
 			},
-			plugin.Statistic{
+			pluginsdk.Statistic{
 				AssetMRN:   assetMRN,
 				MetricName: "asset.column_count",
 				Value:      float64(columnCount),
@@ -545,19 +539,4 @@ func (s *Source) collectTableStatistics(ctx context.Context, assets []asset.Asse
 	}
 
 	return statistics
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "duckdb",
-		Name:        "DuckDB",
-		Description: "Discover schemas, tables, views and foreign key relationships from DuckDB database files",
-		Icon:        "duckdb",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register DuckDB plugin")
-	}
 }

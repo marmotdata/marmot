@@ -1,9 +1,6 @@
-// +marmot:name=Airflow
-// +marmot:description=Ingests metadata from Apache Airflow including DAGs, tasks, and dataset lineage.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage, Run History
+// Package airflow ingests metadata from Apache Airflow, including DAGs,
+// tasks, and dataset lineage.
 package airflow
-
 
 import (
 	"context"
@@ -11,17 +8,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
-// Config for Airflow plugin
-// +marmot:config
+// Config for the Airflow plugin.
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	Host     string `json:"host" description:"Airflow webserver URL (e.g., http://localhost:8080)" validate:"required,url"`
 	Username string `json:"username,omitempty" description:"Username for basic authentication"`
@@ -38,26 +32,17 @@ type Config struct {
 	OnlyActive bool `json:"only_active" description:"Only discover active (unpaused) DAGs" default:"true"`
 }
 
-// +marmot:example-config
-var _ = `
-host: "http://localhost:8080"
-username: "admin"
-password: "${AIRFLOW_PASSWORD}"
-discover_dags: true
-discover_tasks: true
-discover_datasets: true
-include_run_history: true
-run_history_days: 7
-only_active: true
-filter:
-  include:
-    - "^analytics_.*"
-  exclude:
-    - ".*_test$"
-tags:
-  - "airflow"
-  - "orchestration"
-`
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "airflow",
+		Name:        "Airflow",
+		Description: "Ingest metadata from Apache Airflow including DAGs, tasks, and dataset lineage",
+		Icon:        "airflow",
+		Category:    "orchestration",
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
 
 // Source implements the Airflow plugin.
 type Source struct {
@@ -66,8 +51,8 @@ type Source struct {
 }
 
 // Validate validates and normalizes the plugin configuration.
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -82,7 +67,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("authentication required: provide either username/password or api_token")
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -91,8 +76,8 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 }
 
 // Discover discovers Airflow DAGs, tasks, and datasets.
-func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -106,9 +91,9 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 		APIToken: s.config.APIToken,
 	})
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
-	var runHistory []plugin.AssetRunHistory
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
+	var runHistory []pluginsdk.AssetRunHistory
 
 	if s.config.DiscoverDAGs {
 		dagAssets, dagLineages, dagRunHistory, err := s.discoverDAGs(ctx)
@@ -136,7 +121,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 		Int("run_history", len(runHistory)).
 		Msg("Airflow discovery completed")
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:     assets,
 		Lineage:    lineages,
 		RunHistory: runHistory,
@@ -144,10 +129,10 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 }
 
 // discoverDAGs discovers all DAGs and their tasks.
-func (s *Source) discoverDAGs(ctx context.Context) ([]asset.Asset, []lineage.LineageEdge, []plugin.AssetRunHistory, error) {
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
-	var allRunHistory []plugin.AssetRunHistory
+func (s *Source) discoverDAGs(ctx context.Context) ([]pluginsdk.Asset, []pluginsdk.LineageEdge, []pluginsdk.AssetRunHistory, error) {
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
+	var allRunHistory []pluginsdk.AssetRunHistory
 
 	dags, err := s.client.ListDAGs(ctx, s.config.OnlyActive)
 	if err != nil {
@@ -194,9 +179,9 @@ func (s *Source) discoverDAGs(ctx context.Context) ([]asset.Asset, []lineage.Lin
 }
 
 // discoverTasks discovers tasks within a DAG.
-func (s *Source) discoverTasks(ctx context.Context, dagID string) ([]asset.Asset, []lineage.LineageEdge, error) {
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+func (s *Source) discoverTasks(ctx context.Context, dagID string) ([]pluginsdk.Asset, []pluginsdk.LineageEdge, error) {
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	tasks, err := s.client.ListTasks(ctx, dagID)
 	if err != nil {
@@ -215,7 +200,7 @@ func (s *Source) discoverTasks(ctx context.Context, dagID string) ([]asset.Asset
 		taskAsset := s.createTaskAsset(dagID, task)
 		assets = append(assets, taskAsset)
 
-		lineages = append(lineages, lineage.LineageEdge{
+		lineages = append(lineages, pluginsdk.LineageEdge{
 			Source: dagMRN,
 			Target: taskMRNs[task.TaskID],
 			Type:   "CONTAINS",
@@ -223,7 +208,7 @@ func (s *Source) discoverTasks(ctx context.Context, dagID string) ([]asset.Asset
 
 		for _, downstreamID := range task.DownstreamTaskIDs {
 			if downstreamMRN, exists := taskMRNs[downstreamID]; exists {
-				lineages = append(lineages, lineage.LineageEdge{
+				lineages = append(lineages, pluginsdk.LineageEdge{
 					Source: taskMRNs[task.TaskID],
 					Target: downstreamMRN,
 					Type:   "DEPENDS_ON",
@@ -236,9 +221,9 @@ func (s *Source) discoverTasks(ctx context.Context, dagID string) ([]asset.Asset
 }
 
 // discoverDatasets discovers Airflow Datasets and creates lineage.
-func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, []lineage.LineageEdge, error) {
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+func (s *Source) discoverDatasets(ctx context.Context) ([]pluginsdk.Asset, []pluginsdk.LineageEdge, error) {
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	datasets, err := s.client.ListDatasets(ctx)
 	if err != nil {
@@ -256,7 +241,7 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, []lineage
 
 		for _, consumer := range dataset.ConsumingDags {
 			dagMRN := mrn.New("Pipeline", "Airflow", consumer.DagID)
-			lineages = append(lineages, lineage.LineageEdge{
+			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: datasetMRN,
 				Target: dagMRN,
 				Type:   "FEEDS",
@@ -265,7 +250,7 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, []lineage
 
 		for _, producer := range dataset.ProducingTasks {
 			dagMRN := mrn.New("Pipeline", "Airflow", producer.DagID)
-			lineages = append(lineages, lineage.LineageEdge{
+			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: dagMRN,
 				Target: datasetMRN,
 				Type:   "PRODUCES",
@@ -277,7 +262,7 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, []lineage
 }
 
 // createDAGAsset creates a Pipeline asset from an Airflow DAG.
-func (s *Source) createDAGAsset(dag DAG) asset.Asset {
+func (s *Source) createDAGAsset(dag DAG) pluginsdk.Asset {
 	mrnValue := mrn.New("Pipeline", "Airflow", dag.DagID)
 
 	var description *string
@@ -310,7 +295,7 @@ func (s *Source) createDAGAsset(dag DAG) asset.Asset {
 
 	cleanMetadata := s.cleanMetadata(metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &dag.DagID,
 		MRN:         &mrnValue,
 		Type:        "Pipeline",
@@ -318,7 +303,7 @@ func (s *Source) createDAGAsset(dag DAG) asset.Asset {
 		Description: description,
 		Metadata:    cleanMetadata,
 		Tags:        s.config.Tags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Airflow",
 			LastSyncAt: time.Now(),
 			Properties: cleanMetadata,
@@ -328,7 +313,7 @@ func (s *Source) createDAGAsset(dag DAG) asset.Asset {
 }
 
 // enrichDAGAssetWithRunHistory adds run history metadata to a DAG asset.
-func (s *Source) enrichDAGAssetWithRunHistory(a *asset.Asset, runs []DAGRun) {
+func (s *Source) enrichDAGAssetWithRunHistory(a *pluginsdk.Asset, runs []DAGRun) {
 	if len(runs) == 0 {
 		return
 	}
@@ -358,8 +343,8 @@ func (s *Source) enrichDAGAssetWithRunHistory(a *asset.Asset, runs []DAGRun) {
 }
 
 // convertDAGRunsToRunHistory converts Airflow DAG runs to plugin RunHistory events.
-func (s *Source) convertDAGRunsToRunHistory(dagMRN, dagID string, runs []DAGRun) plugin.AssetRunHistory {
-	var events []plugin.RunHistoryEvent
+func (s *Source) convertDAGRunsToRunHistory(dagMRN, dagID string, runs []DAGRun) pluginsdk.AssetRunHistory {
+	var events []pluginsdk.RunHistoryEvent
 
 	for _, run := range runs {
 		eventType := mapAirflowStateToEventType(run.State)
@@ -381,7 +366,7 @@ func (s *Source) convertDAGRunsToRunHistory(dagMRN, dagID string, runs []DAGRun)
 
 		if run.StartDate != nil && *run.StartDate != "" {
 			startTime, _ := time.Parse(time.RFC3339, *run.StartDate)
-			events = append(events, plugin.RunHistoryEvent{
+			events = append(events, pluginsdk.RunHistoryEvent{
 				RunID:        run.DagRunID,
 				JobNamespace: "airflow",
 				JobName:      dagID,
@@ -404,7 +389,7 @@ func (s *Source) convertDAGRunsToRunHistory(dagMRN, dagID string, runs []DAGRun)
 				completionTime = eventTime
 			}
 
-			events = append(events, plugin.RunHistoryEvent{
+			events = append(events, pluginsdk.RunHistoryEvent{
 				RunID:        run.DagRunID,
 				JobNamespace: "airflow",
 				JobName:      dagID,
@@ -421,7 +406,7 @@ func (s *Source) convertDAGRunsToRunHistory(dagMRN, dagID string, runs []DAGRun)
 		}
 	}
 
-	return plugin.AssetRunHistory{
+	return pluginsdk.AssetRunHistory{
 		AssetMRN: dagMRN,
 		Runs:     events,
 	}
@@ -444,7 +429,7 @@ func mapAirflowStateToEventType(state string) string {
 }
 
 // createTaskAsset creates a Task asset from an Airflow task.
-func (s *Source) createTaskAsset(dagID string, task Task) asset.Asset {
+func (s *Source) createTaskAsset(dagID string, task Task) pluginsdk.Asset {
 	taskName := fmt.Sprintf("%s.%s", dagID, task.TaskID)
 	mrnValue := mrn.New("Task", "Airflow", taskName)
 
@@ -469,14 +454,14 @@ func (s *Source) createTaskAsset(dagID string, task Task) asset.Asset {
 
 	cleanMetadata := s.cleanMetadata(metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:      &taskName,
 		MRN:       &mrnValue,
 		Type:      "Task",
 		Providers: []string{"Airflow"},
 		Metadata:  cleanMetadata,
 		Tags:      s.config.Tags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Airflow",
 			LastSyncAt: time.Now(),
 			Properties: cleanMetadata,
@@ -553,7 +538,7 @@ func parseDatasetURI(uri string) (provider, assetType, name string) {
 }
 
 // createDatasetAsset creates a Dataset asset from an Airflow Dataset.
-func (s *Source) createDatasetAsset(dataset Dataset) asset.Asset {
+func (s *Source) createDatasetAsset(dataset Dataset) pluginsdk.Asset {
 	provider, assetType, name := parseDatasetURI(dataset.URI)
 	mrnValue := mrn.New(assetType, provider, name)
 
@@ -572,14 +557,14 @@ func (s *Source) createDatasetAsset(dataset Dataset) asset.Asset {
 
 	cleanMetadata := s.cleanMetadata(metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:      &name,
 		MRN:       &mrnValue,
 		Type:      assetType,
 		Providers: []string{provider},
 		Metadata:  cleanMetadata,
 		Tags:      s.config.Tags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Airflow",
 			LastSyncAt: time.Now(),
 			Properties: cleanMetadata,
@@ -607,19 +592,4 @@ func (s *Source) cleanMetadata(metadata map[string]interface{}) map[string]inter
 		cleaned[k] = v
 	}
 	return cleaned
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "airflow",
-		Name:        "Airflow",
-		Description: "Ingest metadata from Apache Airflow including DAGs, tasks, and dataset lineage",
-		Icon:        "airflow",
-		Category:    "orchestration",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register Airflow plugin")
-	}
 }

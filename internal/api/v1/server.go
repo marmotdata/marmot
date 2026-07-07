@@ -16,14 +16,12 @@ import (
 	"github.com/marmotdata/marmot/internal/crypto"
 
 	// Plugin imports
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/airflow"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/asyncapi"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/azureblob"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/bigquery"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/clickhouse"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dbt"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/deltalake"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/duckdb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/dynamodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/elasticsearch"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/glue"

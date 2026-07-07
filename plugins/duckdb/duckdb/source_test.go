@@ -3,7 +3,7 @@ package duckdb
 import (
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -11,20 +11,20 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name        string
-		config      plugin.RawPluginConfig
+		config      pluginsdk.RawConfig
 		wantErr     bool
 		errContains string
 	}{
 		{
 			name: "valid config",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"path": "/data/analytics.duckdb",
 			},
 			wantErr: false,
 		},
 		{
 			name: "valid config with all options",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"path":                   "/data/analytics.duckdb",
 				"include_columns":        true,
 				"enable_metrics":         true,
@@ -35,13 +35,13 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name:        "missing path",
-			config:      plugin.RawPluginConfig{},
+			config:      pluginsdk.RawConfig{},
 			wantErr:     true,
 			errContains: "path",
 		},
 		{
 			name: "valid config with filters",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"path": "/data/analytics.duckdb",
 				"filter": map[string]interface{}{
 					"include": []interface{}{"^main\\..*"},
@@ -71,7 +71,7 @@ func TestSource_Validate(t *testing.T) {
 
 func TestSource_ValidateDefaults(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"path": "/data/analytics.duckdb",
 	})
 

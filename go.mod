@@ -21,7 +21,6 @@ require (
 	github.com/centrifugal/centrifuge v0.38.0
 	github.com/charlie-haley/asyncapi-go v0.0.0-20260108213546-9782889bf371
 	github.com/coreos/go-oidc/v3 v3.17.0
-	github.com/duckdb/duckdb-go/v2 v2.10501.0
 	github.com/elastic/go-elasticsearch/v8 v8.19.3
 	github.com/go-git/go-git/v5 v5.19.1
 	github.com/go-jose/go-jose/v4 v4.1.4
@@ -135,12 +134,6 @@ require (
 	github.com/dgraph-io/ristretto v1.0.0 // indirect
 	github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
-	github.com/duckdb/duckdb-go-bindings v0.10501.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/darwin-amd64 v0.10501.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/darwin-arm64 v0.10501.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/linux-amd64 v0.10501.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10501.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10501.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/elastic/elastic-transport-go/v8 v8.8.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.2 // indirect
