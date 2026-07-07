@@ -22,11 +22,12 @@ dev: swagger build
 
 frontend-build:
 	cd web/marmot && pnpm install && node scripts/generate-icon-bundle.mjs && pnpm build
+	rm -rf internal/staticfiles/build
 	mkdir -p internal/staticfiles/build
 	cp -r web/marmot/build/* internal/staticfiles/build/
 
 release: clean swagger frontend-build
-	go build -tags=production -ldflags '$(LDFLAGS_VERSION)' -o bin/$(BINARY_NAME) cmd/main.go
+	go build -tags=production -ldflags '-s -w $(LDFLAGS_VERSION)' -o bin/$(BINARY_NAME) cmd/main.go
 	rm -rf internal/staticfiles/build
 
 test:
