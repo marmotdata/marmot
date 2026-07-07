@@ -4,7 +4,6 @@
 // +marmot:features=Assets
 package glue
 
-//go:generate go run ../../../docgen/cmd/main.go
 
 import (
 	"context"

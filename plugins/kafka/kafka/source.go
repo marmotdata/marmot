@@ -62,6 +62,8 @@ func Meta() pluginsdk.Meta {
 		Description: "Discover Kafka topics from Kafka clusters",
 		Icon:        "kafka",
 		Category:    "streaming",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
 	}
 }

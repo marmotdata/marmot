@@ -4,7 +4,6 @@
 // +marmot:features=Assets
 package lambda
 
-//go:generate go run ../../../docgen/cmd/main.go
 
 import (
 	"context"

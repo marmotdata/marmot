@@ -4,7 +4,6 @@
 // +marmot:features=Assets, Lineage, Run History
 package airflow
 
-//go:generate go run ../../../docgen/cmd/main.go
 
 import (
 	"context"

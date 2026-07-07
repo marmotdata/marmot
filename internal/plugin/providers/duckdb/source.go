@@ -4,7 +4,6 @@
 // +marmot:features=Assets, Lineage
 package duckdb
 
-//go:generate go run ../../../docgen/cmd/main.go
 
 import (
 	"context"

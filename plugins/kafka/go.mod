@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.13.0
-	github.com/marmotdata/plugin-sdk v0.0.0-20260706214349-3ff7e5b7f38b
+	github.com/marmotdata/plugin-sdk v0.0.0-20260707202502-81128f1ec2e4
 	github.com/rs/zerolog v1.34.0
 	github.com/twmb/franz-go v1.20.6
 	github.com/twmb/franz-go/pkg/kadm v1.17.2

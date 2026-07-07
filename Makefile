@@ -1,4 +1,4 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate generate-operator lint server-lint frontend-build actionlint frontend-lint frontend-typecheck fix \
+.PHONY: swagger build run test clean dev release docker-build dev-deps generate-operator lint server-lint frontend-build actionlint frontend-lint frontend-typecheck fix \
 	sdk sdk-generate sdk-test sdk-build sdk-lint sdk-clean \
 	sdk-go sdk-go-generate sdk-go-lint sdk-go-test sdk-go-build sdk-go-clean \
 	sdk-py sdk-py-deps sdk-py-install sdk-py-generate sdk-py-lint sdk-py-test sdk-py-build sdk-py-clean \
@@ -38,11 +38,6 @@ e2e-test: build test sdk-go-generate
 clean:
 	rm -rf bin/ internal/static/build/
 	go clean
-
-generate:
-	# Cleanup old docs before generating (top-level files only, preserves subdirectories)
-	find web/docs/docs/Plugins -maxdepth 1 -type f ! -name "index.md" ! -name "_category_.json" -delete
-	go generate ./...
 
 CONTROLLER_GEN ?= $$(go env GOPATH)/bin/controller-gen
 

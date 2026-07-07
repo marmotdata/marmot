@@ -22,7 +22,6 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-//go:generate go run ../../../docgen/cmd/main.go
 
 type Source struct {
 	config *Config
