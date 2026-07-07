@@ -1,7 +1,6 @@
 package dbt
 
 // DBTModelFields represents DBT model-specific metadata fields
-// +marmot:metadata
 type DBTModelFields struct {
 	DBTUniqueID          string  `json:"dbt_unique_id" metadata:"dbt_unique_id" description:"DBT's unique identifier for this node"`
 	DBTPackage           string  `json:"dbt_package" metadata:"dbt_package" description:"DBT package name"`
@@ -28,7 +27,6 @@ type DBTModelFields struct {
 }
 
 // DBTSourceFields represents DBT source-specific metadata fields
-// +marmot:metadata
 type DBTSourceFields struct {
 	DBTUniqueID        string `json:"dbt_unique_id" metadata:"dbt_unique_id" description:"DBT's unique identifier for this source"`
 	DBTPackage         string `json:"dbt_package" metadata:"dbt_package" description:"DBT package name"`
@@ -45,7 +43,6 @@ type DBTSourceFields struct {
 }
 
 // DBTSeedFields represents DBT seed-specific metadata fields
-// +marmot:metadata
 type DBTSeedFields struct {
 	DBTUniqueID        string `json:"dbt_unique_id" metadata:"dbt_unique_id" description:"DBT's unique identifier for this seed"`
 	DBTPackage         string `json:"dbt_package" metadata:"dbt_package" description:"DBT package name"`
@@ -59,7 +56,6 @@ type DBTSeedFields struct {
 }
 
 // DBTColumnFields represents DBT column-specific metadata fields
-// +marmot:metadata
 type DBTColumnFields struct {
 	ColumnName        string   `json:"column_name" metadata:"column_name" description:"Column name"`
 	DataType          string   `json:"data_type" metadata:"data_type" description:"Column data type"`
@@ -70,7 +66,6 @@ type DBTColumnFields struct {
 
 // DBTConfigFields represents DBT config-specific metadata fields
 // Fields with config_ prefix contain DBT model configuration
-// +marmot:metadata
 type DBTConfigFields struct {
 	ConfigEnabled       bool   `json:"config_enabled" metadata:"config_enabled" description:"Whether model is enabled"`
 	ConfigMaterialized  string `json:"config_materialized" metadata:"config_materialized" description:"Materialization strategy from config"`
@@ -82,7 +77,6 @@ type DBTConfigFields struct {
 
 // DBTStatsFields represents DBT catalog statistics fields
 // Fields with stat_ prefix contain statistics from database catalog
-// +marmot:metadata
 type DBTStatsFields struct {
 	StatRowCount         int64   `json:"stat_row_count" metadata:"stat_row_count" description:"Number of rows"`
 	StatBytes            int64   `json:"stat_bytes" metadata:"stat_bytes" description:"Size in bytes"`
