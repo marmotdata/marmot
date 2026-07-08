@@ -7,12 +7,12 @@ import (
 	"github.com/charlie-haley/asyncapi-go/asyncapi3"
 	"github.com/charlie-haley/asyncapi-go/bindings/sns"
 	"github.com/charlie-haley/asyncapi-go/bindings/sqs"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
-func (s *Source) createSNSTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *sns.ChannelBinding) asset.Asset {
+func (s *Source) createSNSTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *sns.ChannelBinding) pluginsdk.Asset {
 	name := channelName
 	if binding.Name != "" {
 		name = binding.Name
@@ -61,9 +61,9 @@ func (s *Source) createSNSTopic(doc *asyncapi3.Document, channelName string, cha
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Topic",
@@ -71,7 +71,7 @@ func (s *Source) createSNSTopic(doc *asyncapi3.Document, channelName string, cha
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{
@@ -84,7 +84,7 @@ func (s *Source) createSNSTopic(doc *asyncapi3.Document, channelName string, cha
 	}
 }
 
-func (s *Source) createSQSQueue(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *sqs.ChannelBinding) asset.Asset {
+func (s *Source) createSQSQueue(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *sqs.ChannelBinding) pluginsdk.Asset {
 	name := channelName
 	if binding.Queue != nil && binding.Queue.Name != "" {
 		name = binding.Queue.Name
@@ -158,9 +158,9 @@ func (s *Source) createSQSQueue(doc *asyncapi3.Document, channelName string, cha
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Queue",
@@ -168,7 +168,7 @@ func (s *Source) createSQSQueue(doc *asyncapi3.Document, channelName string, cha
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{

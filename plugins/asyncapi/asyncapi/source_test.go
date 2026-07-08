@@ -6,19 +6,19 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestAsyncAPIV3Discovery(t *testing.T) {
 	// Get the testasyncapi directory path
-	testDir := filepath.Join("..", "..", "..", "..", "testasyncapi")
+	testDir := filepath.Join("..", "..", "..", "testasyncapi")
 	if _, err := os.Stat(testDir); os.IsNotExist(err) {
 		t.Skip("testasyncapi directory not found, skipping test")
 	}
 
-	rawConfig := plugin.RawPluginConfig{
+	rawConfig := pluginsdk.RawConfig{
 		"spec_path":         testDir,
 		"discover_services": true,
 		"discover_channels": true,

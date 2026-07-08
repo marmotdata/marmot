@@ -6,12 +6,12 @@ import (
 
 	"github.com/charlie-haley/asyncapi-go/asyncapi3"
 	"github.com/charlie-haley/asyncapi-go/bindings/websockets"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
-func (s *Source) createWebSocketChannel(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *websockets.ChannelBinding) asset.Asset {
+func (s *Source) createWebSocketChannel(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *websockets.ChannelBinding) pluginsdk.Asset {
 	name := channelName
 	if channel.Address != "" {
 		name = channel.Address
@@ -52,9 +52,9 @@ func (s *Source) createWebSocketChannel(doc *asyncapi3.Document, channelName str
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Channel",
@@ -62,7 +62,7 @@ func (s *Source) createWebSocketChannel(doc *asyncapi3.Document, channelName str
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{

@@ -6,13 +6,13 @@ import (
 
 	"github.com/charlie-haley/asyncapi-go/asyncapi3"
 	"github.com/charlie-haley/asyncapi-go/bindings/ibmmq"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
-func (s *Source) createIBMMQAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) []asset.Asset {
-	var assets []asset.Asset
+func (s *Source) createIBMMQAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) []pluginsdk.Asset {
+	var assets []pluginsdk.Asset
 
 	// Create queue asset if queue binding is present
 	if binding.Queue != nil && binding.Queue.ObjectName != "" {
@@ -36,7 +36,7 @@ func (s *Source) createIBMMQAssets(doc *asyncapi3.Document, channelName string, 
 	return assets
 }
 
-func (s *Source) createIBMMQQueue(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) asset.Asset {
+func (s *Source) createIBMMQQueue(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) pluginsdk.Asset {
 	name := binding.Queue.ObjectName
 
 	description := channel.Description
@@ -75,9 +75,9 @@ func (s *Source) createIBMMQQueue(doc *asyncapi3.Document, channelName string, c
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Queue",
@@ -85,7 +85,7 @@ func (s *Source) createIBMMQQueue(doc *asyncapi3.Document, channelName string, c
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{
@@ -98,7 +98,7 @@ func (s *Source) createIBMMQQueue(doc *asyncapi3.Document, channelName string, c
 	}
 }
 
-func (s *Source) createIBMMQTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) asset.Asset {
+func (s *Source) createIBMMQTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) pluginsdk.Asset {
 	name := binding.Topic.String
 	if name == "" {
 		name = binding.Topic.ObjectName
@@ -144,9 +144,9 @@ func (s *Source) createIBMMQTopic(doc *asyncapi3.Document, channelName string, c
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Topic",
@@ -154,7 +154,7 @@ func (s *Source) createIBMMQTopic(doc *asyncapi3.Document, channelName string, c
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{
@@ -167,7 +167,7 @@ func (s *Source) createIBMMQTopic(doc *asyncapi3.Document, channelName string, c
 	}
 }
 
-func (s *Source) createIBMMQGenericQueue(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) asset.Asset {
+func (s *Source) createIBMMQGenericQueue(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) pluginsdk.Asset {
 	name := channelName
 	if channel.Address != "" {
 		name = channel.Address
@@ -201,9 +201,9 @@ func (s *Source) createIBMMQGenericQueue(doc *asyncapi3.Document, channelName st
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Queue",
@@ -211,7 +211,7 @@ func (s *Source) createIBMMQGenericQueue(doc *asyncapi3.Document, channelName st
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{
@@ -224,7 +224,7 @@ func (s *Source) createIBMMQGenericQueue(doc *asyncapi3.Document, channelName st
 	}
 }
 
-func (s *Source) createIBMMQGenericTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) asset.Asset {
+func (s *Source) createIBMMQGenericTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *ibmmq.ChannelBinding) pluginsdk.Asset {
 	name := channelName
 	if channel.Address != "" {
 		name = channel.Address
@@ -258,9 +258,9 @@ func (s *Source) createIBMMQGenericTopic(doc *asyncapi3.Document, channelName st
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Topic",
@@ -268,7 +268,7 @@ func (s *Source) createIBMMQGenericTopic(doc *asyncapi3.Document, channelName st
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{

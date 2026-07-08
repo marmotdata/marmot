@@ -6,13 +6,13 @@ import (
 
 	"github.com/charlie-haley/asyncapi-go/asyncapi3"
 	"github.com/charlie-haley/asyncapi-go/bindings/solace"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
-func (s *Source) createSolaceAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, opBinding *solace.OperationBinding) []asset.Asset {
-	var assets []asset.Asset
+func (s *Source) createSolaceAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, opBinding *solace.OperationBinding) []pluginsdk.Asset {
+	var assets []pluginsdk.Asset
 
 	// Create assets based on operation binding destinations
 	if opBinding != nil && len(opBinding.Destinations) > 0 {
@@ -36,7 +36,7 @@ func (s *Source) createSolaceAssets(doc *asyncapi3.Document, channelName string,
 	return assets
 }
 
-func (s *Source) createSolaceQueue(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, queue *solace.QueueDestination, opBinding *solace.OperationBinding) asset.Asset {
+func (s *Source) createSolaceQueue(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, queue *solace.QueueDestination, opBinding *solace.OperationBinding) pluginsdk.Asset {
 	name := queue.Name
 
 	description := channel.Description
@@ -79,9 +79,9 @@ func (s *Source) createSolaceQueue(doc *asyncapi3.Document, channelName string, 
 		metadata["binding_version"] = opBinding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Queue",
@@ -89,7 +89,7 @@ func (s *Source) createSolaceQueue(doc *asyncapi3.Document, channelName string, 
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{
@@ -102,7 +102,7 @@ func (s *Source) createSolaceQueue(doc *asyncapi3.Document, channelName string, 
 	}
 }
 
-func (s *Source) createSolaceTopicFromDest(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, dest *solace.Destination, opBinding *solace.OperationBinding) asset.Asset {
+func (s *Source) createSolaceTopicFromDest(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, dest *solace.Destination, opBinding *solace.OperationBinding) pluginsdk.Asset {
 	// Use channel address or name as topic identifier
 	name := channelName
 	if channel.Address != "" {
@@ -141,9 +141,9 @@ func (s *Source) createSolaceTopicFromDest(doc *asyncapi3.Document, channelName 
 		metadata["binding_version"] = opBinding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Topic",
@@ -151,7 +151,7 @@ func (s *Source) createSolaceTopicFromDest(doc *asyncapi3.Document, channelName 
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{
@@ -164,7 +164,7 @@ func (s *Source) createSolaceTopicFromDest(doc *asyncapi3.Document, channelName 
 	}
 }
 
-func (s *Source) createSolaceGenericTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, opBinding *solace.OperationBinding) asset.Asset {
+func (s *Source) createSolaceGenericTopic(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, opBinding *solace.OperationBinding) pluginsdk.Asset {
 	name := channelName
 	if channel.Address != "" {
 		name = channel.Address
@@ -206,9 +206,9 @@ func (s *Source) createSolaceGenericTopic(doc *asyncapi3.Document, channelName s
 		}
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Topic",
@@ -216,7 +216,7 @@ func (s *Source) createSolaceGenericTopic(doc *asyncapi3.Document, channelName s
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{

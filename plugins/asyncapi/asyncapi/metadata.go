@@ -15,15 +15,15 @@ type SharedFields struct {
 // ServiceFields represents AsyncAPI service-specific metadata
 // +marmot:metadata
 type ServiceFields struct {
-	ContactName  string   `json:"contact_name" metadata:"contact_name" description:"Contact person name"`
-	ContactEmail string   `json:"contact_email" metadata:"contact_email" description:"Contact email address"`
-	ContactURL   string   `json:"contact_url" metadata:"contact_url" description:"Contact URL"`
-	License      string   `json:"license" metadata:"license" description:"License name"`
-	LicenseURL   string   `json:"license_url" metadata:"license_url" description:"License URL"`
-	Servers      []string `json:"servers" metadata:"servers" description:"List of server names"`
-	Protocols    []string `json:"protocols" metadata:"protocols" description:"List of protocols used"`
-	ChannelCount int      `json:"channel_count" metadata:"channel_count" description:"Number of channels"`
-	OperationCount int    `json:"operation_count" metadata:"operation_count" description:"Number of operations"`
+	ContactName    string   `json:"contact_name" metadata:"contact_name" description:"Contact person name"`
+	ContactEmail   string   `json:"contact_email" metadata:"contact_email" description:"Contact email address"`
+	ContactURL     string   `json:"contact_url" metadata:"contact_url" description:"Contact URL"`
+	License        string   `json:"license" metadata:"license" description:"License name"`
+	LicenseURL     string   `json:"license_url" metadata:"license_url" description:"License URL"`
+	Servers        []string `json:"servers" metadata:"servers" description:"List of server names"`
+	Protocols      []string `json:"protocols" metadata:"protocols" description:"List of protocols used"`
+	ChannelCount   int      `json:"channel_count" metadata:"channel_count" description:"Number of channels"`
+	OperationCount int      `json:"operation_count" metadata:"operation_count" description:"Number of operations"`
 }
 
 // KafkaFields represents Kafka-specific metadata fields

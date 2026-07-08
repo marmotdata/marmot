@@ -5,13 +5,13 @@ import (
 	"time"
 
 	"github.com/charlie-haley/asyncapi-go/asyncapi3"
-	"github.com/charlie-haley/asyncapi-go/bindings/anypointmq"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/charlie-haley/asyncapi-go/bindings/jms"
+
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
-func (s *Source) createAnypointMQDestination(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *anypointmq.ChannelBinding) asset.Asset {
+func (s *Source) createJMSDestination(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel, binding *jms.ChannelBinding) pluginsdk.Asset {
 	name := channelName
 	if binding.Destination != "" {
 		name = binding.Destination
@@ -20,18 +20,16 @@ func (s *Source) createAnypointMQDestination(doc *asyncapi3.Document, channelNam
 	}
 
 	assetType := "Queue"
-	if binding.DestinationType == "exchange" {
-		assetType = "Exchange"
-	} else if binding.DestinationType == "fifo-queue" {
-		assetType = "FIFOQueue"
+	if binding.DestinationType == "topic" {
+		assetType = "Topic"
 	}
 
 	description := channel.Description
 	if description == "" {
-		description = fmt.Sprintf("Anypoint MQ %s for channel %s", assetType, channelName)
+		description = fmt.Sprintf("JMS %s for channel %s", assetType, channelName)
 	}
 
-	mrnValue := mrn.New(assetType, "AnypointMQ", name)
+	mrnValue := mrn.New(assetType, "JMS", name)
 
 	metadata := map[string]interface{}{
 		"asyncapi_version": doc.AsyncAPI,
@@ -51,23 +49,23 @@ func (s *Source) createAnypointMQDestination(doc *asyncapi3.Document, channelNam
 		metadata["binding_version"] = binding.BindingVersion
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        assetType,
-		Providers:   []string{"AnypointMQ"},
+		Providers:   []string{"JMS"},
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{
 				"spec_version": doc.AsyncAPI,
 				"channel":      channelName,
-				"binding":      "anypointmq",
+				"binding":      "jms",
 			},
 			Priority: 1,
 		}},

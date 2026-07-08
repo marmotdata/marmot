@@ -1,9 +1,6 @@
-// +marmot:name=AsyncAPI
-// +marmot:description=This plugin ingests metadata from AsyncAPI v3 specifications, discovering services, channels, and message schemas.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package asyncapi discovers services, channels and message schemas
+// from AsyncAPI v3 specifications.
 package asyncapi
-
 
 import (
 	"context"
@@ -31,19 +28,31 @@ import (
 	"github.com/charlie-haley/asyncapi-go/bindings/sqs"
 	"github.com/charlie-haley/asyncapi-go/bindings/websockets"
 	"github.com/charlie-haley/asyncapi-go/spec"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/filesource"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"sigs.k8s.io/yaml"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "asyncapi",
+		Name:        "AsyncAPI",
+		Description: "Discover metadata from AsyncAPI v3 specifications including services, channels, and message schemas",
+		Icon:        "asyncapi",
+		Category:    "api",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for AsyncAPI plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig        `json:",inline"`
-	*plugin.FileSourceConfig `json:",inline"`
+	pluginsdk.BaseConfig         `json:",inline"`
+	*filesource.FileSourceConfig `json:",inline"`
 
 	SpecPath    string `json:"spec_path" validate:"required" description:"Path to AsyncAPI spec file or directory containing specs (local path, s3://bucket/prefix or git::url)"`
 	Environment string `json:"environment,omitempty" description:"Environment name (e.g., production, staging)" default:"production"`
@@ -51,11 +60,9 @@ type Config struct {
 	DiscoverServices bool `json:"discover_services" description:"Create service assets from AsyncAPI info" default:"true"`
 	DiscoverChannels bool `json:"discover_channels" description:"Create channel/topic assets from channels and bindings" default:"true"`
 	DiscoverMessages bool `json:"discover_messages" description:"Attach message schemas to channel assets" default:"true"`
-
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 spec_path: "/app/asyncapi-specs"
 environment: "production"
@@ -75,8 +82,8 @@ type Source struct {
 	config *Config
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
@@ -85,11 +92,11 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.Environment = "production"
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
-	if plugin.DetectSourceType(config.SpecPath) == "local" && (config.FileSourceConfig == nil || config.FileSourceConfig.SourceType == "" || config.FileSourceConfig.SourceType == "local") {
+	if filesource.DetectSourceType(config.SpecPath) == "local" && (config.FileSourceConfig == nil || config.FileSourceConfig.SourceType == "" || config.FileSourceConfig.SourceType == "local") {
 		if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
 			return nil, fmt.Errorf("spec path does not exist: %s", config.SpecPath)
 		}
@@ -99,21 +106,21 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 	s.config = config
 
-	localPath, cleanup, err := plugin.ResolveFilePath(ctx, config.FileSourceConfig, config.SpecPath)
+	localPath, cleanup, err := filesource.ResolveFilePath(ctx, config.FileSourceConfig, config.SpecPath)
 	if err != nil {
 		return nil, fmt.Errorf("resolving file path: %w", err)
 	}
 	defer cleanup()
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 	seenAssets := make(map[string]struct{})
 	seenEdges := make(map[string]struct{})
 
@@ -159,7 +166,7 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 					continue
 				}
 
-					channelAssets := s.createChannelAssets(doc, channelName, channel)
+				channelAssets := s.createChannelAssets(doc, channelName, channel)
 				for _, channelAsset := range channelAssets {
 					s.addUniqueAsset(&assets, channelAsset, seenAssets)
 				}
@@ -223,13 +230,13 @@ func (s *Source) Discover(ctx context.Context, rawConfig plugin.RawPluginConfig)
 		Int("lineages", len(lineages)).
 		Msg("AsyncAPI discovery completed")
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
 }
 
-func (s *Source) createServiceAsset(doc *asyncapi3.Document) asset.Asset {
+func (s *Source) createServiceAsset(doc *asyncapi3.Document) pluginsdk.Asset {
 	serviceName := doc.Info.Title
 	description := doc.Info.Description
 	if description == "" {
@@ -291,9 +298,9 @@ func (s *Source) createServiceAsset(doc *asyncapi3.Document) asset.Asset {
 	metadata["channel_count"] = len(doc.Channels)
 	metadata["operation_count"] = len(doc.Operations)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &serviceName,
 		MRN:         &mrnValue,
 		Type:        "Service",
@@ -301,7 +308,7 @@ func (s *Source) createServiceAsset(doc *asyncapi3.Document) asset.Asset {
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{
@@ -312,8 +319,8 @@ func (s *Source) createServiceAsset(doc *asyncapi3.Document) asset.Asset {
 	}
 }
 
-func (s *Source) createChannelAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel) []asset.Asset {
-	var assets []asset.Asset
+func (s *Source) createChannelAssets(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel) []pluginsdk.Asset {
+	var assets []pluginsdk.Asset
 
 	if len(channel.Bindings) == 0 {
 		asset := s.createGenericChannelAsset(doc, channelName, channel)
@@ -478,7 +485,7 @@ func (s *Source) createChannelAssets(doc *asyncapi3.Document, channelName string
 	return assets
 }
 
-func (s *Source) createGenericChannelAsset(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel) asset.Asset {
+func (s *Source) createGenericChannelAsset(doc *asyncapi3.Document, channelName string, channel *asyncapi3.Channel) pluginsdk.Asset {
 	name := channelName
 	if channel.Address != "" {
 		name = channel.Address
@@ -507,9 +514,9 @@ func (s *Source) createGenericChannelAsset(doc *asyncapi3.Document, channelName 
 		metadata["title"] = channel.Title
 	}
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	a := asset.Asset{
+	a := pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Channel",
@@ -517,7 +524,7 @@ func (s *Source) createGenericChannelAsset(doc *asyncapi3.Document, channelName 
 		Description: &description,
 		Metadata:    s.cleanMetadata(metadata),
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AsyncAPI",
 			LastSyncAt: time.Now(),
 			Properties: map[string]interface{}{
@@ -535,7 +542,7 @@ func (s *Source) createGenericChannelAsset(doc *asyncapi3.Document, channelName 
 	return a
 }
 
-func (s *Source) attachMessageSchemas(doc *asyncapi3.Document, channel *asyncapi3.Channel, a *asset.Asset) {
+func (s *Source) attachMessageSchemas(doc *asyncapi3.Document, channel *asyncapi3.Channel, a *pluginsdk.Asset) {
 	if len(channel.Messages) == 0 {
 		return
 	}
@@ -840,7 +847,7 @@ func (s *Source) determineEdgeType(action spec.Action) string {
 	}
 }
 
-func (s *Source) addUniqueAsset(assets *[]asset.Asset, newAsset asset.Asset, seenAssets map[string]struct{}) {
+func (s *Source) addUniqueAsset(assets *[]pluginsdk.Asset, newAsset pluginsdk.Asset, seenAssets map[string]struct{}) {
 	if newAsset.MRN == nil {
 		log.Warn().Interface("asset", newAsset).Msg("Asset has no MRN, skipping")
 		return
@@ -857,7 +864,7 @@ func (s *Source) addUniqueAsset(assets *[]asset.Asset, newAsset asset.Asset, see
 }
 
 func (s *Source) createLineageEdge(sourceMRN, targetMRN, edgeType string,
-	seenAssets, seenEdges map[string]struct{}, lineageEdges *[]lineage.LineageEdge) {
+	seenAssets, seenEdges map[string]struct{}, lineageEdges *[]pluginsdk.LineageEdge) {
 
 	if _, sourceExists := seenAssets[sourceMRN]; !sourceExists {
 		return
@@ -868,7 +875,7 @@ func (s *Source) createLineageEdge(sourceMRN, targetMRN, edgeType string,
 
 	edgeKey := fmt.Sprintf("%s->%s", sourceMRN, targetMRN)
 	if _, exists := seenEdges[edgeKey]; !exists {
-		*lineageEdges = append(*lineageEdges, lineage.LineageEdge{
+		*lineageEdges = append(*lineageEdges, pluginsdk.LineageEdge{
 			Source: sourceMRN,
 			Target: targetMRN,
 			Type:   edgeType,
@@ -905,19 +912,4 @@ func (s *Source) cleanMetadata(metadata map[string]interface{}) map[string]inter
 func isAsyncAPIFile(path string) bool {
 	ext := strings.ToLower(filepath.Ext(path))
 	return ext == ".yaml" || ext == ".yml" || ext == ".json"
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "asyncapi",
-		Name:        "AsyncAPI",
-		Description: "Discover metadata from AsyncAPI v3 specifications including services, channels, and message schemas",
-		Icon:        "asyncapi",
-		Category:    "api",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register AsyncAPI plugin")
-	}
 }
