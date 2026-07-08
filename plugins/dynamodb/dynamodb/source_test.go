@@ -3,7 +3,7 @@ package dynamodb
 import (
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -11,12 +11,12 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name      string
-		config    plugin.RawPluginConfig
+		config    pluginsdk.RawConfig
 		expectErr bool
 	}{
 		{
 			name: "valid config with credentials",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"credentials": map[string]interface{}{
 					"region": "us-east-1",
 					"id":     "AKIAIOSFODNN7EXAMPLE",
@@ -27,7 +27,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with profile",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"credentials": map[string]interface{}{
 					"region":  "us-west-2",
 					"profile": "production",
@@ -37,7 +37,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with role assumption",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"credentials": map[string]interface{}{
 					"region": "eu-west-1",
 					"role":   "arn:aws:iam::123456789012:role/MyRole",
@@ -47,19 +47,19 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name:      "empty config",
-			config:    plugin.RawPluginConfig{},
+			config:    pluginsdk.RawConfig{},
 			expectErr: false,
 		},
 		{
 			name: "config with tags",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"tags": []interface{}{"aws", "dynamodb"},
 			},
 			expectErr: false,
 		},
 		{
 			name: "config with filter",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"filter": map[string]interface{}{
 					"include": []interface{}{"^prod-.*"},
 					"exclude": []interface{}{".*-temp$"},
@@ -69,7 +69,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "config with tags_to_metadata",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"tags_to_metadata": true,
 				"credentials": map[string]interface{}{
 					"region": "us-east-1",
@@ -95,7 +95,7 @@ func TestSource_Validate(t *testing.T) {
 
 func TestSource_ValidateStoresConfig(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{})
+	_, err := s.Validate(pluginsdk.RawConfig{})
 	require.NoError(t, err)
 	assert.NotNil(t, s.config)
 }

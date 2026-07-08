@@ -1,9 +1,5 @@
-// +marmot:name=DynamoDB
-// +marmot:description=This plugin discovers DynamoDB tables from AWS accounts.
-// +marmot:status=experimental
-// +marmot:features=Assets
+// Package dynamodb discovers tables from Amazon DynamoDB accounts.
 package dynamodb
-
 
 import (
 	"context"
@@ -11,22 +7,33 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	awsdynamodb "github.com/aws/aws-sdk-go-v2/service/dynamodb"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
-// Config for DynamoDB plugin
-// +marmot:config
-type Config struct {
-	plugin.BaseConfig `json:",inline"`
-	*plugin.AWSConfig `json:",inline"`
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "dynamodb",
+		Name:        "AWS DynamoDB",
+		Description: "Discover DynamoDB tables from AWS accounts",
+		Icon:        "dynamodb",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
 }
 
-// Example configuration for the plugin
-// +marmot:example-config
+// Config for the DynamoDB plugin.
+type Config struct {
+	pluginsdk.BaseConfig `json:",inline"`
+	AWSConfig            `json:",inline"`
+}
+
+// Example configuration for the plugin.
 var _ = `
 credentials:
   region: "us-east-1"
@@ -38,16 +45,16 @@ tags:
 
 type Source struct {
 	config *Config
-	client *dynamodb.Client
+	client *awsdynamodb.Client
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -55,31 +62,31 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 	s.config = config
 
-	awsConfig, err := plugin.ExtractAWSConfig(pluginConfig)
+	awsCfg, err := extractAWSConfig(pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("extracting AWS config: %w", err)
 	}
 
-	awsCfg, err := awsConfig.NewAWSConfig(ctx)
+	sdkCfg, err := awsCfg.newAWSConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("creating AWS config: %w", err)
 	}
 
-	s.client = dynamodb.NewFromConfig(awsCfg)
+	s.client = awsdynamodb.NewFromConfig(sdkCfg)
 
 	tableNames, err := s.discoverTables(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("discovering tables: %w", err)
 	}
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 	for _, tableName := range tableNames {
 		a, err := s.createTableAsset(ctx, tableName)
 		if err != nil {
@@ -89,14 +96,14 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		assets = append(assets, a)
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets: assets,
 	}, nil
 }
 
 func (s *Source) discoverTables(ctx context.Context) ([]string, error) {
 	var tableNames []string
-	paginator := dynamodb.NewListTablesPaginator(s.client, &dynamodb.ListTablesInput{})
+	paginator := awsdynamodb.NewListTablesPaginator(s.client, &awsdynamodb.ListTablesInput{})
 
 	for paginator.HasMorePages() {
 		output, err := paginator.NextPage(ctx)
@@ -109,21 +116,20 @@ func (s *Source) discoverTables(ctx context.Context) ([]string, error) {
 	return tableNames, nil
 }
 
-func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.Asset, error) {
+func (s *Source) createTableAsset(ctx context.Context, tableName string) (pluginsdk.Asset, error) {
 	metadata := make(map[string]interface{})
 
-	describeOutput, err := s.client.DescribeTable(ctx, &dynamodb.DescribeTableInput{
+	describeOutput, err := s.client.DescribeTable(ctx, &awsdynamodb.DescribeTableInput{
 		TableName: &tableName,
 	})
 	if err != nil {
-		return asset.Asset{}, fmt.Errorf("describing table: %w", err)
+		return pluginsdk.Asset{}, fmt.Errorf("describing table: %w", err)
 	}
 
 	table := describeOutput.Table
 
-	// Collect tags first (before other metadata, per convention)
-	if s.config.AWSConfig != nil && s.config.TagsToMetadata {
-		tagsOutput, err := s.client.ListTagsOfResource(ctx, &dynamodb.ListTagsOfResourceInput{
+	if s.config.TagsToMetadata {
+		tagsOutput, err := s.client.ListTagsOfResource(ctx, &awsdynamodb.ListTagsOfResourceInput{
 			ResourceArn: table.TableArn,
 		})
 		if err != nil {
@@ -133,11 +139,10 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 			for _, tag := range tagsOutput.Tags {
 				tagMap[*tag.Key] = *tag.Value
 			}
-			metadata = plugin.ProcessAWSTags(s.config.TagsToMetadata, s.config.IncludeTags, tagMap)
+			metadata = processAWSTags(s.config.TagsToMetadata, s.config.IncludeTags, tagMap)
 		}
 	}
 
-	// Table identity
 	if table.TableArn != nil {
 		metadata["table_arn"] = *table.TableArn
 	}
@@ -146,17 +151,14 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 		metadata["creation_date"] = table.CreationDateTime.Format(time.RFC3339)
 	}
 
-	// Table class
 	if table.TableClassSummary != nil {
 		metadata["table_class"] = string(table.TableClassSummary.TableClass)
 	}
 
-	// Billing mode
 	if table.BillingModeSummary != nil {
 		metadata["billing_mode"] = string(table.BillingModeSummary.BillingMode)
 	}
 
-	// Provisioned throughput
 	if table.ProvisionedThroughput != nil {
 		if table.ProvisionedThroughput.ReadCapacityUnits != nil {
 			metadata["read_capacity_units"] = *table.ProvisionedThroughput.ReadCapacityUnits
@@ -166,7 +168,6 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 		}
 	}
 
-	// Key schema
 	if len(table.KeySchema) > 0 {
 		var keyParts []string
 		for _, key := range table.KeySchema {
@@ -175,7 +176,6 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 		metadata["key_schema"] = strings.Join(keyParts, ", ")
 	}
 
-	// Attribute definitions
 	if len(table.AttributeDefinitions) > 0 {
 		var attrParts []string
 		for _, attr := range table.AttributeDefinitions {
@@ -184,11 +184,9 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 		metadata["attribute_definitions"] = strings.Join(attrParts, ", ")
 	}
 
-	// Indexes
 	metadata["gsi_count"] = len(table.GlobalSecondaryIndexes)
 	metadata["lsi_count"] = len(table.LocalSecondaryIndexes)
 
-	// Streams
 	if table.StreamSpecification != nil {
 		metadata["stream_enabled"] = boolToString(table.StreamSpecification.StreamEnabled)
 		if table.StreamSpecification.StreamViewType != "" {
@@ -196,13 +194,11 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 		}
 	}
 
-	// Encryption
 	if table.SSEDescription != nil {
 		metadata["encryption_status"] = string(table.SSEDescription.Status)
 		metadata["encryption_type"] = string(table.SSEDescription.SSEType)
 	}
 
-	// Size and item count
 	if table.TableSizeBytes != nil {
 		metadata["table_size_bytes"] = *table.TableSizeBytes
 	}
@@ -210,12 +206,10 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 		metadata["item_count"] = *table.ItemCount
 	}
 
-	// Deletion protection
 	if table.DeletionProtectionEnabled != nil {
 		metadata["deletion_protection"] = boolToString(table.DeletionProtectionEnabled)
 	}
 
-	// Global table replicas
 	if len(table.Replicas) > 0 {
 		var replicaRegions []string
 		for _, replica := range table.Replicas {
@@ -226,8 +220,7 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 		metadata["global_table_replicas"] = strings.Join(replicaRegions, ", ")
 	}
 
-	// TTL
-	ttlOutput, err := s.client.DescribeTimeToLive(ctx, &dynamodb.DescribeTimeToLiveInput{
+	ttlOutput, err := s.client.DescribeTimeToLive(ctx, &awsdynamodb.DescribeTimeToLiveInput{
 		TableName: &tableName,
 	})
 	if err != nil {
@@ -239,8 +232,7 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 		}
 	}
 
-	// Continuous backups / PITR
-	backupsOutput, err := s.client.DescribeContinuousBackups(ctx, &dynamodb.DescribeContinuousBackupsInput{
+	backupsOutput, err := s.client.DescribeContinuousBackups(ctx, &awsdynamodb.DescribeContinuousBackupsInput{
 		TableName: &tableName,
 	})
 	if err != nil {
@@ -254,16 +246,16 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (asset.
 
 	mrnValue := mrn.New("Table", "DynamoDB", tableName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:      &tableName,
 		MRN:       &mrnValue,
 		Type:      "Table",
 		Providers: []string{"DynamoDB"},
 		Metadata:  metadata,
 		Tags:      processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "DynamoDB",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -277,19 +269,4 @@ func boolToString(b *bool) string {
 		return "true"
 	}
 	return "false"
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "dynamodb",
-		Name:        "AWS DynamoDB",
-		Description: "Discover DynamoDB tables from AWS accounts",
-		Icon:        "dynamodb",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register DynamoDB plugin")
-	}
 }

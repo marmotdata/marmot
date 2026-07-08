@@ -1,9 +1,6 @@
-// +marmot:name=Elasticsearch
-// +marmot:description=This plugin discovers indices, data streams, and aliases from Elasticsearch clusters.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package elasticsearch discovers indices, data streams, and aliases from
+// Elasticsearch clusters.
 package elasticsearch
-
 
 import (
 	"context"
@@ -17,16 +14,28 @@ import (
 	"time"
 
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
-// +marmot:config
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "elasticsearch",
+		Name:        "Elasticsearch",
+		Description: "Discover indices, data streams, and aliases from Elasticsearch clusters",
+		Icon:        "elasticsearch",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
+// Config for the Elasticsearch plugin.
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	Addresses []string `json:"addresses" description:"List of Elasticsearch node URLs"`
 	CloudID   string   `json:"cloud_id" label:"Cloud ID" description:"Elastic Cloud ID for connecting to Elastic Cloud"`
@@ -44,7 +53,7 @@ type Config struct {
 	IncludeSystemIndices bool `json:"include_system_indices" description:"Include system indices (prefixed with .)" default:"false"`
 }
 
-// +marmot:example-config
+// Example configuration for the plugin.
 var _ = `
 addresses:
   - "https://elasticsearch.company.com:9200"
@@ -60,8 +69,8 @@ type Source struct {
 	client *elasticsearch.Client
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -76,7 +85,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.IncludeIndexStats = true
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -128,14 +137,14 @@ func (s *Source) initClient() error {
 	return nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
 	if err := s.initClient(); err != nil {
 		return nil, fmt.Errorf("initializing client: %w", err)
 	}
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
-	var statistics []plugin.Statistic
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
+	var statistics []pluginsdk.Statistic
 
 	clusterName, err := s.getClusterName(ctx)
 	if err != nil {
@@ -179,15 +188,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		Int("statistics", len(statistics)).
 		Msg("Elasticsearch discovery completed")
 
-	result := &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
-	}
-
-	plugin.FilterDiscoveryResult(result, pluginConfig)
-
-	return result, nil
+	}, nil
 }
 
 func (s *Source) getClusterName(ctx context.Context) (string, error) {
@@ -211,7 +216,7 @@ func (s *Source) getClusterName(ctx context.Context) (string, error) {
 	return info.ClusterName, nil
 }
 
-func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]asset.Asset, []plugin.Statistic, error) {
+func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]pluginsdk.Asset, []pluginsdk.Statistic, error) {
 	res, err := s.client.Cat.Indices(
 		s.client.Cat.Indices.WithContext(ctx),
 		s.client.Cat.Indices.WithFormat("json"),
@@ -237,8 +242,8 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 		mappings = make(map[string]map[string]interface{})
 	}
 
-	var assets []asset.Asset
-	var statistics []plugin.Statistic
+	var assets []pluginsdk.Asset
+	var statistics []pluginsdk.Statistic
 
 	for _, idx := range indices {
 		indexName, _ := idx["index"].(string)
@@ -266,9 +271,9 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 		mrnValue := mrn.New("table", "elasticsearch", indexName)
 		name := indexName
 		description := fmt.Sprintf("Elasticsearch index %s in cluster %s", indexName, clusterName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		a := asset.Asset{
+		a := pluginsdk.Asset{
 			Name:        &name,
 			Description: &description,
 			Type:        "Table",
@@ -276,7 +281,7 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 			MRN:         &mrnValue,
 			Metadata:    metadata,
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "Elasticsearch",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -284,14 +289,12 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 			}},
 		}
 
-		if len(s.config.ExternalLinks) > 0 {
-			for _, link := range s.config.ExternalLinks {
-				a.ExternalLinks = append(a.ExternalLinks, asset.ExternalLink{
-					Name: link.Name,
-					Icon: link.Icon,
-					URL:  link.URL,
-				})
-			}
+		for _, link := range s.config.ExternalLinks {
+			a.ExternalLinks = append(a.ExternalLinks, pluginsdk.AssetExternalLink{
+				Name: link.Name,
+				Icon: link.Icon,
+				URL:  link.URL,
+			})
 		}
 
 		if mapping, ok := mappings[indexName]; ok {
@@ -312,7 +315,7 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 
 		if s.config.IncludeIndexStats {
 			docsCount := getInt64(idx, "docs.count")
-			statistics = append(statistics, plugin.Statistic{
+			statistics = append(statistics, pluginsdk.Statistic{
 				AssetMRN:   mrnValue,
 				MetricName: "docs_count",
 				Value:      float64(docsCount),
@@ -420,7 +423,7 @@ func flattenMappingProperties(prefix string, properties map[string]interface{}) 
 	return columns
 }
 
-func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([]asset.Asset, []lineage.LineageEdge, error) {
+func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([]pluginsdk.Asset, []pluginsdk.LineageEdge, error) {
 	res, err := s.client.Indices.GetDataStream(
 		s.client.Indices.GetDataStream.WithContext(ctx),
 	)
@@ -452,8 +455,8 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 		return nil, nil, fmt.Errorf("decoding data streams: %w", err)
 	}
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	for _, ds := range dsResponse.DataStreams {
 		if !s.config.IncludeSystemIndices && strings.HasPrefix(ds.Name, ".") {
@@ -474,9 +477,9 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 		mrnValue := mrn.New("data-stream", "elasticsearch", ds.Name)
 		name := ds.Name
 		description := fmt.Sprintf("Elasticsearch data stream %s in cluster %s", ds.Name, clusterName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:        &name,
 			Description: &description,
 			Type:        "Data Stream",
@@ -484,7 +487,7 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 			MRN:         &mrnValue,
 			Metadata:    metadata,
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "Elasticsearch",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -497,7 +500,7 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 				continue
 			}
 			indexMRN := mrn.New("table", "elasticsearch", backingIndex.IndexName)
-			lineages = append(lineages, lineage.LineageEdge{
+			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: mrnValue,
 				Target: indexMRN,
 				Type:   "CONTAINS",
@@ -508,7 +511,7 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 	return assets, lineages, nil
 }
 
-func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]asset.Asset, []lineage.LineageEdge, error) {
+func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]pluginsdk.Asset, []pluginsdk.LineageEdge, error) {
 	res, err := s.client.Cat.Aliases(
 		s.client.Cat.Aliases.WithContext(ctx),
 		s.client.Cat.Aliases.WithFormat("json"),
@@ -532,7 +535,6 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 		return nil, nil, fmt.Errorf("decoding aliases: %w", err)
 	}
 
-	// Group alias entries by alias name (one alias can point to multiple indices)
 	type aliasInfo struct {
 		indices      []string
 		isWriteIndex string
@@ -558,8 +560,8 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 		}
 	}
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	for aliasName, info := range aliasMap {
 		filterDefined := "false"
@@ -582,9 +584,9 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 		mrnValue := mrn.New("alias", "elasticsearch", aliasName)
 		name := aliasName
 		description := fmt.Sprintf("Elasticsearch alias %s in cluster %s", aliasName, clusterName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:        &name,
 			Description: &description,
 			Type:        "Alias",
@@ -592,7 +594,7 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 			MRN:         &mrnValue,
 			Metadata:    metadata,
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "Elasticsearch",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -600,10 +602,9 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 			}},
 		})
 
-		// Create REFERENCES lineage from alias to target indices
 		for _, indexName := range info.indices {
 			indexMRN := mrn.New("table", "elasticsearch", indexName)
-			lineages = append(lineages, lineage.LineageEdge{
+			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: mrnValue,
 				Target: indexMRN,
 				Type:   "REFERENCES",
@@ -613,8 +614,6 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 
 	return assets, lineages, nil
 }
-
-// Helper functions for safe type extraction from map[string]interface{}
 
 func getString(m map[string]interface{}, key string) string {
 	v, _ := m[key].(string)
@@ -642,20 +641,5 @@ func getInt64(m map[string]interface{}, key string) int64 {
 		return i
 	default:
 		return 0
-	}
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "elasticsearch",
-		Name:        "Elasticsearch",
-		Description: "Discover indices, data streams, and aliases from Elasticsearch clusters",
-		Icon:        "elasticsearch",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register Elasticsearch plugin")
 	}
 }

@@ -6,7 +6,7 @@ on:
       - "plugins/*/v*"
 
 permissions:
-  contents: write
+  contents: read
   packages: write
   id-token: write
 
@@ -164,51 +164,6 @@ jobs:
             digest=$(oras manifest fetch --descriptor "${REPO}:${VERSION}-${os}-${arch}" | jq -r .digest)
             cosign sign --yes "${REPO}@${digest}"
           done
-
-      - name: Build changelog
-        id: changelog
-        env:
-          PLUGIN: ${{ steps.meta.outputs.plugin }}
-          CURRENT_TAG: ${{ github.ref_name }}
-        run: |
-          set -euo pipefail
-          prev=$(git tag -l "plugins/${PLUGIN}/v*" --sort=-v:refname | grep -vFx "${CURRENT_TAG}" | head -n1 || true)
-          if [ -z "${prev}" ]; then
-            range="${CURRENT_TAG}"
-            header="Initial release."
-          else
-            range="${prev}..${CURRENT_TAG}"
-            header="Changes since \`${prev}\`:"
-          fi
-          log=$(git log --no-merges --pretty="format:- %s (%h)" "${range}" -- "plugins/${PLUGIN}/" \
-            | grep -vE "^- (docs|chore|test)(\(|:)" || true)
-          {
-            echo "${header}"
-            echo
-            if [ -n "${log}" ]; then
-              echo "${log}"
-            else
-              echo "_No user-facing changes._"
-            fi
-          } > /tmp/changelog.md
-          echo "path=/tmp/changelog.md" >> "$GITHUB_OUTPUT"
-
-      - name: Create GitHub Release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PLUGIN: ${{ steps.meta.outputs.plugin }}
-          VERSION: ${{ steps.meta.outputs.version }}
-          WORKDIR: ${{ steps.meta.outputs.workdir }}
-        run: |
-          set -euo pipefail
-          gh release create "${GITHUB_REF_NAME}" \
-            --title "${PLUGIN} v${VERSION}" \
-            --notes-file "${{ steps.changelog.outputs.path }}" \
-            --latest=false \
-            "${WORKDIR}/dist/"*.tar.gz \
-            "${WORKDIR}/dist/"*checksums.txt \
-            "${WORKDIR}/dist/"*checksums.txt.sig \
-            "${WORKDIR}/dist/"*checksums.txt.pem
 
       - name: Release summary
         env:

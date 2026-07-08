@@ -18,8 +18,6 @@ import (
 	// Plugin imports
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/clickhouse"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/deltalake"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/dynamodb"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/elasticsearch"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/glue"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/iceberg"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/lambda"

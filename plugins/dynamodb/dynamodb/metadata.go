@@ -1,8 +1,7 @@
 package dynamodb
 
-// DynamoDBFields represents DynamoDB-specific metadata fields
-// +marmot:metadata
-type DynamoDBFields struct {
+// Fields represents DynamoDB-specific metadata fields.
+type Fields struct {
 	TableArn             string            `json:"table_arn" metadata:"table_arn" description:"The ARN of the DynamoDB table"`
 	TableStatus          string            `json:"table_status" metadata:"table_status" description:"Current status of the table (ACTIVE, CREATING, etc.)"`
 	CreationDate         string            `json:"creation_date" metadata:"creation_date" description:"Date and time when the table was created"`

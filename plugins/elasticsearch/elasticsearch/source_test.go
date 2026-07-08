@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/elastic/go-elasticsearch/v8"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -16,27 +16,27 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name        string
-		config      plugin.RawPluginConfig
+		config      pluginsdk.RawConfig
 		wantErr     bool
 		errContains string
 	}{
 		{
 			name: "valid config with addresses",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"addresses": []interface{}{"http://localhost:9200"},
 			},
 			wantErr: false,
 		},
 		{
 			name: "valid config with cloud_id",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"cloud_id": "my-deployment:dXMtY2VudHJhbC0xLmdjcC5jbG91ZC5lcy5pbzo0NDMkMGNmNQ==",
 			},
 			wantErr: false,
 		},
 		{
 			name: "valid config with api_key",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"addresses": []interface{}{"http://localhost:9200"},
 				"api_key":   "my-api-key",
 			},
@@ -44,7 +44,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with basic auth",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"addresses": []interface{}{"http://localhost:9200"},
 				"username":  "elastic",
 				"password":  "changeme",
@@ -53,13 +53,13 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name:        "missing addresses and cloud_id",
-			config:      plugin.RawPluginConfig{},
+			config:      pluginsdk.RawConfig{},
 			wantErr:     true,
 			errContains: "either addresses or cloud_id is required",
 		},
 		{
 			name: "conflicting auth methods",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"addresses": []interface{}{"http://localhost:9200"},
 				"api_key":   "my-api-key",
 				"username":  "elastic",
@@ -89,7 +89,7 @@ func TestSource_Validate(t *testing.T) {
 
 func TestSource_Validate_Defaults(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"addresses": []interface{}{"http://localhost:9200"},
 	})
 	require.NoError(t, err)
@@ -102,7 +102,7 @@ func TestSource_Validate_Defaults(t *testing.T) {
 
 func TestSource_Validate_ExplicitFalse(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"addresses":            []interface{}{"http://localhost:9200"},
 		"include_data_streams": false,
 		"include_aliases":      false,
@@ -121,7 +121,7 @@ func TestFlattenMappingProperties(t *testing.T) {
 		prefix     string
 		properties map[string]interface{}
 		wantCount  int
-		wantFields map[string]string // field name -> expected type
+		wantFields map[string]string
 	}{
 		{
 			name:   "simple fields",
@@ -338,24 +338,22 @@ func TestSource_Discover(t *testing.T) {
 	defer server.Close()
 
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"addresses": []interface{}{server.URL},
 	})
 	require.NoError(t, err)
 
-	// Override the client to use the test server
 	s.client, err = elasticsearch.NewClient(elasticsearch.Config{
 		Addresses: []string{server.URL},
 	})
 	require.NoError(t, err)
 
-	result, err := s.Discover(context.Background(), plugin.RawPluginConfig{
+	result, err := s.Discover(context.Background(), pluginsdk.RawConfig{
 		"addresses": []interface{}{server.URL},
 	})
 	require.NoError(t, err)
 	require.NotNil(t, result)
 
-	// Verify index assets (system index should be excluded)
 	var indexAssets, dsAssets, aliasAssets int
 	for _, a := range result.Assets {
 		switch a.Type {
@@ -380,7 +378,6 @@ func TestSource_Discover(t *testing.T) {
 	assert.Equal(t, 1, dsAssets, "should discover 1 data stream")
 	assert.Equal(t, 1, aliasAssets, "should discover 1 alias")
 
-	// Verify lineage
 	assert.Equal(t, 1, len(result.Lineage), "should have 1 lineage edge (alias REFERENCES)")
 
 	var containsCount, referencesCount int
@@ -395,7 +392,6 @@ func TestSource_Discover(t *testing.T) {
 	assert.Equal(t, 0, containsCount, "backing indices are system indices, no CONTAINS edges")
 	assert.Equal(t, 1, referencesCount, "alias should REFERENCE 1 index")
 
-	// Verify statistics
 	assert.GreaterOrEqual(t, len(result.Statistics), 1, "should have statistics")
 	assert.Equal(t, "docs_count", result.Statistics[0].MetricName)
 	assert.Equal(t, float64(1000), result.Statistics[0].Value)
@@ -445,14 +441,13 @@ func TestSource_Discover_SystemIndicesIncluded(t *testing.T) {
 			_ = json.NewEncoder(w).Encode([]interface{}{})
 
 		default:
-			// Mapping requests
 			_ = json.NewEncoder(w).Encode(map[string]interface{}{})
 		}
 	}))
 	defer server.Close()
 
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"addresses":              []interface{}{server.URL},
 		"include_system_indices": true,
 	})
@@ -463,7 +458,7 @@ func TestSource_Discover_SystemIndicesIncluded(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	result, err := s.Discover(context.Background(), plugin.RawPluginConfig{
+	result, err := s.Discover(context.Background(), pluginsdk.RawConfig{
 		"addresses":              []interface{}{server.URL},
 		"include_system_indices": true,
 	})
