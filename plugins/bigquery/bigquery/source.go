@@ -1,9 +1,6 @@
-// +marmot:name=BigQuery
-// +marmot:description=This plugin discovers datasets and tables from Google BigQuery projects.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package bigquery discovers datasets and tables from Google BigQuery
+// projects.
 package bigquery
-
 
 import (
 	"context"
@@ -14,18 +11,29 @@ import (
 	"time"
 
 	"cloud.google.com/go/bigquery"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"google.golang.org/api/iterator"
 	"google.golang.org/api/option"
 )
 
-// +marmot:config
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "bigquery",
+		Name:        "BigQuery",
+		Description: "Discover datasets and tables from Google BigQuery projects",
+		Icon:        "bigquery",
+		Category:    "data-warehouse",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	ProjectID             string `json:"project_id" label:"Project ID" description:"Google Cloud Project ID" validate:"required"`
 	CredentialsPath       string `json:"credentials_path,omitempty" description:"Path to service account credentials JSON file"`
@@ -37,10 +45,10 @@ type Config struct {
 	IncludeViews          bool `json:"include_views" description:"Whether to discover views" default:"true"`
 	IncludeExternalTables bool `json:"include_external_tables" description:"Whether to discover external tables" default:"true"`
 	ExcludeSystemDatasets bool `json:"exclude_system_datasets" description:"Whether to exclude system datasets (_script, _analytics, etc.)" default:"true"`
-	MaxConcurrentRequests int            `json:"max_concurrent_requests" description:"Maximum number of concurrent API requests" default:"10" validate:"omitempty,min=1,max=100"`
+	MaxConcurrentRequests int  `json:"max_concurrent_requests" description:"Maximum number of concurrent API requests" default:"10" validate:"omitempty,min=1,max=100"`
 }
 
-// +marmot:example-config
+// Example configuration for the plugin
 var _ = `
 project_id: "company-data-warehouse"
 credentials_path: "/etc/marmot/bq-service-account.json"
@@ -62,7 +70,7 @@ const (
 	TableTypeExternal TableType = "EXTERNAL"
 )
 
-func (c *Config) ApplyDefaults(rawConfig plugin.RawPluginConfig) {
+func (c *Config) ApplyDefaults(rawConfig pluginsdk.RawConfig) {
 	if c.MaxConcurrentRequests == 0 {
 		c.MaxConcurrentRequests = 10
 	}
@@ -84,15 +92,15 @@ func (c *Config) ApplyDefaults(rawConfig plugin.RawPluginConfig) {
 	}
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
 	config.ApplyDefaults(rawConfig)
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -118,7 +126,13 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	// The host spawns a fresh plugin process per call, so Discover
+	// cannot rely on state set by an earlier Validate call.
+	if _, err := s.Validate(pluginConfig); err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 	defer cancel()
 
@@ -127,8 +141,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	defer s.closeClient()
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	// Discover datasets
 	log.Debug().Msg("Starting dataset discovery")
@@ -161,7 +175,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		// Only create lineage if datasets are included
 		if s.config.IncludeDatasets {
 			for _, tableAsset := range tableAssets {
-				lineages = append(lineages, lineage.LineageEdge{
+				lineages = append(lineages, pluginsdk.LineageEdge{
 					Source: *datasetAsset.MRN,
 					Target: *tableAsset.MRN,
 					Type:   "CONTAINS",
@@ -170,7 +184,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		}
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
@@ -216,11 +230,11 @@ func (s *Source) closeClient() {
 	}
 }
 
-func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, error) {
+func (s *Source) discoverDatasets(ctx context.Context) ([]pluginsdk.Asset, error) {
 	log.Debug().Str("project_id", s.config.ProjectID).Msg("Discovering datasets")
 
 	it := s.client.Datasets(ctx)
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 
 	for {
 		dataset, err := it.Next()
@@ -280,16 +294,16 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, error) {
 
 		mrnValue := mrn.New("Dataset", "BigQuery", datasetID)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, assetMetadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, assetMetadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:      &datasetID,
 			MRN:       &mrnValue,
 			Type:      "Dataset",
 			Providers: []string{"BigQuery"},
-			Metadata:    assetMetadata,
-			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Metadata:  assetMetadata,
+			Tags:      processedTags,
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "BigQuery",
 				LastSyncAt: time.Now(),
 				Properties: assetMetadata,
@@ -302,11 +316,11 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]asset.Asset, error) {
 	return assets, nil
 }
 
-func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]asset.Asset, error) {
+func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]pluginsdk.Asset, error) {
 	dataset := s.client.Dataset(datasetID)
 	it := dataset.Tables(ctx)
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 
 	for {
 		table, err := it.Next()
@@ -420,7 +434,7 @@ func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]asset.
 
 		mrnValue := mrn.New(assetType, "BigQuery", tableID)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, assetMetadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, assetMetadata)
 
 		var schema map[string]string
 		if metadata.Schema != nil && (tableType == TableTypeTable || tableType == TableTypeView) {
@@ -429,7 +443,7 @@ func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]asset.
 			schema = map[string]string{"json_schema": string(schemaBytes)}
 		}
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:        &tableID,
 			MRN:         &mrnValue,
 			Type:        assetType,
@@ -438,7 +452,7 @@ func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]asset.
 			Metadata:    assetMetadata,
 			Schema:      schema,
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "BigQuery",
 				LastSyncAt: time.Now(),
 				Properties: assetMetadata,
@@ -590,12 +604,12 @@ func (s *Source) extractRequiredFields(fields bigquery.Schema) []string {
 }
 
 // FetchSampleData implements the DataFetcher interface to retrieve sample data from a BigQuery table
-func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
+func (s *Source) FetchSampleData(ctx context.Context, config pluginsdk.RawConfig, a *pluginsdk.Asset) ([]string, [][]interface{}, error) {
 	if a == nil || a.Metadata == nil {
 		return nil, nil, fmt.Errorf("asset or asset metadata is nil")
 	}
 
-	parsedConfig, err := plugin.UnmarshalPluginConfig[Config](config)
+	parsedConfig, err := pluginsdk.UnmarshalConfig[Config](config)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parsing plugin config: %w", err)
 	}
@@ -713,20 +727,5 @@ func convertBigQueryValue(val interface{}) interface{} {
 		return converted
 	default:
 		return val
-	}
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "bigquery",
-		Name:        "BigQuery",
-		Description: "Discover datasets and tables from Google BigQuery projects",
-		Icon:        "bigquery",
-		Category:    "data-warehouse",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register BigQuery plugin")
 	}
 }

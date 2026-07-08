@@ -13,8 +13,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/azureblob"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/bigquery"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/clickhouse"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mongodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mysql"

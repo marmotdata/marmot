@@ -3,7 +3,7 @@ package azureblob
 import (
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -79,7 +79,7 @@ func TestSource_Validate(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &Source{}
-			_, err := s.Validate(plugin.RawPluginConfig(tt.config))
+			_, err := s.Validate(pluginsdk.RawConfig(tt.config))
 
 			if tt.expectErr {
 				require.Error(t, err)
@@ -97,7 +97,7 @@ func TestSource_ValidateDefaults(t *testing.T) {
 		"connection_string": "DefaultEndpointsProtocol=https;AccountName=test;AccountKey=key123;EndpointSuffix=core.windows.net",
 	}
 
-	_, err := s.Validate(plugin.RawPluginConfig(config))
+	_, err := s.Validate(pluginsdk.RawConfig(config))
 	require.NoError(t, err)
 
 	assert.NotNil(t, s.config)

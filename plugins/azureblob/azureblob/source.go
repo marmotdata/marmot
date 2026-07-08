@@ -1,9 +1,6 @@
-// +marmot:name=Azure Blob Storage
-// +marmot:description=Discovers containers and blobs from Azure Blob Storage accounts.
-// +marmot:status=experimental
-// +marmot:features=Assets
+// Package azureblob discovers containers from Azure Blob Storage
+// accounts.
 package azureblob
-
 
 import (
 	"context"
@@ -12,17 +9,28 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob"
 	"github.com/Azure/azure-sdk-for-go/sdk/storage/azblob/service"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "azureblob",
+		Name:        "Azure Blob Storage",
+		Description: "Discover containers from Azure Blob Storage accounts",
+		Icon:        "azureblob",
+		Category:    "storage",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for Azure Blob Storage plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	// Connection options (choose one)
 	ConnectionString string `json:"connection_string,omitempty" description:"Azure Storage connection string" sensitive:"true"`
@@ -33,11 +41,9 @@ type Config struct {
 	// Discovery options
 	IncludeMetadata  bool `json:"include_metadata" description:"Include container metadata" default:"true"`
 	IncludeBlobCount bool `json:"include_blob_count" description:"Count blobs in each container (can be slow for large containers)" default:"false"`
-
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 connection_string: "${AZURE_STORAGE_CONNECTION_STRING}"
 include_metadata: true
@@ -57,8 +63,8 @@ type Source struct {
 	client *azblob.Client
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -71,7 +77,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		return nil, fmt.Errorf("account_key is required when using account_name")
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -79,8 +85,8 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -97,8 +103,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("discovering containers: %w", err)
 	}
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	for _, containerItem := range containers {
 		containerName := *containerItem.Name
@@ -111,7 +117,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		assets = append(assets, asset)
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
@@ -155,7 +161,7 @@ func (s *Source) discoverContainers(ctx context.Context) ([]*service.ContainerIt
 	return containers, nil
 }
 
-func (s *Source) createContainerAsset(ctx context.Context, containerItem *service.ContainerItem) (asset.Asset, error) {
+func (s *Source) createContainerAsset(ctx context.Context, containerItem *service.ContainerItem) (pluginsdk.Asset, error) {
 	containerName := *containerItem.Name
 
 	metadata := make(map[string]interface{})
@@ -214,16 +220,16 @@ func (s *Source) createContainerAsset(ctx context.Context, containerItem *servic
 
 	mrnValue := mrn.New("Container", "AzureBlob", containerName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:      &containerName,
 		MRN:       &mrnValue,
 		Type:      "Container",
 		Providers: []string{"AzureBlob"},
-		Metadata:    metadata,
-		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Metadata:  metadata,
+		Tags:      processedTags,
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "AzureBlob",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -247,19 +253,4 @@ func (s *Source) countBlobs(ctx context.Context, containerName string) (int64, e
 	}
 
 	return count, nil
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "azureblob",
-		Name:        "Azure Blob Storage",
-		Description: "Discover containers from Azure Blob Storage accounts",
-		Icon:        "azureblob",
-		Category:    "storage",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register Azure Blob Storage plugin")
-	}
 }

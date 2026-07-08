@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/hashicorp/go-hclog"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/plugin-sdk"
 	"github.com/rs/zerolog/log"
 )
@@ -95,7 +96,15 @@ func registerExternalPlugin(path string) (bool, error) {
 		return false, nil
 	}
 
-	if err := GetRegistry().Register(meta, &ExternalSource{path: path}); err != nil {
+	// Only plugins that advertise data-preview support get a source that
+	// implements DataFetcher, so the preview handler's type assertion
+	// keeps distinguishing plugins with and without preview support.
+	var source Source = &ExternalSource{path: path}
+	if sdkMeta.SupportsDataPreview {
+		source = &ExternalDataFetcherSource{ExternalSource{path: path}}
+	}
+
+	if err := GetRegistry().Register(meta, source); err != nil {
 		// Lost a race with a concurrent loader; the first registration
 		// wins, same as the check above.
 		log.Debug().Str("plugin", path).Str("id", meta.ID).Msg("Plugin already registered, skipping")
@@ -155,6 +164,42 @@ func (s *ExternalSource) Discover(ctx context.Context, config RawPluginConfig) (
 	}
 
 	return convertDiscoveryResult(sdkResult)
+}
+
+// ExternalDataFetcherSource is an ExternalSource whose plugin advertises
+// data-preview support; it additionally implements DataFetcher.
+type ExternalDataFetcherSource struct {
+	ExternalSource
+}
+
+func (s *ExternalDataFetcherSource) FetchSampleData(ctx context.Context, config RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
+	process, err := pluginsdk.Open(s.path, pluginLogger())
+	if err != nil {
+		return nil, nil, err
+	}
+	defer process.Kill()
+
+	sdkAsset, err := convertAsset(a)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return process.Source.FetchSampleData(ctx, pluginsdk.RawConfig(config), sdkAsset)
+}
+
+// convertAsset converts an internal asset into the SDK asset shape via
+// a JSON round trip; fields the SDK does not mirror are dropped.
+func convertAsset(a *asset.Asset) (*pluginsdk.Asset, error) {
+	data, err := json.Marshal(a)
+	if err != nil {
+		return nil, fmt.Errorf("marshaling asset: %w", err)
+	}
+
+	var sdkAsset pluginsdk.Asset
+	if err := json.Unmarshal(data, &sdkAsset); err != nil {
+		return nil, fmt.Errorf("unmarshaling asset: %w", err)
+	}
+	return &sdkAsset, nil
 }
 
 // convertDiscoveryResult converts the SDK result into the internal
