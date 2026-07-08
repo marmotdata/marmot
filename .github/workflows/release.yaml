@@ -79,8 +79,10 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Run GoReleaser
+      - name: Wait for swagger and frontend builds
         wait-all: true
+
+      - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"

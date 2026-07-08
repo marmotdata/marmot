@@ -71,9 +71,11 @@ jobs:
             echo "cgo=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Wait for cosign
+        wait: cosign
+
       - name: Run GoReleaser
         if: steps.cgo.outputs.cgo != 'true'
-        wait: cosign
         uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"
@@ -89,7 +91,6 @@ jobs:
       # cosign keyless signing.
       - name: Run GoReleaser (cgo)
         if: steps.cgo.outputs.cgo == 'true'
-        wait: cosign
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
@@ -107,8 +108,10 @@ jobs:
             ghcr.io/goreleaser/goreleaser-cross:v1.26.0 -c \
             'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=validate'
 
-      - name: Log in to GHCR
+      - name: Wait for ORAS
         wait: oras
+
+      - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
 
       - name: Push plugin artifacts to GHCR
