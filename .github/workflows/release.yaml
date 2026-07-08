@@ -49,19 +49,12 @@ jobs:
       - name: Clean build artifacts
         run: make clean
 
-      # Swagger generation and the frontend build are independent, so they
-      # run as background steps while the Docker tooling is set up below.
-      # GoReleaser joins them with wait-all.
       - name: Generate swagger docs
-        id: swagger
-        background: true
         run: |
           go install github.com/swaggo/swag/cmd/swag@latest
           make swagger
 
       - name: Build frontend
-        id: frontend
-        background: true
         run: |
           cd web/marmot && pnpm install && cd ../..
           make frontend-build
@@ -78,9 +71,6 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Wait for swagger and frontend builds
-        wait-all: true
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6

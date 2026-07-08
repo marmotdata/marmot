@@ -35,9 +35,11 @@ jobs:
             echo "No plugin directory at ${workdir}" >&2
             exit 1
           fi
-          echo "plugin=${plugin}"   >> "$GITHUB_OUTPUT"
-          echo "version=${version}" >> "$GITHUB_OUTPUT"
-          echo "workdir=${workdir}" >> "$GITHUB_OUTPUT"
+          {
+            echo "plugin=${plugin}"
+            echo "version=${version}"
+            echo "workdir=${workdir}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Set up Go
         uses: actions/setup-go@v5
@@ -46,16 +48,10 @@ jobs:
           cache: true
           cache-dependency-path: ${{ steps.meta.outputs.workdir }}/go.sum
 
-      # Tool installs run in the background while the tests run; the steps
-      # that need them wait on the matching id below.
       - name: Install cosign
-        id: cosign
-        background: true
         uses: sigstore/cosign-installer@v3
 
       - name: Install ORAS
-        id: oras
-        background: true
         uses: oras-project/setup-oras@v1
 
       - name: Run tests
@@ -70,9 +66,6 @@ jobs:
           else
             echo "cgo=false" >> "$GITHUB_OUTPUT"
           fi
-
-      - name: Wait for cosign
-        wait: cosign
 
       - name: Run GoReleaser
         if: steps.cgo.outputs.cgo != 'true'
@@ -107,9 +100,6 @@ jobs:
             --entrypoint /bin/sh \
             ghcr.io/goreleaser/goreleaser-cross:v1.26.0 -c \
             'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=validate'
-
-      - name: Wait for ORAS
-        wait: oras
 
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
