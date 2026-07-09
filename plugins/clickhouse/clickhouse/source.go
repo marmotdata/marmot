@@ -1,9 +1,6 @@
-// +marmot:name=ClickHouse
-// +marmot:description=Discovers databases, tables, and views from ClickHouse instances.
-// +marmot:status=experimental
-// +marmot:features=Assets
+// Package clickhouse discovers databases, tables, and views from
+// ClickHouse instances.
 package clickhouse
-
 
 import (
 	"context"
@@ -16,17 +13,28 @@ import (
 	"time"
 
 	"github.com/ClickHouse/clickhouse-go/v2"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "clickhouse",
+		Name:        "ClickHouse",
+		Description: "Discover databases, tables, and views from ClickHouse instances",
+		Icon:        "clickhouse",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for ClickHouse plugin.
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	Host     string `json:"host" description:"ClickHouse server hostname or IP address" validate:"required"`
 	Port     int    `json:"port" description:"ClickHouse native protocol port" default:"9000" validate:"omitempty,min=1,max=65535"`
@@ -41,7 +49,7 @@ type Config struct {
 	ExcludeSystemTables bool `json:"exclude_system_tables" description:"Whether to exclude system tables" default:"true"`
 }
 
-// +marmot:example-config
+// Example configuration for the plugin
 var _ = `
 host: "clickhouse.company.com"
 port: 9000
@@ -70,8 +78,8 @@ type Source struct {
 }
 
 // Validate validates and normalizes the plugin configuration.
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -84,7 +92,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.Database = "default"
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -93,7 +101,13 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 }
 
 // Discover discovers ClickHouse databases, tables, and views.
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	// The host spawns a fresh plugin process per call, so Discover
+	// cannot rely on state set by an earlier Validate call.
+	if _, err := s.Validate(pluginConfig); err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
@@ -102,9 +116,9 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	defer s.closeConnection()
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
-	var statistics []plugin.Statistic
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
+	var statistics []pluginsdk.Statistic
 
 	log.Debug().Msg("Starting ClickHouse discovery")
 
@@ -135,7 +149,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		}
 
 		for _, tableAsset := range tableAssets {
-			lineages = append(lineages, lineage.LineageEdge{
+			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: *dbAsset.MRN,
 				Target: *tableAsset.MRN,
 				Type:   "CONTAINS",
@@ -149,7 +163,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		Int("statistics", len(statistics)).
 		Msg("ClickHouse discovery completed")
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
@@ -207,7 +221,7 @@ func (s *Source) closeConnection() {
 	}
 }
 
-func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
+func (s *Source) discoverDatabases(ctx context.Context) ([]pluginsdk.Asset, error) {
 	query := `
 		SELECT
 			name,
@@ -224,7 +238,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 	}
 	defer rows.Close()
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 
 	for rows.Next() {
 		var name, engine, comment string
@@ -245,16 +259,16 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		}
 
 		mrnValue := mrn.New("Database", "ClickHouse", name)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:      &name,
 			MRN:       &mrnValue,
 			Type:      "Database",
 			Providers: []string{"ClickHouse"},
 			Metadata:  metadata,
 			Tags:      processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "ClickHouse",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -270,7 +284,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 	return assets, nil
 }
 
-func (s *Source) discoverTables(ctx context.Context, dbName string) ([]asset.Asset, error) {
+func (s *Source) discoverTables(ctx context.Context, dbName string) ([]pluginsdk.Asset, error) {
 	query := `
 		SELECT
 			name,
@@ -295,7 +309,7 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]asset.Ass
 	}
 	defer rows.Close()
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 	var tableNames []string
 
 	for rows.Next() {
@@ -333,16 +347,16 @@ func (s *Source) discoverTables(ctx context.Context, dbName string) ([]asset.Ass
 		tableNames = append(tableNames, name)
 
 		mrnValue := mrn.New(assetType, "ClickHouse", fmt.Sprintf("%s.%s", dbName, name))
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		a := asset.Asset{
+		a := pluginsdk.Asset{
 			Name:      &name,
 			MRN:       &mrnValue,
 			Type:      assetType,
 			Providers: []string{"ClickHouse"},
 			Metadata:  metadata,
 			Tags:      processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "ClickHouse",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -455,8 +469,8 @@ func (s *Source) getColumnsForTables(ctx context.Context, dbName string, tableNa
 	return result, nil
 }
 
-func (s *Source) collectTableStatistics(ctx context.Context, dbName string, assets []asset.Asset) []plugin.Statistic {
-	var statistics []plugin.Statistic
+func (s *Source) collectTableStatistics(ctx context.Context, dbName string, assets []pluginsdk.Asset) []pluginsdk.Statistic {
+	var statistics []pluginsdk.Statistic
 
 	for _, a := range assets {
 		if a.Type != "Table" {
@@ -464,7 +478,7 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 		}
 
 		if rowCount, ok := a.Metadata["row_count"].(int64); ok {
-			statistics = append(statistics, plugin.Statistic{
+			statistics = append(statistics, pluginsdk.Statistic{
 				AssetMRN:   *a.MRN,
 				MetricName: "asset.row_count",
 				Value:      float64(rowCount),
@@ -472,7 +486,7 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 		}
 
 		if sizeBytes, ok := a.Metadata["size_bytes"].(int64); ok {
-			statistics = append(statistics, plugin.Statistic{
+			statistics = append(statistics, pluginsdk.Statistic{
 				AssetMRN:   *a.MRN,
 				MetricName: "asset.size_bytes",
 				Value:      float64(sizeBytes),
@@ -482,7 +496,7 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 		if raw, ok := a.Schema["columns"]; ok {
 			var columns []map[string]interface{}
 			if err := json.Unmarshal([]byte(raw), &columns); err == nil {
-				statistics = append(statistics, plugin.Statistic{
+				statistics = append(statistics, pluginsdk.Statistic{
 					AssetMRN:   *a.MRN,
 					MetricName: "asset.column_count",
 					Value:      float64(len(columns)),
@@ -494,14 +508,13 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 	return statistics
 }
 
-
 // FetchSampleData implements the DataFetcher interface to retrieve sample data from a ClickHouse table.
-func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
+func (s *Source) FetchSampleData(ctx context.Context, config pluginsdk.RawConfig, a *pluginsdk.Asset) ([]string, [][]interface{}, error) {
 	if a == nil || a.Metadata == nil {
 		return nil, nil, fmt.Errorf("asset or asset metadata is nil")
 	}
 
-	parsedConfig, err := plugin.UnmarshalPluginConfig[Config](config)
+	parsedConfig, err := pluginsdk.UnmarshalConfig[Config](config)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parsing plugin config: %w", err)
 	}
@@ -529,7 +542,7 @@ func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginCon
 	defer s.closeConnection()
 
 	//nolint:gosec // G201: inputs sanitized via quoteIdentifier
-	query := fmt.Sprintf("SELECT * FROM %s.%s LIMIT 20", 
+	query := fmt.Sprintf("SELECT * FROM %s.%s LIMIT 20",
 		quoteIdentifier(database),
 		quoteIdentifier(table),
 	)
@@ -605,19 +618,4 @@ func convertClickHouseValue(val interface{}) interface{} {
 func quoteIdentifier(id string) string {
 	id = strings.ReplaceAll(id, "\x00", "")
 	return "`" + strings.ReplaceAll(id, "`", "``") + "`"
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "clickhouse",
-		Name:        "ClickHouse",
-		Description: "Discover databases, tables, and views from ClickHouse instances",
-		Icon:        "clickhouse",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register ClickHouse plugin")
-	}
 }

@@ -3,7 +3,7 @@ package clickhouse
 import (
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -11,13 +11,13 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name        string
-		config      plugin.RawPluginConfig
+		config      pluginsdk.RawConfig
 		wantErr     bool
 		errContains string
 	}{
 		{
 			name: "valid config",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":     "localhost",
 				"port":     9000,
 				"user":     "default",
@@ -28,7 +28,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with defaults",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"user": "default",
 			},
@@ -36,7 +36,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "missing host",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"user":     "default",
 				"password": "password",
 			},
@@ -45,7 +45,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "missing user",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":     "localhost",
 				"password": "password",
 			},
@@ -54,7 +54,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with secure connection",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":   "clickhouse.example.com",
 				"user":   "admin",
 				"secure": true,
@@ -63,7 +63,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with filters",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"user": "default",
 				"filter": map[string]interface{}{
@@ -94,7 +94,7 @@ func TestSource_Validate(t *testing.T) {
 
 func TestSource_ValidateDefaults(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"host": "localhost",
 		"user": "default",
 	})
