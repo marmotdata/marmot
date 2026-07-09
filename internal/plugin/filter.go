@@ -1,46 +1,11 @@
 package plugin
 
 import (
-	"regexp"
-
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 )
-
-// Filter filters discovered assets by name. Filtering is applied by the
-// Marmot host after discovery; plugins only carry the config.
-type Filter struct {
-	Include []string `json:"include,omitempty" description:"Include patterns for resource names (regex)"`
-	Exclude []string `json:"exclude,omitempty" description:"Exclude patterns for resource names (regex)"`
-}
-
-// ShouldIncludeResource reports whether a resource name passes the filter.
-func ShouldIncludeResource(name string, filter Filter) bool {
-	if len(filter.Include) == 0 && len(filter.Exclude) == 0 {
-		return true
-	}
-
-	for _, pattern := range filter.Exclude {
-		matched, err := regexp.MatchString(pattern, name)
-		if err == nil && matched {
-			return false
-		}
-	}
-
-	if len(filter.Include) == 0 {
-		return true
-	}
-
-	for _, pattern := range filter.Include {
-		matched, err := regexp.MatchString(pattern, name)
-		if err == nil && matched {
-			return true
-		}
-	}
-
-	return false
-}
 
 // FilterDiscoveryResult filters a DiscoveryResult based on the Filter in the config.
 // It filters assets by name, then removes lineage, documentation, statistics, and
@@ -68,7 +33,7 @@ func FilterDiscoveryResult(result *DiscoveryResult, rawConfig RawPluginConfig) {
 		if a.Name != nil {
 			name = *a.Name
 		}
-		if ShouldIncludeResource(name, filter) {
+		if pluginsdk.ShouldIncludeResource(name, filter) {
 			filteredAssets = append(filteredAssets, a)
 			if a.MRN != nil {
 				includedMRNs[*a.MRN] = struct{}{}
