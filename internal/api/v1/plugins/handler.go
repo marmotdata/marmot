@@ -6,6 +6,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 )
 
 type Handler struct{}
@@ -36,14 +37,27 @@ func (h *Handler) listPlugins(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, plugins)
 }
 
+// AWSCredentialStatus is the response shape for the AWS credential
+// detection endpoint. Detection itself lives in the plugin SDK so it
+// stays consistent with how AWS plugins resolve credentials.
+type AWSCredentialStatus struct {
+	Available bool     `json:"available"`
+	Sources   []string `json:"sources"`
+	Error     string   `json:"error,omitempty"`
+} // @name AWSCredentialStatus
+
 // @Summary Get AWS credential detection status
 // @Description Detects if AWS credentials are available from environment or config files
 // @Tags plugins
 // @Produce json
-// @Success 200 {object} plugin.AWSCredentialStatus
+// @Success 200 {object} AWSCredentialStatus
 // @Router /api/v1/plugins/aws/credentials/status [get]
 func (h *Handler) awsCredentialStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
-	status := plugin.DetectAWSCredentials(ctx)
-	common.RespondJSON(w, http.StatusOK, status)
+	status := pluginsdk.DetectAWSCredentials(ctx)
+	common.RespondJSON(w, http.StatusOK, AWSCredentialStatus{
+		Available: status.Available,
+		Sources:   status.Sources,
+		Error:     status.Error,
+	})
 }

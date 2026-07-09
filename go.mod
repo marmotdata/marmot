@@ -3,7 +3,6 @@ module github.com/marmotdata/marmot
 go 1.26.1
 
 require (
-	github.com/aws/aws-sdk-go-v2/config v1.32.28
 	github.com/centrifugal/centrifuge v0.38.0
 	github.com/coreos/go-oidc/v3 v3.17.0
 	github.com/go-jose/go-jose/v4 v4.1.4
@@ -60,6 +59,7 @@ require (
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.42.1 // indirect
+	github.com/aws/aws-sdk-go-v2/config v1.32.28 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.27 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.30 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.30 // indirect
