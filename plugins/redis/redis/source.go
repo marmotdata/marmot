@@ -1,9 +1,5 @@
-// +marmot:name=Redis
-// +marmot:description=Discovers databases from Redis instances.
-// +marmot:status=experimental
-// +marmot:features=Assets
+// Package redis discovers databases from Redis instances.
 package redis
-
 
 import (
 	"context"
@@ -13,35 +9,43 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/redis/go-redis/v9"
-	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "redis",
+		Name:        "Redis",
+		Description: "Discover databases from Redis instances",
+		Icon:        "redis",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for Redis plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	// Connection options
-	Host     string `json:"host" description:"Redis server hostname or IP address" validate:"required"`
-	Port     int    `json:"port,omitempty" description:"Redis server port" default:"6379" validate:"omitempty,min=1,max=65535"`
-	Password string `json:"password,omitempty" description:"Password for authentication" sensitive:"true"`
-	Username string `json:"username,omitempty" description:"Username for ACL authentication"`
+	Host        string `json:"host" description:"Redis server hostname or IP address" validate:"required"`
+	Port        int    `json:"port,omitempty" description:"Redis server port" default:"6379" validate:"omitempty,min=1,max=65535"`
+	Password    string `json:"password,omitempty" description:"Password for authentication" sensitive:"true"`
+	Username    string `json:"username,omitempty" description:"Username for ACL authentication"`
 	DB          int    `json:"db,omitempty" description:"Default database number" default:"0" validate:"omitempty,min=0,max=15"`
 	TLS         bool   `json:"tls,omitempty" description:"Enable TLS connection"`
 	TLSInsecure bool   `json:"tls_insecure,omitempty" label:"TLS Insecure" description:"Skip TLS certificate verification"`
 
 	// Discovery options
 	DiscoverAllDatabases bool `json:"discover_all_databases" description:"Discover all databases with keys (db0-db15)" default:"true"`
-
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 host: "localhost"
 port: 6379
@@ -59,8 +63,8 @@ type Source struct {
 	config *Config
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -74,7 +78,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.DiscoverAllDatabases = true
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -82,8 +86,8 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -116,8 +120,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	replicationInfo := parseInfoSection(infoResult, "Replication")
 	keyspaceInfo := parseInfoSection(infoResult, "Keyspace")
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	host := s.config.Host
 	port := s.config.Port
@@ -145,7 +149,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		assets = append(assets, a)
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
@@ -212,7 +216,7 @@ func parseKeyspaceEntry(entry string) map[string]string {
 	return result
 }
 
-func (s *Source) createDatabaseAsset(host string, port int, dbName string, keyspace map[string]string, serverInfo, memoryInfo, clientsInfo, replicationInfo map[string]string) asset.Asset {
+func (s *Source) createDatabaseAsset(host string, port int, dbName string, keyspace map[string]string, serverInfo, memoryInfo, clientsInfo, replicationInfo map[string]string) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 	metadata["host"] = host
 	metadata["port"] = port
@@ -256,35 +260,20 @@ func (s *Source) createDatabaseAsset(host string, port int, dbName string, keysp
 	resourceName := fmt.Sprintf("%s:%d-%s", host, port, dbName)
 	mrnValue := mrn.New("Database", "Redis", resourceName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:      &dbName,
 		MRN:       &mrnValue,
 		Type:      "Database",
 		Providers: []string{"Redis"},
-		Metadata:    metadata,
-		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Metadata:  metadata,
+		Tags:      processedTags,
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Redis",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
 			Priority:   1,
 		}},
-	}
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "redis",
-		Name:        "Redis",
-		Description: "Discover databases from Redis instances",
-		Icon:        "redis",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register Redis plugin")
 	}
 }

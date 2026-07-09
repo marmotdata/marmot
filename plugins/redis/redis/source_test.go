@@ -3,7 +3,7 @@ package redis
 import (
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -11,24 +11,24 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
-		config  plugin.RawPluginConfig
+		config  pluginsdk.RawConfig
 		wantErr string
 	}{
 		{
 			name: "valid host config",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"port": 6379,
 			},
 		},
 		{
 			name:    "missing host",
-			config:  plugin.RawPluginConfig{},
+			config:  pluginsdk.RawConfig{},
 			wantErr: "host",
 		},
 		{
 			name: "invalid port",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"port": 99999,
 			},
@@ -36,7 +36,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "with tls",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":         "localhost",
 				"tls":          true,
 				"tls_insecure": true,
@@ -44,7 +44,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "with filter",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"filter": map[string]interface{}{
 					"include": []interface{}{"^db0$"},
@@ -69,7 +69,7 @@ func TestSource_Validate(t *testing.T) {
 
 func TestSource_ValidateDefaults(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"host": "localhost",
 	})
 	require.NoError(t, err)

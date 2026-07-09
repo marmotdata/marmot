@@ -1,9 +1,6 @@
-// +marmot:name=PostgreSQL
-// +marmot:description=This plugin discovers databases and tables from PostgreSQL instances.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package postgresql discovers databases and tables from PostgreSQL
+// instances.
 package postgresql
-
 
 import (
 	"context"
@@ -15,17 +12,28 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "postgresql",
+		Name:        "PostgreSQL",
+		Description: "Discover databases, schemas, and tables from PostgreSQL instances",
+		Icon:        "postgresql",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for PostgreSQL plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	// Connection configuration
 	Host     string `json:"host" description:"PostgreSQL server hostname or IP address" validate:"required"`
@@ -43,7 +51,6 @@ type Config struct {
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 host: "prod-postgres.company.com"
 port: 5432
@@ -61,8 +68,8 @@ type Source struct {
 	pool   *pgxpool.Pool
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -75,7 +82,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.SSLMode = "disable"
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -83,7 +90,13 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	// The host spawns a fresh plugin process per call, so Discover
+	// cannot rely on state set by an earlier Validate call.
+	if _, err := s.Validate(pluginConfig); err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 	if err := s.initConnection(ctx, "postgres"); err != nil {
@@ -91,16 +104,16 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	defer s.closeConnection()
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
-	var statistics []plugin.Statistic
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
+	var statistics []pluginsdk.Statistic
 
 	log.Debug().Msg("Starting database discovery")
 
 	databaseAssets, err := s.discoverDatabases(ctx)
 	if err != nil {
 		log.Warn().Err(err).Msg("Failed to discover databases")
-		return &plugin.DiscoveryResult{
+		return &pluginsdk.DiscoveryResult{
 			Assets:     assets,
 			Lineage:    lineages,
 			Statistics: statistics,
@@ -139,7 +152,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 			// Create lineage between database and its tables/views
 			for _, objAsset := range objectAssets {
-				lineages = append(lineages, lineage.LineageEdge{
+				lineages = append(lineages, pluginsdk.LineageEdge{
 					Source: *dbAsset.MRN,
 					Target: *objAsset.MRN,
 					Type:   "CONTAINS",
@@ -158,7 +171,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		}
 		dbCancel()
 	}
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
@@ -221,7 +234,7 @@ func (s *Source) closeConnection() {
 	}
 }
 
-func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
+func (s *Source) discoverDatabases(ctx context.Context) ([]pluginsdk.Asset, error) {
 	log.Debug().
 		Str("host", s.config.Host).
 		Int("port", s.config.Port).
@@ -254,7 +267,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 	}
 	defer rows.Close()
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 
 	for rows.Next() {
 		var (
@@ -306,16 +319,16 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 
 		mrnValue := mrn.New("Database", "PostgreSQL", name)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:      &name,
 			MRN:       &mrnValue,
 			Type:      "Database",
 			Providers: []string{"PostgreSQL"},
-			Metadata:    metadata,
-			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Metadata:  metadata,
+			Tags:      processedTags,
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "PostgreSQL",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -332,7 +345,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 	return assets, nil
 }
 
-func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]asset.Asset, error) {
+func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]pluginsdk.Asset, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -340,7 +353,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
         SELECT
             n.nspname AS schema_name,
             c.relname AS name,
-            CASE 
+            CASE
                 WHEN c.relkind = 'r' THEN 'table'
                 WHEN c.relkind = 'v' THEN 'view'
                 WHEN c.relkind = 'm' THEN 'materialized_view'
@@ -367,7 +380,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 	}
 	defer rows.Close()
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 	var schemaTables []struct {
 		schema string
 		table  string
@@ -448,9 +461,9 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 
 		mrnValue := mrn.New(assetType, "PostgreSQL", objectName)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:        &objectName,
 			MRN:         &mrnValue,
 			Type:        assetType,
@@ -459,7 +472,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			Metadata:    metadata,
 			Schema:      make(map[string]string),
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "PostgreSQL",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -606,7 +619,7 @@ func (s *Source) getBulkColumnInfo(ctx context.Context, schemaTables []struct {
 	return result, nil
 }
 
-func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]lineage.LineageEdge, error) {
+func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]pluginsdk.LineageEdge, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -640,7 +653,7 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 	}
 	defer rows.Close()
 
-	var lineages []lineage.LineageEdge
+	var lineages []pluginsdk.LineageEdge
 	uniqueRelations := make(map[string]struct{})
 
 	for rows.Next() {
@@ -678,7 +691,7 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 		}
 		uniqueRelations[relationKey] = struct{}{}
 
-		lineages = append(lineages, lineage.LineageEdge{
+		lineages = append(lineages, pluginsdk.LineageEdge{
 			Source: sourceMRN,
 			Target: targetMRN,
 			Type:   "FOREIGN_KEY",
@@ -692,14 +705,14 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 	return lineages, nil
 }
 
-func (s *Source) collectTableStatistics(ctx context.Context, dbName string, assets []asset.Asset) []plugin.Statistic {
-	var statistics []plugin.Statistic
+func (s *Source) collectTableStatistics(ctx context.Context, dbName string, assets []pluginsdk.Asset) []pluginsdk.Statistic {
+	var statistics []pluginsdk.Statistic
 
 	query := `
-		SELECT 
+		SELECT
 			n.nspname || '.' || c.relname as table_name,
 			c.reltuples::bigint as row_count,
-			(SELECT COUNT(*) FROM information_schema.columns 
+			(SELECT COUNT(*) FROM information_schema.columns
 			 WHERE table_schema = n.nspname AND table_name = c.relname) as column_count,
 			pg_total_relation_size(c.oid) as total_size_bytes
 		FROM pg_catalog.pg_class c
@@ -715,10 +728,16 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 	}
 	defer rows.Close()
 
+	// Key by schema-qualified name to match the stats query's
+	// nspname || '.' || relname output.
 	assetMap := make(map[string]string)
 	for _, a := range assets {
+		schemaName, ok := a.Metadata["schema"].(string)
+		if !ok {
+			continue
+		}
 		if tableName, ok := a.Metadata["table_name"].(string); ok {
-			assetMap[tableName] = *a.MRN
+			assetMap[schemaName+"."+tableName] = *a.MRN
 		}
 	}
 
@@ -736,17 +755,17 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 		}
 
 		statistics = append(statistics,
-			plugin.Statistic{
+			pluginsdk.Statistic{
 				AssetMRN:   assetMRN,
 				MetricName: "asset.row_count",
 				Value:      float64(rowCount),
 			},
-			plugin.Statistic{
+			pluginsdk.Statistic{
 				AssetMRN:   assetMRN,
 				MetricName: "asset.column_count",
 				Value:      float64(columnCount),
 			},
-			plugin.Statistic{
+			pluginsdk.Statistic{
 				AssetMRN:   assetMRN,
 				MetricName: "asset.size_bytes",
 				Value:      float64(sizeBytes),
@@ -758,12 +777,12 @@ func (s *Source) collectTableStatistics(ctx context.Context, dbName string, asse
 }
 
 // FetchSampleData implements the DataFetcher interface to retrieve sample data from a PostgreSQL table
-func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
+func (s *Source) FetchSampleData(ctx context.Context, config pluginsdk.RawConfig, a *pluginsdk.Asset) ([]string, [][]interface{}, error) {
 	if a == nil || a.Metadata == nil {
 		return nil, nil, fmt.Errorf("asset or asset metadata is nil")
 	}
 
-	parsedConfig, err := plugin.UnmarshalPluginConfig[Config](config)
+	parsedConfig, err := pluginsdk.UnmarshalConfig[Config](config)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parsing plugin config: %w", err)
 	}
@@ -825,13 +844,13 @@ func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginCon
 			log.Warn().Err(err).Msg("Failed to scan row, skipping")
 			continue
 		}
-		
+
 		// Convert pgx-specific types to JSON-friendly formats
 		convertedValues := make([]interface{}, len(values))
 		for i, val := range values {
 			convertedValues[i] = convertPgxValue(val)
 		}
-		
+
 		dataRows = append(dataRows, convertedValues)
 	}
 
@@ -882,20 +901,5 @@ func convertPgxValue(val interface{}) interface{} {
 	default:
 		// For other types, return as is
 		return val
-	}
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "postgresql",
-		Name:        "PostgreSQL",
-		Description: "Discover databases, schemas, and tables from PostgreSQL instances",
-		Icon:        "postgresql",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register PostgreSQL plugin")
 	}
 }
