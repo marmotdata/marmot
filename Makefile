@@ -15,7 +15,7 @@ swagger:
 	rm -f $(SDK_OPENAPI3)
 
 build:
-	go build -o bin/$(BINARY_NAME) cmd/main.go
+	go build -ldflags '-s -w' -o bin/$(BINARY_NAME) cmd/main.go
 
 dev: swagger build
 	MARMOT_LOGGING_LEVEL=debug MARMOT_SERVER_ALLOW_UNENCRYPTED=true MARMOT_TELEMETRY_ENABLED=false ./bin/$(BINARY_NAME) run
