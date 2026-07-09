@@ -15,9 +15,6 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/health"
 	"github.com/marmotdata/marmot/internal/crypto"
 
-	// Plugin imports
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/trino"
-
 	"github.com/marmotdata/marmot/internal/api/auth"
 	adminAPI "github.com/marmotdata/marmot/internal/api/v1/admin"
 	agentsAPI "github.com/marmotdata/marmot/internal/api/v1/agents"

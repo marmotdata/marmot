@@ -1,9 +1,6 @@
-// +marmot:name=Trino
-// +marmot:description=Discovers catalogs, schemas, tables, and views from Trino clusters with optional AI enrichment.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package trino discovers catalogs, schemas, tables, and views from
+// Trino clusters, with optional AI enrichment.
 package trino
-
 
 import (
 	"context"
@@ -13,13 +10,25 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	_ "github.com/trinodb/trino-go-client/trino"
 )
+
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "trino",
+		Name:        "Trino",
+		Description: "Discover catalogs, schemas, and tables from Trino clusters",
+		Icon:        "trino",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
 
 // connectorInfo describes how to map a Trino connector's assets to native
 // provider MRNs so that assets merge with those discovered by native plugins.
@@ -50,12 +59,12 @@ var internalConnectors = map[string]bool{
 // Connectors absent from this map (and not internal) use a default mapping.
 var connectorMap = map[string]connectorInfo{
 	// Relational databases
-	"postgresql": {Provider: "PostgreSQL", MRNName: func(_, _, table string) string { return table }},
-	"mysql":      {Provider: "MySQL", MRNName: func(_, _, table string) string { return table }},
-	"mariadb":    {Provider: "MariaDB", MRNName: func(_, _, table string) string { return table }},
-	"sqlserver":  {Provider: "SQL Server", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"oracle":     {Provider: "Oracle", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"clickhouse": {Provider: "ClickHouse", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"postgresql":  {Provider: "PostgreSQL", MRNName: func(_, _, table string) string { return table }},
+	"mysql":       {Provider: "MySQL", MRNName: func(_, _, table string) string { return table }},
+	"mariadb":     {Provider: "MariaDB", MRNName: func(_, _, table string) string { return table }},
+	"sqlserver":   {Provider: "SQL Server", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"oracle":      {Provider: "Oracle", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"clickhouse":  {Provider: "ClickHouse", MRNName: func(_, schema, table string) string { return schema + "." + table }},
 	"singlestore": {Provider: "SingleStore", MRNName: func(_, _, table string) string { return table }},
 	"redshift":    {Provider: "Redshift", MRNName: func(_, schema, table string) string { return schema + "." + table }},
 
@@ -68,10 +77,10 @@ var connectorMap = map[string]connectorInfo{
 	"hudi":       {Provider: "Hudi", MRNName: defaultMRNName},
 
 	// NoSQL / document / key-value
-	"mongodb":       {Provider: "MongoDB", MRNName: func(_, _, table string) string { return table }},
-	"cassandra":     {Provider: "Cassandra", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"redis":         {Provider: "Redis", MRNName: func(_, _, table string) string { return table }},
-	"accumulo":      {Provider: "Accumulo", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"mongodb":   {Provider: "MongoDB", MRNName: func(_, _, table string) string { return table }},
+	"cassandra": {Provider: "Cassandra", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"redis":     {Provider: "Redis", MRNName: func(_, _, table string) string { return table }},
+	"accumulo":  {Provider: "Accumulo", MRNName: func(_, schema, table string) string { return schema + "." + table }},
 
 	// Search / analytics engines
 	"elasticsearch": {Provider: "Elasticsearch", MRNName: func(_, _, table string) string { return table }},
@@ -108,9 +117,8 @@ func connectorInfoForName(connector string) (connectorInfo, bool) {
 }
 
 // Config for Trino plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	// Connection
 	Host        string `json:"host" validate:"required" description:"Trino coordinator hostname"`
@@ -139,7 +147,6 @@ type Config struct {
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 host: "trino.company.com"
 port: 8080
@@ -160,8 +167,8 @@ type Source struct {
 	catalogConnectors map[string]string // catalog name → connector name
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -182,12 +189,11 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.IncludeColumns = true
 	}
 
-
 	if config.AIClassifyLabels == nil && config.AIClassifyTables {
 		config.AIClassifyLabels = []string{"analytics", "operational", "pii", "financial", "logs", "reference"}
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -195,7 +201,13 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	// The host spawns a fresh plugin process per call, so Discover
+	// cannot rely on state set by an earlier Validate call.
+	if _, err := s.Validate(pluginConfig); err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
@@ -204,8 +216,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	defer s.closeConnection()
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	catalogs, err := s.discoverCatalogs(ctx)
 	if err != nil {
@@ -249,7 +261,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 			// Catalog -> Table/View lineage
 			if s.config.IncludeCatalogs {
 				for i := range tableAssets {
-					lineages = append(lineages, lineage.LineageEdge{
+					lineages = append(lineages, pluginsdk.LineageEdge{
 						Source: mrn.New("Catalog", "Trino", catalogName),
 						Target: *tableAssets[i].MRN,
 						Type:   "CONTAINS",
@@ -271,7 +283,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		s.enrichWithAI(ctx, assets)
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
@@ -421,7 +433,7 @@ func (s *Source) discoverSchemas(ctx context.Context, catalog string) ([]string,
 	return schemas, nil
 }
 
-func (s *Source) discoverTables(ctx context.Context, catalog, schema string, info connectorInfo) ([]asset.Asset, error) {
+func (s *Source) discoverTables(ctx context.Context, catalog, schema string, info connectorInfo) ([]pluginsdk.Asset, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -437,7 +449,7 @@ func (s *Source) discoverTables(ctx context.Context, catalog, schema string, inf
 	}
 	defer rows.Close()
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 	for rows.Next() {
 		var tableName, tableType string
 		if err := rows.Scan(&tableName, &tableType); err != nil {
@@ -456,7 +468,7 @@ func (s *Source) discoverTables(ctx context.Context, catalog, schema string, inf
 	return assets, nil
 }
 
-func (s *Source) attachColumns(ctx context.Context, catalog, schema string, assets []asset.Asset) {
+func (s *Source) attachColumns(ctx context.Context, catalog, schema string, assets []pluginsdk.Asset) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -517,7 +529,7 @@ func (s *Source) attachColumns(ctx context.Context, catalog, schema string, asse
 	}
 }
 
-func (s *Source) attachTableComments(ctx context.Context, catalog string, assets []asset.Asset) {
+func (s *Source) attachTableComments(ctx context.Context, catalog string, assets []pluginsdk.Asset) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -568,7 +580,7 @@ func (s *Source) attachTableComments(ctx context.Context, catalog string, assets
 	}
 }
 
-func (s *Source) collectStats(ctx context.Context, assets []asset.Asset) {
+func (s *Source) collectStats(ctx context.Context, assets []pluginsdk.Asset) {
 	for i := range assets {
 		if assets[i].Type != "Table" {
 			continue
@@ -669,7 +681,7 @@ func (s *Source) probeAICatalog(ctx context.Context) bool {
 }
 
 // enrichWithAI performs AI-powered enrichment on discovered assets
-func (s *Source) enrichWithAI(ctx context.Context, assets []asset.Asset) {
+func (s *Source) enrichWithAI(ctx context.Context, assets []pluginsdk.Asset) {
 	if !s.config.AIGenerateDescriptions && !s.config.AIClassifyTables {
 		return
 	}
@@ -788,7 +800,7 @@ func (s *Source) aiClassifyTable(ctx context.Context, table, columnSummary strin
 	return "", nil
 }
 
-func (s *Source) createCatalogAsset(catalogName string) asset.Asset {
+func (s *Source) createCatalogAsset(catalogName string) pluginsdk.Asset {
 	metadata := map[string]interface{}{
 		"host":         s.config.Host,
 		"port":         s.config.Port,
@@ -797,16 +809,16 @@ func (s *Source) createCatalogAsset(catalogName string) asset.Asset {
 
 	mrnValue := mrn.New("Catalog", "Trino", catalogName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
-		Name:        &catalogName,
-		MRN:         &mrnValue,
-		Type:        "Catalog",
-		Providers:   []string{"Trino"},
-		Metadata:    metadata,
-		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+	return pluginsdk.Asset{
+		Name:      &catalogName,
+		MRN:       &mrnValue,
+		Type:      "Catalog",
+		Providers: []string{"Trino"},
+		Metadata:  metadata,
+		Tags:      processedTags,
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Trino",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -815,7 +827,7 @@ func (s *Source) createCatalogAsset(catalogName string) asset.Asset {
 	}
 }
 
-func (s *Source) attachDDL(ctx context.Context, catalog, schema string, assets []asset.Asset) {
+func (s *Source) attachDDL(ctx context.Context, catalog, schema string, assets []pluginsdk.Asset) {
 	for i := range assets {
 		tName, ok := assets[i].Metadata["table_name"].(string)
 		if !ok {
@@ -845,7 +857,7 @@ func (s *Source) attachDDL(ctx context.Context, catalog, schema string, assets [
 	}
 }
 
-func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, info connectorInfo) asset.Asset {
+func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, info connectorInfo) pluginsdk.Asset {
 	metadata := map[string]interface{}{
 		"catalog":    catalog,
 		"schema":     schema,
@@ -861,16 +873,16 @@ func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, 
 	name := info.MRNName(catalog, schema, tableName)
 	mrnValue := mrn.New(assetType, info.Provider, name)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
-		Name:        &name,
-		MRN:         &mrnValue,
-		Type:        assetType,
-		Providers:   []string{info.Provider},
-		Metadata:    metadata,
-		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+	return pluginsdk.Asset{
+		Name:      &name,
+		MRN:       &mrnValue,
+		Type:      assetType,
+		Providers: []string{info.Provider},
+		Metadata:  metadata,
+		Tags:      processedTags,
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Trino",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -916,19 +928,4 @@ func quoteIdentifier(id string) string {
 func escapeString(s string) string {
 	s = strings.ReplaceAll(s, "\x00", "")
 	return strings.ReplaceAll(s, "'", "''")
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "trino",
-		Name:        "Trino",
-		Description: "Discover catalogs, schemas, and tables from Trino clusters",
-		Icon:        "trino",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register Trino plugin")
-	}
 }

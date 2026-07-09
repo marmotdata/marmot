@@ -3,7 +3,7 @@ package trino
 import (
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -11,19 +11,19 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
-		config  plugin.RawPluginConfig
+		config  pluginsdk.RawConfig
 		wantErr string
 	}{
 		{
 			name: "valid minimal config",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "trino.example.com",
 				"user": "marmot",
 			},
 		},
 		{
 			name: "valid full config",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":             "trino.example.com",
 				"port":             8443,
 				"user":             "marmot",
@@ -35,17 +35,17 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name:    "missing host",
-			config:  plugin.RawPluginConfig{"user": "marmot"},
+			config:  pluginsdk.RawConfig{"user": "marmot"},
 			wantErr: "host",
 		},
 		{
 			name:    "missing user",
-			config:  plugin.RawPluginConfig{"host": "localhost"},
+			config:  pluginsdk.RawConfig{"host": "localhost"},
 			wantErr: "user",
 		},
 		{
 			name: "invalid port",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"user": "marmot",
 				"port": 99999,
@@ -54,7 +54,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "with filter",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"user": "marmot",
 				"filter": map[string]interface{}{
@@ -80,7 +80,7 @@ func TestSource_Validate(t *testing.T) {
 
 func TestSource_ValidateDefaults(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"host": "localhost",
 		"user": "marmot",
 	})
@@ -96,7 +96,7 @@ func TestSource_ValidateDefaults(t *testing.T) {
 
 func TestSource_ValidateBoolOverrides(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"host":             "localhost",
 		"user":             "marmot",
 		"include_catalogs": false,
@@ -174,7 +174,7 @@ func TestConnectorMRNNames(t *testing.T) {
 func TestCreateTableAsset_NativeProvider(t *testing.T) {
 	s := &Source{
 		config: &Config{
-			BaseConfig: plugin.BaseConfig{},
+			BaseConfig: pluginsdk.BaseConfig{},
 			Host:       "trino.example.com",
 			Port:       8080,
 		},
