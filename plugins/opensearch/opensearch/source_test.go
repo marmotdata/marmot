@@ -10,7 +10,7 @@ import (
 	opensearchgo "github.com/opensearch-project/opensearch-go/v4"
 	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -18,20 +18,20 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name        string
-		config      plugin.RawPluginConfig
+		config      pluginsdk.RawConfig
 		wantErr     bool
 		errContains string
 	}{
 		{
 			name: "valid config with addresses",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"addresses": []interface{}{"http://localhost:9200"},
 			},
 			wantErr: false,
 		},
 		{
 			name: "valid config with basic auth",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"addresses": []interface{}{"http://localhost:9200"},
 				"username":  "admin",
 				"password":  "admin",
@@ -40,7 +40,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name:        "missing addresses",
-			config:      plugin.RawPluginConfig{},
+			config:      pluginsdk.RawConfig{},
 			wantErr:     true,
 			errContains: "addresses",
 		},
@@ -65,7 +65,7 @@ func TestSource_Validate(t *testing.T) {
 
 func TestSource_Validate_Defaults(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"addresses": []interface{}{"http://localhost:9200"},
 	})
 	require.NoError(t, err)
@@ -78,7 +78,7 @@ func TestSource_Validate_Defaults(t *testing.T) {
 
 func TestSource_Validate_ExplicitFalse(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"addresses":            []interface{}{"http://localhost:9200"},
 		"include_data_streams": false,
 		"include_aliases":      false,
@@ -262,7 +262,7 @@ func TestSource_Discover(t *testing.T) {
 	defer server.Close()
 
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"addresses": []interface{}{server.URL},
 	})
 	require.NoError(t, err)
@@ -272,7 +272,7 @@ func TestSource_Discover(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	result, err := s.Discover(context.Background(), plugin.RawPluginConfig{
+	result, err := s.Discover(context.Background(), pluginsdk.RawConfig{
 		"addresses": []interface{}{server.URL},
 	})
 	require.NoError(t, err)

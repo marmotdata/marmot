@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        plugin: [kafka, confluent, redpanda, airflow, duckdb, asyncapi, dbt, azureblob, bigquery, clickhouse, deltalake, dynamodb, elasticsearch, glue, iceberg, lambda, mongodb, mysql, nats]
+        plugin: [kafka, confluent, redpanda, airflow, duckdb, asyncapi, dbt, azureblob, bigquery, clickhouse, deltalake, dynamodb, elasticsearch, glue, iceberg, lambda, mongodb, mysql, nats, openapi, opensearch]
     runs-on: ubuntu-latest
     defaults:
       run:

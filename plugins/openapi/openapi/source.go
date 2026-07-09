@@ -1,7 +1,5 @@
-// +marmot:name=OpenAPI
-// +marmot:description=This plugin discovers OpenAPI v3 specifications.
-// +marmot:status=experimental
-// +marmot:features=Assets
+// Package openapi discovers services and endpoints from OpenAPI v3
+// specifications.
 package openapi
 
 import (
@@ -12,27 +10,38 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/filesource"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/pb33f/libopenapi"
 	"github.com/pb33f/libopenapi/datamodel"
 	v3 "github.com/pb33f/libopenapi/datamodel/high/v3"
 	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "openapi",
+		Name:        "OpenAPI",
+		Description: "Discover OpenAPI v3 specifications",
+		Icon:        "openapi",
+		Category:    "api",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
 
 type Source struct {
 	config *Config
 }
 
 // Config for OpenAPI plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig        `json:",inline"`
-	*plugin.FileSourceConfig `json:",inline"`
-	SpecPath                 string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications (local path, s3://bucket/prefix or git::url)" validate:"required"`
+	pluginsdk.BaseConfig         `json:",inline"`
+	*filesource.FileSourceConfig `json:",inline"`
+	SpecPath                     string `json:"spec_path" description:"Path to the directory containing the OpenAPI specifications (local path, s3://bucket/prefix or git::url)" validate:"required"`
 }
 
 const (
@@ -42,7 +51,6 @@ const (
 )
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 spec_path: "/app/openapi-specs"
 tags:
@@ -50,17 +58,17 @@ tags:
   - "specifications"
 `
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
-	if plugin.DetectSourceType(config.SpecPath) == "local" && (config.FileSourceConfig == nil || config.FileSourceConfig.SourceType == "" || config.FileSourceConfig.SourceType == "local") {
+	if filesource.DetectSourceType(config.SpecPath) == "local" && (config.FileSourceConfig == nil || config.FileSourceConfig.SourceType == "" || config.FileSourceConfig.SourceType == "local") {
 		if _, err := os.Stat(config.SpecPath); os.IsNotExist(err) {
 			return nil, fmt.Errorf("spec path does not exist: %s", config.SpecPath)
 		}
@@ -69,21 +77,21 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("parsing config: %w", err)
 	}
 	s.config = config
 
-	localPath, cleanup, err := plugin.ResolveFilePath(ctx, config.FileSourceConfig, config.SpecPath)
+	localPath, cleanup, err := filesource.ResolveFilePath(ctx, config.FileSourceConfig, config.SpecPath)
 	if err != nil {
 		return nil, fmt.Errorf("resolving file path: %w", err)
 	}
 	defer cleanup()
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 	seenAssets := make(map[string]bool)
 
 	err = filepath.Walk(localPath, func(path string, info os.FileInfo, err error) error {
@@ -137,13 +145,13 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("walking spec path: %w", err)
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
 }
 
-func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document], config *Config) asset.Asset {
+func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document], config *Config) pluginsdk.Asset {
 	serviceName := spec.Model.Info.Title
 	description := spec.Model.Info.Description
 	if description == "" {
@@ -194,23 +202,23 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 	if spec.Model.ExternalDocs != nil {
 		serviceFields.ExternalDocs = spec.Model.ExternalDocs.URL
 	}
-	metadata := plugin.MapToMetadata(serviceFields)
+	metadata := pluginsdk.MapToMetadata(serviceFields)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	externalLinks := []asset.ExternalLink{}
+	externalLinks := []pluginsdk.AssetExternalLink{}
 	if spec.Model.ExternalDocs != nil {
 		name := spec.Model.ExternalDocs.Description
 		if len(name) == 0 {
 			name = spec.Model.ExternalDocs.URL
 		}
-		externalLinks = append(externalLinks, asset.ExternalLink{
+		externalLinks = append(externalLinks, pluginsdk.AssetExternalLink{
 			Name: name,
 			URL:  spec.Model.ExternalDocs.URL,
 		})
 	}
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:          &serviceName,
 		MRN:           &mrnValue,
 		Type:          typeService,
@@ -218,13 +226,13 @@ func (s *Source) createServiceAsset(spec *libopenapi.DocumentModel[v3.Document],
 		Description:   &description,
 		Metadata:      metadata,
 		Tags:          processedTags,
-		Sources:       []asset.AssetSource{},
+		Sources:       []pluginsdk.AssetSource{},
 		ExternalLinks: externalLinks,
 	}
 }
 
-func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document], config *Config) []asset.Asset {
-	assets := []asset.Asset{}
+func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document], config *Config) []pluginsdk.Asset {
+	assets := []pluginsdk.Asset{}
 	parentMrn := serviceMrnValue(spec)
 	serviceName := spec.Model.Info.Title
 
@@ -259,21 +267,21 @@ func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document
 			if len(endpointField.Description) == 0 {
 				endpointField.Description = item.Description
 			}
-			metadata := plugin.MapToMetadata(endpointField)
-			processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+			metadata := pluginsdk.MapToMetadata(endpointField)
+			processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 			processedTags = append(processedTags, serviceName)
 			processedTags = append(processedTags, op.Tags...)
 			if op.Deprecated != nil && *op.Deprecated {
 				processedTags = append(processedTags, "deprecated")
 			}
 
-			externalLinks := []asset.ExternalLink{}
+			externalLinks := []pluginsdk.AssetExternalLink{}
 			if op.ExternalDocs != nil {
 				name := op.ExternalDocs.Description
 				if len(name) == 0 {
 					name = op.ExternalDocs.URL
 				}
-				externalLinks = append(externalLinks, asset.ExternalLink{
+				externalLinks = append(externalLinks, pluginsdk.AssetExternalLink{
 					Name: name,
 					URL:  op.ExternalDocs.URL,
 				})
@@ -296,7 +304,7 @@ func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document
 				}
 			}
 
-			asset := asset.Asset{
+			asset := pluginsdk.Asset{
 				Name:          &pathWithMethod,
 				MRN:           &mrnValue,
 				ParentMRN:     &parentMrn,
@@ -305,7 +313,7 @@ func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document
 				Description:   &description,
 				Metadata:      metadata,
 				Tags:          processedTags,
-				Sources:       []asset.AssetSource{},
+				Sources:       []pluginsdk.AssetSource{},
 				ExternalLinks: externalLinks,
 				Schema:        schema,
 			}
@@ -316,7 +324,7 @@ func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document
 	return assets
 }
 
-func addUniqueAsset(assets *[]asset.Asset, newAsset asset.Asset, seen map[string]bool) {
+func addUniqueAsset(assets *[]pluginsdk.Asset, newAsset pluginsdk.Asset, seen map[string]bool) {
 	if newAsset.MRN == nil {
 		log.Warn().Interface("asset", newAsset).Msg("Asset has no MRN, skipping")
 		return
@@ -349,19 +357,4 @@ func isJSON(path string) bool {
 func isYAML(path string) bool {
 	ext := filepath.Ext(path)
 	return ext == ".yaml" || ext == ".yml"
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "openapi",
-		Name:        "OpenAPI",
-		Description: "Discover OpenAPI v3 specifications",
-		Icon:        "openapi",
-		Category:    "api",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register OpenAPI plugin")
-	}
 }

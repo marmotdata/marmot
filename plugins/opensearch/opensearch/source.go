@@ -1,9 +1,6 @@
-// +marmot:name=OpenSearch
-// +marmot:description=This plugin discovers indices, data streams, and aliases from OpenSearch clusters.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package opensearch discovers indices, data streams, and aliases from
+// OpenSearch clusters.
 package opensearch
-
 
 import (
 	"context"
@@ -15,18 +12,29 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	opensearchgo "github.com/opensearch-project/opensearch-go/v4"
 	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 	"github.com/rs/zerolog/log"
 )
 
-// +marmot:config
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "opensearch",
+		Name:        "OpenSearch",
+		Description: "Discover indices, data streams, and aliases from OpenSearch clusters",
+		Icon:        "opensearch",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	Addresses []string `json:"addresses" description:"List of OpenSearch node URLs" validate:"required"`
 	Username  string   `json:"username" description:"Username for basic authentication"`
@@ -41,7 +49,7 @@ type Config struct {
 	IncludeSystemIndices bool `json:"include_system_indices" description:"Include system indices (prefixed with .)" default:"false"`
 }
 
-// +marmot:example-config
+// Example configuration for the plugin
 var _ = `
 addresses:
   - "https://opensearch.company.com:9200"
@@ -57,8 +65,8 @@ type Source struct {
 	client *opensearchapi.Client
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -73,7 +81,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.IncludeIndexStats = true
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -115,14 +123,20 @@ func (s *Source) initClient() error {
 	return nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	// The host spawns a fresh plugin process per call, so Discover
+	// cannot rely on state set by an earlier Validate call.
+	if _, err := s.Validate(pluginConfig); err != nil {
+		return nil, err
+	}
+
 	if err := s.initClient(); err != nil {
 		return nil, fmt.Errorf("initializing client: %w", err)
 	}
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
-	var statistics []plugin.Statistic
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
+	var statistics []pluginsdk.Statistic
 
 	clusterName, err := s.getClusterName(ctx)
 	if err != nil {
@@ -166,15 +180,11 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		Int("statistics", len(statistics)).
 		Msg("OpenSearch discovery completed")
 
-	result := &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:     assets,
 		Lineage:    lineages,
 		Statistics: statistics,
-	}
-
-	plugin.FilterDiscoveryResult(result, pluginConfig)
-
-	return result, nil
+	}, nil
 }
 
 func (s *Source) getClusterName(ctx context.Context) (string, error) {
@@ -185,7 +195,7 @@ func (s *Source) getClusterName(ctx context.Context) (string, error) {
 	return resp.ClusterName, nil
 }
 
-func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]asset.Asset, []plugin.Statistic, error) {
+func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]pluginsdk.Asset, []pluginsdk.Statistic, error) {
 	resp, err := s.client.Cat.Indices(ctx, nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("listing indices: %w", err)
@@ -208,8 +218,8 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 		mappings = make(map[string]map[string]interface{})
 	}
 
-	var assets []asset.Asset
-	var statistics []plugin.Statistic
+	var assets []pluginsdk.Asset
+	var statistics []pluginsdk.Statistic
 
 	for _, idx := range resp.Indices {
 		if idx.Index == "" {
@@ -251,9 +261,9 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 		mrnValue := mrn.New("table", "opensearch", idx.Index)
 		name := idx.Index
 		description := fmt.Sprintf("OpenSearch index %s in cluster %s", idx.Index, clusterName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		a := asset.Asset{
+		a := pluginsdk.Asset{
 			Name:        &name,
 			Description: &description,
 			Type:        "Table",
@@ -261,7 +271,7 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 			MRN:         &mrnValue,
 			Metadata:    metadata,
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "OpenSearch",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -271,7 +281,7 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 
 		if len(s.config.ExternalLinks) > 0 {
 			for _, link := range s.config.ExternalLinks {
-				a.ExternalLinks = append(a.ExternalLinks, asset.ExternalLink{
+				a.ExternalLinks = append(a.ExternalLinks, pluginsdk.AssetExternalLink{
 					Name: link.Name,
 					Icon: link.Icon,
 					URL:  link.URL,
@@ -296,7 +306,7 @@ func (s *Source) discoverIndices(ctx context.Context, clusterName string) ([]ass
 		assets = append(assets, a)
 
 		if s.config.IncludeIndexStats {
-			statistics = append(statistics, plugin.Statistic{
+			statistics = append(statistics, pluginsdk.Statistic{
 				AssetMRN:   mrnValue,
 				MetricName: "docs_count",
 				Value:      float64(docsCount),
@@ -379,14 +389,14 @@ func flattenMappingProperties(prefix string, properties map[string]interface{}) 
 	return columns
 }
 
-func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([]asset.Asset, []lineage.LineageEdge, error) {
+func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([]pluginsdk.Asset, []pluginsdk.LineageEdge, error) {
 	resp, err := s.client.DataStream.Get(ctx, nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("listing data streams: %w", err)
 	}
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	for _, ds := range resp.DataStreams {
 		if !s.config.IncludeSystemIndices && strings.HasPrefix(ds.Name, ".") {
@@ -406,9 +416,9 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 		mrnValue := mrn.New("data-stream", "opensearch", ds.Name)
 		name := ds.Name
 		description := fmt.Sprintf("OpenSearch data stream %s in cluster %s", ds.Name, clusterName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:        &name,
 			Description: &description,
 			Type:        "Data Stream",
@@ -416,7 +426,7 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 			MRN:         &mrnValue,
 			Metadata:    metadata,
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "OpenSearch",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -429,7 +439,7 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 				continue
 			}
 			indexMRN := mrn.New("table", "opensearch", backingIndex.Name)
-			lineages = append(lineages, lineage.LineageEdge{
+			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: mrnValue,
 				Target: indexMRN,
 				Type:   "CONTAINS",
@@ -440,7 +450,7 @@ func (s *Source) discoverDataStreams(ctx context.Context, clusterName string) ([
 	return assets, lineages, nil
 }
 
-func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]asset.Asset, []lineage.LineageEdge, error) {
+func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]pluginsdk.Asset, []pluginsdk.LineageEdge, error) {
 	resp, err := s.client.Cat.Aliases(ctx, nil)
 	if err != nil {
 		return nil, nil, fmt.Errorf("listing aliases: %w", err)
@@ -471,8 +481,8 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 		}
 	}
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	for aliasName, info := range aliasMap {
 		filterDefined := "false"
@@ -495,9 +505,9 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 		mrnValue := mrn.New("alias", "opensearch", aliasName)
 		name := aliasName
 		description := fmt.Sprintf("OpenSearch alias %s in cluster %s", aliasName, clusterName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:        &name,
 			Description: &description,
 			Type:        "Alias",
@@ -505,7 +515,7 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 			MRN:         &mrnValue,
 			Metadata:    metadata,
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "OpenSearch",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -515,7 +525,7 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 
 		for _, indexName := range info.indices {
 			indexMRN := mrn.New("table", "opensearch", indexName)
-			lineages = append(lineages, lineage.LineageEdge{
+			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: mrnValue,
 				Target: indexMRN,
 				Type:   "REFERENCES",
@@ -524,19 +534,4 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]ass
 	}
 
 	return assets, lineages, nil
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "opensearch",
-		Name:        "OpenSearch",
-		Description: "Discover indices, data streams, and aliases from OpenSearch clusters",
-		Icon:        "opensearch",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register OpenSearch plugin")
-	}
 }
