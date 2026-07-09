@@ -17,7 +17,7 @@ RUN go mod download
 
 COPY . .
 COPY --from=frontend /app/web/marmot/build ./internal/staticfiles/build
-RUN CGO_ENABLED=1 go build -tags production -ldflags '-s -w -extldflags "-static"' -o marmot ./cmd/main.go
+RUN CGO_ENABLED=0 go build -tags production -ldflags '-s -w' -o marmot ./cmd/main.go
 
 FROM alpine:3.23.3
 
