@@ -1,9 +1,5 @@
-// +marmot:name=NATS
-// +marmot:description=Discovers JetStream streams from NATS servers.
-// +marmot:status=experimental
-// +marmot:features=Assets
+// Package nats discovers JetStream streams from NATS servers.
 package nats
-
 
 import (
 	"context"
@@ -12,18 +8,29 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
-	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "nats",
+		Name:        "NATS",
+		Description: "Discover JetStream streams from NATS servers",
+		Icon:        "nats",
+		Category:    "messaging",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for NATS plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	// Connection options
 	Host            string `json:"host" description:"NATS server hostname or IP address" validate:"required"`
@@ -34,11 +41,9 @@ type Config struct {
 	CredentialsFile string `json:"credentials_file,omitempty" description:"Path to NATS credentials file (.creds)"`
 	TLS             bool   `json:"tls,omitempty" description:"Enable TLS connection"`
 	TLSInsecure     bool   `json:"tls_insecure,omitempty" label:"TLS Insecure" description:"Skip TLS certificate verification"`
-
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 host: "localhost"
 port: 4222
@@ -55,8 +60,8 @@ type Source struct {
 	config *Config
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -65,7 +70,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.Port = 4222
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -73,7 +78,13 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, _ plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	// The host spawns a fresh plugin process per call, so Discover
+	// cannot rely on state set by an earlier Validate call.
+	if _, err := s.Validate(pluginConfig); err != nil {
+		return nil, err
+	}
+
 	nc, err := s.connect()
 	if err != nil {
 		return nil, fmt.Errorf("connecting to NATS: %w", err)
@@ -85,7 +96,7 @@ func (s *Source) Discover(ctx context.Context, _ plugin.RawPluginConfig) (*plugi
 		return nil, fmt.Errorf("creating JetStream context: %w", err)
 	}
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 
 	streams := js.ListStreams(ctx)
 	for info := range streams.Info() {
@@ -96,7 +107,7 @@ func (s *Source) Discover(ctx context.Context, _ plugin.RawPluginConfig) (*plugi
 		return nil, fmt.Errorf("listing streams: %w", err)
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets: assets,
 	}, nil
 }
@@ -130,7 +141,7 @@ func (s *Source) connect() (*nats.Conn, error) {
 	return nats.Connect(addr, opts...)
 }
 
-func (s *Source) createStreamAsset(info *jetstream.StreamInfo) asset.Asset {
+func (s *Source) createStreamAsset(info *jetstream.StreamInfo) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 
 	metadata["stream_name"] = info.Config.Name
@@ -157,35 +168,20 @@ func (s *Source) createStreamAsset(info *jetstream.StreamInfo) asset.Asset {
 	streamName := info.Config.Name
 	mrnValue := mrn.New("Stream", "NATS", streamName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:      &streamName,
 		MRN:       &mrnValue,
 		Type:      "Stream",
 		Providers: []string{"NATS"},
-		Metadata:    metadata,
-		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Metadata:  metadata,
+		Tags:      processedTags,
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "NATS",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
 			Priority:   1,
 		}},
-	}
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "nats",
-		Name:        "NATS",
-		Description: "Discover JetStream streams from NATS servers",
-		Icon:        "nats",
-		Category:    "messaging",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register NATS plugin")
 	}
 }

@@ -16,8 +16,6 @@ import (
 	"github.com/marmotdata/marmot/internal/crypto"
 
 	// Plugin imports
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/mysql"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/nats"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/openapi"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/opensearch"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/postgresql"

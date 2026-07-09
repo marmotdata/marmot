@@ -1,9 +1,5 @@
-// +marmot:name=MySQL
-// +marmot:description=This plugin discovers databases and tables from MySQL instances.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package mysql discovers databases and tables from MySQL instances.
 package mysql
-
 
 import (
 	"context"
@@ -14,17 +10,28 @@ import (
 	"unicode/utf8"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "mysql",
+		Name:        "MySQL",
+		Description: "Discover databases and tables from MySQL instances",
+		Icon:        "mysql",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for MySQL plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	Host     string `json:"host" description:"MySQL server hostname or IP address" validate:"required"`
 	Port     int    `json:"port" description:"MySQL server port" default:"3306" validate:"omitempty,min=1,max=65535"`
@@ -39,7 +46,6 @@ type Config struct {
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 host: "mysql-prod.internal"
 port: 3306
@@ -57,8 +63,8 @@ type Source struct {
 	db     *sql.DB
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -70,7 +76,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.TLS = "false"
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -78,7 +84,13 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	// The host spawns a fresh plugin process per call, so Discover
+	// cannot rely on state set by an earlier Validate call.
+	if _, err := s.Validate(pluginConfig); err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
@@ -87,8 +99,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	defer s.closeConnection()
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	log.Debug().Str("database", s.config.Database).Msg("Starting table and view discovery")
 	objectAssets, err := s.discoverTablesAndViews(ctx, s.config.Database)
@@ -110,7 +122,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		}
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
@@ -163,12 +175,12 @@ func (s *Source) closeConnection() {
 	}
 }
 
-func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]asset.Asset, error) {
+func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]pluginsdk.Asset, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
 	query := `
-		SELECT 
+		SELECT
 			TABLE_SCHEMA as schema_name,
 			TABLE_NAME as name,
 			TABLE_TYPE as object_type,
@@ -191,7 +203,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 	}
 	defer rows.Close()
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 
 	for rows.Next() {
 		var (
@@ -278,9 +290,9 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 
 		mrnValue := mrn.New(assetType, "MySQL", objectName)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:        &objectName,
 			MRN:         &mrnValue,
 			Type:        assetType,
@@ -288,7 +300,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 			Description: &assetDesc,
 			Metadata:    metadata,
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "MySQL",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -304,7 +316,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]a
 	return assets, nil
 }
 
-func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]lineage.LineageEdge, error) {
+func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]pluginsdk.LineageEdge, error) {
 	queryCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
 
@@ -334,7 +346,7 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 	}
 	defer rows.Close()
 
-	var lineages []lineage.LineageEdge
+	var lineages []pluginsdk.LineageEdge
 	uniqueRelations := make(map[string]struct{})
 
 	for rows.Next() {
@@ -382,7 +394,7 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 		}
 		uniqueRelations[relationKey] = struct{}{}
 
-		lineages = append(lineages, lineage.LineageEdge{
+		lineages = append(lineages, pluginsdk.LineageEdge{
 			Source: sourceMRN,
 			Target: targetMRN,
 			Type:   "FOREIGN_KEY",
@@ -397,12 +409,12 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]line
 }
 
 // FetchSampleData implements the DataFetcher interface to retrieve sample data from a MySQL table
-func (s *Source) FetchSampleData(ctx context.Context, config plugin.RawPluginConfig, a *asset.Asset) ([]string, [][]interface{}, error) {
+func (s *Source) FetchSampleData(ctx context.Context, config pluginsdk.RawConfig, a *pluginsdk.Asset) ([]string, [][]interface{}, error) {
 	if a == nil || a.Metadata == nil {
 		return nil, nil, fmt.Errorf("asset or asset metadata is nil")
 	}
 
-	parsedConfig, err := plugin.UnmarshalPluginConfig[Config](config)
+	parsedConfig, err := pluginsdk.UnmarshalConfig[Config](config)
 	if err != nil {
 		return nil, nil, fmt.Errorf("parsing plugin config: %w", err)
 	}
@@ -511,20 +523,5 @@ func convertMySQLValue(val interface{}) interface{} {
 	default:
 		// For other types, return as is
 		return val
-	}
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "mysql",
-		Name:        "MySQL",
-		Description: "Discover databases and tables from MySQL instances",
-		Icon:        "mysql",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register MySQL plugin")
 	}
 }

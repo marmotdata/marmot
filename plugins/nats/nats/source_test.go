@@ -3,7 +3,7 @@ package nats
 import (
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -11,24 +11,24 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name    string
-		config  plugin.RawPluginConfig
+		config  pluginsdk.RawConfig
 		wantErr string
 	}{
 		{
 			name: "valid host config",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"port": 4222,
 			},
 		},
 		{
 			name:    "missing host",
-			config:  plugin.RawPluginConfig{},
+			config:  pluginsdk.RawConfig{},
 			wantErr: "host",
 		},
 		{
 			name: "invalid port",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"port": 99999,
 			},
@@ -36,21 +36,21 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "with token",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":  "localhost",
 				"token": "s3cr3t",
 			},
 		},
 		{
 			name: "with credentials file",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host":             "localhost",
 				"credentials_file": "/path/to/creds.creds",
 			},
 		},
 		{
 			name: "with filter",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"host": "localhost",
 				"filter": map[string]interface{}{
 					"include": []interface{}{"^ORDERS"},
@@ -75,7 +75,7 @@ func TestSource_Validate(t *testing.T) {
 
 func TestSource_ValidateDefaults(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"host": "localhost",
 	})
 	require.NoError(t, err)
