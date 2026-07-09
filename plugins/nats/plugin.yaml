@@ -1,0 +1,18 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: nats
+version: 0.1.0
+
+description: Discover JetStream streams from NATS servers
+category: messaging
+status: experimental
+icon: nats
+features:
+  - Assets
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

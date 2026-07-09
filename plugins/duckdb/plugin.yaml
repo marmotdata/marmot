@@ -1,0 +1,19 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: duckdb
+version: 0.1.0
+
+description: Discover schemas, tables, views and foreign key relationships from DuckDB database files
+category: database
+status: experimental
+icon: duckdb
+features:
+  - Assets
+  - Lineage
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

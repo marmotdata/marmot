@@ -1,0 +1,18 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: deltalake
+version: 0.1.0
+
+description: Discover tables from Delta Lake transaction logs on local filesystems
+category: data-lake
+status: experimental
+icon: deltalake
+features:
+  - Assets
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

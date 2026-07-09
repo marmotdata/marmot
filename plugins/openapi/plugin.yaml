@@ -1,0 +1,18 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: openapi
+version: 0.1.0
+
+description: Discover OpenAPI v3 specifications
+category: api
+status: experimental
+icon: openapi
+features:
+  - Assets
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

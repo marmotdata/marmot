@@ -1,0 +1,18 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: dynamodb
+version: 0.1.0
+
+description: Discover DynamoDB tables from AWS accounts
+category: database
+status: experimental
+icon: dynamodb
+features:
+  - Assets
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

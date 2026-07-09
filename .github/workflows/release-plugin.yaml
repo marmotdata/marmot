@@ -2,11 +2,18 @@ name: Release Plugin
 
 on:
   push:
-    tags:
-      - "plugins/*/v*"
+    branches: [main]
+    paths:
+      - "plugins/*/plugin.yaml"
+  workflow_dispatch:
+    inputs:
+      plugin:
+        description: "Plugin name to force-release (e.g. postgresql). Reads version from plugins/<name>/plugin.yaml."
+        required: true
+        type: string
 
 permissions:
-  contents: read
+  contents: write # to push receipt git tag
   packages: write
   id-token: write
 
@@ -14,54 +21,111 @@ env:
   REGISTRY: ghcr.io/${{ github.repository_owner }}/plugins
 
 jobs:
-  release:
+  detect:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+      count: ${{ steps.set.outputs.count }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Install yq
+        run: |
+          set -euo pipefail
+          if command -v yq >/dev/null; then exit 0; fi
+          sudo wget -q -O /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+          sudo chmod +x /usr/local/bin/yq
+
+      - name: Compute matrix
+        id: set
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          DISPATCH_PLUGIN: ${{ github.event.inputs.plugin }}
+        run: |
+          set -euo pipefail
+
+          releases=()
+
+          add_release() {
+            local yaml="$1"
+            local plugin_dir plugin_name version
+            plugin_dir=$(dirname "$yaml")
+            plugin_name=$(basename "$plugin_dir")
+            version=$(yq -r '.version' "$yaml")
+
+            if [ -z "$version" ] || [ "$version" = "null" ]; then
+              echo "::error file=${yaml}::missing .version"
+              exit 1
+            fi
+            if ! echo "$version" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+              echo "::error file=${yaml}::invalid semver '${version}'"
+              exit 1
+            fi
+
+            releases+=("{\"plugin\":\"${plugin_name}\",\"version\":\"${version}\",\"workdir\":\"${plugin_dir}\"}")
+          }
+
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            yaml="plugins/${DISPATCH_PLUGIN}/plugin.yaml"
+            if [ ! -f "$yaml" ]; then
+              echo "::error::no plugin.yaml at ${yaml}"
+              exit 1
+            fi
+            add_release "$yaml"
+          else
+            # Compare each changed plugin.yaml against its previous version.
+            changed=$(git diff --name-only HEAD^..HEAD | grep -E '^plugins/[^/]+/plugin\.yaml$' || true)
+            for yaml in $changed; do
+              new_ver=$(yq -r '.version' "$yaml")
+              old_ver=$(git show "HEAD^:${yaml}" 2>/dev/null | yq -r '.version // ""' 2>/dev/null || echo "")
+              if [ "$new_ver" = "$old_ver" ]; then
+                continue
+              fi
+              add_release "$yaml"
+            done
+          fi
+
+          if [ ${#releases[@]} -eq 0 ]; then
+            echo "matrix={\"include\":[]}" >> "$GITHUB_OUTPUT"
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          else
+            joined=$(IFS=,; echo "${releases[*]}")
+            echo "matrix={\"include\":[${joined}]}" >> "$GITHUB_OUTPUT"
+            echo "count=${#releases[@]}" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Detected releases: ${releases[*]:-<none>}"
+
+  release:
+    needs: detect
+    if: needs.detect.outputs.count != '0'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - name: Parse tag
-        id: meta
-        run: |
-          set -euo pipefail
-          ref="${GITHUB_REF_NAME}"
-          rest="${ref#plugins/}"
-          plugin="${rest%%/*}"
-          version="${rest#*/v}"
-          workdir="plugins/${plugin}"
-          if [ ! -d "${workdir}" ]; then
-            echo "No plugin directory at ${workdir}" >&2
-            exit 1
-          fi
-          {
-            echo "plugin=${plugin}"
-            echo "version=${version}"
-            echo "workdir=${workdir}"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
-          go-version-file: ${{ steps.meta.outputs.workdir }}/go.mod
+          go-version-file: ${{ matrix.workdir }}/go.mod
           cache: true
-          cache-dependency-path: ${{ steps.meta.outputs.workdir }}/go.sum
+          cache-dependency-path: ${{ matrix.workdir }}/go.sum
 
-      - name: Install cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Install ORAS
-        uses: oras-project/setup-oras@v1
+      - uses: sigstore/cosign-installer@v3
+      - uses: oras-project/setup-oras@v1
 
       - name: Run tests
-        working-directory: ${{ steps.meta.outputs.workdir }}
+        working-directory: ${{ matrix.workdir }}
         run: go test ./...
 
       - name: Detect cgo plugin
         id: cgo
         run: |
-          if grep -q "CGO_ENABLED=1" "${{ steps.meta.outputs.workdir }}/.goreleaser.yaml"; then
+          if grep -q "CGO_ENABLED=1" "${{ matrix.workdir }}/.goreleaser.yaml"; then
             echo "cgo=true" >> "$GITHUB_OUTPUT"
           else
             echo "cgo=false" >> "$GITHUB_OUTPUT"
@@ -73,10 +137,10 @@ jobs:
         with:
           version: "~> v2"
           args: release --clean --skip=validate
-          workdir: ${{ steps.meta.outputs.workdir }}
+          workdir: ${{ matrix.workdir }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
+          GORELEASER_CURRENT_TAG: v${{ matrix.version }}
 
       # cgo plugins need cross toolchains for the darwin builds, so run
       # goreleaser inside the goreleaser-cross image, the same setup the
@@ -86,7 +150,7 @@ jobs:
         if: steps.cgo.outputs.cgo == 'true'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
+          GORELEASER_CURRENT_TAG: v${{ matrix.version }}
         run: |
           docker run --rm \
             -e CGO_ENABLED=1 \
@@ -96,7 +160,7 @@ jobs:
             -e ACTIONS_ID_TOKEN_REQUEST_TOKEN \
             -e COSIGN_YES=true \
             -v "$PWD:/workspace" \
-            -w "/workspace/${{ steps.meta.outputs.workdir }}" \
+            -w "/workspace/${{ matrix.workdir }}" \
             --entrypoint /bin/sh \
             ghcr.io/goreleaser/goreleaser-cross:v1.26.0 -c \
             'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=validate'
@@ -104,12 +168,23 @@ jobs:
       - name: Log in to GHCR
         run: echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
 
+      - name: Guard against overwriting an existing tag
+        env:
+          PLUGIN: ${{ matrix.plugin }}
+          VERSION: ${{ matrix.version }}
+        run: |
+          set -euo pipefail
+          if oras manifest fetch --descriptor "${REGISTRY}/${PLUGIN}:${VERSION}" >/dev/null 2>&1; then
+            echo "::error::${REGISTRY}/${PLUGIN}:${VERSION} already exists. Bump the version in plugin.yaml to release again."
+            exit 1
+          fi
+
       - name: Push plugin artifacts to GHCR
         id: push
         env:
-          PLUGIN: ${{ steps.meta.outputs.plugin }}
-          VERSION: ${{ steps.meta.outputs.version }}
-          WORKDIR: ${{ steps.meta.outputs.workdir }}
+          PLUGIN: ${{ matrix.plugin }}
+          VERSION: ${{ matrix.version }}
+          WORKDIR: ${{ matrix.workdir }}
         run: |
           set -euo pipefail
           REPO="${REGISTRY}/${PLUGIN}"
@@ -149,8 +224,8 @@ jobs:
 
       - name: Sign plugin artifacts
         env:
-          PLUGIN: ${{ steps.meta.outputs.plugin }}
-          VERSION: ${{ steps.meta.outputs.version }}
+          PLUGIN: ${{ matrix.plugin }}
+          VERSION: ${{ matrix.version }}
           DIGEST: ${{ steps.push.outputs.digest }}
         run: |
           set -euo pipefail
@@ -165,10 +240,24 @@ jobs:
             cosign sign --yes "${REPO}@${digest}"
           done
 
+      - name: Write receipt git tag
+        env:
+          PLUGIN: ${{ matrix.plugin }}
+          VERSION: ${{ matrix.version }}
+        run: |
+          set -euo pipefail
+          tag="plugins/${PLUGIN}/v${VERSION}"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag ${tag} already exists — leaving as-is"
+            exit 0
+          fi
+          git tag "$tag"
+          git push origin "$tag"
+
       - name: Release summary
         env:
-          PLUGIN: ${{ steps.meta.outputs.plugin }}
-          VERSION: ${{ steps.meta.outputs.version }}
+          PLUGIN: ${{ matrix.plugin }}
+          VERSION: ${{ matrix.version }}
           DIGEST: ${{ steps.push.outputs.digest }}
         run: |
           {

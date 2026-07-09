@@ -1,0 +1,19 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: elasticsearch
+version: 0.1.0
+
+description: Discover indices, data streams, and aliases from Elasticsearch clusters
+category: database
+status: experimental
+icon: elasticsearch
+features:
+  - Assets
+  - Lineage
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

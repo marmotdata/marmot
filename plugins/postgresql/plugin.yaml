@@ -1,0 +1,19 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: postgresql
+version: 0.1.0
+
+description: Discover databases, schemas, and tables from PostgreSQL instances
+category: database
+status: experimental
+icon: postgresql
+features:
+  - Assets
+  - Lineage
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

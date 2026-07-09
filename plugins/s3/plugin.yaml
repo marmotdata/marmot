@@ -1,0 +1,18 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: s3
+version: 0.1.0
+
+description: Discover S3 buckets from AWS accounts
+category: storage
+status: experimental
+icon: s3
+features:
+  - Assets
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

@@ -1,0 +1,19 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: airflow
+version: 0.1.0
+
+description: Ingest metadata from Apache Airflow including DAGs, tasks, and dataset lineage
+category: orchestration
+status: experimental
+icon: airflow
+features:
+  - Assets
+  - Lineage
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

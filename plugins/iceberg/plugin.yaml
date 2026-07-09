@@ -1,0 +1,19 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: iceberg
+version: 0.1.0
+
+description: Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)
+category: data-lake
+status: experimental
+icon: iceberg
+features:
+  - Assets
+  - Lineage
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

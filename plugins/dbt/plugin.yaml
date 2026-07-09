@@ -1,0 +1,19 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: dbt
+version: 0.1.0
+
+description: Ingest metadata from DBT (Data Build Tool) projects including models, tests, and lineage
+category: transformation
+status: experimental
+icon: dbt
+features:
+  - Assets
+  - Lineage
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

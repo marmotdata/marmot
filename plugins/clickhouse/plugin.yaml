@@ -1,0 +1,18 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: clickhouse
+version: 0.1.0
+
+description: Discover databases, tables, and views from ClickHouse instances
+category: database
+status: experimental
+icon: clickhouse
+features:
+  - Assets
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

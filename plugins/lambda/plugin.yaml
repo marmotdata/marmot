@@ -1,0 +1,18 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: lambda
+version: 0.1.0
+
+description: Discover Lambda functions from AWS accounts
+category: compute
+status: experimental
+icon: lambda
+features:
+  - Assets
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

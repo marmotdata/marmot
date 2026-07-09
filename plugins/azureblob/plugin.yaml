@@ -1,0 +1,18 @@
+apiVersion: marmot.dev/v1
+kind: Plugin
+
+name: azureblob
+version: 0.1.0
+
+description: Discover containers from Azure Blob Storage accounts
+category: storage
+status: experimental
+icon: azureblob
+features:
+  - Assets
+
+sources:
+  - https://github.com/marmotdata/marmot
+maintainers:
+  - name: Marmot Team
+    url: https://github.com/marmotdata

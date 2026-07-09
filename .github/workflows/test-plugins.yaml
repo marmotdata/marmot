@@ -15,21 +15,83 @@ permissions:
   contents: read
 
 jobs:
+  detect:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+      count: ${{ steps.set.outputs.count }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Compute matrix
+        id: set
+        run: |
+          set -euo pipefail
+
+          # Determine base ref for the diff.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="${{ github.event.pull_request.base.sha }}"
+          else
+            base="${{ github.event.before }}"
+          fi
+
+          # Fall back to a full run when we can't compute a diff (first push,
+          # missing base ref, forced push where base is unknown).
+          full_run=false
+          if [ -z "$base" ] || [ "$base" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$base" 2>/dev/null; then
+            full_run=true
+          fi
+
+          # Any change to the workflow itself forces a full run.
+          if [ "$full_run" = "false" ] && git diff --name-only "$base"...HEAD | grep -qE '^\.github/workflows/test-plugins\.yaml$'; then
+            full_run=true
+          fi
+
+          # Enumerate every plugin dir (any dir under plugins/ with a plugin.yaml).
+          mapfile -t all_plugins < <(find plugins -mindepth 2 -maxdepth 2 -name plugin.yaml -exec dirname {} \; | xargs -n1 basename | sort -u)
+
+          if [ "$full_run" = "true" ]; then
+            selected=("${all_plugins[@]}")
+          else
+            # Changed dirs under plugins/ that have a plugin.yaml.
+            mapfile -t changed_dirs < <(git diff --name-only "$base"...HEAD | grep -E '^plugins/[^/]+/' | cut -d/ -f2 | sort -u)
+            selected=()
+            for d in "${changed_dirs[@]}"; do
+              if [ -f "plugins/${d}/plugin.yaml" ]; then
+                selected+=("$d")
+              fi
+            done
+          fi
+
+          if [ ${#selected[@]} -eq 0 ]; then
+            echo "matrix=[]" >> "$GITHUB_OUTPUT"
+            echo "count=0" >> "$GITHUB_OUTPUT"
+          else
+            json=$(printf '%s\n' "${selected[@]}" | jq -R -s -c 'split("\n") | map(select(length > 0))')
+            echo "matrix=${json}" >> "$GITHUB_OUTPUT"
+            echo "count=${#selected[@]}" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "Full run: ${full_run}"
+          echo "Selected plugins: ${selected[*]:-<none>}"
+
   test:
+    needs: detect
+    if: needs.detect.outputs.count != '0'
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        plugin: [kafka, confluent, redpanda, airflow, duckdb, asyncapi, dbt, azureblob, bigquery, clickhouse, deltalake, dynamodb, elasticsearch, glue, iceberg, lambda, mongodb, mysql, nats, openapi, opensearch, postgresql, redis, s3, sns, sqs, trino]
-    runs-on: ubuntu-latest
+        plugin: ${{ fromJson(needs.detect.outputs.matrix) }}
     defaults:
       run:
         working-directory: plugins/${{ matrix.plugin }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v5
+      - uses: actions/checkout@v5
 
-      - name: Set up Go
-        uses: actions/setup-go@v5
+      - uses: actions/setup-go@v5
         with:
           go-version-file: plugins/${{ matrix.plugin }}/go.mod
           cache: true
@@ -43,3 +105,25 @@ jobs:
 
       - name: Vet
         run: go vet ./...
+
+  # Single rollup check — this is the job to mark required in branch protection.
+  summary:
+    if: always()
+    needs: [detect, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify outcomes
+        run: |
+          if [ "${{ needs.detect.result }}" != "success" ]; then
+            echo "detect job failed"
+            exit 1
+          fi
+          if [ "${{ needs.detect.outputs.count }}" = "0" ]; then
+            echo "No plugin changes to test"
+            exit 0
+          fi
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "test job outcome: ${{ needs.test.result }}"
+            exit 1
+          fi
+          echo "All plugin tests passed"
