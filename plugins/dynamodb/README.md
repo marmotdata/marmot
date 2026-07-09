@@ -1,94 +1,128 @@
-# marmot-plugin-dynamodb
+---
+title: DynamoDB
+description: This plugin discovers DynamoDB tables from AWS accounts.
+status: experimental
+---
 
-Marmot plugin for [Amazon DynamoDB](https://aws.amazon.com/dynamodb/). Lists the DynamoDB tables in an AWS account and produces a `Table` asset per table with its identity (ARN, status, creation date), key schema and attribute definitions, billing mode and provisioned throughput, index counts, encryption settings, streams configuration, TTL, continuous backups / point-in-time recovery status, global table replicas, and optionally AWS resource tags.
+# DynamoDB
 
-Authentication uses the standard AWS credential chain (environment variables, shared config, EC2/ECS metadata) with optional IAM role assumption.
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span></div>
+</div>
+</div>
 
-## Example Configurations
+import { CalloutCard } from '@site/src/components/DocCard';
 
-### Default credentials
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
 
-```yaml
-credentials:
-  region: "us-east-1"
-tags:
-  - "aws"
-  - "dynamodb"
-```
 
-### Named profile
-
-```yaml
-credentials:
-  region: "us-west-2"
-  profile: "production"
-```
-
-### Assume role
-
-```yaml
-credentials:
-  region: "eu-west-1"
-  role: "arn:aws:iam::123456789012:role/MarmotDiscovery"
-  role_external_id: "${MARMOT_EXTERNAL_ID}"
-tags_to_metadata: true
-include_tags:
-  - "Team"
-  - "Environment"
-```
-
-### Filtering by name
-
-```yaml
-credentials:
-  region: "us-east-1"
-filter:
-  include:
-    - "^prod-.*"
-  exclude:
-    - ".*-temp$"
-```
+The DynamoDB plugin discovers and catalogs Amazon DynamoDB tables across your AWS accounts. It captures table metadata including key schema, billing mode, indexes, encryption settings, TTL, point-in-time recovery, streams, and tags.
 
 ## Required Permissions
 
-Minimal IAM policy for discovering tables and their full metadata:
+import { Collapsible } from "@site/src/components/Collapsible";
 
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "dynamodb:ListTables",
-        "dynamodb:DescribeTable",
-        "dynamodb:DescribeTimeToLive",
-        "dynamodb:DescribeContinuousBackups",
-        "dynamodb:ListTagsOfResource"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
+<Collapsible
+  title="IAM Policy"
+  icon="mdi:shield-check"
+  policyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "dynamodb:ListTables",
+          "dynamodb:DescribeTable",
+          "dynamodb:DescribeTimeToLive",
+          "dynamodb:DescribeContinuousBackups",
+          "dynamodb:ListTagsOfResource"
+        ],
+        Resource: "*"
+      }
+    ]
+  }}
+  minimalPolicyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: ["dynamodb:ListTables", "dynamodb:DescribeTable"],
+        Resource: "*"
+      }
+    ]
+  }}
+/>
+
+## AWS Configuration
+
+See [AWS Configuration](./Shared%20Configuration/AWS%20Configuration.md) for the supported AWS configuration options.
+
+
+
+## Example Configuration
+
+```yaml
+
+credentials:
+  region: "us-east-1"
+  profile: "production"
+  role: "<role>"
+tags:
+  - "aws"
+
 ```
 
-For a name-only listing, `dynamodb:ListTables` and `dynamodb:DescribeTable` are sufficient.
+## Configuration
+The following configuration options are available:
 
-## Development
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| credentials | AWSCredentials | false | AWS credentials configuration |
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| include_tags | []string | false | List of AWS tags to include as metadata. By default, all tags are included. |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
+| tags_to_metadata | bool | false | Convert AWS tags to Marmot metadata |
 
-Build and test:
+## Available Metadata
 
-```sh
-make build
-make test
-```
+The following metadata fields are available:
 
-To run a local build inside Marmot:
-
-```sh
-make install
-```
-
-This copies the binary to `~/.marmot/plugins/`, the directory Marmot scans for local plugins. A local plugin shadows the released core plugin with the same name: Marmot skips downloading it and loads your build instead. Delete the binary from `~/.marmot/plugins/` to fall back to the released version.
-
-If your Marmot runs with a custom plugins directory (`MARMOT_PLUGINS_DIR`), set the same value for `make install` so both point at the same place.
+| Field | Type | Description |
+|-------|------|-------------|
+| attribute_definitions | string | Attribute definitions for the table's key schema |
+| billing_mode | string | Billing mode of the table (PROVISIONED or PAY_PER_REQUEST) |
+| continuous_backups | string | Continuous backups status (ENABLED or DISABLED) |
+| creation_date | string | Date and time when the table was created |
+| deletion_protection | string | Whether deletion protection is enabled |
+| encryption_status | string | Status of server-side encryption |
+| encryption_type | string | Type of server-side encryption (AES256 or KMS) |
+| global_table_replicas | string | Regions where global table replicas exist |
+| gsi_count | int | Number of global secondary indexes |
+| item_count | int64 | Number of items in the table |
+| key_schema | string | Key schema of the table (partition and sort keys) |
+| lsi_count | int | Number of local secondary indexes |
+| pitr_status | string | Point-in-time recovery status (ENABLED or DISABLED) |
+| read_capacity_units | int64 | Provisioned read capacity units |
+| stream_enabled | string | Whether DynamoDB Streams is enabled |
+| stream_view_type | string | Stream view type (KEYS_ONLY, NEW_IMAGE, OLD_IMAGE, NEW_AND_OLD_IMAGES) |
+| table_arn | string | The ARN of the DynamoDB table |
+| table_class | string | Table class (STANDARD or STANDARD_INFREQUENT_ACCESS) |
+| table_size_bytes | int64 | Total size of the table in bytes |
+| table_status | string | Current status of the table (ACTIVE, CREATING, etc.) |
+| tags | map[string]string | AWS resource tags |
+| ttl_attribute | string | Attribute name used for Time to Live |
+| ttl_status | string | Time to Live status (ENABLED or DISABLED) |
+| write_capacity_units | int64 | Provisioned write capacity units |

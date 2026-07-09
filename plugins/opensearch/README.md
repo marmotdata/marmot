@@ -1,42 +1,100 @@
-# marmot-plugin-opensearch
+---
+title: OpenSearch
+description: This plugin discovers indices, data streams, and aliases from OpenSearch clusters.
+status: experimental
+---
 
-Marmot plugin for [OpenSearch](https://opensearch.org/). Discovers:
+# OpenSearch
 
-- **Indices** as `Table` assets with health, status, shard/replica counts, document counts, store size, and field mappings flattened into a column schema. System indices (prefixed with `.`) are excluded by default.
-- **Data streams** as `Data Stream` assets with timestamp field, generation, and backing index count.
-- **Aliases** as `Alias` assets with their target indices, write-index flag, and filter state.
-- **Lineage**: CONTAINS edges from data streams to their backing indices, and REFERENCES edges from aliases to the indices they point at.
-- **Statistics**: a `docs_count` metric per index.
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Lineage</span></div>
+</div>
+</div>
+
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
+
+The OpenSearch plugin discovers indices, data streams and aliases from OpenSearch clusters.
+
+## Required Permissions
+
+The connecting user needs `cluster_monitor` and `indices_monitor` permissions. The built-in `readall` role is usually sufficient.
+
+
 
 ## Example Configuration
 
 ```yaml
+
 addresses:
   - "https://opensearch.company.com:9200"
 username: "admin"
-password: "${OPENSEARCH_PASSWORD}"
+password: "admin"
 tags:
   - "opensearch"
   - "search"
+
 ```
 
-Use `tls_skip_verify` for self-signed clusters or `ca_cert_path` to trust a custom CA.
+## Configuration
+The following configuration options are available:
 
-## Development
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| addresses | []string | false | List of OpenSearch node URLs |
+| ca_cert_path | string | false | Path to a custom CA certificate file |
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| include_aliases | bool | false | Discover aliases |
+| include_data_streams | bool | false | Discover data streams |
+| include_index_stats | bool | false | Collect document count and store size metrics |
+| include_system_indices | bool | false | Include system indices (prefixed with .) |
+| password | string | false | Password for basic authentication |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
+| tls_skip_verify | bool | false | Skip TLS certificate verification |
+| username | string | false | Username for basic authentication |
 
-Build and test:
+## Available Metadata
 
-```sh
-make build
-make test
-```
+The following metadata fields are available:
 
-To run a local build inside Marmot:
-
-```sh
-make install
-```
-
-This copies the binary to `~/.marmot/plugins/`, the directory Marmot scans for local plugins. A local plugin shadows the released core plugin with the same name: Marmot skips downloading it and loads your build instead. Delete the binary from `~/.marmot/plugins/` to fall back to the released version.
-
-If your Marmot runs with a custom plugins directory (`MARMOT_PLUGINS_DIR`), set the same value for `make install` so both point at the same place.
+| Field | Type | Description |
+|-------|------|-------------|
+| alias_name | string | Name of the alias |
+| analyzer | string | Analyzer used for the field |
+| backing_indices | int | Number of backing indices |
+| cluster | string | Name of the OpenSearch cluster |
+| creation_date | string | Date and time when the index was created |
+| data_stream_name | string | Name of the data stream |
+| docs_count | int64 | Number of documents in the index |
+| field_name | string | Full dotted path of the field |
+| field_type | string | OpenSearch field type (keyword, text, long, etc.) |
+| filter_defined | string | Whether a filter is defined on the alias |
+| generation | int | Current generation of the data stream |
+| health | string | Health status of the index (green, yellow, red) |
+| index | string | Whether the field is indexed |
+| index_name | string | Name of the index |
+| indices | string | Comma-separated list of indices the alias points to |
+| is_write_index | string | Whether the alias has a designated write index |
+| replicas | int | Number of replica shards |
+| shards | int | Number of primary shards |
+| status | string | Health status of the data stream |
+| status | string | Open/close status of the index |
+| store_size | string | Total store size of the index |
+| template | string | Index template used by the data stream |
+| timestamp_field | string | Name of the timestamp field |
+| uuid | string | UUID of the index |

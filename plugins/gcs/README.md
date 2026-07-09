@@ -1,16 +1,87 @@
-# marmot-plugin-gcs
+---
+title: Google Cloud Storage
+description: Discovers buckets from Google Cloud Storage.
+status: experimental
+---
 
-Marmot plugin for Google Cloud Storage. Discovers buckets and registers them as assets in your Marmot catalog.
+# Google Cloud Storage
 
-Marmot plugins are standalone binaries that the Marmot host launches on demand via [go-plugin](https://github.com/hashicorp/go-plugin) and talks to over gRPC. It is built on the [Marmot plugin SDK](https://github.com/marmotdata/plugin-sdk).
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span></div>
+</div>
+</div>
 
-## Install
+import { CalloutCard } from '@site/src/components/DocCard';
 
-Nothing to install: gcs is a core Marmot plugin. Marmot pulls the release pinned in its core plugin manifest from `ghcr.io/marmotdata/plugins/gcs` at startup and caches it under `~/.marmot/plugins/cache`.
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  docId="Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
 
-## Configuration
+
+The Google Cloud Storage plugin discovers buckets from GCP projects. It captures bucket metadata including location, storage class, encryption settings, and lifecycle rules.
+
+## Connection Examples
+
+import { Collapsible } from "@site/src/components/Collapsible";
+
+<Collapsible title="Service Account File" icon="logos:google-cloud">
 
 ```yaml
+project_id: "my-gcp-project"
+credentials_file: "/path/to/service-account.json"
+include_metadata: true
+tags:
+  - "gcs"
+  - "storage"
+```
+
+</Collapsible>
+
+<Collapsible title="Service Account JSON" icon="mdi:key">
+
+```yaml
+project_id: "my-gcp-project"
+credentials_json: "${GCS_CREDENTIALS_JSON}"
+include_metadata: true
+include_object_count: false
+filter:
+  include:
+    - "^data-.*"
+  exclude:
+    - ".*-temp$"
+tags:
+  - "gcs"
+```
+
+</Collapsible>
+
+## Required Permissions
+
+The service account needs the following IAM roles:
+
+- **Storage Bucket Viewer** (`roles/storage.bucketViewer`) - For discovering and listing buckets
+
+Or use a custom role with these permissions:
+- `storage.buckets.list`
+- `storage.buckets.get`
+- `storage.objects.list` (if using object count)
+
+
+
+## Example Configuration
+
+```yaml
+
 project_id: "my-gcp-project"
 credentials_file: "/path/to/service-account.json"
 include_metadata: true
@@ -23,33 +94,41 @@ filter:
 tags:
   - "gcs"
   - "storage"
+
 ```
 
-| Field | Description |
-| --- | --- |
-| `project_id` | Google Cloud project ID (required) |
-| `credentials_file` | Path to a service account JSON file |
-| `credentials_json` | Service account JSON content (sensitive) |
-| `endpoint` | Custom endpoint URL, for fake-gcs-server or other emulators |
-| `disable_auth` | Disable authentication, for local emulators |
-| `include_metadata` | Include bucket metadata like labels (default `true`) |
-| `include_object_count` | Count objects in each bucket; can be slow for large buckets (default `false`) |
+## Configuration
+The following configuration options are available:
 
-## Development
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| credentials_file | string | false | Path to service account JSON file |
+| credentials_json | string | false | Service account JSON content |
+| disable_auth | bool | false | Disable authentication (for local emulators) |
+| endpoint | string | false | Custom endpoint URL (for fake-gcs-server or other emulators) |
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| include_metadata | bool | false | Include bucket metadata like labels |
+| include_object_count | bool | false | Count objects in each bucket (can be slow for large buckets) |
+| project_id | string | false | Google Cloud project ID |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
 
-Build and test:
+## Available Metadata
 
-```sh
-make build
-make test
-```
+The following metadata fields are available:
 
-To run a local build inside Marmot:
-
-```sh
-make install
-```
-
-This copies the binary to `~/.marmot/plugins/`, the directory Marmot scans for local plugins. A local plugin shadows the released core plugin with the same name: Marmot skips downloading it and loads your build instead. Delete the binary from `~/.marmot/plugins/` to fall back to the released version.
-
-If your Marmot runs with a custom plugins directory (`MARMOT_PLUGINS_DIR`), set the same value for `make install` so both point at the same place.
+| Field | Type | Description |
+|-------|------|-------------|
+| bucket_name | string | Name of the bucket |
+| created | string | Bucket creation timestamp |
+| encryption | string | Encryption type (google-managed or customer-managed) |
+| kms_key | string | Customer-managed encryption key name |
+| lifecycle_rules_count | int | Number of lifecycle rules configured |
+| location | string | Geographic location of the bucket |
+| location_type | string | Location type (region, dual-region, multi-region) |
+| logging_enabled | bool | Whether access logging is enabled |
+| object_count | int64 | Number of objects in the bucket |
+| requester_pays | bool | Whether requester pays for access |
+| retention_period_seconds | int64 | Retention period in seconds |
+| storage_class | string | Default storage class (STANDARD, NEARLINE, COLDLINE, ARCHIVE) |
+| versioning | string | Whether object versioning is enabled |

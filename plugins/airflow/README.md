@@ -1,8 +1,34 @@
-# marmot-plugin-airflow
+---
+title: Airflow
+description: Ingests metadata from Apache Airflow including DAGs, tasks, and dataset lineage.
+status: experimental
+---
 
-Marmot plugin for Apache Airflow. Ingests metadata from Airflow's REST API, including DAGs (Directed Acyclic Graphs), tasks, and dataset lineage, to discover your orchestration layer and track data dependencies through Airflow's native Dataset feature.
+# Airflow
 
-Marmot plugins are standalone binaries that the Marmot host launches on demand via [go-plugin](https://github.com/hashicorp/go-plugin) and talks to over gRPC. It is built on the [Marmot plugin SDK](https://github.com/marmotdata/plugin-sdk).
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Lineage</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Run History</span></div>
+</div>
+</div>
+
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  docId="Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
+
+The Airflow plugin ingests metadata from Apache Airflow, including DAGs (Directed Acyclic Graphs), tasks, and dataset lineage. It connects to Airflow's REST API to discover your orchestration layer and track data dependencies through Airflow's native Dataset feature.
 
 ## Prerequisites
 
@@ -10,8 +36,7 @@ Marmot plugins are standalone binaries that the Marmot host launches on demand v
 - **Airflow 2.4+** for Dataset-based lineage tracking
 - REST API enabled with authentication configured
 
-## Authentication
-
+:::tip[Authentication]
 The plugin supports two authentication methods:
 
 - **Basic Auth**: Username and password
@@ -24,9 +49,14 @@ Configure authentication in your Airflow instance via `airflow.cfg`:
 auth_backends = airflow.api.auth.backend.basic_auth
 ```
 
+:::
+
+
+
 ## Example Configuration
 
 ```yaml
+
 host: "http://localhost:8080"
 username: "admin"
 password: "${AIRFLOW_PASSWORD}"
@@ -44,110 +74,63 @@ filter:
 tags:
   - "airflow"
   - "orchestration"
+
 ```
 
 ## Configuration
-
 The following configuration options are available:
 
 | Property | Type | Required | Description |
 |----------|------|----------|-------------|
-| `host` | string | true | Airflow webserver URL (e.g., http://localhost:8080) |
-| `username` | string | false | Username for basic authentication |
-| `password` | string | false | Password for basic authentication (sensitive) |
-| `api_token` | string | false | API token for authentication (alternative to basic auth, sensitive) |
-| `discover_dags` | bool | false | Discover Airflow DAGs as Pipeline assets (default `true`) |
-| `discover_tasks` | bool | false | Discover tasks within DAGs (default `true`) |
-| `discover_datasets` | bool | false | Discover Airflow Datasets for lineage, requires Airflow 2.4+ (default `true`) |
-| `include_run_history` | bool | false | Include DAG run history in metadata (default `true`) |
-| `run_history_days` | int | false | Number of days of run history to fetch (default `7`) |
-| `only_active` | bool | false | Only discover active (unpaused) DAGs (default `true`) |
-| `external_links` | []ExternalLink | false | External links to show on all assets |
-| `filter` | Filter | false | Filter discovered assets by name (regex) |
-| `tags` | TagsConfig | false | Tags to apply to discovered assets |
-
-Either `username`/`password` or `api_token` must be provided.
-
-## Lineage
-
-The plugin creates lineage edges alongside the discovered assets:
-
-- `CONTAINS` from a DAG to each of its tasks
-- `DEPENDS_ON` between tasks, following downstream task relationships
-- `FEEDS` from a Dataset to each DAG that consumes it
-- `PRODUCES` from a DAG to each Dataset its tasks produce
-
-Dataset URIs are mapped to the matching Marmot asset type where possible (for example `s3://` becomes an S3 Bucket, `kafka://` a Kafka Topic, `postgresql://` a PostgreSQL Table), so lineage connects to assets discovered by other plugins.
+| api_token | string | false | API token for authentication (alternative to basic auth) |
+| discover_dags | bool | false | Discover Airflow DAGs as Pipeline assets |
+| discover_datasets | bool | false | Discover Airflow Datasets for lineage (requires Airflow 2.4+) |
+| discover_tasks | bool | false | Discover tasks within DAGs |
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| host | string | false | Airflow webserver URL (e.g., http://localhost:8080) |
+| include_run_history | bool | false | Include DAG run history in metadata |
+| only_active | bool | false | Only discover active (unpaused) DAGs |
+| password | string | false | Password for basic authentication |
+| run_history_days | int | false | Number of days of run history to fetch |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
+| username | string | false | Username for basic authentication |
 
 ## Available Metadata
 
-DAG (Pipeline) assets carry the following fields:
+The following metadata fields are available:
 
 | Field | Type | Description |
 |-------|------|-------------|
-| `dag_id` | string | Unique DAG identifier |
-| `description` | string | DAG description |
-| `file_path` | string | Path to DAG definition file |
-| `schedule_interval` | string | DAG schedule (cron expression or preset) |
-| `is_paused` | bool | Whether DAG is paused |
-| `is_active` | bool | Whether DAG is active |
-| `owners` | string | DAG owners (comma-separated) |
-| `last_run_state` | string | State of the last DAG run (success, failed, running) |
-| `last_run_id` | string | ID of the last DAG run |
-| `last_run_date` | string | Execution date of the last DAG run |
-| `next_run_date` | string | Next scheduled run date |
-| `last_parsed_time` | string | Last time the DAG file was parsed |
-| `success_rate` | float64 | Success rate percentage over the lookback period |
-| `run_count` | int | Number of runs in the lookback period |
-
-Task assets carry the following fields:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `task_id` | string | Task identifier within the DAG |
-| `dag_id` | string | Parent DAG ID |
-| `operator_name` | string | Airflow operator class name (e.g., BashOperator, PythonOperator) |
-| `trigger_rule` | string | Task trigger rule (e.g., all_success, one_success) |
-| `retries` | int | Number of retries configured for the task |
-| `pool` | string | Execution pool for the task |
-| `downstream_tasks` | []string | List of downstream task IDs |
-
-Dataset assets carry the following fields:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `uri` | string | Dataset URI identifier |
-| `created_at` | string | Dataset creation timestamp |
-| `updated_at` | string | Dataset last update timestamp |
-| `producer_count` | int | Number of tasks that produce this dataset |
-| `consumer_count` | int | Number of DAGs that consume this dataset |
-
-DAG run history events carry the following run facets:
-
-| Field | Type | Description |
-|-------|------|-------------|
-| `dag_run_id` | string | Unique identifier for the DAG run |
-| `state` | string | Run state (queued, running, success, failed) |
-| `execution_date` | string | Logical execution date |
-| `start_date` | string | Actual start time of the run |
-| `end_date` | string | End time of the run |
-| `run_type` | string | Type of run (scheduled, manual, backfill) |
-
-## Development
-
-Build and test:
-
-```sh
-make build
-make test
-```
-
-To run a local build inside Marmot:
-
-```sh
-make install
-```
-
-This copies the binary to `~/.marmot/plugins/`, the directory Marmot scans for local plugins. A local plugin shadows the released core plugin with the same name: Marmot skips downloading it and loads your build instead. Delete the binary from `~/.marmot/plugins/` to fall back to the released version.
-
-If your Marmot runs with a custom plugins directory (`MARMOT_PLUGINS_DIR`), set the same value for `make install` so both point at the same place.
+| consumer_count | int | Number of DAGs that consume this dataset |
+| created_at | string | Dataset creation timestamp |
+| dag_id | string | Unique DAG identifier |
+| dag_id | string | Parent DAG ID |
+| dag_run_id | string | Unique identifier for the DAG run |
+| description | string | DAG description |
+| downstream_tasks | []string | List of downstream task IDs |
+| end_date | string | End time of the run |
+| execution_date | string | Logical execution date |
+| file_path | string | Path to DAG definition file |
+| is_active | bool | Whether DAG is active |
+| is_paused | bool | Whether DAG is paused |
+| last_parsed_time | string | Last time the DAG file was parsed |
+| last_run_date | string | Execution date of the last DAG run |
+| last_run_id | string | ID of the last DAG run |
+| last_run_state | string | State of the last DAG run (success, failed, running) |
+| next_run_date | string | Next scheduled run date |
+| operator_name | string | Airflow operator class name (e.g., BashOperator, PythonOperator) |
+| owners | string | DAG owners (comma-separated) |
+| pool | string | Execution pool for the task |
+| producer_count | int | Number of tasks that produce this dataset |
+| retries | int | Number of retries configured for the task |
+| run_count | int | Number of runs in the lookback period |
+| run_type | string | Type of run (scheduled, manual, backfill) |
+| schedule_interval | string | DAG schedule (cron expression or preset) |
+| start_date | string | Actual start time of the run |
+| state | string | Run state (queued, running, success, failed) |
+| success_rate | float64 | Success rate percentage over the lookback period |
+| task_id | string | Task identifier within the DAG |
+| trigger_rule | string | Task trigger rule (e.g., all_success, one_success) |
+| updated_at | string | Dataset last update timestamp |
+| uri | string | Dataset URI identifier |
