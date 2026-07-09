@@ -1,9 +1,5 @@
-// +marmot:name=Lambda
-// +marmot:description=This plugin discovers Lambda functions from AWS accounts.
-// +marmot:status=experimental
-// +marmot:features=Assets
+// Package lambda discovers Lambda functions from AWS accounts.
 package lambda
-
 
 import (
 	"context"
@@ -13,21 +9,32 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/lambda"
 	"github.com/aws/aws-sdk-go-v2/service/lambda/types"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "lambda",
+		Name:        "AWS Lambda",
+		Description: "Discover Lambda functions from AWS accounts",
+		Icon:        "lambda",
+		Category:    "compute",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for Lambda plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
-	*plugin.AWSConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
+	*pluginsdk.AWSConfig `json:",inline"`
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 credentials:
   region: "us-east-1"
@@ -42,13 +49,13 @@ type Source struct {
 	client *lambda.Client
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -56,14 +63,14 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 	s.config = config
 
-	awsConfig, err := plugin.ExtractAWSConfig(pluginConfig)
+	awsConfig, err := pluginsdk.ExtractAWSConfig(pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("extracting AWS config: %w", err)
 	}
@@ -80,7 +87,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("discovering functions: %w", err)
 	}
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 	for _, fn := range functions {
 		a, err := s.createFunctionAsset(ctx, fn)
 		if err != nil {
@@ -90,7 +97,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		assets = append(assets, a)
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets: assets,
 	}, nil
 }
@@ -110,7 +117,7 @@ func (s *Source) discoverFunctions(ctx context.Context) ([]types.FunctionConfigu
 	return functions, nil
 }
 
-func (s *Source) createFunctionAsset(ctx context.Context, fn types.FunctionConfiguration) (asset.Asset, error) {
+func (s *Source) createFunctionAsset(ctx context.Context, fn types.FunctionConfiguration) (pluginsdk.Asset, error) {
 	metadata := make(map[string]interface{})
 	functionName := *fn.FunctionName
 
@@ -122,7 +129,7 @@ func (s *Source) createFunctionAsset(ctx context.Context, fn types.FunctionConfi
 		if err != nil {
 			log.Warn().Err(err).Str("function", functionName).Msg("Failed to get function tags")
 		} else {
-			metadata = plugin.ProcessAWSTags(s.config.TagsToMetadata, s.config.IncludeTags, tagsOutput.Tags)
+			metadata = pluginsdk.ProcessAWSTags(s.config.TagsToMetadata, s.config.IncludeTags, tagsOutput.Tags)
 		}
 	}
 
@@ -213,35 +220,20 @@ func (s *Source) createFunctionAsset(ctx context.Context, fn types.FunctionConfi
 
 	mrnValue := mrn.New("Function", "Lambda", functionName)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:      &functionName,
 		MRN:       &mrnValue,
 		Type:      "Function",
 		Providers: []string{"Lambda"},
 		Metadata:  metadata,
 		Tags:      processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Lambda",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
 			Priority:   1,
 		}},
 	}, nil
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "lambda",
-		Name:        "AWS Lambda",
-		Description: "Discover Lambda functions from AWS accounts",
-		Icon:        "lambda",
-		Category:    "compute",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register Lambda plugin")
-	}
 }

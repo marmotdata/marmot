@@ -6,15 +6,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]asset.Asset, error) {
+func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]pluginsdk.Asset, error) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -28,7 +27,7 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]asse
 	}
 	defer cursor.Close(ctx)
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 
 	for cursor.Next(timeoutCtx) {
 		var collInfo struct {
@@ -68,24 +67,18 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]asse
 		statsCancel()
 
 		if err == nil {
-			if size, ok := collStats["size"].(int64); ok {
+			if size, ok := asInt64(collStats["size"]); ok {
 				metadata["size"] = size
-			} else if size, ok := collStats["size"].(float64); ok {
-				metadata["size"] = int64(size)
 			}
 
-			if count, ok := collStats["count"].(int64); ok {
+			if count, ok := asInt64(collStats["count"]); ok {
 				metadata["document_count"] = count
-			} else if count, ok := collStats["count"].(float64); ok {
-				metadata["document_count"] = int64(count)
 			}
 
 			if capped, ok := collStats["capped"].(bool); ok && capped {
 				metadata["capped"] = true
-				if maxSize, ok := collStats["maxSize"].(int64); ok {
+				if maxSize, ok := asInt64(collStats["maxSize"]); ok {
 					metadata["max_size"] = maxSize
-				} else if maxSize, ok := collStats["maxSize"].(float64); ok {
-					metadata["max_size"] = int64(maxSize)
 				}
 			} else {
 				metadata["capped"] = false
@@ -140,9 +133,9 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]asse
 		}
 
 		mrnValue := mrn.New(assetType, "MongoDB", collName)
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:        &collName,
 			MRN:         &mrnValue,
 			Type:        assetType,
@@ -150,7 +143,7 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]asse
 			Description: &assetDesc,
 			Metadata:    metadata,
 			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "MongoDB",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
@@ -164,6 +157,21 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]asse
 	}
 
 	return assets, nil
+}
+
+// asInt64 normalizes the numeric BSON types collStats/dbStats return
+// (int32, int64, or double, depending on server version and value size)
+// to int64.
+func asInt64(v interface{}) (int64, bool) {
+	switch n := v.(type) {
+	case int32:
+		return int64(n), true
+	case int64:
+		return n, true
+	case float64:
+		return int64(n), true
+	}
+	return 0, false
 }
 
 func shardKeyToString(shardKey bson.D) string {

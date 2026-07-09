@@ -1,9 +1,6 @@
-// +marmot:name=MongoDB
-// +marmot:description=This plugin discovers databases and collections from MongoDB instances.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package mongodb discovers databases and collections from MongoDB
+// instances.
 package mongodb
-
 
 import (
 	"context"
@@ -11,18 +8,29 @@ import (
 	"math"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "mongodb",
+		Name:        "MongoDB",
+		Description: "Discover databases and collections from MongoDB instances",
+		Icon:        "mongodb",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for MongoDB plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
 
 	ConnectionURI string `json:"connection_uri" label:"Connection URI" description:"MongoDB connection URI (overrides host/port/user/password)" validate:"omitempty,uri"`
 	Host          string `json:"host" description:"MongoDB server hostname or IP address" validate:"required_without=ConnectionURI"`
@@ -33,18 +41,17 @@ type Config struct {
 	TLS           bool   `json:"tls" description:"Enable TLS/SSL for connection" default:"false"`
 	TLSInsecure   bool   `json:"tls_insecure" label:"TLS Insecure" description:"Skip verification of server certificate" default:"false"`
 
-	IncludeDatabases   bool           `json:"include_databases" description:"Whether to discover databases" default:"true"`
-	IncludeCollections bool           `json:"include_collections" description:"Whether to discover collections" default:"true"`
-	IncludeViews       bool           `json:"include_views" description:"Whether to include views" default:"true"`
-	IncludeIndexes     bool           `json:"include_indexes" description:"Whether to include index information" default:"true"`
-	SampleSchema       bool           `json:"sample_schema" description:"Sample documents to infer schema" default:"true"`
-	SampleSize         int            `json:"sample_size" description:"Number of documents to sample (-1 for entire collection)" default:"1000" validate:"omitempty,min=-1"`
-	UseRandomSampling  bool           `json:"use_random_sampling" description:"Use random sampling for schema inference" default:"true"`
-	ExcludeSystemDbs bool `json:"exclude_system_dbs" description:"Whether to exclude system databases (admin, config, local)" default:"true"`
+	IncludeDatabases   bool `json:"include_databases" description:"Whether to discover databases" default:"true"`
+	IncludeCollections bool `json:"include_collections" description:"Whether to discover collections" default:"true"`
+	IncludeViews       bool `json:"include_views" description:"Whether to include views" default:"true"`
+	IncludeIndexes     bool `json:"include_indexes" description:"Whether to include index information" default:"true"`
+	SampleSchema       bool `json:"sample_schema" description:"Sample documents to infer schema" default:"true"`
+	SampleSize         int  `json:"sample_size" description:"Number of documents to sample (-1 for entire collection)" default:"1000" validate:"omitempty,min=-1"`
+	UseRandomSampling  bool `json:"use_random_sampling" description:"Use random sampling for schema inference" default:"true"`
+	ExcludeSystemDbs   bool `json:"exclude_system_dbs" description:"Whether to exclude system databases (admin, config, local)" default:"true"`
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 host: "mongo-cluster.company.com"
 port: 27017
@@ -64,8 +71,8 @@ type Source struct {
 	sampleSize int32
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -77,7 +84,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.AuthSource = "admin"
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -99,7 +106,13 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	// The host spawns a fresh plugin process per call, so Discover
+	// cannot rely on state set by an earlier Validate call.
+	if _, err := s.Validate(pluginConfig); err != nil {
+		return nil, err
+	}
+
 	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
 
@@ -108,8 +121,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 	}
 	defer s.disconnect(ctx)
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 
 	if s.config.IncludeDatabases {
 		databaseAssets, err := s.discoverDatabases(ctx)
@@ -143,7 +156,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 				log.Debug().Str("database", dbName).Int("count", len(collectionAssets)).Msg("Discovered collections")
 
 				for _, collAsset := range collectionAssets {
-					lineages = append(lineages, lineage.LineageEdge{
+					lineages = append(lineages, pluginsdk.LineageEdge{
 						Source: *dbAsset.MRN,
 						Target: *collAsset.MRN,
 						Type:   "CONTAINS",
@@ -153,7 +166,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 						viewOn, ok := collAsset.Metadata["view_on"].(string)
 						if ok && viewOn != "" {
 							sourceCollMRN := mrn.New("Collection", "MongoDB", viewOn)
-							lineages = append(lineages, lineage.LineageEdge{
+							lineages = append(lineages, pluginsdk.LineageEdge{
 								Source: sourceCollMRN,
 								Target: *collAsset.MRN,
 								Type:   "VIEW_OF",
@@ -165,23 +178,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		}
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "mongodb",
-		Name:        "MongoDB",
-		Description: "Discover databases and collections from MongoDB instances",
-		Icon:        "mongodb",
-		Category:    "database",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register MongoDB plugin")
-	}
 }

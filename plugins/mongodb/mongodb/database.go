@@ -5,13 +5,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
+func (s *Source) discoverDatabases(ctx context.Context) ([]pluginsdk.Asset, error) {
 	timeoutCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
@@ -20,7 +19,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		return nil, fmt.Errorf("listing database names: %w", err)
 	}
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 
 	for _, dbName := range dbs {
 		if s.config.ExcludeSystemDbs && (dbName == "admin" || dbName == "config" || dbName == "local") {
@@ -39,43 +38,35 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, error) {
 		metadata["created"] = time.Now().Format("2006-01-02 15:04:05")
 
 		if err == nil {
-			if size, ok := dbStats["dataSize"].(int64); ok {
+			if size, ok := asInt64(dbStats["dataSize"]); ok {
 				metadata["size"] = size
-			} else if size, ok := dbStats["dataSize"].(float64); ok {
-				metadata["size"] = int64(size)
 			}
 
-			if collections, ok := dbStats["collections"].(int32); ok {
+			if collections, ok := asInt64(dbStats["collections"]); ok {
 				metadata["collection_count"] = collections
-			} else if collections, ok := dbStats["collections"].(float64); ok {
-				metadata["collection_count"] = int32(collections)
 			}
 
-			if views, ok := dbStats["views"].(int32); ok {
+			if views, ok := asInt64(dbStats["views"]); ok {
 				metadata["view_count"] = views
-			} else if views, ok := dbStats["views"].(float64); ok {
-				metadata["view_count"] = int32(views)
 			}
 
-			if indexes, ok := dbStats["indexes"].(int32); ok {
+			if indexes, ok := asInt64(dbStats["indexes"]); ok {
 				metadata["index_count"] = indexes
-			} else if indexes, ok := dbStats["indexes"].(float64); ok {
-				metadata["index_count"] = int32(indexes)
 			}
 		}
 
 		mrnValue := mrn.New("Database", "MongoDB", dbName)
 
-		processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-		assets = append(assets, asset.Asset{
+		assets = append(assets, pluginsdk.Asset{
 			Name:      &dbName,
 			MRN:       &mrnValue,
 			Type:      "Database",
 			Providers: []string{"MongoDB"},
-			Metadata:    metadata,
-			Tags:        processedTags,
-			Sources: []asset.AssetSource{{
+			Metadata:  metadata,
+			Tags:      processedTags,
+			Sources: []pluginsdk.AssetSource{{
 				Name:       "MongoDB",
 				LastSyncAt: time.Now(),
 				Properties: metadata,
