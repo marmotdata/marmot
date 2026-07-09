@@ -6,6 +6,7 @@ import (
 
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 )
 
 type Handler struct{}
@@ -40,10 +41,10 @@ func (h *Handler) listPlugins(w http.ResponseWriter, r *http.Request) {
 // @Description Detects if AWS credentials are available from environment or config files
 // @Tags plugins
 // @Produce json
-// @Success 200 {object} plugin.AWSCredentialStatus
+// @Success 200 {object} pluginsdk.AWSCredentialStatus
 // @Router /api/v1/plugins/aws/credentials/status [get]
 func (h *Handler) awsCredentialStatus(w http.ResponseWriter, r *http.Request) {
 	ctx := context.Background()
-	status := plugin.DetectAWSCredentials(ctx)
+	status := pluginsdk.DetectAWSCredentials(ctx)
 	common.RespondJSON(w, http.StatusOK, status)
 }

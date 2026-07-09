@@ -13,6 +13,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/rs/zerolog/log"
 )
 
@@ -196,7 +197,7 @@ func (h *Handler) validateConfig(w http.ResponseWriter, r *http.Request) {
 
 	_, err = entry.Source.Validate(req.Config)
 	if err != nil {
-		if validationErrs, ok := err.(plugin.ValidationErrors); ok {
+		if validationErrs, ok := err.(pluginsdk.ValidationErrors); ok {
 			apiErrors := make([]common.ValidationError, len(validationErrs.Errors))
 			for i, e := range validationErrs.Errors {
 				apiErrors[i] = common.ValidationError{

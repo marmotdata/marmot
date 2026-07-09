@@ -1,9 +1,117 @@
 {
   "registry": "ghcr.io/marmotdata/plugins",
   "plugins": {
+    "airflow": {
+      "version": "0.1.0",
+      "digest": "sha256:c662188fb82735d3d47d80b6e4dcf61e1859c9157476d7f1129f837454236137"
+    },
+    "asyncapi": {
+      "version": "0.1.0",
+      "digest": "sha256:9da5ee4b245eba31497beb75c56ee9ac5d64922e6b6a36885d6a2e8b10cc0f16"
+    },
+    "azureblob": {
+      "version": "0.1.0",
+      "digest": "sha256:fc917d5e319d88a5af1cb1561b3808b755ee532c78fcc2f487a6b041a825ea09"
+    },
+    "bigquery": {
+      "version": "0.1.0",
+      "digest": "sha256:8db23d8473a0e52af27dde9f3fda2b26373c78a85fcbd69fe2883846439b0521"
+    },
+    "clickhouse": {
+      "version": "0.1.0",
+      "digest": "sha256:786f79c7cfca6cb495b6fd3e765a424eaea49e234931c7baf1d870ab8d7c2889"
+    },
+    "confluent": {
+      "version": "0.1.0",
+      "digest": "sha256:6823cc1723777d1ace8c32fde6896899178c0232e8d0255a5d7dfe26343b1082"
+    },
+    "dbt": {
+      "version": "0.1.0",
+      "digest": "sha256:b80fb193b738ba918827f24ce996a3ba289ee4c72a26fc1867cc5bc4c60cbbe6"
+    },
+    "deltalake": {
+      "version": "0.1.0",
+      "digest": "sha256:eaabd5f07a031d8e5f6b1d4c01102e2e20018dcf2a806db974a553e8b68e4897"
+    },
+    "duckdb": {
+      "version": "0.1.0",
+      "digest": "sha256:b12d7e94906993828a53d2b8da49c381783353c5b0a2cb4e526b9db51ba10722"
+    },
+    "dynamodb": {
+      "version": "0.1.0",
+      "digest": "sha256:1522bd911c2b4bf72b8f74e1bd26bd5a4617e39d711ac8e39b47c9a7a2c13970"
+    },
+    "elasticsearch": {
+      "version": "0.1.0",
+      "digest": "sha256:c234ce755a298d7b724d823a5c06b7c6d44e42f5c1810fae1241f5381fbdccd9"
+    },
     "gcs": {
       "version": "0.1.0",
       "digest": "sha256:69cc8497bfa293b5d6715e96d5971ffa9e2a9edb421a283529eeecc6f395f2e2"
+    },
+    "glue": {
+      "version": "0.1.0",
+      "digest": "sha256:8e9a46c862c8c9b68eba56af8fe1d24174aea01b8e00ea6bbfcde0529e1f389b"
+    },
+    "iceberg": {
+      "version": "0.1.0",
+      "digest": "sha256:0c09ec9097cf83943e4f8e8ac0a7f6edb173cf77074dd1ae4a906192e132f0a3"
+    },
+    "kafka": {
+      "version": "0.1.0",
+      "digest": "sha256:e418867fd382ba2792f964c39e737b4921bc3a1826b4edf383cad10c837f14eb"
+    },
+    "lambda": {
+      "version": "0.1.0",
+      "digest": "sha256:6ba939b1df36f48d2f5c1effb5efcb6fd3e024e3984ac71e5ab631926df91932"
+    },
+    "mongodb": {
+      "version": "0.1.0",
+      "digest": "sha256:8d14e790aa3b623124c9b28790f6b4b7d48e97570e0c7d46df1def4c07e61ed2"
+    },
+    "mysql": {
+      "version": "0.1.0",
+      "digest": "sha256:c3617cac4e05abf09248728f9195598f9b22f4feb183edd4ef784d6e2348ab22"
+    },
+    "nats": {
+      "version": "0.1.0",
+      "digest": "sha256:367d05b43b797380cb34d35d847877720f842c9abdb999b977f29b4ca60c85f3"
+    },
+    "openapi": {
+      "version": "0.1.0",
+      "digest": "sha256:5db3c4a7b7ce0e4a6d8b0cc61da466b54c25bd2d824b0056a43ee912e3263bb0"
+    },
+    "opensearch": {
+      "version": "0.1.0",
+      "digest": "sha256:88d5ff181cde024896d639e7d56b5ed73ca8dddcf4d1bce7c439a8d3a7d6e86f"
+    },
+    "postgresql": {
+      "version": "0.1.0",
+      "digest": "sha256:ee2e828cd2928f4d916f0794dd65c9ad485bf6b9a8a9d74675d720fbe3a1a36a"
+    },
+    "redis": {
+      "version": "0.1.0",
+      "digest": "sha256:0fff8ea40c060f0ce91dc8fd5b4ee8fe6f14b65da4ceea83ef08085272c84459"
+    },
+    "redpanda": {
+      "version": "0.1.0",
+      "digest": "sha256:bb8872b59be421dae356917fe56b81bb067609a39214e57d08482a9fdc8b1afc"
+    },
+    "s3": {
+      "version": "0.1.0",
+      "digest": "sha256:30813f8d19d0577f673a4790a9de5eaf4fcf46ff150924c7a5f78731a55ab286"
+    },
+    "sns": {
+      "version": "0.1.0",
+      "digest": "sha256:80214e9d174b0e9842a117f7574c6133fde7361a98611f5c1e59c1763e6e5de5"
+    },
+    "sqs": {
+      "version": "0.1.0",
+      "digest": "sha256:90ac0fecdb1487db0d9794f03cfbcb7cbbfe7a2814e0a325b0f942acc529f270"
+    },
+    "trino": {
+      "version": "0.1.0",
+      "digest": "sha256:7eca87a0c1a654d64d54202bc2bdee22c6b994c8fceb3595b04e82cd98724cf2"
     }
   }
 }
