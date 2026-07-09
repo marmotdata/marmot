@@ -102,3 +102,6 @@ changelog:
       - "^docs:"
       - "^chore:"
       - "^test:"
+
+release:
+  disable: true

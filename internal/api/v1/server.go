@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	_ "github.com/marmotdata/marmot/docs"
 	"github.com/marmotdata/marmot/internal/api/v1/assets"
 	"github.com/marmotdata/marmot/internal/api/v1/health"
 	"github.com/marmotdata/marmot/internal/crypto"
@@ -66,7 +65,6 @@ import (
 	"github.com/marmotdata/marmot/internal/websocket"
 	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/rs/zerolog/log"
-	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 // @title Marmot API
@@ -677,9 +675,7 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 		})
 	}
 
-	mux.Handle("/swagger/", httpSwagger.Handler(
-		httpSwagger.URL("/swagger/doc.json"),
-	))
+	registerSwagger(mux)
 }
 
 // teamMembershipAdapter adapts teamService to notification.TeamMembershipProvider

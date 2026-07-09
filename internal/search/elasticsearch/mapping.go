@@ -1,77 +1,63 @@
 package elasticsearch
 
-import (
-	"fmt"
-
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types/enums/dynamicmapping"
-)
-
-// buildTypeMappings returns the type mapping for the marmot search index.
-func buildTypeMappings() *types.TypeMapping {
-	nameAnalyzer := "name_analyzer"
-	falseVal := false
-	dynTrue := dynamicmapping.True
-
-	return &types.TypeMapping{
-		DynamicTemplates: []map[string]types.DynamicTemplate{
+// buildTypeMappings returns the type mapping JSON for the marmot search index.
+func buildTypeMappings() map[string]any {
+	return map[string]any{
+		"dynamic_templates": []map[string]any{
 			{
-				"metadata_as_text": {
-					PathMatch: []string{"metadata.*"},
-					Mapping: &types.TextProperty{
-						Type: "text",
-					},
+				"metadata_as_text": map[string]any{
+					"path_match": []string{"metadata.*"},
+					"mapping":    map[string]any{"type": "text"},
 				},
 			},
 		},
-		Properties: map[string]types.Property{
-			"type":      types.NewKeywordProperty(),
-			"entity_id": types.NewKeywordProperty(),
-			"name": &types.TextProperty{
-				Type:     "text",
-				Analyzer: &nameAnalyzer,
-				Fields: map[string]types.Property{
-					"keyword": types.NewKeywordProperty(),
+		"properties": map[string]any{
+			"type":      map[string]any{"type": "keyword"},
+			"entity_id": map[string]any{"type": "keyword"},
+			"name": map[string]any{
+				"type":     "text",
+				"analyzer": "name_analyzer",
+				"fields": map[string]any{
+					"keyword": map[string]any{"type": "keyword"},
 				},
 			},
-			"description":      &types.TextProperty{Type: "text"},
-			"url_path":         &types.KeywordProperty{Type: "keyword", Index: &falseVal},
-			"asset_type":       types.NewKeywordProperty(),
-			"primary_provider": types.NewKeywordProperty(),
-			"providers":        types.NewKeywordProperty(),
-			"tags":             types.NewKeywordProperty(),
-			"mrn":              types.NewKeywordProperty(),
-			"created_by":       types.NewKeywordProperty(),
-			"created_at":       &types.DateProperty{Type: "date"},
-			"updated_at":       &types.DateProperty{Type: "date"},
-			"documentation":    &types.TextProperty{Type: "text"},
-			"metadata": &types.ObjectProperty{
-				Type:    "object",
-				Dynamic: &dynTrue,
+			"description":      map[string]any{"type": "text"},
+			"url_path":         map[string]any{"type": "keyword", "index": false},
+			"asset_type":       map[string]any{"type": "keyword"},
+			"primary_provider": map[string]any{"type": "keyword"},
+			"providers":        map[string]any{"type": "keyword"},
+			"tags":             map[string]any{"type": "keyword"},
+			"mrn":              map[string]any{"type": "keyword"},
+			"created_by":       map[string]any{"type": "keyword"},
+			"created_at":       map[string]any{"type": "date"},
+			"updated_at":       map[string]any{"type": "date"},
+			"documentation":    map[string]any{"type": "text"},
+			"metadata": map[string]any{
+				"type":    "object",
+				"dynamic": true,
 			},
 		},
 	}
 }
 
-func (c *Client) buildIndexSettings() *types.IndexSettings {
-	settings := &types.IndexSettings{
-		Analysis: &types.IndexSettingsAnalysis{
-			Analyzer: map[string]types.Analyzer{
-				"name_analyzer": &types.CustomAnalyzer{
-					Tokenizer: "standard",
-					Filter:    []string{"lowercase", "asciifolding"},
+func (c *Client) buildIndexSettings() map[string]any {
+	settings := map[string]any{
+		"analysis": map[string]any{
+			"analyzer": map[string]any{
+				"name_analyzer": map[string]any{
+					"type":      "custom",
+					"tokenizer": "standard",
+					"filter":    []string{"lowercase", "asciifolding"},
 				},
 			},
 		},
 	}
 
 	if c.shards != nil {
-		s := fmt.Sprintf("%d", *c.shards)
-		settings.NumberOfShards = &s
+		settings["number_of_shards"] = *c.shards
 	}
 	if c.replicas != nil {
-		s := fmt.Sprintf("%d", *c.replicas)
-		settings.NumberOfReplicas = &s
+		settings["number_of_replicas"] = *c.replicas
 	}
 
 	return settings

@@ -6,7 +6,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.28
 	github.com/centrifugal/centrifuge v0.38.0
 	github.com/coreos/go-oidc/v3 v3.17.0
-	github.com/elastic/go-elasticsearch/v8 v8.19.3
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/go-playground/validator/v10 v10.30.3
 	github.com/golang-jwt/jwt/v5 v5.3.1
@@ -21,6 +20,7 @@ require (
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/opencontainers/image-spec v1.1.1
+	github.com/opensearch-project/opensearch-go/v4 v4.6.0
 	github.com/ory/fosite v0.49.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/robfig/cron/v3 v3.0.1
@@ -83,7 +83,6 @@ require (
 	github.com/dgraph-io/ristretto v1.0.0 // indirect
 	github.com/dolthub/maphash v0.1.0 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/elastic/elastic-transport-go/v8 v8.8.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.2 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
 	github.com/fatih/color v1.18.0 // indirect
@@ -184,7 +183,6 @@ require (
 	github.com/stoewer/go-strcase v1.3.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/swaggo/files v1.0.1 // indirect
-	github.com/tidwall/gjson v1.18.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	github.com/yosida95/uritemplate/v3 v3.0.2 // indirect

@@ -17,7 +17,8 @@ swagger:
 build:
 	go build -ldflags '-s -w' -o bin/$(BINARY_NAME) cmd/main.go
 
-dev: swagger build
+dev: swagger
+	go build -ldflags '-s -w' -tags=swagger -o bin/$(BINARY_NAME) cmd/main.go
 	MARMOT_LOGGING_LEVEL=debug MARMOT_SERVER_ALLOW_UNENCRYPTED=true MARMOT_TELEMETRY_ENABLED=false ./bin/$(BINARY_NAME) run
 
 frontend-build:

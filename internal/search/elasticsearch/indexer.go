@@ -5,24 +5,31 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
-	"github.com/elastic/go-elasticsearch/v8/typedapi/types"
 	"github.com/marmotdata/marmot/internal/core/search"
+	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 )
 
-// docID returns the ES document ID for a given type and entity ID.
+// docID returns the document ID for a given type and entity ID.
 func docID(entityType, entityID string) string {
 	return entityType + ":" + entityID
 }
 
-// Index indexes a single document into Elasticsearch.
+// Index indexes a single document.
 func (c *Client) Index(ctx context.Context, doc search.SearchDocument) error {
-	body := documentToMap(doc)
-	id := docID(doc.Type, doc.EntityID)
+	body, err := json.Marshal(documentToMap(doc))
+	if err != nil {
+		return fmt.Errorf("marshaling document %s:%s: %w", doc.Type, doc.EntityID, err)
+	}
 
-	_, err := c.es.Index(c.index).Id(id).Document(body).Do(ctx)
+	_, err = c.es.Index(ctx, opensearchapi.IndexReq{
+		Index:      c.index,
+		DocumentID: docID(doc.Type, doc.EntityID),
+		Body:       bytes.NewReader(body),
+	})
 	if err != nil {
 		return fmt.Errorf("indexing document %s:%s: %w", doc.Type, doc.EntityID, err)
 	}
@@ -36,83 +43,115 @@ func (c *Client) BulkIndex(ctx context.Context, docs []search.SearchDocument) er
 		return nil
 	}
 
-	req := c.es.Bulk().Index(c.index)
+	var buf bytes.Buffer
 	for _, doc := range docs {
 		id := docID(doc.Type, doc.EntityID)
-		body := documentToMap(doc)
-		if err := req.IndexOp(types.IndexOperation{Id_: &id}, body); err != nil {
-			return fmt.Errorf("adding bulk index op: %w", err)
+		meta, err := json.Marshal(map[string]any{
+			"index": map[string]any{"_id": id},
+		})
+		if err != nil {
+			return fmt.Errorf("marshaling bulk meta for %s: %w", id, err)
 		}
+		body, err := json.Marshal(documentToMap(doc))
+		if err != nil {
+			return fmt.Errorf("marshaling document %s: %w", id, err)
+		}
+		buf.Write(meta)
+		buf.WriteByte('\n')
+		buf.Write(body)
+		buf.WriteByte('\n')
 	}
 
-	res, err := req.Do(ctx)
+	res, err := c.es.Bulk(ctx, opensearchapi.BulkReq{
+		Index: c.index,
+		Body:  &buf,
+	})
 	if err != nil {
 		return fmt.Errorf("bulk indexing: %w", err)
 	}
 
 	if res.Errors {
-		return fmt.Errorf("bulk indexing completed with errors")
+		var failed []string
+		for _, item := range res.Items {
+			for _, op := range item {
+				if op.Error != nil {
+					failed = append(failed, fmt.Sprintf("%s: %s", op.ID, op.Error.Reason))
+				}
+			}
+		}
+		return fmt.Errorf("bulk indexing completed with errors: %s", strings.Join(failed, "; "))
 	}
 
 	return nil
 }
 
-// Delete removes a document from the index.
-// The typed Delete API treats 404 as success, so no special handling is needed.
+// Delete removes a document from the index. A 404 is treated as success.
 func (c *Client) Delete(ctx context.Context, entityType, entityID string) error {
-	_, err := c.es.Delete(c.index, docID(entityType, entityID)).Do(ctx)
+	resp, err := c.es.Document.Delete(ctx, opensearchapi.DocumentDeleteReq{
+		Index:      c.index,
+		DocumentID: docID(entityType, entityID),
+	})
 	if err != nil {
+		if resp != nil && resp.Inspect().Response != nil && resp.Inspect().Response.StatusCode == http.StatusNotFound {
+			return nil
+		}
 		return fmt.Errorf("deleting document %s:%s: %w", entityType, entityID, err)
 	}
 
 	return nil
 }
 
-// Search executes a search query against Elasticsearch.
+// Search executes a search query.
 func (c *Client) Search(ctx context.Context, filter search.Filter) ([]*search.Result, int, *search.Facets, error) {
-	body := buildSearchQuery(filter)
-
-	data, err := json.Marshal(body)
+	body, err := json.Marshal(buildSearchQuery(filter))
 	if err != nil {
 		return nil, 0, nil, fmt.Errorf("marshaling search query: %w", err)
 	}
 
-	res, err := c.es.Search().Index(c.index).Raw(bytes.NewReader(data)).Do(ctx)
+	res, err := c.es.Search(ctx, &opensearchapi.SearchReq{
+		Indices: []string{c.index},
+		Body:    bytes.NewReader(body),
+	})
 	if err != nil {
 		return nil, 0, nil, fmt.Errorf("executing search: %w", err)
 	}
 
 	results := make([]*search.Result, 0, len(res.Hits.Hits))
 	for _, hit := range res.Hits.Hits {
-		result := hitToResult(hit)
-		results = append(results, result)
+		results = append(results, hitToResult(hit))
 	}
 
 	facets := extractFacets(res.Aggregations)
-
-	var total int
-	if res.Hits.Total != nil {
-		total = int(res.Hits.Total.Value)
-	}
+	total := res.Hits.Total.Value
 
 	return results, total, facets, nil
 }
 
-// CreateIndex creates the Elasticsearch index with mappings.
+// CreateIndex creates the search index with mappings and settings if it does
+// not already exist.
 func (c *Client) CreateIndex(ctx context.Context) error {
-	exists, err := c.es.Indices.Exists(c.index).Do(ctx)
-	if err != nil {
+	existsResp, err := c.es.Indices.Exists(ctx, opensearchapi.IndicesExistsReq{
+		Indices: []string{c.index},
+	})
+	if existsResp != nil && existsResp.StatusCode == http.StatusOK {
+		return nil
+	}
+	if err != nil && (existsResp == nil || existsResp.StatusCode != http.StatusNotFound) {
 		return fmt.Errorf("checking index existence: %w", err)
 	}
 
-	if exists {
-		return nil
+	createBody, err := json.Marshal(map[string]any{
+		"settings": c.buildIndexSettings(),
+		"mappings": buildTypeMappings(),
+	})
+	if err != nil {
+		return fmt.Errorf("marshaling index body: %w", err)
 	}
 
-	_, err = c.es.Indices.Create(c.index).
-		Settings(c.buildIndexSettings()).
-		Mappings(buildTypeMappings()).
-		Do(ctx)
+	_, err = c.es.Indices.Create(ctx, opensearchapi.IndicesCreateReq{
+		Index: c.index,
+		Body:  bytes.NewReader(createBody),
+	})
 	if err != nil {
 		return fmt.Errorf("creating index: %w", err)
 	}
@@ -160,7 +199,7 @@ func documentToMap(doc search.SearchDocument) map[string]interface{} {
 	if len(doc.Metadata) > 0 {
 		flat := make(map[string]interface{}, len(doc.Metadata))
 		for k, v := range doc.Metadata {
-			// Replace dots in keys — ES interprets them as nested objects,
+			// Replace dots in keys — ES/OS interpret them as nested objects,
 			// which conflicts with the text dynamic template.
 			safeKey := strings.ReplaceAll(k, ".", "_")
 			flat[safeKey] = fmt.Sprintf("%v", v)
@@ -171,18 +210,10 @@ func documentToMap(doc search.SearchDocument) map[string]interface{} {
 	return m
 }
 
-func hitToResult(hit types.Hit) *search.Result {
-	var source map[string]interface{}
-	if hit.Source_ != nil {
-		_ = json.Unmarshal(hit.Source_, &source)
-	}
-	if source == nil {
-		source = map[string]interface{}{}
-	}
-
-	var rank float32
-	if hit.Score_ != nil {
-		rank = float32(*hit.Score_)
+func hitToResult(hit opensearchapi.SearchHit) *search.Result {
+	source := map[string]interface{}{}
+	if len(hit.Source) > 0 {
+		_ = json.Unmarshal(hit.Source, &source)
 	}
 
 	result := &search.Result{
@@ -190,7 +221,7 @@ func hitToResult(hit types.Hit) *search.Result {
 		ID:   getString(source, "entity_id"),
 		Name: getString(source, "name"),
 		URL:  getString(source, "url_path"),
-		Rank: rank,
+		Rank: hit.Score,
 	}
 
 	if desc, ok := source["description"].(string); ok {
@@ -236,7 +267,15 @@ func hitToResult(hit types.Hit) *search.Result {
 	return result
 }
 
-func extractFacets(aggs map[string]types.Aggregate) *search.Facets {
+// termsAggregation matches the response shape of a `terms` aggregation.
+type termsAggregation struct {
+	Buckets []struct {
+		Key      string `json:"key"`
+		DocCount int    `json:"doc_count"`
+	} `json:"buckets"`
+}
+
+func extractFacets(raw json.RawMessage) *search.Facets {
 	facets := &search.Facets{
 		Types:      make(map[search.ResultType]int),
 		AssetTypes: []search.FacetValue{},
@@ -244,46 +283,31 @@ func extractFacets(aggs map[string]types.Aggregate) *search.Facets {
 		Tags:       []search.FacetValue{},
 	}
 
-	extractBuckets := func(agg types.Aggregate) (keys []string, counts []int) {
-		sta, ok := agg.(*types.StringTermsAggregate)
-		if !ok {
-			return nil, nil
-		}
-		buckets, ok := sta.Buckets.([]types.StringTermsBucket)
-		if !ok {
-			return nil, nil
-		}
-		for _, bucket := range buckets {
-			key, _ := bucket.Key.(string)
-			keys = append(keys, key)
-			counts = append(counts, int(bucket.DocCount))
-		}
-		return keys, counts
+	if len(raw) == 0 {
+		return facets
 	}
 
-	if agg, ok := aggs["types"]; ok {
-		keys, counts := extractBuckets(agg)
-		for i, key := range keys {
-			facets.Types[search.ResultType(key)] = counts[i]
-		}
+	var aggs struct {
+		Types      termsAggregation `json:"types"`
+		AssetTypes termsAggregation `json:"asset_types"`
+		Providers  termsAggregation `json:"providers"`
+		Tags       termsAggregation `json:"tags"`
 	}
-	if agg, ok := aggs["asset_types"]; ok {
-		keys, counts := extractBuckets(agg)
-		for i, key := range keys {
-			facets.AssetTypes = append(facets.AssetTypes, search.FacetValue{Value: key, Count: counts[i]})
-		}
+	if err := json.Unmarshal(raw, &aggs); err != nil {
+		return facets
 	}
-	if agg, ok := aggs["providers"]; ok {
-		keys, counts := extractBuckets(agg)
-		for i, key := range keys {
-			facets.Providers = append(facets.Providers, search.FacetValue{Value: key, Count: counts[i]})
-		}
+
+	for _, b := range aggs.Types.Buckets {
+		facets.Types[search.ResultType(b.Key)] = b.DocCount
 	}
-	if agg, ok := aggs["tags"]; ok {
-		keys, counts := extractBuckets(agg)
-		for i, key := range keys {
-			facets.Tags = append(facets.Tags, search.FacetValue{Value: key, Count: counts[i]})
-		}
+	for _, b := range aggs.AssetTypes.Buckets {
+		facets.AssetTypes = append(facets.AssetTypes, search.FacetValue{Value: b.Key, Count: b.DocCount})
+	}
+	for _, b := range aggs.Providers.Buckets {
+		facets.Providers = append(facets.Providers, search.FacetValue{Value: b.Key, Count: b.DocCount})
+	}
+	for _, b := range aggs.Tags.Buckets {
+		facets.Tags = append(facets.Tags, search.FacetValue{Value: b.Key, Count: b.DocCount})
 	}
 
 	return facets
