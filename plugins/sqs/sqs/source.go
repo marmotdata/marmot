@@ -1,9 +1,5 @@
-// +marmot:name=SQS
-// +marmot:description=This plugin discovers SQS queues from AWS accounts.
-// +marmot:status=experimental
-// +marmot:features=Assets, Lineage
+// Package sqs discovers SQS queues from AWS accounts.
 package sqs
-
 
 import (
 	"context"
@@ -14,27 +10,37 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "sqs",
+		Name:        "AWS SQS",
+		Description: "Discover SQS queues from AWS accounts",
+		Icon:        "sqs",
+		Category:    "messaging",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for SQS plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
-	*plugin.AWSConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
+	*pluginsdk.AWSConfig `json:",inline"`
 
 	DiscoverDLQ bool `json:"discover_dlq,omitempty" description:"Discover Dead Letter Queue relationships"`
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 credentials:
-  region: "us-east-1" 
+  region: "us-east-1"
   id: "<aws-secret-id>"
   secret: "<aws-secret-key>"
 tags:
@@ -46,13 +52,13 @@ type Source struct {
 	client *sqs.Client
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -60,14 +66,14 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
 	s.config = config
 
-	awsConfig, err := plugin.ExtractAWSConfig(pluginConfig)
+	awsConfig, err := pluginsdk.ExtractAWSConfig(pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("extracting AWS config: %w", err)
 	}
@@ -84,8 +90,8 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("discovering queues: %w", err)
 	}
 
-	var assets []asset.Asset
-	var lineages []lineage.LineageEdge
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
 	queueArns := make(map[string]string)
 
 	for _, queueURL := range queues {
@@ -109,7 +115,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		}
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
@@ -138,7 +144,7 @@ func (s *Source) discoverQueues(ctx context.Context) ([]string, error) {
 	return queues, nil
 }
 
-func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.Asset, string, error) {
+func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (pluginsdk.Asset, string, error) {
 	attrs, err := s.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
 		QueueUrl: &queueURL,
 		AttributeNames: []types.QueueAttributeName{
@@ -146,7 +152,7 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 		},
 	})
 	if err != nil {
-		return asset.Asset{}, "", fmt.Errorf("getting queue attributes: %w", err)
+		return pluginsdk.Asset{}, "", fmt.Errorf("getting queue attributes: %w", err)
 	}
 
 	metadata := make(map[string]interface{})
@@ -161,7 +167,7 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 			for key, value := range tagsOutput.Tags {
 				tagMap[key] = value
 			}
-			metadata = plugin.ProcessAWSTags(s.config.TagsToMetadata, s.config.IncludeTags, tagMap)
+			metadata = pluginsdk.ProcessAWSTags(s.config.TagsToMetadata, s.config.IncludeTags, tagMap)
 		}
 	}
 
@@ -192,16 +198,16 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 	name := extractQueueName(queueURL)
 	mrnValue := mrn.New("Queue", "SQS", name)
 
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:      &name,
 		MRN:       &mrnValue,
 		Type:      "Queue",
 		Providers: []string{"SQS"},
-		Metadata:    metadata,
-		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Metadata:  metadata,
+		Tags:      processedTags,
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "SQS",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -210,8 +216,8 @@ func (s *Source) createQueueAsset(ctx context.Context, queueURL string) (asset.A
 	}, attrs.Attributes[string(types.QueueAttributeNameQueueArn)], nil
 }
 
-func (s *Source) discoverDLQLineage(ctx context.Context, queues []string, queueArns map[string]string) ([]lineage.LineageEdge, error) {
-	var lineages []lineage.LineageEdge
+func (s *Source) discoverDLQLineage(ctx context.Context, queues []string, queueArns map[string]string) ([]pluginsdk.LineageEdge, error) {
+	var lineages []pluginsdk.LineageEdge
 
 	for _, queueURL := range queues {
 		attrs, err := s.client.GetQueueAttributes(ctx, &sqs.GetQueueAttributesInput{
@@ -241,7 +247,7 @@ func (s *Source) discoverDLQLineage(ctx context.Context, queues []string, queueA
 				sourceMRN := mrn.New("Queue", "SQS", sourceName)
 				targetMRN := mrn.New("Queue", "SQS", targetName)
 
-				lineages = append(lineages, lineage.LineageEdge{
+				lineages = append(lineages, pluginsdk.LineageEdge{
 					Source: sourceMRN,
 					Target: targetMRN,
 					Type:   "DLQ",
@@ -261,19 +267,4 @@ func extractQueueName(queueURL string) string {
 func extractQueueNameFromArn(arn string) string {
 	parts := strings.Split(arn, ":")
 	return parts[len(parts)-1]
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "sqs",
-		Name:        "AWS SQS",
-		Description: "Discover SQS queues from AWS accounts",
-		Icon:        "sqs",
-		Category:    "messaging",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register SQS plugin")
-	}
 }

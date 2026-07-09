@@ -12,10 +12,6 @@ import (
 	"github.com/marmotdata/marmot/internal/plugin/install"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
-
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/s3"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/sns"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/sqs"
 )
 
 var (
