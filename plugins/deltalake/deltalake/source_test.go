@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -22,14 +22,14 @@ func createTempDeltaTable(t *testing.T) string {
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name      string
-		setup     func(t *testing.T) plugin.RawPluginConfig
+		setup     func(t *testing.T) pluginsdk.RawConfig
 		expectErr bool
 	}{
 		{
 			name: "valid config with single path",
-			setup: func(t *testing.T) plugin.RawPluginConfig {
+			setup: func(t *testing.T) pluginsdk.RawConfig {
 				dir := createTempDeltaTable(t)
-				return plugin.RawPluginConfig{
+				return pluginsdk.RawConfig{
 					"table_paths": []interface{}{dir},
 				}
 			},
@@ -37,10 +37,10 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with multiple paths",
-			setup: func(t *testing.T) plugin.RawPluginConfig {
+			setup: func(t *testing.T) pluginsdk.RawConfig {
 				dir1 := createTempDeltaTable(t)
 				dir2 := createTempDeltaTable(t)
-				return plugin.RawPluginConfig{
+				return pluginsdk.RawConfig{
 					"table_paths": []interface{}{dir1, dir2},
 				}
 			},
@@ -48,15 +48,15 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "missing table_paths",
-			setup: func(t *testing.T) plugin.RawPluginConfig {
-				return plugin.RawPluginConfig{}
+			setup: func(t *testing.T) pluginsdk.RawConfig {
+				return pluginsdk.RawConfig{}
 			},
 			expectErr: true,
 		},
 		{
 			name: "empty table_paths",
-			setup: func(t *testing.T) plugin.RawPluginConfig {
-				return plugin.RawPluginConfig{
+			setup: func(t *testing.T) pluginsdk.RawConfig {
+				return pluginsdk.RawConfig{
 					"table_paths": []interface{}{},
 				}
 			},
@@ -64,9 +64,9 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "path without _delta_log",
-			setup: func(t *testing.T) plugin.RawPluginConfig {
+			setup: func(t *testing.T) pluginsdk.RawConfig {
 				dir := t.TempDir()
-				return plugin.RawPluginConfig{
+				return pluginsdk.RawConfig{
 					"table_paths": []interface{}{dir},
 				}
 			},
@@ -74,9 +74,9 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "config with tags",
-			setup: func(t *testing.T) plugin.RawPluginConfig {
+			setup: func(t *testing.T) pluginsdk.RawConfig {
 				dir := createTempDeltaTable(t)
-				return plugin.RawPluginConfig{
+				return pluginsdk.RawConfig{
 					"table_paths": []interface{}{dir},
 					"tags":        []interface{}{"delta", "data-lake"},
 				}
@@ -85,9 +85,9 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "config with filter",
-			setup: func(t *testing.T) plugin.RawPluginConfig {
+			setup: func(t *testing.T) pluginsdk.RawConfig {
 				dir := createTempDeltaTable(t)
-				return plugin.RawPluginConfig{
+				return pluginsdk.RawConfig{
 					"table_paths": []interface{}{dir},
 					"filter": map[string]interface{}{
 						"include": []interface{}{"^events.*"},
@@ -117,7 +117,7 @@ func TestSource_ValidateStoresConfig(t *testing.T) {
 	dir := createTempDeltaTable(t)
 
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{
+	_, err := s.Validate(pluginsdk.RawConfig{
 		"table_paths": []interface{}{dir},
 	})
 	require.NoError(t, err)
@@ -290,7 +290,7 @@ func TestCreateTableAsset(t *testing.T) {
 	}
 
 	config := &Config{
-		BaseConfig: plugin.BaseConfig{
+		BaseConfig: pluginsdk.BaseConfig{
 			Tags: []string{"test-tag"},
 		},
 	}
