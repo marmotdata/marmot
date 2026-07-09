@@ -85,14 +85,12 @@ func registerExternalPlugin(path string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("fetching plugin metadata: %w", err)
 	}
-
-	meta, err := convertMeta(sdkMeta)
-	if err != nil {
-		return false, fmt.Errorf("converting plugin metadata: %w", err)
+	if sdkMeta.ID == "" {
+		return false, fmt.Errorf("plugin metadata has no id")
 	}
 
-	if _, err := GetRegistry().Get(meta.ID); err == nil {
-		log.Debug().Str("plugin", path).Str("id", meta.ID).Msg("Plugin already registered, skipping")
+	if _, err := GetRegistry().Get(sdkMeta.ID); err == nil {
+		log.Debug().Str("plugin", path).Str("id", sdkMeta.ID).Msg("Plugin already registered, skipping")
 		return false, nil
 	}
 
@@ -104,30 +102,13 @@ func registerExternalPlugin(path string) (bool, error) {
 		source = &ExternalDataFetcherSource{ExternalSource{path: path}}
 	}
 
-	if err := GetRegistry().Register(meta, source); err != nil {
+	if err := GetRegistry().Register(*sdkMeta, source); err != nil {
 		// Lost a race with a concurrent loader; the first registration
 		// wins, same as the check above.
-		log.Debug().Str("plugin", path).Str("id", meta.ID).Msg("Plugin already registered, skipping")
+		log.Debug().Str("plugin", path).Str("id", sdkMeta.ID).Msg("Plugin already registered, skipping")
 		return false, nil
 	}
 	return true, nil
-}
-
-// convertMeta converts an SDK Meta into the internal PluginMeta via a
-// JSON round trip; the two types share their JSON shape by contract.
-func convertMeta(sdkMeta *pluginsdk.Meta) (PluginMeta, error) {
-	var meta PluginMeta
-	data, err := json.Marshal(sdkMeta)
-	if err != nil {
-		return meta, err
-	}
-	if err := json.Unmarshal(data, &meta); err != nil {
-		return meta, err
-	}
-	if meta.ID == "" {
-		return meta, fmt.Errorf("plugin metadata has no id")
-	}
-	return meta, nil
 }
 
 // ExternalSource adapts an external plugin binary to the internal
