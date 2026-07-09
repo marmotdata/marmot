@@ -1,9 +1,6 @@
-// +marmot:name=Iceberg
-// +marmot:description=This plugin discovers namespaces, tables and views from Iceberg catalogs (REST and AWS Glue).
-// +marmot:status=experimental
-// +marmot:features=Assets,Lineage
+// Package iceberg discovers namespaces, tables and views from Iceberg
+// catalogs (REST and AWS Glue).
 package iceberg
-
 
 import (
 	"context"
@@ -14,17 +11,38 @@ import (
 	"github.com/apache/iceberg-go/catalog"
 	gluecat "github.com/apache/iceberg-go/catalog/glue"
 	"github.com/apache/iceberg-go/catalog/rest"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/core/lineage"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
-	"github.com/rs/zerolog/log"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 )
 
-// +marmot:config
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	spec := pluginsdk.GenerateConfigSpec(Config{})
+
+	// Set show_when on inlined AWSConfig fields so they only appear for Glue catalogs
+	glueShowWhen := &pluginsdk.ShowWhen{Field: "catalog_type", Value: "glue"}
+	for i := range spec {
+		switch spec[i].Name {
+		case "credentials", "tags_to_metadata", "include_tags":
+			spec[i].ShowWhen = glueShowWhen
+		}
+	}
+
+	return pluginsdk.Meta{
+		ID:          "iceberg",
+		Name:        "Apache Iceberg",
+		Description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
+		Icon:        "iceberg",
+		Category:    "data-lake",
+		Status:      "experimental",
+		Features:    []string{"Assets", "Lineage"},
+		ConfigSpec:  spec,
+	}
+}
+
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
-	*plugin.AWSConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
+	*pluginsdk.AWSConfig `json:",inline"`
 
 	CatalogType string `json:"catalog_type" description:"Catalog backend type" default:"rest" validate:"omitempty,oneof=rest glue"`
 
@@ -43,7 +61,7 @@ type Config struct {
 	IncludeViews      bool `json:"include_views" description:"Whether to discover views" default:"true"`
 }
 
-// +marmot:example-config
+// Example configuration for the plugin
 var _ = `
 # REST catalog (default)
 uri: "http://localhost:8181"
@@ -64,8 +82,8 @@ type Source struct {
 	cat    catalog.Catalog
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -80,7 +98,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.IncludeViews = true
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -98,8 +116,8 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -146,7 +164,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		ctx = cat.SetPageSize(ctx, -1)
 
 	case "glue":
-		awsConfig, err := plugin.ExtractAWSConfig(pluginConfig)
+		awsConfig, err := pluginsdk.ExtractAWSConfig(pluginConfig)
 		if err != nil {
 			return nil, fmt.Errorf("extracting AWS config: %w", err)
 		}
@@ -175,7 +193,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		return nil, fmt.Errorf("discovering tables: %w", err)
 	}
 
-	var viewAssets []asset.Asset
+	var viewAssets []pluginsdk.Asset
 	if config.IncludeViews {
 		viewAssets, err = s.discoverViews(ctx, namespaces)
 		if err != nil {
@@ -183,35 +201,31 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		}
 	}
 
-	var allAssets []asset.Asset
+	var allAssets []pluginsdk.Asset
 	allAssets = append(allAssets, nsAssets...)
 	allAssets = append(allAssets, tableAssets...)
 	allAssets = append(allAssets, viewAssets...)
 
-	var lineages []lineage.LineageEdge
+	var lineages []pluginsdk.LineageEdge
 	if config.IncludeNamespaces {
 		lineages = buildContainsLineage(tableAssets, viewAssets)
 	}
 
-	result := &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets:  allAssets,
 		Lineage: lineages,
-	}
-
-	plugin.FilterDiscoveryResult(result, pluginConfig)
-
-	return result, nil
+	}, nil
 }
 
-func buildContainsLineage(tableAssets, viewAssets []asset.Asset) []lineage.LineageEdge {
-	var edges []lineage.LineageEdge
+func buildContainsLineage(tableAssets, viewAssets []pluginsdk.Asset) []pluginsdk.LineageEdge {
+	var edges []pluginsdk.LineageEdge
 
 	for i := range tableAssets {
 		nsMRN := namespaceFromAssetMRN(tableAssets[i])
 		if nsMRN == "" {
 			continue
 		}
-		edges = append(edges, lineage.LineageEdge{
+		edges = append(edges, pluginsdk.LineageEdge{
 			Source: nsMRN,
 			Target: *tableAssets[i].MRN,
 			Type:   "CONTAINS",
@@ -223,7 +237,7 @@ func buildContainsLineage(tableAssets, viewAssets []asset.Asset) []lineage.Linea
 		if nsMRN == "" {
 			continue
 		}
-		edges = append(edges, lineage.LineageEdge{
+		edges = append(edges, pluginsdk.LineageEdge{
 			Source: nsMRN,
 			Target: *viewAssets[i].MRN,
 			Type:   "CONTAINS",
@@ -234,7 +248,7 @@ func buildContainsLineage(tableAssets, viewAssets []asset.Asset) []lineage.Linea
 }
 
 // namespaceFromAssetMRN derives the parent namespace MRN from a table/view MRN.
-func namespaceFromAssetMRN(a asset.Asset) string {
+func namespaceFromAssetMRN(a pluginsdk.Asset) string {
 	if a.MRN == nil || a.Metadata == nil {
 		return ""
 	}
@@ -253,30 +267,4 @@ func namespaceFromAssetMRN(a asset.Asset) string {
 
 	nsPath := fullName[:lastDot]
 	return mrn.New("Namespace", "Iceberg", nsPath)
-}
-
-func init() {
-	spec := plugin.GenerateConfigSpec(Config{})
-
-	// Set show_when on inlined AWSConfig fields so they only appear for Glue catalogs
-	glueShowWhen := &plugin.ShowWhen{Field: "catalog_type", Value: "glue"}
-	for i := range spec {
-		switch spec[i].Name {
-		case "credentials", "tags_to_metadata", "include_tags":
-			spec[i].ShowWhen = glueShowWhen
-		}
-	}
-
-	meta := plugin.PluginMeta{
-		ID:          "iceberg",
-		Name:        "Apache Iceberg",
-		Description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
-		Icon:        "iceberg",
-		Category:    "data-lake",
-		ConfigSpec:  spec,
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register Iceberg plugin")
-	}
 }

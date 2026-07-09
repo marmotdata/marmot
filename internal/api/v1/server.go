@@ -16,8 +16,6 @@ import (
 	"github.com/marmotdata/marmot/internal/crypto"
 
 	// Plugin imports
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/glue"
-	_ "github.com/marmotdata/marmot/internal/plugin/providers/iceberg"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/lambda"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mongodb"
 	_ "github.com/marmotdata/marmot/internal/plugin/providers/mysql"

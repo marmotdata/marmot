@@ -1,9 +1,6 @@
-// +marmot:name=Glue
-// +marmot:description=This plugin discovers jobs, databases, tables and crawlers from AWS Glue.
-// +marmot:status=experimental
-// +marmot:features=Assets
+// Package glue discovers jobs, databases, tables and crawlers from
+// AWS Glue.
 package glue
-
 
 import (
 	"context"
@@ -14,17 +11,29 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/glue"
 	"github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "glue",
+		Name:        "AWS Glue",
+		Description: "Discover jobs, databases, tables and crawlers from AWS Glue",
+		Icon:        "glue",
+		Category:    "etl",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
 // Config for Glue plugin
-// +marmot:config
 type Config struct {
-	plugin.BaseConfig `json:",inline"`
-	*plugin.AWSConfig `json:",inline"`
+	pluginsdk.BaseConfig `json:",inline"`
+	*pluginsdk.AWSConfig `json:",inline"`
 
 	DiscoverJobs      bool `json:"discover_jobs" description:"Whether to discover Glue jobs" default:"true"`
 	DiscoverDatabases bool `json:"discover_databases" description:"Whether to discover Glue databases" default:"true"`
@@ -33,7 +42,6 @@ type Config struct {
 }
 
 // Example configuration for the plugin
-// +marmot:example-config
 var _ = `
 credentials:
   region: "us-east-1"
@@ -52,8 +60,8 @@ type Source struct {
 	client *glue.Client
 }
 
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -71,7 +79,7 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 		config.DiscoverCrawlers = true
 	}
 
-	if err := plugin.ValidateStruct(config); err != nil {
+	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
 	}
 
@@ -79,8 +87,8 @@ func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginCon
 	return rawConfig, nil
 }
 
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-	config, err := plugin.UnmarshalPluginConfig[Config](pluginConfig)
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("unmarshaling config: %w", err)
 	}
@@ -100,7 +108,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	s.config = config
 
-	awsConfig, err := plugin.ExtractAWSConfig(pluginConfig)
+	awsConfig, err := pluginsdk.ExtractAWSConfig(pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("extracting AWS config: %w", err)
 	}
@@ -112,7 +120,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 
 	s.client = glue.NewFromConfig(awsCfg)
 
-	var allAssets []asset.Asset
+	var allAssets []pluginsdk.Asset
 
 	if config.DiscoverJobs {
 		jobs, err := s.discoverJobs(ctx)
@@ -148,13 +156,13 @@ func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConf
 		allAssets = append(allAssets, crawlers...)
 	}
 
-	return &plugin.DiscoveryResult{
+	return &pluginsdk.DiscoveryResult{
 		Assets: allAssets,
 	}, nil
 }
 
-func (s *Source) discoverJobs(ctx context.Context) ([]asset.Asset, error) {
-	var assets []asset.Asset
+func (s *Source) discoverJobs(ctx context.Context) ([]pluginsdk.Asset, error) {
+	var assets []pluginsdk.Asset
 	paginator := glue.NewGetJobsPaginator(s.client, &glue.GetJobsInput{})
 
 	for paginator.HasMorePages() {
@@ -172,7 +180,7 @@ func (s *Source) discoverJobs(ctx context.Context) ([]asset.Asset, error) {
 	return assets, nil
 }
 
-func (s *Source) createJobAsset(job types.Job) asset.Asset {
+func (s *Source) createJobAsset(job types.Job) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 
 	name := ""
@@ -226,9 +234,9 @@ func (s *Source) createJobAsset(job types.Job) asset.Asset {
 	}
 
 	mrnValue := mrn.New("Job", "Glue", name)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Job",
@@ -236,7 +244,7 @@ func (s *Source) createJobAsset(job types.Job) asset.Asset {
 		Description: description,
 		Metadata:    metadata,
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Glue",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -245,8 +253,8 @@ func (s *Source) createJobAsset(job types.Job) asset.Asset {
 	}
 }
 
-func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, []string, error) {
-	var assets []asset.Asset
+func (s *Source) discoverDatabases(ctx context.Context) ([]pluginsdk.Asset, []string, error) {
+	var assets []pluginsdk.Asset
 	var dbNames []string
 	paginator := glue.NewGetDatabasesPaginator(s.client, &glue.GetDatabasesInput{})
 
@@ -273,7 +281,7 @@ func (s *Source) discoverDatabases(ctx context.Context) ([]asset.Asset, []string
 	return assets, dbNames, nil
 }
 
-func (s *Source) createDatabaseAsset(db types.Database) asset.Asset {
+func (s *Source) createDatabaseAsset(db types.Database) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 
 	name := ""
@@ -303,9 +311,9 @@ func (s *Source) createDatabaseAsset(db types.Database) asset.Asset {
 	}
 
 	mrnValue := mrn.New("Database", "Glue", name)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Database",
@@ -313,7 +321,7 @@ func (s *Source) createDatabaseAsset(db types.Database) asset.Asset {
 		Description: description,
 		Metadata:    metadata,
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Glue",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -322,8 +330,8 @@ func (s *Source) createDatabaseAsset(db types.Database) asset.Asset {
 	}
 }
 
-func (s *Source) discoverTables(ctx context.Context, dbNames []string) ([]asset.Asset, error) {
-	var assets []asset.Asset
+func (s *Source) discoverTables(ctx context.Context, dbNames []string) ([]pluginsdk.Asset, error) {
+	var assets []pluginsdk.Asset
 
 	for _, dbName := range dbNames {
 		paginator := glue.NewGetTablesPaginator(s.client, &glue.GetTablesInput{
@@ -361,7 +369,7 @@ func isIcebergTable(table types.Table) bool {
 	return strings.EqualFold(tableType, "ICEBERG")
 }
 
-func (s *Source) createTableAsset(dbName string, table types.Table) asset.Asset {
+func (s *Source) createTableAsset(dbName string, table types.Table) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 
 	tableName := ""
@@ -430,9 +438,9 @@ func (s *Source) createTableAsset(dbName string, table types.Table) asset.Asset 
 
 	qualifiedName := dbName + "." + tableName
 	mrnValue := mrn.New("Table", "Glue", qualifiedName)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &tableName,
 		MRN:         &mrnValue,
 		Type:        "Table",
@@ -441,7 +449,7 @@ func (s *Source) createTableAsset(dbName string, table types.Table) asset.Asset 
 		Metadata:    metadata,
 		Schema:      schema,
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Glue",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -450,8 +458,8 @@ func (s *Source) createTableAsset(dbName string, table types.Table) asset.Asset 
 	}
 }
 
-func (s *Source) discoverCrawlers(ctx context.Context) ([]asset.Asset, error) {
-	var assets []asset.Asset
+func (s *Source) discoverCrawlers(ctx context.Context) ([]pluginsdk.Asset, error) {
+	var assets []pluginsdk.Asset
 	paginator := glue.NewGetCrawlersPaginator(s.client, &glue.GetCrawlersInput{})
 
 	for paginator.HasMorePages() {
@@ -469,7 +477,7 @@ func (s *Source) discoverCrawlers(ctx context.Context) ([]asset.Asset, error) {
 	return assets, nil
 }
 
-func (s *Source) createCrawlerAsset(crawler types.Crawler) asset.Asset {
+func (s *Source) createCrawlerAsset(crawler types.Crawler) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 
 	name := ""
@@ -530,9 +538,9 @@ func (s *Source) createCrawlerAsset(crawler types.Crawler) asset.Asset {
 	}
 
 	mrnValue := mrn.New("Crawler", "Glue", name)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Crawler",
@@ -540,7 +548,7 @@ func (s *Source) createCrawlerAsset(crawler types.Crawler) asset.Asset {
 		Description: description,
 		Metadata:    metadata,
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Glue",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -627,19 +635,4 @@ func formatParameters(params map[string]string) string {
 		parts = append(parts, fmt.Sprintf("%s=%s", k, v))
 	}
 	return strings.Join(parts, ", ")
-}
-
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "glue",
-		Name:        "AWS Glue",
-		Description: "Discover jobs, databases, tables and crawlers from AWS Glue",
-		Icon:        "glue",
-		Category:    "etl",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
-
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register Glue plugin")
-	}
 }

@@ -30,7 +30,7 @@ func Meta() pluginsdk.Meta {
 // Config for the DynamoDB plugin.
 type Config struct {
 	pluginsdk.BaseConfig `json:",inline"`
-	AWSConfig            `json:",inline"`
+	pluginsdk.AWSConfig  `json:",inline"`
 }
 
 // Example configuration for the plugin.
@@ -69,12 +69,12 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	}
 	s.config = config
 
-	awsCfg, err := extractAWSConfig(pluginConfig)
+	awsCfg, err := pluginsdk.ExtractAWSConfig(pluginConfig)
 	if err != nil {
 		return nil, fmt.Errorf("extracting AWS config: %w", err)
 	}
 
-	sdkCfg, err := awsCfg.newAWSConfig(ctx)
+	sdkCfg, err := awsCfg.NewAWSConfig(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("creating AWS config: %w", err)
 	}
@@ -139,7 +139,7 @@ func (s *Source) createTableAsset(ctx context.Context, tableName string) (plugin
 			for _, tag := range tagsOutput.Tags {
 				tagMap[*tag.Key] = *tag.Value
 			}
-			metadata = processAWSTags(s.config.TagsToMetadata, s.config.IncludeTags, tagMap)
+			metadata = pluginsdk.ProcessAWSTags(s.config.TagsToMetadata, s.config.IncludeTags, tagMap)
 		}
 	}
 

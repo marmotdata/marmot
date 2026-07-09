@@ -3,8 +3,7 @@ package iceberg
 import (
 	"testing"
 
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,19 +11,19 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name      string
-		config    plugin.RawPluginConfig
+		config    pluginsdk.RawConfig
 		expectErr bool
 	}{
 		{
 			name: "valid REST config",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"uri": "http://localhost:8181",
 			},
 			expectErr: false,
 		},
 		{
 			name: "valid config with all options",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"uri":        "https://catalog.example.com",
 				"warehouse":  "my-warehouse",
 				"credential": "client-id:client-secret",
@@ -40,19 +39,19 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name:      "missing URI defaults to REST and requires URI",
-			config:    plugin.RawPluginConfig{},
+			config:    pluginsdk.RawConfig{},
 			expectErr: true,
 		},
 		{
 			name: "invalid URI",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"uri": "not-a-valid-url",
 			},
 			expectErr: true,
 		},
 		{
 			name: "config with tags",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"uri":  "http://localhost:8181",
 				"tags": []interface{}{"iceberg", "data-lake"},
 			},
@@ -60,7 +59,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "config with filter",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"uri": "http://localhost:8181",
 				"filter": map[string]interface{}{
 					"include": []interface{}{"^prod\\..*"},
@@ -71,7 +70,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid Glue config",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"catalog_type": "glue",
 				"credentials": map[string]interface{}{
 					"region": "us-east-1",
@@ -81,7 +80,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid Glue config with catalog ID",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"catalog_type":    "glue",
 				"glue_catalog_id": "123456789012",
 				"credentials": map[string]interface{}{
@@ -92,21 +91,21 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "Glue config does not require URI",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"catalog_type": "glue",
 			},
 			expectErr: false,
 		},
 		{
 			name: "REST config requires URI",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"catalog_type": "rest",
 			},
 			expectErr: true,
 		},
 		{
 			name: "invalid catalog_type",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"catalog_type": "hive",
 			},
 			expectErr: true,
@@ -130,7 +129,7 @@ func TestSource_Validate(t *testing.T) {
 func TestSource_ValidateStoresConfig(t *testing.T) {
 	t.Run("REST config", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{
+		_, err := s.Validate(pluginsdk.RawConfig{
 			"uri": "http://localhost:8181",
 		})
 		require.NoError(t, err)
@@ -141,7 +140,7 @@ func TestSource_ValidateStoresConfig(t *testing.T) {
 
 	t.Run("Glue config", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{
+		_, err := s.Validate(pluginsdk.RawConfig{
 			"catalog_type":    "glue",
 			"glue_catalog_id": "123456789012",
 		})
@@ -155,7 +154,7 @@ func TestSource_ValidateStoresConfig(t *testing.T) {
 func TestSource_ValidateDefaultCatalogType(t *testing.T) {
 	t.Run("defaults to rest", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{
+		_, err := s.Validate(pluginsdk.RawConfig{
 			"uri": "http://localhost:8181",
 		})
 		require.NoError(t, err)
@@ -164,7 +163,7 @@ func TestSource_ValidateDefaultCatalogType(t *testing.T) {
 
 	t.Run("respects explicit glue", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{
+		_, err := s.Validate(pluginsdk.RawConfig{
 			"catalog_type": "glue",
 		})
 		require.NoError(t, err)
@@ -175,7 +174,7 @@ func TestSource_ValidateDefaultCatalogType(t *testing.T) {
 func TestSource_ValidateDefaultBoolFields(t *testing.T) {
 	t.Run("defaults to true when not set", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{
+		_, err := s.Validate(pluginsdk.RawConfig{
 			"uri": "http://localhost:8181",
 		})
 		require.NoError(t, err)
@@ -185,7 +184,7 @@ func TestSource_ValidateDefaultBoolFields(t *testing.T) {
 
 	t.Run("respects explicit false", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{
+		_, err := s.Validate(pluginsdk.RawConfig{
 			"uri":                "http://localhost:8181",
 			"include_namespaces": false,
 			"include_views":      false,
@@ -197,7 +196,7 @@ func TestSource_ValidateDefaultBoolFields(t *testing.T) {
 
 	t.Run("respects explicit true", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{
+		_, err := s.Validate(pluginsdk.RawConfig{
 			"uri":                "http://localhost:8181",
 			"include_namespaces": true,
 			"include_views":      true,
@@ -238,7 +237,7 @@ func TestNamespaceFromAssetMRN(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			a := asset.Asset{
+			a := pluginsdk.Asset{
 				MRN:      &tt.mrn,
 				Metadata: map[string]interface{}{},
 			}

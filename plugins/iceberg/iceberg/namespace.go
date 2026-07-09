@@ -6,14 +6,13 @@ import (
 	"time"
 
 	"github.com/apache/iceberg-go/table"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
-func (s *Source) discoverNamespaces(ctx context.Context) ([]asset.Asset, map[string]table.Identifier, error) {
-	var assets []asset.Asset
+func (s *Source) discoverNamespaces(ctx context.Context) ([]pluginsdk.Asset, map[string]table.Identifier, error) {
+	var assets []pluginsdk.Asset
 	nsMap := make(map[string]table.Identifier)
 
 	if err := s.listNamespacesRecursive(ctx, nil, &assets, nsMap); err != nil {
@@ -23,7 +22,7 @@ func (s *Source) discoverNamespaces(ctx context.Context) ([]asset.Asset, map[str
 	return assets, nsMap, nil
 }
 
-func (s *Source) listNamespacesRecursive(ctx context.Context, parent table.Identifier, assets *[]asset.Asset, nsMap map[string]table.Identifier) error {
+func (s *Source) listNamespacesRecursive(ctx context.Context, parent table.Identifier, assets *[]pluginsdk.Asset, nsMap map[string]table.Identifier) error {
 	namespaces, err := s.cat.ListNamespaces(ctx, parent)
 	if err != nil {
 		return err
@@ -52,7 +51,7 @@ func (s *Source) listNamespacesRecursive(ctx context.Context, parent table.Ident
 	return nil
 }
 
-func (s *Source) createNamespaceAsset(ctx context.Context, ns table.Identifier) (asset.Asset, error) {
+func (s *Source) createNamespaceAsset(ctx context.Context, ns table.Identifier) (pluginsdk.Asset, error) {
 	nsPath := strings.Join(ns, ".")
 	metadata := map[string]interface{}{
 		"namespace": nsPath,
@@ -78,9 +77,9 @@ func (s *Source) createNamespaceAsset(ctx context.Context, ns table.Identifier) 
 
 	mrnValue := mrn.New("Namespace", "Iceberg", nsPath)
 	name := nsPath
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &name,
 		MRN:         &mrnValue,
 		Type:        "Namespace",
@@ -88,7 +87,7 @@ func (s *Source) createNamespaceAsset(ctx context.Context, ns table.Identifier) 
 		Description: description,
 		Metadata:    metadata,
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Iceberg",
 			LastSyncAt: time.Now(),
 			Properties: metadata,

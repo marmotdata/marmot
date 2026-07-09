@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/glue/types"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -12,12 +12,12 @@ import (
 func TestSource_Validate(t *testing.T) {
 	tests := []struct {
 		name      string
-		config    plugin.RawPluginConfig
+		config    pluginsdk.RawConfig
 		expectErr bool
 	}{
 		{
 			name: "valid config with credentials",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"credentials": map[string]interface{}{
 					"region": "us-east-1",
 					"id":     "AKIAIOSFODNN7EXAMPLE",
@@ -28,7 +28,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with profile",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"credentials": map[string]interface{}{
 					"region":  "us-west-2",
 					"profile": "production",
@@ -38,7 +38,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "valid config with role assumption",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"credentials": map[string]interface{}{
 					"region": "eu-west-1",
 					"role":   "arn:aws:iam::123456789012:role/MyRole",
@@ -48,19 +48,19 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name:      "empty config",
-			config:    plugin.RawPluginConfig{},
+			config:    pluginsdk.RawConfig{},
 			expectErr: false,
 		},
 		{
 			name: "config with tags",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"tags": []interface{}{"aws", "glue"},
 			},
 			expectErr: false,
 		},
 		{
 			name: "config with filter",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"filter": map[string]interface{}{
 					"include": []interface{}{"^prod-.*"},
 					"exclude": []interface{}{".*-temp$"},
@@ -70,7 +70,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "config with tags_to_metadata",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"tags_to_metadata": true,
 				"credentials": map[string]interface{}{
 					"region": "us-east-1",
@@ -80,7 +80,7 @@ func TestSource_Validate(t *testing.T) {
 		},
 		{
 			name: "config with discovery flags",
-			config: plugin.RawPluginConfig{
+			config: pluginsdk.RawConfig{
 				"discover_jobs":      true,
 				"discover_databases": false,
 				"discover_tables":    false,
@@ -106,7 +106,7 @@ func TestSource_Validate(t *testing.T) {
 
 func TestSource_ValidateStoresConfig(t *testing.T) {
 	s := &Source{}
-	_, err := s.Validate(plugin.RawPluginConfig{})
+	_, err := s.Validate(pluginsdk.RawConfig{})
 	require.NoError(t, err)
 	assert.NotNil(t, s.config)
 }
@@ -114,7 +114,7 @@ func TestSource_ValidateStoresConfig(t *testing.T) {
 func TestSource_ValidateDefaultBoolFields(t *testing.T) {
 	t.Run("defaults to true when not set", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{})
+		_, err := s.Validate(pluginsdk.RawConfig{})
 		require.NoError(t, err)
 		assert.True(t, s.config.DiscoverJobs)
 		assert.True(t, s.config.DiscoverDatabases)
@@ -124,7 +124,7 @@ func TestSource_ValidateDefaultBoolFields(t *testing.T) {
 
 	t.Run("respects explicit false", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{
+		_, err := s.Validate(pluginsdk.RawConfig{
 			"discover_jobs":      false,
 			"discover_databases": false,
 			"discover_tables":    false,
@@ -139,7 +139,7 @@ func TestSource_ValidateDefaultBoolFields(t *testing.T) {
 
 	t.Run("respects explicit true", func(t *testing.T) {
 		s := &Source{}
-		_, err := s.Validate(plugin.RawPluginConfig{
+		_, err := s.Validate(pluginsdk.RawConfig{
 			"discover_jobs":      true,
 			"discover_databases": true,
 			"discover_tables":    true,

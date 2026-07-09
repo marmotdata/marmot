@@ -13,9 +13,8 @@ import (
 	"github.com/apache/iceberg-go/catalog"
 	icetable "github.com/apache/iceberg-go/table"
 	"github.com/apache/iceberg-go/view"
-	"github.com/marmotdata/marmot/internal/core/asset"
-	"github.com/marmotdata/marmot/internal/mrn"
-	"github.com/marmotdata/marmot/internal/plugin"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -25,8 +24,8 @@ type viewCatalog interface {
 	LoadView(ctx context.Context, identifier icetable.Identifier) (*view.View, error)
 }
 
-func (s *Source) discoverTables(ctx context.Context, namespaces map[string]icetable.Identifier) ([]asset.Asset, error) {
-	var assets []asset.Asset
+func (s *Source) discoverTables(ctx context.Context, namespaces map[string]icetable.Identifier) ([]pluginsdk.Asset, error) {
+	var assets []pluginsdk.Asset
 
 	for nsPath, ns := range namespaces {
 		for ident, err := range s.cat.ListTables(ctx, ns) {
@@ -50,14 +49,14 @@ func (s *Source) discoverTables(ctx context.Context, namespaces map[string]iceta
 	return assets, nil
 }
 
-func (s *Source) discoverViews(ctx context.Context, namespaces map[string]icetable.Identifier) ([]asset.Asset, error) {
+func (s *Source) discoverViews(ctx context.Context, namespaces map[string]icetable.Identifier) ([]pluginsdk.Asset, error) {
 	vc, ok := s.cat.(viewCatalog)
 	if !ok {
 		log.Debug().Msg("Catalog does not support views")
 		return nil, nil
 	}
 
-	var assets []asset.Asset
+	var assets []pluginsdk.Asset
 
 	for nsPath, ns := range namespaces {
 		for ident, err := range vc.ListViews(ctx, ns) {
@@ -81,7 +80,7 @@ func (s *Source) discoverViews(ctx context.Context, namespaces map[string]icetab
 	return assets, nil
 }
 
-func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier) asset.Asset {
+func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 	tableName := catalog.TableNameFromIdent(ident)
 	fullName := strings.Join(ident, ".")
@@ -133,9 +132,9 @@ func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier
 	}
 
 	mrnValue := mrn.New("Table", "Iceberg", fullName)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:        &tableName,
 		MRN:         &mrnValue,
 		Type:        "Table",
@@ -144,7 +143,7 @@ func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier
 		Schema:      schemaMap,
 		Metadata:    metadata,
 		Tags:        processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Iceberg",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
@@ -153,7 +152,7 @@ func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier
 	}
 }
 
-func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) asset.Asset {
+func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) pluginsdk.Asset {
 	metadata := make(map[string]interface{})
 	viewName := catalog.TableNameFromIdent(ident)
 	fullName := strings.Join(ident, ".")
@@ -189,9 +188,9 @@ func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) asset.
 	}
 
 	mrnValue := mrn.New("View", "Iceberg", fullName)
-	processedTags := plugin.InterpolateTags(s.config.Tags, metadata)
+	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
-	return asset.Asset{
+	return pluginsdk.Asset{
 		Name:          &viewName,
 		MRN:           &mrnValue,
 		Type:          "View",
@@ -202,7 +201,7 @@ func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) asset.
 		QueryLanguage: &sqlLang,
 		Metadata:      metadata,
 		Tags:          processedTags,
-		Sources: []asset.AssetSource{{
+		Sources: []pluginsdk.AssetSource{{
 			Name:       "Iceberg",
 			LastSyncAt: time.Now(),
 			Properties: metadata,
