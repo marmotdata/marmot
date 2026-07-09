@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/go-sql-driver/mysql v1.9.3
-	github.com/marmotdata/plugin-sdk v0.0.0-20260708201219-df7254e073e8
+	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
 	github.com/rs/zerolog v1.35.1
 )
 

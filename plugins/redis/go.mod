@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/redis
 go 1.26.1
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20260708201219-df7254e073e8
+	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
 	github.com/redis/go-redis/v9 v9.17.3
 	github.com/stretchr/testify v1.11.1
 )

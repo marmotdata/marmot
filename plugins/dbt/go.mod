@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/dbt
 go 1.26.1
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20260707212054-bebe3cd64e67
+	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
 	github.com/rs/zerolog v1.35.1
 )
 

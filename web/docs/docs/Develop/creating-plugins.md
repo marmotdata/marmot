@@ -37,7 +37,7 @@ type Config struct {
     pluginsdk.BaseConfig `json:",inline"`
 
     // Add a simple config option
-    Greeting string `json:"greeting" description:"Optional custom greeting message"`
+    Greeting string `json:"greeting" description:"Optional custom greeting message" default:"Hello!"`
 }
 
 type Source struct {
@@ -51,6 +51,9 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
         return nil, fmt.Errorf("unmarshaling config: %w", err)
     }
 
+    // Fill fields from their default tags when absent from the raw config
+    pluginsdk.ApplyDefaults(config, rawConfig)
+
     if err := pluginsdk.ValidateStruct(config); err != nil {
         return nil, err
     }
@@ -59,12 +62,9 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
     return rawConfig, nil
 }
 
-// Discover creates our hello and world assets
+// Discover creates our hello and world assets. The SDK runs Validate
+// first in the same process, so s.config is always set here.
 func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
-    if _, err := s.Validate(rawConfig); err != nil {
-        return nil, fmt.Errorf("validating config: %w", err)
-    }
-
     helloAsset := createHelloAsset(s.config)
     worldAsset := createWorldAsset(s.config)
 
@@ -239,6 +239,8 @@ Supported tags:
 - `sensitive`: Marks field as password/secret
 - `default`: Default value
 
+The `default` tag pre-fills the UI form, but configs written by hand (a CLI ingest file, for example) skip the form. Call `pluginsdk.ApplyDefaults(config, rawConfig)` in `Validate` so the defaults apply either way: it sets every field with a `default` tag whose key is absent from the raw config. Tag values are parsed as JSON (`default:"true"`, `default:"30"`, `default:"[\"a\",\"b\"]"`); values that are not valid JSON apply verbatim to string fields (`default:"production"`).
+
 `BaseConfig` adds the standard `tags`, `external_links`, and `filter` fields every plugin supports. Filtering is applied by Marmot after discovery; your plugin only needs to carry the config.
 
 ## Plugin Interface
@@ -254,6 +256,50 @@ type Source interface {
 
 **Validate**: Unmarshals and validates configuration before discovery runs
 **Discover**: Performs the actual asset discovery and returns assets, lineage, and documentation
+
+Marmot spawns a fresh plugin process for every call, so `Validate` and `Discover` never share an instance across calls. The SDK runs `Validate` before `Discover` in each process, which means state your `Validate` sets on the `Source` (the parsed config, computed limits) is always there when `Discover` runs.
+
+A `Source` can optionally implement `DataFetcher` to power row previews on asset pages:
+
+```go
+type DataFetcher interface {
+    FetchSampleData(ctx context.Context, config RawConfig, a *Asset) (columnNames []string, rows [][]interface{}, err error)
+}
+```
+
+It gets the asset and the plugin config, queries the source system, and returns column names and sample rows. `Serve` detects the interface automatically, there is nothing to register.
+
+## Write End-to-End Tests
+
+The `plugintest` package tests your built binary over the same wire protocol Marmot uses, spawning a fresh process per call just like the host does. That catches problems unit tests miss, like state that does not survive the process model:
+
+```go
+package main_test
+
+import (
+    "context"
+    "testing"
+
+    pluginsdk "github.com/marmotdata/plugin-sdk"
+    "github.com/marmotdata/plugin-sdk/plugintest"
+)
+
+func TestDiscover(t *testing.T) {
+    bin := plugintest.Build(t, ".") // path to the plugin main package
+
+    result, err := bin.Discover(context.Background(), pluginsdk.RawConfig{
+        "greeting": "Hello from a test!",
+    })
+    if err != nil {
+        t.Fatal(err)
+    }
+    if len(result.Assets) != 2 {
+        t.Fatalf("expected 2 assets, got %d", len(result.Assets))
+    }
+}
+```
+
+`Binary` also exposes `Meta`, `Validate`, and `FetchSampleData`. Pair it with a containerized instance of your source system and the test exercises the exact path Marmot takes in production.
 
 ## How Plugins Are Loaded
 

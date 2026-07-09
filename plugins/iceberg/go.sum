@@ -346,8 +346,8 @@ github.com/magiconair/properties v1.8.10 h1:s31yESBquKXCV9a/ScB3ESkOjUYYv+X0rg8S
 github.com/magiconair/properties v1.8.10/go.mod h1:Dhd985XPs7jluiymwWYZ0G4Z61jb3vdS329zhj2hYo0=
 github.com/mailru/easyjson v0.7.7 h1:UGYAvKxe3sBsEDzO8ZeWOSlIQfWFlxbzLZe7hwFURr0=
 github.com/mailru/easyjson v0.7.7/go.mod h1:xzfreul335JAWq5oZzymOObrkdz5UnU4kGfJJLY9Nlc=
-github.com/marmotdata/plugin-sdk v0.0.0-20260708201219-df7254e073e8 h1:IuN392BEQ5BZ3y2N4rAp8UnKK9xKVD0XTGE01H9Meis=
-github.com/marmotdata/plugin-sdk v0.0.0-20260708201219-df7254e073e8/go.mod h1:x+EtM+PAIstRF37EscNbqRW/53UW6pAvXB/H3qJ+2zs=
+github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2 h1:ZzNGyPLRqG10dZXSPYOAM3yFtyQUxnHgUY9IzHtKgH0=
+github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2/go.mod h1:LS0q6Q/yhzZ1OVMgtjc9Zf9DpvMyJk40DtbKANM33xY=
 github.com/mattn/go-colorable v0.1.9/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-colorable v0.1.12/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
 github.com/mattn/go-colorable v0.1.14 h1:9A9LHSqF/7dyVVX6g0U9cwm9pG3kP9gSzcuIPHPsaIE=

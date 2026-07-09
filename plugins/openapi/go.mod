@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/openapi
 go 1.26.1
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20260709110139-ffc0dd8cf02b
+	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
 	github.com/pb33f/libopenapi v0.33.9
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1

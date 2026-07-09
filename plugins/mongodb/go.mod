@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/mongodb
 go 1.26.1
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20260708201219-df7254e073e8
+	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
 	github.com/rs/zerolog v1.35.1
 	go.mongodb.org/mongo-driver v1.17.9
 )
@@ -39,7 +39,6 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/montanaflynn/stats v0.7.1 // indirect
 	github.com/oklog/run v1.1.0 // indirect
-	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
 	github.com/xdg-go/scram v1.1.2 // indirect
 	github.com/xdg-go/stringprep v1.0.4 // indirect

@@ -71,8 +71,8 @@ github.com/jhump/protoreflect v1.17.0 h1:qOEr613fac2lOuTgWN4tPAtLL7fUSbuJL5X5Xum
 github.com/jhump/protoreflect v1.17.0/go.mod h1:h9+vUUL38jiBzck8ck+6G/aeMX8Z4QUY/NiJPwPNi+8=
 github.com/leodido/go-urn v1.4.0 h1:WT9HwE9SGECu3lg4d/dIA+jxlljEa1/ffXKmRjqdmIQ=
 github.com/leodido/go-urn v1.4.0/go.mod h1:bvxc+MVxLKB4z00jd1z+Dvzr47oO32F/QSNjSBOlFxI=
-github.com/marmotdata/plugin-sdk v0.0.0-20260708201219-df7254e073e8 h1:IuN392BEQ5BZ3y2N4rAp8UnKK9xKVD0XTGE01H9Meis=
-github.com/marmotdata/plugin-sdk v0.0.0-20260708201219-df7254e073e8/go.mod h1:x+EtM+PAIstRF37EscNbqRW/53UW6pAvXB/H3qJ+2zs=
+github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2 h1:ZzNGyPLRqG10dZXSPYOAM3yFtyQUxnHgUY9IzHtKgH0=
+github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2/go.mod h1:LS0q6Q/yhzZ1OVMgtjc9Zf9DpvMyJk40DtbKANM33xY=
 github.com/mattn/go-colorable v0.1.9/go.mod h1:u6P/XSegPjTcexA+o6vUJrdnUu04hMope9wVRipJSqc=
 github.com/mattn/go-colorable v0.1.12/go.mod h1:u5H1YNBxpqRaxsYJYSkiCWKzEfiAb1Gb520KVy5xxl4=
 github.com/mattn/go-colorable v0.1.14 h1:9A9LHSqF/7dyVVX6g0U9cwm9pG3kP9gSzcuIPHPsaIE=

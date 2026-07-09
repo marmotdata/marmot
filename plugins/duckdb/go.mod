@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/duckdb/duckdb-go/v2 v2.10501.0
-	github.com/marmotdata/plugin-sdk v0.0.0-20260707212054-bebe3cd64e67
+	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 )
