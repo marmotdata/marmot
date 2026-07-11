@@ -4,10 +4,11 @@ import (
 	"fmt"
 
 	"github.com/marmotdata/marmot/internal/crypto"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 )
 
 // GetSensitiveFields returns a map of sensitive field names from ConfigSpec
-func GetSensitiveFields(configSpec []ConfigField) map[string]bool {
+func GetSensitiveFields(configSpec []pluginsdk.ConfigField) map[string]bool {
 	sensitive := make(map[string]bool)
 	for _, field := range configSpec {
 		if field.Sensitive {
@@ -18,7 +19,7 @@ func GetSensitiveFields(configSpec []ConfigField) map[string]bool {
 }
 
 // EncryptConfig encrypts sensitive fields in a plugin config using the ConfigSpec
-func EncryptConfig(config map[string]interface{}, configSpec []ConfigField, encryptor *crypto.Encryptor) error {
+func EncryptConfig(config map[string]interface{}, configSpec []pluginsdk.ConfigField, encryptor *crypto.Encryptor) error {
 	sensitiveFields := GetSensitiveFields(configSpec)
 	if len(sensitiveFields) == 0 {
 		return nil
@@ -28,7 +29,7 @@ func EncryptConfig(config map[string]interface{}, configSpec []ConfigField, encr
 }
 
 // DecryptConfig decrypts sensitive fields in a plugin config using the ConfigSpec
-func DecryptConfig(config map[string]interface{}, configSpec []ConfigField, encryptor *crypto.Encryptor) error {
+func DecryptConfig(config map[string]interface{}, configSpec []pluginsdk.ConfigField, encryptor *crypto.Encryptor) error {
 	sensitiveFields := GetSensitiveFields(configSpec)
 	if len(sensitiveFields) == 0 {
 		return nil

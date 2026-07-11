@@ -3,7 +3,9 @@
 package assets
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new assets API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new assets API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new assets API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,82 +44,201 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for assets API
-*/
+// Client for assets API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// DeleteAssetsID delete an asset.
 	DeleteAssetsID(params *DeleteAssetsIDParams, opts ...ClientOption) (*DeleteAssetsIDNoContent, error)
 
+	// DeleteAssetsIDContext delete an asset.
+	DeleteAssetsIDContext(ctx context.Context, params *DeleteAssetsIDParams, opts ...ClientOption) (*DeleteAssetsIDNoContent, error)
+
+	// DeleteAssetsTagsID remove tag from asset.
 	DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error)
 
+	// DeleteAssetsTagsIDContext remove tag from asset.
+	DeleteAssetsTagsIDContext(ctx context.Context, params *DeleteAssetsTagsIDParams, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error)
+
+	// DeleteAssetsTermsID remove glossary term from asset.
 	DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error)
 
+	// DeleteAssetsTermsIDContext remove glossary term from asset.
+	DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteAssetsTermsIDParams, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error)
+
+	// GetAPIV1AssetsPreviewID get preview data for an asset.
 	GetAPIV1AssetsPreviewID(params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error)
 
+	// GetAPIV1AssetsPreviewIDContext get preview data for an asset.
+	GetAPIV1AssetsPreviewIDContext(ctx context.Context, params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error)
+
+	// GetAssetsByGlossaryTermTermID get assets by glossary term.
 	GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTermIDParams, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error)
 
+	// GetAssetsByGlossaryTermTermIDContext get assets by glossary term.
+	GetAssetsByGlossaryTermTermIDContext(ctx context.Context, params *GetAssetsByGlossaryTermTermIDParams, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error)
+
+	// GetAssetsDocumentationMrn get asset documentation.
 	GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnParams, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
 
+	// GetAssetsDocumentationMrnContext get asset documentation.
+	GetAssetsDocumentationMrnContext(ctx context.Context, params *GetAssetsDocumentationMrnParams, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error)
+
+	// GetAssetsID get an asset by ID.
 	GetAssetsID(params *GetAssetsIDParams, opts ...ClientOption) (*GetAssetsIDOK, error)
 
+	// GetAssetsIDContext get an asset by ID.
+	GetAssetsIDContext(ctx context.Context, params *GetAssetsIDParams, opts ...ClientOption) (*GetAssetsIDOK, error)
+
+	// GetAssetsIDRunHistory get asset run history.
 	GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error)
 
+	// GetAssetsIDRunHistoryContext get asset run history.
+	GetAssetsIDRunHistoryContext(ctx context.Context, params *GetAssetsIDRunHistoryParams, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error)
+
+	// GetAssetsIDRunHistoryHistogram get asset run history histogram.
 	GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHistogramParams, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error)
 
+	// GetAssetsIDRunHistoryHistogramContext get asset run history histogram.
+	GetAssetsIDRunHistoryHistogramContext(ctx context.Context, params *GetAssetsIDRunHistoryHistogramParams, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error)
+
+	// GetAssetsLookupTypeServiceName lookup asset by type service and name.
 	GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServiceNameParams, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error)
 
+	// GetAssetsLookupTypeServiceNameContext lookup asset by type service and name.
+	GetAssetsLookupTypeServiceNameContext(ctx context.Context, params *GetAssetsLookupTypeServiceNameParams, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error)
+
+	// GetAssetsMatchPattern match asset pattern.
 	GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, opts ...ClientOption) (*GetAssetsMatchPatternOK, error)
 
+	// GetAssetsMatchPatternContext match asset pattern.
+	GetAssetsMatchPatternContext(ctx context.Context, params *GetAssetsMatchPatternParams, opts ...ClientOption) (*GetAssetsMatchPatternOK, error)
+
+	// GetAssetsMyAssets get user s assets.
 	GetAssetsMyAssets(params *GetAssetsMyAssetsParams, opts ...ClientOption) (*GetAssetsMyAssetsOK, error)
 
+	// GetAssetsMyAssetsContext get user s assets.
+	GetAssetsMyAssetsContext(ctx context.Context, params *GetAssetsMyAssetsParams, opts ...ClientOption) (*GetAssetsMyAssetsOK, error)
+
+	// GetAssetsQualifiedNameQualifiedName get an asset by qualified name.
 	GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedNameQualifiedNameParams, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error)
 
+	// GetAssetsQualifiedNameQualifiedNameContext get an asset by qualified name.
+	GetAssetsQualifiedNameQualifiedNameContext(ctx context.Context, params *GetAssetsQualifiedNameQualifiedNameParams, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error)
+
+	// GetAssetsSearch search assets.
 	GetAssetsSearch(params *GetAssetsSearchParams, opts ...ClientOption) (*GetAssetsSearchOK, error)
 
+	// GetAssetsSearchContext search assets.
+	GetAssetsSearchContext(ctx context.Context, params *GetAssetsSearchParams, opts ...ClientOption) (*GetAssetsSearchOK, error)
+
+	// GetAssetsSuggestionsMetadataFields get metadata field suggestions.
 	GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestionsMetadataFieldsParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error)
 
+	// GetAssetsSuggestionsMetadataFieldsContext get metadata field suggestions.
+	GetAssetsSuggestionsMetadataFieldsContext(ctx context.Context, params *GetAssetsSuggestionsMetadataFieldsParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error)
+
+	// GetAssetsSuggestionsMetadataValues get metadata value suggestions.
 	GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestionsMetadataValuesParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error)
 
+	// GetAssetsSuggestionsMetadataValuesContext get metadata value suggestions.
+	GetAssetsSuggestionsMetadataValuesContext(ctx context.Context, params *GetAssetsSuggestionsMetadataValuesParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error)
+
+	// GetAssetsSuggestionsTags get tag suggestions.
 	GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error)
 
+	// GetAssetsSuggestionsTagsContext get tag suggestions.
+	GetAssetsSuggestionsTagsContext(ctx context.Context, params *GetAssetsSuggestionsTagsParams, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error)
+
+	// GetAssetsSummary get asset summary.
 	GetAssetsSummary(params *GetAssetsSummaryParams, opts ...ClientOption) (*GetAssetsSummaryOK, error)
 
+	// GetAssetsSummaryContext get asset summary.
+	GetAssetsSummaryContext(ctx context.Context, params *GetAssetsSummaryParams, opts ...ClientOption) (*GetAssetsSummaryOK, error)
+
+	// GetAssetsTermsID get asset s glossary terms.
 	GetAssetsTermsID(params *GetAssetsTermsIDParams, opts ...ClientOption) (*GetAssetsTermsIDOK, error)
 
+	// GetAssetsTermsIDContext get asset s glossary terms.
+	GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsTermsIDParams, opts ...ClientOption) (*GetAssetsTermsIDOK, error)
+
+	// PostAssets create a new asset.
 	PostAssets(params *PostAssetsParams, opts ...ClientOption) (*PostAssetsCreated, error)
 
+	// PostAssetsContext create a new asset.
+	PostAssetsContext(ctx context.Context, params *PostAssetsParams, opts ...ClientOption) (*PostAssetsCreated, error)
+
+	// PostAssetsDocumentation create asset documentation.
 	PostAssetsDocumentation(params *PostAssetsDocumentationParams, opts ...ClientOption) (*PostAssetsDocumentationOK, error)
 
+	// PostAssetsDocumentationContext create asset documentation.
+	PostAssetsDocumentationContext(ctx context.Context, params *PostAssetsDocumentationParams, opts ...ClientOption) (*PostAssetsDocumentationOK, error)
+
+	// PostAssetsDocumentationBatch batch create documentation.
 	PostAssetsDocumentationBatch(params *PostAssetsDocumentationBatchParams, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error)
 
+	// PostAssetsDocumentationBatchContext batch create documentation.
+	PostAssetsDocumentationBatchContext(ctx context.Context, params *PostAssetsDocumentationBatchParams, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error)
+
+	// PostAssetsTagsID add tag to asset.
 	PostAssetsTagsID(params *PostAssetsTagsIDParams, opts ...ClientOption) (*PostAssetsTagsIDOK, error)
 
+	// PostAssetsTagsIDContext add tag to asset.
+	PostAssetsTagsIDContext(ctx context.Context, params *PostAssetsTagsIDParams, opts ...ClientOption) (*PostAssetsTagsIDOK, error)
+
+	// PostAssetsTermsID add glossary terms to asset.
 	PostAssetsTermsID(params *PostAssetsTermsIDParams, opts ...ClientOption) (*PostAssetsTermsIDOK, error)
 
+	// PostAssetsTermsIDContext add glossary terms to asset.
+	PostAssetsTermsIDContext(ctx context.Context, params *PostAssetsTermsIDParams, opts ...ClientOption) (*PostAssetsTermsIDOK, error)
+
+	// PutAssetsID update an asset.
 	PutAssetsID(params *PutAssetsIDParams, opts ...ClientOption) (*PutAssetsIDOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PutAssetsIDContext update an asset.
+	PutAssetsIDContext(ctx context.Context, params *PutAssetsIDParams, opts ...ClientOption) (*PutAssetsIDOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-DeleteAssetsID deletes an asset
-
-Delete an asset from the system
-*/
+// DeleteAssetsID deletes an asset.
+//
+// Delete an asset from the system.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteAssetsIDContext] instead.
 func (a *Client) DeleteAssetsID(params *DeleteAssetsIDParams, opts ...ClientOption) (*DeleteAssetsIDNoContent, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteAssetsIDContext(ctx, params, opts...)
+}
+
+// DeleteAssetsIDContext deletes an asset.
+//
+// Delete an asset from the system.
+//
+// Do not use the deprecated [DeleteAssetsIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteAssetsIDContext(ctx context.Context, params *DeleteAssetsIDParams, opts ...ClientOption) (*DeleteAssetsIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAssetsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteAssetsID",
 		Method:             "DELETE",
@@ -125,13 +248,14 @@ func (a *Client) DeleteAssetsID(params *DeleteAssetsIDParams, opts ...ClientOpti
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAssetsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -151,16 +275,36 @@ func (a *Client) DeleteAssetsID(params *DeleteAssetsIDParams, opts ...ClientOpti
 	panic(msg)
 }
 
-/*
-DeleteAssetsTagsID removes tag from asset
-
-Remove a tag from an existing asset
-*/
+// DeleteAssetsTagsID removes tag from asset.
+//
+// Remove a tag from an existing asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteAssetsTagsIDContext] instead.
 func (a *Client) DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteAssetsTagsIDContext(ctx, params, opts...)
+}
+
+// DeleteAssetsTagsIDContext removes tag from asset.
+//
+// Remove a tag from an existing asset.
+//
+// Do not use the deprecated [DeleteAssetsTagsIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteAssetsTagsIDContext(ctx context.Context, params *DeleteAssetsTagsIDParams, opts ...ClientOption) (*DeleteAssetsTagsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAssetsTagsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteAssetsTagsID",
 		Method:             "DELETE",
@@ -170,13 +314,14 @@ func (a *Client) DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, opts ...Cl
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAssetsTagsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -196,16 +341,36 @@ func (a *Client) DeleteAssetsTagsID(params *DeleteAssetsTagsIDParams, opts ...Cl
 	panic(msg)
 }
 
-/*
-DeleteAssetsTermsID removes glossary term from asset
-
-Remove a glossary term association from an asset
-*/
+// DeleteAssetsTermsID removes glossary term from asset.
+//
+// Remove a glossary term association from an asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteAssetsTermsIDContext] instead.
 func (a *Client) DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteAssetsTermsIDContext(ctx, params, opts...)
+}
+
+// DeleteAssetsTermsIDContext removes glossary term from asset.
+//
+// Remove a glossary term association from an asset.
+//
+// Do not use the deprecated [DeleteAssetsTermsIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteAssetsTermsIDParams, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAssetsTermsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteAssetsTermsID",
 		Method:             "DELETE",
@@ -215,13 +380,14 @@ func (a *Client) DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, opts ...
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAssetsTermsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -241,16 +407,36 @@ func (a *Client) DeleteAssetsTermsID(params *DeleteAssetsTermsIDParams, opts ...
 	panic(msg)
 }
 
-/*
-GetAPIV1AssetsPreviewID gets preview data for an asset
-
-Fetches sample data from the asset's data source. Requires assets:preview permission.
-*/
+// GetAPIV1AssetsPreviewID gets preview data for an asset.
+//
+// Fetches sample data from the asset's data source. Requires assets:preview permission..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1AssetsPreviewIDContext] instead.
 func (a *Client) GetAPIV1AssetsPreviewID(params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1AssetsPreviewIDContext(ctx, params, opts...)
+}
+
+// GetAPIV1AssetsPreviewIDContext gets preview data for an asset.
+//
+// Fetches sample data from the asset's data source. Requires assets:preview permission..
+//
+// Do not use the deprecated [GetAPIV1AssetsPreviewIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1AssetsPreviewIDContext(ctx context.Context, params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPIV1AssetsPreviewIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPIV1AssetsPreviewID",
 		Method:             "GET",
@@ -260,13 +446,14 @@ func (a *Client) GetAPIV1AssetsPreviewID(params *GetAPIV1AssetsPreviewIDParams, 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPIV1AssetsPreviewIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -286,16 +473,36 @@ func (a *Client) GetAPIV1AssetsPreviewID(params *GetAPIV1AssetsPreviewIDParams, 
 	panic(msg)
 }
 
-/*
-GetAssetsByGlossaryTermTermID gets assets by glossary term
-
-Retrieve all assets associated with a specific glossary term
-*/
+// GetAssetsByGlossaryTermTermID gets assets by glossary term.
+//
+// Retrieve all assets associated with a specific glossary term.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsByGlossaryTermTermIDContext] instead.
 func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTermIDParams, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsByGlossaryTermTermIDContext(ctx, params, opts...)
+}
+
+// GetAssetsByGlossaryTermTermIDContext gets assets by glossary term.
+//
+// Retrieve all assets associated with a specific glossary term.
+//
+// Do not use the deprecated [GetAssetsByGlossaryTermTermIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsByGlossaryTermTermIDContext(ctx context.Context, params *GetAssetsByGlossaryTermTermIDParams, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsByGlossaryTermTermIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsByGlossaryTermTermID",
 		Method:             "GET",
@@ -305,13 +512,14 @@ func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTe
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsByGlossaryTermTermIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -331,16 +539,36 @@ func (a *Client) GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTe
 	panic(msg)
 }
 
-/*
-GetAssetsDocumentationMrn gets asset documentation
-
-Get documentation for a specific asset
-*/
+// GetAssetsDocumentationMrn gets asset documentation.
+//
+// Get documentation for a specific asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsDocumentationMrnContext] instead.
 func (a *Client) GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnParams, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsDocumentationMrnContext(ctx, params, opts...)
+}
+
+// GetAssetsDocumentationMrnContext gets asset documentation.
+//
+// Get documentation for a specific asset.
+//
+// Do not use the deprecated [GetAssetsDocumentationMrnParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsDocumentationMrnContext(ctx context.Context, params *GetAssetsDocumentationMrnParams, opts ...ClientOption) (*GetAssetsDocumentationMrnOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsDocumentationMrnParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsDocumentationMrn",
 		Method:             "GET",
@@ -350,13 +578,14 @@ func (a *Client) GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnPara
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsDocumentationMrnReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -376,16 +605,36 @@ func (a *Client) GetAssetsDocumentationMrn(params *GetAssetsDocumentationMrnPara
 	panic(msg)
 }
 
-/*
-GetAssetsID gets an asset by ID
-
-Get detailed information about a specific asset
-*/
+// GetAssetsID gets an asset by ID.
+//
+// Get detailed information about a specific asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsIDContext] instead.
 func (a *Client) GetAssetsID(params *GetAssetsIDParams, opts ...ClientOption) (*GetAssetsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsIDContext(ctx, params, opts...)
+}
+
+// GetAssetsIDContext gets an asset by ID.
+//
+// Get detailed information about a specific asset.
+//
+// Do not use the deprecated [GetAssetsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsIDContext(ctx context.Context, params *GetAssetsIDParams, opts ...ClientOption) (*GetAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsID",
 		Method:             "GET",
@@ -395,13 +644,14 @@ func (a *Client) GetAssetsID(params *GetAssetsIDParams, opts ...ClientOption) (*
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -421,16 +671,36 @@ func (a *Client) GetAssetsID(params *GetAssetsIDParams, opts ...ClientOption) (*
 	panic(msg)
 }
 
-/*
-GetAssetsIDRunHistory gets asset run history
-
-Get paginated run history for a specific asset
-*/
+// GetAssetsIDRunHistory gets asset run history.
+//
+// Get paginated run history for a specific asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsIDRunHistoryContext] instead.
 func (a *Client) GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsIDRunHistoryContext(ctx, params, opts...)
+}
+
+// GetAssetsIDRunHistoryContext gets asset run history.
+//
+// Get paginated run history for a specific asset.
+//
+// Do not use the deprecated [GetAssetsIDRunHistoryParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsIDRunHistoryContext(ctx context.Context, params *GetAssetsIDRunHistoryParams, opts ...ClientOption) (*GetAssetsIDRunHistoryOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsIDRunHistoryParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsIDRunHistory",
 		Method:             "GET",
@@ -440,13 +710,14 @@ func (a *Client) GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsIDRunHistoryReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -466,16 +737,36 @@ func (a *Client) GetAssetsIDRunHistory(params *GetAssetsIDRunHistoryParams, opts
 	panic(msg)
 }
 
-/*
-GetAssetsIDRunHistoryHistogram gets asset run history histogram
-
-Get histogram data for asset run history over specified period
-*/
+// GetAssetsIDRunHistoryHistogram gets asset run history histogram.
+//
+// Get histogram data for asset run history over specified period.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsIDRunHistoryHistogramContext] instead.
 func (a *Client) GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHistogramParams, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsIDRunHistoryHistogramContext(ctx, params, opts...)
+}
+
+// GetAssetsIDRunHistoryHistogramContext gets asset run history histogram.
+//
+// Get histogram data for asset run history over specified period.
+//
+// Do not use the deprecated [GetAssetsIDRunHistoryHistogramParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsIDRunHistoryHistogramContext(ctx context.Context, params *GetAssetsIDRunHistoryHistogramParams, opts ...ClientOption) (*GetAssetsIDRunHistoryHistogramOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsIDRunHistoryHistogramParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsIDRunHistoryHistogram",
 		Method:             "GET",
@@ -485,13 +776,14 @@ func (a *Client) GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHis
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsIDRunHistoryHistogramReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -511,16 +803,36 @@ func (a *Client) GetAssetsIDRunHistoryHistogram(params *GetAssetsIDRunHistoryHis
 	panic(msg)
 }
 
-/*
-GetAssetsLookupTypeServiceName lookups asset by type service and name
-
-Get an asset by its type, service (provider), and name
-*/
+// GetAssetsLookupTypeServiceName lookups asset by type service and name.
+//
+// Get an asset by its type, service (provider), and name.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsLookupTypeServiceNameContext] instead.
 func (a *Client) GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServiceNameParams, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsLookupTypeServiceNameContext(ctx, params, opts...)
+}
+
+// GetAssetsLookupTypeServiceNameContext lookups asset by type service and name.
+//
+// Get an asset by its type, service (provider), and name.
+//
+// Do not use the deprecated [GetAssetsLookupTypeServiceNameParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsLookupTypeServiceNameContext(ctx context.Context, params *GetAssetsLookupTypeServiceNameParams, opts ...ClientOption) (*GetAssetsLookupTypeServiceNameOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsLookupTypeServiceNameParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsLookupTypeServiceName",
 		Method:             "GET",
@@ -530,13 +842,14 @@ func (a *Client) GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServi
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsLookupTypeServiceNameReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -556,16 +869,36 @@ func (a *Client) GetAssetsLookupTypeServiceName(params *GetAssetsLookupTypeServi
 	panic(msg)
 }
 
-/*
-GetAssetsMatchPattern matches asset pattern
-
-Find assets matching a pattern
-*/
+// GetAssetsMatchPattern matches asset pattern.
+//
+// Find assets matching a pattern.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsMatchPatternContext] instead.
 func (a *Client) GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, opts ...ClientOption) (*GetAssetsMatchPatternOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsMatchPatternContext(ctx, params, opts...)
+}
+
+// GetAssetsMatchPatternContext matches asset pattern.
+//
+// Find assets matching a pattern.
+//
+// Do not use the deprecated [GetAssetsMatchPatternParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsMatchPatternContext(ctx context.Context, params *GetAssetsMatchPatternParams, opts ...ClientOption) (*GetAssetsMatchPatternOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsMatchPatternParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsMatchPattern",
 		Method:             "GET",
@@ -575,13 +908,14 @@ func (a *Client) GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsMatchPatternReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -601,16 +935,36 @@ func (a *Client) GetAssetsMatchPattern(params *GetAssetsMatchPatternParams, opts
 	panic(msg)
 }
 
-/*
-GetAssetsMyAssets gets user s assets
-
-Get assets owned by the current user or their teams
-*/
+// GetAssetsMyAssets gets user s assets.
+//
+// Get assets owned by the current user or their teams.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsMyAssetsContext] instead.
 func (a *Client) GetAssetsMyAssets(params *GetAssetsMyAssetsParams, opts ...ClientOption) (*GetAssetsMyAssetsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsMyAssetsContext(ctx, params, opts...)
+}
+
+// GetAssetsMyAssetsContext gets user s assets.
+//
+// Get assets owned by the current user or their teams.
+//
+// Do not use the deprecated [GetAssetsMyAssetsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsMyAssetsContext(ctx context.Context, params *GetAssetsMyAssetsParams, opts ...ClientOption) (*GetAssetsMyAssetsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsMyAssetsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsMyAssets",
 		Method:             "GET",
@@ -620,13 +974,14 @@ func (a *Client) GetAssetsMyAssets(params *GetAssetsMyAssetsParams, opts ...Clie
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsMyAssetsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -646,16 +1001,36 @@ func (a *Client) GetAssetsMyAssets(params *GetAssetsMyAssetsParams, opts ...Clie
 	panic(msg)
 }
 
-/*
-GetAssetsQualifiedNameQualifiedName gets an asset by qualified name
-
-Get detailed information about a specific asset using its qualified name
-*/
+// GetAssetsQualifiedNameQualifiedName gets an asset by qualified name.
+//
+// Get detailed information about a specific asset using its qualified name.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsQualifiedNameQualifiedNameContext] instead.
 func (a *Client) GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedNameQualifiedNameParams, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsQualifiedNameQualifiedNameContext(ctx, params, opts...)
+}
+
+// GetAssetsQualifiedNameQualifiedNameContext gets an asset by qualified name.
+//
+// Get detailed information about a specific asset using its qualified name.
+//
+// Do not use the deprecated [GetAssetsQualifiedNameQualifiedNameParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsQualifiedNameQualifiedNameContext(ctx context.Context, params *GetAssetsQualifiedNameQualifiedNameParams, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsQualifiedNameQualifiedNameParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsQualifiedNameQualifiedName",
 		Method:             "GET",
@@ -665,13 +1040,14 @@ func (a *Client) GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedN
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsQualifiedNameQualifiedNameReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -691,16 +1067,36 @@ func (a *Client) GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedN
 	panic(msg)
 }
 
-/*
-GetAssetsSearch searches assets
-
-Search for assets using query string and filters
-*/
+// GetAssetsSearch searches assets.
+//
+// Search for assets using query string and filters.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsSearchContext] instead.
 func (a *Client) GetAssetsSearch(params *GetAssetsSearchParams, opts ...ClientOption) (*GetAssetsSearchOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsSearchContext(ctx, params, opts...)
+}
+
+// GetAssetsSearchContext searches assets.
+//
+// Search for assets using query string and filters.
+//
+// Do not use the deprecated [GetAssetsSearchParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsSearchContext(ctx context.Context, params *GetAssetsSearchParams, opts ...ClientOption) (*GetAssetsSearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSearchParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsSearch",
 		Method:             "GET",
@@ -710,13 +1106,14 @@ func (a *Client) GetAssetsSearch(params *GetAssetsSearchParams, opts ...ClientOp
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSearchReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -736,16 +1133,36 @@ func (a *Client) GetAssetsSearch(params *GetAssetsSearchParams, opts ...ClientOp
 	panic(msg)
 }
 
-/*
-GetAssetsSuggestionsMetadataFields gets metadata field suggestions
-
-Get suggestions for metadata fields and their types
-*/
+// GetAssetsSuggestionsMetadataFields gets metadata field suggestions.
+//
+// Get suggestions for metadata fields and their types.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsSuggestionsMetadataFieldsContext] instead.
 func (a *Client) GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestionsMetadataFieldsParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsSuggestionsMetadataFieldsContext(ctx, params, opts...)
+}
+
+// GetAssetsSuggestionsMetadataFieldsContext gets metadata field suggestions.
+//
+// Get suggestions for metadata fields and their types.
+//
+// Do not use the deprecated [GetAssetsSuggestionsMetadataFieldsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsSuggestionsMetadataFieldsContext(ctx context.Context, params *GetAssetsSuggestionsMetadataFieldsParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataFieldsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSuggestionsMetadataFieldsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsSuggestionsMetadataFields",
 		Method:             "GET",
@@ -755,13 +1172,14 @@ func (a *Client) GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestions
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSuggestionsMetadataFieldsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -781,16 +1199,36 @@ func (a *Client) GetAssetsSuggestionsMetadataFields(params *GetAssetsSuggestions
 	panic(msg)
 }
 
-/*
-GetAssetsSuggestionsMetadataValues gets metadata value suggestions
-
-Get suggestions for values of a specific metadata field
-*/
+// GetAssetsSuggestionsMetadataValues gets metadata value suggestions.
+//
+// Get suggestions for values of a specific metadata field.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsSuggestionsMetadataValuesContext] instead.
 func (a *Client) GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestionsMetadataValuesParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsSuggestionsMetadataValuesContext(ctx, params, opts...)
+}
+
+// GetAssetsSuggestionsMetadataValuesContext gets metadata value suggestions.
+//
+// Get suggestions for values of a specific metadata field.
+//
+// Do not use the deprecated [GetAssetsSuggestionsMetadataValuesParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsSuggestionsMetadataValuesContext(ctx context.Context, params *GetAssetsSuggestionsMetadataValuesParams, opts ...ClientOption) (*GetAssetsSuggestionsMetadataValuesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSuggestionsMetadataValuesParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsSuggestionsMetadataValues",
 		Method:             "GET",
@@ -800,13 +1238,14 @@ func (a *Client) GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestions
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSuggestionsMetadataValuesReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -826,16 +1265,36 @@ func (a *Client) GetAssetsSuggestionsMetadataValues(params *GetAssetsSuggestions
 	panic(msg)
 }
 
-/*
-GetAssetsSuggestionsTags gets tag suggestions
-
-Get suggestions for asset tags
-*/
+// GetAssetsSuggestionsTags gets tag suggestions.
+//
+// Get suggestions for asset tags.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsSuggestionsTagsContext] instead.
 func (a *Client) GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsSuggestionsTagsContext(ctx, params, opts...)
+}
+
+// GetAssetsSuggestionsTagsContext gets tag suggestions.
+//
+// Get suggestions for asset tags.
+//
+// Do not use the deprecated [GetAssetsSuggestionsTagsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsSuggestionsTagsContext(ctx context.Context, params *GetAssetsSuggestionsTagsParams, opts ...ClientOption) (*GetAssetsSuggestionsTagsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSuggestionsTagsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsSuggestionsTags",
 		Method:             "GET",
@@ -845,13 +1304,14 @@ func (a *Client) GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSuggestionsTagsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -871,16 +1331,36 @@ func (a *Client) GetAssetsSuggestionsTags(params *GetAssetsSuggestionsTagsParams
 	panic(msg)
 }
 
-/*
-GetAssetsSummary gets asset summary
-
-Get the total count of assets by type
-*/
+// GetAssetsSummary gets asset summary.
+//
+// Get the total count of assets by type.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsSummaryContext] instead.
 func (a *Client) GetAssetsSummary(params *GetAssetsSummaryParams, opts ...ClientOption) (*GetAssetsSummaryOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsSummaryContext(ctx, params, opts...)
+}
+
+// GetAssetsSummaryContext gets asset summary.
+//
+// Get the total count of assets by type.
+//
+// Do not use the deprecated [GetAssetsSummaryParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsSummaryContext(ctx context.Context, params *GetAssetsSummaryParams, opts ...ClientOption) (*GetAssetsSummaryOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsSummaryParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsSummary",
 		Method:             "GET",
@@ -890,13 +1370,14 @@ func (a *Client) GetAssetsSummary(params *GetAssetsSummaryParams, opts ...Client
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsSummaryReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -916,16 +1397,36 @@ func (a *Client) GetAssetsSummary(params *GetAssetsSummaryParams, opts ...Client
 	panic(msg)
 }
 
-/*
-GetAssetsTermsID gets asset s glossary terms
-
-Retrieve all glossary terms associated with an asset
-*/
+// GetAssetsTermsID gets asset s glossary terms.
+//
+// Retrieve all glossary terms associated with an asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsTermsIDContext] instead.
 func (a *Client) GetAssetsTermsID(params *GetAssetsTermsIDParams, opts ...ClientOption) (*GetAssetsTermsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsTermsIDContext(ctx, params, opts...)
+}
+
+// GetAssetsTermsIDContext gets asset s glossary terms.
+//
+// Retrieve all glossary terms associated with an asset.
+//
+// Do not use the deprecated [GetAssetsTermsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsTermsIDContext(ctx context.Context, params *GetAssetsTermsIDParams, opts ...ClientOption) (*GetAssetsTermsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAssetsTermsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAssetsTermsID",
 		Method:             "GET",
@@ -935,13 +1436,14 @@ func (a *Client) GetAssetsTermsID(params *GetAssetsTermsIDParams, opts ...Client
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAssetsTermsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -961,16 +1463,36 @@ func (a *Client) GetAssetsTermsID(params *GetAssetsTermsIDParams, opts ...Client
 	panic(msg)
 }
 
-/*
-PostAssets creates a new asset
-
-Create a new asset in the system
-*/
+// PostAssets creates a new asset.
+//
+// Create a new asset in the system.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAssetsContext] instead.
 func (a *Client) PostAssets(params *PostAssetsParams, opts ...ClientOption) (*PostAssetsCreated, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAssetsContext(ctx, params, opts...)
+}
+
+// PostAssetsContext creates a new asset.
+//
+// Create a new asset in the system.
+//
+// Do not use the deprecated [PostAssetsParams.Context] with this method: it would be ignored.
+func (a *Client) PostAssetsContext(ctx context.Context, params *PostAssetsParams, opts ...ClientOption) (*PostAssetsCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAssets",
 		Method:             "POST",
@@ -980,13 +1502,14 @@ func (a *Client) PostAssets(params *PostAssetsParams, opts ...ClientOption) (*Po
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -1006,16 +1529,36 @@ func (a *Client) PostAssets(params *PostAssetsParams, opts ...ClientOption) (*Po
 	panic(msg)
 }
 
-/*
-PostAssetsDocumentation creates asset documentation
-
-Create or update documentation for an asset
-*/
+// PostAssetsDocumentation creates asset documentation.
+//
+// Create or update documentation for an asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAssetsDocumentationContext] instead.
 func (a *Client) PostAssetsDocumentation(params *PostAssetsDocumentationParams, opts ...ClientOption) (*PostAssetsDocumentationOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAssetsDocumentationContext(ctx, params, opts...)
+}
+
+// PostAssetsDocumentationContext creates asset documentation.
+//
+// Create or update documentation for an asset.
+//
+// Do not use the deprecated [PostAssetsDocumentationParams.Context] with this method: it would be ignored.
+func (a *Client) PostAssetsDocumentationContext(ctx context.Context, params *PostAssetsDocumentationParams, opts ...ClientOption) (*PostAssetsDocumentationOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsDocumentationParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAssetsDocumentation",
 		Method:             "POST",
@@ -1025,13 +1568,14 @@ func (a *Client) PostAssetsDocumentation(params *PostAssetsDocumentationParams, 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsDocumentationReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -1051,16 +1595,36 @@ func (a *Client) PostAssetsDocumentation(params *PostAssetsDocumentationParams, 
 	panic(msg)
 }
 
-/*
-PostAssetsDocumentationBatch batches create documentation
-
-Create or update documentation for multiple assets
-*/
+// PostAssetsDocumentationBatch batches create documentation.
+//
+// Create or update documentation for multiple assets.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAssetsDocumentationBatchContext] instead.
 func (a *Client) PostAssetsDocumentationBatch(params *PostAssetsDocumentationBatchParams, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAssetsDocumentationBatchContext(ctx, params, opts...)
+}
+
+// PostAssetsDocumentationBatchContext batches create documentation.
+//
+// Create or update documentation for multiple assets.
+//
+// Do not use the deprecated [PostAssetsDocumentationBatchParams.Context] with this method: it would be ignored.
+func (a *Client) PostAssetsDocumentationBatchContext(ctx context.Context, params *PostAssetsDocumentationBatchParams, opts ...ClientOption) (*PostAssetsDocumentationBatchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsDocumentationBatchParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAssetsDocumentationBatch",
 		Method:             "POST",
@@ -1070,13 +1634,14 @@ func (a *Client) PostAssetsDocumentationBatch(params *PostAssetsDocumentationBat
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsDocumentationBatchReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -1096,16 +1661,36 @@ func (a *Client) PostAssetsDocumentationBatch(params *PostAssetsDocumentationBat
 	panic(msg)
 }
 
-/*
-PostAssetsTagsID adds tag to asset
-
-Add a new tag to an existing asset
-*/
+// PostAssetsTagsID adds tag to asset.
+//
+// Add a new tag to an existing asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAssetsTagsIDContext] instead.
 func (a *Client) PostAssetsTagsID(params *PostAssetsTagsIDParams, opts ...ClientOption) (*PostAssetsTagsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAssetsTagsIDContext(ctx, params, opts...)
+}
+
+// PostAssetsTagsIDContext adds tag to asset.
+//
+// Add a new tag to an existing asset.
+//
+// Do not use the deprecated [PostAssetsTagsIDParams.Context] with this method: it would be ignored.
+func (a *Client) PostAssetsTagsIDContext(ctx context.Context, params *PostAssetsTagsIDParams, opts ...ClientOption) (*PostAssetsTagsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsTagsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAssetsTagsID",
 		Method:             "POST",
@@ -1115,13 +1700,14 @@ func (a *Client) PostAssetsTagsID(params *PostAssetsTagsIDParams, opts ...Client
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsTagsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -1141,16 +1727,36 @@ func (a *Client) PostAssetsTagsID(params *PostAssetsTagsIDParams, opts ...Client
 	panic(msg)
 }
 
-/*
-PostAssetsTermsID adds glossary terms to asset
-
-Associate one or more glossary terms with an asset
-*/
+// PostAssetsTermsID adds glossary terms to asset.
+//
+// Associate one or more glossary terms with an asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAssetsTermsIDContext] instead.
 func (a *Client) PostAssetsTermsID(params *PostAssetsTermsIDParams, opts ...ClientOption) (*PostAssetsTermsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAssetsTermsIDContext(ctx, params, opts...)
+}
+
+// PostAssetsTermsIDContext adds glossary terms to asset.
+//
+// Associate one or more glossary terms with an asset.
+//
+// Do not use the deprecated [PostAssetsTermsIDParams.Context] with this method: it would be ignored.
+func (a *Client) PostAssetsTermsIDContext(ctx context.Context, params *PostAssetsTermsIDParams, opts ...ClientOption) (*PostAssetsTermsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAssetsTermsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAssetsTermsID",
 		Method:             "POST",
@@ -1160,13 +1766,14 @@ func (a *Client) PostAssetsTermsID(params *PostAssetsTermsIDParams, opts ...Clie
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAssetsTermsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -1186,16 +1793,36 @@ func (a *Client) PostAssetsTermsID(params *PostAssetsTermsIDParams, opts ...Clie
 	panic(msg)
 }
 
-/*
-PutAssetsID updates an asset
-
-Update an existing asset's information
-*/
+// PutAssetsID updates an asset.
+//
+// Update an existing asset's information.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAssetsIDContext] instead.
 func (a *Client) PutAssetsID(params *PutAssetsIDParams, opts ...ClientOption) (*PutAssetsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAssetsIDContext(ctx, params, opts...)
+}
+
+// PutAssetsIDContext updates an asset.
+//
+// Update an existing asset's information.
+//
+// Do not use the deprecated [PutAssetsIDParams.Context] with this method: it would be ignored.
+func (a *Client) PutAssetsIDContext(ctx context.Context, params *PutAssetsIDParams, opts ...ClientOption) (*PutAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutAssetsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PutAssetsID",
 		Method:             "PUT",
@@ -1205,13 +1832,14 @@ func (a *Client) PutAssetsID(params *PutAssetsIDParams, opts ...ClientOption) (*
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutAssetsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -1232,6 +1860,14 @@ func (a *Client) PutAssetsID(params *PutAssetsIDParams, opts ...ClientOption) (*
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [AssetsParams].
+	ctx context.Context
 }

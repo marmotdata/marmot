@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPostSsoTeamMappingsCreated() *PostSsoTeamMappingsCreated {
 	return &PostSsoTeamMappingsCreated{}
 }
 
-/*
-PostSsoTeamMappingsCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostSsoTeamMappingsCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostSsoTeamMappingsCreated struct {
 	Payload *models.SSOTeamMapping
 }
@@ -126,11 +123,9 @@ func NewPostSsoTeamMappingsBadRequest() *PostSsoTeamMappingsBadRequest {
 	return &PostSsoTeamMappingsBadRequest{}
 }
 
-/*
-PostSsoTeamMappingsBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostSsoTeamMappingsBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostSsoTeamMappingsBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPostSsoTeamMappingsConflict() *PostSsoTeamMappingsConflict {
 	return &PostSsoTeamMappingsConflict{}
 }
 
-/*
-PostSsoTeamMappingsConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PostSsoTeamMappingsConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PostSsoTeamMappingsConflict struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPostSsoTeamMappingsInternalServerError() *PostSsoTeamMappingsInternalSer
 	return &PostSsoTeamMappingsInternalServerError{}
 }
 
-/*
-PostSsoTeamMappingsInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostSsoTeamMappingsInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostSsoTeamMappingsInternalServerError struct {
 	Payload *models.ErrorResponse
 }

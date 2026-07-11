@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -44,11 +43,9 @@ func NewPostUsersOauthLinkOK() *PostUsersOauthLinkOK {
 	return &PostUsersOauthLinkOK{}
 }
 
-/*
-PostUsersOauthLinkOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostUsersOauthLinkOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostUsersOauthLinkOK struct {
 }
 
@@ -100,11 +97,9 @@ func NewPostUsersOauthLinkBadRequest() *PostUsersOauthLinkBadRequest {
 	return &PostUsersOauthLinkBadRequest{}
 }
 
-/*
-PostUsersOauthLinkBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostUsersOauthLinkBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostUsersOauthLinkBadRequest struct {
 	Payload *models.ErrorResponse
 }

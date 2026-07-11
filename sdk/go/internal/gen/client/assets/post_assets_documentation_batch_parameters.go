@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAssetsDocumentationBatchParams() *PostAssetsDocumentationBatchParams {
-	return &PostAssetsDocumentationBatchParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAssetsDocumentationBatchParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAssetsDocumentationBatchParamsWithTimeout creates a new PostAssetsDocumentationBatchParams object
 // with the ability to set a timeout on a request.
 func NewPostAssetsDocumentationBatchParamsWithTimeout(timeout time.Duration) *PostAssetsDocumentationBatchParams {
 	return &PostAssetsDocumentationBatchParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAssetsDocumentationBatchParamsWithContext creates a new PostAssetsDocumentationBatchParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsDocumentationBatchParams].
 func NewPostAssetsDocumentationBatchParamsWithContext(ctx context.Context) *PostAssetsDocumentationBatchParams {
 	return &PostAssetsDocumentationBatchParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostAssetsDocumentationBatchParams contains all the parameters to send to the AP
 */
 type PostAssetsDocumentationBatchParams struct {
 
-	/* Request.
-
-	   Batch documentation request
-	*/
+	// Request.
+	//
+	// Batch documentation request
 	Request *models.BatchDocumentationRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post assets documentation batch params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostAssetsDocumentationBatchParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post assets documentation batch params
+// WithTimeout adds the timeout to the post assets documentation batch params.
 func (o *PostAssetsDocumentationBatchParams) WithTimeout(timeout time.Duration) *PostAssetsDocumentationBatchParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post assets documentation batch params
+// SetTimeout adds the timeout to the post assets documentation batch params.
 func (o *PostAssetsDocumentationBatchParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post assets documentation batch params
+// WithContext adds the context to the post assets documentation batch params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsDocumentationBatchParams].
 func (o *PostAssetsDocumentationBatchParams) WithContext(ctx context.Context) *PostAssetsDocumentationBatchParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post assets documentation batch params
+// SetContext adds the context to the post assets documentation batch params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAssetsDocumentationBatchParams].
 func (o *PostAssetsDocumentationBatchParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post assets documentation batch params
+// WithHTTPClient adds the HTTPClient to the post assets documentation batch params.
 func (o *PostAssetsDocumentationBatchParams) WithHTTPClient(client *http.Client) *PostAssetsDocumentationBatchParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post assets documentation batch params
+// SetHTTPClient adds the HTTPClient to the post assets documentation batch params.
 func (o *PostAssetsDocumentationBatchParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithRequest adds the request to the post assets documentation batch params
+// WithRequest adds the request to the post assets documentation batch params.
 func (o *PostAssetsDocumentationBatchParams) WithRequest(request *models.BatchDocumentationRequest) *PostAssetsDocumentationBatchParams {
 	o.SetRequest(request)
 	return o
 }
 
-// SetRequest adds the request to the post assets documentation batch params
+// SetRequest adds the request to the post assets documentation batch params.
 func (o *PostAssetsDocumentationBatchParams) SetRequest(request *models.BatchDocumentationRequest) {
 	o.Request = request
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAssetsDocumentationBatchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

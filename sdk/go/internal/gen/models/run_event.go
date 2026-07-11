@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // RunEvent run event
@@ -69,12 +70,12 @@ func (m *RunEvent) Validate(formats strfmt.Registry) error {
 }
 
 func (m *RunEvent) validateInputs(formats strfmt.Registry) error {
-	if swag.IsZero(m.Inputs) { // not required
+	if typeutils.IsZero(m.Inputs) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Inputs); i++ {
-		if swag.IsZero(m.Inputs[i]) { // not required
+		if typeutils.IsZero(m.Inputs[i]) { // not required
 			continue
 		}
 
@@ -99,7 +100,7 @@ func (m *RunEvent) validateInputs(formats strfmt.Registry) error {
 }
 
 func (m *RunEvent) validateJob(formats strfmt.Registry) error {
-	if swag.IsZero(m.Job) { // not required
+	if typeutils.IsZero(m.Job) { // not required
 		return nil
 	}
 
@@ -122,12 +123,12 @@ func (m *RunEvent) validateJob(formats strfmt.Registry) error {
 }
 
 func (m *RunEvent) validateOutputs(formats strfmt.Registry) error {
-	if swag.IsZero(m.Outputs) { // not required
+	if typeutils.IsZero(m.Outputs) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Outputs); i++ {
-		if swag.IsZero(m.Outputs[i]) { // not required
+		if typeutils.IsZero(m.Outputs[i]) { // not required
 			continue
 		}
 
@@ -152,7 +153,7 @@ func (m *RunEvent) validateOutputs(formats strfmt.Registry) error {
 }
 
 func (m *RunEvent) validateRun(formats strfmt.Registry) error {
-	if swag.IsZero(m.Run) { // not required
+	if typeutils.IsZero(m.Run) { // not required
 		return nil
 	}
 
@@ -206,7 +207,7 @@ func (m *RunEvent) contextValidateInputs(ctx context.Context, formats strfmt.Reg
 
 		if m.Inputs[i] != nil {
 
-			if swag.IsZero(m.Inputs[i]) { // not required
+			if typeutils.IsZero(m.Inputs[i]) { // not required
 				return nil
 			}
 
@@ -233,7 +234,7 @@ func (m *RunEvent) contextValidateJob(ctx context.Context, formats strfmt.Regist
 
 	if m.Job != nil {
 
-		if swag.IsZero(m.Job) { // not required
+		if typeutils.IsZero(m.Job) { // not required
 			return nil
 		}
 
@@ -260,7 +261,7 @@ func (m *RunEvent) contextValidateOutputs(ctx context.Context, formats strfmt.Re
 
 		if m.Outputs[i] != nil {
 
-			if swag.IsZero(m.Outputs[i]) { // not required
+			if typeutils.IsZero(m.Outputs[i]) { // not required
 				return nil
 			}
 
@@ -287,7 +288,7 @@ func (m *RunEvent) contextValidateRun(ctx context.Context, formats strfmt.Regist
 
 	if m.Run != nil {
 
-		if swag.IsZero(m.Run) { // not required
+		if typeutils.IsZero(m.Run) { // not required
 			return nil
 		}
 
@@ -313,13 +314,13 @@ func (m *RunEvent) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *RunEvent) UnmarshalBinary(b []byte) error {
 	var res RunEvent
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

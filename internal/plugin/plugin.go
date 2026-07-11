@@ -8,8 +8,16 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/assetdocs"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 	"sigs.k8s.io/yaml"
 )
+
+// TagsConfig, Filter, and ExternalLink are wire types shared with plugins.
+// Marmot host code uses them as aliases of the SDK types so plugin authors
+// and marmot always agree on the shape.
+type TagsConfig = pluginsdk.TagsConfig
+type Filter = pluginsdk.Filter
+type ExternalLink = pluginsdk.ExternalLink
 
 type Config struct {
 	Name string      `json:"name" yaml:"name"`
@@ -24,23 +32,14 @@ type SourceRun map[string]RawPluginConfig
 // for each plugin's specific config.
 type RawPluginConfig map[string]interface{} // @name RawPluginConfig
 
-type BaseConfig struct {
-	Tags          TagsConfig     `json:"tags,omitempty" description:"Tags to apply to discovered assets"`
-	ExternalLinks []ExternalLink `json:"external_links,omitempty" description:"External links to show on all assets"`
-	Filter        *Filter        `json:"filter,omitempty" description:"Filter discovered assets by name (regex)"`
-}
+// BaseConfig mirrors pluginsdk.BaseConfig; kept as a type alias so host
+// code can embed it in configs without importing the SDK package name.
+type BaseConfig = pluginsdk.BaseConfig
 
 // PluginConfig combines base config with plugin-specific fields
 type PluginConfig struct {
 	BaseConfig `json:",inline"`
 	Source     string `json:"source,omitempty"`
-}
-
-// ExternalLink defines an external resource link
-type ExternalLink struct {
-	Name string `json:"name" description:"Display name for the link" validate:"required"`
-	Icon string `json:"icon,omitempty" description:"Icon identifier for the link"`
-	URL  string `json:"url" description:"URL to the external resource" validate:"required,url"`
 }
 
 // DiscoveryResult contains all discovered assets, lineage, and documentation
@@ -123,23 +122,9 @@ type RunCheckpoint struct {
 	CreatedAt    time.Time `json:"created_at"`
 }
 
-// StatefulRunContext provides context for stateful operations
-type StatefulRunContext struct {
-	PipelineName       string
-	SourceName         string
-	LastRunCheckpoints map[string]*RunCheckpoint // entity_mrn -> checkpoint
-	CurrentRunID       string
-}
-
 type Source interface {
 	Validate(config RawPluginConfig) (RawPluginConfig, error)
 	Discover(ctx context.Context, config RawPluginConfig) (*DiscoveryResult, error)
-}
-
-// StatefulSource extends Source with stateful capabilities
-type StatefulSource interface {
-	Source
-	SupportsStatefulIngestion() bool
 }
 
 // DataFetcher is an optional interface that plugins can implement to support
@@ -147,15 +132,6 @@ type StatefulSource interface {
 // their data sources should implement this interface.
 type DataFetcher interface {
 	FetchSampleData(ctx context.Context, config RawPluginConfig, a *asset.Asset) (columnNames []string, rows [][]interface{}, err error)
-}
-
-// GetConfigType attempts to extract the config type from a source by unmarshaling into an empty interface and using reflection
-func GetConfigType(raw RawPluginConfig, source Source) interface{} {
-	validated, err := source.Validate(raw)
-	if err == nil && validated != nil {
-		return validated
-	}
-	return raw
 }
 
 // UnmarshalPluginConfig unmarshals raw config into a specific plugin config type
@@ -171,78 +147,4 @@ func UnmarshalPluginConfig[T any](raw RawPluginConfig) (*T, error) {
 	}
 
 	return &config, nil
-}
-
-// FilterDiscoveryResult filters a DiscoveryResult based on the Filter in the config.
-// It filters assets by name, then removes lineage, documentation, statistics, and
-// run history entries that reference excluded assets.
-func FilterDiscoveryResult(result *DiscoveryResult, rawConfig RawPluginConfig) {
-	if result == nil {
-		return
-	}
-
-	base, err := UnmarshalPluginConfig[BaseConfig](rawConfig)
-	if err != nil || base.Filter == nil {
-		return
-	}
-
-	filter := *base.Filter
-	if len(filter.Include) == 0 && len(filter.Exclude) == 0 {
-		return
-	}
-
-	// Filter assets by name and collect included MRNs
-	includedMRNs := make(map[string]struct{})
-	filteredAssets := make([]asset.Asset, 0, len(result.Assets))
-	for _, a := range result.Assets {
-		name := ""
-		if a.Name != nil {
-			name = *a.Name
-		}
-		if ShouldIncludeResource(name, filter) {
-			filteredAssets = append(filteredAssets, a)
-			if a.MRN != nil {
-				includedMRNs[*a.MRN] = struct{}{}
-			}
-		}
-	}
-	result.Assets = filteredAssets
-
-	// Filter lineage — keep edges where both source and target are included
-	filteredLineage := make([]lineage.LineageEdge, 0, len(result.Lineage))
-	for _, edge := range result.Lineage {
-		_, srcOK := includedMRNs[edge.Source]
-		_, tgtOK := includedMRNs[edge.Target]
-		if srcOK && tgtOK {
-			filteredLineage = append(filteredLineage, edge)
-		}
-	}
-	result.Lineage = filteredLineage
-
-	// Filter documentation
-	filteredDocs := make([]assetdocs.Documentation, 0, len(result.Documentation))
-	for _, doc := range result.Documentation {
-		if _, ok := includedMRNs[doc.MRN]; ok {
-			filteredDocs = append(filteredDocs, doc)
-		}
-	}
-	result.Documentation = filteredDocs
-
-	// Filter statistics
-	filteredStats := make([]Statistic, 0, len(result.Statistics))
-	for _, stat := range result.Statistics {
-		if _, ok := includedMRNs[stat.AssetMRN]; ok {
-			filteredStats = append(filteredStats, stat)
-		}
-	}
-	result.Statistics = filteredStats
-
-	// Filter run history
-	filteredHistory := make([]AssetRunHistory, 0, len(result.RunHistory))
-	for _, rh := range result.RunHistory {
-		if _, ok := includedMRNs[rh.AssetMRN]; ok {
-			filteredHistory = append(filteredHistory, rh)
-		}
-	}
-	result.RunHistory = filteredHistory
 }

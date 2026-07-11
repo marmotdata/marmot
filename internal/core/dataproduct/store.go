@@ -23,7 +23,7 @@ var (
 	ErrRuleNotFound = errors.New("rule not found")
 )
 
-type RuleType string
+type RuleType string // @name DataProductRuleType
 
 const (
 	RuleTypeQuery         RuleType = "query"
@@ -67,7 +67,7 @@ type DataProduct struct {
 	RuleAssetCount   int `json:"rule_asset_count,omitempty"`
 
 	IconURL *string `json:"icon_url,omitempty"`
-}
+} // @name DataProduct
 
 type Owner struct {
 	ID             string  `json:"id"`
@@ -76,7 +76,7 @@ type Owner struct {
 	Type           string  `json:"type"`
 	Email          *string `json:"email,omitempty"`
 	ProfilePicture *string `json:"profile_picture,omitempty"`
-}
+} // @name DataProductOwner
 
 type OwnerInput struct {
 	ID   string `json:"id" validate:"required"`
@@ -99,7 +99,7 @@ type Rule struct {
 	UpdatedAt       time.Time `json:"updated_at"`
 
 	MatchedAssetCount int `json:"matched_asset_count,omitempty"`
-}
+} // @name DataProductRule
 
 type RuleInput struct {
 	ID              *string  `json:"id,omitempty"`
@@ -125,25 +125,25 @@ type SearchFilter struct {
 type ListResult struct {
 	DataProducts []*DataProduct `json:"data_products"`
 	Total        int            `json:"total"`
-}
+} // @name DataProductListResult
 
 type ResolvedAssets struct {
 	ManualAssets  []string `json:"manual_assets"`
 	DynamicAssets []string `json:"dynamic_assets"`
 	AllAssets     []string `json:"all_assets"`
 	Total         int      `json:"total"`
-}
+} // @name DataProductResolvedAssets
 
 type RulePreview struct {
 	AssetIDs   []string `json:"asset_ids"`
 	AssetCount int      `json:"asset_count"`
 	Errors     []string `json:"errors,omitempty"`
-}
+} // @name DataProductRulePreview
 
 type AssetsResult struct {
 	AssetIDs []string `json:"asset_ids"`
 	Total    int      `json:"total"`
-}
+} // @name DataProductAssetsResult
 
 type Repository interface {
 	Create(ctx context.Context, dp *DataProduct, owners []OwnerInput) error
@@ -322,8 +322,16 @@ func (r *PostgresRepository) Create(ctx context.Context, dp *DataProduct, owners
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`
 
+	// TODO: consider making data_products.tags nullable so an unset value is a
+	// genuine NULL rather than the empty array coerced below, letting us tell
+	// "no tags set" apart from "explicitly empty".
+	tags := dp.Tags
+	if tags == nil {
+		tags = []string{}
+	}
+
 	err = tx.QueryRow(ctx, q,
-		dp.Name, dp.Description, metadataJSON, dp.Tags,
+		dp.Name, dp.Description, metadataJSON, tags,
 		dp.CreatedBy, dp.CreatedAt, dp.UpdatedAt,
 	).Scan(&dp.ID)
 

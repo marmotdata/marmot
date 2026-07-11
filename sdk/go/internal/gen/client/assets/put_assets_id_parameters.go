@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPutAssetsIDParams() *PutAssetsIDParams {
-	return &PutAssetsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPutAssetsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPutAssetsIDParamsWithTimeout creates a new PutAssetsIDParams object
 // with the ability to set a timeout on a request.
 func NewPutAssetsIDParamsWithTimeout(timeout time.Duration) *PutAssetsIDParams {
 	return &PutAssetsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPutAssetsIDParamsWithContext creates a new PutAssetsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutAssetsIDParams].
 func NewPutAssetsIDParamsWithContext(ctx context.Context) *PutAssetsIDParams {
 	return &PutAssetsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,21 +63,19 @@ PutAssetsIDParams contains all the parameters to send to the API endpoint
 */
 type PutAssetsIDParams struct {
 
-	/* Asset.
-
-	   Asset update request
-	*/
+	// Asset.
+	//
+	// Asset update request
 	Asset *models.UpdateAssetRequest
 
-	/* ID.
-
-	   Asset ID
-	*/
+	// ID.
+	//
+	// Asset ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the put assets ID params (not the query body).
@@ -92,65 +93,68 @@ func (o *PutAssetsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the put assets ID params
+// WithTimeout adds the timeout to the put assets ID params.
 func (o *PutAssetsIDParams) WithTimeout(timeout time.Duration) *PutAssetsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the put assets ID params
+// SetTimeout adds the timeout to the put assets ID params.
 func (o *PutAssetsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the put assets ID params
+// WithContext adds the context to the put assets ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutAssetsIDParams].
 func (o *PutAssetsIDParams) WithContext(ctx context.Context) *PutAssetsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the put assets ID params
+// SetContext adds the context to the put assets ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutAssetsIDParams].
 func (o *PutAssetsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the put assets ID params
+// WithHTTPClient adds the HTTPClient to the put assets ID params.
 func (o *PutAssetsIDParams) WithHTTPClient(client *http.Client) *PutAssetsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the put assets ID params
+// SetHTTPClient adds the HTTPClient to the put assets ID params.
 func (o *PutAssetsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithAsset adds the asset to the put assets ID params
+// WithAsset adds the asset to the put assets ID params.
 func (o *PutAssetsIDParams) WithAsset(asset *models.UpdateAssetRequest) *PutAssetsIDParams {
 	o.SetAsset(asset)
 	return o
 }
 
-// SetAsset adds the asset to the put assets ID params
+// SetAsset adds the asset to the put assets ID params.
 func (o *PutAssetsIDParams) SetAsset(asset *models.UpdateAssetRequest) {
 	o.Asset = asset
 }
 
-// WithID adds the id to the put assets ID params
+// WithID adds the id to the put assets ID params.
 func (o *PutAssetsIDParams) WithID(id string) *PutAssetsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the put assets ID params
+// SetID adds the id to the put assets ID params.
 func (o *PutAssetsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PutAssetsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

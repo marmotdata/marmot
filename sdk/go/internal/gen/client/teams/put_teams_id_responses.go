@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -68,11 +67,9 @@ func NewPutTeamsIDOK() *PutTeamsIDOK {
 	return &PutTeamsIDOK{}
 }
 
-/*
-PutTeamsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PutTeamsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type PutTeamsIDOK struct {
 	Payload *models.MessageResponse
 }
@@ -138,11 +135,9 @@ func NewPutTeamsIDBadRequest() *PutTeamsIDBadRequest {
 	return &PutTeamsIDBadRequest{}
 }
 
-/*
-PutTeamsIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PutTeamsIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PutTeamsIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -208,11 +203,9 @@ func NewPutTeamsIDForbidden() *PutTeamsIDForbidden {
 	return &PutTeamsIDForbidden{}
 }
 
-/*
-PutTeamsIDForbidden describes a response with status code 403, with default header values.
-
-Forbidden
-*/
+// PutTeamsIDForbidden describes a response with status code 403, with default header values.
+//
+// Forbidden
 type PutTeamsIDForbidden struct {
 	Payload *models.ErrorResponse
 }
@@ -278,11 +271,9 @@ func NewPutTeamsIDNotFound() *PutTeamsIDNotFound {
 	return &PutTeamsIDNotFound{}
 }
 
-/*
-PutTeamsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PutTeamsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PutTeamsIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -348,11 +339,9 @@ func NewPutTeamsIDConflict() *PutTeamsIDConflict {
 	return &PutTeamsIDConflict{}
 }
 
-/*
-PutTeamsIDConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PutTeamsIDConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PutTeamsIDConflict struct {
 	Payload *models.ErrorResponse
 }
@@ -418,11 +407,9 @@ func NewPutTeamsIDInternalServerError() *PutTeamsIDInternalServerError {
 	return &PutTeamsIDInternalServerError{}
 }
 
-/*
-PutTeamsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PutTeamsIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PutTeamsIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

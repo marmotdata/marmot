@@ -8,6 +8,7 @@ interface Plugin {
   href: string;
   icon: string;
   useLocalIcon?: boolean;
+  hasDarkIcon?: boolean;
 }
 
 const plugins: Plugin[] = [
@@ -23,6 +24,7 @@ const plugins: Plugin[] = [
     href: "/docs/Plugins/AsyncAPI",
     icon: "asyncapi",
     useLocalIcon: true,
+    hasDarkIcon: true,
   },
   {
     name: "Azure Blob Storage",
@@ -189,7 +191,8 @@ const plugins: Plugin[] = [
 function PluginIcon({ plugin, isDarkTheme }: { plugin: Plugin; isDarkTheme: boolean }) {
   if (plugin.useLocalIcon) {
     const ext = plugin.icon.includes('.') ? '' : '.svg';
-    const iconSrc = isDarkTheme ? `/img/dark-${plugin.icon}${ext}` : `/img/${plugin.icon}${ext}`;
+    const useDark = isDarkTheme && plugin.hasDarkIcon;
+    const iconSrc = useDark ? `/img/dark-${plugin.icon}${ext}` : `/img/${plugin.icon}${ext}`;
     return <img src={iconSrc} alt={`${plugin.name} icon`} className="w-8 h-8" />;
   }
 

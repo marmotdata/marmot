@@ -5,6 +5,13 @@ authors:
   - name: Charlie Haley
     url: https://github.com/charlie-haley
 image: /img/marmot-banner.png
+description: "Data catalogs shouldn't need a platform team to run. Meet Marmot, an open source data catalog that needs only PostgreSQL, ships as a single Go binary, and deploys in minutes with no Kafka, Elasticsearch or Airflow."
+tags: [data-catalog, open-source, infrastructure, getting-started]
+keywords:
+  - open source data catalog
+  - lightweight data catalog
+  - data catalog without infrastructure
+  - single binary data catalog
 ---
 
 import { CalloutCard } from '@site/src/components/DocCard';
@@ -102,7 +109,7 @@ Works with Claude Desktop, Claude Code, Cursor, Cline and other MCP-compatible t
 Marmot is still early and I'm actively looking for feedback to shape the roadmap. Get involved on GitHub, reach out on Discord or just try the demo and let me know what you think.
 
 - **Live demo:** [demo.marmotdata.io](https://demo.marmotdata.io)
-- **Documentation:** [marmotdata.io/docs](https://marmotdata.io/docs)
+- **Documentation:** [marmotdata.io/docs](https://marmotdata.io/docs/introduction)
 - **GitHub:** [github.com/marmotdata/marmot](https://github.com/marmotdata/marmot)
 
 <CalloutCard

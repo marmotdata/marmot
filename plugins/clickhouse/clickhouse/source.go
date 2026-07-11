@@ -1,0 +1,621 @@
+// Package clickhouse discovers databases, tables, and views from
+// ClickHouse instances.
+package clickhouse
+
+import (
+	"context"
+	"crypto/tls"
+	"database/sql"
+	"encoding/json"
+	"fmt"
+	"reflect"
+	"strings"
+	"time"
+
+	"github.com/ClickHouse/clickhouse-go/v2"
+	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
+	"github.com/rs/zerolog/log"
+)
+
+// Meta describes the plugin to the Marmot host.
+func Meta() pluginsdk.Meta {
+	return pluginsdk.Meta{
+		ID:          "clickhouse",
+		Name:        "ClickHouse",
+		Description: "Discover databases, tables, and views from ClickHouse instances",
+		Icon:        "clickhouse",
+		Category:    "database",
+		Status:      "experimental",
+		Features:    []string{"Assets"},
+		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+	}
+}
+
+// Config for ClickHouse plugin.
+type Config struct {
+	pluginsdk.BaseConfig `json:",inline"`
+
+	Host     string `json:"host" description:"ClickHouse server hostname or IP address" validate:"required"`
+	Port     int    `json:"port" description:"ClickHouse native protocol port" default:"9000" validate:"omitempty,min=1,max=65535"`
+	User     string `json:"user" description:"Username for authentication" validate:"required"`
+	Password string `json:"password" description:"Password for authentication" sensitive:"true"`
+	Database string `json:"database" description:"Default database to connect to" default:"default"`
+	Secure   bool   `json:"secure" description:"Use TLS/SSL connection" default:"false"`
+
+	IncludeDatabases    bool `json:"include_databases" description:"Whether to discover databases" default:"true"`
+	IncludeColumns      bool `json:"include_columns" description:"Whether to include column information in table metadata" default:"true"`
+	EnableMetrics       bool `json:"enable_metrics" description:"Whether to include table metrics (row counts, sizes)" default:"true"`
+	ExcludeSystemTables bool `json:"exclude_system_tables" description:"Whether to exclude system tables" default:"true"`
+}
+
+// Example configuration for the plugin
+var _ = `
+host: "clickhouse.company.com"
+port: 9000
+user: "default"
+password: "${CLICKHOUSE_PASSWORD}"
+database: "default"
+secure: false
+include_databases: true
+include_columns: true
+enable_metrics: true
+exclude_system_tables: true
+filter:
+  include:
+    - "^analytics.*"
+  exclude:
+    - ".*_temp$"
+tags:
+  - "clickhouse"
+  - "analytics"
+`
+
+// Source represents the ClickHouse plugin.
+type Source struct {
+	config *Config
+	conn   clickhouse.Conn
+}
+
+// Validate validates and normalizes the plugin configuration.
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+	config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
+	if err != nil {
+		return nil, fmt.Errorf("unmarshaling config: %w", err)
+	}
+
+	if config.Port == 0 {
+		config.Port = 9000
+	}
+
+	if config.Database == "" {
+		config.Database = "default"
+	}
+
+	if err := pluginsdk.ValidateStruct(config); err != nil {
+		return nil, err
+	}
+
+	s.config = config
+	return rawConfig, nil
+}
+
+// Discover discovers ClickHouse databases, tables, and views.
+func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
+	// The host spawns a fresh plugin process per call, so Discover
+	// cannot rely on state set by an earlier Validate call.
+	if _, err := s.Validate(pluginConfig); err != nil {
+		return nil, err
+	}
+
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Minute)
+	defer cancel()
+
+	if err := s.initConnection(ctx); err != nil {
+		return nil, fmt.Errorf("initializing database connection: %w", err)
+	}
+	defer s.closeConnection()
+
+	var assets []pluginsdk.Asset
+	var lineages []pluginsdk.LineageEdge
+	var statistics []pluginsdk.Statistic
+
+	log.Debug().Msg("Starting ClickHouse discovery")
+
+	databases, err := s.discoverDatabases(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("discovering databases: %w", err)
+	}
+	assets = append(assets, databases...)
+	log.Debug().Int("count", len(databases)).Msg("Discovered databases")
+
+	for _, dbAsset := range databases {
+		if dbAsset.Type != "Database" {
+			continue
+		}
+		dbName := *dbAsset.Name
+
+		tableAssets, err := s.discoverTables(ctx, dbName)
+		if err != nil {
+			log.Warn().Err(err).Str("database", dbName).Msg("Failed to discover tables")
+			continue
+		}
+		assets = append(assets, tableAssets...)
+		log.Debug().Str("database", dbName).Int("count", len(tableAssets)).Msg("Discovered tables")
+
+		if s.config.EnableMetrics {
+			tableStats := s.collectTableStatistics(ctx, dbName, tableAssets)
+			statistics = append(statistics, tableStats...)
+		}
+
+		for _, tableAsset := range tableAssets {
+			lineages = append(lineages, pluginsdk.LineageEdge{
+				Source: *dbAsset.MRN,
+				Target: *tableAsset.MRN,
+				Type:   "CONTAINS",
+			})
+		}
+	}
+
+	log.Info().
+		Int("assets", len(assets)).
+		Int("lineages", len(lineages)).
+		Int("statistics", len(statistics)).
+		Msg("ClickHouse discovery completed")
+
+	return &pluginsdk.DiscoveryResult{
+		Assets:     assets,
+		Lineage:    lineages,
+		Statistics: statistics,
+	}, nil
+}
+
+func (s *Source) initConnection(ctx context.Context) error {
+	s.closeConnection()
+
+	options := &clickhouse.Options{
+		Addr: []string{fmt.Sprintf("%s:%d", s.config.Host, s.config.Port)},
+		Auth: clickhouse.Auth{
+			Database: s.config.Database,
+			Username: s.config.User,
+			Password: s.config.Password,
+		},
+		Settings: clickhouse.Settings{
+			"max_execution_time": 60,
+		},
+		DialTimeout:     10 * time.Second,
+		MaxOpenConns:    5,
+		MaxIdleConns:    2,
+		ConnMaxLifetime: 2 * time.Minute,
+	}
+
+	if s.config.Secure {
+		options.TLS = &tls.Config{
+			MinVersion: tls.VersionTLS12,
+		}
+	}
+
+	conn, err := clickhouse.Open(options)
+	if err != nil {
+		return fmt.Errorf("opening connection: %w", err)
+	}
+
+	if err := conn.Ping(ctx); err != nil {
+		return fmt.Errorf("pinging database: %w", err)
+	}
+
+	log.Debug().
+		Str("host", s.config.Host).
+		Int("port", s.config.Port).
+		Str("database", s.config.Database).
+		Msg("Successfully connected to ClickHouse")
+
+	s.conn = conn
+	return nil
+}
+
+func (s *Source) closeConnection() {
+	if s.conn != nil {
+		s.conn.Close()
+		s.conn = nil
+	}
+}
+
+func (s *Source) discoverDatabases(ctx context.Context) ([]pluginsdk.Asset, error) {
+	query := `
+		SELECT
+			name,
+			engine,
+			comment
+		FROM system.databases
+		WHERE name NOT IN ('system', 'information_schema', 'INFORMATION_SCHEMA')
+		ORDER BY name
+	`
+
+	rows, err := s.conn.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("querying databases: %w", err)
+	}
+	defer rows.Close()
+
+	var assets []pluginsdk.Asset
+
+	for rows.Next() {
+		var name, engine, comment string
+		if err := rows.Scan(&name, &engine, &comment); err != nil {
+			log.Warn().Err(err).Msg("Failed to scan database row")
+			continue
+		}
+
+		metadata := map[string]interface{}{
+			"host":     s.config.Host,
+			"port":     s.config.Port,
+			"database": name,
+			"engine":   engine,
+		}
+
+		if comment != "" {
+			metadata["comment"] = comment
+		}
+
+		mrnValue := mrn.New("Database", "ClickHouse", name)
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
+
+		assets = append(assets, pluginsdk.Asset{
+			Name:      &name,
+			MRN:       &mrnValue,
+			Type:      "Database",
+			Providers: []string{"ClickHouse"},
+			Metadata:  metadata,
+			Tags:      processedTags,
+			Sources: []pluginsdk.AssetSource{{
+				Name:       "ClickHouse",
+				LastSyncAt: time.Now(),
+				Properties: metadata,
+				Priority:   1,
+			}},
+		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating database rows: %w", err)
+	}
+
+	return assets, nil
+}
+
+func (s *Source) discoverTables(ctx context.Context, dbName string) ([]pluginsdk.Asset, error) {
+	query := `
+		SELECT
+			name,
+			engine,
+			total_rows,
+			total_bytes,
+			comment,
+			create_table_query
+		FROM system.tables
+		WHERE database = ?
+	`
+
+	if s.config.ExcludeSystemTables {
+		query += ` AND NOT startsWith(name, '.')`
+	}
+
+	query += ` ORDER BY name`
+
+	rows, err := s.conn.Query(ctx, query, dbName)
+	if err != nil {
+		return nil, fmt.Errorf("querying tables: %w", err)
+	}
+	defer rows.Close()
+
+	var assets []pluginsdk.Asset
+	var tableNames []string
+
+	for rows.Next() {
+		var name, engine, comment, createQuery string
+		var totalRows, totalBytes sql.NullInt64
+
+		if err := rows.Scan(&name, &engine, &totalRows, &totalBytes, &comment, &createQuery); err != nil {
+			log.Warn().Err(err).Msg("Failed to scan table row")
+			continue
+		}
+
+		assetType := "Table"
+		if engine == "View" || engine == "MaterializedView" {
+			assetType = "View"
+		}
+
+		metadata := map[string]interface{}{
+			"host":       s.config.Host,
+			"port":       s.config.Port,
+			"database":   dbName,
+			"table_name": name,
+			"engine":     engine,
+		}
+
+		if totalRows.Valid {
+			metadata["row_count"] = totalRows.Int64
+		}
+		if totalBytes.Valid {
+			metadata["size_bytes"] = totalBytes.Int64
+		}
+		if comment != "" {
+			metadata["comment"] = comment
+		}
+
+		tableNames = append(tableNames, name)
+
+		mrnValue := mrn.New(assetType, "ClickHouse", fmt.Sprintf("%s.%s", dbName, name))
+		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
+
+		a := pluginsdk.Asset{
+			Name:      &name,
+			MRN:       &mrnValue,
+			Type:      assetType,
+			Providers: []string{"ClickHouse"},
+			Metadata:  metadata,
+			Tags:      processedTags,
+			Sources: []pluginsdk.AssetSource{{
+				Name:       "ClickHouse",
+				LastSyncAt: time.Now(),
+				Properties: metadata,
+				Priority:   1,
+			}},
+		}
+
+		if createQuery != "" {
+			lang := "sql"
+			a.Query = &createQuery
+			a.QueryLanguage = &lang
+		}
+
+		assets = append(assets, a)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating table rows: %w", err)
+	}
+
+	if s.config.IncludeColumns && len(tableNames) > 0 {
+		columnMap, err := s.getColumnsForTables(ctx, dbName, tableNames)
+		if err != nil {
+			log.Warn().Err(err).Msg("Failed to get column information")
+		} else {
+			for i := range assets {
+				tableName := *assets[i].Name
+				if columns, exists := columnMap[tableName]; exists {
+					jsonBytes, err := json.Marshal(columns)
+					if err != nil {
+						log.Warn().Err(err).Str("table", tableName).Msg("Failed to marshal columns")
+						continue
+					}
+					if assets[i].Schema == nil {
+						assets[i].Schema = make(map[string]string)
+					}
+					assets[i].Schema["columns"] = string(jsonBytes)
+				}
+			}
+		}
+	}
+
+	return assets, nil
+}
+
+func (s *Source) getColumnsForTables(ctx context.Context, dbName string, tableNames []string) (map[string][]map[string]interface{}, error) {
+	query := `
+		SELECT
+			table,
+			name,
+			type,
+			default_kind,
+			default_expression,
+			comment,
+			is_in_primary_key,
+			is_in_sorting_key
+		FROM system.columns
+		WHERE database = ?
+		ORDER BY table, position
+	`
+
+	rows, err := s.conn.Query(ctx, query, dbName)
+	if err != nil {
+		return nil, fmt.Errorf("querying columns: %w", err)
+	}
+	defer rows.Close()
+
+	tableSet := make(map[string]bool)
+	for _, name := range tableNames {
+		tableSet[name] = true
+	}
+
+	result := make(map[string][]map[string]interface{})
+
+	for rows.Next() {
+		var tableName, columnName, dataType, defaultKind, defaultExpr, comment string
+		var isPrimaryKey, isSortingKey uint8
+
+		if err := rows.Scan(&tableName, &columnName, &dataType, &defaultKind, &defaultExpr, &comment, &isPrimaryKey, &isSortingKey); err != nil {
+			log.Warn().Err(err).Msg("Failed to scan column row")
+			continue
+		}
+
+		if !tableSet[tableName] {
+			continue
+		}
+
+		column := map[string]interface{}{
+			"column_name":    columnName,
+			"data_type":      dataType,
+			"is_primary_key": isPrimaryKey == 1,
+			"is_sorting_key": isSortingKey == 1,
+		}
+
+		if defaultKind != "" {
+			column["default_kind"] = defaultKind
+			column["default_expression"] = defaultExpr
+		}
+		if comment != "" {
+			column["comment"] = comment
+		}
+
+		result[tableName] = append(result[tableName], column)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterating column rows: %w", err)
+	}
+
+	return result, nil
+}
+
+func (s *Source) collectTableStatistics(ctx context.Context, dbName string, assets []pluginsdk.Asset) []pluginsdk.Statistic {
+	var statistics []pluginsdk.Statistic
+
+	for _, a := range assets {
+		if a.Type != "Table" {
+			continue
+		}
+
+		if rowCount, ok := a.Metadata["row_count"].(int64); ok {
+			statistics = append(statistics, pluginsdk.Statistic{
+				AssetMRN:   *a.MRN,
+				MetricName: "asset.row_count",
+				Value:      float64(rowCount),
+			})
+		}
+
+		if sizeBytes, ok := a.Metadata["size_bytes"].(int64); ok {
+			statistics = append(statistics, pluginsdk.Statistic{
+				AssetMRN:   *a.MRN,
+				MetricName: "asset.size_bytes",
+				Value:      float64(sizeBytes),
+			})
+		}
+
+		if raw, ok := a.Schema["columns"]; ok {
+			var columns []map[string]interface{}
+			if err := json.Unmarshal([]byte(raw), &columns); err == nil {
+				statistics = append(statistics, pluginsdk.Statistic{
+					AssetMRN:   *a.MRN,
+					MetricName: "asset.column_count",
+					Value:      float64(len(columns)),
+				})
+			}
+		}
+	}
+
+	return statistics
+}
+
+// FetchSampleData implements the DataFetcher interface to retrieve sample data from a ClickHouse table.
+func (s *Source) FetchSampleData(ctx context.Context, config pluginsdk.RawConfig, a *pluginsdk.Asset) ([]string, [][]interface{}, error) {
+	if a == nil || a.Metadata == nil {
+		return nil, nil, fmt.Errorf("asset or asset metadata is nil")
+	}
+
+	parsedConfig, err := pluginsdk.UnmarshalConfig[Config](config)
+	if err != nil {
+		return nil, nil, fmt.Errorf("parsing plugin config: %w", err)
+	}
+	s.config = parsedConfig
+
+	database, _ := a.Metadata["database"].(string)
+	table, _ := a.Metadata["table_name"].(string)
+
+	if database == "" {
+		return nil, nil, fmt.Errorf("could not determine database from asset metadata")
+	}
+	if table == "" && a.Name != nil {
+		table = *a.Name
+	}
+	if table == "" {
+		return nil, nil, fmt.Errorf("could not determine table name from asset metadata")
+	}
+
+	fetchCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	if err := s.initConnection(fetchCtx); err != nil {
+		return nil, nil, fmt.Errorf("connecting to ClickHouse: %w", err)
+	}
+	defer s.closeConnection()
+
+	//nolint:gosec // G201: inputs sanitized via quoteIdentifier
+	query := fmt.Sprintf("SELECT * FROM %s.%s LIMIT 20",
+		quoteIdentifier(database),
+		quoteIdentifier(table),
+	)
+
+	log.Debug().
+		Str("database", database).
+		Str("table", table).
+		Msg("Fetching sample data from ClickHouse")
+
+	rows, err := s.conn.Query(fetchCtx, query)
+	if err != nil {
+		return nil, nil, fmt.Errorf("querying table: %w", err)
+	}
+	defer rows.Close()
+
+	colTypes := rows.ColumnTypes()
+
+	columnNames := make([]string, len(colTypes))
+	for i, ct := range colTypes {
+		columnNames[i] = ct.Name()
+	}
+
+	var dataRows [][]interface{}
+	for rows.Next() {
+		scanPtrs := make([]reflect.Value, len(colTypes))
+		scanDests := make([]interface{}, len(colTypes))
+		for i, ct := range colTypes {
+			ptr := reflect.New(ct.ScanType())
+			scanPtrs[i] = ptr
+			scanDests[i] = ptr.Interface()
+		}
+
+		if err := rows.Scan(scanDests...); err != nil {
+			log.Warn().Err(err).Msg("Failed to scan row, skipping")
+			continue
+		}
+
+		converted := make([]interface{}, len(colTypes))
+		for i, ptr := range scanPtrs {
+			converted[i] = convertClickHouseValue(ptr.Elem().Interface())
+		}
+		dataRows = append(dataRows, converted)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, nil, fmt.Errorf("iterating rows: %w", err)
+	}
+
+	log.Debug().
+		Int("columns", len(columnNames)).
+		Int("rows", len(dataRows)).
+		Msg("Successfully fetched sample data from ClickHouse")
+
+	return columnNames, dataRows, nil
+}
+
+// convertClickHouseValue converts ClickHouse-specific types to JSON-friendly formats.
+func convertClickHouseValue(val interface{}) interface{} {
+	if val == nil {
+		return nil
+	}
+	switch v := val.(type) {
+	case []byte:
+		return fmt.Sprintf("0x%x", v)
+	case time.Time:
+		return v.Format(time.RFC3339)
+	default:
+		return val
+	}
+}
+
+// quoteIdentifier wraps an identifier in backticks for ClickHouse SQL.
+func quoteIdentifier(id string) string {
+	id = strings.ReplaceAll(id, "\x00", "")
+	return "`" + strings.ReplaceAll(id, "`", "``") + "`"
+}

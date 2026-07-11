@@ -3,7 +3,9 @@
 package auth
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new auth API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new auth API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new auth API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,11 +44,9 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for auth API
-*/
+// Client for auth API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
@@ -75,29 +77,72 @@ func WithContentTypeApplicationxWwwFormUrlencoded(r *runtime.ClientOperation) {
 	r.ConsumesMediaTypes = []string{"application/x-www-form-urlencoded"}
 }
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// GetAuthProviderCallback handle o auth callback.
 	GetAuthProviderCallback(params *GetAuthProviderCallbackParams, opts ...ClientOption) error
 
+	// GetAuthProviderCallbackContext handle o auth callback.
+	GetAuthProviderCallbackContext(ctx context.Context, params *GetAuthProviderCallbackParams, opts ...ClientOption) error
+
+	// GetAuthProviderLogin initiate o auth login.
 	GetAuthProviderLogin(params *GetAuthProviderLoginParams, opts ...ClientOption) error
 
+	// GetAuthProviderLoginContext initiate o auth login.
+	GetAuthProviderLoginContext(ctx context.Context, params *GetAuthProviderLoginParams, opts ...ClientOption) error
+
+	// GetAuthProviders get auth configuration.
 	GetAuthProviders(params *GetAuthProvidersParams, opts ...ClientOption) (*GetAuthProvidersOK, error)
 
+	// GetAuthProvidersContext get auth configuration.
+	GetAuthProvidersContext(ctx context.Context, params *GetAuthProvidersParams, opts ...ClientOption) (*GetAuthProvidersOK, error)
+
+	// GetSsoProviders list configured s s o providers admin.
+	GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error)
+
+	// GetSsoProvidersContext list configured s s o providers admin.
+	GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error)
+
+	// PostOauthToken o auth token endpoint.
 	PostOauthToken(params *PostOauthTokenParams, opts ...ClientOption) (*PostOauthTokenOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PostOauthTokenContext o auth token endpoint.
+	PostOauthTokenContext(ctx context.Context, params *PostOauthTokenParams, opts ...ClientOption) (*PostOauthTokenOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-GetAuthProviderCallback handles o auth callback
-
-Processes the OAuth callback from any provider
-*/
+// GetAuthProviderCallback handles o auth callback.
+//
+// Processes the OAuth callback from any provider.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAuthProviderCallbackContext] instead.
 func (a *Client) GetAuthProviderCallback(params *GetAuthProviderCallbackParams, opts ...ClientOption) error {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAuthProviderCallbackContext(ctx, params, opts...)
+}
+
+// GetAuthProviderCallbackContext handles o auth callback.
+//
+// Processes the OAuth callback from any provider.
+//
+// Do not use the deprecated [GetAuthProviderCallbackParams.Context] with this method: it would be ignored.
+func (a *Client) GetAuthProviderCallbackContext(ctx context.Context, params *GetAuthProviderCallbackParams, opts ...ClientOption) error {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAuthProviderCallbackParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAuthProviderCallback",
 		Method:             "GET",
@@ -107,13 +152,14 @@ func (a *Client) GetAuthProviderCallback(params *GetAuthProviderCallbackParams, 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAuthProviderCallbackReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	_, err := a.transport.Submit(op)
+
+	_, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return err
 	}
@@ -122,16 +168,36 @@ func (a *Client) GetAuthProviderCallback(params *GetAuthProviderCallbackParams, 
 	return nil
 }
 
-/*
-GetAuthProviderLogin initiates o auth login
-
-Redirects the user to the OAuth provider for authentication
-*/
+// GetAuthProviderLogin initiates o auth login.
+//
+// Redirects the user to the OAuth provider for authentication.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAuthProviderLoginContext] instead.
 func (a *Client) GetAuthProviderLogin(params *GetAuthProviderLoginParams, opts ...ClientOption) error {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAuthProviderLoginContext(ctx, params, opts...)
+}
+
+// GetAuthProviderLoginContext initiates o auth login.
+//
+// Redirects the user to the OAuth provider for authentication.
+//
+// Do not use the deprecated [GetAuthProviderLoginParams.Context] with this method: it would be ignored.
+func (a *Client) GetAuthProviderLoginContext(ctx context.Context, params *GetAuthProviderLoginParams, opts ...ClientOption) error {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAuthProviderLoginParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAuthProviderLogin",
 		Method:             "GET",
@@ -141,13 +207,14 @@ func (a *Client) GetAuthProviderLogin(params *GetAuthProviderLoginParams, opts .
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAuthProviderLoginReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	_, err := a.transport.Submit(op)
+
+	_, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return err
 	}
@@ -156,16 +223,36 @@ func (a *Client) GetAuthProviderLogin(params *GetAuthProviderLoginParams, opts .
 	return nil
 }
 
-/*
-GetAuthProviders gets auth configuration
-
-Returns the enabled auth providers without sensitive data
-*/
+// GetAuthProviders gets auth configuration.
+//
+// Returns the enabled auth providers without sensitive data.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAuthProvidersContext] instead.
 func (a *Client) GetAuthProviders(params *GetAuthProvidersParams, opts ...ClientOption) (*GetAuthProvidersOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAuthProvidersContext(ctx, params, opts...)
+}
+
+// GetAuthProvidersContext gets auth configuration.
+//
+// Returns the enabled auth providers without sensitive data.
+//
+// Do not use the deprecated [GetAuthProvidersParams.Context] with this method: it would be ignored.
+func (a *Client) GetAuthProvidersContext(ctx context.Context, params *GetAuthProvidersParams, opts ...ClientOption) (*GetAuthProvidersOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAuthProvidersParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAuthProviders",
 		Method:             "GET",
@@ -175,13 +262,14 @@ func (a *Client) GetAuthProviders(params *GetAuthProvidersParams, opts ...Client
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAuthProvidersReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -201,19 +289,106 @@ func (a *Client) GetAuthProviders(params *GetAuthProvidersParams, opts ...Client
 	panic(msg)
 }
 
-/*
-	PostOauthToken os auth token endpoint
+// GetSsoProviders lists configured s s o providers admin.
+//
+// Read-only view of SSO providers wired via server config. Editing is done in config.yaml..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetSsoProvidersContext] instead.
+func (a *Client) GetSsoProviders(params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
 
-	Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).
+	return a.GetSsoProvidersContext(ctx, params, opts...)
+}
 
-For token-exchange, supported subject_token_type values are
-urn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token.
-*/
+// GetSsoProvidersContext lists configured s s o providers admin.
+//
+// Read-only view of SSO providers wired via server config. Editing is done in config.yaml..
+//
+// Do not use the deprecated [GetSsoProvidersParams.Context] with this method: it would be ignored.
+func (a *Client) GetSsoProvidersContext(ctx context.Context, params *GetSsoProvidersParams, opts ...ClientOption) (*GetSsoProvidersOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetSsoProvidersParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetSsoProviders",
+		Method:             "GET",
+		PathPattern:        "/sso-providers",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetSsoProvidersReader{formats: a.formats},
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetSsoProvidersOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetSsoProviders: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// PostOauthToken os auth token endpoint.
+//
+// Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).
+// For token-exchange, supported subject_token_type values are
+// urn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostOauthTokenContext] instead.
 func (a *Client) PostOauthToken(params *PostOauthTokenParams, opts ...ClientOption) (*PostOauthTokenOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostOauthTokenContext(ctx, params, opts...)
+}
+
+// PostOauthTokenContext os auth token endpoint.
+//
+// Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).
+// For token-exchange, supported subject_token_type values are
+// urn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token..
+//
+// Do not use the deprecated [PostOauthTokenParams.Context] with this method: it would be ignored.
+func (a *Client) PostOauthTokenContext(ctx context.Context, params *PostOauthTokenParams, opts ...ClientOption) (*PostOauthTokenOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostOauthTokenParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostOauthToken",
 		Method:             "POST",
@@ -223,13 +398,14 @@ func (a *Client) PostOauthToken(params *PostOauthTokenParams, opts ...ClientOpti
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostOauthTokenReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -250,6 +426,14 @@ func (a *Client) PostOauthToken(params *PostOauthTokenParams, opts ...ClientOpti
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [AuthParams].
+	ctx context.Context
 }

@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAPIV1LineageParams() *PostAPIV1LineageParams {
-	return &PostAPIV1LineageParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAPIV1LineageParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAPIV1LineageParamsWithTimeout creates a new PostAPIV1LineageParams object
 // with the ability to set a timeout on a request.
 func NewPostAPIV1LineageParamsWithTimeout(timeout time.Duration) *PostAPIV1LineageParams {
 	return &PostAPIV1LineageParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAPIV1LineageParamsWithContext creates a new PostAPIV1LineageParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1LineageParams].
 func NewPostAPIV1LineageParamsWithContext(ctx context.Context) *PostAPIV1LineageParams {
 	return &PostAPIV1LineageParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostAPIV1LineageParams contains all the parameters to send to the API endpoint
 */
 type PostAPIV1LineageParams struct {
 
-	/* Event.
-
-	   OpenLineage run event
-	*/
+	// Event.
+	//
+	// OpenLineage run event
 	Event *models.RunEvent
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post API v1 lineage params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostAPIV1LineageParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post API v1 lineage params
+// WithTimeout adds the timeout to the post API v1 lineage params.
 func (o *PostAPIV1LineageParams) WithTimeout(timeout time.Duration) *PostAPIV1LineageParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post API v1 lineage params
+// SetTimeout adds the timeout to the post API v1 lineage params.
 func (o *PostAPIV1LineageParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post API v1 lineage params
+// WithContext adds the context to the post API v1 lineage params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1LineageParams].
 func (o *PostAPIV1LineageParams) WithContext(ctx context.Context) *PostAPIV1LineageParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post API v1 lineage params
+// SetContext adds the context to the post API v1 lineage params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1LineageParams].
 func (o *PostAPIV1LineageParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post API v1 lineage params
+// WithHTTPClient adds the HTTPClient to the post API v1 lineage params.
 func (o *PostAPIV1LineageParams) WithHTTPClient(client *http.Client) *PostAPIV1LineageParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post API v1 lineage params
+// SetHTTPClient adds the HTTPClient to the post API v1 lineage params.
 func (o *PostAPIV1LineageParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithEvent adds the event to the post API v1 lineage params
+// WithEvent adds the event to the post API v1 lineage params.
 func (o *PostAPIV1LineageParams) WithEvent(event *models.RunEvent) *PostAPIV1LineageParams {
 	o.SetEvent(event)
 	return o
 }
 
-// SetEvent adds the event to the post API v1 lineage params
+// SetEvent adds the event to the post API v1 lineage params.
 func (o *PostAPIV1LineageParams) SetEvent(event *models.RunEvent) {
 	o.Event = event
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAPIV1LineageParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

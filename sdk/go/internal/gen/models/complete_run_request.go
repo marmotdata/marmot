@@ -8,7 +8,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -88,7 +89,7 @@ func (m *CompleteRunRequest) validateStatus(formats strfmt.Registry) error {
 }
 
 func (m *CompleteRunRequest) validateSummary(formats strfmt.Registry) error {
-	if swag.IsZero(m.Summary) { // not required
+	if typeutils.IsZero(m.Summary) { // not required
 		return nil
 	}
 
@@ -153,7 +154,7 @@ func (m *CompleteRunRequest) contextValidateSummary(ctx context.Context, formats
 
 	if m.Summary != nil {
 
-		if swag.IsZero(m.Summary) { // not required
+		if typeutils.IsZero(m.Summary) { // not required
 			return nil
 		}
 
@@ -179,13 +180,13 @@ func (m *CompleteRunRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *CompleteRunRequest) UnmarshalBinary(b []byte) error {
 	var res CompleteRunRequest
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

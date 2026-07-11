@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewDeleteAssetsIDNoContent() *DeleteAssetsIDNoContent {
 	return &DeleteAssetsIDNoContent{}
 }
 
-/*
-DeleteAssetsIDNoContent describes a response with status code 204, with default header values.
-
-No Content
-*/
+// DeleteAssetsIDNoContent describes a response with status code 204, with default header values.
+//
+// No Content
 type DeleteAssetsIDNoContent struct {
 }
 
@@ -112,11 +109,9 @@ func NewDeleteAssetsIDNotFound() *DeleteAssetsIDNotFound {
 	return &DeleteAssetsIDNotFound{}
 }
 
-/*
-DeleteAssetsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// DeleteAssetsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type DeleteAssetsIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -182,11 +177,9 @@ func NewDeleteAssetsIDConflict() *DeleteAssetsIDConflict {
 	return &DeleteAssetsIDConflict{}
 }
 
-/*
-DeleteAssetsIDConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// DeleteAssetsIDConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type DeleteAssetsIDConflict struct {
 	Payload *models.ErrorResponse
 }
@@ -252,11 +245,9 @@ func NewDeleteAssetsIDInternalServerError() *DeleteAssetsIDInternalServerError {
 	return &DeleteAssetsIDInternalServerError{}
 }
 
-/*
-DeleteAssetsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// DeleteAssetsIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type DeleteAssetsIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // LineageResponse lineage response
@@ -43,12 +44,12 @@ func (m *LineageResponse) Validate(formats strfmt.Registry) error {
 }
 
 func (m *LineageResponse) validateEdges(formats strfmt.Registry) error {
-	if swag.IsZero(m.Edges) { // not required
+	if typeutils.IsZero(m.Edges) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Edges); i++ {
-		if swag.IsZero(m.Edges[i]) { // not required
+		if typeutils.IsZero(m.Edges[i]) { // not required
 			continue
 		}
 
@@ -73,12 +74,12 @@ func (m *LineageResponse) validateEdges(formats strfmt.Registry) error {
 }
 
 func (m *LineageResponse) validateNodes(formats strfmt.Registry) error {
-	if swag.IsZero(m.Nodes) { // not required
+	if typeutils.IsZero(m.Nodes) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Nodes); i++ {
-		if swag.IsZero(m.Nodes[i]) { // not required
+		if typeutils.IsZero(m.Nodes[i]) { // not required
 			continue
 		}
 
@@ -126,7 +127,7 @@ func (m *LineageResponse) contextValidateEdges(ctx context.Context, formats strf
 
 		if m.Edges[i] != nil {
 
-			if swag.IsZero(m.Edges[i]) { // not required
+			if typeutils.IsZero(m.Edges[i]) { // not required
 				return nil
 			}
 
@@ -155,7 +156,7 @@ func (m *LineageResponse) contextValidateNodes(ctx context.Context, formats strf
 
 		if m.Nodes[i] != nil {
 
-			if swag.IsZero(m.Nodes[i]) { // not required
+			if typeutils.IsZero(m.Nodes[i]) { // not required
 				return nil
 			}
 
@@ -183,13 +184,13 @@ func (m *LineageResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *LineageResponse) UnmarshalBinary(b []byte) error {
 	var res LineageResponse
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

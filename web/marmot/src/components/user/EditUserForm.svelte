@@ -1,8 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { fetchApi } from '$lib/api';
 	import { toasts, handleApiError } from '$lib/stores/toast';
+	import { listRoles } from '$lib/roles/api';
 	import { Lock, Mail, User as UserIcon, Shield } from 'lucide-svelte';
 	import type { User, Role } from '$lib/users/types';
+	import type { Role as FullRole } from '$lib/roles/types';
 
 	let { user, onCancel, onUpdate } = $props<{
 		user: User;
@@ -10,8 +13,32 @@
 		onUpdate: (updatedUser: User) => void;
 	}>();
 
-	let loading = false;
-	let editedUser = { ...user };
+	let loading = $state(false);
+	let availableRoles: FullRole[] = $state([]);
+	let editedUser = $state({ ...user });
+
+	onMount(async () => {
+		try {
+			availableRoles = await listRoles();
+		} catch (err) {
+			toasts.error(err instanceof Error ? err.message : 'Failed to load roles');
+		}
+	});
+
+	function toggleRole(name: string) {
+		const has = editedUser.roles.some((r: Role) => r.name === name);
+		if (has) {
+			editedUser.roles = editedUser.roles.filter((r: Role) => r.name !== name);
+		} else {
+			const roleToAdd = availableRoles.find((r) => r.name === name);
+			if (roleToAdd) {
+				editedUser.roles = [
+					...editedUser.roles,
+					{ id: roleToAdd.id, name: roleToAdd.name, description: roleToAdd.description }
+				];
+			}
+		}
+	}
 
 	async function updateUser() {
 		try {
@@ -123,34 +150,32 @@
 				<Shield class="h-4 w-4 mr-2 text-gray-500 dark:text-gray-400" />
 				Roles
 			</h4>
-			<div class="space-y-2">
-				{#each user.roles as role (role.name)}
-					<label
-						class="flex items-center p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
-					>
-						<input
-							type="checkbox"
-							checked={editedUser.roles.some((r: Role) => r.name === role.name)}
-							on:change={(e) => {
-								if (e.currentTarget.checked) {
-									editedUser.roles = [...editedUser.roles, role];
-								} else {
-									editedUser.roles = editedUser.roles.filter((r: Role) => r.name !== role.name);
-								}
-							}}
-							class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500"
-						/>
-						<span class="ml-3 text-sm text-gray-700 dark:text-gray-300">
-							{role.name}
-							{#if role.description}
-								<span class="text-xs text-gray-500 dark:text-gray-400 ml-1">
-									— {role.description}
-								</span>
-							{/if}
-						</span>
-					</label>
-				{/each}
-			</div>
+			{#if availableRoles.length === 0}
+				<p class="text-sm text-gray-500 dark:text-gray-400 italic">Loading roles...</p>
+			{:else}
+				<div class="space-y-2">
+					{#each availableRoles as role (role.id)}
+						<label
+							class="flex items-center p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer"
+						>
+							<input
+								type="checkbox"
+								checked={editedUser.roles.some((r: Role) => r.name === role.name)}
+								on:change={() => toggleRole(role.name)}
+								class="rounded border-gray-300 dark:border-gray-600 text-earthy-terracotta-600 focus:ring-earthy-terracotta-500 dark:focus:ring-earthy-terracotta-500"
+							/>
+							<span class="ml-3 text-sm text-gray-700 dark:text-gray-300">
+								{role.name}
+								{#if role.description}
+									<span class="text-xs text-gray-500 dark:text-gray-400 ml-1">
+										— {role.description}
+									</span>
+								{/if}
+							</span>
+						</label>
+					{/each}
+				</div>
+			{/if}
 		</div>
 
 		<div class="border-t border-gray-200 dark:border-gray-700 pt-6">

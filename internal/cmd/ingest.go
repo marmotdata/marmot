@@ -172,6 +172,9 @@ func init() {
 var ingestCmd = &cobra.Command{
 	Use:   "ingest",
 	Short: "Ingest data from sources into Marmot",
+	PreRun: func(cmd *cobra.Command, args []string) {
+		loadPlugins()
+	},
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return runIngestion(cmd.Context())
 	},

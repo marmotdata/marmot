@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPutGlossaryIDParams() *PutGlossaryIDParams {
-	return &PutGlossaryIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPutGlossaryIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPutGlossaryIDParamsWithTimeout creates a new PutGlossaryIDParams object
 // with the ability to set a timeout on a request.
 func NewPutGlossaryIDParamsWithTimeout(timeout time.Duration) *PutGlossaryIDParams {
 	return &PutGlossaryIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPutGlossaryIDParamsWithContext creates a new PutGlossaryIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutGlossaryIDParams].
 func NewPutGlossaryIDParamsWithContext(ctx context.Context) *PutGlossaryIDParams {
 	return &PutGlossaryIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,21 +63,19 @@ PutGlossaryIDParams contains all the parameters to send to the API endpoint
 */
 type PutGlossaryIDParams struct {
 
-	/* ID.
-
-	   Glossary Term ID
-	*/
+	// ID.
+	//
+	// Glossary Term ID
 	ID string
 
-	/* Term.
-
-	   Glossary term update data
-	*/
+	// Term.
+	//
+	// Glossary term update data
 	Term *models.UpdateTermRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the put glossary ID params (not the query body).
@@ -92,65 +93,68 @@ func (o *PutGlossaryIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the put glossary ID params
+// WithTimeout adds the timeout to the put glossary ID params.
 func (o *PutGlossaryIDParams) WithTimeout(timeout time.Duration) *PutGlossaryIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the put glossary ID params
+// SetTimeout adds the timeout to the put glossary ID params.
 func (o *PutGlossaryIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the put glossary ID params
+// WithContext adds the context to the put glossary ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutGlossaryIDParams].
 func (o *PutGlossaryIDParams) WithContext(ctx context.Context) *PutGlossaryIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the put glossary ID params
+// SetContext adds the context to the put glossary ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutGlossaryIDParams].
 func (o *PutGlossaryIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the put glossary ID params
+// WithHTTPClient adds the HTTPClient to the put glossary ID params.
 func (o *PutGlossaryIDParams) WithHTTPClient(client *http.Client) *PutGlossaryIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the put glossary ID params
+// SetHTTPClient adds the HTTPClient to the put glossary ID params.
 func (o *PutGlossaryIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the put glossary ID params
+// WithID adds the id to the put glossary ID params.
 func (o *PutGlossaryIDParams) WithID(id string) *PutGlossaryIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the put glossary ID params
+// SetID adds the id to the put glossary ID params.
 func (o *PutGlossaryIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithTerm adds the term to the put glossary ID params
+// WithTerm adds the term to the put glossary ID params.
 func (o *PutGlossaryIDParams) WithTerm(term *models.UpdateTermRequest) *PutGlossaryIDParams {
 	o.SetTerm(term)
 	return o
 }
 
-// SetTerm adds the term to the put glossary ID params
+// SetTerm adds the term to the put glossary ID params.
 func (o *PutGlossaryIDParams) SetTerm(term *models.UpdateTermRequest) {
 	o.Term = term
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PutGlossaryIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

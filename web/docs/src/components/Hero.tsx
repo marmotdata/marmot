@@ -206,10 +206,11 @@ export default function Hero(): JSX.Element {
           data-animate-delay="3"
           className="text-lg sm:text-xl text-gray-500 dark:text-gray-400 max-w-3xl mx-auto mb-10 leading-relaxed"
         >
-          Marmot is the <b>open source context layer</b> for agents and
-          humans. Catalog every service, API, queue, topic, database and
-          pipeline then expose real, governed context to your AI agents and your
-          team.
+          Assistants, agents, copilots: your organization already uses them
+          every day, but none of them can reach how it actually works: the
+          systems, the data, what it all means, and who owns it. Marmot is
+          the <b>open source context layer</b> that puts all of it within
+          reach of every assistant, agent, and person.
         </p>
 
         <div
@@ -240,7 +241,7 @@ export default function Hero(): JSX.Element {
             href="https://demo.marmotdata.io"
             target="_blank"
             rel="noopener noreferrer"
-            className="group inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 hover:-translate-y-0.5"
+            className="group demo-btn inline-flex items-center justify-center px-7 py-3.5 text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 transition-all duration-200 hover:-translate-y-0.5"
           >
             <svg
               className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:scale-110"
@@ -258,6 +259,31 @@ export default function Hero(): JSX.Element {
             Live Demo
           </a>
         </div>
+
+        {/* Built-by credibility strip */}
+        <p
+          data-animate
+          data-animate-delay="5"
+          className="mt-10 text-sm text-gray-400 dark:text-gray-500 max-w-2xl mx-auto leading-relaxed"
+        >
+          Built by engineers who've shipped at{" "}
+          <span className="text-gray-500 dark:text-gray-400 font-medium">
+            HashiCorp, Adidas, Just Eat Takeaway.com
+          </span>{" "}
+          and{" "}
+          <span className="text-gray-500 dark:text-gray-400 font-medium">
+            Traefik
+          </span>
+          , and help maintain{" "}
+          <span className="text-gray-500 dark:text-gray-400 font-medium">
+            Kubernetes, Terraform, Redpanda
+          </span>{" "}
+          and the{" "}
+          <span className="text-gray-500 dark:text-gray-400 font-medium">
+            Cloud Native Computing Foundation
+          </span>
+          .
+        </p>
       </div>
 
       {/* Context Flow diagram */}

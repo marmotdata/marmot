@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -44,11 +43,9 @@ func NewDeleteUsersApikeysIDNoContent() *DeleteUsersApikeysIDNoContent {
 	return &DeleteUsersApikeysIDNoContent{}
 }
 
-/*
-DeleteUsersApikeysIDNoContent describes a response with status code 204, with default header values.
-
-No Content
-*/
+// DeleteUsersApikeysIDNoContent describes a response with status code 204, with default header values.
+//
+// No Content
 type DeleteUsersApikeysIDNoContent struct {
 }
 
@@ -100,11 +97,9 @@ func NewDeleteUsersApikeysIDBadRequest() *DeleteUsersApikeysIDBadRequest {
 	return &DeleteUsersApikeysIDBadRequest{}
 }
 
-/*
-DeleteUsersApikeysIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// DeleteUsersApikeysIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type DeleteUsersApikeysIDBadRequest struct {
 	Payload *models.ErrorResponse
 }

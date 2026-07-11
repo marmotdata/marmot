@@ -2,6 +2,7 @@ import React from "react";
 import { Icon } from "@iconify/react";
 import IconAPI from "~icons/material-symbols/api-rounded";
 import IconTerminal from "~icons/material-symbols/terminal";
+import IconDashboard from "~icons/material-symbols/space-dashboard-rounded";
 
 const capabilities = [
   {
@@ -14,7 +15,7 @@ const capabilities = [
     icon: "mdi:graph-outline",
     title: "Understand",
     description:
-      "Trace how data flows and what depends on what with lineage.",
+      "See how a dashboard connects to a table, and what breaks if it changes.",
   },
   {
     icon: "mdi:tag-text-outline",
@@ -33,7 +34,7 @@ const capabilities = [
 const populateMethods = [
   {
     title: "Terraform",
-    href: "/docs/populating/terraform",
+    href: "/docs/Populating/Terraform",
     icon: (
       <img
         src="/img/terraform.svg"
@@ -44,7 +45,7 @@ const populateMethods = [
   },
   {
     title: "Pulumi",
-    href: "/docs/populating/pulumi",
+    href: "/docs/Populating/Pulumi",
     icon: (
       <img
         src="/img/pulumi.svg"
@@ -63,6 +64,11 @@ const populateMethods = [
     href: "/docs/populating/cli",
     icon: <IconTerminal className="w-6 h-6" />,
   },
+  {
+    title: "UI",
+    href: "/docs/Populating/UI",
+    icon: <IconDashboard className="w-6 h-6" />,
+  },
 ];
 
 export default function BenefitsShowcase(): JSX.Element {
@@ -71,11 +77,12 @@ export default function BenefitsShowcase(): JSX.Element {
       <div className="max-w-6xl mx-auto">
         <div data-animate className="text-center mb-10">
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
-            Context for AI and engineers
+            One catalog for people and AI
           </h2>
           <p className="text-base text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-            Catalog every data asset, enrich it with the context that matters
-            and make it accessible to your team and your AI tools.
+            Catalog every asset once, from services to databases to
+            dashboards, add what it means and who owns it, and make it easy
+            to find for your team in the UI and for agents over MCP.
           </p>
         </div>
 

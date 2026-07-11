@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -38,11 +37,9 @@ func NewDeletePipelinesPipelineNameOK() *DeletePipelinesPipelineNameOK {
 	return &DeletePipelinesPipelineNameOK{}
 }
 
-/*
-DeletePipelinesPipelineNameOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// DeletePipelinesPipelineNameOK describes a response with status code 200, with default header values.
+//
+// OK
 type DeletePipelinesPipelineNameOK struct {
 	Payload *models.DestroyRunResponse
 }

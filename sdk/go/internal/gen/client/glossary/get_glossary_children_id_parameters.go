@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetGlossaryChildrenIDParams() *GetGlossaryChildrenIDParams {
-	return &GetGlossaryChildrenIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetGlossaryChildrenIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetGlossaryChildrenIDParamsWithTimeout creates a new GetGlossaryChildrenIDParams object
 // with the ability to set a timeout on a request.
 func NewGetGlossaryChildrenIDParamsWithTimeout(timeout time.Duration) *GetGlossaryChildrenIDParams {
 	return &GetGlossaryChildrenIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetGlossaryChildrenIDParamsWithContext creates a new GetGlossaryChildrenIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryChildrenIDParams].
 func NewGetGlossaryChildrenIDParamsWithContext(ctx context.Context) *GetGlossaryChildrenIDParams {
 	return &GetGlossaryChildrenIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetGlossaryChildrenIDParams contains all the parameters to send to the API endpo
 */
 type GetGlossaryChildrenIDParams struct {
 
-	/* ID.
-
-	   Parent Term ID
-	*/
+	// ID.
+	//
+	// Parent Term ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get glossary children ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetGlossaryChildrenIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get glossary children ID params
+// WithTimeout adds the timeout to the get glossary children ID params.
 func (o *GetGlossaryChildrenIDParams) WithTimeout(timeout time.Duration) *GetGlossaryChildrenIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get glossary children ID params
+// SetTimeout adds the timeout to the get glossary children ID params.
 func (o *GetGlossaryChildrenIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get glossary children ID params
+// WithContext adds the context to the get glossary children ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryChildrenIDParams].
 func (o *GetGlossaryChildrenIDParams) WithContext(ctx context.Context) *GetGlossaryChildrenIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get glossary children ID params
+// SetContext adds the context to the get glossary children ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetGlossaryChildrenIDParams].
 func (o *GetGlossaryChildrenIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get glossary children ID params
+// WithHTTPClient adds the HTTPClient to the get glossary children ID params.
 func (o *GetGlossaryChildrenIDParams) WithHTTPClient(client *http.Client) *GetGlossaryChildrenIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get glossary children ID params
+// SetHTTPClient adds the HTTPClient to the get glossary children ID params.
 func (o *GetGlossaryChildrenIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get glossary children ID params
+// WithID adds the id to the get glossary children ID params.
 func (o *GetGlossaryChildrenIDParams) WithID(id string) *GetGlossaryChildrenIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get glossary children ID params
+// SetID adds the id to the get glossary children ID params.
 func (o *GetGlossaryChildrenIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetGlossaryChildrenIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

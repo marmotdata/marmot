@@ -3,7 +3,9 @@
 package ingestion
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new ingestion API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new ingestion API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new ingestion API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,52 +44,113 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for ingestion API
-*/
+// Client for ingestion API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// DeleteAPIV1IngestionSchedulesID delete an ingestion schedule.
 	DeleteAPIV1IngestionSchedulesID(params *DeleteAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*DeleteAPIV1IngestionSchedulesIDNoContent, error)
 
+	// DeleteAPIV1IngestionSchedulesIDContext delete an ingestion schedule.
+	DeleteAPIV1IngestionSchedulesIDContext(ctx context.Context, params *DeleteAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*DeleteAPIV1IngestionSchedulesIDNoContent, error)
+
+	// GetAPIV1IngestionRuns list ingestion job runs.
 	GetAPIV1IngestionRuns(params *GetAPIV1IngestionRunsParams, opts ...ClientOption) (*GetAPIV1IngestionRunsOK, error)
 
+	// GetAPIV1IngestionRunsContext list ingestion job runs.
+	GetAPIV1IngestionRunsContext(ctx context.Context, params *GetAPIV1IngestionRunsParams, opts ...ClientOption) (*GetAPIV1IngestionRunsOK, error)
+
+	// GetAPIV1IngestionRunsID get a job run by ID.
 	GetAPIV1IngestionRunsID(params *GetAPIV1IngestionRunsIDParams, opts ...ClientOption) (*GetAPIV1IngestionRunsIDOK, error)
 
+	// GetAPIV1IngestionRunsIDContext get a job run by ID.
+	GetAPIV1IngestionRunsIDContext(ctx context.Context, params *GetAPIV1IngestionRunsIDParams, opts ...ClientOption) (*GetAPIV1IngestionRunsIDOK, error)
+
+	// GetAPIV1IngestionRunsIDEntities get entities for a job run.
 	GetAPIV1IngestionRunsIDEntities(params *GetAPIV1IngestionRunsIDEntitiesParams, opts ...ClientOption) (*GetAPIV1IngestionRunsIDEntitiesOK, error)
 
+	// GetAPIV1IngestionRunsIDEntitiesContext get entities for a job run.
+	GetAPIV1IngestionRunsIDEntitiesContext(ctx context.Context, params *GetAPIV1IngestionRunsIDEntitiesParams, opts ...ClientOption) (*GetAPIV1IngestionRunsIDEntitiesOK, error)
+
+	// GetAPIV1IngestionSchedules list ingestion schedules.
 	GetAPIV1IngestionSchedules(params *GetAPIV1IngestionSchedulesParams, opts ...ClientOption) (*GetAPIV1IngestionSchedulesOK, error)
 
+	// GetAPIV1IngestionSchedulesContext list ingestion schedules.
+	GetAPIV1IngestionSchedulesContext(ctx context.Context, params *GetAPIV1IngestionSchedulesParams, opts ...ClientOption) (*GetAPIV1IngestionSchedulesOK, error)
+
+	// GetAPIV1IngestionSchedulesID get an ingestion schedule by ID.
 	GetAPIV1IngestionSchedulesID(params *GetAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*GetAPIV1IngestionSchedulesIDOK, error)
 
+	// GetAPIV1IngestionSchedulesIDContext get an ingestion schedule by ID.
+	GetAPIV1IngestionSchedulesIDContext(ctx context.Context, params *GetAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*GetAPIV1IngestionSchedulesIDOK, error)
+
+	// PostAPIV1IngestionRunsIDCancel cancel a running job.
 	PostAPIV1IngestionRunsIDCancel(params *PostAPIV1IngestionRunsIDCancelParams, opts ...ClientOption) (*PostAPIV1IngestionRunsIDCancelNoContent, error)
 
+	// PostAPIV1IngestionRunsIDCancelContext cancel a running job.
+	PostAPIV1IngestionRunsIDCancelContext(ctx context.Context, params *PostAPIV1IngestionRunsIDCancelParams, opts ...ClientOption) (*PostAPIV1IngestionRunsIDCancelNoContent, error)
+
+	// PostAPIV1IngestionSchedules create a new ingestion schedule.
 	PostAPIV1IngestionSchedules(params *PostAPIV1IngestionSchedulesParams, opts ...ClientOption) (*PostAPIV1IngestionSchedulesCreated, error)
 
+	// PostAPIV1IngestionSchedulesContext create a new ingestion schedule.
+	PostAPIV1IngestionSchedulesContext(ctx context.Context, params *PostAPIV1IngestionSchedulesParams, opts ...ClientOption) (*PostAPIV1IngestionSchedulesCreated, error)
+
+	// PostAPIV1IngestionSchedulesIDTrigger manually trigger an ingestion schedule.
 	PostAPIV1IngestionSchedulesIDTrigger(params *PostAPIV1IngestionSchedulesIDTriggerParams, opts ...ClientOption) (*PostAPIV1IngestionSchedulesIDTriggerCreated, error)
 
+	// PostAPIV1IngestionSchedulesIDTriggerContext manually trigger an ingestion schedule.
+	PostAPIV1IngestionSchedulesIDTriggerContext(ctx context.Context, params *PostAPIV1IngestionSchedulesIDTriggerParams, opts ...ClientOption) (*PostAPIV1IngestionSchedulesIDTriggerCreated, error)
+
+	// PostAPIV1IngestionValidate validate plugin configuration.
 	PostAPIV1IngestionValidate(params *PostAPIV1IngestionValidateParams, opts ...ClientOption) (*PostAPIV1IngestionValidateOK, error)
 
+	// PostAPIV1IngestionValidateContext validate plugin configuration.
+	PostAPIV1IngestionValidateContext(ctx context.Context, params *PostAPIV1IngestionValidateParams, opts ...ClientOption) (*PostAPIV1IngestionValidateOK, error)
+
+	// PutAPIV1IngestionSchedulesID update an ingestion schedule.
 	PutAPIV1IngestionSchedulesID(params *PutAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*PutAPIV1IngestionSchedulesIDOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PutAPIV1IngestionSchedulesIDContext update an ingestion schedule.
+	PutAPIV1IngestionSchedulesIDContext(ctx context.Context, params *PutAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*PutAPIV1IngestionSchedulesIDOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-DeleteAPIV1IngestionSchedulesID deletes an ingestion schedule
-*/
+// DeleteAPIV1IngestionSchedulesID deletes an ingestion schedule.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteAPIV1IngestionSchedulesIDContext] instead.
 func (a *Client) DeleteAPIV1IngestionSchedulesID(params *DeleteAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*DeleteAPIV1IngestionSchedulesIDNoContent, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteAPIV1IngestionSchedulesIDContext(ctx, params, opts...)
+}
+
+// DeleteAPIV1IngestionSchedulesIDContext deletes an ingestion schedule.
+//
+// Do not use the deprecated [DeleteAPIV1IngestionSchedulesIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteAPIV1IngestionSchedulesIDContext(ctx context.Context, params *DeleteAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*DeleteAPIV1IngestionSchedulesIDNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteAPIV1IngestionSchedulesIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteAPIV1IngestionSchedulesID",
 		Method:             "DELETE",
@@ -95,13 +160,14 @@ func (a *Client) DeleteAPIV1IngestionSchedulesID(params *DeleteAPIV1IngestionSch
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteAPIV1IngestionSchedulesIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -121,14 +187,32 @@ func (a *Client) DeleteAPIV1IngestionSchedulesID(params *DeleteAPIV1IngestionSch
 	panic(msg)
 }
 
-/*
-GetAPIV1IngestionRuns lists ingestion job runs
-*/
+// GetAPIV1IngestionRuns lists ingestion job runs.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1IngestionRunsContext] instead.
 func (a *Client) GetAPIV1IngestionRuns(params *GetAPIV1IngestionRunsParams, opts ...ClientOption) (*GetAPIV1IngestionRunsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1IngestionRunsContext(ctx, params, opts...)
+}
+
+// GetAPIV1IngestionRunsContext lists ingestion job runs.
+//
+// Do not use the deprecated [GetAPIV1IngestionRunsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1IngestionRunsContext(ctx context.Context, params *GetAPIV1IngestionRunsParams, opts ...ClientOption) (*GetAPIV1IngestionRunsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPIV1IngestionRunsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPIV1IngestionRuns",
 		Method:             "GET",
@@ -138,13 +222,14 @@ func (a *Client) GetAPIV1IngestionRuns(params *GetAPIV1IngestionRunsParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPIV1IngestionRunsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -164,14 +249,32 @@ func (a *Client) GetAPIV1IngestionRuns(params *GetAPIV1IngestionRunsParams, opts
 	panic(msg)
 }
 
-/*
-GetAPIV1IngestionRunsID gets a job run by ID
-*/
+// GetAPIV1IngestionRunsID gets a job run by ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1IngestionRunsIDContext] instead.
 func (a *Client) GetAPIV1IngestionRunsID(params *GetAPIV1IngestionRunsIDParams, opts ...ClientOption) (*GetAPIV1IngestionRunsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1IngestionRunsIDContext(ctx, params, opts...)
+}
+
+// GetAPIV1IngestionRunsIDContext gets a job run by ID.
+//
+// Do not use the deprecated [GetAPIV1IngestionRunsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1IngestionRunsIDContext(ctx context.Context, params *GetAPIV1IngestionRunsIDParams, opts ...ClientOption) (*GetAPIV1IngestionRunsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPIV1IngestionRunsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPIV1IngestionRunsID",
 		Method:             "GET",
@@ -181,13 +284,14 @@ func (a *Client) GetAPIV1IngestionRunsID(params *GetAPIV1IngestionRunsIDParams, 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPIV1IngestionRunsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -207,14 +311,32 @@ func (a *Client) GetAPIV1IngestionRunsID(params *GetAPIV1IngestionRunsIDParams, 
 	panic(msg)
 }
 
-/*
-GetAPIV1IngestionRunsIDEntities gets entities for a job run
-*/
+// GetAPIV1IngestionRunsIDEntities gets entities for a job run.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1IngestionRunsIDEntitiesContext] instead.
 func (a *Client) GetAPIV1IngestionRunsIDEntities(params *GetAPIV1IngestionRunsIDEntitiesParams, opts ...ClientOption) (*GetAPIV1IngestionRunsIDEntitiesOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1IngestionRunsIDEntitiesContext(ctx, params, opts...)
+}
+
+// GetAPIV1IngestionRunsIDEntitiesContext gets entities for a job run.
+//
+// Do not use the deprecated [GetAPIV1IngestionRunsIDEntitiesParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1IngestionRunsIDEntitiesContext(ctx context.Context, params *GetAPIV1IngestionRunsIDEntitiesParams, opts ...ClientOption) (*GetAPIV1IngestionRunsIDEntitiesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPIV1IngestionRunsIDEntitiesParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPIV1IngestionRunsIDEntities",
 		Method:             "GET",
@@ -224,13 +346,14 @@ func (a *Client) GetAPIV1IngestionRunsIDEntities(params *GetAPIV1IngestionRunsID
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPIV1IngestionRunsIDEntitiesReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -250,14 +373,32 @@ func (a *Client) GetAPIV1IngestionRunsIDEntities(params *GetAPIV1IngestionRunsID
 	panic(msg)
 }
 
-/*
-GetAPIV1IngestionSchedules lists ingestion schedules
-*/
+// GetAPIV1IngestionSchedules lists ingestion schedules.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1IngestionSchedulesContext] instead.
 func (a *Client) GetAPIV1IngestionSchedules(params *GetAPIV1IngestionSchedulesParams, opts ...ClientOption) (*GetAPIV1IngestionSchedulesOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1IngestionSchedulesContext(ctx, params, opts...)
+}
+
+// GetAPIV1IngestionSchedulesContext lists ingestion schedules.
+//
+// Do not use the deprecated [GetAPIV1IngestionSchedulesParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1IngestionSchedulesContext(ctx context.Context, params *GetAPIV1IngestionSchedulesParams, opts ...ClientOption) (*GetAPIV1IngestionSchedulesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPIV1IngestionSchedulesParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPIV1IngestionSchedules",
 		Method:             "GET",
@@ -267,13 +408,14 @@ func (a *Client) GetAPIV1IngestionSchedules(params *GetAPIV1IngestionSchedulesPa
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPIV1IngestionSchedulesReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -293,14 +435,32 @@ func (a *Client) GetAPIV1IngestionSchedules(params *GetAPIV1IngestionSchedulesPa
 	panic(msg)
 }
 
-/*
-GetAPIV1IngestionSchedulesID gets an ingestion schedule by ID
-*/
+// GetAPIV1IngestionSchedulesID gets an ingestion schedule by ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAPIV1IngestionSchedulesIDContext] instead.
 func (a *Client) GetAPIV1IngestionSchedulesID(params *GetAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*GetAPIV1IngestionSchedulesIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAPIV1IngestionSchedulesIDContext(ctx, params, opts...)
+}
+
+// GetAPIV1IngestionSchedulesIDContext gets an ingestion schedule by ID.
+//
+// Do not use the deprecated [GetAPIV1IngestionSchedulesIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAPIV1IngestionSchedulesIDContext(ctx context.Context, params *GetAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*GetAPIV1IngestionSchedulesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAPIV1IngestionSchedulesIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAPIV1IngestionSchedulesID",
 		Method:             "GET",
@@ -310,13 +470,14 @@ func (a *Client) GetAPIV1IngestionSchedulesID(params *GetAPIV1IngestionSchedules
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAPIV1IngestionSchedulesIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -336,14 +497,32 @@ func (a *Client) GetAPIV1IngestionSchedulesID(params *GetAPIV1IngestionSchedules
 	panic(msg)
 }
 
-/*
-PostAPIV1IngestionRunsIDCancel cancels a running job
-*/
+// PostAPIV1IngestionRunsIDCancel cancels a running job.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPIV1IngestionRunsIDCancelContext] instead.
 func (a *Client) PostAPIV1IngestionRunsIDCancel(params *PostAPIV1IngestionRunsIDCancelParams, opts ...ClientOption) (*PostAPIV1IngestionRunsIDCancelNoContent, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPIV1IngestionRunsIDCancelContext(ctx, params, opts...)
+}
+
+// PostAPIV1IngestionRunsIDCancelContext cancels a running job.
+//
+// Do not use the deprecated [PostAPIV1IngestionRunsIDCancelParams.Context] with this method: it would be ignored.
+func (a *Client) PostAPIV1IngestionRunsIDCancelContext(ctx context.Context, params *PostAPIV1IngestionRunsIDCancelParams, opts ...ClientOption) (*PostAPIV1IngestionRunsIDCancelNoContent, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAPIV1IngestionRunsIDCancelParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAPIV1IngestionRunsIDCancel",
 		Method:             "POST",
@@ -353,13 +532,14 @@ func (a *Client) PostAPIV1IngestionRunsIDCancel(params *PostAPIV1IngestionRunsID
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAPIV1IngestionRunsIDCancelReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -379,14 +559,32 @@ func (a *Client) PostAPIV1IngestionRunsIDCancel(params *PostAPIV1IngestionRunsID
 	panic(msg)
 }
 
-/*
-PostAPIV1IngestionSchedules creates a new ingestion schedule
-*/
+// PostAPIV1IngestionSchedules creates a new ingestion schedule.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPIV1IngestionSchedulesContext] instead.
 func (a *Client) PostAPIV1IngestionSchedules(params *PostAPIV1IngestionSchedulesParams, opts ...ClientOption) (*PostAPIV1IngestionSchedulesCreated, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPIV1IngestionSchedulesContext(ctx, params, opts...)
+}
+
+// PostAPIV1IngestionSchedulesContext creates a new ingestion schedule.
+//
+// Do not use the deprecated [PostAPIV1IngestionSchedulesParams.Context] with this method: it would be ignored.
+func (a *Client) PostAPIV1IngestionSchedulesContext(ctx context.Context, params *PostAPIV1IngestionSchedulesParams, opts ...ClientOption) (*PostAPIV1IngestionSchedulesCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAPIV1IngestionSchedulesParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAPIV1IngestionSchedules",
 		Method:             "POST",
@@ -396,13 +594,14 @@ func (a *Client) PostAPIV1IngestionSchedules(params *PostAPIV1IngestionSchedules
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAPIV1IngestionSchedulesReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -422,14 +621,32 @@ func (a *Client) PostAPIV1IngestionSchedules(params *PostAPIV1IngestionSchedules
 	panic(msg)
 }
 
-/*
-PostAPIV1IngestionSchedulesIDTrigger manuallies trigger an ingestion schedule
-*/
+// PostAPIV1IngestionSchedulesIDTrigger manuallies trigger an ingestion schedule.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPIV1IngestionSchedulesIDTriggerContext] instead.
 func (a *Client) PostAPIV1IngestionSchedulesIDTrigger(params *PostAPIV1IngestionSchedulesIDTriggerParams, opts ...ClientOption) (*PostAPIV1IngestionSchedulesIDTriggerCreated, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPIV1IngestionSchedulesIDTriggerContext(ctx, params, opts...)
+}
+
+// PostAPIV1IngestionSchedulesIDTriggerContext manuallies trigger an ingestion schedule.
+//
+// Do not use the deprecated [PostAPIV1IngestionSchedulesIDTriggerParams.Context] with this method: it would be ignored.
+func (a *Client) PostAPIV1IngestionSchedulesIDTriggerContext(ctx context.Context, params *PostAPIV1IngestionSchedulesIDTriggerParams, opts ...ClientOption) (*PostAPIV1IngestionSchedulesIDTriggerCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAPIV1IngestionSchedulesIDTriggerParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAPIV1IngestionSchedulesIDTrigger",
 		Method:             "POST",
@@ -439,13 +656,14 @@ func (a *Client) PostAPIV1IngestionSchedulesIDTrigger(params *PostAPIV1Ingestion
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAPIV1IngestionSchedulesIDTriggerReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -465,14 +683,32 @@ func (a *Client) PostAPIV1IngestionSchedulesIDTrigger(params *PostAPIV1Ingestion
 	panic(msg)
 }
 
-/*
-PostAPIV1IngestionValidate validates plugin configuration
-*/
+// PostAPIV1IngestionValidate validates plugin configuration.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPIV1IngestionValidateContext] instead.
 func (a *Client) PostAPIV1IngestionValidate(params *PostAPIV1IngestionValidateParams, opts ...ClientOption) (*PostAPIV1IngestionValidateOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPIV1IngestionValidateContext(ctx, params, opts...)
+}
+
+// PostAPIV1IngestionValidateContext validates plugin configuration.
+//
+// Do not use the deprecated [PostAPIV1IngestionValidateParams.Context] with this method: it would be ignored.
+func (a *Client) PostAPIV1IngestionValidateContext(ctx context.Context, params *PostAPIV1IngestionValidateParams, opts ...ClientOption) (*PostAPIV1IngestionValidateOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAPIV1IngestionValidateParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAPIV1IngestionValidate",
 		Method:             "POST",
@@ -482,13 +718,14 @@ func (a *Client) PostAPIV1IngestionValidate(params *PostAPIV1IngestionValidatePa
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAPIV1IngestionValidateReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -508,14 +745,32 @@ func (a *Client) PostAPIV1IngestionValidate(params *PostAPIV1IngestionValidatePa
 	panic(msg)
 }
 
-/*
-PutAPIV1IngestionSchedulesID updates an ingestion schedule
-*/
+// PutAPIV1IngestionSchedulesID updates an ingestion schedule.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutAPIV1IngestionSchedulesIDContext] instead.
 func (a *Client) PutAPIV1IngestionSchedulesID(params *PutAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*PutAPIV1IngestionSchedulesIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutAPIV1IngestionSchedulesIDContext(ctx, params, opts...)
+}
+
+// PutAPIV1IngestionSchedulesIDContext updates an ingestion schedule.
+//
+// Do not use the deprecated [PutAPIV1IngestionSchedulesIDParams.Context] with this method: it would be ignored.
+func (a *Client) PutAPIV1IngestionSchedulesIDContext(ctx context.Context, params *PutAPIV1IngestionSchedulesIDParams, opts ...ClientOption) (*PutAPIV1IngestionSchedulesIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutAPIV1IngestionSchedulesIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PutAPIV1IngestionSchedulesID",
 		Method:             "PUT",
@@ -525,13 +780,14 @@ func (a *Client) PutAPIV1IngestionSchedulesID(params *PutAPIV1IngestionSchedules
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutAPIV1IngestionSchedulesIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -552,6 +808,14 @@ func (a *Client) PutAPIV1IngestionSchedulesID(params *PutAPIV1IngestionSchedules
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [IngestionParams].
+	ctx context.Context
 }

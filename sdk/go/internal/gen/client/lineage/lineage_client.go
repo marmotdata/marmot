@@ -3,7 +3,9 @@
 package lineage
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new lineage API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new lineage API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new lineage API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,44 +44,87 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for lineage API
-*/
+// Client for lineage API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// DeleteLineageDirectID delete direct lineage.
 	DeleteLineageDirectID(params *DeleteLineageDirectIDParams, opts ...ClientOption) (*DeleteLineageDirectIDOK, error)
 
+	// DeleteLineageDirectIDContext delete direct lineage.
+	DeleteLineageDirectIDContext(ctx context.Context, params *DeleteLineageDirectIDParams, opts ...ClientOption) (*DeleteLineageDirectIDOK, error)
+
+	// GetLineageAssetsID get asset lineage.
 	GetLineageAssetsID(params *GetLineageAssetsIDParams, opts ...ClientOption) (*GetLineageAssetsIDOK, error)
 
+	// GetLineageAssetsIDContext get asset lineage.
+	GetLineageAssetsIDContext(ctx context.Context, params *GetLineageAssetsIDParams, opts ...ClientOption) (*GetLineageAssetsIDOK, error)
+
+	// GetLineageDirectID get direct lineage by ID.
 	GetLineageDirectID(params *GetLineageDirectIDParams, opts ...ClientOption) (*GetLineageDirectIDOK, error)
 
+	// GetLineageDirectIDContext get direct lineage by ID.
+	GetLineageDirectIDContext(ctx context.Context, params *GetLineageDirectIDParams, opts ...ClientOption) (*GetLineageDirectIDOK, error)
+
+	// PostAPIV1Lineage ingest open lineage event.
 	PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error)
 
+	// PostAPIV1LineageContext ingest open lineage event.
+	PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error)
+
+	// PostLineageBatch batch create lineage edges.
 	PostLineageBatch(params *PostLineageBatchParams, opts ...ClientOption) (*PostLineageBatchOK, error)
 
+	// PostLineageBatchContext batch create lineage edges.
+	PostLineageBatchContext(ctx context.Context, params *PostLineageBatchParams, opts ...ClientOption) (*PostLineageBatchOK, error)
+
+	// PostLineageDirect create direct lineage.
 	PostLineageDirect(params *PostLineageDirectParams, opts ...ClientOption) (*PostLineageDirectOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PostLineageDirectContext create direct lineage.
+	PostLineageDirectContext(ctx context.Context, params *PostLineageDirectParams, opts ...ClientOption) (*PostLineageDirectOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-DeleteLineageDirectID deletes direct lineage
-
-Delete a direct lineage connection by its ID
-*/
+// DeleteLineageDirectID deletes direct lineage.
+//
+// Delete a direct lineage connection by its ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteLineageDirectIDContext] instead.
 func (a *Client) DeleteLineageDirectID(params *DeleteLineageDirectIDParams, opts ...ClientOption) (*DeleteLineageDirectIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteLineageDirectIDContext(ctx, params, opts...)
+}
+
+// DeleteLineageDirectIDContext deletes direct lineage.
+//
+// Delete a direct lineage connection by its ID.
+//
+// Do not use the deprecated [DeleteLineageDirectIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteLineageDirectIDContext(ctx context.Context, params *DeleteLineageDirectIDParams, opts ...ClientOption) (*DeleteLineageDirectIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteLineageDirectIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteLineageDirectID",
 		Method:             "DELETE",
@@ -87,13 +134,14 @@ func (a *Client) DeleteLineageDirectID(params *DeleteLineageDirectIDParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteLineageDirectIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -113,16 +161,36 @@ func (a *Client) DeleteLineageDirectID(params *DeleteLineageDirectIDParams, opts
 	panic(msg)
 }
 
-/*
-GetLineageAssetsID gets asset lineage
-
-Get upstream and downstream lineage for a specific asset
-*/
+// GetLineageAssetsID gets asset lineage.
+//
+// Get upstream and downstream lineage for a specific asset.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetLineageAssetsIDContext] instead.
 func (a *Client) GetLineageAssetsID(params *GetLineageAssetsIDParams, opts ...ClientOption) (*GetLineageAssetsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetLineageAssetsIDContext(ctx, params, opts...)
+}
+
+// GetLineageAssetsIDContext gets asset lineage.
+//
+// Get upstream and downstream lineage for a specific asset.
+//
+// Do not use the deprecated [GetLineageAssetsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetLineageAssetsIDContext(ctx context.Context, params *GetLineageAssetsIDParams, opts ...ClientOption) (*GetLineageAssetsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetLineageAssetsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetLineageAssetsID",
 		Method:             "GET",
@@ -132,13 +200,14 @@ func (a *Client) GetLineageAssetsID(params *GetLineageAssetsIDParams, opts ...Cl
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetLineageAssetsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -158,16 +227,36 @@ func (a *Client) GetLineageAssetsID(params *GetLineageAssetsIDParams, opts ...Cl
 	panic(msg)
 }
 
-/*
-GetLineageDirectID gets direct lineage by ID
-
-Get a specific direct lineage connection by its ID
-*/
+// GetLineageDirectID gets direct lineage by ID.
+//
+// Get a specific direct lineage connection by its ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetLineageDirectIDContext] instead.
 func (a *Client) GetLineageDirectID(params *GetLineageDirectIDParams, opts ...ClientOption) (*GetLineageDirectIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetLineageDirectIDContext(ctx, params, opts...)
+}
+
+// GetLineageDirectIDContext gets direct lineage by ID.
+//
+// Get a specific direct lineage connection by its ID.
+//
+// Do not use the deprecated [GetLineageDirectIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetLineageDirectIDContext(ctx context.Context, params *GetLineageDirectIDParams, opts ...ClientOption) (*GetLineageDirectIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetLineageDirectIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetLineageDirectID",
 		Method:             "GET",
@@ -177,13 +266,14 @@ func (a *Client) GetLineageDirectID(params *GetLineageDirectIDParams, opts ...Cl
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetLineageDirectIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -203,16 +293,36 @@ func (a *Client) GetLineageDirectID(params *GetLineageDirectIDParams, opts ...Cl
 	panic(msg)
 }
 
-/*
-PostAPIV1Lineage ingests open lineage event
-
-Process OpenLineage run events and update assets/lineage accordingly
-*/
+// PostAPIV1Lineage ingests open lineage event.
+//
+// Process OpenLineage run events and update assets/lineage accordingly.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAPIV1LineageContext] instead.
 func (a *Client) PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAPIV1LineageContext(ctx, params, opts...)
+}
+
+// PostAPIV1LineageContext ingests open lineage event.
+//
+// Process OpenLineage run events and update assets/lineage accordingly.
+//
+// Do not use the deprecated [PostAPIV1LineageParams.Context] with this method: it would be ignored.
+func (a *Client) PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAPIV1LineageParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAPIV1Lineage",
 		Method:             "POST",
@@ -222,13 +332,14 @@ func (a *Client) PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...Client
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAPIV1LineageReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -248,16 +359,36 @@ func (a *Client) PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...Client
 	panic(msg)
 }
 
-/*
-PostLineageBatch batches create lineage edges
-
-Create lineage edges in batch
-*/
+// PostLineageBatch batches create lineage edges.
+//
+// Create lineage edges in batch.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostLineageBatchContext] instead.
 func (a *Client) PostLineageBatch(params *PostLineageBatchParams, opts ...ClientOption) (*PostLineageBatchOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostLineageBatchContext(ctx, params, opts...)
+}
+
+// PostLineageBatchContext batches create lineage edges.
+//
+// Create lineage edges in batch.
+//
+// Do not use the deprecated [PostLineageBatchParams.Context] with this method: it would be ignored.
+func (a *Client) PostLineageBatchContext(ctx context.Context, params *PostLineageBatchParams, opts ...ClientOption) (*PostLineageBatchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostLineageBatchParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostLineageBatch",
 		Method:             "POST",
@@ -267,13 +398,14 @@ func (a *Client) PostLineageBatch(params *PostLineageBatchParams, opts ...Client
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostLineageBatchReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -293,16 +425,36 @@ func (a *Client) PostLineageBatch(params *PostLineageBatchParams, opts ...Client
 	panic(msg)
 }
 
-/*
-PostLineageDirect creates direct lineage
-
-Create a direct lineage connection between two assets and returns the created edge
-*/
+// PostLineageDirect creates direct lineage.
+//
+// Create a direct lineage connection between two assets and returns the created edge.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostLineageDirectContext] instead.
 func (a *Client) PostLineageDirect(params *PostLineageDirectParams, opts ...ClientOption) (*PostLineageDirectOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostLineageDirectContext(ctx, params, opts...)
+}
+
+// PostLineageDirectContext creates direct lineage.
+//
+// Create a direct lineage connection between two assets and returns the created edge.
+//
+// Do not use the deprecated [PostLineageDirectParams.Context] with this method: it would be ignored.
+func (a *Client) PostLineageDirectContext(ctx context.Context, params *PostLineageDirectParams, opts ...ClientOption) (*PostLineageDirectOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostLineageDirectParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostLineageDirect",
 		Method:             "POST",
@@ -312,13 +464,14 @@ func (a *Client) PostLineageDirect(params *PostLineageDirectParams, opts ...Clie
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostLineageDirectReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -339,6 +492,14 @@ func (a *Client) PostLineageDirect(params *PostLineageDirectParams, opts ...Clie
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [LineageParams].
+	ctx context.Context
 }

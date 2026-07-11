@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetMetricsTopAssetsParams creates a new GetMetricsTopAssetsParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetMetricsTopAssetsParams() *GetMetricsTopAssetsParams {
-	return &GetMetricsTopAssetsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetMetricsTopAssetsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetMetricsTopAssetsParamsWithTimeout creates a new GetMetricsTopAssetsParams object
 // with the ability to set a timeout on a request.
 func NewGetMetricsTopAssetsParamsWithTimeout(timeout time.Duration) *GetMetricsTopAssetsParams {
 	return &GetMetricsTopAssetsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetMetricsTopAssetsParamsWithContext creates a new GetMetricsTopAssetsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsTopAssetsParams].
 func NewGetMetricsTopAssetsParamsWithContext(ctx context.Context) *GetMetricsTopAssetsParams {
 	return &GetMetricsTopAssetsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,29 +63,26 @@ GetMetricsTopAssetsParams contains all the parameters to send to the API endpoin
 */
 type GetMetricsTopAssetsParams struct {
 
-	/* End.
-
-	   End time (ISO 8601)
-	*/
+	// End.
+	//
+	// End time (ISO 8601)
 	End string
 
-	/* Limit.
-
-	   Number of results
-
-	   Default: 10
-	*/
+	// Limit.
+	//
+	// Number of results
+	//
+	// Default: 10
 	Limit *int64
 
-	/* Start.
-
-	   Start time (ISO 8601)
-	*/
+	// Start.
+	//
+	// Start time (ISO 8601)
 	Start string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get metrics top assets params (not the query body).
@@ -104,82 +105,85 @@ func (o *GetMetricsTopAssetsParams) SetDefaults() {
 		Limit: &limitDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get metrics top assets params
+// WithTimeout adds the timeout to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) WithTimeout(timeout time.Duration) *GetMetricsTopAssetsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get metrics top assets params
+// SetTimeout adds the timeout to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get metrics top assets params
+// WithContext adds the context to the get metrics top assets params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsTopAssetsParams].
 func (o *GetMetricsTopAssetsParams) WithContext(ctx context.Context) *GetMetricsTopAssetsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get metrics top assets params
+// SetContext adds the context to the get metrics top assets params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsTopAssetsParams].
 func (o *GetMetricsTopAssetsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get metrics top assets params
+// WithHTTPClient adds the HTTPClient to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) WithHTTPClient(client *http.Client) *GetMetricsTopAssetsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get metrics top assets params
+// SetHTTPClient adds the HTTPClient to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithEnd adds the end to the get metrics top assets params
+// WithEnd adds the end to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) WithEnd(end string) *GetMetricsTopAssetsParams {
 	o.SetEnd(end)
 	return o
 }
 
-// SetEnd adds the end to the get metrics top assets params
+// SetEnd adds the end to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) SetEnd(end string) {
 	o.End = end
 }
 
-// WithLimit adds the limit to the get metrics top assets params
+// WithLimit adds the limit to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) WithLimit(limit *int64) *GetMetricsTopAssetsParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get metrics top assets params
+// SetLimit adds the limit to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithStart adds the start to the get metrics top assets params
+// WithStart adds the start to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) WithStart(start string) *GetMetricsTopAssetsParams {
 	o.SetStart(start)
 	return o
 }
 
-// SetStart adds the start to the get metrics top assets params
+// SetStart adds the start to the get metrics top assets params.
 func (o *GetMetricsTopAssetsParams) SetStart(start string) {
 	o.Start = start
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetMetricsTopAssetsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -202,7 +206,7 @@ func (o *GetMetricsTopAssetsParams) WriteToRequest(r runtime.ClientRequest, reg 
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {

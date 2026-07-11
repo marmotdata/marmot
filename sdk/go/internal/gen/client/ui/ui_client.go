@@ -3,7 +3,9 @@
 package ui
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new ui API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new ui API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new ui API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,34 +44,57 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for ui API
-*/
+// Client for ui API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// GetUIConfig get UI configuration.
 	GetUIConfig(params *GetUIConfigParams, opts ...ClientOption) (*GetUIConfigOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// GetUIConfigContext get UI configuration.
+	GetUIConfigContext(ctx context.Context, params *GetUIConfigParams, opts ...ClientOption) (*GetUIConfigOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-GetUIConfig gets UI configuration
-
-Get UI configuration including banner settings
-*/
+// GetUIConfig gets UI configuration.
+//
+// Get UI configuration including banner settings.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetUIConfigContext] instead.
 func (a *Client) GetUIConfig(params *GetUIConfigParams, opts ...ClientOption) (*GetUIConfigOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetUIConfigContext(ctx, params, opts...)
+}
+
+// GetUIConfigContext gets UI configuration.
+//
+// Get UI configuration including banner settings.
+//
+// Do not use the deprecated [GetUIConfigParams.Context] with this method: it would be ignored.
+func (a *Client) GetUIConfigContext(ctx context.Context, params *GetUIConfigParams, opts ...ClientOption) (*GetUIConfigOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetUIConfigParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetUIConfig",
 		Method:             "GET",
@@ -77,13 +104,14 @@ func (a *Client) GetUIConfig(params *GetUIConfigParams, opts ...ClientOption) (*
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetUIConfigReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +132,14 @@ func (a *Client) GetUIConfig(params *GetUIConfigParams, opts ...ClientOption) (*
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [UIParams].
+	ctx context.Context
 }

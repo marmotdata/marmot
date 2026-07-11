@@ -10,15 +10,16 @@ export default function CTA(): JSX.Element {
           data-animate
           className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight"
         >
-          Ready to give your AI the context it needs?
+          One context for people and agents.
         </h2>
         <p
           data-animate
           data-animate-delay="1"
           className="text-base text-gray-500 dark:text-gray-400 mb-8 leading-relaxed"
         >
-          Try the live demo or explore the open source, self-hostable
-          solution. MIT licensed with a flexible API.
+          Giving your employees and agents a context layer is a huge boost in
+          autonomy and productivity. Explore the live demo, deploy it for
+          free, or talk to us when you're ready to scale your context layer.
         </p>
 
         <div
@@ -48,10 +49,10 @@ export default function CTA(): JSX.Element {
             </svg>
           </a>
           <a
-            href="/docs/introduction"
-            className="group inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-lg text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white border border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200"
+            href="/pricing#contact"
+            className="group demo-btn inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-lg text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
           >
-            Read the Docs
+            Talk to Us
             <svg
               className="w-4 h-4 ml-1.5 transition-transform duration-200 group-hover:translate-x-0.5"
               fill="none"
@@ -73,12 +74,12 @@ export default function CTA(): JSX.Element {
           data-animate-delay="3"
           className="mt-6 text-sm text-gray-400 dark:text-gray-500"
         >
-          Have questions?{" "}
+          Prefer to explore first?{" "}
           <a
-            href="/pricing"
+            href="/docs/introduction"
             className="text-earthy-terracotta-600 dark:text-earthy-terracotta-400 hover:underline"
           >
-            Get in touch
+            Read the docs
           </a>
         </p>
       </div>

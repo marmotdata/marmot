@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsSuggestionsMetadataFieldsParams() *GetAssetsSuggestionsMetadataFieldsParams {
-	return &GetAssetsSuggestionsMetadataFieldsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsSuggestionsMetadataFieldsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsSuggestionsMetadataFieldsParamsWithTimeout creates a new GetAssetsSuggestionsMetadataFieldsParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsSuggestionsMetadataFieldsParamsWithTimeout(timeout time.Duration) *GetAssetsSuggestionsMetadataFieldsParams {
 	return &GetAssetsSuggestionsMetadataFieldsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsSuggestionsMetadataFieldsParamsWithContext creates a new GetAssetsSuggestionsMetadataFieldsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSuggestionsMetadataFieldsParams].
 func NewGetAssetsSuggestionsMetadataFieldsParamsWithContext(ctx context.Context) *GetAssetsSuggestionsMetadataFieldsParams {
 	return &GetAssetsSuggestionsMetadataFieldsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -57,9 +61,9 @@ GetAssetsSuggestionsMetadataFieldsParams contains all the parameters to send to 
 	Typically these are written to a http.Request.
 */
 type GetAssetsSuggestionsMetadataFieldsParams struct {
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets suggestions metadata fields params (not the query body).
@@ -77,43 +81,46 @@ func (o *GetAssetsSuggestionsMetadataFieldsParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get assets suggestions metadata fields params
+// WithTimeout adds the timeout to the get assets suggestions metadata fields params.
 func (o *GetAssetsSuggestionsMetadataFieldsParams) WithTimeout(timeout time.Duration) *GetAssetsSuggestionsMetadataFieldsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets suggestions metadata fields params
+// SetTimeout adds the timeout to the get assets suggestions metadata fields params.
 func (o *GetAssetsSuggestionsMetadataFieldsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets suggestions metadata fields params
+// WithContext adds the context to the get assets suggestions metadata fields params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSuggestionsMetadataFieldsParams].
 func (o *GetAssetsSuggestionsMetadataFieldsParams) WithContext(ctx context.Context) *GetAssetsSuggestionsMetadataFieldsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets suggestions metadata fields params
+// SetContext adds the context to the get assets suggestions metadata fields params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsSuggestionsMetadataFieldsParams].
 func (o *GetAssetsSuggestionsMetadataFieldsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets suggestions metadata fields params
+// WithHTTPClient adds the HTTPClient to the get assets suggestions metadata fields params.
 func (o *GetAssetsSuggestionsMetadataFieldsParams) WithHTTPClient(client *http.Client) *GetAssetsSuggestionsMetadataFieldsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets suggestions metadata fields params
+// SetHTTPClient adds the HTTPClient to the get assets suggestions metadata fields params.
 func (o *GetAssetsSuggestionsMetadataFieldsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsSuggestionsMetadataFieldsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

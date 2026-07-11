@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetAssetsMyAssetsParams creates a new GetAssetsMyAssetsParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsMyAssetsParams() *GetAssetsMyAssetsParams {
-	return &GetAssetsMyAssetsParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsMyAssetsParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsMyAssetsParamsWithTimeout creates a new GetAssetsMyAssetsParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsMyAssetsParamsWithTimeout(timeout time.Duration) *GetAssetsMyAssetsParams {
 	return &GetAssetsMyAssetsParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsMyAssetsParamsWithContext creates a new GetAssetsMyAssetsParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsMyAssetsParams].
 func NewGetAssetsMyAssetsParamsWithContext(ctx context.Context) *GetAssetsMyAssetsParams {
 	return &GetAssetsMyAssetsParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,23 +63,21 @@ GetAssetsMyAssetsParams contains all the parameters to send to the API endpoint
 */
 type GetAssetsMyAssetsParams struct {
 
-	/* Limit.
-
-	   Limit
-
-	   Default: 20
-	*/
+	// Limit.
+	//
+	// Limit
+	//
+	// Default: 20
 	Limit *int64
 
-	/* Offset.
-
-	   Offset
-	*/
+	// Offset.
+	//
+	// Offset
 	Offset *int64
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets my assets params (not the query body).
@@ -101,71 +103,74 @@ func (o *GetAssetsMyAssetsParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get assets my assets params
+// WithTimeout adds the timeout to the get assets my assets params.
 func (o *GetAssetsMyAssetsParams) WithTimeout(timeout time.Duration) *GetAssetsMyAssetsParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets my assets params
+// SetTimeout adds the timeout to the get assets my assets params.
 func (o *GetAssetsMyAssetsParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets my assets params
+// WithContext adds the context to the get assets my assets params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsMyAssetsParams].
 func (o *GetAssetsMyAssetsParams) WithContext(ctx context.Context) *GetAssetsMyAssetsParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets my assets params
+// SetContext adds the context to the get assets my assets params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsMyAssetsParams].
 func (o *GetAssetsMyAssetsParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets my assets params
+// WithHTTPClient adds the HTTPClient to the get assets my assets params.
 func (o *GetAssetsMyAssetsParams) WithHTTPClient(client *http.Client) *GetAssetsMyAssetsParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets my assets params
+// SetHTTPClient adds the HTTPClient to the get assets my assets params.
 func (o *GetAssetsMyAssetsParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithLimit adds the limit to the get assets my assets params
+// WithLimit adds the limit to the get assets my assets params.
 func (o *GetAssetsMyAssetsParams) WithLimit(limit *int64) *GetAssetsMyAssetsParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get assets my assets params
+// SetLimit adds the limit to the get assets my assets params.
 func (o *GetAssetsMyAssetsParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get assets my assets params
+// WithOffset adds the offset to the get assets my assets params.
 func (o *GetAssetsMyAssetsParams) WithOffset(offset *int64) *GetAssetsMyAssetsParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get assets my assets params
+// SetOffset adds the offset to the get assets my assets params.
 func (o *GetAssetsMyAssetsParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsMyAssetsParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -178,7 +183,7 @@ func (o *GetAssetsMyAssetsParams) WriteToRequest(r runtime.ClientRequest, reg st
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -195,7 +200,7 @@ func (o *GetAssetsMyAssetsParams) WriteToRequest(r runtime.ClientRequest, reg st
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {

@@ -8,10 +8,13 @@ function MagnifyIcon({ className }: { className?: string }) {
   );
 }
 
-function AccountSearchIcon({ className }: { className?: string }) {
+function LineageIcon({ className }: { className?: string }) {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={className} fill="currentColor">
-      <path d="M10 13c-.35.59-.64 1.24-.81 1.93C6.5 15.16 3.9 16.42 3.9 17v1.1h5.3c.17.68.45 1.32.8 1.9H2v-3c0-2.66 5.33-4 8-4m0-9a4 4 0 0 1 4 4c0 .91-.31 1.75-.82 2.43c-.86.32-1.63.83-2.27 1.47L10 12a4 4 0 0 1-4-4a4 4 0 0 1 4-4m0 1.9A2.1 2.1 0 0 0 7.9 8a2.1 2.1 0 0 0 2.1 2.1A2.1 2.1 0 0 0 12.1 8A2.1 2.1 0 0 0 10 5.9m5.5 6.1c2.5 0 4.5 2 4.5 4.5c0 .88-.25 1.71-.69 2.4l3.08 3.1L21 23.39l-3.12-3.07c-.69.43-1.51.68-2.38.68c-2.5 0-4.5-2-4.5-4.5s2-4.5 4.5-4.5m0 2a2.5 2.5 0 0 0-2.5 2.5a2.5 2.5 0 0 0 2.5 2.5a2.5 2.5 0 0 0 2.5-2.5a2.5 2.5 0 0 0-2.5-2.5" />
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="5" cy="6" r="2.2" />
+      <circle cx="5" cy="18" r="2.2" />
+      <circle cx="19" cy="12" r="2.2" />
+      <path d="M7 6.8 16.8 11.2 M7 17.2 16.8 12.8" />
     </svg>
   );
 }
@@ -26,7 +29,7 @@ function BookOpenIcon({ className }: { className?: string }) {
 
 const iconMap: Record<string, React.FC<{ className?: string }>> = {
   "mdi:magnify": MagnifyIcon,
-  "mdi:account-search-outline": AccountSearchIcon,
+  "custom:lineage": LineageIcon,
   "mdi:book-open-page-variant-outline": BookOpenIcon,
 };
 
@@ -48,23 +51,23 @@ const messages: ChatMessage[] = [
   },
   {
     role: "user",
-    text: "Who owns the orders table?",
+    text: "What breaks if we rename the order_gmv column?",
   },
   {
     role: "assistant",
-    text: "The orders table is owned by the Data Platform team. Sarah Chen is the primary contact.",
+    text: "The daily_orders_summary view and the Revenue Overview dashboard both depend on that column. The table is owned by the Data Platform team, so check with Sarah Chen first.",
     tool: {
-      name: "find_ownership",
-      icon: "mdi:account-search-outline",
+      name: "get_lineage",
+      icon: "custom:lineage",
     },
   },
   {
     role: "user",
-    text: 'What does "GMV" mean in the order_gmv column?',
+    text: "And what does GMV actually stand for?",
   },
   {
     role: "assistant",
-    text: "GMV stands for Gross Merchandise Value — the total sales revenue before deductions.",
+    text: "GMV is Gross Merchandise Value, the total sales revenue before deductions. That definition comes straight from your business glossary.",
     tool: {
       name: "lookup_term",
       icon: "mdi:book-open-page-variant-outline",
@@ -160,14 +163,17 @@ export default function MCPShowcase(): JSX.Element {
           {/* Left: copy */}
           <div className="lg:w-2/5 text-center lg:text-left">
             <h2 className="text-3xl sm:text-4xl font-extrabold text-gray-900 dark:text-white mb-4 tracking-tight">
-              Built-in MCP server
+              Answers, not guesses
             </h2>
             <p className="text-lg text-gray-500 dark:text-gray-400 mb-6">
-              Ask your AI assistant about your business and get answers backed
-              by your actual catalog.
+              The questions that used to land in a team's Slack channel get
+              answered on the spot. Marmot's built-in MCP server gives the
+              assistants your people already use answers backed by your
+              actual catalog.
             </p>
             <p className="text-sm text-gray-400 dark:text-gray-500 mb-6">
-              Works with any MCP-compatible client.
+              One server to set up, not one per data source. Works with any
+              MCP-compatible client.
             </p>
             <a
               href="/docs/MCP/"

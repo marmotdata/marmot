@@ -3,7 +3,9 @@
 package metrics
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new metrics API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new metrics API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new metrics API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,48 +44,99 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for metrics API
-*/
+// Client for metrics API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// GetMetrics get metrics for UI.
 	GetMetrics(params *GetMetricsParams, opts ...ClientOption) (*GetMetricsOK, error)
 
+	// GetMetricsContext get metrics for UI.
+	GetMetricsContext(ctx context.Context, params *GetMetricsParams, opts ...ClientOption) (*GetMetricsOK, error)
+
+	// GetMetricsAssetsByOwner get assets by owner.
 	GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error)
 
+	// GetMetricsAssetsByOwnerContext get assets by owner.
+	GetMetricsAssetsByOwnerContext(ctx context.Context, params *GetMetricsAssetsByOwnerParams, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error)
+
+	// GetMetricsAssetsByProvider get assets by provider.
 	GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderParams, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error)
 
+	// GetMetricsAssetsByProviderContext get assets by provider.
+	GetMetricsAssetsByProviderContext(ctx context.Context, params *GetMetricsAssetsByProviderParams, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error)
+
+	// GetMetricsAssetsByType get assets by type.
 	GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error)
 
+	// GetMetricsAssetsByTypeContext get assets by type.
+	GetMetricsAssetsByTypeContext(ctx context.Context, params *GetMetricsAssetsByTypeParams, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error)
+
+	// GetMetricsAssetsTotal get total assets count.
 	GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error)
 
+	// GetMetricsAssetsTotalContext get total assets count.
+	GetMetricsAssetsTotalContext(ctx context.Context, params *GetMetricsAssetsTotalParams, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error)
+
+	// GetMetricsAssetsWithSchemas get assets with schemas count.
 	GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemasParams, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error)
 
+	// GetMetricsAssetsWithSchemasContext get assets with schemas count.
+	GetMetricsAssetsWithSchemasContext(ctx context.Context, params *GetMetricsAssetsWithSchemasParams, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error)
+
+	// GetMetricsTopAssets get top viewed assets.
 	GetMetricsTopAssets(params *GetMetricsTopAssetsParams, opts ...ClientOption) (*GetMetricsTopAssetsOK, error)
 
+	// GetMetricsTopAssetsContext get top viewed assets.
+	GetMetricsTopAssetsContext(ctx context.Context, params *GetMetricsTopAssetsParams, opts ...ClientOption) (*GetMetricsTopAssetsOK, error)
+
+	// GetMetricsTopQueries get top search queries.
 	GetMetricsTopQueries(params *GetMetricsTopQueriesParams, opts ...ClientOption) (*GetMetricsTopQueriesOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// GetMetricsTopQueriesContext get top search queries.
+	GetMetricsTopQueriesContext(ctx context.Context, params *GetMetricsTopQueriesParams, opts ...ClientOption) (*GetMetricsTopQueriesOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-GetMetrics gets metrics for UI
-
-Get aggregated metrics for dashboard display
-*/
+// GetMetrics gets metrics for UI.
+//
+// Get aggregated metrics for dashboard display.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMetricsContext] instead.
 func (a *Client) GetMetrics(params *GetMetricsParams, opts ...ClientOption) (*GetMetricsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMetricsContext(ctx, params, opts...)
+}
+
+// GetMetricsContext gets metrics for UI.
+//
+// Get aggregated metrics for dashboard display.
+//
+// Do not use the deprecated [GetMetricsParams.Context] with this method: it would be ignored.
+func (a *Client) GetMetricsContext(ctx context.Context, params *GetMetricsParams, opts ...ClientOption) (*GetMetricsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetMetrics",
 		Method:             "GET",
@@ -91,13 +146,14 @@ func (a *Client) GetMetrics(params *GetMetricsParams, opts ...ClientOption) (*Ge
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -117,16 +173,36 @@ func (a *Client) GetMetrics(params *GetMetricsParams, opts ...ClientOption) (*Ge
 	panic(msg)
 }
 
-/*
-GetMetricsAssetsByOwner gets assets by owner
-
-Get asset counts grouped by owner
-*/
+// GetMetricsAssetsByOwner gets assets by owner.
+//
+// Get asset counts grouped by owner.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMetricsAssetsByOwnerContext] instead.
 func (a *Client) GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMetricsAssetsByOwnerContext(ctx, params, opts...)
+}
+
+// GetMetricsAssetsByOwnerContext gets assets by owner.
+//
+// Get asset counts grouped by owner.
+//
+// Do not use the deprecated [GetMetricsAssetsByOwnerParams.Context] with this method: it would be ignored.
+func (a *Client) GetMetricsAssetsByOwnerContext(ctx context.Context, params *GetMetricsAssetsByOwnerParams, opts ...ClientOption) (*GetMetricsAssetsByOwnerOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsByOwnerParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetMetricsAssetsByOwner",
 		Method:             "GET",
@@ -136,13 +212,14 @@ func (a *Client) GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsByOwnerReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -162,16 +239,36 @@ func (a *Client) GetMetricsAssetsByOwner(params *GetMetricsAssetsByOwnerParams, 
 	panic(msg)
 }
 
-/*
-GetMetricsAssetsByProvider gets assets by provider
-
-Get asset counts grouped by provider
-*/
+// GetMetricsAssetsByProvider gets assets by provider.
+//
+// Get asset counts grouped by provider.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMetricsAssetsByProviderContext] instead.
 func (a *Client) GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderParams, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMetricsAssetsByProviderContext(ctx, params, opts...)
+}
+
+// GetMetricsAssetsByProviderContext gets assets by provider.
+//
+// Get asset counts grouped by provider.
+//
+// Do not use the deprecated [GetMetricsAssetsByProviderParams.Context] with this method: it would be ignored.
+func (a *Client) GetMetricsAssetsByProviderContext(ctx context.Context, params *GetMetricsAssetsByProviderParams, opts ...ClientOption) (*GetMetricsAssetsByProviderOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsByProviderParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetMetricsAssetsByProvider",
 		Method:             "GET",
@@ -181,13 +278,14 @@ func (a *Client) GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderPa
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsByProviderReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -207,16 +305,36 @@ func (a *Client) GetMetricsAssetsByProvider(params *GetMetricsAssetsByProviderPa
 	panic(msg)
 }
 
-/*
-GetMetricsAssetsByType gets assets by type
-
-Get asset counts grouped by type
-*/
+// GetMetricsAssetsByType gets assets by type.
+//
+// Get asset counts grouped by type.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMetricsAssetsByTypeContext] instead.
 func (a *Client) GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMetricsAssetsByTypeContext(ctx, params, opts...)
+}
+
+// GetMetricsAssetsByTypeContext gets assets by type.
+//
+// Get asset counts grouped by type.
+//
+// Do not use the deprecated [GetMetricsAssetsByTypeParams.Context] with this method: it would be ignored.
+func (a *Client) GetMetricsAssetsByTypeContext(ctx context.Context, params *GetMetricsAssetsByTypeParams, opts ...ClientOption) (*GetMetricsAssetsByTypeOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsByTypeParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetMetricsAssetsByType",
 		Method:             "GET",
@@ -226,13 +344,14 @@ func (a *Client) GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, op
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsByTypeReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -252,16 +371,36 @@ func (a *Client) GetMetricsAssetsByType(params *GetMetricsAssetsByTypeParams, op
 	panic(msg)
 }
 
-/*
-GetMetricsAssetsTotal gets total assets count
-
-Get the total number of assets
-*/
+// GetMetricsAssetsTotal gets total assets count.
+//
+// Get the total number of assets.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMetricsAssetsTotalContext] instead.
 func (a *Client) GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMetricsAssetsTotalContext(ctx, params, opts...)
+}
+
+// GetMetricsAssetsTotalContext gets total assets count.
+//
+// Get the total number of assets.
+//
+// Do not use the deprecated [GetMetricsAssetsTotalParams.Context] with this method: it would be ignored.
+func (a *Client) GetMetricsAssetsTotalContext(ctx context.Context, params *GetMetricsAssetsTotalParams, opts ...ClientOption) (*GetMetricsAssetsTotalOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsTotalParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetMetricsAssetsTotal",
 		Method:             "GET",
@@ -271,13 +410,14 @@ func (a *Client) GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsTotalReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -297,16 +437,36 @@ func (a *Client) GetMetricsAssetsTotal(params *GetMetricsAssetsTotalParams, opts
 	panic(msg)
 }
 
-/*
-GetMetricsAssetsWithSchemas gets assets with schemas count
-
-Get the count of assets that have schemas defined
-*/
+// GetMetricsAssetsWithSchemas gets assets with schemas count.
+//
+// Get the count of assets that have schemas defined.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMetricsAssetsWithSchemasContext] instead.
 func (a *Client) GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemasParams, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMetricsAssetsWithSchemasContext(ctx, params, opts...)
+}
+
+// GetMetricsAssetsWithSchemasContext gets assets with schemas count.
+//
+// Get the count of assets that have schemas defined.
+//
+// Do not use the deprecated [GetMetricsAssetsWithSchemasParams.Context] with this method: it would be ignored.
+func (a *Client) GetMetricsAssetsWithSchemasContext(ctx context.Context, params *GetMetricsAssetsWithSchemasParams, opts ...ClientOption) (*GetMetricsAssetsWithSchemasOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsAssetsWithSchemasParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetMetricsAssetsWithSchemas",
 		Method:             "GET",
@@ -316,13 +476,14 @@ func (a *Client) GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemas
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsAssetsWithSchemasReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -342,16 +503,36 @@ func (a *Client) GetMetricsAssetsWithSchemas(params *GetMetricsAssetsWithSchemas
 	panic(msg)
 }
 
-/*
-GetMetricsTopAssets gets top viewed assets
-
-Get the most viewed assets
-*/
+// GetMetricsTopAssets gets top viewed assets.
+//
+// Get the most viewed assets.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMetricsTopAssetsContext] instead.
 func (a *Client) GetMetricsTopAssets(params *GetMetricsTopAssetsParams, opts ...ClientOption) (*GetMetricsTopAssetsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMetricsTopAssetsContext(ctx, params, opts...)
+}
+
+// GetMetricsTopAssetsContext gets top viewed assets.
+//
+// Get the most viewed assets.
+//
+// Do not use the deprecated [GetMetricsTopAssetsParams.Context] with this method: it would be ignored.
+func (a *Client) GetMetricsTopAssetsContext(ctx context.Context, params *GetMetricsTopAssetsParams, opts ...ClientOption) (*GetMetricsTopAssetsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsTopAssetsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetMetricsTopAssets",
 		Method:             "GET",
@@ -361,13 +542,14 @@ func (a *Client) GetMetricsTopAssets(params *GetMetricsTopAssetsParams, opts ...
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsTopAssetsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -387,16 +569,36 @@ func (a *Client) GetMetricsTopAssets(params *GetMetricsTopAssetsParams, opts ...
 	panic(msg)
 }
 
-/*
-GetMetricsTopQueries gets top search queries
-
-Get the most popular search queries
-*/
+// GetMetricsTopQueries gets top search queries.
+//
+// Get the most popular search queries.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetMetricsTopQueriesContext] instead.
 func (a *Client) GetMetricsTopQueries(params *GetMetricsTopQueriesParams, opts ...ClientOption) (*GetMetricsTopQueriesOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetMetricsTopQueriesContext(ctx, params, opts...)
+}
+
+// GetMetricsTopQueriesContext gets top search queries.
+//
+// Get the most popular search queries.
+//
+// Do not use the deprecated [GetMetricsTopQueriesParams.Context] with this method: it would be ignored.
+func (a *Client) GetMetricsTopQueriesContext(ctx context.Context, params *GetMetricsTopQueriesParams, opts ...ClientOption) (*GetMetricsTopQueriesOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetMetricsTopQueriesParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetMetricsTopQueries",
 		Method:             "GET",
@@ -406,13 +608,14 @@ func (a *Client) GetMetricsTopQueries(params *GetMetricsTopQueriesParams, opts .
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetMetricsTopQueriesReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -433,6 +636,14 @@ func (a *Client) GetMetricsTopQueries(params *GetMetricsTopQueriesParams, opts .
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [MetricsParams].
+	ctx context.Context
 }

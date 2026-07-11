@@ -3,7 +3,9 @@
 package agents
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new agents API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new agents API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new agents API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,38 +44,71 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for agents API
-*/
+// Client for agents API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// GetAgentsAssetIDActivity agent activity.
 	GetAgentsAssetIDActivity(params *GetAgentsAssetIDActivityParams, opts ...ClientOption) (*GetAgentsAssetIDActivityOK, error)
 
+	// GetAgentsAssetIDActivityContext agent activity.
+	GetAgentsAssetIDActivityContext(ctx context.Context, params *GetAgentsAssetIDActivityParams, opts ...ClientOption) (*GetAgentsAssetIDActivityOK, error)
+
+	// GetAgentsAssetIDRuns list agent runs.
 	GetAgentsAssetIDRuns(params *GetAgentsAssetIDRunsParams, opts ...ClientOption) (*GetAgentsAssetIDRunsOK, error)
 
+	// GetAgentsAssetIDRunsContext list agent runs.
+	GetAgentsAssetIDRunsContext(ctx context.Context, params *GetAgentsAssetIDRunsParams, opts ...ClientOption) (*GetAgentsAssetIDRunsOK, error)
+
+	// GetAgentsAssetIDStats agent stats.
 	GetAgentsAssetIDStats(params *GetAgentsAssetIDStatsParams, opts ...ClientOption) (*GetAgentsAssetIDStatsOK, error)
 
+	// GetAgentsAssetIDStatsContext agent stats.
+	GetAgentsAssetIDStatsContext(ctx context.Context, params *GetAgentsAssetIDStatsParams, opts ...ClientOption) (*GetAgentsAssetIDStatsOK, error)
+
+	// PostAgentsRuns record agent run.
 	PostAgentsRuns(params *PostAgentsRunsParams, opts ...ClientOption) (*PostAgentsRunsCreated, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PostAgentsRunsContext record agent run.
+	PostAgentsRunsContext(ctx context.Context, params *PostAgentsRunsParams, opts ...ClientOption) (*PostAgentsRunsCreated, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-GetAgentsAssetIDActivity agents activity
-*/
+// GetAgentsAssetIDActivity agents activity.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAgentsAssetIDActivityContext] instead.
 func (a *Client) GetAgentsAssetIDActivity(params *GetAgentsAssetIDActivityParams, opts ...ClientOption) (*GetAgentsAssetIDActivityOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAgentsAssetIDActivityContext(ctx, params, opts...)
+}
+
+// GetAgentsAssetIDActivityContext agents activity.
+//
+// Do not use the deprecated [GetAgentsAssetIDActivityParams.Context] with this method: it would be ignored.
+func (a *Client) GetAgentsAssetIDActivityContext(ctx context.Context, params *GetAgentsAssetIDActivityParams, opts ...ClientOption) (*GetAgentsAssetIDActivityOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAgentsAssetIDActivityParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAgentsAssetIDActivity",
 		Method:             "GET",
@@ -81,13 +118,14 @@ func (a *Client) GetAgentsAssetIDActivity(params *GetAgentsAssetIDActivityParams
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAgentsAssetIDActivityReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -107,14 +145,32 @@ func (a *Client) GetAgentsAssetIDActivity(params *GetAgentsAssetIDActivityParams
 	panic(msg)
 }
 
-/*
-GetAgentsAssetIDRuns lists agent runs
-*/
+// GetAgentsAssetIDRuns lists agent runs.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAgentsAssetIDRunsContext] instead.
 func (a *Client) GetAgentsAssetIDRuns(params *GetAgentsAssetIDRunsParams, opts ...ClientOption) (*GetAgentsAssetIDRunsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAgentsAssetIDRunsContext(ctx, params, opts...)
+}
+
+// GetAgentsAssetIDRunsContext lists agent runs.
+//
+// Do not use the deprecated [GetAgentsAssetIDRunsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAgentsAssetIDRunsContext(ctx context.Context, params *GetAgentsAssetIDRunsParams, opts ...ClientOption) (*GetAgentsAssetIDRunsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAgentsAssetIDRunsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAgentsAssetIDRuns",
 		Method:             "GET",
@@ -124,13 +180,14 @@ func (a *Client) GetAgentsAssetIDRuns(params *GetAgentsAssetIDRunsParams, opts .
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAgentsAssetIDRunsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -150,14 +207,32 @@ func (a *Client) GetAgentsAssetIDRuns(params *GetAgentsAssetIDRunsParams, opts .
 	panic(msg)
 }
 
-/*
-GetAgentsAssetIDStats agents stats
-*/
+// GetAgentsAssetIDStats agents stats.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAgentsAssetIDStatsContext] instead.
 func (a *Client) GetAgentsAssetIDStats(params *GetAgentsAssetIDStatsParams, opts ...ClientOption) (*GetAgentsAssetIDStatsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAgentsAssetIDStatsContext(ctx, params, opts...)
+}
+
+// GetAgentsAssetIDStatsContext agents stats.
+//
+// Do not use the deprecated [GetAgentsAssetIDStatsParams.Context] with this method: it would be ignored.
+func (a *Client) GetAgentsAssetIDStatsContext(ctx context.Context, params *GetAgentsAssetIDStatsParams, opts ...ClientOption) (*GetAgentsAssetIDStatsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetAgentsAssetIDStatsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetAgentsAssetIDStats",
 		Method:             "GET",
@@ -167,13 +242,14 @@ func (a *Client) GetAgentsAssetIDStats(params *GetAgentsAssetIDStatsParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetAgentsAssetIDStatsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -193,14 +269,32 @@ func (a *Client) GetAgentsAssetIDStats(params *GetAgentsAssetIDStatsParams, opts
 	panic(msg)
 }
 
-/*
-PostAgentsRuns records agent run
-*/
+// PostAgentsRuns records agent run.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostAgentsRunsContext] instead.
 func (a *Client) PostAgentsRuns(params *PostAgentsRunsParams, opts ...ClientOption) (*PostAgentsRunsCreated, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostAgentsRunsContext(ctx, params, opts...)
+}
+
+// PostAgentsRunsContext records agent run.
+//
+// Do not use the deprecated [PostAgentsRunsParams.Context] with this method: it would be ignored.
+func (a *Client) PostAgentsRunsContext(ctx context.Context, params *PostAgentsRunsParams, opts ...ClientOption) (*PostAgentsRunsCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostAgentsRunsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostAgentsRuns",
 		Method:             "POST",
@@ -210,13 +304,14 @@ func (a *Client) PostAgentsRuns(params *PostAgentsRunsParams, opts ...ClientOpti
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostAgentsRunsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -237,6 +332,14 @@ func (a *Client) PostAgentsRuns(params *PostAgentsRunsParams, opts ...ClientOpti
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [AgentsParams].
+	ctx context.Context
 }

@@ -36,11 +36,9 @@ func NewPostRunsCompleteOK() *PostRunsCompleteOK {
 	return &PostRunsCompleteOK{}
 }
 
-/*
-PostRunsCompleteOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostRunsCompleteOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostRunsCompleteOK struct {
 	Payload map[string]string
 }

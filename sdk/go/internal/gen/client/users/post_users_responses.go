@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostUsersOK() *PostUsersOK {
 	return &PostUsersOK{}
 }
 
-/*
-PostUsersOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostUsersOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostUsersOK struct {
 	Payload *models.User
 }
@@ -120,11 +117,9 @@ func NewPostUsersBadRequest() *PostUsersBadRequest {
 	return &PostUsersBadRequest{}
 }
 
-/*
-PostUsersBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostUsersBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostUsersBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPostUsersConflict() *PostUsersConflict {
 	return &PostUsersConflict{}
 }
 
-/*
-PostUsersConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PostUsersConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PostUsersConflict struct {
 	Payload *models.ErrorResponse
 }

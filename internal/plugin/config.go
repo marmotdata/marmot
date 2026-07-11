@@ -3,6 +3,8 @@ package plugin
 import (
 	"reflect"
 	"strings"
+
+	pluginsdk "github.com/marmotdata/plugin-sdk"
 )
 
 const SensitiveMask = "********"
@@ -94,7 +96,7 @@ func extractSensitiveFieldsRecursive(t reflect.Type, prefix string, fields *[]st
 }
 
 // MaskSensitiveFieldsFromSpec masks sensitive fields in a config map using the ConfigSpec
-func MaskSensitiveFieldsFromSpec(config RawPluginConfig, configSpec []ConfigField) RawPluginConfig {
+func MaskSensitiveFieldsFromSpec(config RawPluginConfig, configSpec []pluginsdk.ConfigField) RawPluginConfig {
 	if config == nil {
 		return nil
 	}
@@ -113,7 +115,7 @@ func MaskSensitiveFieldsFromSpec(config RawPluginConfig, configSpec []ConfigFiel
 	return result
 }
 
-func extractSensitiveFieldsFromSpec(fields []ConfigField, prefix string) []string {
+func extractSensitiveFieldsFromSpec(fields []pluginsdk.ConfigField, prefix string) []string {
 	var sensitive []string
 
 	for _, field := range fields {
@@ -127,7 +129,7 @@ func extractSensitiveFieldsFromSpec(fields []ConfigField, prefix string) []strin
 		}
 
 		// Recursively check nested fields
-		if field.Type == FieldTypeObject && len(field.Fields) > 0 {
+		if field.Type == pluginsdk.FieldTypeObject && len(field.Fields) > 0 {
 			nestedFields := extractSensitiveFieldsFromSpec(field.Fields, fullPath+".")
 			sensitive = append(sensitive, nestedFields...)
 		}

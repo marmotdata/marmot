@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
-	import CreateTeamForm from './CreateTeamForm.svelte';
 	import TeamTable from './TeamTable.svelte';
 	import type { Team } from '$lib/teams/types';
 
@@ -10,14 +11,12 @@
 	let offset = 0;
 	let limit = 10;
 	let teamQuery = '';
-	let creatingTeam = false;
 	let loading = false;
 	let error: string | null = null;
 	let searchTimer: ReturnType<typeof setTimeout>;
 
-	async function handleTeamCreated() {
-		creatingTeam = false;
-		await fetchTeams();
+	function goCreate() {
+		goto(resolve('/teams/new'));
 	}
 
 	async function fetchTeams() {
@@ -71,15 +70,11 @@
 			</div>
 			<button
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
-				on:click={() => (creatingTeam = !creatingTeam)}
+				on:click={goCreate}
 			>
-				{creatingTeam ? 'Cancel' : 'Create Team'}
+				Create Team
 			</button>
 		</div>
-
-		{#if creatingTeam}
-			<CreateTeamForm onTeamCreated={handleTeamCreated} />
-		{/if}
 
 		{#if loading && !teams.length}
 			<div class="flex justify-center p-8">

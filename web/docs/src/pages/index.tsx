@@ -36,7 +36,7 @@ export default function Home(): JSX.Element {
   return (
     <Layout
       title="The Open Source Context Layer for Agents and Humans"
-      description="Marmot is the open source context layer for your whole stack. Catalog every service, API, queue, topic, database and pipeline, then expose real, governed context to AI agents through MCP and to your team."
+      description="Marmot is the open source context layer for agents and humans. Catalog what your data is, what it means, and who owns it, then make it available to your team and to every AI assistant through one MCP server."
     >
       <div className="bg-earthy-brown-50 dark:bg-gray-900 min-h-screen overflow-hidden">
         <Hero />

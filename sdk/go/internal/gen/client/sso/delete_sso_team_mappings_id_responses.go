@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewDeleteSsoTeamMappingsIDOK() *DeleteSsoTeamMappingsIDOK {
 	return &DeleteSsoTeamMappingsIDOK{}
 }
 
-/*
-DeleteSsoTeamMappingsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// DeleteSsoTeamMappingsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type DeleteSsoTeamMappingsIDOK struct {
 	Payload *models.MessageResponse
 }
@@ -120,11 +117,9 @@ func NewDeleteSsoTeamMappingsIDNotFound() *DeleteSsoTeamMappingsIDNotFound {
 	return &DeleteSsoTeamMappingsIDNotFound{}
 }
 
-/*
-DeleteSsoTeamMappingsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// DeleteSsoTeamMappingsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type DeleteSsoTeamMappingsIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewDeleteSsoTeamMappingsIDInternalServerError() *DeleteSsoTeamMappingsIDInt
 	return &DeleteSsoTeamMappingsIDInternalServerError{}
 }
 
-/*
-DeleteSsoTeamMappingsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// DeleteSsoTeamMappingsIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type DeleteSsoTeamMappingsIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPutAssetsIDOK() *PutAssetsIDOK {
 	return &PutAssetsIDOK{}
 }
 
-/*
-PutAssetsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PutAssetsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type PutAssetsIDOK struct {
 	Payload *models.Asset
 }
@@ -126,11 +123,9 @@ func NewPutAssetsIDBadRequest() *PutAssetsIDBadRequest {
 	return &PutAssetsIDBadRequest{}
 }
 
-/*
-PutAssetsIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PutAssetsIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PutAssetsIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPutAssetsIDNotFound() *PutAssetsIDNotFound {
 	return &PutAssetsIDNotFound{}
 }
 
-/*
-PutAssetsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PutAssetsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PutAssetsIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPutAssetsIDInternalServerError() *PutAssetsIDInternalServerError {
 	return &PutAssetsIDInternalServerError{}
 }
 
-/*
-PutAssetsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PutAssetsIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PutAssetsIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

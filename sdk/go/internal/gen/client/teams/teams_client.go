@@ -3,7 +3,9 @@
 package teams
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new teams API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new teams API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new teams API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,52 +44,111 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for teams API
-*/
+// Client for teams API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// DeleteTeamsID delete a team.
 	DeleteTeamsID(params *DeleteTeamsIDParams, opts ...ClientOption) (*DeleteTeamsIDOK, error)
 
+	// DeleteTeamsIDContext delete a team.
+	DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsIDParams, opts ...ClientOption) (*DeleteTeamsIDOK, error)
+
+	// DeleteTeamsIDMembersUserID remove a team member.
 	DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDParams, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error)
 
+	// DeleteTeamsIDMembersUserIDContext remove a team member.
+	DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *DeleteTeamsIDMembersUserIDParams, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error)
+
+	// GetTeams list teams.
 	GetTeams(params *GetTeamsParams, opts ...ClientOption) (*GetTeamsOK, error)
 
+	// GetTeamsContext list teams.
+	GetTeamsContext(ctx context.Context, params *GetTeamsParams, opts ...ClientOption) (*GetTeamsOK, error)
+
+	// GetTeamsID get a team.
 	GetTeamsID(params *GetTeamsIDParams, opts ...ClientOption) (*GetTeamsIDOK, error)
 
+	// GetTeamsIDContext get a team.
+	GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams, opts ...ClientOption) (*GetTeamsIDOK, error)
+
+	// GetTeamsIDMembers list team members.
 	GetTeamsIDMembers(params *GetTeamsIDMembersParams, opts ...ClientOption) (*GetTeamsIDMembersOK, error)
 
+	// GetTeamsIDMembersContext list team members.
+	GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsIDMembersParams, opts ...ClientOption) (*GetTeamsIDMembersOK, error)
+
+	// PostTeams create a team.
 	PostTeams(params *PostTeamsParams, opts ...ClientOption) (*PostTeamsCreated, error)
 
+	// PostTeamsContext create a team.
+	PostTeamsContext(ctx context.Context, params *PostTeamsParams, opts ...ClientOption) (*PostTeamsCreated, error)
+
+	// PostTeamsIDMembers add a team member.
 	PostTeamsIDMembers(params *PostTeamsIDMembersParams, opts ...ClientOption) (*PostTeamsIDMembersCreated, error)
 
+	// PostTeamsIDMembersContext add a team member.
+	PostTeamsIDMembersContext(ctx context.Context, params *PostTeamsIDMembersParams, opts ...ClientOption) (*PostTeamsIDMembersCreated, error)
+
+	// PostTeamsIDMembersUserIDConvertToManual convert member to manual.
 	PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMembersUserIDConvertToManualParams, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error)
 
+	// PostTeamsIDMembersUserIDConvertToManualContext convert member to manual.
+	PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Context, params *PostTeamsIDMembersUserIDConvertToManualParams, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error)
+
+	// PutTeamsID update a team.
 	PutTeamsID(params *PutTeamsIDParams, opts ...ClientOption) (*PutTeamsIDOK, error)
 
+	// PutTeamsIDContext update a team.
+	PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams, opts ...ClientOption) (*PutTeamsIDOK, error)
+
+	// PutTeamsIDMembersUserIDRole update member role.
 	PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRoleParams, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PutTeamsIDMembersUserIDRoleContext update member role.
+	PutTeamsIDMembersUserIDRoleContext(ctx context.Context, params *PutTeamsIDMembersUserIDRoleParams, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-DeleteTeamsID deletes a team
-
-Delete a team by its ID
-*/
+// DeleteTeamsID deletes a team.
+//
+// Delete a team by its ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteTeamsIDContext] instead.
 func (a *Client) DeleteTeamsID(params *DeleteTeamsIDParams, opts ...ClientOption) (*DeleteTeamsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteTeamsIDContext(ctx, params, opts...)
+}
+
+// DeleteTeamsIDContext deletes a team.
+//
+// Delete a team by its ID.
+//
+// Do not use the deprecated [DeleteTeamsIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteTeamsIDContext(ctx context.Context, params *DeleteTeamsIDParams, opts ...ClientOption) (*DeleteTeamsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteTeamsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteTeamsID",
 		Method:             "DELETE",
@@ -95,13 +158,14 @@ func (a *Client) DeleteTeamsID(params *DeleteTeamsIDParams, opts ...ClientOption
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteTeamsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -121,16 +185,36 @@ func (a *Client) DeleteTeamsID(params *DeleteTeamsIDParams, opts ...ClientOption
 	panic(msg)
 }
 
-/*
-DeleteTeamsIDMembersUserID removes a team member
-
-Remove a user from a team
-*/
+// DeleteTeamsIDMembersUserID removes a team member.
+//
+// Remove a user from a team.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteTeamsIDMembersUserIDContext] instead.
 func (a *Client) DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDParams, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteTeamsIDMembersUserIDContext(ctx, params, opts...)
+}
+
+// DeleteTeamsIDMembersUserIDContext removes a team member.
+//
+// Remove a user from a team.
+//
+// Do not use the deprecated [DeleteTeamsIDMembersUserIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteTeamsIDMembersUserIDContext(ctx context.Context, params *DeleteTeamsIDMembersUserIDParams, opts ...ClientOption) (*DeleteTeamsIDMembersUserIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteTeamsIDMembersUserIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteTeamsIDMembersUserID",
 		Method:             "DELETE",
@@ -140,13 +224,14 @@ func (a *Client) DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDPa
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteTeamsIDMembersUserIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -166,16 +251,36 @@ func (a *Client) DeleteTeamsIDMembersUserID(params *DeleteTeamsIDMembersUserIDPa
 	panic(msg)
 }
 
-/*
-GetTeams lists teams
-
-Get a paginated list of teams
-*/
+// GetTeams lists teams.
+//
+// Get a paginated list of teams.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetTeamsContext] instead.
 func (a *Client) GetTeams(params *GetTeamsParams, opts ...ClientOption) (*GetTeamsOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetTeamsContext(ctx, params, opts...)
+}
+
+// GetTeamsContext lists teams.
+//
+// Get a paginated list of teams.
+//
+// Do not use the deprecated [GetTeamsParams.Context] with this method: it would be ignored.
+func (a *Client) GetTeamsContext(ctx context.Context, params *GetTeamsParams, opts ...ClientOption) (*GetTeamsOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetTeamsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetTeams",
 		Method:             "GET",
@@ -185,13 +290,14 @@ func (a *Client) GetTeams(params *GetTeamsParams, opts ...ClientOption) (*GetTea
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetTeamsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -211,16 +317,36 @@ func (a *Client) GetTeams(params *GetTeamsParams, opts ...ClientOption) (*GetTea
 	panic(msg)
 }
 
-/*
-GetTeamsID gets a team
-
-Get a team by its ID
-*/
+// GetTeamsID gets a team.
+//
+// Get a team by its ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetTeamsIDContext] instead.
 func (a *Client) GetTeamsID(params *GetTeamsIDParams, opts ...ClientOption) (*GetTeamsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetTeamsIDContext(ctx, params, opts...)
+}
+
+// GetTeamsIDContext gets a team.
+//
+// Get a team by its ID.
+//
+// Do not use the deprecated [GetTeamsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetTeamsIDContext(ctx context.Context, params *GetTeamsIDParams, opts ...ClientOption) (*GetTeamsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetTeamsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetTeamsID",
 		Method:             "GET",
@@ -230,13 +356,14 @@ func (a *Client) GetTeamsID(params *GetTeamsIDParams, opts ...ClientOption) (*Ge
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetTeamsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -256,16 +383,36 @@ func (a *Client) GetTeamsID(params *GetTeamsIDParams, opts ...ClientOption) (*Ge
 	panic(msg)
 }
 
-/*
-GetTeamsIDMembers lists team members
-
-Get the members of a team
-*/
+// GetTeamsIDMembers lists team members.
+//
+// Get the members of a team.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetTeamsIDMembersContext] instead.
 func (a *Client) GetTeamsIDMembers(params *GetTeamsIDMembersParams, opts ...ClientOption) (*GetTeamsIDMembersOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetTeamsIDMembersContext(ctx, params, opts...)
+}
+
+// GetTeamsIDMembersContext lists team members.
+//
+// Get the members of a team.
+//
+// Do not use the deprecated [GetTeamsIDMembersParams.Context] with this method: it would be ignored.
+func (a *Client) GetTeamsIDMembersContext(ctx context.Context, params *GetTeamsIDMembersParams, opts ...ClientOption) (*GetTeamsIDMembersOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetTeamsIDMembersParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetTeamsIDMembers",
 		Method:             "GET",
@@ -275,13 +422,14 @@ func (a *Client) GetTeamsIDMembers(params *GetTeamsIDMembersParams, opts ...Clie
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetTeamsIDMembersReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -301,16 +449,36 @@ func (a *Client) GetTeamsIDMembers(params *GetTeamsIDMembersParams, opts ...Clie
 	panic(msg)
 }
 
-/*
-PostTeams creates a team
-
-Create a new team
-*/
+// PostTeams creates a team.
+//
+// Create a new team.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostTeamsContext] instead.
 func (a *Client) PostTeams(params *PostTeamsParams, opts ...ClientOption) (*PostTeamsCreated, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostTeamsContext(ctx, params, opts...)
+}
+
+// PostTeamsContext creates a team.
+//
+// Create a new team.
+//
+// Do not use the deprecated [PostTeamsParams.Context] with this method: it would be ignored.
+func (a *Client) PostTeamsContext(ctx context.Context, params *PostTeamsParams, opts ...ClientOption) (*PostTeamsCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostTeamsParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostTeams",
 		Method:             "POST",
@@ -320,13 +488,14 @@ func (a *Client) PostTeams(params *PostTeamsParams, opts ...ClientOption) (*Post
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostTeamsReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -346,16 +515,36 @@ func (a *Client) PostTeams(params *PostTeamsParams, opts ...ClientOption) (*Post
 	panic(msg)
 }
 
-/*
-PostTeamsIDMembers adds a team member
-
-Add a user as a member of a team
-*/
+// PostTeamsIDMembers adds a team member.
+//
+// Add a user as a member of a team.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostTeamsIDMembersContext] instead.
 func (a *Client) PostTeamsIDMembers(params *PostTeamsIDMembersParams, opts ...ClientOption) (*PostTeamsIDMembersCreated, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostTeamsIDMembersContext(ctx, params, opts...)
+}
+
+// PostTeamsIDMembersContext adds a team member.
+//
+// Add a user as a member of a team.
+//
+// Do not use the deprecated [PostTeamsIDMembersParams.Context] with this method: it would be ignored.
+func (a *Client) PostTeamsIDMembersContext(ctx context.Context, params *PostTeamsIDMembersParams, opts ...ClientOption) (*PostTeamsIDMembersCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostTeamsIDMembersParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostTeamsIDMembers",
 		Method:             "POST",
@@ -365,13 +554,14 @@ func (a *Client) PostTeamsIDMembers(params *PostTeamsIDMembersParams, opts ...Cl
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostTeamsIDMembersReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -391,16 +581,36 @@ func (a *Client) PostTeamsIDMembers(params *PostTeamsIDMembersParams, opts ...Cl
 	panic(msg)
 }
 
-/*
-PostTeamsIDMembersUserIDConvertToManual converts member to manual
-
-Convert an SSO-managed team member to a manually managed member
-*/
+// PostTeamsIDMembersUserIDConvertToManual converts member to manual.
+//
+// Convert an SSO-managed team member to a manually managed member.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostTeamsIDMembersUserIDConvertToManualContext] instead.
 func (a *Client) PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMembersUserIDConvertToManualParams, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostTeamsIDMembersUserIDConvertToManualContext(ctx, params, opts...)
+}
+
+// PostTeamsIDMembersUserIDConvertToManualContext converts member to manual.
+//
+// Convert an SSO-managed team member to a manually managed member.
+//
+// Do not use the deprecated [PostTeamsIDMembersUserIDConvertToManualParams.Context] with this method: it would be ignored.
+func (a *Client) PostTeamsIDMembersUserIDConvertToManualContext(ctx context.Context, params *PostTeamsIDMembersUserIDConvertToManualParams, opts ...ClientOption) (*PostTeamsIDMembersUserIDConvertToManualOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostTeamsIDMembersUserIDConvertToManualParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostTeamsIDMembersUserIDConvertToManual",
 		Method:             "POST",
@@ -410,13 +620,14 @@ func (a *Client) PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMemb
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostTeamsIDMembersUserIDConvertToManualReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -436,16 +647,36 @@ func (a *Client) PostTeamsIDMembersUserIDConvertToManual(params *PostTeamsIDMemb
 	panic(msg)
 }
 
-/*
-PutTeamsID updates a team
-
-Update a team's fields by its ID
-*/
+// PutTeamsID updates a team.
+//
+// Update a team's fields by its ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutTeamsIDContext] instead.
 func (a *Client) PutTeamsID(params *PutTeamsIDParams, opts ...ClientOption) (*PutTeamsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutTeamsIDContext(ctx, params, opts...)
+}
+
+// PutTeamsIDContext updates a team.
+//
+// Update a team's fields by its ID.
+//
+// Do not use the deprecated [PutTeamsIDParams.Context] with this method: it would be ignored.
+func (a *Client) PutTeamsIDContext(ctx context.Context, params *PutTeamsIDParams, opts ...ClientOption) (*PutTeamsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutTeamsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PutTeamsID",
 		Method:             "PUT",
@@ -455,13 +686,14 @@ func (a *Client) PutTeamsID(params *PutTeamsIDParams, opts ...ClientOption) (*Pu
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutTeamsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -481,16 +713,36 @@ func (a *Client) PutTeamsID(params *PutTeamsIDParams, opts ...ClientOption) (*Pu
 	panic(msg)
 }
 
-/*
-PutTeamsIDMembersUserIDRole updates member role
-
-Update the role of a team member
-*/
+// PutTeamsIDMembersUserIDRole updates member role.
+//
+// Update the role of a team member.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutTeamsIDMembersUserIDRoleContext] instead.
 func (a *Client) PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRoleParams, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutTeamsIDMembersUserIDRoleContext(ctx, params, opts...)
+}
+
+// PutTeamsIDMembersUserIDRoleContext updates member role.
+//
+// Update the role of a team member.
+//
+// Do not use the deprecated [PutTeamsIDMembersUserIDRoleParams.Context] with this method: it would be ignored.
+func (a *Client) PutTeamsIDMembersUserIDRoleContext(ctx context.Context, params *PutTeamsIDMembersUserIDRoleParams, opts ...ClientOption) (*PutTeamsIDMembersUserIDRoleOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutTeamsIDMembersUserIDRoleParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PutTeamsIDMembersUserIDRole",
 		Method:             "PUT",
@@ -500,13 +752,14 @@ func (a *Client) PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRole
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutTeamsIDMembersUserIDRoleReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -527,6 +780,14 @@ func (a *Client) PutTeamsIDMembersUserIDRole(params *PutTeamsIDMembersUserIDRole
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [TeamsParams].
+	ctx context.Context
 }

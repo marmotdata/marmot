@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostLineageBatchParams() *PostLineageBatchParams {
-	return &PostLineageBatchParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostLineageBatchParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostLineageBatchParamsWithTimeout creates a new PostLineageBatchParams object
 // with the ability to set a timeout on a request.
 func NewPostLineageBatchParamsWithTimeout(timeout time.Duration) *PostLineageBatchParams {
 	return &PostLineageBatchParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostLineageBatchParamsWithContext creates a new PostLineageBatchParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostLineageBatchParams].
 func NewPostLineageBatchParamsWithContext(ctx context.Context) *PostLineageBatchParams {
 	return &PostLineageBatchParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostLineageBatchParams contains all the parameters to send to the API endpoint
 */
 type PostLineageBatchParams struct {
 
-	/* Edges.
-
-	   Array of lineage edges to create
-	*/
+	// Edges.
+	//
+	// Array of lineage edges to create
 	Edges []*models.LineageEdge
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post lineage batch params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostLineageBatchParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post lineage batch params
+// WithTimeout adds the timeout to the post lineage batch params.
 func (o *PostLineageBatchParams) WithTimeout(timeout time.Duration) *PostLineageBatchParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post lineage batch params
+// SetTimeout adds the timeout to the post lineage batch params.
 func (o *PostLineageBatchParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post lineage batch params
+// WithContext adds the context to the post lineage batch params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostLineageBatchParams].
 func (o *PostLineageBatchParams) WithContext(ctx context.Context) *PostLineageBatchParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post lineage batch params
+// SetContext adds the context to the post lineage batch params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostLineageBatchParams].
 func (o *PostLineageBatchParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post lineage batch params
+// WithHTTPClient adds the HTTPClient to the post lineage batch params.
 func (o *PostLineageBatchParams) WithHTTPClient(client *http.Client) *PostLineageBatchParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post lineage batch params
+// SetHTTPClient adds the HTTPClient to the post lineage batch params.
 func (o *PostLineageBatchParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithEdges adds the edges to the post lineage batch params
+// WithEdges adds the edges to the post lineage batch params.
 func (o *PostLineageBatchParams) WithEdges(edges []*models.LineageEdge) *PostLineageBatchParams {
 	o.SetEdges(edges)
 	return o
 }
 
-// SetEdges adds the edges to the post lineage batch params
+// SetEdges adds the edges to the post lineage batch params.
 func (o *PostLineageBatchParams) SetEdges(edges []*models.LineageEdge) {
 	o.Edges = edges
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostLineageBatchParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

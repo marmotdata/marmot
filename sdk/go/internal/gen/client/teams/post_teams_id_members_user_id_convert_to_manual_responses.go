@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostTeamsIDMembersUserIDConvertToManualOK() *PostTeamsIDMembersUserIDCon
 	return &PostTeamsIDMembersUserIDConvertToManualOK{}
 }
 
-/*
-PostTeamsIDMembersUserIDConvertToManualOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostTeamsIDMembersUserIDConvertToManualOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostTeamsIDMembersUserIDConvertToManualOK struct {
 	Payload *models.MessageResponse
 }
@@ -120,11 +117,9 @@ func NewPostTeamsIDMembersUserIDConvertToManualNotFound() *PostTeamsIDMembersUse
 	return &PostTeamsIDMembersUserIDConvertToManualNotFound{}
 }
 
-/*
-PostTeamsIDMembersUserIDConvertToManualNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PostTeamsIDMembersUserIDConvertToManualNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PostTeamsIDMembersUserIDConvertToManualNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPostTeamsIDMembersUserIDConvertToManualInternalServerError() *PostTeamsI
 	return &PostTeamsIDMembersUserIDConvertToManualInternalServerError{}
 }
 
-/*
-PostTeamsIDMembersUserIDConvertToManualInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostTeamsIDMembersUserIDConvertToManualInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostTeamsIDMembersUserIDConvertToManualInternalServerError struct {
 	Payload *models.ErrorResponse
 }

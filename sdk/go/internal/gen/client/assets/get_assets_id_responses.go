@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewGetAssetsIDOK() *GetAssetsIDOK {
 	return &GetAssetsIDOK{}
 }
 
-/*
-GetAssetsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetAssetsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetAssetsIDOK struct {
 	Payload *models.Asset
 }
@@ -120,11 +117,9 @@ func NewGetAssetsIDNotFound() *GetAssetsIDNotFound {
 	return &GetAssetsIDNotFound{}
 }
 
-/*
-GetAssetsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// GetAssetsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type GetAssetsIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewGetAssetsIDInternalServerError() *GetAssetsIDInternalServerError {
 	return &GetAssetsIDInternalServerError{}
 }
 
-/*
-GetAssetsIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// GetAssetsIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type GetAssetsIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

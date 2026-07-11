@@ -1,0 +1,175 @@
+---
+slug: /ai-data-engineering
+title: "AI Data Engineering: Giving Agents Real Context"
+description: "What AI data engineering is, why context matters more than the model, and how to give LLMs and agents real, governed context about your data so they stop guessing."
+keywords:
+  - AI data engineering
+  - what is AI data engineering
+  - LLM data context
+  - data context layer
+  - context engineering for AI
+  - giving agents data context
+  - AI data engineering vs data engineering
+image: /img/resources/ai-data-engineering.png
+date: 2026-06-30
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import { ResourceBanner } from '@site/src/components/ResourceCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/ai-data-engineering" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is AI data engineering?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "AI data engineering is the work of giving LLMs and AI agents real, governed context about your data so they can build and reason without guessing. It covers two things: using AI to help do data engineering, and engineering the context those AI tools need, the schemas, ownership, lineage and definitions an agent must have to act correctly. The second is the harder and higher-leverage part."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why is context more important than the model for AI agents?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A capable model with no context about your landscape will hallucinate table names, invent schemas and guess at ownership, because it has nothing real to work from. The limit is rarely the model's reasoning, it is what the model knows about your specific data. Give it real schemas, lineage and owners and the output changes completely. Context is the lever, not a bigger model."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What context does an AI agent need about data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "An agent needs schemas, so it knows what tables and fields exist and their types; ownership, so it routes questions and attributes correctly; lineage, so it understands what feeds what and what a change will break; a glossary, so business terms resolve to one meaning; and quality signals, so it can tell a trusted asset from a deprecated one. All of it scoped to the agent's permissions."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How is AI data engineering different from traditional data engineering?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Traditional data engineering moves and shapes data for human consumers: pipelines, models and dashboards. AI data engineering adds a new consumer, the agent, which needs the meaning and governance around the data, not just the data itself, and it needs it at runtime through an interface it can query. The pipelines still matter; the new work is making the context machine-readable and governed."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do you give an LLM context about your data?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The practical path in 2026 is a data catalog that exposes context over MCP and a clean API. The catalog holds schemas, ownership, lineage and glossary from across your stack, and the agent retrieves what it needs at runtime, scoped to its permissions, rather than working from a stale README or a hand-pasted prompt. That keeps the context current and governed."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is a data context layer?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A data context layer is the governed source an agent queries to understand your data before it acts. It exposes structured metadata, and increasingly the underlying data itself, through an interface like MCP or an API, scoped to the caller. AI data engineering is largely the work of building and maintaining that layer so agents work from facts rather than guesses."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+[← All resources](/resources)
+
+<ResourceBanner href="/resources/ai-data-engineering" />
+
+AI data engineering is the work of giving LLMs and agents real, governed context about your data so they can build and reason without guessing. It is the part of working with AI that decides whether an agent is genuinely useful or just confidently wrong.
+
+This guide explains what AI data engineering is, why context matters more than the model, what context an agent actually needs, and how to deliver it at runtime.
+
+## What is AI data engineering? {#what-is}
+
+**AI data engineering is the discipline of preparing data and its context so AI systems can use it safely and well.** The term covers two related ideas. One is using AI to help do data engineering: generating pipelines, writing transformations, explaining models. The other, and the harder one, is engineering the context that AI tools need to work against your data at all.
+
+This guide focuses on the second. A model is good at reasoning in general. It knows nothing about your `orders` table, your ownership structure or what "active customer" means in your organisation. AI data engineering is the work of making that knowledge available, structured, current and governed, so an agent can use it.
+
+## Why context matters more than the model {#why}
+
+**The model is rarely the limit. The context is.** An assistant with no context about your landscape will hallucinate table names, invent schemas and guess at ownership, because it has nothing real to anchor on. Swapping in a larger model does not fix this. Giving it a catalog with real schemas, lineage and owners does, and the output changes completely.
+
+This is why teams that get value from agents tend to invest less in prompt tricks and more in the context behind the prompt. We wrote about the failure mode in [AI is making assumptions about your data](/blog/ai-is-making-assumptions-about-your-data). The fix is not a cleverer model, it is real context delivered at the moment the agent needs it.
+
+## What context an AI agent needs {#what-context}
+
+An agent needs the same things a careful engineer would check before touching unfamiliar data:
+
+- **Schemas.** What tables and fields exist, and their types.
+- **Ownership.** Who is responsible, so the agent routes questions and attributes correctly.
+- **Lineage.** What feeds what, so it understands dependencies and impact.
+- **Glossary.** What business terms actually mean in your organisation.
+- **Quality signals.** Freshness and certification, so it prefers trusted sources over deprecated ones.
+
+All of it scoped to the agent's permissions, so it sees only what it is allowed to.
+
+## AI data engineering vs traditional data engineering {#vs-traditional}
+
+**Traditional data engineering serves humans. AI data engineering adds the agent as a consumer.** Classic data engineering moves and shapes data into pipelines, models and dashboards that people read. That work does not go away.
+
+What is new is a consumer that needs the meaning and governance around the data, not just the data, and needs it at runtime through an interface it can query. A dashboard is rendered for a person to interpret. An agent has to fetch structured context and act on it directly. So the added job is making context machine-readable, governed and queryable, which is what the rest of this guide is about.
+
+## How agents get that context {#how}
+
+**The practical path in 2026 is a catalog that exposes context over [MCP](/resources/mcp-for-data) and a clean API.** The agent retrieves governed context at runtime, scoped to its permissions, rather than working from a stale README or a prompt someone pasted in last quarter.
+
+That runtime delivery matters. Context pasted into a prompt is out of date the moment a schema changes. Context pulled from a catalog over MCP reflects the current state of your stack every time the agent asks. This governed, on-demand delivery is what turns a pile of metadata into a usable [AI context layer](/resources/ai-context-layer).
+
+## How to do AI data engineering well {#best-practices}
+
+A few habits carry most of the value:
+
+- **Catalog the whole stack**, not just the warehouse, so an agent sees the real landscape.
+- **Keep context current** by ingesting from the systems of record, not hand-maintained docs.
+- **Make it queryable at runtime** over MCP and an API, rather than baking it into prompts.
+- **Govern every query**, scoping context to the caller so agents stay in their lane.
+- **Carry quality and ownership** alongside schemas, so the agent can judge what to trust.
+
+## Frequently asked questions {#faq}
+
+### What is AI data engineering? {#faq-what}
+
+AI data engineering is the work of giving LLMs and AI agents real, governed context about your data so they can build and reason without guessing. It covers two things: using AI to help do data engineering, and engineering the context those AI tools need, the schemas, ownership, lineage and definitions an agent must have to act correctly. The second is the harder and higher-leverage part.
+
+### Why is context more important than the model for AI agents? {#faq-context-vs-model}
+
+A capable model with no context about your landscape will hallucinate table names, invent schemas and guess at ownership, because it has nothing real to work from. The limit is rarely the model's reasoning, it is what the model knows about your specific data. Give it real schemas, lineage and owners and the output changes completely. Context is the lever, not a bigger model.
+
+### What context does an AI agent need about data? {#faq-what-context}
+
+An agent needs schemas, so it knows what tables and fields exist and their types; ownership, so it routes questions and attributes correctly; lineage, so it understands what feeds what and what a change will break; a glossary, so business terms resolve to one meaning; and quality signals, so it can tell a trusted asset from a deprecated one. All of it scoped to the agent's permissions.
+
+### How is AI data engineering different from traditional data engineering? {#faq-vs-traditional}
+
+Traditional data engineering moves and shapes data for human consumers: pipelines, models and dashboards. AI data engineering adds a new consumer, the agent, which needs the meaning and governance around the data, not just the data itself, and it needs it at runtime through an interface it can query. The pipelines still matter; the new work is making the context machine-readable and governed.
+
+### How do you give an LLM context about your data? {#faq-how}
+
+The practical path in 2026 is a data catalog that exposes context over MCP and a clean API. The catalog holds schemas, ownership, lineage and glossary from across your stack, and the agent retrieves what it needs at runtime, scoped to its permissions, rather than working from a stale README or a hand-pasted prompt. That keeps the context current and governed.
+
+### What is a data context layer? {#faq-context-layer}
+
+A data context layer is the governed source an agent queries to understand your data before it acts. It exposes structured metadata, and increasingly the underlying data itself, through an interface like MCP or an API, scoped to the caller. AI data engineering is largely the work of building and maintaining that layer so agents work from facts rather than guesses.
+
+## Related {#related}
+
+- [What Is an AI Context Layer?](/resources/ai-context-layer)
+- [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
+- [What Is a Data Catalog?](/resources/data-catalog)
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+
+<CalloutCard
+  title="Try Marmot with your AI assistant"
+  description="Connect Claude, Cursor or any MCP-compatible tool to a catalog of your whole stack."
+  href="https://marmotdata.io/docs/MCP/"
+  buttonText="Set up MCP"
+  variant="external"
+  icon="mdi:robot"
+/>

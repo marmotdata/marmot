@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -62,11 +61,9 @@ func NewPostGlossaryCreated() *PostGlossaryCreated {
 	return &PostGlossaryCreated{}
 }
 
-/*
-PostGlossaryCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostGlossaryCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostGlossaryCreated struct {
 	Payload *models.GlossaryTerm
 }
@@ -132,11 +129,9 @@ func NewPostGlossaryBadRequest() *PostGlossaryBadRequest {
 	return &PostGlossaryBadRequest{}
 }
 
-/*
-PostGlossaryBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostGlossaryBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostGlossaryBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -202,11 +197,9 @@ func NewPostGlossaryUnauthorized() *PostGlossaryUnauthorized {
 	return &PostGlossaryUnauthorized{}
 }
 
-/*
-PostGlossaryUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PostGlossaryUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PostGlossaryUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -272,11 +265,9 @@ func NewPostGlossaryConflict() *PostGlossaryConflict {
 	return &PostGlossaryConflict{}
 }
 
-/*
-PostGlossaryConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PostGlossaryConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PostGlossaryConflict struct {
 	Payload *models.ErrorResponse
 }
@@ -342,11 +333,9 @@ func NewPostGlossaryInternalServerError() *PostGlossaryInternalServerError {
 	return &PostGlossaryInternalServerError{}
 }
 
-/*
-PostGlossaryInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostGlossaryInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostGlossaryInternalServerError struct {
 	Payload *models.ErrorResponse
 }

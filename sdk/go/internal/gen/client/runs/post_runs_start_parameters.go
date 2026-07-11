@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostRunsStartParams() *PostRunsStartParams {
-	return &PostRunsStartParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostRunsStartParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostRunsStartParamsWithTimeout creates a new PostRunsStartParams object
 // with the ability to set a timeout on a request.
 func NewPostRunsStartParamsWithTimeout(timeout time.Duration) *PostRunsStartParams {
 	return &PostRunsStartParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostRunsStartParamsWithContext creates a new PostRunsStartParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsStartParams].
 func NewPostRunsStartParamsWithContext(ctx context.Context) *PostRunsStartParams {
 	return &PostRunsStartParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostRunsStartParams contains all the parameters to send to the API endpoint
 */
 type PostRunsStartParams struct {
 
-	/* Request.
-
-	   Start run request
-	*/
+	// Request.
+	//
+	// Start run request
 	Request *models.StartRunRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post runs start params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostRunsStartParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post runs start params
+// WithTimeout adds the timeout to the post runs start params.
 func (o *PostRunsStartParams) WithTimeout(timeout time.Duration) *PostRunsStartParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post runs start params
+// SetTimeout adds the timeout to the post runs start params.
 func (o *PostRunsStartParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post runs start params
+// WithContext adds the context to the post runs start params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsStartParams].
 func (o *PostRunsStartParams) WithContext(ctx context.Context) *PostRunsStartParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post runs start params
+// SetContext adds the context to the post runs start params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostRunsStartParams].
 func (o *PostRunsStartParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post runs start params
+// WithHTTPClient adds the HTTPClient to the post runs start params.
 func (o *PostRunsStartParams) WithHTTPClient(client *http.Client) *PostRunsStartParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post runs start params
+// SetHTTPClient adds the HTTPClient to the post runs start params.
 func (o *PostRunsStartParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithRequest adds the request to the post runs start params
+// WithRequest adds the request to the post runs start params.
 func (o *PostRunsStartParams) WithRequest(request *models.StartRunRequest) *PostRunsStartParams {
 	o.SetRequest(request)
 	return o
 }
 
-// SetRequest adds the request to the post runs start params
+// SetRequest adds the request to the post runs start params.
 func (o *PostRunsStartParams) SetRequest(request *models.StartRunRequest) {
 	o.Request = request
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostRunsStartParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

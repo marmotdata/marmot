@@ -1,0 +1,196 @@
+---
+slug: /data-catalog
+title: "What Is a Data Catalog? A 2026 Guide"
+description: "What a data catalog is, what it does, its features and benefits, and how to choose one in 2026 when AI agents query metadata at runtime. A plain, vendor-neutral guide."
+keywords:
+  - data catalog
+  - what is a data catalog
+  - data catalog 2026
+  - metadata management
+  - data catalog tools
+  - data catalog features
+  - open source data catalog
+  - data discovery
+image: /img/resources/data-catalog.png
+date: 2026-06-30
+---
+
+import { CalloutCard } from '@site/src/components/DocCard';
+import { ResourceBanner } from '@site/src/components/ResourceCard';
+import Head from '@docusaurus/Head';
+
+<Head>
+  <link rel="canonical" href="https://marmotdata.io/resources/data-catalog" />
+  <script type="application/ld+json">
+    {JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is a data catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A data catalog is an organised inventory of an organisation's data assets. It collects metadata from across the stack, databases, warehouses, queues, pipelines and dashboards, into one searchable place that records what data exists, who owns it, what it means and how it connects. In 2026 the catalog is also the context layer that AI agents query at runtime before they act."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is a data catalog used for?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A data catalog is used to find data, understand it and trust it. People use it to search for the right table or dashboard, see who owns it, read its definition and trace its lineage. AI agents use the same catalog over an API or MCP to get governed context about your data before they write a query or answer a question, so they stop guessing about schemas and ownership."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the difference between a data catalog and a database?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A database stores the data itself. A data catalog stores metadata about that data: where it lives, what the columns mean, who owns it, how fresh it is and how it flows through the stack. The catalog does not hold your records. It is the index and context layer that makes the data across all your systems discoverable and trustworthy."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the best open source data catalog in 2026?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "The leading open source data catalogs are Marmot, OpenMetadata and DataHub. Marmot is the lightest to run, a single Go binary on Postgres with a built-in MCP server for AI agents. OpenMetadata and DataHub offer the widest connector libraries but run as multi-service platforms. The right choice depends on how much infrastructure you want to run and how you plan to expose context to agents."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Do I need a data catalog?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "If people or AI agents regularly ask which table to use, who owns a dataset or whether data can be trusted, a data catalog pays for itself. It becomes close to essential once you run AI agents against your data, because an agent needs governed context to act safely and a catalog is where that context lives."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is a data catalog the same as metadata management?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "They are closely related but not identical. Metadata management is the broader practice of collecting and maintaining metadata. A data catalog is the product that puts that metadata to work: a searchable inventory with lineage, ownership, glossary and governance that people and agents actually use. Most modern catalogs are how teams do metadata management in practice."
+          }
+        }
+      ]
+    })}
+  </script>
+</Head>
+
+[← All resources](/resources)
+
+<ResourceBanner href="/resources/data-catalog" />
+
+A data catalog is the inventory of your data: what exists, who owns it, how it connects and what it means. It pulls metadata from across your stack into one place you can search and trust. For years that was a tool for people. In 2026 the more important consumer is often the AI agent that queries the catalog at runtime before it writes code or answers a question.
+
+This guide explains what a data catalog is, what it does, the features and benefits that matter, the main types, and how to choose one now that agents are a first-class consumer.
+
+## What is a data catalog? {#what-is-a-data-catalog}
+
+**A data catalog is an organised inventory of an organisation's data assets, built from the metadata that describes them.** It collects metadata from databases, warehouses, object storage, message queues, pipelines and dashboards into one searchable place, and records what each asset is, who owns it, what it means and how it relates to everything else.
+
+The data itself stays where it lives. The catalog holds the context around it: schemas, descriptions, owners, tags, glossary terms, quality signals and lineage. That context is what turns a sprawl of disconnected systems into something a person, or an agent, can navigate with confidence.
+
+## What does a data catalog do? {#what-it-does}
+
+A good data catalog does four things, and most of its value comes from doing all four together.
+
+- **Inventory.** A single searchable list of tables, topics, buckets, models and dashboards across every system, so nobody has to remember where things live.
+- **Context.** Schemas, descriptions, owners, tags and business glossary terms, so an asset means the same thing to everyone who uses it.
+- **Lineage.** A map of how data flows, so you can see what feeds a dashboard and what breaks if you change a table upstream.
+- **Governance.** Ownership and access controls, so the right people, and the right agents, see the right things and nothing they should not.
+
+## Why data catalogs matter in 2026 {#why-it-matters}
+
+**The catalog used to be a productivity tool for humans. Now it is the context layer for AI.** When an agent writes a query, answers a question or triggers an action, it needs to know what your data means before it acts. Without that context it guesses, and a confident wrong answer is worse than no answer.
+
+A data catalog is where that context lives, and the way agents reach it has standardised around two interfaces: a plain API and, increasingly, [MCP](/resources/mcp-for-data), the Model Context Protocol. An agent asks the catalog what exists, what it means and who owns it, gets an answer scoped to its permissions, and only then acts. This is the shift that has reshaped what a catalog is for, and it is covered in depth in [AI data engineering](/resources/ai-data-engineering).
+
+The volume changes too. An agent queries metadata far more often than a person does, so how the catalog exposes context, and what it costs to serve those queries, now matters as much as how it looks in a UI.
+
+## Data catalog features to look for {#features}
+
+Whether you are evaluating tools or building a shortlist, these are the features that separate a useful catalog from a glorified spreadsheet.
+
+- **Search and discovery.** Fast, fuzzy search across every asset, with filters by source, owner, tag and domain.
+- **Rich metadata and a business glossary.** Schemas, descriptions and shared definitions, so "active customer" means one thing.
+- **Column and table lineage.** Upstream and downstream flow, for impact analysis and root-cause work.
+- **Ownership and access control.** Clear owners and permissions, so governance is enforced rather than documented.
+- **Data quality signals.** Freshness, certification and test results, so users know what to trust.
+- **An agent-queryable interface.** A clean API and native [MCP](/resources/mcp-for-data) support, so AI tools like Claude and Cursor reach governed context, not raw dumps.
+- **Broad integrations.** Connectors, SDKs and infrastructure-as-code paths to populate the catalog from the stack you already run.
+- **A sensible footprint.** What you have to deploy and maintain to keep the catalog running, which ranges from a single binary to a multi-service platform.
+
+## Types of data catalog {#types}
+
+Catalogs differ along a few axes that matter more than marketing categories.
+
+- **Open source vs commercial.** Open source catalogs such as Marmot, OpenMetadata and DataHub let you self-host, inspect the code and avoid per-seat fees. Commercial platforms such as Atlan, Collibra and Secoda are managed services with vendor support and compliance certifications.
+- **Self-hosted vs fully managed.** Self-hosting gives you control and keeps metadata in your own infrastructure. A managed SaaS removes the operational work in exchange for a commercial relationship and less control over where data sits.
+- **Lightweight vs platform.** Some catalogs run as a single process on a database. Others are multi-service platforms with their own search cluster and ingestion framework. Both can hold large catalogs; the difference is how much you have to operate.
+
+## Benefits of a data catalog {#benefits}
+
+**A data catalog pays off by turning scattered, untrusted data into something people and agents can use quickly and safely.** The concrete benefits:
+
+- **Faster discovery.** People stop pinging colleagues to ask which table to use, and agents stop guessing.
+- **Trust.** Ownership, definitions and quality signals tell users whether a dataset can be relied on.
+- **Safer change.** Lineage shows what depends on what, so you can change a pipeline without quietly breaking a report.
+- **Governance and compliance.** Access is scoped and auditable, which matters more, not less, once agents can act on data.
+- **Agent enablement.** A governed context layer is what lets AI tools work against your data without making things up.
+
+## How to choose a data catalog in 2026 {#how-to-choose}
+
+The criteria changed once agents became a consumer. Beyond search and lineage, weigh these:
+
+- **How it exposes context to AI.** Native [MCP](/resources/mcp-for-data) support, an agent-queryable API and lineage reachable through that interface.
+- **Governed context, not raw access.** Every query scoped to the caller's permissions, so an agent sees only what it should.
+- **Deployment footprint.** What you actually have to run and keep healthy.
+- **Connector coverage and integration paths.** Pre-built connectors, plus SDKs and infrastructure-as-code for the long tail.
+- **Cost model.** Per-seat or per-usage pricing behaves differently under agent workloads, where query volume is high.
+
+We compare the main options on exactly these terms in [Data Catalogs as the AI Context Layer](/resources/data-catalogs-for-ai-agents), with head-to-head pages for [Marmot vs DataHub](/resources/marmot-vs-datahub), [Marmot vs OpenMetadata](/resources/marmot-vs-openmetadata) and [Marmot vs Atlan](/resources/marmot-vs-atlan).
+
+## Frequently asked questions {#faq}
+
+### What is a data catalog? {#faq-what}
+
+A data catalog is an organised inventory of an organisation's data assets. It collects metadata from across the stack, databases, warehouses, queues, pipelines and dashboards, into one searchable place that records what data exists, who owns it, what it means and how it connects. In 2026 the catalog is also the context layer that AI agents query at runtime before they act.
+
+### What is a data catalog used for? {#faq-used-for}
+
+A data catalog is used to find data, understand it and trust it. People use it to search for the right table or dashboard, see who owns it, read its definition and trace its lineage. AI agents use the same catalog over an API or MCP to get governed context about your data before they write a query or answer a question, so they stop guessing about schemas and ownership.
+
+### What is the difference between a data catalog and a database? {#faq-vs-database}
+
+A database stores the data itself. A data catalog stores metadata about that data: where it lives, what the columns mean, who owns it, how fresh it is and how it flows through the stack. The catalog does not hold your records. It is the index and context layer that makes the data across all your systems discoverable and trustworthy.
+
+### What is the best open source data catalog in 2026? {#faq-best-open-source}
+
+The leading open source data catalogs are Marmot, OpenMetadata and DataHub. Marmot is the lightest to run, a single Go binary on Postgres with a built-in MCP server for AI agents. OpenMetadata and DataHub offer the widest connector libraries but run as multi-service platforms. The right choice depends on how much infrastructure you want to run and how you plan to expose context to agents. See [the full comparison](/resources/data-catalogs-for-ai-agents).
+
+### Do I need a data catalog? {#faq-need}
+
+If people or AI agents regularly ask which table to use, who owns a dataset or whether data can be trusted, a data catalog pays for itself. It becomes close to essential once you run AI agents against your data, because an agent needs governed context to act safely and a catalog is where that context lives.
+
+### Is a data catalog the same as metadata management? {#faq-metadata-management}
+
+They are closely related but not identical. Metadata management is the broader practice of collecting and maintaining metadata. A data catalog is the product that puts that metadata to work: a searchable inventory with lineage, ownership, glossary and governance that people and agents actually use. Most modern catalogs are how teams do metadata management in practice.
+
+## Related {#related}
+
+- [Data Catalogs as the AI Context Layer: A 2026 Comparison](/resources/data-catalogs-for-ai-agents)
+- [MCP for Data: Connecting AI Agents to Your Catalog](/resources/mcp-for-data)
+- [AI Data Engineering](/resources/ai-data-engineering)
+- [Data Governance](/resources/data-governance)
+
+<CalloutCard
+  title="Try Marmot"
+  description="An open source data catalog that needs only Postgres, with a built-in MCP server for AI agents."
+  href="https://marmotdata.io/docs/introduction"
+  buttonText="Get started"
+  variant="external"
+  icon="mdi:rocket-launch"
+/>

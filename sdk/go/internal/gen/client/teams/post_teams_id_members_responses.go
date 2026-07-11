@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -62,11 +61,9 @@ func NewPostTeamsIDMembersCreated() *PostTeamsIDMembersCreated {
 	return &PostTeamsIDMembersCreated{}
 }
 
-/*
-PostTeamsIDMembersCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostTeamsIDMembersCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostTeamsIDMembersCreated struct {
 	Payload *models.MessageResponse
 }
@@ -132,11 +129,9 @@ func NewPostTeamsIDMembersBadRequest() *PostTeamsIDMembersBadRequest {
 	return &PostTeamsIDMembersBadRequest{}
 }
 
-/*
-PostTeamsIDMembersBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostTeamsIDMembersBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostTeamsIDMembersBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -202,11 +197,9 @@ func NewPostTeamsIDMembersForbidden() *PostTeamsIDMembersForbidden {
 	return &PostTeamsIDMembersForbidden{}
 }
 
-/*
-PostTeamsIDMembersForbidden describes a response with status code 403, with default header values.
-
-Forbidden
-*/
+// PostTeamsIDMembersForbidden describes a response with status code 403, with default header values.
+//
+// Forbidden
 type PostTeamsIDMembersForbidden struct {
 	Payload *models.ErrorResponse
 }
@@ -272,11 +265,9 @@ func NewPostTeamsIDMembersConflict() *PostTeamsIDMembersConflict {
 	return &PostTeamsIDMembersConflict{}
 }
 
-/*
-PostTeamsIDMembersConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PostTeamsIDMembersConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PostTeamsIDMembersConflict struct {
 	Payload *models.ErrorResponse
 }
@@ -342,11 +333,9 @@ func NewPostTeamsIDMembersInternalServerError() *PostTeamsIDMembersInternalServe
 	return &PostTeamsIDMembersInternalServerError{}
 }
 
-/*
-PostTeamsIDMembersInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostTeamsIDMembersInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostTeamsIDMembersInternalServerError struct {
 	Payload *models.ErrorResponse
 }

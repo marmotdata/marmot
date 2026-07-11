@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
 )
 
 // NewGetLineageAssetsIDParams creates a new GetLineageAssetsIDParams object,
@@ -21,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetLineageAssetsIDParams() *GetLineageAssetsIDParams {
-	return &GetLineageAssetsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetLineageAssetsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetLineageAssetsIDParamsWithTimeout creates a new GetLineageAssetsIDParams object
 // with the ability to set a timeout on a request.
 func NewGetLineageAssetsIDParamsWithTimeout(timeout time.Duration) *GetLineageAssetsIDParams {
 	return &GetLineageAssetsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetLineageAssetsIDParamsWithContext creates a new GetLineageAssetsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetLineageAssetsIDParams].
 func NewGetLineageAssetsIDParamsWithContext(ctx context.Context) *GetLineageAssetsIDParams {
 	return &GetLineageAssetsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,33 +63,30 @@ GetLineageAssetsIDParams contains all the parameters to send to the API endpoint
 */
 type GetLineageAssetsIDParams struct {
 
-	/* Direction.
-
-	   Direction of lineage (upstream, downstream, or both)
-
-	   Default: "both"
-	*/
+	// Direction.
+	//
+	// Direction of lineage (upstream, downstream, or both)
+	//
+	// Default: "both"
 	Direction *string
 
-	/* ID.
-
-	   Asset ID
-
-	   Format: uuid
-	*/
+	// ID.
+	//
+	// Asset ID
+	//
+	// Format: uuid
 	ID strfmt.UUID
 
-	/* Limit.
-
-	   Maximum depth of lineage graph
-
-	   Default: 10
-	*/
+	// Limit.
+	//
+	// Maximum depth of lineage graph
+	//
+	// Default: 10
 	Limit *int64
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get lineage assets ID params (not the query body).
@@ -111,82 +112,85 @@ func (o *GetLineageAssetsIDParams) SetDefaults() {
 		Limit:     &limitDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get lineage assets ID params
+// WithTimeout adds the timeout to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) WithTimeout(timeout time.Duration) *GetLineageAssetsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get lineage assets ID params
+// SetTimeout adds the timeout to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get lineage assets ID params
+// WithContext adds the context to the get lineage assets ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetLineageAssetsIDParams].
 func (o *GetLineageAssetsIDParams) WithContext(ctx context.Context) *GetLineageAssetsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get lineage assets ID params
+// SetContext adds the context to the get lineage assets ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetLineageAssetsIDParams].
 func (o *GetLineageAssetsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get lineage assets ID params
+// WithHTTPClient adds the HTTPClient to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) WithHTTPClient(client *http.Client) *GetLineageAssetsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get lineage assets ID params
+// SetHTTPClient adds the HTTPClient to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithDirection adds the direction to the get lineage assets ID params
+// WithDirection adds the direction to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) WithDirection(direction *string) *GetLineageAssetsIDParams {
 	o.SetDirection(direction)
 	return o
 }
 
-// SetDirection adds the direction to the get lineage assets ID params
+// SetDirection adds the direction to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) SetDirection(direction *string) {
 	o.Direction = direction
 }
 
-// WithID adds the id to the get lineage assets ID params
+// WithID adds the id to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) WithID(id strfmt.UUID) *GetLineageAssetsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get lineage assets ID params
+// SetID adds the id to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) SetID(id strfmt.UUID) {
 	o.ID = id
 }
 
-// WithLimit adds the limit to the get lineage assets ID params
+// WithLimit adds the limit to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) WithLimit(limit *int64) *GetLineageAssetsIDParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get lineage assets ID params
+// SetLimit adds the limit to the get lineage assets ID params.
 func (o *GetLineageAssetsIDParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetLineageAssetsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -221,7 +225,7 @@ func (o *GetLineageAssetsIDParams) WriteToRequest(r runtime.ClientRequest, reg s
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {

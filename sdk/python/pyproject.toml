@@ -40,6 +40,7 @@ dev = [
     "ruff>=0.6",
     "mypy>=1.11",
     "types-PyYAML>=6.0",
+    "pip>=26.1.2",
     "pip-audit>=2.7",
     "openapi-python-client>=0.21",
 ]

@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -99,7 +100,7 @@ func (m *BatchCreateRequest) validateAssets(formats strfmt.Registry) error {
 	}
 
 	for i := 0; i < len(m.Assets); i++ {
-		if swag.IsZero(m.Assets[i]) { // not required
+		if typeutils.IsZero(m.Assets[i]) { // not required
 			continue
 		}
 
@@ -124,12 +125,12 @@ func (m *BatchCreateRequest) validateAssets(formats strfmt.Registry) error {
 }
 
 func (m *BatchCreateRequest) validateDocumentation(formats strfmt.Registry) error {
-	if swag.IsZero(m.Documentation) { // not required
+	if typeutils.IsZero(m.Documentation) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Documentation); i++ {
-		if swag.IsZero(m.Documentation[i]) { // not required
+		if typeutils.IsZero(m.Documentation[i]) { // not required
 			continue
 		}
 
@@ -154,12 +155,12 @@ func (m *BatchCreateRequest) validateDocumentation(formats strfmt.Registry) erro
 }
 
 func (m *BatchCreateRequest) validateLineage(formats strfmt.Registry) error {
-	if swag.IsZero(m.Lineage) { // not required
+	if typeutils.IsZero(m.Lineage) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Lineage); i++ {
-		if swag.IsZero(m.Lineage[i]) { // not required
+		if typeutils.IsZero(m.Lineage[i]) { // not required
 			continue
 		}
 
@@ -211,12 +212,12 @@ func (m *BatchCreateRequest) validateSourceName(formats strfmt.Registry) error {
 }
 
 func (m *BatchCreateRequest) validateStatistics(formats strfmt.Registry) error {
-	if swag.IsZero(m.Statistics) { // not required
+	if typeutils.IsZero(m.Statistics) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Statistics); i++ {
-		if swag.IsZero(m.Statistics[i]) { // not required
+		if typeutils.IsZero(m.Statistics[i]) { // not required
 			continue
 		}
 
@@ -272,7 +273,7 @@ func (m *BatchCreateRequest) contextValidateAssets(ctx context.Context, formats 
 
 		if m.Assets[i] != nil {
 
-			if swag.IsZero(m.Assets[i]) { // not required
+			if typeutils.IsZero(m.Assets[i]) { // not required
 				return nil
 			}
 
@@ -301,7 +302,7 @@ func (m *BatchCreateRequest) contextValidateDocumentation(ctx context.Context, f
 
 		if m.Documentation[i] != nil {
 
-			if swag.IsZero(m.Documentation[i]) { // not required
+			if typeutils.IsZero(m.Documentation[i]) { // not required
 				return nil
 			}
 
@@ -330,7 +331,7 @@ func (m *BatchCreateRequest) contextValidateLineage(ctx context.Context, formats
 
 		if m.Lineage[i] != nil {
 
-			if swag.IsZero(m.Lineage[i]) { // not required
+			if typeutils.IsZero(m.Lineage[i]) { // not required
 				return nil
 			}
 
@@ -359,7 +360,7 @@ func (m *BatchCreateRequest) contextValidateStatistics(ctx context.Context, form
 
 		if m.Statistics[i] != nil {
 
-			if swag.IsZero(m.Statistics[i]) { // not required
+			if typeutils.IsZero(m.Statistics[i]) { // not required
 				return nil
 			}
 
@@ -387,13 +388,13 @@ func (m *BatchCreateRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *BatchCreateRequest) UnmarshalBinary(b []byte) error {
 	var res BatchCreateRequest
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

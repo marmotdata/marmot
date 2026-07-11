@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // Facets facets
@@ -53,12 +54,12 @@ func (m *Facets) Validate(formats strfmt.Registry) error {
 }
 
 func (m *Facets) validateAssetTypes(formats strfmt.Registry) error {
-	if swag.IsZero(m.AssetTypes) { // not required
+	if typeutils.IsZero(m.AssetTypes) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.AssetTypes); i++ {
-		if swag.IsZero(m.AssetTypes[i]) { // not required
+		if typeutils.IsZero(m.AssetTypes[i]) { // not required
 			continue
 		}
 
@@ -83,12 +84,12 @@ func (m *Facets) validateAssetTypes(formats strfmt.Registry) error {
 }
 
 func (m *Facets) validateProviders(formats strfmt.Registry) error {
-	if swag.IsZero(m.Providers) { // not required
+	if typeutils.IsZero(m.Providers) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Providers); i++ {
-		if swag.IsZero(m.Providers[i]) { // not required
+		if typeutils.IsZero(m.Providers[i]) { // not required
 			continue
 		}
 
@@ -113,12 +114,12 @@ func (m *Facets) validateProviders(formats strfmt.Registry) error {
 }
 
 func (m *Facets) validateTags(formats strfmt.Registry) error {
-	if swag.IsZero(m.Tags) { // not required
+	if typeutils.IsZero(m.Tags) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Tags); i++ {
-		if swag.IsZero(m.Tags[i]) { // not required
+		if typeutils.IsZero(m.Tags[i]) { // not required
 			continue
 		}
 
@@ -170,7 +171,7 @@ func (m *Facets) contextValidateAssetTypes(ctx context.Context, formats strfmt.R
 
 		if m.AssetTypes[i] != nil {
 
-			if swag.IsZero(m.AssetTypes[i]) { // not required
+			if typeutils.IsZero(m.AssetTypes[i]) { // not required
 				return nil
 			}
 
@@ -199,7 +200,7 @@ func (m *Facets) contextValidateProviders(ctx context.Context, formats strfmt.Re
 
 		if m.Providers[i] != nil {
 
-			if swag.IsZero(m.Providers[i]) { // not required
+			if typeutils.IsZero(m.Providers[i]) { // not required
 				return nil
 			}
 
@@ -228,7 +229,7 @@ func (m *Facets) contextValidateTags(ctx context.Context, formats strfmt.Registr
 
 		if m.Tags[i] != nil {
 
-			if swag.IsZero(m.Tags[i]) { // not required
+			if typeutils.IsZero(m.Tags[i]) { // not required
 				return nil
 			}
 
@@ -256,13 +257,13 @@ func (m *Facets) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *Facets) UnmarshalBinary(b []byte) error {
 	var res Facets
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

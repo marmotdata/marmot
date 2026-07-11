@@ -8,7 +8,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // LineageNode lineage node
@@ -44,7 +45,7 @@ func (m *LineageNode) Validate(formats strfmt.Registry) error {
 }
 
 func (m *LineageNode) validateAsset(formats strfmt.Registry) error {
-	if swag.IsZero(m.Asset) { // not required
+	if typeutils.IsZero(m.Asset) { // not required
 		return nil
 	}
 
@@ -84,7 +85,7 @@ func (m *LineageNode) contextValidateAsset(ctx context.Context, formats strfmt.R
 
 	if m.Asset != nil {
 
-		if swag.IsZero(m.Asset) { // not required
+		if typeutils.IsZero(m.Asset) { // not required
 			return nil
 		}
 
@@ -110,13 +111,13 @@ func (m *LineageNode) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *LineageNode) UnmarshalBinary(b []byte) error {
 	var res LineageNode
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

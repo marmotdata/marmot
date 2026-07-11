@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostUsersUpdatePasswordParams() *PostUsersUpdatePasswordParams {
-	return &PostUsersUpdatePasswordParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostUsersUpdatePasswordParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostUsersUpdatePasswordParamsWithTimeout creates a new PostUsersUpdatePasswordParams object
 // with the ability to set a timeout on a request.
 func NewPostUsersUpdatePasswordParamsWithTimeout(timeout time.Duration) *PostUsersUpdatePasswordParams {
 	return &PostUsersUpdatePasswordParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostUsersUpdatePasswordParamsWithContext creates a new PostUsersUpdatePasswordParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersUpdatePasswordParams].
 func NewPostUsersUpdatePasswordParamsWithContext(ctx context.Context) *PostUsersUpdatePasswordParams {
 	return &PostUsersUpdatePasswordParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,15 +63,14 @@ PostUsersUpdatePasswordParams contains all the parameters to send to the API end
 */
 type PostUsersUpdatePasswordParams struct {
 
-	/* Request.
-
-	   Password update request
-	*/
+	// Request.
+	//
+	// Password update request
 	Request *models.UpdatePasswordRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post users update password params (not the query body).
@@ -86,54 +88,57 @@ func (o *PostUsersUpdatePasswordParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post users update password params
+// WithTimeout adds the timeout to the post users update password params.
 func (o *PostUsersUpdatePasswordParams) WithTimeout(timeout time.Duration) *PostUsersUpdatePasswordParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post users update password params
+// SetTimeout adds the timeout to the post users update password params.
 func (o *PostUsersUpdatePasswordParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post users update password params
+// WithContext adds the context to the post users update password params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersUpdatePasswordParams].
 func (o *PostUsersUpdatePasswordParams) WithContext(ctx context.Context) *PostUsersUpdatePasswordParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post users update password params
+// SetContext adds the context to the post users update password params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostUsersUpdatePasswordParams].
 func (o *PostUsersUpdatePasswordParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post users update password params
+// WithHTTPClient adds the HTTPClient to the post users update password params.
 func (o *PostUsersUpdatePasswordParams) WithHTTPClient(client *http.Client) *PostUsersUpdatePasswordParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post users update password params
+// SetHTTPClient adds the HTTPClient to the post users update password params.
 func (o *PostUsersUpdatePasswordParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithRequest adds the request to the post users update password params
+// WithRequest adds the request to the post users update password params.
 func (o *PostUsersUpdatePasswordParams) WithRequest(request *models.UpdatePasswordRequest) *PostUsersUpdatePasswordParams {
 	o.SetRequest(request)
 	return o
 }
 
-// SetRequest adds the request to the post users update password params
+// SetRequest adds the request to the post users update password params.
 func (o *PostUsersUpdatePasswordParams) SetRequest(request *models.UpdatePasswordRequest) {
 	o.Request = request
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostUsersUpdatePasswordParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

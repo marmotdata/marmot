@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPutUsersPreferencesParams() *PutUsersPreferencesParams {
-	return &PutUsersPreferencesParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPutUsersPreferencesParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPutUsersPreferencesParamsWithTimeout creates a new PutUsersPreferencesParams object
 // with the ability to set a timeout on a request.
 func NewPutUsersPreferencesParamsWithTimeout(timeout time.Duration) *PutUsersPreferencesParams {
 	return &PutUsersPreferencesParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPutUsersPreferencesParamsWithContext creates a new PutUsersPreferencesParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutUsersPreferencesParams].
 func NewPutUsersPreferencesParamsWithContext(ctx context.Context) *PutUsersPreferencesParams {
 	return &PutUsersPreferencesParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ PutUsersPreferencesParams contains all the parameters to send to the API endpoin
 */
 type PutUsersPreferencesParams struct {
 
-	/* Preferences.
-
-	   User preferences
-	*/
+	// Preferences.
+	//
+	// User preferences
 	Preferences any
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the put users preferences params (not the query body).
@@ -84,54 +87,57 @@ func (o *PutUsersPreferencesParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the put users preferences params
+// WithTimeout adds the timeout to the put users preferences params.
 func (o *PutUsersPreferencesParams) WithTimeout(timeout time.Duration) *PutUsersPreferencesParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the put users preferences params
+// SetTimeout adds the timeout to the put users preferences params.
 func (o *PutUsersPreferencesParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the put users preferences params
+// WithContext adds the context to the put users preferences params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutUsersPreferencesParams].
 func (o *PutUsersPreferencesParams) WithContext(ctx context.Context) *PutUsersPreferencesParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the put users preferences params
+// SetContext adds the context to the put users preferences params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutUsersPreferencesParams].
 func (o *PutUsersPreferencesParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the put users preferences params
+// WithHTTPClient adds the HTTPClient to the put users preferences params.
 func (o *PutUsersPreferencesParams) WithHTTPClient(client *http.Client) *PutUsersPreferencesParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the put users preferences params
+// SetHTTPClient adds the HTTPClient to the put users preferences params.
 func (o *PutUsersPreferencesParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithPreferences adds the preferences to the put users preferences params
+// WithPreferences adds the preferences to the put users preferences params.
 func (o *PutUsersPreferencesParams) WithPreferences(preferences any) *PutUsersPreferencesParams {
 	o.SetPreferences(preferences)
 	return o
 }
 
-// SetPreferences adds the preferences to the put users preferences params
+// SetPreferences adds the preferences to the put users preferences params.
 func (o *PutUsersPreferencesParams) SetPreferences(preferences any) {
 	o.Preferences = preferences
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PutUsersPreferencesParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -62,11 +61,9 @@ func NewPutAPIV1IngestionSchedulesIDOK() *PutAPIV1IngestionSchedulesIDOK {
 	return &PutAPIV1IngestionSchedulesIDOK{}
 }
 
-/*
-PutAPIV1IngestionSchedulesIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PutAPIV1IngestionSchedulesIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type PutAPIV1IngestionSchedulesIDOK struct {
 	Payload *models.Schedule
 }
@@ -132,11 +129,9 @@ func NewPutAPIV1IngestionSchedulesIDBadRequest() *PutAPIV1IngestionSchedulesIDBa
 	return &PutAPIV1IngestionSchedulesIDBadRequest{}
 }
 
-/*
-PutAPIV1IngestionSchedulesIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PutAPIV1IngestionSchedulesIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PutAPIV1IngestionSchedulesIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -202,11 +197,9 @@ func NewPutAPIV1IngestionSchedulesIDUnauthorized() *PutAPIV1IngestionSchedulesID
 	return &PutAPIV1IngestionSchedulesIDUnauthorized{}
 }
 
-/*
-PutAPIV1IngestionSchedulesIDUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PutAPIV1IngestionSchedulesIDUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PutAPIV1IngestionSchedulesIDUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -272,11 +265,9 @@ func NewPutAPIV1IngestionSchedulesIDNotFound() *PutAPIV1IngestionSchedulesIDNotF
 	return &PutAPIV1IngestionSchedulesIDNotFound{}
 }
 
-/*
-PutAPIV1IngestionSchedulesIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PutAPIV1IngestionSchedulesIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PutAPIV1IngestionSchedulesIDNotFound struct {
 	Payload *models.ErrorResponse
 }
@@ -342,11 +333,9 @@ func NewPutAPIV1IngestionSchedulesIDInternalServerError() *PutAPIV1IngestionSche
 	return &PutAPIV1IngestionSchedulesIDInternalServerError{}
 }
 
-/*
-PutAPIV1IngestionSchedulesIDInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PutAPIV1IngestionSchedulesIDInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PutAPIV1IngestionSchedulesIDInternalServerError struct {
 	Payload *models.ErrorResponse
 }

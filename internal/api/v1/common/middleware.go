@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/marmotdata/marmot/internal/core/auth"
+	"github.com/marmotdata/marmot/internal/core/serviceaccount"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/rs/zerolog/log"
@@ -29,6 +31,13 @@ func SetOAuthManager(m *auth.OAuthManager) {
 	globalOAuthManager = m
 }
 
+var globalServiceAccountService serviceaccount.Service
+
+// SetServiceAccountService registers the SA service so WithAuth can fall through to SA key validation.
+func SetServiceAccountService(svc serviceaccount.Service) {
+	globalServiceAccountService = svc
+}
+
 // OAuthAuthorizeCompleter completes a pending OAuth authorise flow (PKCE) from the login endpoint.
 type OAuthAuthorizeCompleter interface {
 	HasPendingAuthorize(r *http.Request) bool
@@ -47,24 +56,44 @@ func GetOAuthAuthorizeCompleter() OAuthAuthorizeCompleter {
 
 // WithAuth middleware handles API key, JWT, and K8s ServiceAccount token authentication.
 func WithAuth(userService user.Service, authService auth.Service, cfg *config.Config) func(http.HandlerFunc) http.HandlerFunc {
+	resolver := auth.NewResolver(userService)
 	k8sValidator := globalK8sValidator
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
 			apiKey := r.Header.Get("X-API-Key")
 
 			if apiKey != "" {
-				user, err := userService.ValidateAPIKey(r.Context(), apiKey)
-				if err != nil {
-					log.Debug().Err(err).
-						Str("endpoint", r.URL.Path).
-						Str("method", r.Method).
-						Msg("Failed to validate API key")
-					setWWWAuthenticate(w, cfg)
-					RespondError(w, http.StatusUnauthorized, "Invalid API key")
+				u, err := userService.ValidateAPIKey(r.Context(), apiKey)
+				if err == nil {
+					ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
+					next(w, r.WithContext(ctx))
 					return
 				}
-				ctx := context.WithValue(r.Context(), UserContextKey, user)
-				next(w, r.WithContext(ctx))
+
+				if errors.Is(err, user.ErrInvalidAPIKey) && globalServiceAccountService != nil {
+					sa, saErr := globalServiceAccountService.ValidateAPIKey(r.Context(), apiKey)
+					if saErr == nil {
+						roleNames := make([]string, 0, len(sa.Roles))
+						permKeys := make([]string, 0)
+						for _, r := range sa.Roles {
+							roleNames = append(roleNames, r.Name)
+							for _, p := range r.Permissions {
+								permKeys = append(permKeys, p.ResourceType+":"+p.Action)
+							}
+						}
+						principal := auth.NewServiceAccountPrincipal(sa.ID, sa.Name, roleNames, permKeys)
+						ctx := setPrincipalContext(r.Context(), principal)
+						next(w, r.WithContext(ctx))
+						return
+					}
+				}
+
+				log.Debug().Err(err).
+					Str("endpoint", r.URL.Path).
+					Str("method", r.Method).
+					Msg("Failed to validate API key")
+				setWWWAuthenticate(w, cfg)
+				RespondError(w, http.StatusUnauthorized, "Invalid API key")
 				return
 			}
 
@@ -75,20 +104,17 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 				// Try JWT validation first
 				claims, err := authService.ValidateToken(r.Context(), tokenString)
 				if err == nil {
-					user, err := userService.Get(r.Context(), claims.Subject)
+					p, err := resolver.Resolve(r.Context(), claims)
 					if err != nil {
 						setWWWAuthenticate(w, cfg)
-						RespondError(w, http.StatusUnauthorized, "Invalid token")
+						if errors.Is(err, auth.ErrUserInactive) {
+							RespondError(w, http.StatusUnauthorized, "User account is inactive")
+						} else {
+							RespondError(w, http.StatusUnauthorized, "Invalid token")
+						}
 						return
 					}
-
-					if !user.Active {
-						setWWWAuthenticate(w, cfg)
-						RespondError(w, http.StatusUnauthorized, "User account is inactive")
-						return
-					}
-
-					ctx := context.WithValue(r.Context(), UserContextKey, user)
+					ctx := setPrincipalContext(r.Context(), p)
 					next(w, r.WithContext(ctx))
 					return
 				}
@@ -102,7 +128,8 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 							Str("service_account", sa).
 							Str("endpoint", r.URL.Path).
 							Msg("Authenticated via K8s ServiceAccount token")
-						ctx := context.WithValue(r.Context(), UserContextKey, GetOperatorUser())
+						ctx := setPrincipalContext(r.Context(), auth.NewOperatorPrincipal())
+						ctx = context.WithValue(ctx, UserContextKey, GetOperatorUser())
 						next(w, r.WithContext(ctx))
 						return
 					}
@@ -119,14 +146,14 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 							Str("user_id", exchUser.ID).
 							Str("endpoint", r.URL.Path).
 							Msg("Authenticated via OIDC token exchange")
-						ctx := context.WithValue(r.Context(), UserContextKey, exchUser)
+						ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(exchUser))
 						next(w, r.WithContext(ctx))
 						return
 					}
 				}
 
 				// Fall back to API key in Bearer header
-				user, err := userService.ValidateAPIKey(r.Context(), tokenString)
+				u, err := userService.ValidateAPIKey(r.Context(), tokenString)
 				if err != nil {
 					log.Error().Err(err).
 						Str("endpoint", r.URL.Path).
@@ -136,8 +163,7 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 					RespondError(w, http.StatusUnauthorized, "Invalid token")
 					return
 				}
-
-				ctx := context.WithValue(r.Context(), UserContextKey, user)
+				ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(u))
 				next(w, r.WithContext(ctx))
 				return
 			}
@@ -145,10 +171,8 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 			// Check if anonymous auth is enabled
 			if cfg.Auth.Anonymous.Enabled {
 				anonymousUser := GetAnonymousUser(cfg.Auth.Anonymous.Role)
-
-				ctx := context.WithValue(r.Context(), UserContextKey, anonymousUser)
+				ctx := setPrincipalContext(r.Context(), auth.NewUserPrincipal(anonymousUser))
 				ctx = WithAnonymousContext(ctx, cfg.Auth.Anonymous.Role)
-
 				log.Trace().
 					Str("endpoint", r.URL.Path).
 					Str("method", r.Method).
@@ -164,43 +188,65 @@ func WithAuth(userService user.Service, authService auth.Service, cfg *config.Co
 	}
 }
 
-// RequirePermission middleware checks if the user has required permissions
+func setPrincipalContext(ctx context.Context, p auth.Principal) context.Context {
+	if p == nil {
+		return ctx
+	}
+	ctx = context.WithValue(ctx, PrincipalContextKey, p)
+	if u := p.AsUser(); u != nil {
+		ctx = context.WithValue(ctx, UserContextKey, u)
+	}
+	return ctx
+}
+
+// RequirePermission middleware checks if the authenticated principal has the required permission.
+// It supports both user principals (via UserContextKey) and non-user principals like service
+// accounts (via PrincipalContextKey).
 func RequirePermission(userService user.Service, resourceType, action string) func(http.HandlerFunc) http.HandlerFunc {
 	return func(next http.HandlerFunc) http.HandlerFunc {
 		return func(w http.ResponseWriter, r *http.Request) {
-			user, ok := r.Context().Value(UserContextKey).(*user.User)
-			if !ok {
+			usr, userOk := r.Context().Value(UserContextKey).(*user.User)
+
+			if userOk {
+				// handle anonymous users
+				if usr.Username == "anonymous" {
+					anonymousCtx, ok := GetAnonymousContext(r.Context())
+					if ok {
+						hasRolePermission, err := checkAnonymousPermission(userService, anonymousCtx.RoleName, resourceType, action)
+						if err != nil {
+							RespondError(w, http.StatusInternalServerError, "Failed to check permissions")
+							return
+						}
+						if !hasRolePermission {
+							RespondError(w, http.StatusForbidden, "Permission denied")
+							return
+						}
+						next(w, r)
+						return
+					}
+				}
+
+				hasPermission, err := userService.HasPermission(r.Context(), usr.ID, resourceType, action)
+				if err != nil {
+					RespondError(w, http.StatusInternalServerError, "Failed to check permissions")
+					return
+				}
+				if !hasPermission {
+					RespondError(w, http.StatusForbidden, "Permission denied")
+					return
+				}
+				next(w, r)
+				return
+			}
+
+			// Non-user principal (e.g. service account) — use the Principal interface directly.
+			p, principalOk := PrincipalFromContext(r.Context())
+			if !principalOk {
 				RespondError(w, http.StatusUnauthorized, "Authentication required")
 				return
 			}
 
-			// handle anonymous users
-			if user.Username == "anonymous" {
-				anonymousCtx, ok := GetAnonymousContext(r.Context())
-				if ok {
-					hasRolePermission, err := checkAnonymousPermission(userService, anonymousCtx.RoleName, resourceType, action)
-					if err != nil {
-						RespondError(w, http.StatusInternalServerError, "Failed to check permissions")
-						return
-					}
-
-					if !hasRolePermission {
-						RespondError(w, http.StatusForbidden, "Permission denied")
-						return
-					}
-
-					next(w, r)
-					return
-				}
-			}
-
-			hasPermission, err := userService.HasPermission(r.Context(), user.ID, resourceType, action)
-			if err != nil {
-				RespondError(w, http.StatusInternalServerError, "Failed to check permissions")
-				return
-			}
-
-			if !hasPermission {
+			if !p.HasPermission(resourceType, action) {
 				RespondError(w, http.StatusForbidden, "Permission denied")
 				return
 			}

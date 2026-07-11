@@ -6,7 +6,7 @@ const pillars = [
     icon: "mdi:database-eye-off-outline",
     title: "Metadata, not your data",
     description:
-      "Marmot catalogs schemas, ownership, descriptions, lineage and statistics. The rows, messages and payloads inside your systems never enter Marmot.",
+      "Marmot catalogs schemas, ownership, descriptions, lineage and statistics, encrypted under your key. The rows, messages and payloads inside your systems never enter Marmot.",
   },
   {
     icon: "mdi:cloud-lock-outline",

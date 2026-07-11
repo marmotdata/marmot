@@ -7,10 +7,40 @@ import React, {
   type FormEvent,
 } from "react";
 import Layout from "@theme/Layout";
+import Head from "@docusaurus/Head";
 import { Icon } from "@iconify/react";
 
 const API_BASE = "https://api.marmotdata.io";
 const TURNSTILE_SITE_KEY = "0x4AAAAAAC14j-gGk5wzDj2N";
+
+const FAQ_ITEMS = [
+  {
+    q: "Is Marmot really free?",
+    a: "Yes. The open source core is MIT licensed with no usage limits. Self-host it for free, forever.",
+  },
+  {
+    q: "Self-hosted vs Marmot Cloud?",
+    a: "Cloud handles hosting, upgrades and backups for you. If you're comfortable running containers, self-hosting works great.",
+  },
+  {
+    q: "When will Marmot Cloud be available?",
+    a: "Currently in early development. Join the waitlist and you'll be among the first to get access.",
+  },
+  {
+    q: "What professional services do you offer?",
+    a: "Anything from building a custom connector to helping you deploy Marmot across your organization. Scoped to what you actually need.",
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: FAQ_ITEMS.map(({ q, a }) => ({
+    "@type": "Question",
+    name: q,
+    acceptedAnswer: { "@type": "Answer", text: a },
+  })),
+};
 
 // Preload the Turnstile script so it's ready when needed
 function useTurnstileScript() {
@@ -839,6 +869,9 @@ export default function Pricing(): JSX.Element {
       title="Pricing"
       description="Price by lookups, not seats. Run Marmot yourself for free, or scale Marmot Cloud with your agents on metered pricing that grows with the value you capture."
     >
+      <Head>
+        <script type="application/ld+json">{JSON.stringify(faqJsonLd)}</script>
+      </Head>
       <div className="bg-earthy-brown-50 dark:bg-gray-900 min-h-screen">
         {/* Hero */}
         <section className="pt-16 pb-10 px-4 sm:px-6 lg:px-8 gradient-mesh-hero">
@@ -893,7 +926,6 @@ export default function Pricing(): JSX.Element {
                 grows, or bring your own cloud for enterprise.
               </p>
             </div>
-
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch">
               {plans.map((plan, i) => (
                 <div

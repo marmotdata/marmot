@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewDeleteAssetsTagsIDOK() *DeleteAssetsTagsIDOK {
 	return &DeleteAssetsTagsIDOK{}
 }
 
-/*
-DeleteAssetsTagsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// DeleteAssetsTagsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type DeleteAssetsTagsIDOK struct {
 	Payload *models.Asset
 }
@@ -120,11 +117,9 @@ func NewDeleteAssetsTagsIDBadRequest() *DeleteAssetsTagsIDBadRequest {
 	return &DeleteAssetsTagsIDBadRequest{}
 }
 
-/*
-DeleteAssetsTagsIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// DeleteAssetsTagsIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type DeleteAssetsTagsIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewDeleteAssetsTagsIDNotFound() *DeleteAssetsTagsIDNotFound {
 	return &DeleteAssetsTagsIDNotFound{}
 }
 
-/*
-DeleteAssetsTagsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// DeleteAssetsTagsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type DeleteAssetsTagsIDNotFound struct {
 	Payload *models.ErrorResponse
 }

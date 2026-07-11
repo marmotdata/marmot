@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostAPIV1IngestionRunsIDCancelParams() *PostAPIV1IngestionRunsIDCancelParams {
-	return &PostAPIV1IngestionRunsIDCancelParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostAPIV1IngestionRunsIDCancelParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostAPIV1IngestionRunsIDCancelParamsWithTimeout creates a new PostAPIV1IngestionRunsIDCancelParams object
 // with the ability to set a timeout on a request.
 func NewPostAPIV1IngestionRunsIDCancelParamsWithTimeout(timeout time.Duration) *PostAPIV1IngestionRunsIDCancelParams {
 	return &PostAPIV1IngestionRunsIDCancelParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostAPIV1IngestionRunsIDCancelParamsWithContext creates a new PostAPIV1IngestionRunsIDCancelParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1IngestionRunsIDCancelParams].
 func NewPostAPIV1IngestionRunsIDCancelParamsWithContext(ctx context.Context) *PostAPIV1IngestionRunsIDCancelParams {
 	return &PostAPIV1IngestionRunsIDCancelParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ PostAPIV1IngestionRunsIDCancelParams contains all the parameters to send to the 
 */
 type PostAPIV1IngestionRunsIDCancelParams struct {
 
-	/* ID.
-
-	   Job run ID
-	*/
+	// ID.
+	//
+	// Job run ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post API v1 ingestion runs ID cancel params (not the query body).
@@ -84,54 +87,57 @@ func (o *PostAPIV1IngestionRunsIDCancelParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post API v1 ingestion runs ID cancel params
+// WithTimeout adds the timeout to the post API v1 ingestion runs ID cancel params.
 func (o *PostAPIV1IngestionRunsIDCancelParams) WithTimeout(timeout time.Duration) *PostAPIV1IngestionRunsIDCancelParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post API v1 ingestion runs ID cancel params
+// SetTimeout adds the timeout to the post API v1 ingestion runs ID cancel params.
 func (o *PostAPIV1IngestionRunsIDCancelParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post API v1 ingestion runs ID cancel params
+// WithContext adds the context to the post API v1 ingestion runs ID cancel params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1IngestionRunsIDCancelParams].
 func (o *PostAPIV1IngestionRunsIDCancelParams) WithContext(ctx context.Context) *PostAPIV1IngestionRunsIDCancelParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post API v1 ingestion runs ID cancel params
+// SetContext adds the context to the post API v1 ingestion runs ID cancel params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostAPIV1IngestionRunsIDCancelParams].
 func (o *PostAPIV1IngestionRunsIDCancelParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post API v1 ingestion runs ID cancel params
+// WithHTTPClient adds the HTTPClient to the post API v1 ingestion runs ID cancel params.
 func (o *PostAPIV1IngestionRunsIDCancelParams) WithHTTPClient(client *http.Client) *PostAPIV1IngestionRunsIDCancelParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post API v1 ingestion runs ID cancel params
+// SetHTTPClient adds the HTTPClient to the post API v1 ingestion runs ID cancel params.
 func (o *PostAPIV1IngestionRunsIDCancelParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the post API v1 ingestion runs ID cancel params
+// WithID adds the id to the post API v1 ingestion runs ID cancel params.
 func (o *PostAPIV1IngestionRunsIDCancelParams) WithID(id string) *PostAPIV1IngestionRunsIDCancelParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the post API v1 ingestion runs ID cancel params
+// SetID adds the id to the post API v1 ingestion runs ID cancel params.
 func (o *PostAPIV1IngestionRunsIDCancelParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostAPIV1IngestionRunsIDCancelParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

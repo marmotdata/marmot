@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -56,11 +55,9 @@ func NewPostAssetRulesCreated() *PostAssetRulesCreated {
 	return &PostAssetRulesCreated{}
 }
 
-/*
-PostAssetRulesCreated describes a response with status code 201, with default header values.
-
-Created
-*/
+// PostAssetRulesCreated describes a response with status code 201, with default header values.
+//
+// Created
 type PostAssetRulesCreated struct {
 	Payload *models.AssetRule
 }
@@ -126,11 +123,9 @@ func NewPostAssetRulesBadRequest() *PostAssetRulesBadRequest {
 	return &PostAssetRulesBadRequest{}
 }
 
-/*
-PostAssetRulesBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostAssetRulesBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostAssetRulesBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -196,11 +191,9 @@ func NewPostAssetRulesConflict() *PostAssetRulesConflict {
 	return &PostAssetRulesConflict{}
 }
 
-/*
-PostAssetRulesConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PostAssetRulesConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PostAssetRulesConflict struct {
 	Payload *models.ErrorResponse
 }
@@ -266,11 +259,9 @@ func NewPostAssetRulesInternalServerError() *PostAssetRulesInternalServerError {
 	return &PostAssetRulesInternalServerError{}
 }
 
-/*
-PostAssetRulesInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostAssetRulesInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostAssetRulesInternalServerError struct {
 	Payload *models.ErrorResponse
 }

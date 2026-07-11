@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostAssetsTagsIDOK() *PostAssetsTagsIDOK {
 	return &PostAssetsTagsIDOK{}
 }
 
-/*
-PostAssetsTagsIDOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostAssetsTagsIDOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostAssetsTagsIDOK struct {
 	Payload *models.Asset
 }
@@ -120,11 +117,9 @@ func NewPostAssetsTagsIDBadRequest() *PostAssetsTagsIDBadRequest {
 	return &PostAssetsTagsIDBadRequest{}
 }
 
-/*
-PostAssetsTagsIDBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostAssetsTagsIDBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostAssetsTagsIDBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPostAssetsTagsIDNotFound() *PostAssetsTagsIDNotFound {
 	return &PostAssetsTagsIDNotFound{}
 }
 
-/*
-PostAssetsTagsIDNotFound describes a response with status code 404, with default header values.
-
-Not Found
-*/
+// PostAssetsTagsIDNotFound describes a response with status code 404, with default header values.
+//
+// Not Found
 type PostAssetsTagsIDNotFound struct {
 	Payload *models.ErrorResponse
 }

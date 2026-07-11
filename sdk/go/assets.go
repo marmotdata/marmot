@@ -28,13 +28,30 @@ type AssetSearchOptions struct {
 	Offset    int64
 }
 
-// CreateAssetInput is the input for AssetsService.Create.
+// AssetExternalLink is a labeled URL attached to an asset.
+type AssetExternalLink = models.AssetExternalLink
+
+// AssetSource records where an asset's metadata originated, with a priority
+// used to resolve conflicts when several sources describe the same asset.
+type AssetSource = models.AssetSource
+
+// AssetEnvironment describes an asset within a named environment (e.g. prod,
+// staging), including an environment-specific path and metadata.
+type AssetEnvironment = models.Environment
+
+// CreateAssetInput is the input for AssetsService.Create. Only Name, Type, and
+// Providers are required; empty optional fields are omitted from the request.
 type CreateAssetInput struct {
-	Name        string
-	Type        string
-	Providers   []string
-	Description string
-	Tags        []string
+	Name          string
+	Type          string
+	Providers     []string
+	Description   string
+	Tags          []string
+	Metadata      map[string]any
+	Schema        map[string]string
+	ExternalLinks []*AssetExternalLink
+	Sources       []*AssetSource
+	Environments  map[string]AssetEnvironment
 }
 
 // LookupInput identifies an asset by its natural key (type, service, name).
@@ -53,6 +70,11 @@ type UpdateAssetInput struct {
 	UserDescription string
 	Providers       []string
 	Tags            []string
+	Metadata        map[string]any
+	Schema          map[string]string
+	ExternalLinks   []*AssetExternalLink
+	Sources         []*AssetSource
+	Environments    map[string]AssetEnvironment
 }
 
 // AssetsService covers asset CRUD, search, summary, and tag management.
@@ -91,11 +113,18 @@ func (s *AssetsService) Search(ctx context.Context, opts AssetSearchOptions) (*A
 // Create creates a new asset.
 func (s *AssetsService) Create(ctx context.Context, in CreateAssetInput) (*Asset, error) {
 	body := &models.CreateAssetRequest{
-		Name:        &in.Name,
-		Type:        &in.Type,
-		Providers:   in.Providers,
-		Tags:        in.Tags,
-		Description: in.Description,
+		Name:          &in.Name,
+		Type:          &in.Type,
+		Providers:     in.Providers,
+		Tags:          in.Tags,
+		Description:   in.Description,
+		Schema:        in.Schema,
+		ExternalLinks: in.ExternalLinks,
+		Sources:       in.Sources,
+		Environments:  in.Environments,
+	}
+	if len(in.Metadata) > 0 {
+		body.Metadata = in.Metadata
 	}
 	p := assets.NewPostAssetsParams().WithContext(ctx).WithAsset(body)
 	resp, err := s.gen.Assets.PostAssets(p)
@@ -152,6 +181,13 @@ func (s *AssetsService) Update(ctx context.Context, id string, in UpdateAssetInp
 		UserDescription: in.UserDescription,
 		Providers:       in.Providers,
 		Tags:            in.Tags,
+		Schema:          in.Schema,
+		ExternalLinks:   in.ExternalLinks,
+		Sources:         in.Sources,
+		Environments:    in.Environments,
+	}
+	if len(in.Metadata) > 0 {
+		body.Metadata = in.Metadata
 	}
 	p := assets.NewPutAssetsIDParams().WithContext(ctx).WithID(id).WithAsset(body)
 	resp, err := s.gen.Assets.PutAssetsID(p)

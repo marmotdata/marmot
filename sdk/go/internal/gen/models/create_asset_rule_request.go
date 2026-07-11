@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // CreateAssetRuleRequest create asset rule request
@@ -66,12 +67,12 @@ func (m *CreateAssetRuleRequest) Validate(formats strfmt.Registry) error {
 }
 
 func (m *CreateAssetRuleRequest) validateLinks(formats strfmt.Registry) error {
-	if swag.IsZero(m.Links) { // not required
+	if typeutils.IsZero(m.Links) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Links); i++ {
-		if swag.IsZero(m.Links[i]) { // not required
+		if typeutils.IsZero(m.Links[i]) { // not required
 			continue
 		}
 
@@ -115,7 +116,7 @@ func (m *CreateAssetRuleRequest) contextValidateLinks(ctx context.Context, forma
 
 		if m.Links[i] != nil {
 
-			if swag.IsZero(m.Links[i]) { // not required
+			if typeutils.IsZero(m.Links[i]) { // not required
 				return nil
 			}
 
@@ -143,13 +144,13 @@ func (m *CreateAssetRuleRequest) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *CreateAssetRuleRequest) UnmarshalBinary(b []byte) error {
 	var res CreateAssetRuleRequest
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

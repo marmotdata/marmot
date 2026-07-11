@@ -7,7 +7,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 	"github.com/go-openapi/validate"
 )
 
@@ -59,7 +60,7 @@ func (m *UpdateUserInput) Validate(formats strfmt.Registry) error {
 }
 
 func (m *UpdateUserInput) validatePassword(formats strfmt.Registry) error {
-	if swag.IsZero(m.Password) { // not required
+	if typeutils.IsZero(m.Password) { // not required
 		return nil
 	}
 
@@ -71,7 +72,7 @@ func (m *UpdateUserInput) validatePassword(formats strfmt.Registry) error {
 }
 
 func (m *UpdateUserInput) validateRoleNames(formats strfmt.Registry) error {
-	if swag.IsZero(m.RoleNames) { // not required
+	if typeutils.IsZero(m.RoleNames) { // not required
 		return nil
 	}
 
@@ -94,13 +95,13 @@ func (m *UpdateUserInput) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *UpdateUserInput) UnmarshalBinary(b []byte) error {
 	var res UpdateUserInput
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

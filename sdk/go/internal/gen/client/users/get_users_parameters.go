@@ -11,7 +11,8 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/conv"
+	"github.com/go-openapi/swag/stringutils"
 )
 
 // NewGetUsersParams creates a new GetUsersParams object,
@@ -21,24 +22,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetUsersParams() *GetUsersParams {
-	return &GetUsersParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetUsersParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetUsersParamsWithTimeout creates a new GetUsersParams object
 // with the ability to set a timeout on a request.
 func NewGetUsersParamsWithTimeout(timeout time.Duration) *GetUsersParams {
 	return &GetUsersParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetUsersParamsWithContext creates a new GetUsersParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetUsersParams].
 func NewGetUsersParamsWithContext(ctx context.Context) *GetUsersParams {
 	return &GetUsersParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -59,41 +64,36 @@ GetUsersParams contains all the parameters to send to the API endpoint
 */
 type GetUsersParams struct {
 
-	/* Active.
-
-	   Filter by active status
-	*/
+	// Active.
+	//
+	// Filter by active status
 	Active *bool
 
-	/* Limit.
-
-	   Number of items to return
-
-	   Default: 50
-	*/
+	// Limit.
+	//
+	// Number of items to return
+	//
+	// Default: 50
 	Limit *int64
 
-	/* Offset.
-
-	   Number of items to skip
-	*/
+	// Offset.
+	//
+	// Number of items to skip
 	Offset *int64
 
-	/* Query.
-
-	   Search query for username or email
-	*/
+	// Query.
+	//
+	// Search query for username or email
 	Query *string
 
-	/* RoleIds.
-
-	   Filter by role IDs
-	*/
+	// RoleIds.
+	//
+	// Filter by role IDs
 	RoleIds []string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get users params (not the query body).
@@ -119,104 +119,107 @@ func (o *GetUsersParams) SetDefaults() {
 		Offset: &offsetDefault,
 	}
 
-	val.timeout = o.timeout
-	val.Context = o.Context
+	val.inner.timeout = o.inner.timeout
+	val.inner.ctx = o.inner.ctx
 	val.HTTPClient = o.HTTPClient
 	*o = val
 }
 
-// WithTimeout adds the timeout to the get users params
+// WithTimeout adds the timeout to the get users params.
 func (o *GetUsersParams) WithTimeout(timeout time.Duration) *GetUsersParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get users params
+// SetTimeout adds the timeout to the get users params.
 func (o *GetUsersParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get users params
+// WithContext adds the context to the get users params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetUsersParams].
 func (o *GetUsersParams) WithContext(ctx context.Context) *GetUsersParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get users params
+// SetContext adds the context to the get users params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetUsersParams].
 func (o *GetUsersParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get users params
+// WithHTTPClient adds the HTTPClient to the get users params.
 func (o *GetUsersParams) WithHTTPClient(client *http.Client) *GetUsersParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get users params
+// SetHTTPClient adds the HTTPClient to the get users params.
 func (o *GetUsersParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithActive adds the active to the get users params
+// WithActive adds the active to the get users params.
 func (o *GetUsersParams) WithActive(active *bool) *GetUsersParams {
 	o.SetActive(active)
 	return o
 }
 
-// SetActive adds the active to the get users params
+// SetActive adds the active to the get users params.
 func (o *GetUsersParams) SetActive(active *bool) {
 	o.Active = active
 }
 
-// WithLimit adds the limit to the get users params
+// WithLimit adds the limit to the get users params.
 func (o *GetUsersParams) WithLimit(limit *int64) *GetUsersParams {
 	o.SetLimit(limit)
 	return o
 }
 
-// SetLimit adds the limit to the get users params
+// SetLimit adds the limit to the get users params.
 func (o *GetUsersParams) SetLimit(limit *int64) {
 	o.Limit = limit
 }
 
-// WithOffset adds the offset to the get users params
+// WithOffset adds the offset to the get users params.
 func (o *GetUsersParams) WithOffset(offset *int64) *GetUsersParams {
 	o.SetOffset(offset)
 	return o
 }
 
-// SetOffset adds the offset to the get users params
+// SetOffset adds the offset to the get users params.
 func (o *GetUsersParams) SetOffset(offset *int64) {
 	o.Offset = offset
 }
 
-// WithQuery adds the query to the get users params
+// WithQuery adds the query to the get users params.
 func (o *GetUsersParams) WithQuery(query *string) *GetUsersParams {
 	o.SetQuery(query)
 	return o
 }
 
-// SetQuery adds the query to the get users params
+// SetQuery adds the query to the get users params.
 func (o *GetUsersParams) SetQuery(query *string) {
 	o.Query = query
 }
 
-// WithRoleIds adds the roleIds to the get users params
+// WithRoleIds adds the roleIds to the get users params.
 func (o *GetUsersParams) WithRoleIds(roleIds []string) *GetUsersParams {
 	o.SetRoleIds(roleIds)
 	return o
 }
 
-// SetRoleIds adds the roleIds to the get users params
+// SetRoleIds adds the roleIds to the get users params.
 func (o *GetUsersParams) SetRoleIds(roleIds []string) {
 	o.RoleIds = roleIds
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetUsersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error
@@ -229,7 +232,7 @@ func (o *GetUsersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regi
 		if o.Active != nil {
 			qrActive = *o.Active
 		}
-		qActive := swag.FormatBool(qrActive)
+		qActive := conv.FormatBool(qrActive)
 		if qActive != "" {
 
 			if err := r.SetQueryParam("active", qActive); err != nil {
@@ -246,7 +249,7 @@ func (o *GetUsersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regi
 		if o.Limit != nil {
 			qrLimit = *o.Limit
 		}
-		qLimit := swag.FormatInt64(qrLimit)
+		qLimit := conv.FormatInteger(qrLimit)
 		if qLimit != "" {
 
 			if err := r.SetQueryParam("limit", qLimit); err != nil {
@@ -263,7 +266,7 @@ func (o *GetUsersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regi
 		if o.Offset != nil {
 			qrOffset = *o.Offset
 		}
-		qOffset := swag.FormatInt64(qrOffset)
+		qOffset := conv.FormatInteger(qrOffset)
 		if qOffset != "" {
 
 			if err := r.SetQueryParam("offset", qOffset); err != nil {
@@ -306,7 +309,7 @@ func (o *GetUsersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Regi
 	return nil
 }
 
-// bindParamGetUsers binds the parameter role_ids
+// bindParamGetUsers binds the parameter role_ids.
 func (o *GetUsersParams) bindParamRoleIds(formats strfmt.Registry) []string {
 	roleIdsIR := o.RoleIds
 
@@ -318,7 +321,7 @@ func (o *GetUsersParams) bindParamRoleIds(formats strfmt.Registry) []string {
 	}
 
 	// items.CollectionFormat: "csv"
-	roleIdsIS := swag.JoinByFormat(roleIdsIC, "csv")
+	roleIdsIS := stringutils.JoinByFormat(roleIdsIC, "csv")
 
 	return roleIdsIS
 }

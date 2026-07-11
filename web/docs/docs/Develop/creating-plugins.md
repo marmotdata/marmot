@@ -4,105 +4,84 @@ This guide walks you through creating a simple HelloWorld plugin for Marmot that
 
 import { CalloutCard } from '@site/src/components/DocCard';
 
-> **Documentation Comments**: The `+marmot:` comments throughout the code are used by Marmot's documentation generator. Always include these comments - they provide metadata for the plugin registry and generate user-facing documentation.
+Marmot plugins are standalone binaries built on the [Marmot plugin SDK](https://github.com/marmotdata/plugin-sdk). Marmot launches them on demand via [go-plugin](https://github.com/hashicorp/go-plugin) and talks to them over gRPC: once at startup to read their metadata, then once per run to validate configuration and discover assets. Your plugin lives in its own repository, with its own dependencies and release cycle. [marmot-plugin-gcs](https://github.com/marmotdata/marmot-plugin-gcs) is a complete real-world example.
 
-## 1. Create the Plugin Package
+## 1. Create the Plugin Module
 
-Create a new package in the `internal/plugin/providers` directory:
+Create a new Go module and add the SDK:
 
 ```bash
-mkdir -p internal/plugin/providers/helloworld
+mkdir marmot-plugin-helloworld && cd marmot-plugin-helloworld
+go mod init github.com/you/marmot-plugin-helloworld
+go get github.com/marmotdata/plugin-sdk
 ```
 
 ## 2. Implement the Source Interface
 
-Create `source.go` in your plugin directory:
+Create `source.go`:
 
 ```go
-package helloworld
+package main
 
 import (
     "context"
     "fmt"
     "time"
 
-    "github.com/marmotdata/marmot/internal/core/asset"
-    "github.com/marmotdata/marmot/internal/core/lineage"
-    "github.com/marmotdata/marmot/internal/mrn"
-    "github.com/marmotdata/marmot/internal/plugin"
-    "github.com/rs/zerolog/log"
+    pluginsdk "github.com/marmotdata/plugin-sdk"
+    "github.com/marmotdata/plugin-sdk/mrn"
 )
 
-// +marmot:name=HelloWorld
-// +marmot:description=A simple plugin that creates "hello" and "world" assets with lineage.
-// +marmot:status=experimental
+// Config for the HelloWorld plugin
+type Config struct {
+    pluginsdk.BaseConfig `json:",inline"`
+
+    // Add a simple config option
+    Greeting string `json:"greeting" description:"Optional custom greeting message" default:"Hello!"`
+}
+
 type Source struct {
     config *Config
 }
 
-// Config for HelloWorld plugin
-// +marmot:config
-type Config struct {
-    plugin.BaseConfig `json:",inline"`
-
-    // Add a simple config option
-    Greeting string `json:"greeting" description:"Optional custom greeting message"`
-}
-
-// Example configuration for the plugin
-// +marmot:example-config
-var _ = `
-greeting: "Hello, Marmot!"
-tags:
-  - "hello"
-  - "example"
-`
-
 // Validate checks if the configuration is valid
-func (s *Source) Validate(rawConfig plugin.RawPluginConfig) (plugin.RawPluginConfig, error) {
-    config, err := plugin.UnmarshalPluginConfig[Config](rawConfig)
+func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, error) {
+    config, err := pluginsdk.UnmarshalConfig[Config](rawConfig)
     if err != nil {
         return nil, fmt.Errorf("unmarshaling config: %w", err)
+    }
+
+    // Fill fields from their default tags when absent from the raw config
+    pluginsdk.ApplyDefaults(config, rawConfig)
+
+    if err := pluginsdk.ValidateStruct(config); err != nil {
+        return nil, err
     }
 
     s.config = config
     return rawConfig, nil
 }
 
-// Discover creates our hello and world assets
-func (s *Source) Discover(ctx context.Context, pluginConfig plugin.RawPluginConfig) (*plugin.DiscoveryResult, error) {
-    _, err := s.Validate(pluginConfig)
-    if err != nil {
-        return nil, fmt.Errorf("validating config: %w", err)
-    }
-
-    log.Info().Msg("HelloWorld plugin starting asset discovery")
-
+// Discover creates our hello and world assets. The SDK runs Validate
+// first in the same process, so s.config is always set here.
+func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*pluginsdk.DiscoveryResult, error) {
     helloAsset := createHelloAsset(s.config)
     worldAsset := createWorldAsset(s.config)
 
-    helloMRN := *helloAsset.MRN
-    worldMRN := *worldAsset.MRN
-
     // Create lineage between assets
-    lineageEdge := lineage.LineageEdge{
-        Source: helloMRN,
-        Target: worldMRN,
+    lineageEdge := pluginsdk.LineageEdge{
+        Source: *helloAsset.MRN,
+        Target: *worldAsset.MRN,
         Type:   "PRODUCES",
     }
 
-    log.Info().
-        Str("hello_mrn", helloMRN).
-        Str("world_mrn", worldMRN).
-        Msg("Created lineage relationship")
-
-    return &plugin.DiscoveryResult{
-        Assets:  []asset.Asset{helloAsset, worldAsset},
-        Lineage: []lineage.LineageEdge{lineageEdge},
+    return &pluginsdk.DiscoveryResult{
+        Assets:  []pluginsdk.Asset{helloAsset, worldAsset},
+        Lineage: []pluginsdk.LineageEdge{lineageEdge},
     }, nil
 }
 
-func createHelloAsset(config *Config) asset.Asset {
+func createHelloAsset(config *Config) pluginsdk.Asset {
     name := "hello"
     mrnValue := mrn.New("Example", "HelloWorld", name)
     description := "Hello asset created by HelloWorld plugin"
@@ -115,7 +94,7 @@ func createHelloAsset(config *Config) asset.Asset {
         metadata["greeting"] = config.Greeting
     }
 
-    return asset.Asset{
+    return pluginsdk.Asset{
         Name:        &name,
         MRN:         &mrnValue,
         Type:        "Example",
@@ -123,7 +102,7 @@ func createHelloAsset(config *Config) asset.Asset {
         Description: &description,
         Metadata:    metadata,
         Tags:        config.Tags,
-        Sources: []asset.AssetSource{{
+        Sources: []pluginsdk.AssetSource{{
             Name:       "HelloWorld",
             LastSyncAt: time.Now(),
             Properties: metadata,
@@ -132,7 +111,7 @@ func createHelloAsset(config *Config) asset.Asset {
     }
 }
 
-func createWorldAsset(config *Config) asset.Asset {
+func createWorldAsset(config *Config) pluginsdk.Asset {
     name := "world"
     mrnValue := mrn.New("Example", "HelloWorld", name)
     description := "World asset created by HelloWorld plugin"
@@ -141,7 +120,7 @@ func createWorldAsset(config *Config) asset.Asset {
         "type": "bar",
     }
 
-    return asset.Asset{
+    return pluginsdk.Asset{
         Name:        &name,
         MRN:         &mrnValue,
         Type:        "Example",
@@ -149,7 +128,7 @@ func createWorldAsset(config *Config) asset.Asset {
         Description: &description,
         Metadata:    metadata,
         Tags:        config.Tags,
-        Sources: []asset.AssetSource{{
+        Sources: []pluginsdk.AssetSource{{
             Name:       "HelloWorld",
             LastSyncAt: time.Now(),
             Properties: metadata,
@@ -159,56 +138,43 @@ func createWorldAsset(config *Config) asset.Asset {
 }
 ```
 
-## 3. Define Metadata Types
+## 3. Serve the Plugin
 
-Create a simple `metadata.go` file. This defines what metadata is available and exported from your plugin.
-
-```go
-package helloworld
-
-// HelloWorldFields represents example metadata fields
-// +marmot:metadata
-type HelloWorldFields struct {
-    Type string `json:"type" metadata:"type" description:"The type of asset created"`
-    Greeting  string `json:"greeting" metadata:"greeting" description:"Optional custom greeting message"`
-}
-```
-
-## 4. Register the Plugin
-
-Create an `init()` function at the end of `source.go` to auto-register your plugin:
+Create `main.go`. `Serve` hands your source to go-plugin and blocks until Marmot disconnects:
 
 ```go
-func init() {
-	meta := plugin.PluginMeta{
-		ID:          "helloworld",
-		Name:        "HelloWorld",
-		Description: "A simple plugin that creates hello and world assets with lineage",
-		Icon:        "wave",
-		Category:    "example",
-		ConfigSpec:  plugin.GenerateConfigSpec(Config{}),
-	}
+package main
 
-	if err := plugin.GetRegistry().Register(meta, &Source{}); err != nil {
-		log.Fatal().Err(err).Msg("Failed to register HelloWorld plugin")
-	}
-}
-```
-
-The init() function:
-
-- Runs automatically when the package is imported
-- Defines plugin metadata (ID, name, description, icon, category)
-- Auto-generates the configuration spec from your Config struct
-- Registers the plugin with the global registry
-
-**Important**: Your plugin must be imported in `internal/api/v1/server.go` to trigger registration:
-
-```go
 import (
-    _ "github.com/marmotdata/marmot/internal/plugin/providers/helloworld"
+    pluginsdk "github.com/marmotdata/plugin-sdk"
 )
+
+func main() {
+    pluginsdk.Serve(&pluginsdk.ServeConfig{
+        Meta: pluginsdk.Meta{
+            ID:          "helloworld",
+            Name:        "HelloWorld",
+            Description: "A simple plugin that creates hello and world assets with lineage",
+            Icon:        "wave",
+            Category:    "example",
+            ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+        },
+        Source: &Source{},
+    })
+}
 ```
+
+The metadata defines how your plugin shows up in Marmot: its ID (the source name used in ingest configs), display name, description, icon, category, and the configuration form rendered in the UI.
+
+## 4. Install the Plugin
+
+Build the binary and copy it into the directory Marmot scans for local plugins. The binary name must start with `marmot-plugin-`:
+
+```bash
+go build -o ~/.marmot/plugins/marmot-plugin-helloworld .
+```
+
+Marmot discovers it at startup, both the server and the CLI. Set `MARMOT_PLUGINS_DIR` if your Marmot uses a different plugins directory.
 
 ## 5. Test the Plugin
 
@@ -227,7 +193,7 @@ runs:
 Run the ingestion:
 
 ```bash
-go run cmd/main.go ingest -c hello.yaml -H http://localhost:8080 -k your-api-key
+marmot ingest -c hello.yaml --host http://localhost:8080 --api-key your-api-key
 ```
 
 After running, you should see two new assets in your catalog:
@@ -238,11 +204,11 @@ After running, you should see two new assets in your catalog:
 
 ## Configuration Spec Generation
 
-The `plugin.GenerateConfigSpec()` function automatically generates a UI-ready configuration schema from your Config struct using struct tags:
+The `pluginsdk.GenerateConfigSpec()` function automatically generates a UI-ready configuration schema from your Config struct using struct tags:
 
 ```go
 type Config struct {
-    plugin.BaseConfig `json:",inline"`
+    pluginsdk.BaseConfig `json:",inline"`
 
     // Text input
     Greeting string `json:"greeting" description:"Custom greeting message"`
@@ -268,23 +234,81 @@ Supported tags:
 
 - `json`: Field name in JSON
 - `description`: Help text shown in UI
+- `label`: Display label (defaults to a title-cased field name)
 - `validate`: Validation rules (required, min, max, oneof, etc.)
 - `sensitive`: Marks field as password/secret
 - `default`: Default value
 
+The `default` tag pre-fills the UI form, but configs written by hand (a CLI ingest file, for example) skip the form. Call `pluginsdk.ApplyDefaults(config, rawConfig)` in `Validate` so the defaults apply either way: it sets every field with a `default` tag whose key is absent from the raw config. Tag values are parsed as JSON (`default:"true"`, `default:"30"`, `default:"[\"a\",\"b\"]"`); values that are not valid JSON apply verbatim to string fields (`default:"production"`).
+
+`BaseConfig` adds the standard `tags`, `external_links`, and `filter` fields every plugin supports. Filtering is applied by Marmot after discovery; your plugin only needs to carry the config.
+
 ## Plugin Interface
 
-All plugins must implement the `plugin.Source` interface:
+All plugins implement the `pluginsdk.Source` interface:
 
 ```go
 type Source interface {
-    Validate(rawConfig RawPluginConfig) error
-    Discover(ctx context.Context, config RawPluginConfig) (*DiscoveryResult, error)
+    Validate(config RawConfig) (RawConfig, error)
+    Discover(ctx context.Context, config RawConfig) (*DiscoveryResult, error)
 }
 ```
 
 **Validate**: Unmarshals and validates configuration before discovery runs
-**Discover**: Performs the actual asset discovery and returns assets + lineage
+**Discover**: Performs the actual asset discovery and returns assets, lineage, and documentation
+
+Marmot spawns a fresh plugin process for every call, so `Validate` and `Discover` never share an instance across calls. The SDK runs `Validate` before `Discover` in each process, which means state your `Validate` sets on the `Source` (the parsed config, computed limits) is always there when `Discover` runs.
+
+A `Source` can optionally implement `DataFetcher` to power row previews on asset pages:
+
+```go
+type DataFetcher interface {
+    FetchSampleData(ctx context.Context, config RawConfig, a *Asset) (columnNames []string, rows [][]interface{}, err error)
+}
+```
+
+It gets the asset and the plugin config, queries the source system, and returns column names and sample rows. `Serve` detects the interface automatically, there is nothing to register.
+
+## Write End-to-End Tests
+
+The `plugintest` package tests your built binary over the same wire protocol Marmot uses, spawning a fresh process per call just like the host does. That catches problems unit tests miss, like state that does not survive the process model:
+
+```go
+package main_test
+
+import (
+    "context"
+    "testing"
+
+    pluginsdk "github.com/marmotdata/plugin-sdk"
+    "github.com/marmotdata/plugin-sdk/plugintest"
+)
+
+func TestDiscover(t *testing.T) {
+    bin := plugintest.Build(t, ".") // path to the plugin main package
+
+    result, err := bin.Discover(context.Background(), pluginsdk.RawConfig{
+        "greeting": "Hello from a test!",
+    })
+    if err != nil {
+        t.Fatal(err)
+    }
+    if len(result.Assets) != 2 {
+        t.Fatalf("expected 2 assets, got %d", len(result.Assets))
+    }
+}
+```
+
+`Binary` also exposes `Meta`, `Validate`, and `FetchSampleData`. Pair it with a containerized instance of your source system and the test exercises the exact path Marmot takes in production.
+
+## How Plugins Are Loaded
+
+Marmot looks for `marmot-plugin-*` binaries in two places at startup:
+
+- `~/.marmot/plugins` (`MARMOT_PLUGINS_DIR`): plugins you installed by hand, like the one in this guide
+- `~/.marmot/plugins/cache` (`MARMOT_PLUGIN_CACHE_DIR`): core plugins Marmot downloads from `ghcr.io/marmotdata/plugins`
+
+Local plugins load first, so a local binary shadows a downloaded core plugin with the same ID. That makes iterating on a core plugin easy: build it into `~/.marmot/plugins` and Marmot runs your build instead of the released one.
 
 <CalloutCard
   title="Need Help Building a Plugin?"

@@ -5,21 +5,24 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/marmotdata/marmot/pkg/config"
+	"github.com/opensearch-project/opensearch-go/v4"
+	"github.com/opensearch-project/opensearch-go/v4/opensearchapi"
 )
 
-// Client wraps the Elasticsearch client with connection lifecycle management.
+// Client wraps the opensearch-go client. The package is still named
+// "elasticsearch" because it targets both engines — opensearch-go is a leaner
+// HTTP client that speaks the shared ES/OS REST surface.
 type Client struct {
-	es       *elasticsearch.TypedClient
+	es       *opensearchapi.Client
 	index    string
 	shards   *int
 	replicas *int
 }
 
-// NewClient creates a new Elasticsearch client from configuration.
+// NewClient creates a new search client from configuration.
 func NewClient(cfg *config.ElasticsearchConfig) (*Client, error) {
-	esCfg := elasticsearch.Config{
+	osCfg := opensearch.Config{
 		Addresses: cfg.Addresses,
 		Username:  cfg.Username,
 		Password:  cfg.Password,
@@ -31,15 +34,15 @@ func NewClient(cfg *config.ElasticsearchConfig) (*Client, error) {
 			return nil, fmt.Errorf("configuring TLS: %w", err)
 		}
 		if tlsCfg != nil {
-			esCfg.Transport = &http.Transport{
+			osCfg.Transport = &http.Transport{
 				TLSClientConfig: tlsCfg,
 			}
 		}
 	}
 
-	es, err := elasticsearch.NewTypedClient(esCfg)
+	es, err := opensearchapi.NewClient(opensearchapi.Config{Client: osCfg})
 	if err != nil {
-		return nil, fmt.Errorf("creating elasticsearch client: %w", err)
+		return nil, fmt.Errorf("creating search client: %w", err)
 	}
 
 	index := cfg.Index
@@ -55,16 +58,16 @@ func NewClient(cfg *config.ElasticsearchConfig) (*Client, error) {
 	}, nil
 }
 
-// Healthy checks if the Elasticsearch cluster is reachable.
+// Healthy checks if the search cluster is reachable.
 func (c *Client) Healthy(ctx context.Context) bool {
-	ok, err := c.es.Ping().Do(ctx)
+	resp, err := c.es.Ping(ctx, nil)
 	if err != nil {
 		return false
 	}
-	return ok
+	return !resp.IsError()
 }
 
-// Close is a no-op for the HTTP-based ES client.
+// Close is a no-op for the HTTP-based client.
 func (c *Client) Close() error {
 	return nil
 }

@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { fetchApi } from '$lib/api';
-	import CreateUserForm from './CreateUserForm.svelte';
 	import UserTable from './UserTable.svelte';
 	import type { User } from '$lib/users/types';
 
@@ -10,15 +11,13 @@
 	let offset = 0;
 	let limit = 10;
 	let userQuery = '';
-	let creatingUser = false;
 	let editingUserId: string | null = null;
 	let loading = false;
 	let error: string | null = null;
 	let searchTimer: ReturnType<typeof setTimeout>;
 
-	async function handleUserCreated() {
-		creatingUser = false;
-		await fetchUsers();
+	function goCreate() {
+		goto(resolve('/users/new'));
 	}
 
 	async function fetchUsers() {
@@ -80,15 +79,11 @@
 			</div>
 			<button
 				class="ml-4 px-4 py-2 bg-earthy-terracotta-700 dark:bg-earthy-terracotta-700 text-white rounded-md hover:bg-earthy-terracotta-800 dark:hover:bg-earthy-terracotta-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-earthy-terracotta-600 dark:focus:ring-earthy-terracotta-600"
-				on:click={() => (creatingUser = !creatingUser)}
+				on:click={goCreate}
 			>
-				{creatingUser ? 'Cancel' : 'Add User'}
+				Add User
 			</button>
 		</div>
-
-		{#if creatingUser}
-			<CreateUserForm onUserCreated={handleUserCreated} onCancel={() => (creatingUser = false)} />
-		{/if}
 
 		{#if loading && !users.length}
 			<div class="flex justify-center p-8">

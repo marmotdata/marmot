@@ -3,7 +3,9 @@
 package glossary
 
 import (
+	"context"
 	"fmt"
+	"time"
 
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
@@ -11,11 +13,12 @@ import (
 )
 
 // New creates a new glossary API client.
-func New(transport runtime.ClientTransport, formats strfmt.Registry) ClientService {
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) ClientService {
 	return &Client{transport: transport, formats: formats}
 }
 
 // New creates a new glossary API client with basic auth credentials.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -29,6 +32,7 @@ func NewClientWithBasicAuth(host, basePath, scheme, user, password string) Clien
 }
 
 // New creates a new glossary API client with a bearer token for authentication.
+//
 // It takes the following parameters:
 // - host: http host (github.com).
 // - basePath: any base path for the API client ("/v1", "/v3").
@@ -40,48 +44,99 @@ func NewClientWithBearerToken(host, basePath, scheme, bearerToken string) Client
 	return &Client{transport: transport, formats: strfmt.Default}
 }
 
-/*
-Client for glossary API
-*/
+// Client for glossary API.
 type Client struct {
-	transport runtime.ClientTransport
+	transport runtime.ContextualTransport
 	formats   strfmt.Registry
 }
 
 // ClientOption may be used to customize the behavior of Client methods.
 type ClientOption func(*runtime.ClientOperation)
 
-// ClientService is the interface for Client methods
+// ClientService is the interface for Client methods.
 type ClientService interface {
+
+	// DeleteGlossaryID delete glossary term.
 	DeleteGlossaryID(params *DeleteGlossaryIDParams, opts ...ClientOption) (*DeleteGlossaryIDOK, error)
 
+	// DeleteGlossaryIDContext delete glossary term.
+	DeleteGlossaryIDContext(ctx context.Context, params *DeleteGlossaryIDParams, opts ...ClientOption) (*DeleteGlossaryIDOK, error)
+
+	// GetGlossaryAncestorsID get ancestor terms.
 	GetGlossaryAncestorsID(params *GetGlossaryAncestorsIDParams, opts ...ClientOption) (*GetGlossaryAncestorsIDOK, error)
 
+	// GetGlossaryAncestorsIDContext get ancestor terms.
+	GetGlossaryAncestorsIDContext(ctx context.Context, params *GetGlossaryAncestorsIDParams, opts ...ClientOption) (*GetGlossaryAncestorsIDOK, error)
+
+	// GetGlossaryChildrenID get child terms.
 	GetGlossaryChildrenID(params *GetGlossaryChildrenIDParams, opts ...ClientOption) (*GetGlossaryChildrenIDOK, error)
 
+	// GetGlossaryChildrenIDContext get child terms.
+	GetGlossaryChildrenIDContext(ctx context.Context, params *GetGlossaryChildrenIDParams, opts ...ClientOption) (*GetGlossaryChildrenIDOK, error)
+
+	// GetGlossaryID get glossary term.
 	GetGlossaryID(params *GetGlossaryIDParams, opts ...ClientOption) (*GetGlossaryIDOK, error)
 
+	// GetGlossaryIDContext get glossary term.
+	GetGlossaryIDContext(ctx context.Context, params *GetGlossaryIDParams, opts ...ClientOption) (*GetGlossaryIDOK, error)
+
+	// GetGlossaryList list glossary terms.
 	GetGlossaryList(params *GetGlossaryListParams, opts ...ClientOption) (*GetGlossaryListOK, error)
 
+	// GetGlossaryListContext list glossary terms.
+	GetGlossaryListContext(ctx context.Context, params *GetGlossaryListParams, opts ...ClientOption) (*GetGlossaryListOK, error)
+
+	// GetGlossarySearch search glossary terms.
 	GetGlossarySearch(params *GetGlossarySearchParams, opts ...ClientOption) (*GetGlossarySearchOK, error)
 
+	// GetGlossarySearchContext search glossary terms.
+	GetGlossarySearchContext(ctx context.Context, params *GetGlossarySearchParams, opts ...ClientOption) (*GetGlossarySearchOK, error)
+
+	// PostGlossary create glossary term.
 	PostGlossary(params *PostGlossaryParams, opts ...ClientOption) (*PostGlossaryCreated, error)
 
+	// PostGlossaryContext create glossary term.
+	PostGlossaryContext(ctx context.Context, params *PostGlossaryParams, opts ...ClientOption) (*PostGlossaryCreated, error)
+
+	// PutGlossaryID update glossary term.
 	PutGlossaryID(params *PutGlossaryIDParams, opts ...ClientOption) (*PutGlossaryIDOK, error)
 
-	SetTransport(transport runtime.ClientTransport)
+	// PutGlossaryIDContext update glossary term.
+	PutGlossaryIDContext(ctx context.Context, params *PutGlossaryIDParams, opts ...ClientOption) (*PutGlossaryIDOK, error)
+
+	SetTransport(transport runtime.ContextualTransport)
 }
 
-/*
-DeleteGlossaryID deletes glossary term
-
-Delete a glossary term by its ID
-*/
+// DeleteGlossaryID deletes glossary term.
+//
+// Delete a glossary term by its ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.DeleteGlossaryIDContext] instead.
 func (a *Client) DeleteGlossaryID(params *DeleteGlossaryIDParams, opts ...ClientOption) (*DeleteGlossaryIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.DeleteGlossaryIDContext(ctx, params, opts...)
+}
+
+// DeleteGlossaryIDContext deletes glossary term.
+//
+// Delete a glossary term by its ID.
+//
+// Do not use the deprecated [DeleteGlossaryIDParams.Context] with this method: it would be ignored.
+func (a *Client) DeleteGlossaryIDContext(ctx context.Context, params *DeleteGlossaryIDParams, opts ...ClientOption) (*DeleteGlossaryIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewDeleteGlossaryIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "DeleteGlossaryID",
 		Method:             "DELETE",
@@ -91,13 +146,14 @@ func (a *Client) DeleteGlossaryID(params *DeleteGlossaryIDParams, opts ...Client
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &DeleteGlossaryIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -117,16 +173,36 @@ func (a *Client) DeleteGlossaryID(params *DeleteGlossaryIDParams, opts ...Client
 	panic(msg)
 }
 
-/*
-GetGlossaryAncestorsID gets ancestor terms
-
-Retrieve all ancestor terms of a glossary term (parent chain)
-*/
+// GetGlossaryAncestorsID gets ancestor terms.
+//
+// Retrieve all ancestor terms of a glossary term (parent chain).
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetGlossaryAncestorsIDContext] instead.
 func (a *Client) GetGlossaryAncestorsID(params *GetGlossaryAncestorsIDParams, opts ...ClientOption) (*GetGlossaryAncestorsIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetGlossaryAncestorsIDContext(ctx, params, opts...)
+}
+
+// GetGlossaryAncestorsIDContext gets ancestor terms.
+//
+// Retrieve all ancestor terms of a glossary term (parent chain).
+//
+// Do not use the deprecated [GetGlossaryAncestorsIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetGlossaryAncestorsIDContext(ctx context.Context, params *GetGlossaryAncestorsIDParams, opts ...ClientOption) (*GetGlossaryAncestorsIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetGlossaryAncestorsIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetGlossaryAncestorsID",
 		Method:             "GET",
@@ -136,13 +212,14 @@ func (a *Client) GetGlossaryAncestorsID(params *GetGlossaryAncestorsIDParams, op
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetGlossaryAncestorsIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -162,16 +239,36 @@ func (a *Client) GetGlossaryAncestorsID(params *GetGlossaryAncestorsIDParams, op
 	panic(msg)
 }
 
-/*
-GetGlossaryChildrenID gets child terms
-
-Retrieve all child terms of a glossary term
-*/
+// GetGlossaryChildrenID gets child terms.
+//
+// Retrieve all child terms of a glossary term.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetGlossaryChildrenIDContext] instead.
 func (a *Client) GetGlossaryChildrenID(params *GetGlossaryChildrenIDParams, opts ...ClientOption) (*GetGlossaryChildrenIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetGlossaryChildrenIDContext(ctx, params, opts...)
+}
+
+// GetGlossaryChildrenIDContext gets child terms.
+//
+// Retrieve all child terms of a glossary term.
+//
+// Do not use the deprecated [GetGlossaryChildrenIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetGlossaryChildrenIDContext(ctx context.Context, params *GetGlossaryChildrenIDParams, opts ...ClientOption) (*GetGlossaryChildrenIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetGlossaryChildrenIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetGlossaryChildrenID",
 		Method:             "GET",
@@ -181,13 +278,14 @@ func (a *Client) GetGlossaryChildrenID(params *GetGlossaryChildrenIDParams, opts
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetGlossaryChildrenIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -207,16 +305,36 @@ func (a *Client) GetGlossaryChildrenID(params *GetGlossaryChildrenIDParams, opts
 	panic(msg)
 }
 
-/*
-GetGlossaryID gets glossary term
-
-Retrieve a glossary term by its ID
-*/
+// GetGlossaryID gets glossary term.
+//
+// Retrieve a glossary term by its ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetGlossaryIDContext] instead.
 func (a *Client) GetGlossaryID(params *GetGlossaryIDParams, opts ...ClientOption) (*GetGlossaryIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetGlossaryIDContext(ctx, params, opts...)
+}
+
+// GetGlossaryIDContext gets glossary term.
+//
+// Retrieve a glossary term by its ID.
+//
+// Do not use the deprecated [GetGlossaryIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetGlossaryIDContext(ctx context.Context, params *GetGlossaryIDParams, opts ...ClientOption) (*GetGlossaryIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetGlossaryIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetGlossaryID",
 		Method:             "GET",
@@ -226,13 +344,14 @@ func (a *Client) GetGlossaryID(params *GetGlossaryIDParams, opts ...ClientOption
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetGlossaryIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -252,16 +371,36 @@ func (a *Client) GetGlossaryID(params *GetGlossaryIDParams, opts ...ClientOption
 	panic(msg)
 }
 
-/*
-GetGlossaryList lists glossary terms
-
-Retrieve a paginated list of all glossary terms
-*/
+// GetGlossaryList lists glossary terms.
+//
+// Retrieve a paginated list of all glossary terms.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetGlossaryListContext] instead.
 func (a *Client) GetGlossaryList(params *GetGlossaryListParams, opts ...ClientOption) (*GetGlossaryListOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetGlossaryListContext(ctx, params, opts...)
+}
+
+// GetGlossaryListContext lists glossary terms.
+//
+// Retrieve a paginated list of all glossary terms.
+//
+// Do not use the deprecated [GetGlossaryListParams.Context] with this method: it would be ignored.
+func (a *Client) GetGlossaryListContext(ctx context.Context, params *GetGlossaryListParams, opts ...ClientOption) (*GetGlossaryListOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetGlossaryListParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetGlossaryList",
 		Method:             "GET",
@@ -271,13 +410,14 @@ func (a *Client) GetGlossaryList(params *GetGlossaryListParams, opts ...ClientOp
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetGlossaryListReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -297,16 +437,36 @@ func (a *Client) GetGlossaryList(params *GetGlossaryListParams, opts ...ClientOp
 	panic(msg)
 }
 
-/*
-GetGlossarySearch searches glossary terms
-
-Search for glossary terms by query string and filters
-*/
+// GetGlossarySearch searches glossary terms.
+//
+// Search for glossary terms by query string and filters.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetGlossarySearchContext] instead.
 func (a *Client) GetGlossarySearch(params *GetGlossarySearchParams, opts ...ClientOption) (*GetGlossarySearchOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetGlossarySearchContext(ctx, params, opts...)
+}
+
+// GetGlossarySearchContext searches glossary terms.
+//
+// Search for glossary terms by query string and filters.
+//
+// Do not use the deprecated [GetGlossarySearchParams.Context] with this method: it would be ignored.
+func (a *Client) GetGlossarySearchContext(ctx context.Context, params *GetGlossarySearchParams, opts ...ClientOption) (*GetGlossarySearchOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewGetGlossarySearchParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "GetGlossarySearch",
 		Method:             "GET",
@@ -316,13 +476,14 @@ func (a *Client) GetGlossarySearch(params *GetGlossarySearchParams, opts ...Clie
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &GetGlossarySearchReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -342,16 +503,36 @@ func (a *Client) GetGlossarySearch(params *GetGlossarySearchParams, opts ...Clie
 	panic(msg)
 }
 
-/*
-PostGlossary creates glossary term
-
-Create a new glossary term with name, definition, and optional metadata
-*/
+// PostGlossary creates glossary term.
+//
+// Create a new glossary term with name, definition, and optional metadata.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PostGlossaryContext] instead.
 func (a *Client) PostGlossary(params *PostGlossaryParams, opts ...ClientOption) (*PostGlossaryCreated, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PostGlossaryContext(ctx, params, opts...)
+}
+
+// PostGlossaryContext creates glossary term.
+//
+// Create a new glossary term with name, definition, and optional metadata.
+//
+// Do not use the deprecated [PostGlossaryParams.Context] with this method: it would be ignored.
+func (a *Client) PostGlossaryContext(ctx context.Context, params *PostGlossaryParams, opts ...ClientOption) (*PostGlossaryCreated, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPostGlossaryParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PostGlossary",
 		Method:             "POST",
@@ -361,13 +542,14 @@ func (a *Client) PostGlossary(params *PostGlossaryParams, opts ...ClientOption) 
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PostGlossaryReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -387,16 +569,36 @@ func (a *Client) PostGlossary(params *PostGlossaryParams, opts ...ClientOption) 
 	panic(msg)
 }
 
-/*
-PutGlossaryID updates glossary term
-
-Update an existing glossary term by its ID
-*/
+// PutGlossaryID updates glossary term.
+//
+// Update an existing glossary term by its ID.
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.PutGlossaryIDContext] instead.
 func (a *Client) PutGlossaryID(params *PutGlossaryIDParams, opts ...ClientOption) (*PutGlossaryIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.PutGlossaryIDContext(ctx, params, opts...)
+}
+
+// PutGlossaryIDContext updates glossary term.
+//
+// Update an existing glossary term by its ID.
+//
+// Do not use the deprecated [PutGlossaryIDParams.Context] with this method: it would be ignored.
+func (a *Client) PutGlossaryIDContext(ctx context.Context, params *PutGlossaryIDParams, opts ...ClientOption) (*PutGlossaryIDOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
 		params = NewPutGlossaryIDParams()
 	}
+
 	op := &runtime.ClientOperation{
 		ID:                 "PutGlossaryID",
 		Method:             "PUT",
@@ -406,13 +608,14 @@ func (a *Client) PutGlossaryID(params *PutGlossaryIDParams, opts ...ClientOption
 		Schemes:            []string{"http"},
 		Params:             params,
 		Reader:             &PutGlossaryIDReader{formats: a.formats},
-		Context:            params.Context,
 		Client:             params.HTTPClient,
 	}
+
 	for _, opt := range opts {
 		opt(op)
 	}
-	result, err := a.transport.Submit(op)
+
+	result, err := a.transport.SubmitContext(ctx, op)
 	if err != nil {
 		return nil, err
 	}
@@ -433,6 +636,14 @@ func (a *Client) PutGlossaryID(params *PutGlossaryIDParams, opts ...ClientOption
 }
 
 // SetTransport changes the transport on the client
-func (a *Client) SetTransport(transport runtime.ClientTransport) {
+func (a *Client) SetTransport(transport runtime.ContextualTransport) {
 	a.transport = transport
+}
+
+// innerParams captures internal fields so they don't conflict with user-supplied parameters.
+type innerParams struct {
+	timeout time.Duration
+
+	// Deprecated: use the operation call with context to pass the context instead of [GlossaryParams].
+	ctx context.Context
 }

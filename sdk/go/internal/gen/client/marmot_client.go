@@ -3,10 +3,11 @@
 package client
 
 import (
+	"maps"
+
 	"github.com/go-openapi/runtime"
 	httptransport "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/admin"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/agents"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/asset_rules"
@@ -20,8 +21,10 @@ import (
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/pipelines"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/plugins"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/products"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/roles"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/runs"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/search"
+	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/service_accounts"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/sso"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/teams"
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/client/ui"
@@ -32,15 +35,13 @@ import (
 var Default = NewHTTPClient(nil)
 
 const (
-	// DefaultHost is the default Host
-	// found in Meta (info) section of spec file
+	// DefaultHost is the default Host found in Meta (info) section of spec file.
 	DefaultHost string = "localhost"
-	// DefaultBasePath is the default BasePath
-	// found in Meta (info) section of spec file
+	// DefaultBasePath is the default BasePath found in Meta (info) section of spec file.
 	DefaultBasePath string = "/api/v1"
 )
 
-// DefaultSchemes are the default schemes found in Meta (info) section of spec file
+// DefaultSchemes are the default schemes found in Meta (info) section of spec file.
 var DefaultSchemes = []string{"http"}
 
 // NewHTTPClient creates a new marmot HTTP client.
@@ -56,13 +57,16 @@ func NewHTTPClientWithConfig(formats strfmt.Registry, cfg *TransportConfig) *Mar
 		cfg = DefaultTransportConfig()
 	}
 
-	// create transport and client
+	// create transport and client.
 	transport := httptransport.New(cfg.Host, cfg.BasePath, cfg.Schemes)
+	maps.Copy(transport.Producers, cfg.Producers)
+	maps.Copy(transport.Consumers, cfg.Consumers)
+
 	return New(transport, formats)
 }
 
-// New creates a new marmot client
-func New(transport runtime.ClientTransport, formats strfmt.Registry) *Marmot {
+// New creates a new marmot client.
+func New(transport runtime.ContextualTransport, formats strfmt.Registry) *Marmot {
 	// ensure nullable parameters have default
 	if formats == nil {
 		formats = strfmt.Default
@@ -83,12 +87,15 @@ func New(transport runtime.ClientTransport, formats strfmt.Registry) *Marmot {
 	cli.Pipelines = pipelines.New(transport, formats)
 	cli.Plugins = plugins.New(transport, formats)
 	cli.Products = products.New(transport, formats)
+	cli.Roles = roles.New(transport, formats)
 	cli.Runs = runs.New(transport, formats)
 	cli.Search = search.New(transport, formats)
+	cli.ServiceAccounts = service_accounts.New(transport, formats)
 	cli.Sso = sso.New(transport, formats)
 	cli.Teams = teams.New(transport, formats)
 	cli.UI = ui.New(transport, formats)
 	cli.Users = users.New(transport, formats)
+
 	return cli
 }
 
@@ -105,9 +112,11 @@ func DefaultTransportConfig() *TransportConfig {
 // TransportConfig contains the transport related info,
 // found in the meta section of the spec file.
 type TransportConfig struct {
-	Host     string
-	BasePath string
-	Schemes  []string
+	Host      string
+	BasePath  string
+	Schemes   []string
+	Producers map[string]runtime.Producer
+	Consumers map[string]runtime.Consumer
 }
 
 // WithHost overrides the default host,
@@ -131,7 +140,19 @@ func (cfg *TransportConfig) WithSchemes(schemes []string) *TransportConfig {
 	return cfg
 }
 
-// Marmot is a client for marmot
+// WithProducers overrides the default producers registered by [httptransport.Runtime].
+func (cfg *TransportConfig) WithProducers(producers map[string]runtime.Producer) *TransportConfig {
+	cfg.Producers = producers
+	return cfg
+}
+
+// WithConsumers overrides the default consumers registered by [httptransport.Runtime].
+func (cfg *TransportConfig) WithConsumers(consumers map[string]runtime.Consumer) *TransportConfig {
+	cfg.Consumers = consumers
+	return cfg
+}
+
+// Marmot is a client for marmot.
 type Marmot struct {
 	Admin admin.ClientService
 
@@ -159,9 +180,13 @@ type Marmot struct {
 
 	Products products.ClientService
 
+	Roles roles.ClientService
+
 	Runs runs.ClientService
 
 	Search search.ClientService
+
+	ServiceAccounts service_accounts.ClientService
 
 	Sso sso.ClientService
 
@@ -171,11 +196,11 @@ type Marmot struct {
 
 	Users users.ClientService
 
-	Transport runtime.ClientTransport
+	Transport runtime.ContextualTransport
 }
 
-// SetTransport changes the transport on the client and all its subresources
-func (c *Marmot) SetTransport(transport runtime.ClientTransport) {
+// SetTransport changes the transport on the client and all its subresources.
+func (c *Marmot) SetTransport(transport runtime.ContextualTransport) {
 	c.Transport = transport
 	c.Admin.SetTransport(transport)
 	c.Agents.SetTransport(transport)
@@ -190,8 +215,10 @@ func (c *Marmot) SetTransport(transport runtime.ClientTransport) {
 	c.Pipelines.SetTransport(transport)
 	c.Plugins.SetTransport(transport)
 	c.Products.SetTransport(transport)
+	c.Roles.SetTransport(transport)
 	c.Runs.SetTransport(transport)
 	c.Search.SetTransport(transport)
+	c.ServiceAccounts.SetTransport(transport)
 	c.Sso.SetTransport(transport)
 	c.Teams.SetTransport(transport)
 	c.UI.SetTransport(transport)

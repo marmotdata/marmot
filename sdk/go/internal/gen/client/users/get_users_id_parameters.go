@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetUsersIDParams() *GetUsersIDParams {
-	return &GetUsersIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetUsersIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetUsersIDParamsWithTimeout creates a new GetUsersIDParams object
 // with the ability to set a timeout on a request.
 func NewGetUsersIDParamsWithTimeout(timeout time.Duration) *GetUsersIDParams {
 	return &GetUsersIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetUsersIDParamsWithContext creates a new GetUsersIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetUsersIDParams].
 func NewGetUsersIDParamsWithContext(ctx context.Context) *GetUsersIDParams {
 	return &GetUsersIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetUsersIDParams contains all the parameters to send to the API endpoint
 */
 type GetUsersIDParams struct {
 
-	/* ID.
-
-	   User ID
-	*/
+	// ID.
+	//
+	// User ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get users ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetUsersIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get users ID params
+// WithTimeout adds the timeout to the get users ID params.
 func (o *GetUsersIDParams) WithTimeout(timeout time.Duration) *GetUsersIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get users ID params
+// SetTimeout adds the timeout to the get users ID params.
 func (o *GetUsersIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get users ID params
+// WithContext adds the context to the get users ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetUsersIDParams].
 func (o *GetUsersIDParams) WithContext(ctx context.Context) *GetUsersIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get users ID params
+// SetContext adds the context to the get users ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetUsersIDParams].
 func (o *GetUsersIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get users ID params
+// WithHTTPClient adds the HTTPClient to the get users ID params.
 func (o *GetUsersIDParams) WithHTTPClient(client *http.Client) *GetUsersIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get users ID params
+// SetHTTPClient adds the HTTPClient to the get users ID params.
 func (o *GetUsersIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get users ID params
+// WithID adds the id to the get users ID params.
 func (o *GetUsersIDParams) WithID(id string) *GetUsersIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get users ID params
+// SetID adds the id to the get users ID params.
 func (o *GetUsersIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetUsersIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

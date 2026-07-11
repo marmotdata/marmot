@@ -2,16 +2,16 @@ import React from "react";
 import { Icon } from "@iconify/react";
 
 const todayItems = [
-  "Schemas pasted into prompts that quietly go stale",
-  "A new MCP server to wire up for every source",
-  "No ownership, meaning or lineage, so the model guesses",
-  "Every team rebuilds the same context plumbing",
+  "Answers live in people's heads, Slack threads and stale wiki pages",
+  "Schemas pasted into prompts that quietly go out of date",
+  "Nothing tells the AI what GMV means or which orders table is the real one, so it guesses",
+  "Every team wires up the same context by hand, separately, over and over",
 ];
 
 const marmotItems = [
-  "One governed context layer across every asset",
-  "One MCP endpoint every agent shares",
-  "Ownership, definitions and lineage built in",
+  "Catalog every service, database, dashboard and pipeline once",
+  "Ownership, definitions and lineage attached to every asset",
+  "One MCP endpoint every assistant shares, from Claude to Copilot",
   "Always live, never a stale copy",
 ];
 
@@ -21,15 +21,16 @@ export default function ContextProblem(): JSX.Element {
       <div className="max-w-5xl mx-auto">
         <div data-animate className="text-center mb-10">
           <p className="text-xs font-bold uppercase tracking-widest text-earthy-terracotta-600 dark:text-earthy-terracotta-400 mb-3">
-            Stop hardcoding context
+            Why a context layer
           </p>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white mb-3 tracking-tight">
-            Why you need a context layer
+            When AI doesn't know, it guesses
           </h2>
           <p className="text-base text-gray-500 dark:text-gray-400 max-w-2xl mx-auto">
-            This is how most agents get data today, and why it doesn't last. A
-            context layer replaces the hand wired map with one that stays
-            current.
+            When someone doesn't know what a column means or where a database
+            lives, they ask a teammate. An agent can't do that. It only knows
+            what it can reach, so the knowledge people carry in their heads
+            needs a place both humans and agents can actually reach.
           </p>
         </div>
 
@@ -101,8 +102,8 @@ export default function ContextProblem(): JSX.Element {
           data-animate-delay="3"
           className="text-center text-base text-gray-500 dark:text-gray-400 mt-9 max-w-2xl mx-auto"
         >
-          You don't move your databases to Marmot. You stop hardcoding the
-          context around them.{" "}
+          You don't move your data into Marmot. You stop hardcoding the
+          context around it.{" "}
           <a
             href="/docs/Agents/"
             className="text-earthy-terracotta-700 dark:text-earthy-terracotta-400 font-semibold hover:underline whitespace-nowrap"

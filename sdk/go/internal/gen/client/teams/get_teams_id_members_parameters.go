@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetTeamsIDMembersParams() *GetTeamsIDMembersParams {
-	return &GetTeamsIDMembersParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetTeamsIDMembersParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetTeamsIDMembersParamsWithTimeout creates a new GetTeamsIDMembersParams object
 // with the ability to set a timeout on a request.
 func NewGetTeamsIDMembersParamsWithTimeout(timeout time.Duration) *GetTeamsIDMembersParams {
 	return &GetTeamsIDMembersParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetTeamsIDMembersParamsWithContext creates a new GetTeamsIDMembersParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetTeamsIDMembersParams].
 func NewGetTeamsIDMembersParamsWithContext(ctx context.Context) *GetTeamsIDMembersParams {
 	return &GetTeamsIDMembersParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetTeamsIDMembersParams contains all the parameters to send to the API endpoint
 */
 type GetTeamsIDMembersParams struct {
 
-	/* ID.
-
-	   Team ID
-	*/
+	// ID.
+	//
+	// Team ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get teams ID members params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetTeamsIDMembersParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get teams ID members params
+// WithTimeout adds the timeout to the get teams ID members params.
 func (o *GetTeamsIDMembersParams) WithTimeout(timeout time.Duration) *GetTeamsIDMembersParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get teams ID members params
+// SetTimeout adds the timeout to the get teams ID members params.
 func (o *GetTeamsIDMembersParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get teams ID members params
+// WithContext adds the context to the get teams ID members params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetTeamsIDMembersParams].
 func (o *GetTeamsIDMembersParams) WithContext(ctx context.Context) *GetTeamsIDMembersParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get teams ID members params
+// SetContext adds the context to the get teams ID members params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetTeamsIDMembersParams].
 func (o *GetTeamsIDMembersParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get teams ID members params
+// WithHTTPClient adds the HTTPClient to the get teams ID members params.
 func (o *GetTeamsIDMembersParams) WithHTTPClient(client *http.Client) *GetTeamsIDMembersParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get teams ID members params
+// SetHTTPClient adds the HTTPClient to the get teams ID members params.
 func (o *GetTeamsIDMembersParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get teams ID members params
+// WithID adds the id to the get teams ID members params.
 func (o *GetTeamsIDMembersParams) WithID(id string) *GetTeamsIDMembersParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get teams ID members params
+// SetID adds the id to the get teams ID members params.
 func (o *GetTeamsIDMembersParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetTeamsIDMembersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

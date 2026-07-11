@@ -115,15 +115,15 @@ The Marmot provider offers these primary resources:
 
 #### `marmot.Asset`
 
-Define data assets in your catalog. Refer to the [Terraform provider documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/asset) for all available configuration options.
+Define data assets in your catalog. Refer to the [Terraform provider documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/asset) for all available configuration options.
 
 #### `marmot.Lineage`
 
-Establish data lineage relationships between assets. Refer to the [Terraform provider documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs/resources/lineage) for all available configuration options.
+Establish data lineage relationships between assets. Refer to the [Terraform provider documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs/resources/lineage) for all available configuration options.
 
 ## Learn More
 
 - [Pulumi Documentation](https://www.pulumi.com/docs/)
 - [Pulumi "Any Terraform Provider" Documentation](https://www.pulumi.com/registry/packages/terraform-provider/)
-- [Marmot Terraform Provider Documentation](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs)
+- [Marmot Terraform Provider Documentation](https://registry.terraform.io/providers/marmotdata/marmot/0.4.0/docs)
 - [Terraform Provider Repository for Marmot](https://github.com/marmotdata/terraform-provider-marmot)

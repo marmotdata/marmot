@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPutTeamsIDMembersUserIDRoleParams() *PutTeamsIDMembersUserIDRoleParams {
-	return &PutTeamsIDMembersUserIDRoleParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPutTeamsIDMembersUserIDRoleParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPutTeamsIDMembersUserIDRoleParamsWithTimeout creates a new PutTeamsIDMembersUserIDRoleParams object
 // with the ability to set a timeout on a request.
 func NewPutTeamsIDMembersUserIDRoleParamsWithTimeout(timeout time.Duration) *PutTeamsIDMembersUserIDRoleParams {
 	return &PutTeamsIDMembersUserIDRoleParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPutTeamsIDMembersUserIDRoleParamsWithContext creates a new PutTeamsIDMembersUserIDRoleParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutTeamsIDMembersUserIDRoleParams].
 func NewPutTeamsIDMembersUserIDRoleParamsWithContext(ctx context.Context) *PutTeamsIDMembersUserIDRoleParams {
 	return &PutTeamsIDMembersUserIDRoleParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,27 +63,24 @@ PutTeamsIDMembersUserIDRoleParams contains all the parameters to send to the API
 */
 type PutTeamsIDMembersUserIDRoleParams struct {
 
-	/* ID.
-
-	   Team ID
-	*/
+	// ID.
+	//
+	// Team ID
 	ID string
 
-	/* Role.
-
-	   Role update request
-	*/
+	// Role.
+	//
+	// Role update request
 	Role *models.UpdateMemberRoleRequest
 
-	/* UserID.
-
-	   User ID
-	*/
+	// UserID.
+	//
+	// User ID
 	UserID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the put teams ID members user ID role params (not the query body).
@@ -98,76 +98,79 @@ func (o *PutTeamsIDMembersUserIDRoleParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the put teams ID members user ID role params
+// WithTimeout adds the timeout to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) WithTimeout(timeout time.Duration) *PutTeamsIDMembersUserIDRoleParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the put teams ID members user ID role params
+// SetTimeout adds the timeout to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the put teams ID members user ID role params
+// WithContext adds the context to the put teams ID members user ID role params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutTeamsIDMembersUserIDRoleParams].
 func (o *PutTeamsIDMembersUserIDRoleParams) WithContext(ctx context.Context) *PutTeamsIDMembersUserIDRoleParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the put teams ID members user ID role params
+// SetContext adds the context to the put teams ID members user ID role params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PutTeamsIDMembersUserIDRoleParams].
 func (o *PutTeamsIDMembersUserIDRoleParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the put teams ID members user ID role params
+// WithHTTPClient adds the HTTPClient to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) WithHTTPClient(client *http.Client) *PutTeamsIDMembersUserIDRoleParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the put teams ID members user ID role params
+// SetHTTPClient adds the HTTPClient to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the put teams ID members user ID role params
+// WithID adds the id to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) WithID(id string) *PutTeamsIDMembersUserIDRoleParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the put teams ID members user ID role params
+// SetID adds the id to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithRole adds the role to the put teams ID members user ID role params
+// WithRole adds the role to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) WithRole(role *models.UpdateMemberRoleRequest) *PutTeamsIDMembersUserIDRoleParams {
 	o.SetRole(role)
 	return o
 }
 
-// SetRole adds the role to the put teams ID members user ID role params
+// SetRole adds the role to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) SetRole(role *models.UpdateMemberRoleRequest) {
 	o.Role = role
 }
 
-// WithUserID adds the userID to the put teams ID members user ID role params
+// WithUserID adds the userID to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) WithUserID(userID string) *PutTeamsIDMembersUserIDRoleParams {
 	o.SetUserID(userID)
 	return o
 }
 
-// SetUserID adds the userId to the put teams ID members user ID role params
+// SetUserID adds the userId to the put teams ID members user ID role params.
 func (o *PutTeamsIDMembersUserIDRoleParams) SetUserID(userID string) {
 	o.UserID = userID
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PutTeamsIDMembersUserIDRoleParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

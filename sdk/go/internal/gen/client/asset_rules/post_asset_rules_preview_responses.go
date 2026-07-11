@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -50,11 +49,9 @@ func NewPostAssetRulesPreviewOK() *PostAssetRulesPreviewOK {
 	return &PostAssetRulesPreviewOK{}
 }
 
-/*
-PostAssetRulesPreviewOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// PostAssetRulesPreviewOK describes a response with status code 200, with default header values.
+//
+// OK
 type PostAssetRulesPreviewOK struct {
 	Payload *models.RulePreview
 }
@@ -120,11 +117,9 @@ func NewPostAssetRulesPreviewBadRequest() *PostAssetRulesPreviewBadRequest {
 	return &PostAssetRulesPreviewBadRequest{}
 }
 
-/*
-PostAssetRulesPreviewBadRequest describes a response with status code 400, with default header values.
-
-Bad Request
-*/
+// PostAssetRulesPreviewBadRequest describes a response with status code 400, with default header values.
+//
+// Bad Request
 type PostAssetRulesPreviewBadRequest struct {
 	Payload *models.ErrorResponse
 }
@@ -190,11 +185,9 @@ func NewPostAssetRulesPreviewInternalServerError() *PostAssetRulesPreviewInterna
 	return &PostAssetRulesPreviewInternalServerError{}
 }
 
-/*
-PostAssetRulesPreviewInternalServerError describes a response with status code 500, with default header values.
-
-Internal Server Error
-*/
+// PostAssetRulesPreviewInternalServerError describes a response with status code 500, with default header values.
+//
+// Internal Server Error
 type PostAssetRulesPreviewInternalServerError struct {
 	Payload *models.ErrorResponse
 }

@@ -1,0 +1,114 @@
+---
+slug: /
+title: "Marmot Resources: Data Catalogs, Governance and AI Context"
+description: "Guides and comparisons on data catalogs, data governance, data quality, AI data engineering and MCP for data. Practical, vendor-neutral resources from the Marmot team."
+keywords:
+  - data catalog resources
+  - data governance guide
+  - data quality
+  - AI data engineering
+  - MCP for data
+image: /img/resources/hero.png
+hide_title: true
+hide_table_of_contents: true
+---
+
+import { ResourceCard, ResourceCardGrid, FeedItem, ResourceFeed, ResourceHero } from '@site/src/components/ResourceCard';
+
+<ResourceHero
+  eyebrow="Marmot Resources"
+  title="Build the context layer your engineers and AI agents need"
+  description="Guides and comparisons on cataloguing, governance, quality and giving AI agents real, governed context over MCP. Written by the team behind Marmot, the open source data catalog built for agents and humans."
+  primaryHref="/resources/data-catalogs-for-ai-agents"
+  primaryText="Compare data catalogs for AI"
+  secondaryHref="/docs/introduction"
+  secondaryText="Get started with Marmot"
+/>
+
+## Browse by topic {#topics}
+
+<ResourceCardGrid>
+  <ResourceCard
+    kind="Topic"
+    title="Data Catalog"
+    description="What a data catalog is, why it matters, and how to choose one in 2026."
+    href="/resources/data-catalog"
+  />
+  <ResourceCard
+    kind="Topic"
+    title="AI Context Layer"
+    description="What an AI context layer is, why agents need one, and how it differs from RAG."
+    href="/resources/ai-context-layer"
+  />
+  <ResourceCard
+    kind="Topic"
+    title="Data Governance"
+    description="Ownership, policies and access control for data and the agents that use it."
+    href="/resources/data-governance"
+  />
+  <ResourceCard
+    kind="Topic"
+    title="Data Quality"
+    description="Trust, freshness and certification, and why agents need it more than humans."
+    href="/resources/data-quality"
+  />
+  <ResourceCard
+    kind="Topic"
+    title="AI Data Engineering"
+    description="Giving LLMs and agents real context about your data landscape."
+    href="/resources/ai-data-engineering"
+  />
+  <ResourceCard
+    kind="Topic"
+    title="MCP for Data"
+    description="The Model Context Protocol, and how catalogs expose context to AI tools."
+    href="/resources/mcp-for-data"
+  />
+</ResourceCardGrid>
+
+## Latest {#latest}
+
+<ResourceFeed>
+  <FeedItem
+    kind="Comparison"
+    title="Data Catalogs as the AI Context Layer: A 2026 Comparison"
+    description="An honest, side-by-side look at how Marmot, OpenMetadata, DataHub, Atlan, Collibra, Secoda, Amundsen and Apache Atlas expose governed context to AI agents over MCP and API."
+    href="/resources/data-catalogs-for-ai-agents"
+    meta="Comparison · 8 tools"
+  />
+  <FeedItem
+    kind="Comparison"
+    title="Marmot vs DataHub"
+    description="Native built-in MCP on a single binary versus DataHub's official MCP server on a Kafka, graph and search stack. Where each one wins, stated plainly."
+    href="/resources/marmot-vs-datahub"
+    meta="Head-to-head"
+  />
+  <FeedItem
+    kind="Comparison"
+    title="Marmot vs OpenMetadata"
+    description="Two open source catalogs with native MCP, compared on footprint and breadth. A single Go binary on Postgres versus the widest connector platform on a search cluster and ingestion framework."
+    href="/resources/marmot-vs-openmetadata"
+    meta="Head-to-head"
+  />
+  <FeedItem
+    kind="Comparison"
+    title="Marmot vs Atlan"
+    description="An open source catalog you self-host as a single Go binary versus Atlan's fully managed enterprise SaaS. Where each wins on MCP, cost, control and compliance."
+    href="/resources/marmot-vs-atlan"
+    meta="Head-to-head"
+  />
+  <FeedItem
+    kind="Guide"
+    title="MCP for Data: Connecting AI Agents to Your Catalog"
+    description="What the Model Context Protocol is, how a catalog exposes context to tools like Claude and Cursor, and when to reach for MCP versus a plain API."
+    href="/resources/mcp-for-data"
+    meta="Guide"
+  />
+  <FeedItem
+    kind="Guide"
+    title="AI Data Engineering: Giving Agents Real Context"
+    description="Why the model is rarely the limit, and what context an agent actually needs, schemas, ownership, lineage and glossary, to stop guessing about your data."
+    href="/resources/ai-data-engineering"
+    meta="Guide"
+  />
+</ResourceFeed>

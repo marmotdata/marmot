@@ -12,6 +12,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/marmotdata/marmot/internal/plugin/install"
 	"github.com/rs/zerolog/log"
 )
 
@@ -23,12 +24,13 @@ const (
 )
 
 type Scheduler struct {
-	service     *ScheduleService
-	runsService Service
-	encryptor   *crypto.Encryptor
-	registry    *plugin.Registry
-	db          *pgxpool.Pool
-	linkAssets  bool
+	service       *ScheduleService
+	runsService   Service
+	encryptor     *crypto.Encryptor
+	registry      *plugin.Registry
+	db            *pgxpool.Pool
+	linkAssets    bool
+	pluginInstall *install.Options
 
 	maxWorkers        int
 	schedulerInterval time.Duration
@@ -51,8 +53,11 @@ type SchedulerConfig struct {
 	SchedulerInterval time.Duration
 	LeaseExpiry       time.Duration
 	ClaimExpiry       time.Duration
-	LinkAssets         bool
+	LinkAssets        bool
 	DB                *pgxpool.Pool
+	// PluginInstall configures installing a core plugin on demand when
+	// a job needs one that is not loaded. Nil disables it.
+	PluginInstall *install.Options
 }
 
 func NewScheduler(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry, config *SchedulerConfig) *Scheduler {
@@ -87,6 +92,7 @@ func NewScheduler(service *ScheduleService, runsService Service, encryptor *cryp
 		registry:          registry,
 		db:                config.DB,
 		linkAssets:        config.LinkAssets,
+		pluginInstall:     config.PluginInstall,
 		maxWorkers:        maxWorkers,
 		schedulerInterval: schedulerInterval,
 		leaseExpiry:       leaseExpiry,
@@ -176,7 +182,7 @@ func (s *Scheduler) jobDispatcher() {
 					s.activeWorkers.Add(-1)
 				}()
 
-				worker := newWorker(s.service, s.runsService, s.encryptor, s.registry, s.linkAssets)
+				worker := newWorker(s.service, s.runsService, s.encryptor, s.registry, s.linkAssets, s.pluginInstall)
 				if err := worker.executeJob(s.ctx, j); err != nil {
 					log.Error().
 						Err(err).
@@ -286,21 +292,38 @@ func (s *Scheduler) leaseCleanupLoop() {
 }
 
 type worker struct {
-	service     *ScheduleService
-	runsService Service
-	encryptor   *crypto.Encryptor
-	registry    *plugin.Registry
-	linkAssets  bool
+	service       *ScheduleService
+	runsService   Service
+	encryptor     *crypto.Encryptor
+	registry      *plugin.Registry
+	linkAssets    bool
+	pluginInstall *install.Options
 }
 
-func newWorker(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry, linkAssets bool) *worker {
+func newWorker(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry, linkAssets bool, pluginInstall *install.Options) *worker {
 	return &worker{
-		service:     service,
-		runsService: runsService,
-		encryptor:   encryptor,
-		registry:    registry,
-		linkAssets:  linkAssets,
+		service:       service,
+		runsService:   runsService,
+		encryptor:     encryptor,
+		registry:      registry,
+		linkAssets:    linkAssets,
+		pluginInstall: pluginInstall,
 	}
+}
+
+// installMissingPlugin recovers a job whose plugin is not in the
+// registry, e.g. because installing core plugins failed at server
+// startup: it installs the plugin, loads plugin binaries from disk,
+// and retries the lookup.
+func (w *worker) installMissingPlugin(ctx context.Context, id string) (plugin.Source, error) {
+	log.Info().Str("plugin", id).Msg("Plugin not loaded, installing")
+
+	path, err := install.EnsurePlugin(ctx, *w.pluginInstall, id)
+	if err != nil {
+		return nil, err
+	}
+	plugin.LoadBinary(path)
+	return w.registry.GetSource(id)
 }
 
 func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
@@ -331,6 +354,9 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 	}
 
 	source, err := w.registry.GetSource(schedule.PluginID)
+	if err != nil && w.pluginInstall != nil {
+		source, err = w.installMissingPlugin(ctx, schedule.PluginID)
+	}
 	if err != nil {
 		errorMsg := fmt.Sprintf("Failed to get plugin source: %v", err)
 		_ = w.service.CompleteJobRun(ctx, run.ID, false, &errorMsg, 0, 0, 0, 0, 0)

@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/runtime"
 	cr "github.com/go-openapi/runtime/client"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -22,24 +21,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostTeamsIDMembersParams() *PostTeamsIDMembersParams {
-	return &PostTeamsIDMembersParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostTeamsIDMembersParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostTeamsIDMembersParamsWithTimeout creates a new PostTeamsIDMembersParams object
 // with the ability to set a timeout on a request.
 func NewPostTeamsIDMembersParamsWithTimeout(timeout time.Duration) *PostTeamsIDMembersParams {
 	return &PostTeamsIDMembersParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostTeamsIDMembersParamsWithContext creates a new PostTeamsIDMembersParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostTeamsIDMembersParams].
 func NewPostTeamsIDMembersParamsWithContext(ctx context.Context) *PostTeamsIDMembersParams {
 	return &PostTeamsIDMembersParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -60,21 +63,19 @@ PostTeamsIDMembersParams contains all the parameters to send to the API endpoint
 */
 type PostTeamsIDMembersParams struct {
 
-	/* ID.
-
-	   Team ID
-	*/
+	// ID.
+	//
+	// Team ID
 	ID string
 
-	/* Member.
-
-	   Member addition request
-	*/
+	// Member.
+	//
+	// Member addition request
 	Member *models.AddMemberRequest
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post teams ID members params (not the query body).
@@ -92,65 +93,68 @@ func (o *PostTeamsIDMembersParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post teams ID members params
+// WithTimeout adds the timeout to the post teams ID members params.
 func (o *PostTeamsIDMembersParams) WithTimeout(timeout time.Duration) *PostTeamsIDMembersParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post teams ID members params
+// SetTimeout adds the timeout to the post teams ID members params.
 func (o *PostTeamsIDMembersParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post teams ID members params
+// WithContext adds the context to the post teams ID members params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostTeamsIDMembersParams].
 func (o *PostTeamsIDMembersParams) WithContext(ctx context.Context) *PostTeamsIDMembersParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post teams ID members params
+// SetContext adds the context to the post teams ID members params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostTeamsIDMembersParams].
 func (o *PostTeamsIDMembersParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post teams ID members params
+// WithHTTPClient adds the HTTPClient to the post teams ID members params.
 func (o *PostTeamsIDMembersParams) WithHTTPClient(client *http.Client) *PostTeamsIDMembersParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post teams ID members params
+// SetHTTPClient adds the HTTPClient to the post teams ID members params.
 func (o *PostTeamsIDMembersParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the post teams ID members params
+// WithID adds the id to the post teams ID members params.
 func (o *PostTeamsIDMembersParams) WithID(id string) *PostTeamsIDMembersParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the post teams ID members params
+// SetID adds the id to the post teams ID members params.
 func (o *PostTeamsIDMembersParams) SetID(id string) {
 	o.ID = id
 }
 
-// WithMember adds the member to the post teams ID members params
+// WithMember adds the member to the post teams ID members params.
 func (o *PostTeamsIDMembersParams) WithMember(member *models.AddMemberRequest) *PostTeamsIDMembersParams {
 	o.SetMember(member)
 	return o
 }
 
-// SetMember adds the member to the post teams ID members params
+// SetMember adds the member to the post teams ID members params.
 func (o *PostTeamsIDMembersParams) SetMember(member *models.AddMemberRequest) {
 	o.Member = member
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostTeamsIDMembersParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

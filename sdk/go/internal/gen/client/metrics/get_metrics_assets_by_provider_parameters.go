@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetMetricsAssetsByProviderParams() *GetMetricsAssetsByProviderParams {
-	return &GetMetricsAssetsByProviderParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetMetricsAssetsByProviderParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetMetricsAssetsByProviderParamsWithTimeout creates a new GetMetricsAssetsByProviderParams object
 // with the ability to set a timeout on a request.
 func NewGetMetricsAssetsByProviderParamsWithTimeout(timeout time.Duration) *GetMetricsAssetsByProviderParams {
 	return &GetMetricsAssetsByProviderParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetMetricsAssetsByProviderParamsWithContext creates a new GetMetricsAssetsByProviderParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsAssetsByProviderParams].
 func NewGetMetricsAssetsByProviderParamsWithContext(ctx context.Context) *GetMetricsAssetsByProviderParams {
 	return &GetMetricsAssetsByProviderParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -57,9 +61,9 @@ GetMetricsAssetsByProviderParams contains all the parameters to send to the API 
 	Typically these are written to a http.Request.
 */
 type GetMetricsAssetsByProviderParams struct {
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get metrics assets by provider params (not the query body).
@@ -77,43 +81,46 @@ func (o *GetMetricsAssetsByProviderParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get metrics assets by provider params
+// WithTimeout adds the timeout to the get metrics assets by provider params.
 func (o *GetMetricsAssetsByProviderParams) WithTimeout(timeout time.Duration) *GetMetricsAssetsByProviderParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get metrics assets by provider params
+// SetTimeout adds the timeout to the get metrics assets by provider params.
 func (o *GetMetricsAssetsByProviderParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get metrics assets by provider params
+// WithContext adds the context to the get metrics assets by provider params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsAssetsByProviderParams].
 func (o *GetMetricsAssetsByProviderParams) WithContext(ctx context.Context) *GetMetricsAssetsByProviderParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get metrics assets by provider params
+// SetContext adds the context to the get metrics assets by provider params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetMetricsAssetsByProviderParams].
 func (o *GetMetricsAssetsByProviderParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get metrics assets by provider params
+// WithHTTPClient adds the HTTPClient to the get metrics assets by provider params.
 func (o *GetMetricsAssetsByProviderParams) WithHTTPClient(client *http.Client) *GetMetricsAssetsByProviderParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get metrics assets by provider params
+// SetHTTPClient adds the HTTPClient to the get metrics assets by provider params.
 func (o *GetMetricsAssetsByProviderParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetMetricsAssetsByProviderParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

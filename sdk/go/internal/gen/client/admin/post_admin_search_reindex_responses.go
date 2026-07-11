@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -62,11 +61,9 @@ func NewPostAdminSearchReindexAccepted() *PostAdminSearchReindexAccepted {
 	return &PostAdminSearchReindexAccepted{}
 }
 
-/*
-PostAdminSearchReindexAccepted describes a response with status code 202, with default header values.
-
-Accepted
-*/
+// PostAdminSearchReindexAccepted describes a response with status code 202, with default header values.
+//
+// Accepted
 type PostAdminSearchReindexAccepted struct {
 	Payload *models.ReindexAcceptedResponse
 }
@@ -132,11 +129,9 @@ func NewPostAdminSearchReindexUnauthorized() *PostAdminSearchReindexUnauthorized
 	return &PostAdminSearchReindexUnauthorized{}
 }
 
-/*
-PostAdminSearchReindexUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// PostAdminSearchReindexUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type PostAdminSearchReindexUnauthorized struct {
 	Payload *models.ErrorResponse
 }
@@ -202,11 +197,9 @@ func NewPostAdminSearchReindexForbidden() *PostAdminSearchReindexForbidden {
 	return &PostAdminSearchReindexForbidden{}
 }
 
-/*
-PostAdminSearchReindexForbidden describes a response with status code 403, with default header values.
-
-Forbidden
-*/
+// PostAdminSearchReindexForbidden describes a response with status code 403, with default header values.
+//
+// Forbidden
 type PostAdminSearchReindexForbidden struct {
 	Payload *models.ErrorResponse
 }
@@ -272,11 +265,9 @@ func NewPostAdminSearchReindexConflict() *PostAdminSearchReindexConflict {
 	return &PostAdminSearchReindexConflict{}
 }
 
-/*
-PostAdminSearchReindexConflict describes a response with status code 409, with default header values.
-
-Conflict
-*/
+// PostAdminSearchReindexConflict describes a response with status code 409, with default header values.
+//
+// Conflict
 type PostAdminSearchReindexConflict struct {
 	Payload *models.ErrorResponse
 }
@@ -342,11 +333,9 @@ func NewPostAdminSearchReindexServiceUnavailable() *PostAdminSearchReindexServic
 	return &PostAdminSearchReindexServiceUnavailable{}
 }
 
-/*
-PostAdminSearchReindexServiceUnavailable describes a response with status code 503, with default header values.
-
-Service Unavailable
-*/
+// PostAdminSearchReindexServiceUnavailable describes a response with status code 503, with default header values.
+//
+// Service Unavailable
 type PostAdminSearchReindexServiceUnavailable struct {
 	Payload *models.ErrorResponse
 }

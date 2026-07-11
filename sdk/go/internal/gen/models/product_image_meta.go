@@ -8,7 +8,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // ProductImageMeta product image meta
@@ -56,7 +57,7 @@ func (m *ProductImageMeta) Validate(formats strfmt.Registry) error {
 }
 
 func (m *ProductImageMeta) validatePurpose(formats strfmt.Registry) error {
-	if swag.IsZero(m.Purpose) { // not required
+	if typeutils.IsZero(m.Purpose) { // not required
 		return nil
 	}
 
@@ -92,7 +93,7 @@ func (m *ProductImageMeta) ContextValidate(ctx context.Context, formats strfmt.R
 
 func (m *ProductImageMeta) contextValidatePurpose(ctx context.Context, formats strfmt.Registry) error {
 
-	if swag.IsZero(m.Purpose) { // not required
+	if typeutils.IsZero(m.Purpose) { // not required
 		return nil
 	}
 
@@ -117,13 +118,13 @@ func (m *ProductImageMeta) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *ProductImageMeta) UnmarshalBinary(b []byte) error {
 	var res ProductImageMeta
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res

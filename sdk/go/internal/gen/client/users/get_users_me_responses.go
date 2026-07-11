@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
-
 	"github.com/marmotdata/marmot/sdk/go/internal/gen/models"
 )
 
@@ -44,11 +43,9 @@ func NewGetUsersMeOK() *GetUsersMeOK {
 	return &GetUsersMeOK{}
 }
 
-/*
-GetUsersMeOK describes a response with status code 200, with default header values.
-
-OK
-*/
+// GetUsersMeOK describes a response with status code 200, with default header values.
+//
+// OK
 type GetUsersMeOK struct {
 	Payload *models.User
 }
@@ -114,11 +111,9 @@ func NewGetUsersMeUnauthorized() *GetUsersMeUnauthorized {
 	return &GetUsersMeUnauthorized{}
 }
 
-/*
-GetUsersMeUnauthorized describes a response with status code 401, with default header values.
-
-Unauthorized
-*/
+// GetUsersMeUnauthorized describes a response with status code 401, with default header values.
+//
+// Unauthorized
 type GetUsersMeUnauthorized struct {
 	Payload *models.ErrorResponse
 }

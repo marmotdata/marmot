@@ -6,14 +6,14 @@ Marmot isn't limited to plugin-based ingestion. You can also use:
 
 ### Infrastructure as Code
 
-- [Terraform Provider](/docs/populating/terraform) - Manage Marmot assets as Terraform resources
-- [Pulumi Package](/docs/populating/pulumi) - Integrate Marmot with Pulumi infrastructure definitions
+- [Terraform Provider](/docs/Populating/Terraform) - Manage Marmot assets as Terraform resources
+- [Pulumi Package](/docs/Populating/Pulumi) - Integrate Marmot with Pulumi infrastructure definitions
 
 These approaches enable version-controlled asset definitions and integration with existing infrastructure workflows.
 
 ### API
 
-The [Marmot API](/docs/populating/api) lets you programmatically create, update, and manage assets.
+The [Marmot API](/docs/Populating/API) lets you programmatically create, update, and manage assets.
 
 ## Available Plugins
 

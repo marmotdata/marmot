@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsQualifiedNameQualifiedNameParams() *GetAssetsQualifiedNameQualifiedNameParams {
-	return &GetAssetsQualifiedNameQualifiedNameParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsQualifiedNameQualifiedNameParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsQualifiedNameQualifiedNameParamsWithTimeout creates a new GetAssetsQualifiedNameQualifiedNameParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsQualifiedNameQualifiedNameParamsWithTimeout(timeout time.Duration) *GetAssetsQualifiedNameQualifiedNameParams {
 	return &GetAssetsQualifiedNameQualifiedNameParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsQualifiedNameQualifiedNameParamsWithContext creates a new GetAssetsQualifiedNameQualifiedNameParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsQualifiedNameQualifiedNameParams].
 func NewGetAssetsQualifiedNameQualifiedNameParamsWithContext(ctx context.Context) *GetAssetsQualifiedNameQualifiedNameParams {
 	return &GetAssetsQualifiedNameQualifiedNameParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetAssetsQualifiedNameQualifiedNameParams contains all the parameters to send to
 */
 type GetAssetsQualifiedNameQualifiedNameParams struct {
 
-	/* QualifiedName.
-
-	   Asset qualified name
-	*/
+	// QualifiedName.
+	//
+	// Asset qualified name
 	QualifiedName string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets qualified name qualified name params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetAssetsQualifiedNameQualifiedNameParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get assets qualified name qualified name params
+// WithTimeout adds the timeout to the get assets qualified name qualified name params.
 func (o *GetAssetsQualifiedNameQualifiedNameParams) WithTimeout(timeout time.Duration) *GetAssetsQualifiedNameQualifiedNameParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets qualified name qualified name params
+// SetTimeout adds the timeout to the get assets qualified name qualified name params.
 func (o *GetAssetsQualifiedNameQualifiedNameParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets qualified name qualified name params
+// WithContext adds the context to the get assets qualified name qualified name params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsQualifiedNameQualifiedNameParams].
 func (o *GetAssetsQualifiedNameQualifiedNameParams) WithContext(ctx context.Context) *GetAssetsQualifiedNameQualifiedNameParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets qualified name qualified name params
+// SetContext adds the context to the get assets qualified name qualified name params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsQualifiedNameQualifiedNameParams].
 func (o *GetAssetsQualifiedNameQualifiedNameParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets qualified name qualified name params
+// WithHTTPClient adds the HTTPClient to the get assets qualified name qualified name params.
 func (o *GetAssetsQualifiedNameQualifiedNameParams) WithHTTPClient(client *http.Client) *GetAssetsQualifiedNameQualifiedNameParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets qualified name qualified name params
+// SetHTTPClient adds the HTTPClient to the get assets qualified name qualified name params.
 func (o *GetAssetsQualifiedNameQualifiedNameParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithQualifiedName adds the qualifiedName to the get assets qualified name qualified name params
+// WithQualifiedName adds the qualifiedName to the get assets qualified name qualified name params.
 func (o *GetAssetsQualifiedNameQualifiedNameParams) WithQualifiedName(qualifiedName string) *GetAssetsQualifiedNameQualifiedNameParams {
 	o.SetQualifiedName(qualifiedName)
 	return o
 }
 
-// SetQualifiedName adds the qualifiedName to the get assets qualified name qualified name params
+// SetQualifiedName adds the qualifiedName to the get assets qualified name qualified name params.
 func (o *GetAssetsQualifiedNameQualifiedNameParams) SetQualifiedName(qualifiedName string) {
 	o.QualifiedName = qualifiedName
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsQualifiedNameQualifiedNameParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

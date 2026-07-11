@@ -1,4 +1,4 @@
-.PHONY: swagger build run test clean dev release docker-build dev-deps generate generate-operator lint server-lint frontend-build actionlint frontend-lint frontend-typecheck fix \
+.PHONY: swagger build run test clean dev release docker-build dev-deps generate-operator lint server-lint frontend-build actionlint frontend-lint frontend-typecheck fix \
 	sdk sdk-generate sdk-test sdk-build sdk-lint sdk-clean \
 	sdk-go sdk-go-generate sdk-go-lint sdk-go-test sdk-go-build sdk-go-clean \
 	sdk-py sdk-py-deps sdk-py-install sdk-py-generate sdk-py-lint sdk-py-test sdk-py-build sdk-py-clean \
@@ -15,18 +15,20 @@ swagger:
 	rm -f $(SDK_OPENAPI3)
 
 build:
-	go build -o bin/$(BINARY_NAME) cmd/main.go
+	go build -ldflags '-s -w' -o bin/$(BINARY_NAME) cmd/main.go
 
-dev: swagger build
+dev: swagger
+	go build -ldflags '-s -w' -tags=swagger -o bin/$(BINARY_NAME) cmd/main.go
 	MARMOT_LOGGING_LEVEL=debug MARMOT_SERVER_ALLOW_UNENCRYPTED=true MARMOT_TELEMETRY_ENABLED=false ./bin/$(BINARY_NAME) run
 
 frontend-build:
 	cd web/marmot && pnpm install && node scripts/generate-icon-bundle.mjs && pnpm build
+	rm -rf internal/staticfiles/build
 	mkdir -p internal/staticfiles/build
 	cp -r web/marmot/build/* internal/staticfiles/build/
 
 release: clean swagger frontend-build
-	go build -tags=production -ldflags '$(LDFLAGS_VERSION)' -o bin/$(BINARY_NAME) cmd/main.go
+	go build -tags=production -ldflags '-s -w $(LDFLAGS_VERSION)' -o bin/$(BINARY_NAME) cmd/main.go
 	rm -rf internal/staticfiles/build
 
 test:
@@ -38,11 +40,6 @@ e2e-test: build test sdk-go-generate
 clean:
 	rm -rf bin/ internal/static/build/
 	go clean
-
-generate:
-	# Cleanup old docs before generating (top-level files only, preserves subdirectories)
-	find web/docs/docs/Plugins -maxdepth 1 -type f ! -name "index.md" ! -name "_category_.json" -delete
-	go generate ./...
 
 CONTROLLER_GEN ?= $$(go env GOPATH)/bin/controller-gen
 

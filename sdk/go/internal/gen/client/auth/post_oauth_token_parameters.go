@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewPostOauthTokenParams() *PostOauthTokenParams {
-	return &PostOauthTokenParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewPostOauthTokenParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewPostOauthTokenParamsWithTimeout creates a new PostOauthTokenParams object
 // with the ability to set a timeout on a request.
 func NewPostOauthTokenParamsWithTimeout(timeout time.Duration) *PostOauthTokenParams {
 	return &PostOauthTokenParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewPostOauthTokenParamsWithContext creates a new PostOauthTokenParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostOauthTokenParams].
 func NewPostOauthTokenParamsWithContext(ctx context.Context) *PostOauthTokenParams {
 	return &PostOauthTokenParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,27 +62,24 @@ PostOauthTokenParams contains all the parameters to send to the API endpoint
 */
 type PostOauthTokenParams struct {
 
-	/* GrantType.
-
-	   authorization_code or urn:ietf:params:oauth:grant-type:token-exchange
-	*/
+	// GrantType.
+	//
+	// authorization_code or urn:ietf:params:oauth:grant-type:token-exchange
 	GrantType string
 
-	/* SubjectToken.
-
-	   Token to exchange (token-exchange grant only)
-	*/
+	// SubjectToken.
+	//
+	// Token to exchange (token-exchange grant only)
 	SubjectToken *string
 
-	/* SubjectTokenType.
-
-	   id_token or access_token URI (token-exchange grant only)
-	*/
+	// SubjectTokenType.
+	//
+	// id_token or access_token URI (token-exchange grant only)
 	SubjectTokenType *string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the post oauth token params (not the query body).
@@ -96,76 +97,79 @@ func (o *PostOauthTokenParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the post oauth token params
+// WithTimeout adds the timeout to the post oauth token params.
 func (o *PostOauthTokenParams) WithTimeout(timeout time.Duration) *PostOauthTokenParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the post oauth token params
+// SetTimeout adds the timeout to the post oauth token params.
 func (o *PostOauthTokenParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the post oauth token params
+// WithContext adds the context to the post oauth token params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostOauthTokenParams].
 func (o *PostOauthTokenParams) WithContext(ctx context.Context) *PostOauthTokenParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the post oauth token params
+// SetContext adds the context to the post oauth token params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [PostOauthTokenParams].
 func (o *PostOauthTokenParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the post oauth token params
+// WithHTTPClient adds the HTTPClient to the post oauth token params.
 func (o *PostOauthTokenParams) WithHTTPClient(client *http.Client) *PostOauthTokenParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the post oauth token params
+// SetHTTPClient adds the HTTPClient to the post oauth token params.
 func (o *PostOauthTokenParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithGrantType adds the grantType to the post oauth token params
+// WithGrantType adds the grantType to the post oauth token params.
 func (o *PostOauthTokenParams) WithGrantType(grantType string) *PostOauthTokenParams {
 	o.SetGrantType(grantType)
 	return o
 }
 
-// SetGrantType adds the grantType to the post oauth token params
+// SetGrantType adds the grantType to the post oauth token params.
 func (o *PostOauthTokenParams) SetGrantType(grantType string) {
 	o.GrantType = grantType
 }
 
-// WithSubjectToken adds the subjectToken to the post oauth token params
+// WithSubjectToken adds the subjectToken to the post oauth token params.
 func (o *PostOauthTokenParams) WithSubjectToken(subjectToken *string) *PostOauthTokenParams {
 	o.SetSubjectToken(subjectToken)
 	return o
 }
 
-// SetSubjectToken adds the subjectToken to the post oauth token params
+// SetSubjectToken adds the subjectToken to the post oauth token params.
 func (o *PostOauthTokenParams) SetSubjectToken(subjectToken *string) {
 	o.SubjectToken = subjectToken
 }
 
-// WithSubjectTokenType adds the subjectTokenType to the post oauth token params
+// WithSubjectTokenType adds the subjectTokenType to the post oauth token params.
 func (o *PostOauthTokenParams) WithSubjectTokenType(subjectTokenType *string) *PostOauthTokenParams {
 	o.SetSubjectTokenType(subjectTokenType)
 	return o
 }
 
-// SetSubjectTokenType adds the subjectTokenType to the post oauth token params
+// SetSubjectTokenType adds the subjectTokenType to the post oauth token params.
 func (o *PostOauthTokenParams) SetSubjectTokenType(subjectTokenType *string) {
 	o.SubjectTokenType = subjectTokenType
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *PostOauthTokenParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

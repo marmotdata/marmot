@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewDeleteUsersApikeysIDParams() *DeleteUsersApikeysIDParams {
-	return &DeleteUsersApikeysIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewDeleteUsersApikeysIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewDeleteUsersApikeysIDParamsWithTimeout creates a new DeleteUsersApikeysIDParams object
 // with the ability to set a timeout on a request.
 func NewDeleteUsersApikeysIDParamsWithTimeout(timeout time.Duration) *DeleteUsersApikeysIDParams {
 	return &DeleteUsersApikeysIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewDeleteUsersApikeysIDParamsWithContext creates a new DeleteUsersApikeysIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteUsersApikeysIDParams].
 func NewDeleteUsersApikeysIDParamsWithContext(ctx context.Context) *DeleteUsersApikeysIDParams {
 	return &DeleteUsersApikeysIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ DeleteUsersApikeysIDParams contains all the parameters to send to the API endpoi
 */
 type DeleteUsersApikeysIDParams struct {
 
-	/* ID.
-
-	   API key ID
-	*/
+	// ID.
+	//
+	// API key ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the delete users apikeys ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *DeleteUsersApikeysIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the delete users apikeys ID params
+// WithTimeout adds the timeout to the delete users apikeys ID params.
 func (o *DeleteUsersApikeysIDParams) WithTimeout(timeout time.Duration) *DeleteUsersApikeysIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the delete users apikeys ID params
+// SetTimeout adds the timeout to the delete users apikeys ID params.
 func (o *DeleteUsersApikeysIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the delete users apikeys ID params
+// WithContext adds the context to the delete users apikeys ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteUsersApikeysIDParams].
 func (o *DeleteUsersApikeysIDParams) WithContext(ctx context.Context) *DeleteUsersApikeysIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the delete users apikeys ID params
+// SetContext adds the context to the delete users apikeys ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [DeleteUsersApikeysIDParams].
 func (o *DeleteUsersApikeysIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the delete users apikeys ID params
+// WithHTTPClient adds the HTTPClient to the delete users apikeys ID params.
 func (o *DeleteUsersApikeysIDParams) WithHTTPClient(client *http.Client) *DeleteUsersApikeysIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the delete users apikeys ID params
+// SetHTTPClient adds the HTTPClient to the delete users apikeys ID params.
 func (o *DeleteUsersApikeysIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the delete users apikeys ID params
+// WithID adds the id to the delete users apikeys ID params.
 func (o *DeleteUsersApikeysIDParams) WithID(id string) *DeleteUsersApikeysIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the delete users apikeys ID params
+// SetID adds the id to the delete users apikeys ID params.
 func (o *DeleteUsersApikeysIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *DeleteUsersApikeysIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

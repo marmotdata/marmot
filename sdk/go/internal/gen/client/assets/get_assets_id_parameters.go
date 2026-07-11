@@ -20,24 +20,28 @@ import (
 //
 // To enforce default values in parameter, use SetDefaults or WithDefaults.
 func NewGetAssetsIDParams() *GetAssetsIDParams {
-	return &GetAssetsIDParams{
-		timeout: cr.DefaultTimeout,
-	}
+	return NewGetAssetsIDParamsWithTimeout(cr.DefaultTimeout)
 }
 
 // NewGetAssetsIDParamsWithTimeout creates a new GetAssetsIDParams object
 // with the ability to set a timeout on a request.
 func NewGetAssetsIDParamsWithTimeout(timeout time.Duration) *GetAssetsIDParams {
 	return &GetAssetsIDParams{
-		timeout: timeout,
+		inner: innerParams{
+			timeout: timeout,
+		},
 	}
 }
 
 // NewGetAssetsIDParamsWithContext creates a new GetAssetsIDParams object
 // with the ability to set a context for a request.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsIDParams].
 func NewGetAssetsIDParamsWithContext(ctx context.Context) *GetAssetsIDParams {
 	return &GetAssetsIDParams{
-		Context: ctx,
+		inner: innerParams{
+			ctx: ctx,
+		},
 	}
 }
 
@@ -58,15 +62,14 @@ GetAssetsIDParams contains all the parameters to send to the API endpoint
 */
 type GetAssetsIDParams struct {
 
-	/* ID.
-
-	   Asset ID
-	*/
+	// ID.
+	//
+	// Asset ID
 	ID string
 
-	timeout    time.Duration
-	Context    context.Context
 	HTTPClient *http.Client
+
+	inner innerParams
 }
 
 // WithDefaults hydrates default values in the get assets ID params (not the query body).
@@ -84,54 +87,57 @@ func (o *GetAssetsIDParams) SetDefaults() {
 	// no default values defined for this parameter
 }
 
-// WithTimeout adds the timeout to the get assets ID params
+// WithTimeout adds the timeout to the get assets ID params.
 func (o *GetAssetsIDParams) WithTimeout(timeout time.Duration) *GetAssetsIDParams {
 	o.SetTimeout(timeout)
 	return o
 }
 
-// SetTimeout adds the timeout to the get assets ID params
+// SetTimeout adds the timeout to the get assets ID params.
 func (o *GetAssetsIDParams) SetTimeout(timeout time.Duration) {
-	o.timeout = timeout
+	o.inner.timeout = timeout
 }
 
-// WithContext adds the context to the get assets ID params
+// WithContext adds the context to the get assets ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsIDParams].
 func (o *GetAssetsIDParams) WithContext(ctx context.Context) *GetAssetsIDParams {
 	o.SetContext(ctx)
 	return o
 }
 
-// SetContext adds the context to the get assets ID params
+// SetContext adds the context to the get assets ID params.
+//
+// Deprecated: use the operation call with context to pass the context instead of [GetAssetsIDParams].
 func (o *GetAssetsIDParams) SetContext(ctx context.Context) {
-	o.Context = ctx
+	o.inner.ctx = ctx
 }
 
-// WithHTTPClient adds the HTTPClient to the get assets ID params
+// WithHTTPClient adds the HTTPClient to the get assets ID params.
 func (o *GetAssetsIDParams) WithHTTPClient(client *http.Client) *GetAssetsIDParams {
 	o.SetHTTPClient(client)
 	return o
 }
 
-// SetHTTPClient adds the HTTPClient to the get assets ID params
+// SetHTTPClient adds the HTTPClient to the get assets ID params.
 func (o *GetAssetsIDParams) SetHTTPClient(client *http.Client) {
 	o.HTTPClient = client
 }
 
-// WithID adds the id to the get assets ID params
+// WithID adds the id to the get assets ID params.
 func (o *GetAssetsIDParams) WithID(id string) *GetAssetsIDParams {
 	o.SetID(id)
 	return o
 }
 
-// SetID adds the id to the get assets ID params
+// SetID adds the id to the get assets ID params.
 func (o *GetAssetsIDParams) SetID(id string) {
 	o.ID = id
 }
 
-// WriteToRequest writes these params to a swagger request
+// WriteToRequest writes these params to a [runtime.ClientRequest].
 func (o *GetAssetsIDParams) WriteToRequest(r runtime.ClientRequest, reg strfmt.Registry) error {
-
-	if err := r.SetTimeout(o.timeout); err != nil {
+	if err := r.SetTimeout(o.inner.timeout); err != nil {
 		return err
 	}
 	var res []error

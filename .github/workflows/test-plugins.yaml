@@ -1,0 +1,45 @@
+name: Test Plugins
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "plugins/**"
+      - ".github/workflows/test-plugins.yaml"
+  pull_request:
+    paths:
+      - "plugins/**"
+      - ".github/workflows/test-plugins.yaml"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      fail-fast: false
+      matrix:
+        plugin: [kafka, confluent, redpanda, airflow, duckdb, asyncapi, dbt, azureblob, bigquery, clickhouse, deltalake, dynamodb, elasticsearch, gcs, glue, iceberg, lambda, mongodb, mysql, nats, openapi, opensearch, postgresql, redis, s3, sns, sqs, trino]
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: plugins/${{ matrix.plugin }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: plugins/${{ matrix.plugin }}/go.mod
+          cache: true
+          cache-dependency-path: plugins/${{ matrix.plugin }}/go.sum
+
+      - name: Build
+        run: go build ./...
+
+      - name: Test
+        run: go test ./...
+
+      - name: Vet
+        run: go vet ./...

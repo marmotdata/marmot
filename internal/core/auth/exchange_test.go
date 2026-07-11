@@ -103,6 +103,7 @@ func (tj *testJWKS) verifier(t *testing.T) *oidc.IDTokenVerifier {
 }
 
 type mockUserService struct {
+	getFn                 func(ctx context.Context, id string) (*user.User, error)
 	getUserByProviderIDFn func(ctx context.Context, provider, providerUserID string) (*user.User, error)
 	createFn              func(ctx context.Context, input user.CreateUserInput) (*user.User, error)
 	updateFn              func(ctx context.Context, id string, input user.UpdateUserInput) (*user.User, error)
@@ -122,7 +123,12 @@ func (m *mockUserService) Update(ctx context.Context, id string, input user.Upda
 }
 
 func (m *mockUserService) Delete(_ context.Context, _, _ string) error                           { return nil }
-func (m *mockUserService) Get(_ context.Context, _ string) (*user.User, error)                   { return nil, nil }
+func (m *mockUserService) Get(ctx context.Context, id string) (*user.User, error) {
+	if m.getFn != nil {
+		return m.getFn(ctx, id)
+	}
+	return nil, nil
+}
 func (m *mockUserService) GetUserByUsername(_ context.Context, _ string) (*user.User, error)      { return nil, nil }
 func (m *mockUserService) FindSimilarUsernames(_ context.Context, _ string, _ int) ([]string, error) { return nil, nil }
 func (m *mockUserService) List(_ context.Context, _ user.Filter) ([]*user.User, int, error)      { return nil, 0, nil }

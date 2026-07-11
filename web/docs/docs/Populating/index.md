@@ -45,6 +45,12 @@ import { CalloutCard, DocCard, DocCardGrid } from '@site/src/components/DocCard'
     docId="Populating/API"
     icon="mdi:api"
   />
+  <DocCard
+    title="Kubernetes Operator"
+    description="Ingest assets on a schedule with declarative Kubernetes resources"
+    docId="Populating/Operator"
+    icon="mdi:kubernetes"
+  />
 </DocCardGrid>
 
 <CalloutCard

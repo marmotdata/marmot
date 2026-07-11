@@ -9,7 +9,8 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
+	"github.com/go-openapi/swag/jsonutils"
+	"github.com/go-openapi/swag/typeutils"
 )
 
 // BatchCreateResponse batch create response
@@ -53,12 +54,12 @@ func (m *BatchCreateResponse) Validate(formats strfmt.Registry) error {
 }
 
 func (m *BatchCreateResponse) validateAssets(formats strfmt.Registry) error {
-	if swag.IsZero(m.Assets) { // not required
+	if typeutils.IsZero(m.Assets) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Assets); i++ {
-		if swag.IsZero(m.Assets[i]) { // not required
+		if typeutils.IsZero(m.Assets[i]) { // not required
 			continue
 		}
 
@@ -83,12 +84,12 @@ func (m *BatchCreateResponse) validateAssets(formats strfmt.Registry) error {
 }
 
 func (m *BatchCreateResponse) validateDocumentation(formats strfmt.Registry) error {
-	if swag.IsZero(m.Documentation) { // not required
+	if typeutils.IsZero(m.Documentation) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Documentation); i++ {
-		if swag.IsZero(m.Documentation[i]) { // not required
+		if typeutils.IsZero(m.Documentation[i]) { // not required
 			continue
 		}
 
@@ -113,12 +114,12 @@ func (m *BatchCreateResponse) validateDocumentation(formats strfmt.Registry) err
 }
 
 func (m *BatchCreateResponse) validateLineage(formats strfmt.Registry) error {
-	if swag.IsZero(m.Lineage) { // not required
+	if typeutils.IsZero(m.Lineage) { // not required
 		return nil
 	}
 
 	for i := 0; i < len(m.Lineage); i++ {
-		if swag.IsZero(m.Lineage[i]) { // not required
+		if typeutils.IsZero(m.Lineage[i]) { // not required
 			continue
 		}
 
@@ -170,7 +171,7 @@ func (m *BatchCreateResponse) contextValidateAssets(ctx context.Context, formats
 
 		if m.Assets[i] != nil {
 
-			if swag.IsZero(m.Assets[i]) { // not required
+			if typeutils.IsZero(m.Assets[i]) { // not required
 				return nil
 			}
 
@@ -199,7 +200,7 @@ func (m *BatchCreateResponse) contextValidateDocumentation(ctx context.Context, 
 
 		if m.Documentation[i] != nil {
 
-			if swag.IsZero(m.Documentation[i]) { // not required
+			if typeutils.IsZero(m.Documentation[i]) { // not required
 				return nil
 			}
 
@@ -228,7 +229,7 @@ func (m *BatchCreateResponse) contextValidateLineage(ctx context.Context, format
 
 		if m.Lineage[i] != nil {
 
-			if swag.IsZero(m.Lineage[i]) { // not required
+			if typeutils.IsZero(m.Lineage[i]) { // not required
 				return nil
 			}
 
@@ -256,13 +257,13 @@ func (m *BatchCreateResponse) MarshalBinary() ([]byte, error) {
 	if m == nil {
 		return nil, nil
 	}
-	return swag.WriteJSON(m)
+	return jsonutils.WriteJSON(m)
 }
 
 // UnmarshalBinary interface implementation
 func (m *BatchCreateResponse) UnmarshalBinary(b []byte) error {
 	var res BatchCreateResponse
-	if err := swag.ReadJSON(b, &res); err != nil {
+	if err := jsonutils.ReadJSON(b, &res); err != nil {
 		return err
 	}
 	*m = res
