@@ -102,10 +102,6 @@
 		return '';
 	}
 
-	function toggleDetails(key: string) {
-		expandedDetails[key] = !expandedDetails[key];
-	}
-
 	async function saveMetadata(updatedMetadata: Record<string, unknown>) {
 		const entityId = id || asset?.id;
 		const apiEndpoint = endpoint || (asset ? '/assets' : null);
@@ -374,13 +370,13 @@
 												</div>
 											</div>
 										{:else if isObject(value)}
-											<details class="group/details">
+											<details
+												class="group/details"
+												open={expandedDetails[key]}
+												ontoggle={(e) => (expandedDetails[key] = e.currentTarget.open)}
+											>
 												<summary
 													class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center text-sm"
-													onclick={(e) => {
-														e.preventDefault();
-														toggleDetails(key);
-													}}
 												>
 													<Arrow expanded={expandedDetails[key]} />
 													<span class="ml-1">View object</span>
