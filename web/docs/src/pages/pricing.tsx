@@ -163,6 +163,7 @@ function WaitlistForm() {
         <input
           type="email"
           required
+          autoFocus
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@company.com"
@@ -171,7 +172,7 @@ function WaitlistForm() {
         <button
           type="submit"
           disabled={status === "loading"}
-          className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold rounded-lg text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 disabled:opacity-60 transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap"
+          className="inline-flex items-center justify-center px-5 py-2 text-sm font-semibold rounded-lg border-none cursor-pointer text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 disabled:opacity-60 transition-all duration-200 hover:-translate-y-0.5 whitespace-nowrap"
         >
           {status === "loading" ? "Joining…" : "Join Waitlist"}
         </button>
@@ -202,112 +203,80 @@ function WaitlistForm() {
   );
 }
 
-function ContactForm() {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [message, setMessage] = useState("");
-  const [status, setStatus] = useState<
-    "idle" | "loading" | "success" | "error"
-  >("idle");
-  const [errorMsg, setErrorMsg] = useState("");
-  const [challenged, setChallenged] = useState(false);
-  const formDataRef = useRef({ name: "", email: "", message: "" });
+function WaitlistDialog({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  const dialogRef = useRef<HTMLDialogElement>(null);
 
-  useTurnstileScript();
-
-  const handleToken = useCallback(async (token: string) => {
-    const data = formDataRef.current;
-    try {
-      const res = await fetch(`${API_BASE}/contact`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          message: data.message,
-          "cf-turnstile-response": token,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setErrorMsg(json.error || "Something went wrong");
-        setStatus("error");
-        setChallenged(false);
-        return;
-      }
-      setStatus("success");
-    } catch {
-      setErrorMsg("Could not reach the server. Please try again.");
-      setStatus("error");
-      setChallenged(false);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open && !dialog.open) {
+      dialog.showModal();
+      dialog.querySelector<HTMLInputElement>('input[type="email"]')?.focus();
     }
-  }, []);
-
-  function handleSubmit(e: FormEvent) {
-    e.preventDefault();
-    setStatus("loading");
-    setErrorMsg("");
-    formDataRef.current = { name, email, message };
-    setChallenged(false);
-    setTimeout(() => setChallenged(true), 0);
-  }
-
-  if (status === "success") {
-    return (
-      <div className="pt-2">
-        <p className="text-sm font-medium text-earthy-green-700 dark:text-earthy-green-400">
-          Thanks! We'll be in touch soon.
-        </p>
-      </div>
-    );
-  }
+    if (!open && dialog.open) dialog.close();
+  }, [open]);
 
   return (
-    <form onSubmit={handleSubmit} className="pt-2 space-y-2.5">
-      <input
-        type="text"
-        required
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="Name"
-        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/60 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500/40 focus:border-earthy-terracotta-500"
-      />
-      <input
-        type="email"
-        required
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        placeholder="Work email"
-        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/60 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500/40 focus:border-earthy-terracotta-500"
-      />
-      <textarea
-        required
-        value={message}
-        onChange={(e) => setMessage(e.target.value)}
-        placeholder="Tell us about your agent fleet, expected volume, and requirements…"
-        rows={3}
-        className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800/60 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-earthy-terracotta-500/40 focus:border-earthy-terracotta-500 resize-none"
-      />
-      <button
-        type="submit"
-        disabled={status === "loading"}
-        className="group w-full inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-600 disabled:opacity-60 transition-all duration-200 hover:-translate-y-0.5"
-      >
-        {status === "loading" ? "Sending…" : "Talk to sales"}
-        {status !== "loading" && <ArrowIcon />}
-      </button>
-      {challenged && <Turnstile onToken={handleToken} />}
-      {status === "error" && (
-        <p className="text-xs text-red-600 dark:text-red-400">{errorMsg}</p>
+    <dialog
+      ref={dialogRef}
+      onClose={onClose}
+      onClick={(e) => {
+        // The dialog itself is only the click target when the backdrop is hit
+        if (e.target === dialogRef.current) onClose();
+      }}
+      className="w-full max-w-md rounded-2xl p-0 overflow-visible bg-white dark:bg-gray-800 border border-earthy-terracotta-200 dark:border-earthy-terracotta-700/50 shadow-lg hub-pulse backdrop:bg-gray-900/50 backdrop:backdrop-blur-sm"
+    >
+      {/* Form only mounts while open, so state resets between visits */}
+      {open && (
+        <div className="relative p-7">
+          <img
+            src="/img/marmot.svg"
+            alt=""
+            className="absolute -top-14 right-8 w-16 h-16 pointer-events-none"
+          />
+          <div className="flex items-center gap-2.5 mb-2">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-0">
+              Marmot Cloud
+            </h3>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-400 dark:text-gray-500 ml-auto">
+              <span className="w-1.5 h-1.5 rounded-full bg-earthy-yellow-500 animate-pulse" />
+              Coming soon
+            </span>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close"
+              className="p-1.5 -mr-1.5 rounded-lg bg-transparent border-none cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-earthy-terracotta-500/40"
+            >
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-2">
+            Managed, metered hosting for your fleet. Join the waitlist for
+            early access and onboarding.
+          </p>
+          <WaitlistForm />
+        </div>
       )}
-      <p className="text-[11px] text-gray-400 dark:text-gray-500">
-        By submitting you agree to our{" "}
-        <a href="/privacy" className="underline hover:text-gray-600 dark:hover:text-gray-300">
-          privacy policy
-        </a>
-        .
-      </p>
-    </form>
+    </dialog>
   );
 }
 
@@ -516,7 +485,7 @@ function Slider({
   );
 }
 
-function Estimator() {
+function Estimator({ onJoinWaitlist }: { onJoinWaitlist: () => void }) {
   const [mode, setMode] = useState<"fleet" | "volume">("fleet");
 
   // Fleet inputs default to a representative Team plan fleet (~1.5M lookups)
@@ -555,8 +524,8 @@ function Estimator() {
           {/* Mode toggle */}
           <div className="inline-flex p-1 rounded-xl bg-gray-100 dark:bg-gray-800/70 mb-7">
             {[
-              { key: "fleet", label: "Estimate from my fleet" },
-              { key: "volume", label: "I know my volume" },
+              { key: "fleet", label: "Estimate my usage" },
+              { key: "volume", label: "I know my lookup count" },
             ].map((opt) => (
               <button
                 key={opt.key}
@@ -750,23 +719,30 @@ function Estimator() {
               {isEnterprise && (
                 <p className="text-[11px] text-earthy-terracotta-600 dark:text-earthy-terracotta-400 mt-2 text-right">
                   At this volume, Enterprise unlocks discounted rates.{" "}
-                  <a href="#contact" className="underline">
+                  <a href="mailto:support@marmotdata.io" className="underline">
                     Talk to sales
                   </a>
                   .
                 </p>
               )}
-              <a
-                href={isFree ? "/docs/introduction" : isEnterprise ? "#contact" : "#waitlist"}
-                className="group mt-4 w-full inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold rounded-xl text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
-              >
-                {isFree
-                  ? "Start free"
-                  : isEnterprise
-                    ? "Talk to sales"
-                    : "Join Cloud waitlist"}
-                <ArrowIcon />
-              </a>
+              {isFree || isEnterprise ? (
+                <a
+                  href={isFree ? "/docs/introduction" : "mailto:support@marmotdata.io"}
+                  className="group mt-4 w-full inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold rounded-xl text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  {isFree ? "Start free" : "Talk to sales"}
+                  <ArrowIcon />
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onJoinWaitlist}
+                  className="group mt-4 w-full inline-flex items-center justify-center px-6 py-2.5 text-sm font-semibold rounded-xl border-none cursor-pointer text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md transition-all duration-200 hover:-translate-y-0.5"
+                >
+                  Join Cloud waitlist
+                  <ArrowIcon />
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -802,7 +778,7 @@ const plans: Plan[] = [
       "Search, lineage & glossary",
       "Community support",
     ],
-    cta: { label: "Start free", href: "/docs/introduction" },
+    cta: { label: "Join Cloud waitlist", href: "#waitlist" },
   },
   {
     name: "Team",
@@ -834,17 +810,13 @@ const plans: Plan[] = [
       "Dedicated support & onboarding",
       "Security & compliance review",
     ],
-    cta: { label: "Talk to sales", href: "#contact" },
+    cta: { label: "Talk to sales", href: "mailto:support@marmotdata.io" },
   },
 ];
 
-const rateRows = [
-  { range: "0 to 500K", rate: "Free", note: "Included on every plan" },
-  { range: "500K to 10M", rate: "€0.001", note: "per lookup" },
-  { range: "10M+", rate: "€0.0006", note: "per lookup" },
-];
-
 export default function Pricing(): JSX.Element {
+  const [waitlistOpen, setWaitlistOpen] = useState(false);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -908,7 +880,7 @@ export default function Pricing(): JSX.Element {
           className="pb-14 px-4 sm:px-6 lg:px-8 scroll-mt-24"
         >
           <div data-animate className="max-w-5xl mx-auto">
-            <Estimator />
+            <Estimator onJoinWaitlist={() => setWaitlistOpen(true)} />
           </div>
         </section>
 
@@ -956,16 +928,30 @@ export default function Pricing(): JSX.Element {
                       {plan.unit}
                     </p>
                   </div>
-                  <a
-                    href={plan.cta.href}
-                    className={`group inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 mb-6 ${plan.highlight
-                      ? "text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md"
-                      : "text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-600"
-                      }`}
-                  >
-                    {plan.cta.label}
-                    <ArrowIcon />
-                  </a>
+                  {plan.cta.href === "#waitlist" ? (
+                    <button
+                      type="button"
+                      onClick={() => setWaitlistOpen(true)}
+                      className={`group inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-xl cursor-pointer transition-all duration-200 hover:-translate-y-0.5 mb-6 ${plan.highlight
+                        ? "border-none text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md"
+                        : "text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 border border-solid border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-600"
+                        }`}
+                    >
+                      {plan.cta.label}
+                      <ArrowIcon />
+                    </button>
+                  ) : (
+                    <a
+                      href={plan.cta.href}
+                      className={`group inline-flex items-center justify-center px-5 py-2.5 text-sm font-semibold rounded-xl transition-all duration-200 hover:-translate-y-0.5 mb-6 ${plan.highlight
+                        ? "text-white bg-earthy-terracotta-700 hover:bg-earthy-terracotta-800 shadow-sm hover:shadow-md"
+                        : "text-gray-700 dark:text-gray-300 bg-white/70 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 hover:border-earthy-terracotta-300 dark:hover:border-earthy-terracotta-600"
+                        }`}
+                    >
+                      {plan.cta.label}
+                      <ArrowIcon />
+                    </a>
+                  )}
                   <ul className="space-y-2.5">
                     {plan.features.map((f) => (
                       <li key={f} className="flex items-start gap-2">
@@ -984,9 +970,9 @@ export default function Pricing(): JSX.Element {
 
         <div className="section-divider max-w-2xl mx-auto" />
 
-        {/* Rate table + what's a lookup */}
+        {/* What's a lookup */}
         <section className="py-14 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
             <div data-animate>
               <p className="text-xs font-bold uppercase tracking-widest text-earthy-terracotta-600 dark:text-earthy-terracotta-400 mb-3">
                 Economics
@@ -1007,106 +993,16 @@ export default function Pricing(): JSX.Element {
               </p>
             </div>
 
-            <div data-animate data-animate-delay="1" className="glass-card rounded-2xl p-6 sm:p-7">
-              <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-4">
-                Team plan · rate per lookup
-              </p>
-              <div className="divide-y divide-gray-200/70 dark:divide-gray-700/40">
-                {rateRows.map((row) => (
-                  <div
-                    key={row.range}
-                    className="flex items-center justify-between py-3.5"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-gray-900 dark:text-white">
-                        {row.range}
-                      </p>
-                      <p className="text-[11px] text-gray-400 dark:text-gray-500">
-                        {row.note}
-                      </p>
-                    </div>
-                    <span
-                      className={`text-sm font-bold ${row.rate === "Free"
-                        ? "text-earthy-green-600 dark:text-earthy-green-400"
-                        : "text-gray-900 dark:text-white"
-                        }`}
-                    >
-                      {row.rate}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-4 leading-relaxed">
-                €1K platform floor + usage above 500K. Billed monthly, cancel
-                anytime. Configurable limits per plan.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <div className="section-divider max-w-2xl mx-auto" />
-
-        {/* Cloud waitlist + Enterprise contact */}
-        <section className="py-14 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Cloud early access */}
-              <div
-                id="waitlist"
-                data-animate
-                className="glass-card rounded-2xl p-7 flex flex-col scroll-mt-24"
-              >
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-earthy-blue-100 dark:bg-earthy-blue-900/30 flex items-center justify-center">
-                    <Icon
-                      icon="material-symbols:cloud"
-                      className="w-4.5 h-4.5 text-earthy-blue-700 dark:text-earthy-blue-400"
-                    />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Marmot Cloud
-                  </h3>
-                  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-400 dark:text-gray-500 ml-auto">
-                    <span className="w-1.5 h-1.5 rounded-full bg-earthy-yellow-500 animate-pulse" />
-                    Coming soon
-                  </span>
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  Managed, metered hosting for the Team plan. Join the waitlist
-                  to get early access and onboarding. Running it yourself is free
-                  and available today.
-                </p>
-                <div className="mt-auto">
-                  <WaitlistForm />
-                </div>
-              </div>
-
-              {/* Enterprise contact */}
-              <div
-                id="contact"
-                data-animate
-                data-animate-delay="1"
-                className="glass-card rounded-2xl p-7 flex flex-col scroll-mt-24"
-              >
-                <div className="flex items-center gap-2.5 mb-2">
-                  <div className="w-8 h-8 rounded-lg bg-earthy-green-100 dark:bg-earthy-green-900/30 flex items-center justify-center">
-                    <Icon
-                      icon="material-symbols:handshake"
-                      className="w-4.5 h-4.5 text-earthy-green-700 dark:text-earthy-green-400"
-                    />
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Enterprise
-                  </h3>
-                </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-                  Large agent fleets, BYOC, discounted usage and compliance
-                  reviews. Tell us what you need and we'll put together a plan.
-                </p>
-                <div className="mt-auto">
-                  <ContactForm />
-                </div>
-              </div>
+            <div
+              data-animate
+              data-animate-delay="1"
+              className="hidden lg:flex items-center justify-center"
+            >
+              <img
+                src="/img/marmot.svg"
+                alt="Marmot"
+                className="w-36 h-36 float-gentle"
+              />
             </div>
           </div>
         </section>
@@ -1157,6 +1053,10 @@ export default function Pricing(): JSX.Element {
           </div>
         </section>
       </div>
+      <WaitlistDialog
+        open={waitlistOpen}
+        onClose={() => setWaitlistOpen(false)}
+      />
     </Layout>
   );
 }

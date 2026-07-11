@@ -598,6 +598,26 @@ html[data-theme="dark"] .hub-pulse {
   }
 }
 
+@keyframes float-gentle {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.float-gentle {
+  animation: float-gentle 5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .float-gentle {
+    animation: none;
+  }
+}
+
 @keyframes sparkle-float {
   0% {
     transform: translateY(0) scale(0);
