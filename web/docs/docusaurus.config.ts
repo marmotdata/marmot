@@ -311,7 +311,7 @@ const config: Config = {
             },
             {
               label: "Contact Us",
-              href: "mailto:charlie@marmotdata.io",
+              href: "mailto:support@marmotdata.io",
             },
           ],
         },

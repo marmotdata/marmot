@@ -73,7 +73,7 @@ export default function SecurityTrust(): JSX.Element {
           className="text-center text-sm text-gray-500 dark:text-gray-400 mt-9"
         >
           <a
-            href="/pricing#contact"
+            href="mailto:support@marmotdata.io"
             className="text-earthy-terracotta-700 dark:text-earthy-terracotta-400 font-semibold hover:underline"
           >
             Talk to us
