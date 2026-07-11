@@ -1,15 +1,52 @@
-# marmot-plugin-redis
+---
+title: Redis
+description: Discovers databases from Redis instances.
+status: experimental
+---
 
-Marmot plugin for [Redis](https://redis.io/). Reads `INFO` from a server and produces a `Database` asset per keyspace database (db0-db15) with key counts, expiring-key counts, average TTL, and server context (version, role, memory usage, eviction policy, connected clients).
+# Redis
 
-Set `discover_all_databases: false` to only produce the database configured in `db`.
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span></div>
+</div>
+</div>
+
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
+
+The Redis plugin discovers logical databases (db0–db15) from Redis instances. It uses the `INFO` command to collect server metadata and parses the Keyspace section to identify databases that contain keys.
+
+## Required Permissions
+
+The connecting user needs permission to run the `INFO` command. By default all users can run `INFO`, but if you are using Redis ACLs:
+
+```
+ACL SETUSER marmot_reader on >password ~* &* +info +ping +select
+```
+
+
 
 ## Example Configuration
 
 ```yaml
-host: "redis.company.com"
+
+host: "localhost"
 port: 6379
-password: "${REDIS_PASSWORD}"
+password: "secret"
 discover_all_databases: true
 filter:
   include:
@@ -17,25 +54,41 @@ filter:
 tags:
   - "redis"
   - "cache"
+
 ```
 
-Use `username` for ACL auth, and `tls`/`tls_insecure` for TLS connections.
+## Configuration
+The following configuration options are available:
 
-## Development
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| db | int | false | Default database number |
+| discover_all_databases | bool | false | Discover all databases with keys (db0-db15) |
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| host | string | false | Redis server hostname or IP address |
+| password | string | false | Password for authentication |
+| port | int | false | Redis server port |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
+| tls | bool | false | Enable TLS connection |
+| tls_insecure | bool | false | Skip TLS certificate verification |
+| username | string | false | Username for ACL authentication |
 
-Build and test:
+## Available Metadata
 
-```sh
-make build
-make test
-```
+The following metadata fields are available:
 
-To run a local build inside Marmot:
-
-```sh
-make install
-```
-
-This copies the binary to `~/.marmot/plugins/`, the directory Marmot scans for local plugins. A local plugin shadows the released core plugin with the same name: Marmot skips downloading it and loads your build instead. Delete the binary from `~/.marmot/plugins/` to fall back to the released version.
-
-If your Marmot runs with a custom plugins directory (`MARMOT_PLUGINS_DIR`), set the same value for `make install` so both point at the same place.
+| Field | Type | Description |
+|-------|------|-------------|
+| avg_ttl_ms | int64 | Average TTL in milliseconds |
+| connected_clients | string | Number of connected clients |
+| database | string | Database name (e.g. db0) |
+| expires_count | int64 | Number of keys with an expiration |
+| host | string | Redis server hostname |
+| key_count | int64 | Number of keys in the database |
+| maxmemory_policy | string | Eviction policy when maxmemory is reached |
+| port | int | Redis server port |
+| redis_version | string | Redis server version |
+| role | string | Replication role (master/slave) |
+| uptime_seconds | string | Server uptime in seconds |
+| used_memory_human | string | Human-readable used memory |

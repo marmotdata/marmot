@@ -1,56 +1,94 @@
-# marmot-plugin-openapi
+---
+title: OpenAPI
+description: This plugin discovers OpenAPI v3 specifications.
+status: experimental
+---
 
-Marmot plugin for [OpenAPI](https://www.openapis.org/) v3 specifications. Walks a directory of spec files (JSON or YAML) and produces:
+# OpenAPI
 
-- **Services** as `Service` assets from each spec's `info` section (version, servers, contact, license, endpoint counts, external docs).
-- **Endpoints** as `Endpoint` assets per operation, with HTTP method, path, operation ID, status codes, deprecation state, and response schemas converted to JSON Schema. Endpoints are parented to their service and tagged with the service name and operation tags.
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span></div>
+</div>
+</div>
 
-Specs older than OpenAPI v3 are skipped.
+import { CalloutCard } from '@site/src/components/DocCard';
 
-## Example Configurations
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
 
-### Local spec directory
+
+The OpenAPI plugin discovers API specifications from OpenAPI v3 files. It creates assets for services and their endpoints.
+
+The plugin scans for `.json` and `.yaml` files and parses them as OpenAPI v3 specifications.
+
+## File Sources
+
+The `spec_path` field accepts local paths, S3 URIs (`s3://bucket/prefix`) or Git URIs (`git::https://...`). For S3 and Git sources, files are downloaded to a temporary directory before discovery and cleaned up afterwards.
+
+See [File Sources](./Shared%20Configuration/File%20Sources.md) for the full list of supported backends, authentication options and configuration examples.
+
+
+
+## Example Configuration
 
 ```yaml
+
 spec_path: "/app/openapi-specs"
 tags:
   - "openapi"
   - "specifications"
+
 ```
 
-### S3-hosted specs
+## Configuration
+The following configuration options are available:
 
-```yaml
-spec_path: "s3://my-specs-bucket/openapi/"
-s3_source:
-  credentials:
-    region: "eu-west-2"
-    use_default: true
-```
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| git_source | GitSourceConfig | false | Git repository file source configuration |
+| s3_source | S3SourceConfig | false | S3 file source configuration |
+| source_type | string | false | File source backend (auto-detected from path when empty) |
+| spec_path | string | false | Path to the directory containing the OpenAPI specifications (local path, s3://bucket/prefix or git::url) |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
 
-### Git repository
+## Available Metadata
 
-```yaml
-spec_path: "git::https://github.com/example/api-specs//openapi?ref=main"
-git_source:
-  token: "${GITHUB_TOKEN}"
-```
+The following metadata fields are available:
 
-## Development
-
-Build and test:
-
-```sh
-make build
-make test
-```
-
-To run a local build inside Marmot:
-
-```sh
-make install
-```
-
-This copies the binary to `~/.marmot/plugins/`, the directory Marmot scans for local plugins. A local plugin shadows the released core plugin with the same name: Marmot skips downloading it and loads your build instead. Delete the binary from `~/.marmot/plugins/` to fall back to the released version.
-
-If your Marmot runs with a custom plugins directory (`MARMOT_PLUGINS_DIR`), set the same value for `make install` so both point at the same place.
+| Field | Type | Description |
+|-------|------|-------------|
+| contact_email | string | Contact email |
+| contact_name | string | Contact name |
+| contact_url | string | Contact URL |
+| deprecated | bool | Is this endpoint deprecated |
+| description | string | Description of the API |
+| description | string | A verbose explanation of the operation behaviour. |
+| external_docs | string | Link to the external documentation |
+| http_method | string | HTTP method |
+| license_identifier | string | SPDX license experession for the API |
+| license_name | string | Name of the license |
+| license_url | string | URL of the license |
+| num_deprecated_endpoints | int | Number of deprecated endpoints in the OpenAPI specification |
+| num_endpoints | int | Number of endpoints in the OpenAPI specification |
+| openapi_version | string | Version of the OpenAPI spec |
+| operation_id | string | Unique identifier of the operation |
+| path | string | Path |
+| servers | []string | URL of the servers of the API |
+| service_name | string | Name of the service that owns the resource |
+| service_version | string | Version of the service |
+| status_codes | []string | All HTTP response status codes that are returned for this endpoint. |
+| summary | string | A short summary of what the operation does |
+| terms_of_service | string | Link to the page that describes the terms of service |

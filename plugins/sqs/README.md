@@ -1,36 +1,115 @@
-# marmot-plugin-sqs
+---
+title: SQS
+description: This plugin discovers SQS queues from AWS accounts.
+status: experimental
+---
 
-Marmot plugin for [Amazon SQS](https://aws.amazon.com/sqs/). Lists the queues in an account and produces a `Queue` asset per queue with its ARN, visibility timeout, retention, size limits, delay, FIFO settings, and redrive policy. With `discover_dlq` enabled it also emits DLQ lineage edges from each queue to its dead-letter queue. Queue tags can optionally be converted to asset metadata.
+# SQS
 
-Authentication uses the standard AWS credential chain: static keys, a shared profile, an assumed role, or the environment defaults.
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Lineage</span></div>
+</div>
+</div>
+
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
+
+The SQS plugin discovers and catalogs Amazon SQS queues across your AWS accounts. It captures queue configurations and can discover Dead Letter Queue relationships.
+
+## Required Permissions
+
+import { Collapsible } from "@site/src/components/Collapsible";
+
+<Collapsible
+  title="IAM Policy"
+  icon="mdi:shield-check"
+  policyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "sqs:ListQueues",
+          "sqs:GetQueueAttributes",
+          "sqs:ListQueueTags"
+        ],
+        Resource: "*"
+      }
+    ]
+  }}
+  minimalPolicyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: ["sqs:ListQueues", "sqs:GetQueueAttributes"],
+        Resource: "*"
+      }
+    ]
+  }}
+/>
+
+## AWS Configuration
+
+See [AWS Configuration](./Shared%20Configuration/AWS%20Configuration.md) for the supported AWS configuration options.
+
+
 
 ## Example Configuration
 
 ```yaml
+
 credentials:
-  region: "us-east-1"
-  profile: "production"
-  role: "arn:aws:iam::123456789012:role/MarmotDiscovery"
-discover_dlq: true
+  region: "us-east-1" 
+  id: "<aws-secret-id>"
+  secret: "<aws-secret-key>"
 tags:
-  - "aws"
+  - "sns"
+
 ```
 
-## Development
+## Configuration
+The following configuration options are available:
 
-Build and test:
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| credentials | AWSCredentials | false | AWS credentials configuration |
+| discover_dlq | bool | false | Discover Dead Letter Queue relationships |
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| include_tags | []string | false | List of AWS tags to include as metadata. By default, all tags are included. |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
+| tags_to_metadata | bool | false | Convert AWS tags to Marmot metadata |
 
-```sh
-make build
-make test
-```
+## Available Metadata
 
-To run a local build inside Marmot:
+The following metadata fields are available:
 
-```sh
-make install
-```
-
-This copies the binary to `~/.marmot/plugins/`, the directory Marmot scans for local plugins. A local plugin shadows the released core plugin with the same name: Marmot skips downloading it and loads your build instead. Delete the binary from `~/.marmot/plugins/` to fall back to the released version.
-
-If your Marmot runs with a custom plugins directory (`MARMOT_PLUGINS_DIR`), set the same value for `make install` so both point at the same place.
+| Field | Type | Description |
+|-------|------|-------------|
+| content_based_deduplication | bool | Whether content-based deduplication is enabled |
+| deduplication_scope | string | Deduplication scope for FIFO queues |
+| delay_seconds | string | Delay seconds for messages |
+| fifo_queue | bool | Whether this is a FIFO queue |
+| fifo_throughput_limit | string | FIFO throughput limit type |
+| maximum_message_size | string | Maximum message size in bytes |
+| message_retention_period | string | Message retention period in seconds |
+| queue_arn | string | The ARN of the SQS queue |
+| receive_message_wait_time | string | Long polling wait time in seconds |
+| redrive_policy | string | Redrive policy JSON string |
+| tags | map[string]string | AWS resource tags |
+| visibility_timeout | string | The visibility timeout for the queue |

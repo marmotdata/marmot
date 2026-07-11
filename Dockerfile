@@ -1,9 +1,9 @@
-FROM node:20-alpine AS frontend
+FROM node:22-alpine AS frontend
 
-RUN corepack enable && corepack prepare pnpm@9 --activate
+RUN corepack enable && corepack prepare pnpm@11 --activate
 
 WORKDIR /app/web/marmot
-COPY web/marmot/package.json web/marmot/pnpm-lock.yaml ./
+COPY web/marmot/package.json web/marmot/pnpm-lock.yaml web/marmot/pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY web/marmot/ ./
 RUN node scripts/generate-icon-bundle.mjs && pnpm build
@@ -17,7 +17,7 @@ RUN go mod download
 
 COPY . .
 COPY --from=frontend /app/web/marmot/build ./internal/staticfiles/build
-RUN CGO_ENABLED=1 go build -tags production -ldflags '-s -w -extldflags "-static"' -o marmot ./cmd/main.go
+RUN CGO_ENABLED=0 go build -tags production -ldflags '-s -w' -o marmot ./cmd/main.go
 
 FROM alpine:3.23.3
 

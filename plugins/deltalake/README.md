@@ -1,56 +1,73 @@
-# marmot-plugin-deltalake
+---
+title: Delta Lake
+description: This plugin discovers tables from Delta Lake transaction logs on local filesystems.
+status: experimental
+---
 
-Marmot plugin for [Delta Lake](https://delta.io/) tables. Reads the `_delta_log` transaction log of each configured table directory (JSON commits plus Parquet checkpoints) and produces a `Table` asset per table with its current version, active file count and total size, format, partition columns, table properties, protocol versions, and the column schema.
+# Delta Lake
 
-Table paths can be local directories, `s3://bucket/prefix`, or `git::` URLs; remote paths are downloaded to a temp directory for reading.
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span></div>
+</div>
+</div>
 
-## Example Configurations
+import { CalloutCard } from '@site/src/components/DocCard';
 
-### Local tables
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
+
+
+## Example Configuration
 
 ```yaml
+
 table_paths:
   - "/data/delta/events"
   - "/data/delta/users"
 tags:
   - "delta-lake"
+
 ```
 
-### S3-hosted tables
+## Configuration
+The following configuration options are available:
 
-```yaml
-table_paths:
-  - "s3://lake-bucket/delta/events"
-s3_source:
-  credentials:
-    region: "eu-west-2"
-    use_default: true
-```
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| git_source | GitSourceConfig | false | Git repository file source configuration |
+| s3_source | S3SourceConfig | false | S3 file source configuration |
+| source_type | string | false | File source backend (auto-detected from path when empty) |
+| table_paths | []string | false | Paths to Delta Lake table directories (local paths, s3://bucket/prefix or git::url) |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
 
-### Git repository
+## Available Metadata
 
-```yaml
-table_paths:
-  - "git::https://github.com/example/lake//tables/events?ref=main"
-git_source:
-  token: "${GITHUB_TOKEN}"
-```
+The following metadata fields are available:
 
-## Development
-
-Build and test:
-
-```sh
-make build
-make test
-```
-
-To run a local build inside Marmot:
-
-```sh
-make install
-```
-
-This copies the binary to `~/.marmot/plugins/`, the directory Marmot scans for local plugins. A local plugin shadows the released core plugin with the same name: Marmot skips downloading it and loads your build instead. Delete the binary from `~/.marmot/plugins/` to fall back to the released version.
-
-If your Marmot runs with a custom plugins directory (`MARMOT_PLUGINS_DIR`), set the same value for `make install` so both point at the same place.
+| Field | Type | Description |
+|-------|------|-------------|
+| created_time | int64 | Table creation timestamp in milliseconds |
+| current_version | int64 | Current Delta log version |
+| format | string | Data format (e.g. parquet) |
+| location | string | Table directory path |
+| min_reader_version | int | Minimum reader protocol version |
+| min_writer_version | int | Minimum writer protocol version |
+| num_files | int | Number of active data files |
+| partition_columns | string | Comma-separated partition column names |
+| schema_field_count | int | Number of schema fields |
+| table_id | string | Delta table unique identifier |
+| total_size | int64 | Total size of active data files in bytes |

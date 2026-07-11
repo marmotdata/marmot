@@ -1,5 +1,6 @@
 .git/
 web/docs/
+**/node_modules/
 test/
 charts/
 .claude/

@@ -1,41 +1,126 @@
-# marmot-plugin-lambda
+---
+title: Lambda
+description: This plugin discovers Lambda functions from AWS accounts.
+status: experimental
+---
 
-Marmot plugin for [AWS Lambda](https://aws.amazon.com/lambda/). Lists the functions in an account and produces a `Function` asset per function with its runtime, handler, role, code size and hash, memory and timeout settings, architectures, VPC configuration, layers, tracing mode, and state. AWS resource tags can optionally be converted to asset metadata.
+# Lambda
 
-Authentication uses the standard AWS credential chain: static keys, a shared profile, an assumed role, or the environment defaults.
+<div class="flex flex-col gap-3 mb-6 pb-6 border-b border-gray-200">
+<div class="flex items-center gap-3">
+<span class="inline-flex items-center rounded-full px-4 py-2 text-sm font-medium bg-earthy-yellow-300 text-earthy-yellow-900">Experimental</span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-sm text-gray-500">Creates:</span>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span></div>
+</div>
+</div>
+
+import { CalloutCard } from '@site/src/components/DocCard';
+
+<CalloutCard
+  title="Configure in the UI"
+  description="This plugin can be configured directly in the Marmot UI with a step-by-step wizard."
+  href="/docs/Populating/UI"
+  buttonText="View Guide"
+  variant="secondary"
+  icon="mdi:cursor-default-click"
+/>
+
+
+The Lambda plugin discovers and catalogs AWS Lambda functions across your AWS accounts. It captures function metadata including runtime, memory, timeout, VPC configuration, layers, tracing, and tags.
+
+## Required Permissions
+
+import { Collapsible } from "@site/src/components/Collapsible";
+
+<Collapsible
+  title="IAM Policy"
+  icon="mdi:shield-check"
+  policyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "lambda:ListFunctions",
+          "lambda:GetFunction",
+          "lambda:ListTags"
+        ],
+        Resource: "*"
+      }
+    ]
+  }}
+  minimalPolicyJson={{
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: ["lambda:ListFunctions"],
+        Resource: "*"
+      }
+    ]
+  }}
+/>
+
+## AWS Configuration
+
+See [AWS Configuration](./Shared%20Configuration/AWS%20Configuration.md) for the supported AWS configuration options.
+
+
 
 ## Example Configuration
 
 ```yaml
+
 credentials:
   region: "us-east-1"
   profile: "production"
-  role: "arn:aws:iam::123456789012:role/MarmotDiscovery"
+  role: "<role>"
 tags:
   - "aws"
-tags_to_metadata: true
-include_tags:
-  - "team"
-  - "environment"
+
 ```
 
-`tags_to_metadata` converts each AWS tag to a `tag_<key>` metadata field; `include_tags` limits which tags are converted (all by default).
+## Configuration
+The following configuration options are available:
 
-## Development
+| Property | Type | Required | Description |
+|----------|------|----------|-------------|
+| credentials | AWSCredentials | false | AWS credentials configuration |
+| external_links | []ExternalLink | false | External links to show on all assets |
+| filter | Filter | false | Filter discovered assets by name (regex) |
+| include_tags | []string | false | List of AWS tags to include as metadata. By default, all tags are included. |
+| tags | TagsConfig | false | Tags to apply to discovered assets |
+| tags_to_metadata | bool | false | Convert AWS tags to Marmot metadata |
 
-Build and test:
+## Available Metadata
 
-```sh
-make build
-make test
-```
+The following metadata fields are available:
 
-To run a local build inside Marmot:
-
-```sh
-make install
-```
-
-This copies the binary to `~/.marmot/plugins/`, the directory Marmot scans for local plugins. A local plugin shadows the released core plugin with the same name: Marmot skips downloading it and loads your build instead. Delete the binary from `~/.marmot/plugins/` to fall back to the released version.
-
-If your Marmot runs with a custom plugins directory (`MARMOT_PLUGINS_DIR`), set the same value for `make install` so both point at the same place.
+| Field | Type | Description |
+|-------|------|-------------|
+| architectures | string | Instruction set architectures (x86_64, arm64) |
+| code_sha256 | string | SHA256 hash of the deployment package |
+| code_size | int64 | The size of the function's deployment package in bytes |
+| description | string | The function's description |
+| environment_variable_count | int | Number of environment variables configured |
+| ephemeral_storage_mb | int32 | Ephemeral storage allocated in MB |
+| function_arn | string | The ARN of the Lambda function |
+| handler | string | The function's entry point handler |
+| last_modified | string | Date and time the function was last modified |
+| last_update_status | string | Status of the last update (Successful, Failed, InProgress) |
+| layer_count | int | Number of Lambda layers attached |
+| layers | string | Lambda layer ARNs attached to the function |
+| memory_size_mb | int32 | Memory allocated to the function in MB |
+| package_type | string | Deployment package type (Zip or Image) |
+| role | string | The IAM execution role ARN |
+| runtime | string | The runtime environment for the function (e.g. go1.x, python3.12, nodejs20.x) |
+| security_group_count | int | Number of VPC security groups |
+| state | string | Current state of the function (Active, Pending, Inactive, Failed) |
+| subnet_count | int | Number of VPC subnets |
+| tags | map[string]string | AWS resource tags |
+| timeout_seconds | int32 | Function execution timeout in seconds |
+| tracing_mode | string | X-Ray tracing mode (Active or PassThrough) |
+| version | string | The function version |
+| vpc_id | string | VPC ID if the function is connected to a VPC |
