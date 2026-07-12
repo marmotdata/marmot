@@ -452,8 +452,11 @@
 			return expandedSections[sectionName];
 		}
 
-		// Default collapsed for asset filter
-		if (sectionName === 'asset_filter') return false;
+		// Default collapsed for the asset filter and credentials sections.
+		// These are optional and most users leave them at their defaults,
+		// so collapsing keeps the form tidy and avoids a large box jumping
+		// into view when the step opens.
+		if (sectionName === 'asset_filter' || sectionName === 'credentials') return false;
 
 		// Default to expanded for all other sections
 		return true;
