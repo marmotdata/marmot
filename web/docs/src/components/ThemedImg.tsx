@@ -23,7 +23,7 @@ export function ThemedImg({
       <img
         src={darkSrc}
         alt={alt}
-        className={`hidden dark:block ${className}`}
+        className={`hidden dark:inline ${className}`}
       />
     </>
   );
