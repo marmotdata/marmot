@@ -19,6 +19,8 @@ import S3Icon from '~icons/logos/aws-s3';
 import SparkIcon from '~icons/logos/apache-spark';
 import SnowflakeIcon from '~icons/logos/snowflake-icon';
 import KubernetesIcon from '~icons/logos/kubernetes';
+import EksIcon from '~icons/logos/aws-eks';
+import GkeIcon from '~icons/logos/google-icon';
 import BigQueryIcon from '~icons/logos/google-cloud';
 import DuckDBIcon from '~icons/devicon/duckdb';
 import DatabricksIcon from '~icons/simple-icons/databricks';
@@ -109,6 +111,8 @@ export const providerIconMap: Record<
 	spark: { default: SparkIcon, displayName: 'Spark' },
 	snowflake: { default: SnowflakeIcon, displayName: 'Snowflake' },
 	kubernetes: { default: KubernetesIcon, displayName: 'Kubernetes' },
+	eks: { default: EksIcon, displayName: 'Amazon EKS' },
+	gke: { default: GkeIcon, displayName: 'Google GKE' },
 	bigquery: { default: BigQueryIcon, displayName: 'BigQuery' },
 	amqp: { default: RabbitMQIcon, displayName: 'AMQP' },
 	rabbitmq: { default: RabbitMQIcon, displayName: 'RabbitMQ' },
