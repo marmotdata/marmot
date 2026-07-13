@@ -49,7 +49,7 @@ export default function CTA(): JSX.Element {
             </svg>
           </a>
           <a
-            href="/pricing#contact"
+            href="mailto:support@marmotdata.io"
             className="group demo-btn inline-flex items-center justify-center px-6 py-3 text-sm font-semibold rounded-lg text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-all duration-200"
           >
             Talk to Us

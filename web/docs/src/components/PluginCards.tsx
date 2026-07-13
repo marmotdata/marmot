@@ -114,6 +114,24 @@ const plugins: Plugin[] = [
     icon: "devicon:apachekafka",
   },
   {
+    name: "Kubernetes",
+    description: "Discover namespaces, services, workloads, and cron jobs from self-managed Kubernetes clusters",
+    href: "/docs/Plugins/Kubernetes",
+    icon: "devicon:kubernetes",
+  },
+  {
+    name: "Amazon EKS",
+    description: "Discover namespaces, services, workloads, and cron jobs from Amazon EKS clusters",
+    href: "/docs/Plugins/EKS",
+    icon: "logos:aws-eks",
+  },
+  {
+    name: "Google GKE",
+    description: "Discover namespaces, services, workloads, and cron jobs from Google GKE clusters",
+    href: "/docs/Plugins/GKE",
+    icon: "logos:google-icon",
+  },
+  {
     name: "MongoDB",
     description: "Discover databases and collections from MongoDB instances",
     href: "/docs/Plugins/MongoDB",

@@ -9,8 +9,8 @@ home: https://github.com/marmotdata/marmot
 sources:
   - https://github.com/marmotdata/marmot
 maintainers:
-  - name: Charlie Haley
-    email: charlie@marmotdata.io
+  - name: The Marmot Authors
+    email: support@marmotdata.io
 keywords:
   - marmot
   - data
