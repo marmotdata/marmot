@@ -587,7 +587,9 @@
 						role="status"
 					>
 						<IconifyIcon icon="material-symbols:info-outline" class="h-5 w-5 flex-shrink-0" />
-						<span>Plugins are still loading on the server. This view will refresh automatically.</span>
+						<span
+							>Plugins are still loading on the server. This view will refresh automatically.</span
+						>
 					</div>
 				{/if}
 
