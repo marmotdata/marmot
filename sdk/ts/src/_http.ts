@@ -101,7 +101,9 @@ export class Transport {
   }
 
   private headers(hasBody: boolean): Record<string, string> {
-    const h: Record<string, string> = {};
+    const h: Record<string, string> = {
+      "User-Agent": "marmot-sdk-ts",
+    };
     if (this.credential.scheme === "X-API-Key") {
       h["X-API-Key"] = this.credential.token;
     } else {

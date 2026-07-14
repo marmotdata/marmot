@@ -11,6 +11,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/assetrule"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/mrn"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
 )
 
@@ -162,6 +163,7 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
+	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }
@@ -290,6 +292,8 @@ func (h *Handler) getAssetByMRN(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }

@@ -9,6 +9,8 @@ import httpx
 from marmot._adapter import make_gen_client, make_marmot_auth
 from marmot.auth import Credential, resolve
 from marmot.auth.workload import WorkloadIdentitySource
+
+_USER_AGENT = "marmot-sdk-py"
 from marmot.resources.admin import AdminResource
 from marmot.resources.agent_runs import AgentRunsResource
 from marmot.resources.api_keys import APIKeysResource
@@ -44,6 +46,7 @@ class Client:
         self._owns_http = http_client is None
         self._http.auth = make_marmot_auth(credential)
         self._http.base_url = httpx.URL(f"{self._base_url}/api/v1")
+        self._http.headers.setdefault("User-Agent", _USER_AGENT)
         self._gen = make_gen_client(self._base_url, self._http)
         self.admin = AdminResource(self._gen)
         self.agent_runs = AgentRunsResource(self._gen)

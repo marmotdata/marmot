@@ -10,6 +10,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -69,6 +70,7 @@ type Server struct {
 	lineageService     lineage.Service
 	searchService      search.Service
 	config             *config.Config
+	lookups            lookups.Recorder
 }
 
 func NewServer(
@@ -80,6 +82,7 @@ func NewServer(
 	lineageService lineage.Service,
 	searchService search.Service,
 	config *config.Config,
+	lookupsRecorder lookups.Recorder,
 ) *Server {
 	return &Server{
 		assetService:       assetService,
@@ -90,6 +93,7 @@ func NewServer(
 		lineageService:     lineageService,
 		searchService:      searchService,
 		config:             config,
+		lookups:            lookupsRecorder,
 	}
 }
 
@@ -118,6 +122,7 @@ func (s *Server) registerTools(server *mcpsdk.Server, user *user.User) {
 		searchService:      s.searchService,
 		user:               user,
 		config:             s.config,
+		lookups:            s.lookups,
 	}
 
 	mcpsdk.AddTool(server, &mcpsdk.Tool{

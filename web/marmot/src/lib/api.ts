@@ -13,6 +13,7 @@ export async function fetchApi(endpoint: string, options: FetchApiOptions = {}) 
 
 	const headers: Record<string, string> = {
 		'Content-Type': 'application/json',
+		'X-Marmot-Client': 'web',
 		...(fetchOptions.headers as Record<string, string>)
 	};
 

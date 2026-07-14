@@ -11,6 +11,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/lineage"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
 )
 
@@ -52,6 +53,8 @@ func (h *Handler) getDirectLineage(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(w, http.StatusNotFound, "Lineage edge not found")
 		return
 	}
+
+	h.lookups.Record(r.Context(), lookups.CategoryLineage)
 
 	common.RespondJSON(w, http.StatusOK, edge)
 }
@@ -176,7 +179,7 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 		direction = "both"
 	}
 
-	lineage, err := h.lineageService.GetAssetLineage(r.Context(), assetID, limit, direction)
+	lineageResp, err := h.lineageService.GetAssetLineage(r.Context(), assetID, limit, direction)
 	if err != nil {
 		log.Error().Err(err).
 			Str("asset_id", assetID).
@@ -193,7 +196,9 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	common.RespondJSON(w, http.StatusOK, lineage)
+	h.lookups.Record(r.Context(), lookups.CategoryLineage)
+
+	common.RespondJSON(w, http.StatusOK, lineageResp)
 }
 
 // @Summary Ingest OpenLineage event

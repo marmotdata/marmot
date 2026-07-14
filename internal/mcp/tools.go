@@ -7,13 +7,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/search"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
+	"github.com/marmotdata/marmot/pkg/config"
 	mcpsdk "github.com/modelcontextprotocol/go-sdk/mcp"
 	"github.com/rs/zerolog/log"
 )
@@ -29,6 +30,15 @@ type ToolContext struct {
 	searchService      search.Service
 	user               *user.User
 	config             *config.Config
+	lookups            lookups.Recorder
+}
+
+// recordLookup increments the lookup counter with source=mcp. Safe to call
+func (tc *ToolContext) recordLookup(ctx context.Context, cat lookups.Category) {
+	if tc.lookups == nil {
+		return
+	}
+	tc.lookups.Record(lookups.WithSource(ctx, lookups.SourceMCP), cat)
 }
 
 type DiscoverDataInput struct {
@@ -126,6 +136,7 @@ func (tc *ToolContext) getAssetByID(ctx context.Context, id string) (*mcpsdk.Cal
 		), nil, nil
 	}
 
+	tc.recordLookup(ctx, lookups.CategoryAssetDetail)
 	return tc.renderAssetDetails(ctx, asset)
 }
 
@@ -142,6 +153,7 @@ func (tc *ToolContext) getAssetByMRN(ctx context.Context, mrn string) (*mcpsdk.C
 		), nil, nil
 	}
 
+	tc.recordLookup(ctx, lookups.CategoryAssetDetail)
 	return tc.renderAssetDetails(ctx, asset)
 }
 
@@ -150,6 +162,7 @@ func (tc *ToolContext) renderAssetDetails(ctx context.Context, a *asset.Asset) (
 
 	lineageResp, err := tc.lineageService.GetAssetLineage(ctx, a.ID, 5, "both")
 	if err == nil && lineageResp != nil {
+		tc.recordLookup(ctx, lookups.CategoryLineage)
 		formatted += "\n\n" + tc.formatLineage(lineageResp)
 	}
 
@@ -1226,6 +1239,8 @@ func (tc *ToolContext) traceLineage(
 			nil,
 		), nil, nil
 	}
+
+	tc.recordLookup(ctx, lookups.CategoryLineage)
 
 	var parts []string
 	parts = append(parts, fmt.Sprintf("# %s", escapeMarkdown(*a.Name)))

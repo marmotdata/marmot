@@ -13,6 +13,7 @@ import (
 	"github.com/marmotdata/marmot/internal/staticfiles"
 	"github.com/marmotdata/marmot/internal/store/postgres"
 	"github.com/marmotdata/marmot/internal/telemetry"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/rs/zerolog"
@@ -66,18 +67,40 @@ func runMarmot(_ *cobra.Command) error {
 	if cfg.Telemetry.Enabled {
 		log.Info().Msg("Anonymous telemetry enabled — learn more: https://marmotdata.io/docs/configure/telemetry — disable with telemetry.enabled: false or MARMOT_TELEMETRY_ENABLED=false")
 	}
+
+	// Lookup counters feed the anonymous telemetry payload; recorder is always
+	// installed so handlers can call it unconditionally. The flusher + store
+	// are only wired up when telemetry is enabled — otherwise counters just
+	// accumulate in memory (bounded: ~14 keys) and are never persisted.
+	lookupsRecorder := lookups.NewRecorder()
+	var lookupsStore lookups.Store
+	var lookupsFlusher *lookups.Flusher
+	if cfg.Telemetry.Enabled {
+		installID, err := telemetry.GetOrCreateInstallID(ctx, db)
+		if err != nil {
+			log.Warn().Err(err).Msg("lookups: could not resolve install ID; counters won't be persisted")
+		} else {
+			lookupsStore = lookups.NewPostgresStore(db)
+			lookupsFlusher = lookups.NewFlusher(lookupsRecorder, lookupsStore, installID, lookups.DefaultFlushInterval)
+			lookupsFlusher.Start(ctx)
+		}
+	}
+
 	telemetryCfg := telemetry.CollectorConfig{
 		Enabled:  cfg.Telemetry.Enabled,
 		Endpoint: cfg.Telemetry.Endpoint,
 		Interval: time.Duration(cfg.Telemetry.Interval) * time.Second,
 		Version:  Version,
 	}
-	collector := telemetry.NewCollector(db, telemetryCfg)
+	collector := telemetry.NewCollector(db, telemetryCfg, lookupsStore)
 	go collector.Run(ctx)
 
 	mux := http.NewServeMux()
-	server := v1.New(cfg, db)
+	server := v1.New(cfg, db, lookupsRecorder)
 	server.RegisterRoutes(mux)
+	if lookupsFlusher != nil {
+		defer lookupsFlusher.Stop()
+	}
 
 	if cfg.Metrics.Enabled {
 		go func() {

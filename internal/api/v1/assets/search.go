@@ -9,6 +9,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/asset"
 	"github.com/marmotdata/marmot/internal/mrn"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
 )
 
@@ -234,6 +235,7 @@ func (h *Handler) lookupAsset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	h.metricsService.GetRecorder().RecordAssetView(r.Context(), result.ID, result.Type, *result.Name, result.Providers[0])
+	h.lookups.Record(r.Context(), lookups.CategoryAssetDetail)
 
 	common.RespondJSON(w, http.StatusOK, h.enrichAssetResponse(r, result))
 }

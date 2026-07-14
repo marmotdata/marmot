@@ -8,6 +8,7 @@ import (
 	v1 "github.com/marmotdata/marmot/internal/api/v1"
 	"github.com/marmotdata/marmot/internal/staticfiles"
 	"github.com/marmotdata/marmot/internal/store/postgres"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/marmotdata/marmot/pkg/config"
 )
 
@@ -17,8 +18,10 @@ type Server struct {
 }
 
 // NewServer creates a new Marmot server with all services initialized.
+// External embedders get a local in-memory lookup recorder that is never
+// drained — sufficient for handler correctness but no telemetry is sent.
 func NewServer(cfg *config.Config, db *pgxpool.Pool) *Server {
-	return &Server{internal: v1.New(cfg, db)}
+	return &Server{internal: v1.New(cfg, db, lookups.NewRecorder())}
 }
 
 // RegisterRoutes registers all API routes on the given ServeMux.

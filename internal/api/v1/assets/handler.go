@@ -14,6 +14,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/crypto"
 	"github.com/marmotdata/marmot/internal/metrics"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 )
 
 type Handler struct {
@@ -28,6 +29,7 @@ type Handler struct {
 	assetRuleService assetrule.Service
 	encryptor        *crypto.Encryptor
 	config           *config.Config
+	lookups          lookups.Recorder
 }
 
 func NewHandler(
@@ -42,6 +44,7 @@ func NewHandler(
 	assetRuleService assetrule.Service,
 	encryptor *crypto.Encryptor,
 	config *config.Config,
+	lookupsRecorder lookups.Recorder,
 ) *Handler {
 	return &Handler{
 		assetService:     assetService,
@@ -55,6 +58,7 @@ func NewHandler(
 		assetRuleService: assetRuleService,
 		encryptor:        encryptor,
 		config:           config,
+		lookups:          lookupsRecorder,
 	}
 }
 

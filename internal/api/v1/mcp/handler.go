@@ -13,6 +13,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/team"
 	"github.com/marmotdata/marmot/internal/core/user"
 	"github.com/marmotdata/marmot/internal/mcp"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 )
 
 type Handler struct {
@@ -32,10 +33,11 @@ func NewHandler(
 	searchService search.Service,
 	authService auth.Service,
 	config *config.Config,
+	lookupsRecorder lookups.Recorder,
 ) *Handler {
 	teamAdapter := &teamServiceAdapter{teamService: teamService}
 	return &Handler{
-		mcpServer:   mcp.NewServer(assetService, glossaryService, userService, teamAdapter, dataProductService, lineageService, searchService, config),
+		mcpServer:   mcp.NewServer(assetService, glossaryService, userService, teamAdapter, dataProductService, lineageService, searchService, config, lookupsRecorder),
 		userService: userService,
 		authService: authService,
 		config:      config,

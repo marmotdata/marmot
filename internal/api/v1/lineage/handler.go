@@ -8,6 +8,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 )
 
 type Handler struct {
@@ -15,14 +16,16 @@ type Handler struct {
 	userService    user.Service
 	authService    auth.Service
 	config         *config.Config
+	lookups        lookups.Recorder
 }
 
-func NewHandler(lineageService lineage.Service, userService user.Service, authService auth.Service, config *config.Config) *Handler {
+func NewHandler(lineageService lineage.Service, userService user.Service, authService auth.Service, config *config.Config, lookupsRecorder lookups.Recorder) *Handler {
 	return &Handler{
 		lineageService: lineageService,
 		userService:    userService,
 		authService:    authService,
 		config:         config,
+		lookups:        lookupsRecorder,
 	}
 }
 

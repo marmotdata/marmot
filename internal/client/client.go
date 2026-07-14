@@ -148,6 +148,7 @@ func (c *Client) do(ctx context.Context, method, path string, query url.Values, 
 func (c *Client) setHeaders(req *http.Request) {
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
+	req.Header.Set("User-Agent", "marmot-cli")
 	if c.apiKey != "" {
 		req.Header.Set("X-API-Key", c.apiKey)
 	}

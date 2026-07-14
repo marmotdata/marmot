@@ -262,6 +262,7 @@ func (c *apiClient) newRequest(ctx context.Context, method, path string, body in
 	}
 
 	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("User-Agent", "marmot-cli")
 	if c.isSAToken {
 		req.Header.Set("Authorization", "Bearer "+c.token)
 	} else if c.token != "" {

@@ -62,6 +62,7 @@ import (
 	"github.com/marmotdata/marmot/internal/plugin"
 	"github.com/marmotdata/marmot/internal/plugin/install"
 	"github.com/marmotdata/marmot/internal/search/elasticsearch"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/marmotdata/marmot/internal/websocket"
 	"github.com/marmotdata/marmot/pkg/config"
 	"github.com/rs/zerolog/log"
@@ -103,7 +104,7 @@ type Server struct {
 	handlers []interface{ Routes() []common.Route }
 }
 
-func New(config *config.Config, db *pgxpool.Pool) *Server {
+func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Recorder) *Server {
 	metricsStore := metrics.NewPostgresStore(db)
 	metricsService := metrics.NewService(metricsStore, db)
 	metricsService.Start(context.Background())
@@ -521,11 +522,11 @@ func New(config *config.Config, db *pgxpool.Pool) *Server {
 
 	server.handlers = []interface{ Routes() []common.Route }{
 		health.NewHandler(),
-		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config),
+		assets.NewHandler(assetSvc, assetDocsSvc, userSvc, authSvc, metricsService, runsSvc, scheduleSvc, teamSvc, assetRuleSvc, scheduleEncryptor, config, lookupsRecorder),
 		users.NewHandler(userSvc, authSvc, config),
 		authHandler,
-		lineage.NewHandler(lineageSvc, userSvc, authSvc, config),
-		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config),
+		lineage.NewHandler(lineageSvc, userSvc, authSvc, config, lookupsRecorder),
+		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config, lookupsRecorder),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
 		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
@@ -660,6 +661,11 @@ func (s *Server) RegisterRoutes(mux *http.ServeMux) {
 					// Wrapping breaks the upgrade process
 					handler(w, r)
 				} else {
+					// Attribute the request to a client channel (cli, sdk-go,
+					// web, mcp, …) for lookup telemetry. Handlers read it back
+					// via lookups.SourceFrom(ctx).
+					r = r.WithContext(lookups.WithSource(r.Context(), lookups.SourceFromRequest(r)))
+
 					// For regular HTTP requests, use the wrapped ResponseWriter for metrics
 					wrapped := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
 					handler(wrapped, r)
