@@ -30,11 +30,25 @@ func (h *Handler) Routes() []common.Route {
 	}
 }
 
-func (h *Handler) listPlugins(w http.ResponseWriter, r *http.Request) {
-	registry := plugin.GetRegistry()
-	plugins := registry.List()
+// ListPluginsResponse wraps the registered plugin list with a Loading
+// flag so the UI can render a "plugins still loading" banner while
+// server startup finishes registering them, instead of a misleading
+// "no plugins available" state.
+type ListPluginsResponse struct {
+	Plugins []pluginsdk.Meta `json:"plugins"`
+	Loading bool             `json:"loading"`
+} // @name ListPluginsResponse
 
-	common.RespondJSON(w, http.StatusOK, plugins)
+// @Summary List registered plugins
+// @Tags plugins
+// @Produce json
+// @Success 200 {object} ListPluginsResponse
+// @Router /api/v1/plugins [get]
+func (h *Handler) listPlugins(w http.ResponseWriter, r *http.Request) {
+	common.RespondJSON(w, http.StatusOK, ListPluginsResponse{
+		Plugins: plugin.GetRegistry().List(),
+		Loading: !plugin.GetLoadState().Ready(),
+	})
 }
 
 // AWSCredentialStatus is the response for

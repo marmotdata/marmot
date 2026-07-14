@@ -686,6 +686,8 @@ func (tc *ToolContext) getTermByID(ctx context.Context, termID string) (*mcpsdk.
 		), nil, nil
 	}
 
+	tc.recordLookup(ctx, lookups.CategoryGlossaryTerm)
+
 	formatted := FormatTermCard(term, tc.config.Server.RootURL)
 
 	if ancestors, err := tc.glossaryService.GetAncestors(ctx, termID); err == nil && len(ancestors) > 0 {
@@ -878,6 +880,8 @@ func (tc *ToolContext) getDataProductByName(ctx context.Context, name string) (*
 }
 
 func (tc *ToolContext) renderDataProductDetails(ctx context.Context, product *dataproduct.DataProduct) (*mcpsdk.CallToolResult, any, error) {
+	tc.recordLookup(ctx, lookups.CategoryDataProduct)
+
 	const assetSampleSize = 15
 
 	var memberAssets []*asset.Asset

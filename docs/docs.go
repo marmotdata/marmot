@@ -336,6 +336,25 @@ const docTemplate = `{
                 }
             }
         },
+        "/api/v1/plugins": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugins"
+                ],
+                "summary": "List registered plugins",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ListPluginsResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/api/v1/plugins/aws/credentials/status": {
             "get": {
                 "description": "Detects if AWS credentials are available from environment or config files",
@@ -9002,6 +9021,20 @@ const docTemplate = `{
                 }
             }
         },
+        "ListPluginsResponse": {
+            "type": "object",
+            "properties": {
+                "loading": {
+                    "type": "boolean"
+                },
+                "plugins": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.Meta"
+                    }
+                }
+            }
+        },
         "ListSSOMappingsResponse": {
             "type": "object",
             "properties": {
@@ -10614,6 +10647,158 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "pluginsdk.ConfigField": {
+            "type": "object",
+            "properties": {
+                "default": {},
+                "description": {
+                    "type": "string"
+                },
+                "fields": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.ConfigField"
+                    }
+                },
+                "hidden": {
+                    "type": "boolean"
+                },
+                "is_array": {
+                    "type": "boolean"
+                },
+                "label": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "options": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.FieldOption"
+                    }
+                },
+                "placeholder": {
+                    "type": "string"
+                },
+                "required": {
+                    "type": "boolean"
+                },
+                "sensitive": {
+                    "type": "boolean"
+                },
+                "show_when": {
+                    "$ref": "#/definitions/pluginsdk.ShowWhen"
+                },
+                "type": {
+                    "$ref": "#/definitions/pluginsdk.FieldType"
+                },
+                "validation": {
+                    "$ref": "#/definitions/pluginsdk.Validation"
+                }
+            }
+        },
+        "pluginsdk.FieldOption": {
+            "type": "object",
+            "properties": {
+                "label": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "pluginsdk.FieldType": {
+            "type": "string",
+            "enum": [
+                "string",
+                "int",
+                "bool",
+                "select",
+                "multiselect",
+                "password",
+                "object"
+            ],
+            "x-enum-varnames": [
+                "FieldTypeString",
+                "FieldTypeInt",
+                "FieldTypeBool",
+                "FieldTypeSelect",
+                "FieldTypeMultiselect",
+                "FieldTypePassword",
+                "FieldTypeObject"
+            ]
+        },
+        "pluginsdk.Meta": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "type": "string"
+                },
+                "config_spec": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/pluginsdk.ConfigField"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "features": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "icon": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                },
+                "supports_data_preview": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "pluginsdk.ShowWhen": {
+            "type": "object",
+            "properties": {
+                "field": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            }
+        },
+        "pluginsdk.Validation": {
+            "type": "object",
+            "properties": {
+                "max": {
+                    "type": "integer"
+                },
+                "max_len": {
+                    "type": "integer"
+                },
+                "min": {
+                    "type": "integer"
+                },
+                "min_len": {
+                    "type": "integer"
+                },
+                "pattern": {
                     "type": "string"
                 }
             }

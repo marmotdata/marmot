@@ -12,6 +12,7 @@ import (
 	"github.com/marmotdata/marmot/internal/api/v1/common"
 	"github.com/marmotdata/marmot/internal/core/dataproduct"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 	"github.com/rs/zerolog/log"
 )
 
@@ -166,6 +167,8 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+
+	h.lookups.Record(r.Context(), lookups.CategoryDataProduct)
 
 	common.RespondJSON(w, http.StatusOK, dp)
 }

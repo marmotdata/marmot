@@ -177,6 +177,10 @@ type ValidateConfigResponse struct {
 // @Failure 401 {object} common.ErrorResponse
 // @Router /ingestion/validate [post]
 func (h *Handler) validateConfig(w http.ResponseWriter, r *http.Request) {
+	if !common.RequirePluginsReady(w) {
+		return
+	}
+
 	var req ValidateConfigRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")
@@ -581,6 +585,10 @@ func (h *Handler) deleteSchedule(w http.ResponseWriter, r *http.Request) {
 // @Failure 500 {object} common.ErrorResponse
 // @Router /ingestion/schedules/{id}/trigger [post]
 func (h *Handler) triggerSchedule(w http.ResponseWriter, r *http.Request) {
+	if !common.RequirePluginsReady(w) {
+		return
+	}
+
 	id := r.PathValue("id")
 	if id == "" {
 		common.RespondError(w, http.StatusBadRequest, "Schedule ID is required")

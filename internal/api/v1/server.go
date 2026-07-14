@@ -276,17 +276,24 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 
 	// Download core plugins that this build's manifest pins but the
 	// cache does not hold yet, then register plugins: locally installed
-	// ones first, so they shadow the pinned cached core plugins.
+	// ones first, so they shadow the pinned cached core plugins. Run in
+	// the background so the HTTP server can bind immediately; the
+	// scheduler, plugin-triggering endpoints, and /readyz gate on
+	// pluginLoadState until this finishes.
 	installOpts := install.Options{Registry: config.Plugins.Registry}
-	if config.Plugins.Autoinstall {
-		if err := install.EnsureCore(context.Background(), installOpts); err != nil {
-			log.Warn().Err(err).Msg("Failed to install core plugins; continuing with what is available")
+	pluginLoadState := plugin.GetLoadState()
+	go func() {
+		defer pluginLoadState.MarkReady()
+		if config.Plugins.Autoinstall {
+			if err := install.EnsureCore(context.Background(), installOpts); err != nil {
+				log.Warn().Err(err).Msg("Failed to install core plugins; continuing with what is available")
+			}
 		}
-	}
-
-	if err := install.LoadPlugins(installOpts); err != nil {
-		log.Error().Err(err).Msg("Failed to load external plugins")
-	}
+		if err := install.LoadPlugins(installOpts); err != nil {
+			log.Error().Err(err).Msg("Failed to load external plugins")
+		}
+		log.Info().Msg("Plugin loading complete")
+	}()
 
 	pluginRegistry := plugin.GetRegistry()
 
@@ -301,7 +308,7 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 	if config.Plugins.Autoinstall {
 		schedulerConfig.PluginInstall = &install.Options{Registry: config.Plugins.Registry}
 	}
-	scheduler := runService.NewScheduler(scheduleSvc, runsSvc, scheduleEncryptor, pluginRegistry, schedulerConfig)
+	scheduler := runService.NewScheduler(scheduleSvc, runsSvc, scheduleEncryptor, pluginRegistry, pluginLoadState, schedulerConfig)
 
 	if err := scheduler.Start(context.Background()); err != nil {
 		log.Error().Err(err).Msg("Failed to start scheduler")
@@ -529,8 +536,8 @@ func New(config *config.Config, db *pgxpool.Pool, lookupsRecorder lookups.Record
 		mcpAPI.NewHandler(assetSvc, glossarySvc, userSvc, teamSvc, dataProductSvc, lineageSvc, finalSearchSvc, authSvc, config, lookupsRecorder),
 		metricsAPI.NewHandler(metricsService, userSvc, authSvc, config),
 		runs.NewHandler(runsSvc, userSvc, authSvc, scheduleSvc, config),
-		glossary.NewHandler(glossarySvc, userSvc, authSvc, config),
-		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config),
+		glossary.NewHandler(glossarySvc, userSvc, authSvc, config, lookupsRecorder),
+		dataproducts.NewHandler(dataProductSvc, userSvc, authSvc, config, lookupsRecorder),
 		assetrulesAPI.NewHandler(assetRuleSvc, userSvc, authSvc, config),
 		docsAPI.NewHandler(docsSvc, userSvc, authSvc, config),
 		notificationsAPI.NewHandler(notificationSvc, userSvc, authSvc, config),

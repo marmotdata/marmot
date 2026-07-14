@@ -1306,6 +1306,15 @@ definitions:
           $ref: '#/definitions/TeamMemberWithUser'
         type: array
     type: object
+  ListPluginsResponse:
+    properties:
+      loading:
+        type: boolean
+      plugins:
+        items:
+          $ref: '#/definitions/pluginsdk.Meta'
+        type: array
+    type: object
   ListSSOMappingsResponse:
     properties:
       mappings:
@@ -2375,6 +2384,110 @@ definitions:
       message:
         type: string
     type: object
+  pluginsdk.ConfigField:
+    properties:
+      default: {}
+      description:
+        type: string
+      fields:
+        items:
+          $ref: '#/definitions/pluginsdk.ConfigField'
+        type: array
+      hidden:
+        type: boolean
+      is_array:
+        type: boolean
+      label:
+        type: string
+      name:
+        type: string
+      options:
+        items:
+          $ref: '#/definitions/pluginsdk.FieldOption'
+        type: array
+      placeholder:
+        type: string
+      required:
+        type: boolean
+      sensitive:
+        type: boolean
+      show_when:
+        $ref: '#/definitions/pluginsdk.ShowWhen'
+      type:
+        $ref: '#/definitions/pluginsdk.FieldType'
+      validation:
+        $ref: '#/definitions/pluginsdk.Validation'
+    type: object
+  pluginsdk.FieldOption:
+    properties:
+      label:
+        type: string
+      value:
+        type: string
+    type: object
+  pluginsdk.FieldType:
+    enum:
+    - string
+    - int
+    - bool
+    - select
+    - multiselect
+    - password
+    - object
+    type: string
+    x-enum-varnames:
+    - FieldTypeString
+    - FieldTypeInt
+    - FieldTypeBool
+    - FieldTypeSelect
+    - FieldTypeMultiselect
+    - FieldTypePassword
+    - FieldTypeObject
+  pluginsdk.Meta:
+    properties:
+      category:
+        type: string
+      config_spec:
+        items:
+          $ref: '#/definitions/pluginsdk.ConfigField'
+        type: array
+      description:
+        type: string
+      features:
+        items:
+          type: string
+        type: array
+      icon:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+      status:
+        type: string
+      supports_data_preview:
+        type: boolean
+    type: object
+  pluginsdk.ShowWhen:
+    properties:
+      field:
+        type: string
+      value:
+        type: string
+    type: object
+  pluginsdk.Validation:
+    properties:
+      max:
+        type: integer
+      max_len:
+        type: integer
+      min:
+        type: integer
+      min_len:
+        type: integer
+      pattern:
+        type: string
+    type: object
   v1_roles.createRoleRequest:
     properties:
       description:
@@ -2619,6 +2732,18 @@ paths:
       summary: Ingest OpenLineage event
       tags:
       - lineage
+  /api/v1/plugins:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ListPluginsResponse'
+      summary: List registered plugins
+      tags:
+      - plugins
   /api/v1/plugins/aws/credentials/status:
     get:
       description: Detects if AWS credentials are available from environment or config

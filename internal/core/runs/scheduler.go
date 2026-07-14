@@ -28,6 +28,7 @@ type Scheduler struct {
 	runsService   Service
 	encryptor     *crypto.Encryptor
 	registry      *plugin.Registry
+	loadState     *plugin.LoadState
 	db            *pgxpool.Pool
 	linkAssets    bool
 	pluginInstall *install.Options
@@ -60,9 +61,12 @@ type SchedulerConfig struct {
 	PluginInstall *install.Options
 }
 
-func NewScheduler(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry, config *SchedulerConfig) *Scheduler {
+func NewScheduler(service *ScheduleService, runsService Service, encryptor *crypto.Encryptor, registry *plugin.Registry, loadState *plugin.LoadState, config *SchedulerConfig) *Scheduler {
 	if config == nil {
 		config = &SchedulerConfig{}
+	}
+	if loadState == nil {
+		loadState = plugin.GetLoadState()
 	}
 
 	maxWorkers := config.MaxWorkers
@@ -90,6 +94,7 @@ func NewScheduler(service *ScheduleService, runsService Service, encryptor *cryp
 		runsService:       runsService,
 		encryptor:         encryptor,
 		registry:          registry,
+		loadState:         loadState,
 		db:                config.DB,
 		linkAssets:        config.LinkAssets,
 		pluginInstall:     config.PluginInstall,
@@ -104,6 +109,19 @@ func NewScheduler(service *ScheduleService, runsService Service, encryptor *cryp
 
 func (s *Scheduler) Start(ctx context.Context) error {
 	s.ctx, s.cancel = context.WithCancel(ctx)
+
+	if !s.loadState.Ready() {
+		log.Info().Msg("Scheduler waiting for plugin loading to complete before dispatching jobs")
+		s.wg.Add(1)
+		go func() {
+			defer s.wg.Done()
+			select {
+			case <-s.loadState.Done():
+				log.Info().Msg("Scheduler received plugin-ready signal; dispatching enabled")
+			case <-s.ctx.Done():
+			}
+		}()
+	}
 
 	s.wg.Add(1)
 	go func() {
@@ -195,6 +213,9 @@ func (s *Scheduler) jobDispatcher() {
 }
 
 func (s *Scheduler) processSchedules(ctx context.Context) error {
+	if !s.loadState.Ready() {
+		return nil
+	}
 
 	schedules, err := s.service.GetSchedulesDueForRun(ctx, 100)
 	if err != nil {
@@ -253,6 +274,10 @@ func (s *Scheduler) pendingJobsPoller() {
 }
 
 func (s *Scheduler) checkPendingJobs() {
+	if !s.loadState.Ready() {
+		return
+	}
+
 	ctx := context.Background()
 	status := JobStatusPending
 

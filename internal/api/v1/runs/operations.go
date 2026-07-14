@@ -125,6 +125,10 @@ type RunEntitiesResponse struct {
 // @Success 200 {object} plugin.Run
 // @Router /runs/start [post]
 func (h *Handler) startRun(w http.ResponseWriter, r *http.Request) {
+	if !common.RequirePluginsReady(w) {
+		return
+	}
+
 	var req StartRunRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		common.RespondError(w, http.StatusBadRequest, "Invalid request body")

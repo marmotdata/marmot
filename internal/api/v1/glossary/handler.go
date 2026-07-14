@@ -8,6 +8,7 @@ import (
 	"github.com/marmotdata/marmot/internal/core/auth"
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/user"
+	"github.com/marmotdata/marmot/internal/telemetry/lookups"
 )
 
 type Handler struct {
@@ -15,6 +16,7 @@ type Handler struct {
 	userService     user.Service
 	authService     auth.Service
 	config          *config.Config
+	lookups         lookups.Recorder
 }
 
 func NewHandler(
@@ -22,12 +24,14 @@ func NewHandler(
 	userService user.Service,
 	authService auth.Service,
 	config *config.Config,
+	lookupsRecorder lookups.Recorder,
 ) *Handler {
 	return &Handler{
 		glossaryService: glossaryService,
 		userService:     userService,
 		authService:     authService,
 		config:          config,
+		lookups:         lookupsRecorder,
 	}
 }
 

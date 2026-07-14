@@ -1,7 +1,3 @@
-// Package lookups counts asset-detail and lineage fetches per install for
-// Marmot's internal cloud-pricing analytics. Counters are lock-free on the
-// hot path; a background flusher persists deltas and the periodic anonymous
-// telemetry payload carries them out.
 package lookups
 
 import (
@@ -16,8 +12,10 @@ import (
 type Category string
 
 const (
-	CategoryAssetDetail Category = "asset_detail"
-	CategoryLineage     Category = "lineage"
+	CategoryAssetDetail  Category = "asset_detail"
+	CategoryLineage      Category = "lineage"
+	CategoryGlossaryTerm Category = "glossary_term"
+	CategoryDataProduct  Category = "data_product"
 )
 
 // Source identifies the channel a lookup came in on. Values are stable —

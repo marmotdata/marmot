@@ -60,6 +60,20 @@ resources:
     cpu: 500m
     memory: 512Mi
 
+livenessProbe:
+  httpGet:
+    path: /livez
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 20
+readinessProbe:
+  httpGet:
+    path: /readyz
+    port: http
+  initialDelaySeconds: 2
+  periodSeconds: 5
+  failureThreshold: 30
+
 autoscaling:
   enabled: true
   minReplicas: 2
@@ -270,11 +284,11 @@ operator:
       cpu: 100m
       memory: 128Mi
   leaderElect: true
-  watchNamespace: ""              # empty = all namespaces
+  watchNamespace: "" # empty = all namespaces
   metricsBindAddress: ":8090"
   healthProbeBindAddress: ":8091"
   marmot:
-    url: ""                       # auto-detected from service
+    url: "" # auto-detected from service
   # Default resources for ingestion Job pods (overridable per-CRD)
   jobDefaults:
     resources:
