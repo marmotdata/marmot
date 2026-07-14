@@ -9,8 +9,6 @@ import httpx
 from marmot._adapter import make_gen_client, make_marmot_auth
 from marmot.auth import Credential, resolve
 from marmot.auth.workload import WorkloadIdentitySource
-
-_USER_AGENT = "marmot-sdk-py"
 from marmot.resources.admin import AdminResource
 from marmot.resources.agent_runs import AgentRunsResource
 from marmot.resources.api_keys import APIKeysResource
@@ -23,6 +21,8 @@ from marmot.resources.runs import RunsResource
 from marmot.resources.search import SearchResource
 from marmot.resources.teams import TeamsResource
 from marmot.resources.users import UsersResource
+
+_USER_AGENT = "marmot-sdk-py"
 
 
 class Client:
