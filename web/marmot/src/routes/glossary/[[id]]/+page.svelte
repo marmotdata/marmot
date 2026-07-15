@@ -641,6 +641,31 @@
 							</div>
 						</div>
 					</div>
+				{:else if $terms.length === 0}
+					<div class="flex flex-col items-center justify-center py-16">
+						<div
+							class="w-20 h-20 rounded-2xl bg-gray-100 dark:bg-gray-800 flex items-center justify-center mb-4"
+						>
+							<Icon
+								icon="material-symbols:book-outline"
+								class="text-4xl text-gray-400 dark:text-gray-500"
+							/>
+						</div>
+						<h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+							No glossary terms yet
+						</h2>
+						<p class="text-sm text-gray-500 dark:text-gray-400 text-center max-w-md mb-6">
+							Glossary terms help you describe your business definitions and data concepts.
+						</p>
+						{#if canManageGlossary}
+							<Button
+								click={handleNewTerm}
+								icon="material-symbols:add"
+								text="Create your first term"
+								variant="filled"
+							/>
+						{/if}
+					</div>
 				{:else}
 					<div class="flex items-center justify-center h-full">
 						<div
@@ -650,29 +675,12 @@
 								icon="material-symbols:book-outline"
 								class="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500 mb-4"
 							/>
-							{#if $terms.length === 0}
-								<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-									No Glossary Terms
-								</h3>
-								<p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
-									Create a term to start describing your business definitions and data concepts
-								</p>
-								{#if canManageGlossary}
-									<Button
-										click={handleNewTerm}
-										icon="material-symbols:add"
-										text="Create Your First Term"
-										variant="filled"
-									/>
-								{/if}
-							{:else}
-								<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-									No Term Selected
-								</h3>
-								<p class="text-sm text-gray-500 dark:text-gray-400">
-									Select a term from the list to view its details
-								</p>
-							{/if}
+							<h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+								No Term Selected
+							</h3>
+							<p class="text-sm text-gray-500 dark:text-gray-400">
+								Select a term from the list to view its details
+							</p>
 						</div>
 					</div>
 				{/if}
