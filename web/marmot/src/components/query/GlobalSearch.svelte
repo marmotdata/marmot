@@ -33,11 +33,6 @@
 	let selectedIndex = -1;
 	let debounceTimer: ReturnType<typeof setTimeout>;
 
-	$: if (initialQuery !== searchQuery) {
-		searchQuery = initialQuery;
-		scheduleSearch();
-	}
-
 	function scheduleSearch() {
 		clearTimeout(debounceTimer);
 		if (searchQuery.trim()) {
