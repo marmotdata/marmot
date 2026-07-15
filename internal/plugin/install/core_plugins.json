@@ -41,6 +41,10 @@
       "version": "0.1.0",
       "digest": "sha256:1522bd911c2b4bf72b8f74e1bd26bd5a4617e39d711ac8e39b47c9a7a2c13970"
     },
+    "eks": {
+      "version": "0.1.0",
+      "digest": "sha256:0913f6bbec8ccef40ef516001bcdaabd2ada9e7e2a0e5c5c462a6fb1d7263c66"
+    },
     "elasticsearch": {
       "version": "0.1.0",
       "digest": "sha256:c234ce755a298d7b724d823a5c06b7c6d44e42f5c1810fae1241f5381fbdccd9"
@@ -48,6 +52,10 @@
     "gcs": {
       "version": "0.1.0",
       "digest": "sha256:69cc8497bfa293b5d6715e96d5971ffa9e2a9edb421a283529eeecc6f395f2e2"
+    },
+    "gke": {
+      "version": "0.1.0",
+      "digest": "sha256:5dbcbf062ba5bc75db1fc4fc3034211b5e4ab18dc61841bae33520da6ecd67a2"
     },
     "glue": {
       "version": "0.1.0",
@@ -60,6 +68,10 @@
     "kafka": {
       "version": "0.1.0",
       "digest": "sha256:e418867fd382ba2792f964c39e737b4921bc3a1826b4edf383cad10c837f14eb"
+    },
+    "kubernetes": {
+      "version": "0.1.0",
+      "digest": "sha256:36ed22761c718650d18d5fa6b5fee5d3ef762593dcd2e1d51764c7faef2abc94"
     },
     "lambda": {
       "version": "0.1.0",

@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Icon } from "@iconify/react";
+import Link from "@docusaurus/Link";
 import useDocusaurusContext from "@docusaurus/useDocusaurusContext";
+import { useDocsVersionCandidates } from "@docusaurus/plugin-content-docs/client";
 
 interface Plugin {
   name: string;
   description: string;
-  href: string;
+  docId: string;
   icon: string;
   useLocalIcon?: boolean;
   hasDarkIcon?: boolean;
@@ -15,13 +17,13 @@ const plugins: Plugin[] = [
   {
     name: "Airflow",
     description: "Ingest DAGs, tasks, and dataset lineage from Apache Airflow",
-    href: "/docs/Plugins/Airflow",
+    docId: "Plugins/Airflow",
     icon: "logos:airflow-icon",
   },
   {
     name: "AsyncAPI",
     description: "Discover services, topics, and queues from AsyncAPI specifications",
-    href: "/docs/Plugins/AsyncAPI",
+    docId: "Plugins/AsyncAPI",
     icon: "asyncapi",
     useLocalIcon: true,
     hasDarkIcon: true,
@@ -29,179 +31,179 @@ const plugins: Plugin[] = [
   {
     name: "Azure Blob Storage",
     description: "Discover containers from Azure Blob Storage accounts",
-    href: "/docs/Plugins/Azure%20Blob%20Storage",
+    docId: "Plugins/Azure Blob Storage",
     icon: "logos:azure-icon",
   },
   {
     name: "BigQuery",
     description: "Catalog datasets, tables, and views from Google BigQuery projects",
-    href: "/docs/Plugins/BigQuery",
+    docId: "Plugins/BigQuery",
     icon: "devicon:googlecloud",
   },
   {
     name: "ClickHouse",
     description: "Discover databases, tables, and views from ClickHouse instances",
-    href: "/docs/Plugins/ClickHouse",
+    docId: "Plugins/ClickHouse",
     icon: "devicon:clickhouse",
   },
   {
     name: "Confluent Cloud",
     description: "Discover Kafka topics from Confluent Cloud clusters",
-    href: "/docs/Plugins/Confluent%20Cloud",
+    docId: "Plugins/Confluent Cloud",
     icon: "confluent.png",
     useLocalIcon: true,
   },
   {
     name: "DBT",
     description: "Ingest models, sources, seeds, and lineage from dbt projects",
-    href: "/docs/Plugins/DBT",
+    docId: "Plugins/DBT",
     icon: "logos:dbt-icon",
   },
   {
     name: "Delta Lake",
     description: "Discover tables from Delta Lake transaction logs on local filesystems",
-    href: "/docs/Plugins/Delta%20Lake",
+    docId: "Plugins/Delta Lake",
     icon: "deltalake",
     useLocalIcon: true,
   },
   {
     name: "DuckDB",
     description: "Discover schemas, tables, views, and relationships from DuckDB database files",
-    href: "/docs/Plugins/DuckDB",
+    docId: "Plugins/DuckDB",
     icon: "devicon:duckdb",
   },
   {
     name: "DynamoDB",
     description: "Discover tables from Amazon DynamoDB",
-    href: "/docs/Plugins/DynamoDB",
+    docId: "Plugins/DynamoDB",
     icon: "logos:aws-dynamodb",
   },
   {
     name: "Elasticsearch",
     description: "Discover indices, data streams, and aliases from Elasticsearch clusters",
-    href: "/docs/Plugins/Elasticsearch",
+    docId: "Plugins/Elasticsearch",
     icon: "logos:elasticsearch",
   },
   {
     name: "Google Cloud Storage",
     description: "Discover buckets from Google Cloud Storage",
-    href: "/docs/Plugins/Google%20Cloud%20Storage",
+    docId: "Plugins/Google Cloud Storage",
     icon: "logos:google-cloud",
   },
   {
     name: "Glue",
     description: "Discover jobs, databases, tables and crawlers from AWS Glue",
-    href: "/docs/Plugins/Glue",
+    docId: "Plugins/Glue",
     icon: "logos:aws-glue",
   },
   {
     name: "Iceberg",
     description: "Discover namespaces, tables and views from Iceberg catalogs (REST and AWS Glue)",
-    href: "/docs/Plugins/Iceberg",
+    docId: "Plugins/Iceberg",
     icon: "iceberg",
     useLocalIcon: true,
   },
   {
     name: "Lambda",
     description: "Discover functions from AWS Lambda",
-    href: "/docs/Plugins/Lambda",
+    docId: "Plugins/Lambda",
     icon: "logos:aws-lambda",
   },
   {
     name: "Kafka",
     description: "Catalog topics from Apache Kafka clusters with Schema Registry integration",
-    href: "/docs/Plugins/Kafka",
+    docId: "Plugins/Kafka",
     icon: "devicon:apachekafka",
   },
   {
     name: "Kubernetes",
     description: "Discover namespaces, services, workloads, and cron jobs from self-managed Kubernetes clusters",
-    href: "/docs/Plugins/Kubernetes",
+    docId: "Plugins/Kubernetes",
     icon: "devicon:kubernetes",
   },
   {
     name: "Amazon EKS",
     description: "Discover namespaces, services, workloads, and cron jobs from Amazon EKS clusters",
-    href: "/docs/Plugins/EKS",
+    docId: "Plugins/EKS",
     icon: "logos:aws-eks",
   },
   {
     name: "Google GKE",
     description: "Discover namespaces, services, workloads, and cron jobs from Google GKE clusters",
-    href: "/docs/Plugins/GKE",
+    docId: "Plugins/GKE",
     icon: "logos:google-icon",
   },
   {
     name: "MongoDB",
     description: "Discover databases and collections from MongoDB instances",
-    href: "/docs/Plugins/MongoDB",
+    docId: "Plugins/MongoDB",
     icon: "devicon:mongodb",
   },
   {
     name: "MySQL",
     description: "Discover databases and tables from MySQL instances",
-    href: "/docs/Plugins/MySQL",
+    docId: "Plugins/MySQL",
     icon: "devicon:mysql",
   },
   {
     name: "NATS",
     description: "Discover JetStream streams from NATS servers",
-    href: "/docs/Plugins/NATS",
+    docId: "Plugins/NATS",
     icon: "devicon:nats",
   },
   {
     name: "OpenSearch",
     description: "Discover indices, data streams, and aliases from OpenSearch clusters",
-    href: "/docs/Plugins/OpenSearch",
+    docId: "Plugins/OpenSearch",
     icon: "logos:opensearch-icon",
   },
   {
     name: "OpenAPI",
     description: "Discover services and endpoints from OpenAPI v3 specifications",
-    href: "/docs/Plugins/OpenAPI",
+    docId: "Plugins/OpenAPI",
     icon: "devicon:openapi",
   },
   {
     name: "PostgreSQL",
     description: "Discover tables, views, and relationships from PostgreSQL databases",
-    href: "/docs/Plugins/PostgreSQL",
+    docId: "Plugins/PostgreSQL",
     icon: "devicon:postgresql",
   },
   {
     name: "Redis",
     description: "Discover databases from Redis instances",
-    href: "/docs/Plugins/Redis",
+    docId: "Plugins/Redis",
     icon: "devicon:redis",
   },
   {
     name: "Redpanda",
     description: "Discover topics from Redpanda clusters",
-    href: "/docs/Plugins/Redpanda",
+    docId: "Plugins/Redpanda",
     icon: "redpanda",
     useLocalIcon: true,
   },
   {
     name: "S3",
     description: "Catalog buckets from Amazon S3",
-    href: "/docs/Plugins/S3",
+    docId: "Plugins/S3",
     icon: "logos:aws-s3",
   },
   {
     name: "SNS",
     description: "Catalog topics from Amazon SNS",
-    href: "/docs/Plugins/SNS",
+    docId: "Plugins/SNS",
     icon: "logos:aws-sns",
   },
   {
     name: "SQS",
     description: "Discover queues from Amazon SQS",
-    href: "/docs/Plugins/SQS",
+    docId: "Plugins/SQS",
     icon: "logos:aws-sqs",
   },
   {
     name: "Trino",
     description: "Discover catalogs, schemas, tables and views from Trino clusters",
-    href: "/docs/Plugins/Trino",
+    docId: "Plugins/Trino",
     icon: "simple-icons:trino",
   },
 ];
@@ -225,6 +227,15 @@ function PluginIcon({ plugin, isDarkTheme }: { plugin: Plugin; isDarkTheme: bool
 export default function PluginCards(): JSX.Element {
   const [search, setSearch] = useState("");
   const { siteConfig } = useDocusaurusContext();
+  const versionCandidates = useDocsVersionCandidates("default");
+
+  const resolveHref = (docId: string): string => {
+    for (const version of versionCandidates) {
+      const doc = version.docs.find((d) => d.id === docId);
+      if (doc) return doc.path;
+    }
+    return "#";
+  };
 
   // Check for dark theme
   const isDarkTheme = typeof document !== "undefined" &&
@@ -259,9 +270,9 @@ export default function PluginCards(): JSX.Element {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredPlugins.map((plugin) => (
-            <a
+            <Link
               key={plugin.name}
-              href={plugin.href}
+              to={resolveHref(plugin.docId)}
               className="group block p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 hover:border-[var(--ifm-color-primary)] dark:hover:border-[var(--ifm-color-primary)] hover:shadow-lg transition-all no-underline"
             >
               <div className="flex items-start gap-4">
@@ -277,7 +288,7 @@ export default function PluginCards(): JSX.Element {
                   </p>
                 </div>
               </div>
-            </a>
+            </Link>
           ))}
         </div>
       )}

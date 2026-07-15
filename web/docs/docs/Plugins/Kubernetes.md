@@ -58,8 +58,8 @@ rules:
 :::tip[Managed clusters]
 This plugin is for self-managed and on-prem clusters. For managed clusters that authenticate with cloud IAM, use the dedicated plugins, which reuse this plugin's discovery engine:
 
-- Amazon EKS: the [EKS plugin](/docs/Plugins/EKS)
-- Google GKE: the [GKE plugin](/docs/Plugins/GKE)
+- Amazon EKS: the [EKS plugin](./EKS)
+- Google GKE: the [GKE plugin](./GKE)
 
 :::
 

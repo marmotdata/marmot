@@ -28,7 +28,7 @@ import { CalloutCard } from '@site/src/components/DocCard';
 />
 
 
-The GKE plugin discovers namespaces, services, deployments, stateful sets, cron jobs, and pods from Google Kubernetes Engine clusters. It is the [Kubernetes plugin](/docs/Plugins/Kubernetes)'s discovery engine with Google Cloud authentication, so the assets, lineage, and run history it produces are identical. See the Kubernetes plugin for details on what gets discovered and how resources are linked.
+The GKE plugin discovers namespaces, services, deployments, stateful sets, cron jobs, and pods from Google Kubernetes Engine clusters. It is the [Kubernetes plugin](./Kubernetes)'s discovery engine with Google Cloud authentication, so the assets, lineage, and run history it produces are identical. See the Kubernetes plugin for details on what gets discovered and how resources are linked.
 
 Authentication uses Google Cloud IAM: on each run the plugin mints a short-lived OAuth token from the Google credentials of wherever Marmot runs. There is no static token to store or rotate. This is the clean way to read a GKE cluster from a GCE instance, Cloud Run, or another Google Cloud workload.
 
@@ -88,7 +88,7 @@ tags:
 
 ```
 
-The discovery options (`namespaces`, `discover_*`, `cluster_name`, `tags`, and so on) are the same as the [Kubernetes plugin](/docs/Plugins/Kubernetes); see there for what each one does. The cluster name is used as the asset name prefix unless you set `cluster_name`.
+The discovery options (`namespaces`, `discover_*`, `cluster_name`, `tags`, and so on) are the same as the [Kubernetes plugin](./Kubernetes); see there for what each one does. The cluster name is used as the asset name prefix unless you set `cluster_name`.
 
 ## Configuration
 The following configuration options are available:
@@ -115,4 +115,4 @@ The following configuration options are available:
 
 ## Available Metadata
 
-The metadata fields are the same as the [Kubernetes plugin](/docs/Plugins/Kubernetes#available-metadata). Every asset also carries `cloud` (set to `GKE`), `gcp_project`, and `gcp_location`, so you can tell where a cluster lives without following lineage.
+The metadata fields are the same as the [Kubernetes plugin](./Kubernetes#available-metadata). Every asset also carries `cloud` (set to `GKE`), `gcp_project`, and `gcp_location`, so you can tell where a cluster lives without following lineage.

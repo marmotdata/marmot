@@ -32,7 +32,7 @@ Marmot plugin for Apache Kafka. Discovers topics from Kafka clusters, captures t
 
 Marmot plugins are standalone binaries that the Marmot host launches on demand via [go-plugin](https://github.com/hashicorp/go-plugin) and talks to over gRPC. It is built on the [Marmot plugin SDK](https://github.com/marmotdata/plugin-sdk).
 
-> Looking for a managed service? Marmot has dedicated plugins for [Confluent Cloud](../confluent) and [Redpanda](../redpanda) with pre-configured defaults.
+> Looking for a managed service? Marmot has dedicated plugins for [Confluent Cloud](./Confluent%20Cloud) and [Redpanda](./Redpanda) with pre-configured defaults.
 
 ## Connection Examples
 

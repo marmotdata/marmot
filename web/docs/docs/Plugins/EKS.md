@@ -28,7 +28,7 @@ import { CalloutCard } from '@site/src/components/DocCard';
 />
 
 
-The EKS plugin discovers namespaces, services, deployments, stateful sets, cron jobs, and pods from Amazon EKS clusters. It is the [Kubernetes plugin](/docs/Plugins/Kubernetes)'s discovery engine with AWS IAM authentication, so the assets, lineage, and run history it produces are identical. See the Kubernetes plugin for details on what gets discovered and how resources are linked.
+The EKS plugin discovers namespaces, services, deployments, stateful sets, cron jobs, and pods from Amazon EKS clusters. It is the [Kubernetes plugin](./Kubernetes)'s discovery engine with AWS IAM authentication, so the assets, lineage, and run history it produces are identical. See the Kubernetes plugin for details on what gets discovered and how resources are linked.
 
 Authentication uses AWS IAM: on each run the plugin mints a short-lived token from the AWS credentials of wherever Marmot runs. There is no static token to store or rotate. This is the clean way to read an EKS cluster from an EC2 instance or another AWS workload.
 
@@ -88,7 +88,7 @@ tags:
 
 ```
 
-The discovery options (`namespaces`, `discover_*`, `cluster_name`, `tags`, and so on) are the same as the [Kubernetes plugin](/docs/Plugins/Kubernetes); see there for what each one does. The cluster name is used as the asset name prefix unless you set `cluster_name`.
+The discovery options (`namespaces`, `discover_*`, `cluster_name`, `tags`, and so on) are the same as the [Kubernetes plugin](./Kubernetes); see there for what each one does. The cluster name is used as the asset name prefix unless you set `cluster_name`.
 
 ## Configuration
 The following configuration options are available:
@@ -113,4 +113,4 @@ The following configuration options are available:
 
 ## Available Metadata
 
-The metadata fields are the same as the [Kubernetes plugin](/docs/Plugins/Kubernetes#available-metadata). Every asset also carries `cloud` (set to `EKS`), `aws_region`, and `aws_account_id`, so you can tell where a cluster lives without following lineage. The cluster asset additionally carries `cluster_arn`, its canonical AWS identifier.
+The metadata fields are the same as the [Kubernetes plugin](./Kubernetes#available-metadata). Every asset also carries `cloud` (set to `EKS`), `aws_region`, and `aws_account_id`, so you can tell where a cluster lives without following lineage. The cluster asset additionally carries `cluster_arn`, its canonical AWS identifier.
