@@ -1,0 +1,104 @@
+---
+title: Authentication
+description: Configure authentication providers
+---
+
+# Authentication
+
+Marmot supports multiple OAuth/OIDC providers for Single Sign-On authentication. You can enable multiple providers simultaneously, and users will see login buttons for all enabled providers.
+
+import { DocCard, DocCardGrid, FeatureCard, FeatureGrid } from '@site/src/components/DocCard';
+
+## Supported Providers
+
+<DocCardGrid>
+  <DocCard
+    title="Generic OIDC"
+    description="Any OIDC-compliant provider with team synchronisation"
+    docId="Configure/Authentication/generic-oidc"
+    icon="mdi:shield-key-outline"
+  />
+  <DocCard
+    title="Google OIDC"
+    description="OpenID Connect authentication with Google Workspace"
+    docId="Configure/Authentication/google-oidc"
+    icon="mdi:google"
+  />
+  <DocCard
+    title="GitHub OAuth"
+    description="OAuth 2.0 authentication with GitHub"
+    docId="Configure/Authentication/github-oauth"
+    icon="mdi:github"
+  />
+  <DocCard
+    title="GitLab OIDC"
+    description="OpenID Connect for GitLab SaaS and self-hosted"
+    docId="Configure/Authentication/gitlab-oidc"
+    icon="mdi:gitlab"
+  />
+  <DocCard
+    title="Keycloak OIDC"
+    description="OpenID Connect with team synchronisation"
+    docId="Configure/Authentication/keycloak-oidc"
+    icon="simple-icons:keycloak"
+  />
+  <DocCard
+    title="Okta OIDC"
+    description="OpenID Connect with team synchronisation"
+    docId="Configure/Authentication/okta-oidc"
+    icon="simple-icons:okta"
+  />
+  <DocCard
+    title="Slack OIDC"
+    description="OpenID Connect authentication with Slack"
+    docId="Configure/Authentication/slack-oidc"
+    icon="mdi:slack"
+  />
+  <DocCard
+    title="Auth0 OIDC"
+    description="OpenID Connect with team synchronisation"
+    docId="Configure/Authentication/auth0-oidc"
+    icon="simple-icons:auth0"
+  />
+</DocCardGrid>
+
+## How It Works
+
+<FeatureGrid>
+  <FeatureCard
+    title="Email-Based Linking"
+    description="User accounts are linked by email address across all providers"
+    icon="mdi:email"
+  />
+  <FeatureCard
+    title="Multiple Providers"
+    description="Enable as many providers as you need - users choose at login"
+    icon="mdi:account-multiple"
+  />
+</FeatureGrid>
+
+## Prerequisites
+
+Before configuring any authentication provider, you must set `server.root_url` to the public URL of your Marmot instance. This is used to generate OAuth callback URLs.
+
+```yaml
+server:
+  root_url: https://marmot.example.com
+```
+
+Or via environment variable:
+
+```bash
+export MARMOT_SERVER_ROOT_URL=https://marmot.example.com
+```
+
+## Setup Steps
+
+Each provider requires:
+
+1. **Set `server.root_url`** - The public URL users access Marmot from
+2. **Create OAuth App** - Register an application in the provider's developer console
+3. **Configure Marmot** - Add credentials via environment variables or config file
+4. **Restart Marmot** - Changes take effect after restart
+
+See individual provider guides above for detailed setup instructions.
