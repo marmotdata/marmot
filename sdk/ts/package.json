@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "description": "TypeScript SDK for Marmot — read the catalog and self-document automation, agents, and pipelines.",
   "license": "Apache-2.0",
-  "homepage": "https://marmot.run",
+  "homepage": "https://marmotdata.io",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/marmotdata/marmot.git",

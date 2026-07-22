@@ -87,6 +87,9 @@ jobs:
       - name: Build
         run: make sdk-ts-build
 
+      - name: Upgrade npm for OIDC trusted publishing
+        run: npm install -g npm@latest
+
       - name: Publish via npm trusted publishing (OIDC)
         run: cd sdk/ts && npm publish --provenance --access public
         env:
