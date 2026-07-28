@@ -3,6 +3,8 @@
 
 # Marmot
 
+[![MCP Toplist](https://mcptoplist.com/badge/io.github.marmotdata%2Fmarmot.svg)](https://mcptoplist.com/server/io.github.marmotdata%2Fmarmot)
+
 **Discover any data asset in seconds. Then let your AI do the same.**
 
 _The open-source context layer for your AI. Catalog your tables, topics, queues and APIs then expose real metadata to your AI agents._
