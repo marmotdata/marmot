@@ -16,7 +16,7 @@ overrides:
   estree-util-value-to-estree: ">=3.4.1"
   mdast-util-to-hast: ">=13.2.1"
   "@babel/runtime-corejs3": ">=7.27.1"
-  "@babel/runtime": ">=7.27.1"
+  "@babel/runtime": "^7.27.1"
   "@babel/helpers": ">=7.27.1"
   "@babel/core": "^7.29.6"
   glob: ">=10.5.0"
