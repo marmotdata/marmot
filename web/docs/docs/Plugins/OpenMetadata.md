@@ -52,11 +52,30 @@ Descriptions, columns, classification tags, assigned glossary terms, owners, dom
 
 Marmot ingestion runs cannot create glossary terms, teams, users, domains or data products as objects of their own, so those stay on the assets as tags and metadata rather than becoming first class objects in Marmot.
 
+## Cutting Over from OpenMetadata
+
+Moving off OpenMetadata is not a single switch, so this plugin is built to run on a schedule for as long as the move takes.
+
+**During the cutover, run it like any other pipeline.** Each run brings across whatever changed in OpenMetadata, so the two catalogs stay in step while people are still working in both. Re-running is safe: assets that have not changed are left alone.
+
+**Anything written in Marmot survives every re-sync.** A description edited in Marmot is stored separately from the one the run imported, so the next sync refreshes the imported side and never overwrites the edit. The same holds for tags, owners and glossary terms added in Marmot.
+
+**Adopt each system as you go.** When you are ready to catalogue a system directly, add its own pipeline, for example the PostgreSQL plugin against the database OpenMetadata was describing. The imported assets and the native ones share an MRN, so the native run takes over the assets that are already there instead of creating a second copy of everything. Nothing needs to be deleted or re-pointed, and the descriptions people wrote stay put.
+
+**When you are done, stop scheduling the run.** The imported assets stay exactly as they are.
+
+<CalloutCard
+  title="Stop the schedule, do not destroy the pipeline"
+  description="marmot ingest --destroy deletes every asset the pipeline ever created, including ones another pipeline has since taken over. To retire this plugin, remove its schedule and leave the assets in place."
+  variant="secondary"
+  icon="mdi:alert-outline"
+/>
+
 ## Running it Alongside Marmot's Own Plugins
 
-By default an imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://table/postgresql/orders` whether Marmot read it from OpenMetadata or from the database itself; each run appears under its own name in the asset's sources.
+By default an imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://table/postgresql/orders` whether Marmot read it from OpenMetadata or from the database itself, so whichever run happens next updates the asset that is already there.
 
-That means names drop the levels the native plugin does not use, so two OpenMetadata services holding the same table name resolve to one asset. The run reports every entity it merged this way. Set `naming: qualified` to keep them apart instead, at the cost of no longer merging with native runs:
+That means names drop the levels the native plugin does not use, so two OpenMetadata services holding the same table name resolve to one asset. The run reports every entity it merged this way. Set `naming: qualified` to keep them apart instead, at the cost of no longer merging with native runs, which also gives up the handover described above:
 
 ```yaml
 runs:

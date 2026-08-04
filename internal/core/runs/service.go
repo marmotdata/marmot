@@ -263,6 +263,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 
 		assetHash := s.hashAsset(ast)
 
+		assetError := ""
 		status := StatusCreated
 		if checkpoint, exists := lastCheckpoints[assetMRN]; exists && checkpoint.Operation != StatusDeleted {
 			if len(checkpoint.SourceFields) > 0 && checkpoint.SourceFields[0] == assetHash {
@@ -287,11 +288,26 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				QueryLanguage: ast.QueryLanguage,
 				CreatedBy:     run.CreatedBy,
 			}
-			if _, err := s.assetService.Create(ctx, createInput); err != nil {
+			_, err := s.assetService.Create(ctx, createInput)
+
+			// The asset can already exist even though this pipeline has
+			// never seen it: another source discovered the same thing
+			// first. That is how a catalog imported from elsewhere hands
+			// over to the native plugin for the same technology, so the
+			// second source adopts the asset rather than failing on it.
+			if errors.Is(err, asset.ErrAlreadyExists) {
+				status = StatusUpdated
+				err = nil
+			}
+
+			if err != nil {
 				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to create asset")
+				assetError = err.Error()
 				status = StatusFailed
 			}
-		} else if status == StatusUpdated {
+		}
+
+		if status == StatusUpdated {
 			updateInput := asset.UpdateInput{
 				Name:             &ast.Name,
 				Type:             ast.Type,
@@ -308,10 +324,12 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			existingAsset, err := s.assetService.GetByMRN(ctx, assetMRN)
 			if err != nil {
 				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to get existing asset for update")
+				assetError = err.Error()
 				status = StatusFailed
 			} else {
 				if _, err := s.assetService.Update(ctx, existingAsset.ID, updateInput); err != nil {
 					log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to update asset")
+					assetError = err.Error()
 					status = StatusFailed
 				}
 			}
@@ -324,6 +342,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			MRN:      assetMRN,
 			Status:   status,
 			Asset:    ast,
+			Error:    assetError,
 		}
 		response.Assets = append(response.Assets, result)
 
