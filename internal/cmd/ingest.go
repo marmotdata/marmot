@@ -71,14 +71,15 @@ type CompleteRunRequest struct {
 }
 
 type BatchCreateRequest struct {
-	Assets        []CreateAssetRequest     `json:"assets"`
-	Lineage       []CreateLineageRequest   `json:"lineage"`
-	Documentation []CreateDocRequest       `json:"documentation"`
-	Statistics    []CreateStatisticRequest `json:"statistics"`
-	Config        plugin.RawPluginConfig   `json:"config"`
-	PipelineName  string                   `json:"pipeline_name"`
-	SourceName    string                   `json:"source_name"`
-	RunID         string                   `json:"run_id"`
+	Assets        []CreateAssetRequest      `json:"assets"`
+	Lineage       []CreateLineageRequest    `json:"lineage"`
+	Documentation []CreateDocRequest        `json:"documentation"`
+	Statistics    []CreateStatisticRequest  `json:"statistics"`
+	RunHistory    []CreateRunHistoryRequest `json:"run_history"`
+	Config        plugin.RawPluginConfig    `json:"config"`
+	PipelineName  string                    `json:"pipeline_name"`
+	SourceName    string                    `json:"source_name"`
+	RunID         string                    `json:"run_id"`
 }
 
 type CreateAssetRequest struct {
@@ -97,12 +98,26 @@ type CreateLineageRequest struct {
 	Source string `json:"source"`
 	Target string `json:"target"`
 	Type   string `json:"type"`
+	JobMRN string `json:"job_mrn,omitempty"`
 }
 
 type CreateDocRequest struct {
 	AssetMRN string `json:"asset_mrn"`
 	Content  string `json:"content"`
 	Type     string `json:"type"`
+}
+
+// CreateRunHistoryRequest is one run event a plugin observed, flattened
+// from the per-asset run history a discovery returns.
+type CreateRunHistoryRequest struct {
+	AssetMRN     string                 `json:"asset_mrn"`
+	RunID        string                 `json:"run_id"`
+	JobNamespace string                 `json:"job_namespace"`
+	JobName      string                 `json:"job_name"`
+	EventType    string                 `json:"event_type"`
+	EventTime    time.Time              `json:"event_time"`
+	RunFacets    map[string]interface{} `json:"run_facets,omitempty"`
+	JobFacets    map[string]interface{} `json:"job_facets,omitempty"`
 }
 
 type CreateStatisticRequest struct {
@@ -500,6 +515,7 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 					Source: edge.Source,
 					Target: edge.Target,
 					Type:   edge.Type,
+					JobMRN: edge.JobMRN,
 				})
 			}
 
@@ -512,10 +528,27 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 				})
 			}
 
+			runHistory := make([]CreateRunHistoryRequest, 0)
+			for _, assetRuns := range result.RunHistory {
+				for _, event := range assetRuns.Runs {
+					runHistory = append(runHistory, CreateRunHistoryRequest{
+						AssetMRN:     assetRuns.AssetMRN,
+						RunID:        event.RunID,
+						JobNamespace: event.JobNamespace,
+						JobName:      event.JobName,
+						EventType:    event.EventType,
+						EventTime:    event.EventTime,
+						RunFacets:    event.RunFacets,
+						JobFacets:    event.JobFacets,
+					})
+				}
+			}
+
 			batchReq := BatchCreateRequest{
 				Assets:        assets,
 				Lineage:       lineage,
 				Documentation: documentation,
+				RunHistory:    runHistory,
 				Config:        maskedConfig,
 				PipelineName:  config.Name,
 				SourceName:    sourceName,
@@ -776,4 +809,3 @@ func printDestroySummary(response *DestroyRunResponse, totalDeleted int, pipelin
 		fmt.Printf("\n%s⚠️  No resources were found to delete%s\n", colorYellow, colorReset)
 	}
 }
-

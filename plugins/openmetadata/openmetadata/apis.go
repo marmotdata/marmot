@@ -88,8 +88,10 @@ func (c *collector) discoverAPIs(ctx context.Context, client *client) error {
 
 		asset := c.newAsset(ep.entityBase, "apiEndpoint", "Endpoint", p, name, metadata)
 
+		// Containment is carried by the CONTAINS edge. Asset.ParentMRN
+		// exists on the SDK type but Marmot does not persist it, so
+		// setting it would look like a link and store nothing.
 		if parent, ok := collectionMRNs[collectionFQN]; ok {
-			asset.ParentMRN = &parent
 			c.link(parent, *asset.MRN, "CONTAINS")
 		}
 

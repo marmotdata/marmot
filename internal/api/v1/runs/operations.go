@@ -29,15 +29,30 @@ type CompleteRunRequest struct {
 	Error   string             `json:"error,omitempty"`
 } // @name CompleteRunRequest
 
+// CreateRunHistoryRequest is one run event a plugin observed against an
+// asset, for example an Airflow DAG run or an OpenMetadata pipeline
+// execution.
+type CreateRunHistoryRequest struct {
+	AssetMRN     string                 `json:"asset_mrn"`
+	RunID        string                 `json:"run_id"`
+	JobNamespace string                 `json:"job_namespace"`
+	JobName      string                 `json:"job_name"`
+	EventType    string                 `json:"event_type"`
+	EventTime    time.Time              `json:"event_time"`
+	RunFacets    map[string]interface{} `json:"run_facets,omitempty"`
+	JobFacets    map[string]interface{} `json:"job_facets,omitempty"`
+} // @name CreateRunHistoryRequest
+
 type BatchCreateRequest struct {
-	Assets        []CreateAssetRequest   `json:"assets" validate:"required,min=1"`
-	Lineage       []CreateLineageRequest `json:"lineage"`
-	Documentation []CreateDocRequest     `json:"documentation"`
-	Statistics    []CreateStatRequest    `json:"statistics"`
-	Config        plugin.RawPluginConfig `json:"config"`
-	PipelineName  string                 `json:"pipeline_name" validate:"required"`
-	SourceName    string                 `json:"source_name" validate:"required"`
-	RunID         string                 `json:"run_id" validate:"required"`
+	Assets        []CreateAssetRequest      `json:"assets" validate:"required,min=1"`
+	Lineage       []CreateLineageRequest    `json:"lineage"`
+	Documentation []CreateDocRequest        `json:"documentation"`
+	Statistics    []CreateStatRequest       `json:"statistics"`
+	RunHistory    []CreateRunHistoryRequest `json:"run_history"`
+	Config        plugin.RawPluginConfig    `json:"config"`
+	PipelineName  string                    `json:"pipeline_name" validate:"required"`
+	SourceName    string                    `json:"source_name" validate:"required"`
+	RunID         string                    `json:"run_id" validate:"required"`
 } // @name BatchCreateRequest
 
 type DestroyRunResponse struct {
@@ -57,6 +72,7 @@ type CreateLineageRequest struct {
 	Source string `json:"source"`
 	Target string `json:"target"`
 	Type   string `json:"type"`
+	JobMRN string `json:"job_mrn,omitempty"`
 } // @name CreateLineageRequest
 
 type CreateDocRequest struct {
@@ -239,6 +255,7 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 			Source: lineage.Source,
 			Target: lineage.Target,
 			Type:   lineage.Type,
+			JobMRN: lineage.JobMRN,
 		}
 	}
 	docRequests := make([]runs.DocumentationInput, len(req.Documentation))
@@ -262,6 +279,29 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to process entities: %v", err))
 		return
 	}
+
+	// Run history is stored separately from the entities: it is an
+	// append-only event stream keyed by asset, not something the run
+	// creates, updates or removes.
+	if len(req.RunHistory) > 0 {
+		runHistory := make([]runs.RunHistoryInput, len(req.RunHistory))
+		for i, event := range req.RunHistory {
+			runHistory[i] = runs.RunHistoryInput{
+				AssetMRN:     event.AssetMRN,
+				RunID:        event.RunID,
+				JobNamespace: event.JobNamespace,
+				JobName:      event.JobName,
+				EventType:    event.EventType,
+				EventTime:    event.EventTime,
+				RunFacets:    event.RunFacets,
+				JobFacets:    event.JobFacets,
+			}
+		}
+		if _, err := h.runService.ProcessRunHistory(r.Context(), runHistory); err != nil {
+			log.Warn().Err(err).Msg("Failed to process some run history entries")
+		}
+	}
+
 	common.RespondJSON(w, http.StatusOK, response)
 }
 

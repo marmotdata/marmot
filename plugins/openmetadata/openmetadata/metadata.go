@@ -111,3 +111,18 @@ type APIFields struct {
 	EndpointURL string `json:"endpoint_url" metadata:"endpoint_url" description:"URL of the endpoint"`
 	Path        string `json:"path" metadata:"path" description:"Request path"`
 }
+
+// DriveFields represents metadata on drive directories, files,
+// spreadsheets and worksheets.
+// +marmot:metadata
+type DriveFields struct {
+	Path          string `json:"path" metadata:"path" description:"Path within the drive"`
+	DirectoryType string `json:"directory_type" metadata:"directory_type" description:"Drive directory type"`
+	FileType      string `json:"file_type" metadata:"file_type" description:"Drive file type, for example Document or Spreadsheet"`
+	FileExtension string `json:"file_extension" metadata:"file_extension" description:"Drive file extension"`
+	MimeType      string `json:"mime_type" metadata:"mime_type" description:"Drive file MIME type"`
+	FileVersion   string `json:"file_version" metadata:"file_version" description:"Drive file version"`
+	Checksum      string `json:"checksum" metadata:"checksum" description:"Drive file checksum"`
+	Shared        bool   `json:"shared" metadata:"shared" description:"Whether the drive directory or file is shared"`
+	Spreadsheet   string `json:"spreadsheet" metadata:"spreadsheet" description:"Spreadsheet a worksheet belongs to"`
+}

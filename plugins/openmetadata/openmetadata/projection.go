@@ -159,6 +159,10 @@ var projections = map[string]projection{
 	"Pulsar":          {Provider: "Pulsar"},
 	"CustomMessaging": {Provider: "Messaging"},
 
+	// Drives
+	"GoogleDrive": {Provider: "GoogleDrive"},
+	"SharePoint":  {Provider: "SharePoint"},
+
 	// Object storage
 	"S3":   {Provider: "S3", ContainerType: "Bucket"},
 	"GCS":  {Provider: "GCS", ContainerType: "Bucket"},

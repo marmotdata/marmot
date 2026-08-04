@@ -334,3 +334,260 @@ func TestDiscover_NamesAnIcebergNamespaceTheWayTheIcebergPluginDoes(t *testing.T
 	require.NotNil(t, namespace)
 	assert.Equal(t, "mrn://namespace/iceberg/analytics", *namespace.MRN)
 }
+
+// Drive entities: OpenMetadata catalogues a drive as directories holding
+// files, and separately as spreadsheets holding worksheets.
+
+func driveFixture() *fakeOM {
+	root := entity("gdrive", "GoogleDrive", "gdrive.Marketing")
+	root["path"] = "/Marketing"
+
+	sub := entity("gdrive", "GoogleDrive", "gdrive.Marketing.Campaigns_2024")
+	sub["parent"] = map[string]interface{}{"fullyQualifiedName": "gdrive.Marketing"}
+	sub["path"] = "/Marketing/Campaigns_2024"
+
+	file := entity("gdrive", "GoogleDrive", `gdrive.Marketing."plan.pdf"`)
+	file["directory"] = map[string]interface{}{"fullyQualifiedName": "gdrive.Marketing"}
+	file["fileType"] = "Document"
+	file["fileExtension"] = "pdf"
+	file["size"] = 2097152
+
+	sheet := entity("gdrive", "GoogleDrive", "gdrive.annual_budget_2024")
+	sheet["path"] = "/Marketing/annual_budget_2024.xlsx"
+
+	ws := entity("gdrive", "GoogleDrive", "gdrive.annual_budget_2024.Q1")
+	ws["spreadsheet"] = map[string]interface{}{"fullyQualifiedName": "gdrive.annual_budget_2024"}
+	ws["columns"] = []map[string]interface{}{{"name": "cost_centre", "dataType": "STRING"}}
+
+	return newFakeOM().
+		with("drives/directories", root, sub).
+		with("drives/files", file).
+		with("drives/spreadsheets", sheet).
+		with("drives/worksheets", ws)
+}
+
+func TestDiscover_CataloguesDriveEntities(t *testing.T) {
+	result := discover(t, driveFixture(), nil)
+
+	// A folder is a Folder, every document is a File, and a sheet of a
+	// spreadsheet is a Table. That is what someone looking at the drive
+	// would call them.
+	assert.NotNil(t, findAsset(result, "Folder", "Marketing"))
+	assert.NotNil(t, findAsset(result, "File", "Marketing/plan.pdf"))
+	assert.NotNil(t, findAsset(result, "Spreadsheet", "Marketing/annual_budget_2024"),
+		"a spreadsheet is kept apart from a plain file: it has sheets inside it")
+	assert.NotNil(t, findAsset(result, "Table", "Marketing/annual_budget_2024/Q1"),
+		"a worksheet is a sheet of columns, so it is catalogued as a table")
+}
+
+func TestDiscover_NestsDriveEntities(t *testing.T) {
+	result := discover(t, driveFixture(), nil)
+
+	assert.True(t, hasEdge(result, "mrn://folder/googledrive/marketing",
+		"mrn://folder/googledrive/marketing-campaigns_2024", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://folder/googledrive/marketing",
+		"mrn://file/googledrive/marketing-plan.pdf", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://folder/googledrive/marketing",
+		"mrn://spreadsheet/googledrive/marketing-annual_budget_2024", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://spreadsheet/googledrive/marketing-annual_budget_2024",
+		"mrn://table/googledrive/marketing-annual_budget_2024-q1", "CONTAINS"))
+}
+
+func TestDiscover_RecordsWorksheetColumns(t *testing.T) {
+	result := discover(t, driveFixture(), nil)
+
+	columns := decodeColumns(t, findAsset(result, "Table", "Marketing/annual_budget_2024/Q1"))
+	require.Len(t, columns, 1)
+	assert.Equal(t, "cost_centre", columns[0]["column_name"])
+}
+
+func TestDiscover_KeepsAQuotedFileNameWhole(t *testing.T) {
+	// A file name contains a dot, which OpenMetadata quotes in the FQN.
+	result := discover(t, driveFixture(), nil)
+
+	assert.NotNil(t, findAsset(result, "File", "Marketing/plan.pdf"),
+		"plan.pdf must stay one name component")
+}
+
+func TestDiscover_CanLeaveOutDrives(t *testing.T) {
+	result := discover(t, driveFixture(), pluginsdk.RawConfig{"include_drives": false})
+
+	assert.Empty(t, result.Assets)
+}
+
+func TestDiscover_KeepsOneAssetForASpreadsheetAndItsFile(t *testing.T) {
+	// OpenMetadata records a Google Sheet twice: as the file in a folder
+	// and as the spreadsheet holding the worksheets. That is one
+	// document, so the catalog should hold one asset for it.
+	dir := entity("gdrive", "GoogleDrive", "gdrive.Finance")
+	dir["path"] = "/Finance"
+
+	file := entity("gdrive", "GoogleDrive", `gdrive.Finance."annual_budget.xlsx"`)
+	file["path"] = "/Finance/annual_budget.xlsx"
+	file["directory"] = map[string]interface{}{"fullyQualifiedName": "gdrive.Finance"}
+
+	sheet := entity("gdrive", "GoogleDrive", "gdrive.annual_budget")
+	sheet["path"] = "/Finance/annual_budget.xlsx"
+
+	result := discover(t, newFakeOM().
+		with("drives/directories", dir).
+		with("drives/files", file).
+		with("drives/spreadsheets", sheet),
+		nil)
+
+	assert.Nil(t, findAsset(result, "File", "Finance/annual_budget.xlsx"),
+		"the file entity is dropped in favour of the richer spreadsheet")
+	assert.NotNil(t, findAsset(result, "Spreadsheet", "Finance/annual_budget"),
+		"one asset for the document, named by where it lives")
+}
+
+func TestDiscover_NestsASpreadsheetUnderTheFolderItsPathPointsAt(t *testing.T) {
+	// OpenMetadata files a spreadsheet under the service, not the
+	// folder, so the folder has to come from its path.
+	dir := entity("gdrive", "GoogleDrive", "gdrive.Finance")
+	dir["path"] = "/Finance"
+
+	sheet := entity("gdrive", "GoogleDrive", "gdrive.annual_budget")
+	sheet["path"] = "/Finance/annual_budget.xlsx"
+
+	result := discover(t, newFakeOM().
+		with("drives/directories", dir).
+		with("drives/spreadsheets", sheet),
+		nil)
+
+	assert.True(t, hasEdge(result, "mrn://folder/googledrive/finance",
+		"mrn://spreadsheet/googledrive/finance-annual_budget", "CONTAINS"))
+}
+
+func TestDiscover_KeepsAFileThatIsNotASpreadsheet(t *testing.T) {
+	file := entity("gdrive", "GoogleDrive", `gdrive.Finance."notes.pdf"`)
+	file["path"] = "/Finance/notes.pdf"
+
+	sheet := entity("gdrive", "GoogleDrive", "gdrive.annual_budget")
+	sheet["path"] = "/Finance/annual_budget.xlsx"
+
+	result := discover(t, newFakeOM().
+		with("drives/files", file).
+		with("drives/spreadsheets", sheet),
+		nil)
+
+	assert.NotNil(t, findAsset(result, "File", "Finance/notes.pdf"))
+}
+
+func TestDiscover_CreatesFoldersOpenMetadataDoesNotDescribe(t *testing.T) {
+	// OpenMetadata holds no directory entity for every folder on a
+	// document's path. Without them the document would sit under a
+	// folder that is not in the catalog.
+	sheet := entity("gdrive", "GoogleDrive", "gdrive.product_roadmap")
+	sheet["path"] = "/Product/Roadmaps/product_roadmap.xlsx"
+
+	result := discover(t, newFakeOM().with("drives/spreadsheets", sheet), nil)
+
+	product := findAsset(result, "Folder", "Product")
+	require.NotNil(t, product, "the folder named by the path must exist")
+	assert.Equal(t, true, product.Metadata["inferred_from_path"])
+
+	assert.NotNil(t, findAsset(result, "Folder", "Product/Roadmaps"))
+	assert.True(t, hasEdge(result, "mrn://folder/googledrive/product",
+		"mrn://folder/googledrive/product-roadmaps", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://folder/googledrive/product-roadmaps",
+		"mrn://spreadsheet/googledrive/product-roadmaps-product_roadmap", "CONTAINS"))
+}
+
+func TestDiscover_PrefersTheDescribedFolderOverAnInferredOne(t *testing.T) {
+	dir := entity("gdrive", "GoogleDrive", "gdrive.Finance")
+	dir["path"] = "/Finance"
+	dir["description"] = "Financial documents"
+
+	file := entity("gdrive", "GoogleDrive", `gdrive."notes.pdf"`)
+	file["path"] = "/Finance/notes.pdf"
+
+	result := discover(t, newFakeOM().
+		with("drives/directories", dir).
+		with("drives/files", file),
+		nil)
+
+	finance := findAsset(result, "Folder", "Finance")
+	require.NotNil(t, finance)
+	require.NotNil(t, finance.Description)
+	assert.Equal(t, "Financial documents", *finance.Description)
+	assert.Nil(t, finance.Metadata["inferred_from_path"])
+}
+
+func TestDiscover_FilesAreNamedByTheirPathNotTheirOpenMetadataName(t *testing.T) {
+	// OpenMetadata files some documents under the service rather than
+	// the folder they live in; the path is what says where they are.
+	file := entity("gdrive", "GoogleDrive", `gdrive."handbook.pdf"`)
+	file["path"] = "/HR/handbook.pdf"
+
+	result := discover(t, newFakeOM().with("drives/files", file), nil)
+
+	assert.NotNil(t, findAsset(result, "File", "HR/handbook.pdf"))
+	assert.True(t, hasEdge(result, "mrn://folder/googledrive/hr",
+		"mrn://file/googledrive/hr-handbook.pdf", "CONTAINS"))
+}
+
+func TestDrivePathHelpers(t *testing.T) {
+	assert.Equal(t, "Finance/Q4", drivePath("/Finance/Q4/"))
+	assert.Equal(t, "Finance", parentPath("Finance/Q4"))
+	assert.Equal(t, "", parentPath("Finance"))
+	assert.Equal(t, []string{"a", "a/b", "a/b/c"}, ancestors("a/b/c"))
+	assert.Nil(t, ancestors(""))
+	assert.Equal(t, "Finance/budget", withoutExtension("Finance/budget.xlsx"))
+	assert.Equal(t, "Finance/budget", withoutExtension("Finance/budget"))
+}
+
+func TestDiscover_CataloguesTheDriveItself(t *testing.T) {
+	// A drive is the container someone browsing starts at, the way a
+	// bucket is for object storage, so it is an asset rather than a
+	// connection detail.
+	drive := entity("gdrive", "GoogleDrive", "gdrive")
+	drive["name"] = "gdrive"
+
+	dir := entity("gdrive", "GoogleDrive", "gdrive.Finance")
+	dir["path"] = "/Finance"
+
+	result := discover(t, newFakeOM().
+		with("services/driveServices", drive).
+		with("drives/directories", dir),
+		nil)
+
+	assert.NotNil(t, findAsset(result, "Drive", "gdrive"))
+	assert.True(t, hasEdge(result, "mrn://drive/googledrive/gdrive",
+		"mrn://folder/googledrive/finance", "CONTAINS"),
+		"a top level folder belongs to the drive")
+}
+
+func TestDiscover_OnlyTopLevelFoldersBelongToTheDrive(t *testing.T) {
+	drive := entity("gdrive", "GoogleDrive", "gdrive")
+	top := entity("gdrive", "GoogleDrive", "gdrive.Finance")
+	top["path"] = "/Finance"
+	nested := entity("gdrive", "GoogleDrive", "gdrive.Finance.Q4")
+	nested["path"] = "/Finance/Q4"
+
+	result := discover(t, newFakeOM().
+		with("services/driveServices", drive).
+		with("drives/directories", top, nested),
+		nil)
+
+	assert.True(t, hasEdge(result, "mrn://drive/googledrive/gdrive",
+		"mrn://folder/googledrive/finance", "CONTAINS"))
+	assert.False(t, hasEdge(result, "mrn://drive/googledrive/gdrive",
+		"mrn://folder/googledrive/finance-q4", "CONTAINS"),
+		"a nested folder belongs to its parent folder, not the drive")
+	assert.True(t, hasEdge(result, "mrn://folder/googledrive/finance",
+		"mrn://folder/googledrive/finance-q4", "CONTAINS"))
+}
+
+func TestDiscover_SurvivesADriveServiceEndpointThatIsAbsent(t *testing.T) {
+	dir := entity("gdrive", "GoogleDrive", "gdrive.Finance")
+	dir["path"] = "/Finance"
+
+	result := discover(t, newFakeOM().
+		with("drives/directories", dir).
+		without("services/driveServices"),
+		nil)
+
+	assert.Nil(t, findAsset(result, "Drive", "gdrive"))
+	assert.NotNil(t, findAsset(result, "Folder", "Finance"))
+}

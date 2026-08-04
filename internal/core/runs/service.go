@@ -83,6 +83,7 @@ type LineageInput struct {
 	Source string `json:"source"`
 	Target string `json:"target"`
 	Type   string `json:"type"`
+	JobMRN string `json:"job_mrn,omitempty"`
 }
 
 type DocumentationInput struct {
@@ -401,7 +402,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		}
 
 		if status == StatusCreated {
-			if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target, lin.Type); err != nil {
+			if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN); err != nil {
 				log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
 				status = StatusFailed
 			}

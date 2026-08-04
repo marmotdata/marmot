@@ -66,6 +66,7 @@ type Config struct {
 	IncludeStoredProcedures bool `json:"include_stored_procedures" description:"Import stored procedures as functions" default:"true"`
 	IncludeTopics           bool `json:"include_topics" description:"Import messaging topics" default:"true"`
 	IncludeContainers       bool `json:"include_containers" description:"Import object storage buckets and containers" default:"true"`
+	IncludeDrives           bool `json:"include_drives" description:"Import drive directories, files, spreadsheets and worksheets" default:"true"`
 	IncludeDashboards       bool `json:"include_dashboards" description:"Import dashboards, charts and dashboard data models" default:"true"`
 	IncludePipelines        bool `json:"include_pipelines" description:"Import orchestration pipelines" default:"true"`
 	IncludeTasks            bool `json:"include_tasks" description:"Import the individual tasks of each pipeline" default:"true"`
@@ -196,6 +197,11 @@ func (s *Source) collect(ctx context.Context, client *client, c *collector) erro
 	}
 	if s.config.IncludeContainers {
 		if err := c.discoverContainers(ctx, client); err != nil {
+			return err
+		}
+	}
+	if s.config.IncludeDrives {
+		if err := c.discoverDrives(ctx, client); err != nil {
 			return err
 		}
 	}

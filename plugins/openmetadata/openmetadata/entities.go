@@ -268,6 +268,55 @@ type searchIndex struct {
 	Fields    []column `json:"fields"`
 }
 
+// driveService is the drive itself: My Drive, a shared drive, or a
+// SharePoint site. OpenMetadata models it as a service, but unlike a
+// database connection it is a real container people navigate, so it is
+// catalogued rather than skipped.
+type driveService struct {
+	entityBase
+}
+
+// Drive entities. OpenMetadata models a drive as
+// service > directory > file, and separately
+// service > spreadsheet > worksheet, where a worksheet is a sheet of
+// columns and so the only drive entity with a schema.
+type directory struct {
+	entityBase
+	DirectoryType string     `json:"directoryType"`
+	Path          string     `json:"path"`
+	IsShared      bool       `json:"isShared"`
+	Parent        *entityRef `json:"parent"`
+}
+
+type driveFile struct {
+	entityBase
+	FileType      string     `json:"fileType"`
+	FileExtension string     `json:"fileExtension"`
+	MimeType      string     `json:"mimeType"`
+	Path          string     `json:"path"`
+	Size          float64    `json:"size"`
+	FileVersion   string     `json:"fileVersion"`
+	Checksum      string     `json:"checksum"`
+	IsShared      bool       `json:"isShared"`
+	WebViewLink   string     `json:"webViewLink"`
+	Directory     *entityRef `json:"directory"`
+}
+
+type spreadsheet struct {
+	entityBase
+	Path      string     `json:"path"`
+	Size      float64    `json:"size"`
+	Directory *entityRef `json:"directory"`
+}
+
+type worksheet struct {
+	entityBase
+	Spreadsheet *entityRef `json:"spreadsheet"`
+	Columns     []column   `json:"columns"`
+	IsHidden    bool       `json:"isHidden"`
+	RowCount    float64    `json:"rowCount"`
+}
+
 type apiCollection struct {
 	entityBase
 	EndpointURL string `json:"endpointURL"`

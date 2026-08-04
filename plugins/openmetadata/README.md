@@ -27,7 +27,7 @@ import { CalloutCard } from '@site/src/components/DocCard';
   icon="mdi:cursor-default-click"
 />
 
-The OpenMetadata plugin imports an entire OpenMetadata instance in one run: tables, views, stored procedures, topics, buckets, dashboards, charts, pipelines, models, search indices, API endpoints, and the lineage between them.
+The OpenMetadata plugin imports an entire OpenMetadata instance in one run: tables, views, stored procedures, topics, buckets, dashboards, charts, pipelines, models, search indices, API endpoints, drive files and spreadsheets, and the lineage between them.
 
 OpenMetadata is a catalog, so everything in it describes something that lives somewhere else. This plugin catalogues each entity as the technology it belongs to rather than as an OpenMetadata thing: a table under a Postgres service becomes a PostgreSQL asset in Marmot, addressed exactly as Marmot's own PostgreSQL plugin would address it. Point Marmot at OpenMetadata and the result looks like a catalog Marmot built itself.
 
@@ -40,6 +40,11 @@ OpenMetadata is a catalog, so everything in it describes something that lives so
 | stored procedure | Function |
 | topic | Topic |
 | container | Bucket at the top level, Container below it |
+| drive | Drive |
+| drive folder | Folder |
+| drive file | File |
+| spreadsheet | Spreadsheet |
+| a sheet of a spreadsheet | Table, with its columns |
 | dashboard, chart, dashboard data model | Dashboard, Chart, Data Model Object |
 | pipeline and its tasks | Pipeline, Task |
 | ML model | Model |
@@ -50,7 +55,11 @@ OpenMetadata is a catalog, so everything in it describes something that lives so
 
 Descriptions, columns, classification tags, assigned glossary terms, owners, domains and data products come across on the assets. Every asset gets a link back to the entity in OpenMetadata, and to the underlying system when OpenMetadata knows that address.
 
-Marmot ingestion runs cannot create glossary terms, teams, users, domains or data products as objects of their own, so those stay on the assets as tags and metadata rather than becoming first class objects in Marmot.
+The drive itself is catalogued, and the folders at the top of it are linked to it, so a drive is browsable from its root. Drive documents are placed by their path rather than their OpenMetadata name, because OpenMetadata files some of them under the service instead of the folder they live in. Any folder named by a path that OpenMetadata holds no directory for is created too, marked `inferred_from_path`, so nothing is left sitting under a folder that is missing from the catalog.
+
+Columns are part of the asset in Marmot rather than entities of their own, so a table with two hundred columns is one asset carrying two hundred columns, not two hundred and one things. OpenMetadata counts them separately, which is why its own totals are far larger than the number of assets an import produces.
+
+Marmot ingestion runs cannot create glossary terms, teams, users, domains or data products as objects of their own, so those stay on the assets as tags and metadata rather than becoming first class objects in Marmot. Data quality test cases and OpenMetadata's own usage analytics have no Marmot equivalent and are not imported.
 
 ## Cutting Over from OpenMetadata
 
@@ -132,6 +141,7 @@ The following configuration options are available:
 | include_apis | bool | false | Import API collections and endpoints |
 | include_columns | bool | false | Import column, field and feature definitions |
 | include_containers | bool | false | Import object storage buckets and containers |
+| include_drives | bool | false | Import drive directories, files, spreadsheets and worksheets |
 | include_dashboards | bool | false | Import dashboards, charts and dashboard data models |
 | include_deleted | bool | false | Import entities OpenMetadata has soft deleted |
 | include_lineage | bool | false | Import lineage between imported assets |
@@ -217,4 +227,10 @@ The following metadata fields are available:
 | target | string | Column the model predicts |
 | task_count | int | Number of tasks in the pipeline |
 | task_type | string | Task type, for example the Airflow operator |
+| shared | bool | Whether the drive directory or file is shared |
+| file_type | string | Drive file type, for example Document or Spreadsheet |
+| file_extension | string | Drive file extension |
+| mime_type | string | Drive file MIME type |
+| directory_type | string | Drive directory type |
+| path | string | Path within the drive |
 | weekly_query_count | int | Queries against the table in the last week |

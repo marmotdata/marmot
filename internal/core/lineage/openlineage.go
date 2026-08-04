@@ -167,7 +167,7 @@ func (s *service) createDAGTaskLineage(ctx context.Context, event *RunEvent, job
 			return err
 		}
 
-		if _, err := s.CreateDirectLineage(ctx, dagMRN, jobAssetMRN, "CONTAINS"); err != nil {
+		if _, err := s.CreateDirectLineage(ctx, dagMRN, jobAssetMRN, "CONTAINS", ""); err != nil {
 			log.Warn().Err(err).
 				Str("dag_mrn", dagMRN).
 				Str("task_mrn", jobAssetMRN).
@@ -252,7 +252,7 @@ func (s *service) createProjectModelLineage(ctx context.Context, event *RunEvent
 		parentNamespace,
 		projectJobName)
 
-	if _, err := s.CreateDirectLineage(ctx, projectMRN, jobAssetMRN, "CONTAINS"); err != nil{
+	if _, err := s.CreateDirectLineage(ctx, projectMRN, jobAssetMRN, "CONTAINS", ""); err != nil{
 		log.Warn().Err(err).
 			Str("project_mrn", projectMRN).
 			Str("model_mrn", jobAssetMRN).
@@ -387,7 +387,7 @@ func (s *service) processDatasets(ctx context.Context, event *RunEvent, jobAsset
 	}
 
 	for _, inputMRN := range inputMRNs {
-		if _, err := s.CreateDirectLineage(ctx, inputMRN, jobAssetMRN, "CONSUMES"); err != nil {
+		if _, err := s.CreateDirectLineage(ctx, inputMRN, jobAssetMRN, "CONSUMES", ""); err != nil {
 			log.Warn().Err(err).
 				Str("input_mrn", inputMRN).
 				Str("job_mrn", jobAssetMRN).
@@ -396,7 +396,7 @@ func (s *service) processDatasets(ctx context.Context, event *RunEvent, jobAsset
 	}
 
 	for _, outputMRN := range outputMRNs {
-		if _, err := s.CreateDirectLineage(ctx, jobAssetMRN, outputMRN, "PRODUCES"); err != nil {
+		if _, err := s.CreateDirectLineage(ctx, jobAssetMRN, outputMRN, "PRODUCES", ""); err != nil {
 			log.Warn().Err(err).
 				Str("job_mrn", jobAssetMRN).
 				Str("output_mrn", outputMRN).

@@ -89,7 +89,7 @@ func (h *Handler) createDirectLineage(w http.ResponseWriter, r *http.Request) {
 	if edge.Type != "" {
 		lineageType = edge.Type
 	}
-	edgeID, err := h.lineageService.CreateDirectLineage(r.Context(), edge.Source, edge.Target, lineageType)
+	edgeID, err := h.lineageService.CreateDirectLineage(r.Context(), edge.Source, edge.Target, lineageType, edge.JobMRN)
 	if err != nil {
 		log.Error().Err(err).
 			Str("source", edge.Source).
@@ -149,6 +149,7 @@ func (h *Handler) deleteDirectLineage(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Asset ID" format(uuid)
 // @Param limit query int false "Maximum depth of lineage graph" default(10)
 // @Param direction query string false "Direction of lineage (upstream, downstream, or both)" Enums(upstream, downstream, both) default(both)
+// @Param exclude_types query string false "Comma separated edge types to leave out, for example CONTAINS to see data flow without structure"
 // @Success 200 {object} lineage.LineageResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -179,6 +180,8 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 		direction = "both"
 	}
 
+	excludeTypes := parseEdgeTypes(r.URL.Query().Get("exclude_types"))
+
 	lineageResp, err := h.lineageService.GetAssetLineage(r.Context(), assetID, limit, direction)
 	if err != nil {
 		log.Error().Err(err).
@@ -194,6 +197,10 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 
 		common.RespondError(w, http.StatusInternalServerError, "Failed to get asset lineage")
 		return
+	}
+
+	if len(excludeTypes) > 0 {
+		lineageResp = withoutEdgeTypes(lineageResp, excludeTypes, assetID)
 	}
 
 	h.lookups.Record(r.Context(), lookups.CategoryLineage)
@@ -249,4 +256,46 @@ func (h *Handler) ingestOpenLineageEvent(w http.ResponseWriter, r *http.Request)
 	}
 
 	w.WriteHeader(http.StatusOK)
+}
+
+// parseEdgeTypes reads a comma separated edge type list, upper-cased so
+// callers can write either "contains" or "CONTAINS".
+func parseEdgeTypes(raw string) map[string]bool {
+	if strings.TrimSpace(raw) == "" {
+		return nil
+	}
+
+	types := make(map[string]bool)
+	for _, t := range strings.Split(raw, ",") {
+		if t = strings.ToUpper(strings.TrimSpace(t)); t != "" {
+			types[t] = true
+		}
+	}
+	return types
+}
+
+// withoutEdgeTypes drops edges of the given types and the nodes left
+// with nothing to connect to. Most of a catalog's lineage is structural
+// containment, so hiding it is what makes the data flow legible.
+func withoutEdgeTypes(resp *lineage.LineageResponse, exclude map[string]bool, rootID string) *lineage.LineageResponse {
+	edges := make([]lineage.LineageEdge, 0, len(resp.Edges))
+	connected := map[string]bool{rootID: true}
+
+	for _, edge := range resp.Edges {
+		if exclude[strings.ToUpper(edge.Type)] {
+			continue
+		}
+		edges = append(edges, edge)
+		connected[edge.Source] = true
+		connected[edge.Target] = true
+	}
+
+	nodes := make([]lineage.LineageNode, 0, len(resp.Nodes))
+	for _, node := range resp.Nodes {
+		if connected[node.ID] || (node.Asset != nil && node.Asset.MRN != nil && connected[*node.Asset.MRN]) {
+			nodes = append(nodes, node)
+		}
+	}
+
+	return &lineage.LineageResponse{Nodes: nodes, Edges: edges}
 }

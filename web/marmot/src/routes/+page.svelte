@@ -311,21 +311,6 @@
 		return colors[color] || colors.terracotta;
 	}
 
-	function getProviderIcon(provider: string): string {
-		const iconMap: Record<string, string> = {
-			bigquery: 'googlebigquery',
-			kafka: 'apachekafka',
-			spark: 'apachespark',
-			airflow: 'apacheairflow',
-			flink: 'apacheflink',
-			hive: 'apachehive',
-			openapi: 'openapiinitiative',
-			nats: 'natsdotio'
-		};
-		const normalizedProvider = provider.toLowerCase();
-		return iconMap[normalizedProvider] || normalizedProvider;
-	}
-
 	onMount(fetchData);
 </script>
 
@@ -408,10 +393,7 @@
 									<div
 										class="w-12 h-12 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center flex-shrink-0"
 									>
-										<Icon
-											icon={`simple-icons:${getProviderIcon(asset.asset_provider)}`}
-											class="w-6 h-6 text-gray-600 dark:text-gray-400"
-										/>
+										<IconComponent name={asset.asset_provider} size="sm" showLabel={false} />
 									</div>
 									<div class="flex-1 min-w-0 text-left">
 										<h3
@@ -553,10 +535,7 @@
 										class="w-full flex items-center justify-between group"
 									>
 										<div class="flex items-center gap-2">
-											<Icon
-												icon={`simple-icons:${getProviderIcon(item.provider)}`}
-												class="w-4 h-4 text-gray-600 dark:text-gray-400"
-											/>
+											<IconComponent name={item.provider} size="xs" showLabel={false} />
 											<span
 												class="text-sm text-gray-900 dark:text-gray-100 capitalize group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
 											>

@@ -63,6 +63,11 @@ import QuickSightIcon from '~icons/logos/aws-quicksight';
 import RedashIcon from '~icons/simple-icons/redash';
 import SQLServerIcon from '~icons/simple-icons/microsoftsqlserver';
 import SapIcon from '~icons/logos/sap';
+import GoogleDriveIcon from '~icons/logos/google-drive';
+import SharePointIcon from '~icons/simple-icons/microsoftsharepoint';
+import OneDriveIcon from '~icons/logos/microsoft-onedrive';
+import DorisIcon from '~icons/simple-icons/apachedoris';
+import MatillionIcon from '~icons/simple-icons/matillion';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -101,6 +106,11 @@ import RobotOutline from '~icons/material-symbols/robot-2-outline';
 import AlternateEmailRounded from '~icons/material-symbols/alternate-email-rounded';
 import ManageSearchRounded from '~icons/material-symbols/manage-search-rounded';
 import BarChartRounded from '~icons/material-symbols/bar-chart-4-bars';
+import DraftOutline from '~icons/material-symbols/draft-outline';
+import TableEyeOutline from '~icons/material-symbols/table-eye-outline';
+import FolderOutline from '~icons/material-symbols/folder-outline';
+import HardDriveOutline from '~icons/material-symbols/hard-drive-outline';
+import GridOnOutline from '~icons/material-symbols/grid-on';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
 
@@ -282,7 +292,14 @@ export const providerIconMap: Record<
 	redash: { default: RedashIcon, class: 'text-[#FF7964]', displayName: 'Redash' },
 	'sql-server': { default: SQLServerIcon, class: 'text-[#CC2927]', displayName: 'SQL Server' },
 	sqlserver: { default: SQLServerIcon, class: 'text-[#CC2927]', displayName: 'SQL Server' },
-	sap: { default: SapIcon, displayName: 'SAP' }
+	sap: { default: SapIcon, displayName: 'SAP' },
+	// Drives
+	googledrive: { default: GoogleDriveIcon, displayName: 'Google Drive' },
+	'google-drive': { default: GoogleDriveIcon, displayName: 'Google Drive' },
+	sharepoint: { default: SharePointIcon, class: 'text-[#038387]', displayName: 'SharePoint' },
+	onedrive: { default: OneDriveIcon, displayName: 'OneDrive' },
+	doris: { default: DorisIcon, class: 'text-[#1E90FF]', displayName: 'Doris' },
+	matillion: { default: MatillionIcon, class: 'text-[#19232D] dark:text-gray-100', displayName: 'Matillion' }
 };
 
 // Type icons with display names
@@ -472,6 +489,31 @@ export const typeIconMap: Record<
 		default: BarChartRounded,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'Chart'
+	},
+	file: {
+		default: DraftOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'File'
+	},
+	drive: {
+		default: HardDriveOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Drive'
+	},
+	folder: {
+		default: FolderOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Folder'
+	},
+	spreadsheet: {
+		default: GridOnOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Spreadsheet'
+	},
+	externaltable: {
+		default: TableEyeOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'External Table'
 	}
 };
 

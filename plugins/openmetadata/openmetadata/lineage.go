@@ -151,6 +151,10 @@ var lineageKinds = map[string]bool{
 	"pipeline":           true,
 	"storedProcedure":    true,
 	"apiEndpoint":        true,
+	"worksheet":          true,
+	"spreadsheet":        true,
+	"file":               true,
+	"directory":          true,
 }
 
 // trackForLineage remembers that an entity can be asked for lineage.
