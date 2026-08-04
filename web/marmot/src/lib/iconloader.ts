@@ -42,6 +42,27 @@ import TableauIcon from '~icons/simple-icons/tableau';
 import LookerIcon from '~icons/logos/looker-icon';
 import LangChainIcon from '~icons/simple-icons/langchain';
 import ClaudeIcon from '~icons/simple-icons/claude';
+import SupersetIcon from '~icons/logos/apache-superset';
+import MetabaseIcon from '~icons/logos/metabase';
+import PowerBIIcon from '~icons/logos/microsoft-power-bi';
+import MLflowIcon from '~icons/simple-icons/mlflow';
+import PrestoIcon from '~icons/logos/presto';
+import HiveIcon from '~icons/simple-icons/apachehive';
+import CassandraIcon from '~icons/logos/cassandra';
+import MariaDBIcon from '~icons/logos/mariadb-icon';
+import Db2Icon from '~icons/logos/ibm';
+import CockroachIcon from '~icons/simple-icons/cockroachlabs';
+import SQLiteIcon from '~icons/logos/sqlite';
+import CouchbaseIcon from '~icons/logos/couchbase';
+import DruidIcon from '~icons/simple-icons/apachedruid';
+import AirbyteIcon from '~icons/simple-icons/airbyte';
+import NifiIcon from '~icons/simple-icons/apachenifi';
+import FlinkIcon from '~icons/logos/apache-flink';
+import QlikIcon from '~icons/simple-icons/qlik';
+import QuickSightIcon from '~icons/logos/aws-quicksight';
+import RedashIcon from '~icons/simple-icons/redash';
+import SQLServerIcon from '~icons/simple-icons/microsoftsqlserver';
+import SapIcon from '~icons/logos/sap';
 
 import QueueListIcon from '~icons/heroicons/queue-list';
 import ChatBubbleIcon from '~icons/heroicons/chat-bubble-left-ellipsis';
@@ -79,6 +100,7 @@ import StorageOutline from '~icons/material-symbols/storage';
 import RobotOutline from '~icons/material-symbols/robot-2-outline';
 import AlternateEmailRounded from '~icons/material-symbols/alternate-email-rounded';
 import ManageSearchRounded from '~icons/material-symbols/manage-search-rounded';
+import BarChartRounded from '~icons/material-symbols/bar-chart-4-bars';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
 
@@ -221,7 +243,46 @@ export const providerIconMap: Record<
 		default: ClaudeIcon,
 		class: 'text-[#D97757] dark:text-[#E8927C]',
 		displayName: 'Claude'
-	}
+	},
+	// Catalogs Marmot imports from
+	openmetadata: {
+		default: BookOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'OpenMetadata'
+	},
+	// Providers reachable through an imported catalog
+	superset: { default: SupersetIcon, displayName: 'Superset' },
+	metabase: { default: MetabaseIcon, displayName: 'Metabase' },
+	powerbi: { default: PowerBIIcon, displayName: 'Power BI' },
+	mlflow: { default: MLflowIcon, class: 'text-[#0194E2]', displayName: 'MLflow' },
+	sagemaker: {
+		default: RobotOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'SageMaker'
+	},
+	'vertex-ai': {
+		default: RobotOutline,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Vertex AI'
+	},
+	presto: { default: PrestoIcon, displayName: 'Presto' },
+	hive: { default: HiveIcon, class: 'text-[#FDEE21] dark:text-[#FDEE21]', displayName: 'Hive' },
+	cassandra: { default: CassandraIcon, displayName: 'Cassandra' },
+	mariadb: { default: MariaDBIcon, displayName: 'MariaDB' },
+	db2: { default: Db2Icon, displayName: 'Db2' },
+	cockroachdb: { default: CockroachIcon, class: 'text-[#6933FF]', displayName: 'CockroachDB' },
+	sqlite: { default: SQLiteIcon, displayName: 'SQLite' },
+	couchbase: { default: CouchbaseIcon, displayName: 'Couchbase' },
+	druid: { default: DruidIcon, class: 'text-[#29F1FB]', displayName: 'Druid' },
+	airbyte: { default: AirbyteIcon, class: 'text-[#615EFF]', displayName: 'Airbyte' },
+	nifi: { default: NifiIcon, class: 'text-[#728E9B]', displayName: 'NiFi' },
+	flink: { default: FlinkIcon, displayName: 'Flink' },
+	qlik: { default: QlikIcon, class: 'text-[#009845]', displayName: 'Qlik' },
+	quicksight: { default: QuickSightIcon, displayName: 'QuickSight' },
+	redash: { default: RedashIcon, class: 'text-[#FF7964]', displayName: 'Redash' },
+	'sql-server': { default: SQLServerIcon, class: 'text-[#CC2927]', displayName: 'SQL Server' },
+	sqlserver: { default: SQLServerIcon, class: 'text-[#CC2927]', displayName: 'SQL Server' },
+	sap: { default: SapIcon, displayName: 'SAP' }
 };
 
 // Type icons with display names
@@ -406,6 +467,11 @@ export const typeIconMap: Record<
 		default: ManageSearchRounded,
 		class: 'text-gray-900 dark:text-gray-100',
 		displayName: 'Index'
+	},
+	chart: {
+		default: BarChartRounded,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Chart'
 	}
 };
 

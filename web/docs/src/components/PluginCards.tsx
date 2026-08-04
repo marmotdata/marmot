@@ -164,6 +164,12 @@ const plugins: Plugin[] = [
     icon: "devicon:openapi",
   },
   {
+    name: "OpenMetadata",
+    description: "Import an OpenMetadata instance, cataloguing every entity as the technology it belongs to",
+    docId: "Plugins/OpenMetadata",
+    icon: "material-symbols:book-2-outline",
+  },
+  {
     name: "PostgreSQL",
     description: "Discover tables, views, and relationships from PostgreSQL databases",
     docId: "Plugins/PostgreSQL",
