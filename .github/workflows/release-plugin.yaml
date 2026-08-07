@@ -51,9 +51,6 @@ jobs:
       - name: Install cosign
         uses: sigstore/cosign-installer@v3
 
-      - name: Install ORAS
-        uses: oras-project/setup-oras@v1
-
       - name: Run tests
         working-directory: ${{ steps.meta.outputs.workdir }}
         run: go test ./...
@@ -78,10 +75,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: v${{ steps.meta.outputs.version }}
 
-      # cgo plugins need cross toolchains for the darwin builds, so run
-      # goreleaser inside the goreleaser-cross image, the same setup the
-      # main marmot release uses. The OIDC env vars are passed through for
-      # cosign keyless signing.
+      # cgo plugins need cross toolchains for the darwin builds.
       - name: Run GoReleaser (cgo)
         if: steps.cgo.outputs.cgo == 'true'
         env:
@@ -102,9 +96,11 @@ jobs:
             'git config --global --add safe.directory /workspace && goreleaser release --clean --skip=validate'
 
       - name: Log in to GHCR
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | oras login ghcr.io --username "${{ github.actor }}" --password-stdin
+        run: |
+          mkdir -p ~/.docker
+          echo '{"auths":{"ghcr.io":{"auth":"'"$(printf '%s:%s' '${{ github.actor }}' '${{ secrets.GITHUB_TOKEN }}' | base64 -w0)"'"}}}' > ~/.docker/config.json
 
-      - name: Push plugin artifacts to GHCR
+      - name: Push plugin OCI artefacts
         id: push
         env:
           PLUGIN: ${{ steps.meta.outputs.plugin }}
@@ -112,76 +108,37 @@ jobs:
           WORKDIR: ${{ steps.meta.outputs.workdir }}
         run: |
           set -euo pipefail
-          REPO="${REGISTRY}/${PLUGIN}"
+          output=$(go run ./cmd plugin push \
+            "${REGISTRY}/${PLUGIN}:${VERSION}" \
+            --source "${WORKDIR}" \
+            --dist "${WORKDIR}/dist" \
+            --repo-url "https://github.com/${{ github.repository }}" \
+            | tee /dev/stderr)
+          {
+            echo "index_digest=$(awk '$1=="index:"{print $2}' <<<"$output")"
+            echo "info_digest=$(awk '$1=="info:"{print $2}' <<<"$output")"
+          } >> "$GITHUB_OUTPUT"
 
-          platform_tags=()
-          for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
-            os="${platform%/*}"
-            arch="${platform#*/}"
-
-            binary=$(find "${WORKDIR}/dist" -type f -name "marmot-plugin-${PLUGIN}" -path "*_${os}_${arch}*" | head -n1)
-            if [ -z "$binary" ]; then
-              echo "No binary found for ${platform}" >&2
-              exit 1
-            fi
-
-            tmp=$(mktemp -d)
-            gzip -9 -c "$binary" > "${tmp}/marmot-plugin-${PLUGIN}.gz"
-
-            tag="${VERSION}-${os}-${arch}"
-            (
-              cd "$tmp"
-              oras push \
-                --artifact-type application/vnd.marmot.plugin.v1 \
-                --artifact-platform "${platform}" \
-                --annotation "org.opencontainers.image.source=https://github.com/${{ github.repository }}" \
-                --annotation "org.opencontainers.image.version=${VERSION}" \
-                "${REPO}:${tag}" \
-                "marmot-plugin-${PLUGIN}.gz:application/vnd.marmot.plugin.v1+gzip"
-            )
-            platform_tags+=("$tag")
-          done
-
-          oras manifest index create "${REPO}:${VERSION},latest" "${platform_tags[@]}"
-
-          digest=$(oras manifest fetch --descriptor "${REPO}:${VERSION}" | jq -r .digest)
-          echo "digest=${digest}" >> "$GITHUB_OUTPUT"
-
-      - name: Sign plugin artifacts
+      - name: Sign OCI artefacts
         env:
           PLUGIN: ${{ steps.meta.outputs.plugin }}
-          VERSION: ${{ steps.meta.outputs.version }}
-          DIGEST: ${{ steps.push.outputs.digest }}
+          INDEX_DIGEST: ${{ steps.push.outputs.index_digest }}
+          INFO_DIGEST: ${{ steps.push.outputs.info_digest }}
         run: |
           set -euo pipefail
           REPO="${REGISTRY}/${PLUGIN}"
-
-          cosign sign --yes "${REPO}@${DIGEST}"
-
-          for platform in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64; do
-            os="${platform%/*}"
-            arch="${platform#*/}"
-            digest=$(oras manifest fetch --descriptor "${REPO}:${VERSION}-${os}-${arch}" | jq -r .digest)
-            cosign sign --yes "${REPO}@${digest}"
-          done
+          cosign sign --yes "${REPO}@${INDEX_DIGEST}"
+          cosign sign --yes "${REPO}@${INFO_DIGEST}"
 
       - name: Release summary
         env:
           PLUGIN: ${{ steps.meta.outputs.plugin }}
           VERSION: ${{ steps.meta.outputs.version }}
-          DIGEST: ${{ steps.push.outputs.digest }}
+          INDEX_DIGEST: ${{ steps.push.outputs.index_digest }}
         run: |
           {
-            echo "## Plugin published"
-            echo
-            echo '```'
-            echo "${REGISTRY}/${PLUGIN}:${VERSION}"
-            echo "${REGISTRY}/${PLUGIN}@${DIGEST}"
-            echo '```'
-            echo
-            echo "Update \`internal/plugin/install/core_plugins.json\` in marmotdata/marmot to pin this release:"
-            echo
+            echo "### ${PLUGIN} ${VERSION}"
             echo '```json'
-            echo "\"${PLUGIN}\": { \"version\": \"${VERSION}\", \"digest\": \"${DIGEST}\" }"
+            echo "\"${PLUGIN}\": { \"version\": \"${VERSION}\", \"digest\": \"${INDEX_DIGEST}\" }"
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"

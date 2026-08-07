@@ -4,7 +4,7 @@ go 1.26.3
 
 require (
 	cloud.google.com/go/storage v1.63.0
-	github.com/marmotdata/plugin-sdk v0.0.0-20260711225716-7aecacb11402
+	github.com/marmotdata/plugin-sdk v0.0.0-20260807074119-e2083bf8d8cf
 	github.com/stretchr/testify v1.11.1
 	google.golang.org/api v0.287.0
 )

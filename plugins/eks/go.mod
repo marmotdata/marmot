@@ -8,7 +8,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.44.0
 	github.com/aws/smithy-go v1.27.3
 	github.com/marmotdata/marmot/plugins/kubernetes v0.0.0-00010101000000-000000000000
-	github.com/marmotdata/plugin-sdk v0.0.0-20260711225716-7aecacb11402
+	github.com/marmotdata/plugin-sdk v0.0.0-20260807074119-e2083bf8d8cf
 	github.com/stretchr/testify v1.11.1
 	k8s.io/client-go v0.36.2
 )
