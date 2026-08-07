@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/kubernetes
 go 1.26.1
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20260711225716-7aecacb11402
+	github.com/marmotdata/plugin-sdk v0.0.0-20260807074119-e2083bf8d8cf
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 	k8s.io/api v0.36.2
