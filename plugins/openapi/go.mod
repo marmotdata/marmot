@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/openapi
 go 1.26.1
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
+	github.com/marmotdata/plugin-sdk v0.0.0-20260807074119-e2083bf8d8cf
 	github.com/pb33f/libopenapi v0.33.9
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
@@ -11,6 +11,7 @@ require (
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
 	github.com/ProtonMail/go-crypto v1.1.6 // indirect
@@ -69,6 +70,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.40.0 // indirect

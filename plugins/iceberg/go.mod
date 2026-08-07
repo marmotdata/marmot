@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	github.com/apache/iceberg-go v0.5.0
-	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
+	github.com/marmotdata/plugin-sdk v0.0.0-20260807074119-e2083bf8d8cf
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 )
@@ -14,6 +14,7 @@ require (
 	atomicgo.dev/keyboard v0.2.9 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
 	cloud.google.com/go v0.123.0 // indirect
+	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	github.com/andybalholm/brotli v1.2.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/apache/arrow-go/v18 v18.5.2-0.20260220015023-a886a5722b87 // indirect
@@ -85,6 +86,7 @@ require (
 	golang.org/x/exp v0.0.0-20260218203240-3dfff04db8fa // indirect
 	golang.org/x/mod v0.37.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sync v0.22.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260625142307-59b4966ccb57 // indirect

@@ -3,12 +3,13 @@ module github.com/marmotdata/marmot/plugins/redis
 go 1.26.1
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
+	github.com/marmotdata/plugin-sdk v0.0.0-20260807074119-e2083bf8d8cf
 	github.com/redis/go-redis/v9 v9.17.3
 	github.com/stretchr/testify v1.11.1
 )
 
 require (
+	cloud.google.com/go/compute/metadata v0.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.42.1 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.32.28 // indirect
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.27 // indirect
@@ -43,6 +44,7 @@ require (
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/crypto v0.54.0 // indirect
 	golang.org/x/net v0.57.0 // indirect
+	golang.org/x/oauth2 v0.36.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478 // indirect

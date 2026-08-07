@@ -4,7 +4,7 @@ go 1.26.1
 
 require (
 	cloud.google.com/go/bigquery v1.73.1
-	github.com/marmotdata/plugin-sdk v0.0.0-20260709145136-df61934963a2
+	github.com/marmotdata/plugin-sdk v0.0.0-20260807074119-e2083bf8d8cf
 	github.com/rs/zerolog v1.35.1
 	google.golang.org/api v0.267.0
 )
