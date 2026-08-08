@@ -260,6 +260,9 @@
 		{ id: 'contents', label: 'Contents', icon: 'material-symbols:folder-open-outline' }
 	];
 
+	// Providers whose assets form a drive tree worth browsing as folders.
+	const driveProviders = new Set(['googledrive', 'sharepoint']);
+
 	let visibleTabs = $derived(
 		allTabs.filter((tab) => {
 			if (
@@ -271,7 +274,13 @@
 			if (tab.id === 'preview' && (!isTableAsset(asset) || !$tablePreviewEnabled)) return false;
 			if (tab.id === 'run-history' && !asset?.has_run_history) return false;
 			if (tab.id === 'runs' && !isAgent) return false;
-			if (tab.id === 'contents' && children.length === 0 && parents.length === 0) return false;
+			// Contents is for drives, where a folder tree is how people
+			// navigate. Other providers nest too, but their structure is
+			// better read from Lineage.
+			if (tab.id === 'contents') {
+				if (!driveProviders.has((asset?.providers?.[0] ?? '').toLowerCase())) return false;
+				if (children.length === 0 && parents.length === 0) return false;
+			}
 			return true;
 		})
 	);

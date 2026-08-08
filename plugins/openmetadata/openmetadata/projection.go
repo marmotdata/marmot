@@ -76,6 +76,17 @@ func nameOnly(_, _, name string) string          { return name }
 func schemaQualified(_, schema, n string) string { return join(schema, n) }
 func fullyQualified(db, schema, n string) string { return join(db, schema, n) }
 
+// bucketQualified names an object by the bucket holding it. OpenMetadata's
+// file-based database services put the bucket at the schema level and a
+// label at the database level, and object stores address data as
+// bucket/key rather than with dots.
+func bucketQualified(_, bucket, key string) string {
+	if bucket == "" {
+		return key
+	}
+	return bucket + "/" + key
+}
+
 func join(parts ...string) string {
 	kept := parts[:0]
 	for _, p := range parts {
@@ -103,23 +114,23 @@ var projections = map[string]projection{
 	// Relational databases
 	"Postgres":    {Provider: "PostgreSQL", TableName: nameOnly},
 	"Mysql":       {Provider: "MySQL", TableName: nameOnly, TableGroup: groupSchema},
-	"MariaDB":     {Provider: "MariaDB", TableName: nameOnly, TableGroup: groupSchema},
+	"MariaDB":     {Provider: "MariaDB", TableName: schemaQualified, TableGroup: groupSchema},
 	"Mssql":       {Provider: "SQL Server", TableName: fullyQualified},
-	"Oracle":      {Provider: "Oracle", TableName: fullyQualified},
+	"Oracle":      {Provider: "Oracle", TableName: schemaQualified, TableGroup: groupSchema},
 	"Db2":         {Provider: "Db2", TableName: fullyQualified},
 	"Clickhouse":  {Provider: "ClickHouse", TableName: nameOnly, TableGroup: groupSchema},
-	"SingleStore": {Provider: "SingleStore", TableName: nameOnly, TableGroup: groupSchema},
+	"SingleStore": {Provider: "SingleStore", TableName: schemaQualified, TableGroup: groupSchema},
 	"Vertica":     {Provider: "Vertica", TableName: fullyQualified},
-	"Teradata":    {Provider: "Teradata", TableName: fullyQualified},
+	"Teradata":    {Provider: "Teradata", TableName: schemaQualified, TableGroup: groupSchema},
 	"Greenplum":   {Provider: "Greenplum", TableName: fullyQualified},
 	"Cockroach":   {Provider: "CockroachDB", TableName: fullyQualified},
-	"SQLite":      {Provider: "SQLite", TableName: nameOnly, TableGroup: groupSchema},
-	"Exasol":      {Provider: "Exasol", TableName: fullyQualified},
+	"SQLite":      {Provider: "SQLite", TableName: nameOnly, TableGroup: groupNone},
+	"Exasol":      {Provider: "Exasol", TableName: schemaQualified, TableGroup: groupSchema},
 
 	// Cloud warehouses and lakehouses
-	"Snowflake":    {Provider: "Snowflake", TableName: fullyQualified},
+	"Snowflake":    {Provider: "Snowflake", TableName: fullyQualified, TableTypes: map[string]string{"External": "ExternalTable"}},
 	"BigQuery":     {Provider: "BigQuery", TableName: nameOnly, TableGroup: groupSchema, TableGroupType: "Dataset", TableTypes: map[string]string{"External": "ExternalTable"}},
-	"Redshift":     {Provider: "Redshift", TableName: fullyQualified},
+	"Redshift":     {Provider: "Redshift", TableName: fullyQualified, TableTypes: map[string]string{"External": "ExternalTable"}},
 	"Athena":       {Provider: "Athena", TableName: schemaQualified, TableGroup: groupSchema},
 	"Databricks":   {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"UnityCatalog": {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
@@ -127,37 +138,35 @@ var projections = map[string]projection{
 	"Synapse":      {Provider: "Azure Synapse", TableName: fullyQualified},
 	"Iceberg":      {Provider: "Iceberg", TableName: nameOnly, TableGroup: groupSchema, TableGroupType: "Namespace"},
 	"DeltaLake":    {Provider: "Delta Lake", TableName: nameOnly, TableGroup: groupNone},
-	"Hive":         {Provider: "Hive", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"Impala":       {Provider: "Impala", TableName: fullyQualified, TableGroupType: "Catalog"},
+	"Hive":         {Provider: "Hive", TableName: schemaQualified, TableGroup: groupSchema},
+	"Impala":       {Provider: "Impala", TableName: schemaQualified, TableGroup: groupSchema},
 	"Trino":        {Provider: "Trino", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"Presto":       {Provider: "Presto", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"Dremio":       {Provider: "Dremio", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"Glue":         {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
 	"Doris":        {Provider: "Doris", TableName: schemaQualified, TableGroup: groupSchema},
-	"Druid":        {Provider: "Druid", TableName: schemaQualified, TableGroup: groupSchema},
-	"Pinot":        {Provider: "Pinot", TableName: nameOnly, TableGroup: groupSchema},
+	"Druid":        {Provider: "Druid", TableName: nameOnly, TableGroup: groupNone},
+	"PinotDB":      {Provider: "Pinot", TableName: nameOnly, TableGroup: groupNone},
 
 	// Document, key-value and wide-column stores
 	"MongoDB":   {Provider: "MongoDB", TableName: nameOnly, TableGroup: groupSchema, TableTypes: map[string]string{"Regular": "Collection"}},
 	"DynamoDB":  {Provider: "DynamoDB", TableName: nameOnly, TableGroup: groupNone},
-	"Cassandra": {Provider: "Cassandra", TableName: schemaQualified, TableGroup: groupSchema, TableGroupType: "Namespace"},
-	"Couchbase": {Provider: "Couchbase", TableName: schemaQualified, TableGroup: groupSchema},
+	"Cassandra": {Provider: "Cassandra", TableName: schemaQualified, TableGroup: groupSchema},
+	"Couchbase": {Provider: "Couchbase", TableName: fullyQualified, TableGroupType: "Bucket", TableTypes: map[string]string{"Regular": "Collection"}},
 
 	// SaaS and application sources
-	"Salesforce": {Provider: "Salesforce", TableName: nameOnly, TableGroup: groupNone},
-	"SAS":        {Provider: "SAS", TableName: schemaQualified, TableGroup: groupSchema},
-	"Domo":       {Provider: "Domo", TableName: schemaQualified, TableGroup: groupSchema},
+	"Salesforce":   {Provider: "Salesforce", TableName: nameOnly, TableGroup: groupNone},
+	"SAS":          {Provider: "SAS", TableName: schemaQualified, TableGroup: groupSchema},
+	"DomoDatabase": {Provider: "Domo", TableName: nameOnly, TableGroup: groupNone, TableTypes: map[string]string{"Regular": "Dataset"}},
 
 	// Search
 	"ElasticSearch": {Provider: "Elasticsearch", IndexType: "Table"},
 	"OpenSearch":    {Provider: "OpenSearch", IndexType: "Table"},
 
 	// Messaging
-	"Kafka":           {Provider: "Kafka"},
-	"Redpanda":        {Provider: "Kafka"},
-	"Kinesis":         {Provider: "Kinesis"},
-	"Pulsar":          {Provider: "Pulsar"},
-	"CustomMessaging": {Provider: "Messaging"},
+	"Kafka":    {Provider: "Kafka"},
+	"Redpanda": {Provider: "Kafka"},
+	"Kinesis":  {Provider: "Kinesis"},
 
 	// Drives
 	"GoogleDrive": {Provider: "GoogleDrive"},
@@ -182,7 +191,7 @@ var projections = map[string]projection{
 	"GluePipeline":       {Provider: "Glue"},
 	"DatabricksPipeline": {Provider: "Databricks"},
 	"DomoPipeline":       {Provider: "Domo"},
-	"Wherescape":         {Provider: "Wherescape"},
+	"Wherescape":         {Provider: "WhereScape"},
 	"SSIS":               {Provider: "SSIS"},
 
 	// Dashboards
@@ -210,6 +219,42 @@ var projections = map[string]projection{
 
 	// APIs
 	"Rest": {Provider: "OpenAPI"},
+
+	// Technologies Marmot has no plugin for yet. Modelled as a native
+	// plugin should model them, so that when one is written the two runs
+	// land on the same asset rather than two.
+	"Timescale":       {Provider: "PostgreSQL", TableName: nameOnly},
+	"QuestDB":         {Provider: "QuestDB", TableName: nameOnly, TableGroup: groupNone},
+	"SapHana":         {Provider: "SAP HANA", TableName: fullyQualified},
+	"SapErp":          {Provider: "SAP ERP", TableName: nameOnly, TableGroup: groupNone},
+	"StarRocks":       {Provider: "StarRocks", TableName: schemaQualified, TableGroup: groupSchema},
+	"Iomete":          {Provider: "IOMETE", TableName: fullyQualified, TableGroupType: "Catalog"},
+	"MicrosoftFabric": {Provider: "Microsoft Fabric", TableName: fullyQualified},
+	"BigTable":        {Provider: "Bigtable", TableName: fullyQualified, TableGroup: groupSchema},
+	"BurstIQ":         {Provider: "BurstIQ", TableName: nameOnly, TableGroup: groupNone},
+	// A data lake service reads files out of object storage, so its
+	// objects are addressed bucket/key. groupNone keeps it from minting a
+	// Bucket that would shadow the one the native S3 and GCS plugins make.
+	"Datalake": {Provider: "Data Lake", TableName: bucketQualified, TableGroup: groupNone},
+
+	// Messaging and drives
+	"PubSub": {Provider: "GooglePubSub"},
+	"Sftp":   {Provider: "SFTP"},
+
+	// Orchestration and transformation
+	"Spark":                   {Provider: "Spark"},
+	"OpenLineage":             {Provider: "OpenLineage"},
+	"Snowplow":                {Provider: "Snowplow"},
+	"KafkaConnect":            {Provider: "Kafka"},
+	"KinesisFirehose":         {Provider: "Firehose"},
+	"Mulesoft":                {Provider: "MuleSoft"},
+	"DataFactory":             {Provider: "Azure Data Factory"},
+	"MicrosoftFabricPipeline": {Provider: "Microsoft Fabric"},
+
+	// Dashboards
+	"Grafana": {Provider: "Grafana"},
+	"Hex":     {Provider: "Hex"},
+	"Ssrs":    {Provider: "SSRS"},
 }
 
 // projectionFor returns the projection for an OpenMetadata serviceType.

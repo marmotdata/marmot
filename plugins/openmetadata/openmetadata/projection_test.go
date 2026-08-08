@@ -179,3 +179,145 @@ func TestAPIBaseURL_AcceptsTheFormsPeopleActuallyPaste(t *testing.T) {
 	assert.Equal(t, "https://om.example.com/api", apiBaseURL("https://om.example.com/api"))
 	assert.Equal(t, "https://om.example.com/api", apiBaseURL("  https://om.example.com  "))
 }
+
+func TestProjectionFor_AddressesACustomServiceByItsType(t *testing.T) {
+	// A custom service is user-defined, so there is no technology to name
+	// it after. Naming it for its category instead would put two
+	// unrelated custom services in one namespace.
+	for _, serviceType := range []string{"CustomMessaging", "CustomDatabase", "CustomDashboard"} {
+		p := projectionFor(serviceType)
+		assert.Equal(t, serviceType, p.Provider, serviceType)
+	}
+}
+
+// A projection key that is not a real OpenMetadata serviceType silently
+// never applies: the service falls through to the default instead, and
+// the mistake is invisible until someone compares the catalog with
+// OpenMetadata by hand.
+
+func TestProjection_KeysAreRealOpenMetadataServiceTypes(t *testing.T) {
+	// These three were wrong: OpenMetadata calls them PinotDB and
+	// DomoDatabase, and has no Pulsar service at all.
+	for _, notAServiceType := range []string{"Pinot", "Domo", "Pulsar"} {
+		_, found := projections[notAServiceType]
+		assert.False(t, found, "%s is not an OpenMetadata serviceType", notAServiceType)
+	}
+
+	for _, serviceType := range []string{"PinotDB", "DomoDatabase"} {
+		_, found := projections[serviceType]
+		assert.True(t, found, "%s is an OpenMetadata serviceType", serviceType)
+	}
+}
+
+func TestProjection_PinotTablesAreFlat(t *testing.T) {
+	p := projectionFor("PinotDB")
+
+	assert.Equal(t, "Pinot", p.Provider)
+	assert.Equal(t, "events", p.TableName("default", "default", "events"),
+		"Pinot tables live in one flat namespace")
+}
+
+func TestProjection_DomoSharesOneProviderAcrossItsServices(t *testing.T) {
+	// Domo is one product; OpenMetadata splits it into three services.
+	for _, serviceType := range []string{"DomoDatabase", "DomoDashboard", "DomoPipeline"} {
+		assert.Equal(t, "Domo", projectionFor(serviceType).Provider, serviceType)
+	}
+}
+
+func TestProjection_CouchbaseHoldsCollectionsNotTables(t *testing.T) {
+	p := projectionFor("Couchbase")
+
+	assert.Equal(t, "Collection", p.assetTypeFor("Regular"),
+		"Couchbase stores documents in collections, the same as MongoDB")
+	assert.Equal(t, "travel.inventory.airline",
+		p.TableName("travel", "inventory", "airline"),
+		"a bucket is a real level: two buckets can hold the same scope and collection")
+}
+
+func TestProjection_DruidDatasourcesAreFlat(t *testing.T) {
+	p := projectionFor("Druid")
+
+	assert.Equal(t, "wikipedia", p.TableName("druid", "druid", "wikipedia"),
+		"OpenMetadata files every Druid datasource under a constant schema")
+}
+
+func TestProjection_MysqlCompatibleServersKeepTheDatabaseInTheName(t *testing.T) {
+	// MariaDB and SingleStore have no native Marmot plugin, so they are
+	// modelled properly rather than copying the MySQL plugin's bare name.
+	for _, serviceType := range []string{"MariaDB", "SingleStore"} {
+		p := projectionFor(serviceType)
+		assert.Equal(t, "shop.orders", p.TableName("default", "shop", "orders"),
+			"%s: one server holds many databases", serviceType)
+	}
+}
+
+// Technologies with no native Marmot plugin yet. These tests pin the
+// tuple a future native plugin has to emit to land on the same asset.
+
+func TestProjection_TimescaleIsPostgres(t *testing.T) {
+	// TimescaleDB is a Postgres extension, so Marmot's PostgreSQL plugin
+	// already reads it. Giving it its own provider would catalogue one
+	// hypertable twice.
+	p := projectionFor("Timescale")
+
+	assert.Equal(t, "PostgreSQL", p.Provider)
+	assert.Equal(t, mrn.New("Table", "PostgreSQL", "metrics"),
+		mrn.New("Table", p.Provider, p.TableName("iot", "public", "metrics")))
+}
+
+func TestProjection_PubSubMatchesTheAsyncAPIPlugin(t *testing.T) {
+	// plugins/asyncapi already emits (Topic, GooglePubSub, bare topic id).
+	assert.Equal(t, "GooglePubSub", projectionFor("PubSub").Provider)
+}
+
+func TestProjection_KafkaConnectBelongsToKafka(t *testing.T) {
+	// Kafka Connect ships inside the Kafka distribution, the same way
+	// Glue's ETL jobs and Glue's catalog share one provider. Identity is
+	// (Type, Provider, Name), so a Pipeline can never collide with a Topic.
+	assert.Equal(t, "Kafka", projectionFor("KafkaConnect").Provider)
+	assert.Equal(t, "Glue", projectionFor("GluePipeline").Provider)
+}
+
+func TestProjection_DataLakeObjectsAreAddressedByBucket(t *testing.T) {
+	p := projectionFor("Datalake")
+
+	assert.Equal(t, "raw/events.parquet",
+		p.TableName("default", "raw", "events.parquet"),
+		"a data lake reads files out of object storage, so bucket/key is the address")
+	assert.Equal(t, groupNone, p.TableGroup,
+		"the Bucket asset belongs to the S3 and GCS plugins, not to this one")
+}
+
+func TestProjection_EnginesWithoutADatabaseLevelDoNotInheritOne(t *testing.T) {
+	// OpenMetadata fills the level an engine does not have with the
+	// literal "default". Letting that reach a name puts "default" in the
+	// asset's identity and collapses every service onto one container.
+	for _, serviceType := range []string{"Oracle", "Hive", "Teradata", "Exasol"} {
+		p := projectionFor(serviceType)
+		assert.Equal(t, "hr.employees", p.TableName("default", "hr", "employees"), serviceType)
+		assert.Equal(t, groupSchema, p.TableGroup, serviceType)
+	}
+}
+
+func TestProjection_SQLiteMakesNoContainerAsset(t *testing.T) {
+	// Every SQLite database calls its only schema "main", so grouping on
+	// it would join unrelated files under one asset.
+	p := projectionFor("SQLite")
+
+	assert.Equal(t, groupNone, p.TableGroup)
+	assert.Equal(t, "orders", p.TableName("default", "main", "orders"))
+}
+
+func TestProjection_ExternalTablesAreTypedAsSuch(t *testing.T) {
+	// A Snowflake or Redshift external table holds no data of its own,
+	// the same as the BigQuery external tables Marmot already types this
+	// way.
+	for _, serviceType := range []string{"Snowflake", "Redshift", "BigQuery"} {
+		assert.Equal(t, "ExternalTable", projectionFor(serviceType).assetTypeFor("External"), serviceType)
+	}
+}
+
+func TestProjection_DomoHoldsDatasets(t *testing.T) {
+	assert.Equal(t, "Dataset", projectionFor("DomoDatabase").assetTypeFor("Regular"),
+		"Domo has no tables; its object is a DataSet")
+}

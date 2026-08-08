@@ -110,6 +110,10 @@ import DraftOutline from '~icons/material-symbols/draft-outline';
 import TableEyeOutline from '~icons/material-symbols/table-eye-outline';
 import FolderOutline from '~icons/material-symbols/folder-outline';
 import HardDriveOutline from '~icons/material-symbols/hard-drive-outline';
+import SqlServerIcon from '~icons/simple-icons/microsoftsqlserver';
+import GoogleCloudIcon from '~icons/simple-icons/googlecloud';
+import MicrosoftIcon from '~icons/simple-icons/microsoft';
+import ImpalaIcon from '~icons/logos/impala';
 import GridOnOutline from '~icons/material-symbols/grid-on';
 
 export type IconResult = string | { component: ComponentType<SvelteComponent>; class?: string };
@@ -124,6 +128,33 @@ export const providerIconMap: Record<
 		displayName: string;
 	}
 > = {
+	// No brand mark is bundled for these either, so they show what they are.
+	sftp: { default: StorageOutline, displayName: 'SFTP' },
+	hex: { default: DashboardOutline, displayName: 'Hex' },
+	snowplow: { default: Graph4, displayName: 'Snowplow' },
+	firehose: { default: Graph4, displayName: 'Firehose' },
+	mulesoft: { default: Graph4, displayName: 'MuleSoft' },
+	'azure-data-factory': { default: AzureIcon, displayName: 'Azure Data Factory' },
+	// OpenMetadata's user-defined services. The technology behind one is
+	// unknown, so these show the category rather than a brand.
+	customdatabase: { default: DatabaseOutlineIcon, displayName: 'Custom Database' },
+	custommessaging: { default: ChatBubbleIcon, displayName: 'Custom Messaging' },
+	customdashboard: { default: DashboardOutline, displayName: 'Custom Dashboard' },
+	custompipeline: { default: Graph4, displayName: 'Custom Pipeline' },
+	customstorage: { default: StorageOutline, displayName: 'Custom Storage' },
+	customsearch: { default: ManageSearchRounded, displayName: 'Custom Search' },
+	custommlmodel: { default: ModelingOutlineRounded, displayName: 'Custom ML Model' },
+	// Brand marks
+	'sql-server': { default: SqlServerIcon, displayName: 'SQL Server' },
+	'azure-synapse': { default: AzureIcon, displayName: 'Azure Synapse' },
+	'vertex-ai': { default: GoogleCloudIcon, displayName: 'Vertex AI' },
+	ssis: { default: MicrosoftIcon, displayName: 'SSIS' },
+	impala: { default: ImpalaIcon, displayName: 'Impala' },
+
+	// No brand mark is bundled for these, so they show what they are.
+	thoughtspot: { default: DashboardOutline, displayName: 'ThoughtSpot' },
+	stitch: { default: Graph4, displayName: 'Stitch' },
+	wherescape: { default: Graph4, displayName: 'WhereScape' },
 	asyncapi: { default: AsyncApiIcon, displayName: 'AsyncAPI' },
 	openapi: { default: OpenApiIcon, displayName: 'OpenAPI' },
 	dbt: { default: DbtIcon, displayName: 'dbt' },
@@ -312,6 +343,21 @@ export const typeIconMap: Record<
 		displayName: string;
 	}
 > = {
+	catalog: {
+		default: DatabaseOutlineIcon,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Catalog'
+	},
+	namespace: {
+		default: HomeStorageOutlineIcon,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Namespace'
+	},
+	'data-model-object': {
+		default: ModelingOutlineRounded,
+		class: 'text-gray-900 dark:text-gray-100',
+		displayName: 'Data Model Object'
+	},
 	queue: {
 		default: QueueListIcon,
 		class: 'text-gray-900 dark:text-gray-100',
