@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - "plugins/*/v*"
+  workflow_dispatch:
 
 permissions:
   contents: read
