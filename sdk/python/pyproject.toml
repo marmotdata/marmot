@@ -29,7 +29,7 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://marmot.run"
+Homepage = "https://marmotdata.io"
 Repository = "https://github.com/marmotdata/marmot"
 Issues = "https://github.com/marmotdata/marmot/issues"
 
