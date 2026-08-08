@@ -51,7 +51,7 @@ func buildInfoBundle(ctx context.Context, name, source, dist string) (infoBundle
 		if err != nil {
 			return infoBundle{}, err
 		}
-		b.AssetSchemas = append(encoded, '\n')
+		b.AssetSchemas = normaliseTrailingNewline(encoded)
 	}
 
 	return b, nil
