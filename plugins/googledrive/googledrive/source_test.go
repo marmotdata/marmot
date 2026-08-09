@@ -180,13 +180,14 @@ func TestValidate_AppliesDefaults(t *testing.T) {
 	assert.Equal(t, 1, source.config.HeaderRow)
 }
 
-func TestValidate_ReplacesExplicitZerosWithDefaults(t *testing.T) {
+func TestValidate_RejectsAnExplicitZeroRatherThanRewritingIt(t *testing.T) {
+	// An absent value is defaulted; a value someone typed is theirs. A 0
+	// concurrency used to build an unbuffered semaphore and hang the run.
 	source := &Source{}
-	_, err := source.Validate(pluginsdk.RawConfig{"page_size": 0, "header_row": 0})
-	require.NoError(t, err)
+	_, err := source.Validate(pluginsdk.RawConfig{"page_size": 0})
 
-	assert.Equal(t, 1000, source.config.PageSize)
-	assert.Equal(t, 1, source.config.HeaderRow)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "page_size must be at least 1")
 }
 
 func TestDiscover_CataloguesFolders(t *testing.T) {
@@ -538,11 +539,14 @@ func TestDiscover_OrdersSheetsTheSameWayEveryRun(t *testing.T) {
 	}
 }
 
-func TestValidate_ReplacesAnExplicitZeroConcurrency(t *testing.T) {
-	// An unbuffered semaphore would hang the sheets pass forever.
+func TestValidate_RefusesAZeroConcurrency(t *testing.T) {
+	// A zero built an unbuffered semaphore and hung the sheets pass. It is
+	// now refused outright rather than quietly corrected.
 	source := &Source{}
 	_, err := source.Validate(pluginsdk.RawConfig{"concurrency": 0})
+	require.Error(t, err)
 
+	_, err = source.Validate(pluginsdk.RawConfig{})
 	require.NoError(t, err)
-	assert.Equal(t, 8, source.config.Concurrency)
+	assert.Equal(t, 8, source.config.Concurrency, "an absent value still defaults")
 }

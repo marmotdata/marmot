@@ -57,9 +57,9 @@ type Config struct {
 
 	// Limits
 	MaxFiles    int `json:"max_files" description:"Stop after this many files. 0 means no limit" default:"0" validate:"omitempty,min=0"`
-	PageSize    int `json:"page_size" description:"Files per API request" default:"1000" validate:"omitempty,min=1,max=1000"`
-	HeaderRow   int `json:"header_row" description:"Row of a sheet that holds the column names" default:"1" validate:"omitempty,min=1"`
-	Concurrency int `json:"concurrency" description:"Parallel requests for the sheets of a spreadsheet" default:"8" validate:"omitempty,min=1,max=64"`
+	PageSize    int `json:"page_size" description:"Files per API request" default:"1000" validate:"min=1,max=1000"`
+	HeaderRow   int `json:"header_row" description:"Row of a sheet that holds the column names" default:"1" validate:"min=1"`
+	Concurrency int `json:"concurrency" description:"Parallel requests for the sheets of a spreadsheet" default:"8" validate:"min=1,max=64"`
 }
 
 // Example configuration for the plugin
@@ -91,9 +91,6 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	// ApplyDefaults leaves a key alone when the user wrote it, so an
 	// explicit zero reaches here. Concurrency especially: zero would
 	// make an unbuffered semaphore and hang the sheets pass forever.
-	applyFloor(&config.PageSize, 1000)
-	applyFloor(&config.HeaderRow, 1)
-	applyFloor(&config.Concurrency, 8)
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
@@ -265,13 +262,6 @@ func (c *collector) report() {
 			Str("first", metadataPath(merged.First)).
 			Str("second", metadataPath(merged.Second)).
 			Msg("Merged into one asset")
-	}
-}
-
-// applyFloor replaces a non-positive value with its default.
-func applyFloor(value *int, fallback int) {
-	if *value <= 0 {
-		*value = fallback
 	}
 }
 

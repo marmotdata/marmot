@@ -429,9 +429,14 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 			schema[k] = v
 		}
 
-		sources := make([]string, len(a.Sources))
+		sources := make([]asset.AssetSource, len(a.Sources))
 		for j, source := range a.Sources {
-			sources[j] = source.Name
+			sources[j] = asset.AssetSource{
+				Name:       source.Name,
+				LastSyncAt: source.LastSyncAt,
+				Properties: source.Properties,
+				Priority:   source.Priority,
+			}
 		}
 
 		assetsInput = append(assetsInput, CreateAssetInput{
