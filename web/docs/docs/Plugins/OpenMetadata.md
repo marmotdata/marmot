@@ -12,7 +12,7 @@ status: experimental
 </div>
 <div class="flex items-center gap-2">
 <span class="text-sm text-gray-500">Creates:</span>
-<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Lineage</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Run History</span></div>
+<div class="flex flex-wrap gap-2"><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Assets</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Lineage</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Run History</span><span class="inline-flex items-center rounded-lg px-4 py-2 text-sm font-medium bg-earthy-green-100 text-earthy-green-800 border border-earthy-green-300">Glossary</span></div>
 </div>
 </div>
 
@@ -27,7 +27,7 @@ import { CalloutCard } from '@site/src/components/DocCard';
   icon="mdi:cursor-default-click"
 />
 
-The OpenMetadata plugin imports an entire OpenMetadata instance in one run: tables, views, stored procedures, topics, buckets, dashboards, charts, pipelines, models, search indices, API endpoints, drive files and spreadsheets, and the lineage between them.
+The OpenMetadata plugin imports an entire OpenMetadata instance in one run: tables, views, stored procedures, topics, buckets, dashboards, charts, pipelines, models, search indices, API endpoints, drive files and spreadsheets, the business glossary, and the lineage between them.
 
 OpenMetadata is a catalog, so everything in it describes something that lives somewhere else. This plugin catalogues each entity as the technology it belongs to rather than as an OpenMetadata thing: a table under a Postgres service becomes a PostgreSQL asset in Marmot, addressed exactly as Marmot's own PostgreSQL plugin would address it. Point Marmot at OpenMetadata and the result looks like a catalog Marmot built itself.
 
@@ -39,7 +39,7 @@ OpenMetadata is a catalog, so everything in it describes something that lives so
 | table | Table, View, or the name the technology's own plugin uses (a MongoDB collection is a Collection, a BigQuery external table an ExternalTable) |
 | stored procedure | Function |
 | topic | Topic |
-| container | Bucket at the top level, Container below it |
+| container | Bucket, or Container on Azure Blob. Only the top level one is imported |
 | drive | Drive |
 | drive folder | Folder |
 | drive file | File |
@@ -50,16 +50,22 @@ OpenMetadata is a catalog, so everything in it describes something that lives so
 | ML model | Model |
 | search index | Table on Elasticsearch and OpenSearch, Index elsewhere |
 | API collection and endpoint | Service, Endpoint |
+| glossary | Glossary Term, the root of its own vocabulary |
+| glossary term | Glossary Term, nested under its parent term or its glossary |
 | entity lineage | Lineage, carrying the pipeline that moved the data |
 | pipeline executions | Run History |
 
-Descriptions, columns, classification tags, assigned glossary terms, owners, domains and data products come across on the assets. Every asset gets a link back to the entity in OpenMetadata, and to the underlying system when OpenMetadata knows that address.
+Descriptions, columns, classification tags, owners, domains and data products come across on the assets. Every asset gets a link back to the entity in OpenMetadata, and to the underlying system when OpenMetadata knows that address.
+
+The glossary comes across as glossary terms rather than as tags, so a term keeps its definition, its synonyms and the terms below it, and the assets it was curated onto are assigned it. Terms are identified by their OpenMetadata fully qualified name, so two glossaries can each hold a Customer without becoming one term. Set `glossary_terms_as_tags: true` to also copy each assigned term onto the asset's tags, or `include_glossary: false` to leave the glossary behind entirely.
+
+Object storage comes across as the bucket alone. OpenMetadata models the prefixes inside a bucket as containers of their own, but Marmot's S3, GCS and Azure Blob plugins catalogue the bucket and nothing below it, so an imported prefix would sit in the catalog forever without a native run ever updating it. Each run reports how many it left out. Set `include_container_prefixes: true` to import the hierarchy anyway, which is worth doing when nothing else is going to catalogue that bucket. Drive folders are a different case and still come across in full: a drive really is a tree of folders, and Marmot's GoogleDrive plugin catalogues it as one.
 
 The drive itself is catalogued, and the folders at the top of it are linked to it, so a drive is browsable from its root. Drive documents are placed by their path rather than their OpenMetadata name, because OpenMetadata files some of them under the service instead of the folder they live in. Any folder named by a path that OpenMetadata holds no directory for is created too, marked `inferred_from_path`, so nothing is left sitting under a folder that is missing from the catalog.
 
 Columns are part of the asset in Marmot rather than entities of their own, so a table with two hundred columns is one asset carrying two hundred columns, not two hundred and one things. OpenMetadata counts them separately, which is why its own totals are far larger than the number of assets an import produces.
 
-Marmot ingestion runs cannot create glossary terms, teams, users, domains or data products as objects of their own, so those stay on the assets as tags and metadata rather than becoming first class objects in Marmot. Data quality test cases and OpenMetadata's own usage analytics have no Marmot equivalent and are not imported.
+Marmot ingestion runs cannot create teams, users, domains or data products as objects of their own, so those stay on the assets as metadata rather than becoming first class objects in Marmot. Data quality test cases and OpenMetadata's own usage analytics have no Marmot equivalent and are not imported.
 
 ## Cutting Over from OpenMetadata
 
@@ -82,7 +88,7 @@ Moving off OpenMetadata is not a single switch, so this plugin is built to run o
 
 ## Running it Alongside Marmot's Own Plugins
 
-By default an imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://table/postgresql/orders` whether Marmot read it from OpenMetadata or from the database itself, so whichever run happens next updates the asset that is already there.
+By default an imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://table/postgresql/public.orders` whether Marmot read it from OpenMetadata or from the database itself, so whichever run happens next updates the asset that is already there.
 
 That means names drop the levels the native plugin does not use, so two OpenMetadata services holding the same table name resolve to one asset. The run reports every entity it merged this way. Set `naming: qualified` to keep them apart instead, at the cost of no longer merging with native runs, which also gives up the handover described above:
 
@@ -136,14 +142,16 @@ The following configuration options are available:
 | exclude_services | []string | false | OpenMetadata services to skip |
 | external_links | []ExternalLink | false | External links to show on all assets |
 | filter | Filter | false | Filter discovered assets by name (regex) |
-| glossary_terms_as_tags | bool | false | Copy assigned glossary terms onto assets as tags |
+| glossary_terms_as_tags | bool | false | Also copy assigned glossary terms onto assets as tags. They are imported as glossary terms either way |
 | host | string | true | OpenMetadata server URL, for example https://openmetadata.company.com |
 | include_apis | bool | false | Import API collections and endpoints |
 | include_columns | bool | false | Import column, field and feature definitions |
+| include_container_prefixes | bool | false | Also import the prefixes and folders inside a storage container. Marmot's own object storage plugins catalogue only the container itself |
 | include_containers | bool | false | Import object storage buckets and containers |
 | include_drives | bool | false | Import drive directories, files, spreadsheets and worksheets |
 | include_dashboards | bool | false | Import dashboards, charts and dashboard data models |
 | include_deleted | bool | false | Import entities OpenMetadata has soft deleted |
+| include_glossary | bool | false | Import the business glossary as Marmot glossary terms, and assign them to the assets they are curated onto |
 | include_lineage | bool | false | Import lineage between imported assets |
 | include_mlmodels | bool | false | Import machine learning models |
 | include_pipelines | bool | false | Import orchestration pipelines |

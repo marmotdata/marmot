@@ -86,6 +86,12 @@ func (s *Source) createTableAsset(tbl *icetable.Table, ident icetable.Identifier
 	fullName := strings.Join(ident, ".")
 	meta := tbl.Metadata()
 
+	// The namespace this table belongs to, written as its own key rather
+	// than left to be recovered by splitting the MRN: a table identifier
+	// may itself contain a dot, so splitting at the last dot would name a
+	// namespace that does not exist. The CONTAINS edge and the UI parent
+	// both read this.
+	metadata["namespace"] = namespacePath(ident)
 	metadata["table_uuid"] = meta.TableUUID().String()
 	metadata["location"] = meta.Location()
 	metadata["format_version"] = meta.Version()
@@ -158,6 +164,7 @@ func (s *Source) createViewAsset(v *view.View, ident icetable.Identifier) plugin
 	fullName := strings.Join(ident, ".")
 	meta := v.Metadata()
 
+	metadata["namespace"] = namespacePath(ident)
 	metadata["view_uuid"] = meta.ViewUUID().String()
 	metadata["location"] = meta.Location()
 	metadata["format_version"] = meta.FormatVersion()
@@ -238,4 +245,13 @@ func extractSchemaFields(schema *iceberggo.Schema) string {
 		return fmt.Sprintf("error marshaling schema: %v", err)
 	}
 	return string(data)
+}
+
+// namespacePath is the namespace part of a table or view identifier: every
+// level except the object's own name.
+func namespacePath(ident icetable.Identifier) string {
+	if len(ident) < 2 {
+		return ""
+	}
+	return strings.Join(ident[:len(ident)-1], ".")
 }

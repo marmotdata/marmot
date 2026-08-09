@@ -3,6 +3,7 @@ package googledrive
 import (
 	"context"
 	"encoding/json"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -136,9 +137,13 @@ func discover(t *testing.T, drive *fakeDrive, sheets sheetsAPI, overrides plugin
 	return result
 }
 
+// findAsset looks an asset up by the path that identifies it, not by the
+// name shown in the UI. Those differ on purpose: the MRN carries the
+// path, Name is the item's own name.
 func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
 	for i, a := range result.Assets {
-		if a.Type == assetType && a.Name != nil && *a.Name == name {
+		if a.Type == assetType && a.MRN != nil && len(a.Providers) > 0 &&
+			*a.MRN == mrn.New(assetType, a.Providers[0], name) {
 			return &result.Assets[i]
 		}
 	}
@@ -225,25 +230,37 @@ func TestDiscover_MatchesTheOpenMetadataProjection(t *testing.T) {
 	assert.Equal(t, "mrn://file/googledrive/marketing-plan.pdf", *fileAsset.MRN)
 }
 
-// Marmot rebuilds an asset's MRN from its type, first provider and name
-// when a run reaches the server, so all three have to agree.
+// Marmot keeps the MRN a plugin declares, so what has to hold is that the
+// MRN survives being split apart and rebuilt. Note this is NOT a constraint
+// that Name reproduce the MRN.
 func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
+	// The UI builds every link by splitting the MRN, and /assets/lookup
+	// feeds those parts back through mrn.New. An MRN that changes under
+	// that round trip leaves the asset unreachable.
 	result := discover(t, &fakeDrive{items: []driveItem{
-		folder("f1", "Finance"),
-		file("d1", "budget.xlsx", "application/vnd.ms-excel", "f1"),
-		file("s1", "annual_budget", spreadsheetMimeType, "f1"),
-	}}, &fakeSheets{tabs: map[string][]sheetTab{
-		"s1": {{Title: "Q1", Columns: []string{"cost_centre", "amount"}}},
-	}}, nil)
-
+		folder("f1", "Marketing"),
+		file("d1", "brand guidelines.pdf", "application/pdf", "f1"),
+	}}, nil, nil)
 	require.NotEmpty(t, result.Assets)
+
 	for _, a := range result.Assets {
 		require.NotNil(t, a.MRN)
-		require.NotNil(t, a.Name)
-		require.NotEmpty(t, a.Providers)
-		assert.Equal(t, mrn.New(a.Type, a.Providers[0], *a.Name), *a.MRN,
-			"asset %q must be addressable by the MRN the server rebuilds", *a.Name)
+		parts := strings.SplitN(strings.TrimPrefix(*a.MRN, "mrn://"), "/", 3)
+		require.Len(t, parts, 3, "malformed MRN %q", *a.MRN)
+		assert.Equal(t, *a.MRN, mrn.New(parts[0], parts[1], parts[2]), *a.MRN)
 	}
+}
+
+func TestDiscover_NamesAreTheItemsOwnName(t *testing.T) {
+	result := discover(t, &fakeDrive{items: []driveItem{
+		folder("f1", "Marketing"),
+		file("d1", "brief.pdf", "application/pdf", "f1"),
+	}}, nil, nil)
+
+	file := findAsset(result, "File", "Marketing/brief.pdf")
+	require.NotNil(t, file)
+	assert.Equal(t, "mrn://file/googledrive/marketing-brief.pdf", *file.MRN)
+	assert.Equal(t, "brief.pdf", *file.Name, "the catalog reads brief.pdf, not its whole path")
 }
 
 func TestDiscover_LineagePointsAtRealAssets(t *testing.T) {
@@ -506,7 +523,7 @@ func TestDiscover_OrdersSheetsTheSameWayEveryRun(t *testing.T) {
 	}
 
 	// s1 replies last, so completion order would put A/One at the end.
-	want := []string{"A/One", "B/Two", "C/Three"}
+	want := []string{"One", "Two", "Three"}
 
 	for run := 0; run < 8; run++ {
 		result := discover(t, drive, &staggeredSheets{tabs: tabs}, nil)

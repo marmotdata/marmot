@@ -30,6 +30,8 @@ import { CalloutCard } from '@site/src/components/DocCard';
 
 The Confluent Cloud plugin discovers Kafka topics from Confluent Cloud clusters. It uses the same discovery engine as the Kafka plugin with defaults tuned for Confluent Cloud.
 
+Because it is the same engine, topics are catalogued under the Kafka provider and addressed as `mrn://topic/kafka/<topic>`, not under a Confluent provider. Running Kafka, Redpanda and Confluent Cloud against clusters that share a topic name will therefore land them on one asset.
+
 ## Connection
 
 Confluent Cloud requires SASL/SSL authentication with an API key pair. You can create API keys in the Confluent Cloud Console.
@@ -105,24 +107,18 @@ The following metadata fields are available:
 |-------|------|-------------|
 | cleanup_policy | string | Topic cleanup policy |
 | delete_retention_ms | string | Time to retain deleted segments in milliseconds |
-| group_id | string | Consumer group ID |
 | key_schema | string | Key schema definition |
 | key_schema_id | int | ID of the key schema in Schema Registry |
 | key_schema_type | string | Type of the key schema (AVRO, JSON, etc.) |
 | key_schema_version | int | Version of the key schema |
 | max_message_bytes | string | Maximum message size in bytes |
-| members | []string | Members of the consumer group |
 | min_insync_replicas | string | Minimum number of in-sync replicas |
 | partition_count | int32 | Number of partitions |
-| protocol | string | Rebalance protocol |
-| protocol_type | string | Protocol type |
 | replication_factor | int16 | Replication factor |
 | retention_bytes | string | Maximum size of the topic in bytes |
 | retention_ms | string | Message retention period in milliseconds |
 | segment_bytes | string | Segment file size in bytes |
 | segment_ms | string | Segment file roll time in milliseconds |
-| state | string | Current state of the consumer group |
-| subscribed_topics | []string | Topics the group is subscribed to |
 | topic_name | string | Name of the Kafka topic |
 | value_schema | string | Value schema definition |
 | value_schema_id | int | ID of the value schema in Schema Registry |

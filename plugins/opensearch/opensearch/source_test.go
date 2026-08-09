@@ -316,3 +316,88 @@ func TestSource_Discover(t *testing.T) {
 	assert.Equal(t, "docs_count", result.Statistics[0].MetricName)
 	assert.Equal(t, float64(1000), result.Statistics[0].Value)
 }
+
+// assertLineageOnlyReferencesDiscoveredAssets is the guard for the bug
+// class this plugin family kept reproducing: an edge naming an MRN the
+// same run never emits is silently dropped by the server, so the lineage
+// disappears instead of failing loudly.
+func assertLineageOnlyReferencesDiscoveredAssets(t *testing.T, result *pluginsdk.DiscoveryResult) {
+	t.Helper()
+
+	emitted := make(map[string]struct{}, len(result.Assets))
+	for _, a := range result.Assets {
+		if a.MRN != nil {
+			emitted[*a.MRN] = struct{}{}
+		}
+	}
+
+	for _, edge := range result.Lineage {
+		assert.Contains(t, emitted, edge.Source,
+			"lineage edge source %q has no asset behind it", edge.Source)
+		assert.Contains(t, emitted, edge.Target,
+			"lineage edge target %q has no asset behind it", edge.Target)
+	}
+}
+
+// An alias over a system index must not emit an edge when the index itself
+// was filtered out of discovery.
+func TestSource_Discover_AliasOverSystemIndexEmitsNoDanglingEdge(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		switch r.URL.Path {
+		case "/":
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"cluster_name": "test-cluster",
+				"version":      map[string]interface{}{"number": "2.12.0", "distribution": "opensearch"},
+			})
+
+		case "/_cat/indices":
+			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+				{"index": "logs", "health": "green", "status": "open", "uuid": "a", "pri": "1", "rep": "0", "docs.count": "1", "store.size": "1kb"},
+				{"index": ".internal-index", "health": "green", "status": "open", "uuid": "b", "pri": "1", "rep": "0", "docs.count": "1", "store.size": "1kb"},
+			})
+
+		case "/_data_stream":
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{"data_streams": []interface{}{}})
+
+		case "/_cat/aliases":
+			// One alias spans a normal index and a system index.
+			_ = json.NewEncoder(w).Encode([]map[string]interface{}{
+				{"alias": "everything", "index": "logs", "filter": "-", "is_write_index": "true"},
+				{"alias": "everything", "index": ".internal-index", "filter": "-", "is_write_index": "false"},
+			})
+
+		default:
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{})
+		}
+	}))
+	defer server.Close()
+
+	cfg := pluginsdk.RawConfig{
+		"addresses":              []interface{}{server.URL},
+		"include_system_indices": false,
+	}
+
+	s := &Source{}
+	_, err := s.Validate(cfg)
+	require.NoError(t, err)
+
+	s.client, err = opensearchapi.NewClient(opensearchapi.Config{
+		Client: opensearchgo.Config{Addresses: []string{server.URL}},
+	})
+	require.NoError(t, err)
+
+	result, err := s.Discover(context.Background(), cfg)
+	require.NoError(t, err)
+
+	assertLineageOnlyReferencesDiscoveredAssets(t, result)
+
+	var targets []string
+	for _, e := range result.Lineage {
+		if e.Type == "REFERENCES" {
+			targets = append(targets, e.Target)
+		}
+	}
+	assert.Equal(t, []string{"mrn://table/opensearch/logs"}, targets)
+}

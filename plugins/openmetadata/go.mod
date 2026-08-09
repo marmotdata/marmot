@@ -3,7 +3,7 @@ module github.com/marmotdata/marmot/plugins/openmetadata
 go 1.26.3
 
 require (
-	github.com/marmotdata/plugin-sdk v0.0.0-20260711225716-7aecacb11402
+	github.com/marmotdata/plugin-sdk v0.0.0-20260808201944-87df44e04332
 	github.com/rs/zerolog v1.35.1
 	github.com/stretchr/testify v1.11.1
 )
@@ -51,3 +51,5 @@ require (
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
+// Local development against the in-progress SDK. Re-pin before release.

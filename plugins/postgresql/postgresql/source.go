@@ -459,7 +459,10 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]p
 			continue
 		}
 
-		mrnValue := mrn.New(assetType, "PostgreSQL", objectName)
+		// The schema is part of a table's identity: one database can hold
+		// public.users and staging.users, and they are not the same table.
+		// Name stays the bare object name, which is what the catalog shows.
+		mrnValue := assetMRN(assetType, dbName, schemaName, objectName)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -682,8 +685,10 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]plug
 			Str("constraint", constraintName).
 			Msg("Found foreign key relationship")
 
-		sourceMRN := mrn.New("Table", "PostgreSQL", sourceTable)
-		targetMRN := mrn.New("Table", "PostgreSQL", targetTable)
+		// Must match the identity the table assets were given above, or the
+		// edge points at an MRN that is never created.
+		sourceMRN := assetMRN("Table", dbName, sourceSchema, sourceTable)
+		targetMRN := assetMRN("Table", dbName, targetSchema, targetTable)
 
 		relationKey := fmt.Sprintf("%s:%s", sourceMRN, targetMRN)
 		if _, exists := uniqueRelations[relationKey]; exists {
@@ -902,4 +907,11 @@ func convertPgxValue(val interface{}) interface{} {
 		// For other types, return as is
 		return val
 	}
+}
+
+// assetMRN is what identifies an object in this catalog. One database holds many schemas, and public.users is not staging.users.
+// The name shown in the UI stays the object's own name; only the MRN
+// carries the path.
+func assetMRN(assetType, database, schema, name string) string {
+	return mrn.New(assetType, "PostgreSQL", database+"."+schema+"."+name)
 }

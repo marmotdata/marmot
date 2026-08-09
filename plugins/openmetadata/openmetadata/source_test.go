@@ -1,6 +1,7 @@
 package openmetadata
 
 import (
+	"strings"
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
@@ -80,11 +81,11 @@ func TestDiscover_CataloguesATableAsItsOwnTechnology(t *testing.T) {
 		with("tables", tableEntity("postgres_prod", "Postgres", "postgres_prod.shop.public.orders", "Regular")),
 		nil)
 
-	orders := findAsset(result, "Table", "orders")
+	orders := findAsset(result, "Table", "shop.public.orders")
 	require.NotNil(t, orders)
 	assert.Equal(t, []string{"PostgreSQL"}, orders.Providers,
 		"a Postgres table in OpenMetadata is a PostgreSQL asset in Marmot")
-	assert.Equal(t, "mrn://table/postgresql/orders", *orders.MRN)
+	assert.Equal(t, "mrn://table/postgresql/shop.public.orders", *orders.MRN)
 }
 
 func TestDiscover_LinksATableToItsDatabase(t *testing.T) {
@@ -93,7 +94,7 @@ func TestDiscover_LinksATableToItsDatabase(t *testing.T) {
 		with("tables", tableEntity("postgres_prod", "Postgres", "postgres_prod.shop.public.orders", "Regular")),
 		nil)
 
-	assert.True(t, hasEdge(result, "mrn://database/postgresql/shop", "mrn://table/postgresql/orders", "CONTAINS"))
+	assert.True(t, hasEdge(result, "mrn://database/postgresql/shop", "mrn://table/postgresql/shop.public.orders", "CONTAINS"))
 }
 
 func TestDiscover_SeparatesViewsFromTables(t *testing.T) {
@@ -103,8 +104,8 @@ func TestDiscover_SeparatesViewsFromTables(t *testing.T) {
 			tableEntity("pg", "Postgres", "pg.shop.public.recent_orders", "View")),
 		nil)
 
-	assert.NotNil(t, findAsset(result, "Table", "orders"))
-	assert.NotNil(t, findAsset(result, "View", "recent_orders"))
+	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
+	assert.NotNil(t, findAsset(result, "View", "shop.public.recent_orders"))
 }
 
 func TestDiscover_QualifiedNamingKeepsServicesApart(t *testing.T) {
@@ -152,7 +153,7 @@ func TestDiscover_SkipsExcludedServices(t *testing.T) {
 		pluginsdk.RawConfig{"exclude_services": []string{"pg_staging"}})
 
 	require.Len(t, result.Assets, 1)
-	assert.NotNil(t, findAsset(result, "Table", "orders"))
+	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
 }
 
 func TestDiscover_SkipsExcludedServiceTypes(t *testing.T) {
@@ -184,7 +185,7 @@ func TestDiscover_SkipsSoftDeletedEntities(t *testing.T) {
 		nil)
 
 	require.Len(t, result.Assets, 1)
-	assert.NotNil(t, findAsset(result, "Table", "orders"))
+	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
 }
 
 func TestDiscover_HonoursIncludeToggles(t *testing.T) {
@@ -206,7 +207,7 @@ func TestDiscover_SurvivesEntityKindsTheServerDoesNotHave(t *testing.T) {
 		nil)
 
 	require.Len(t, result.Assets, 1)
-	assert.NotNil(t, findAsset(result, "Table", "orders"))
+	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
 }
 
 func TestDiscover_FailsWhenTheServerIsNotOpenMetadata(t *testing.T) {
@@ -221,10 +222,15 @@ func TestDiscover_FailsWhenTheServerIsNotOpenMetadata(t *testing.T) {
 	assert.Contains(t, err.Error(), "databases")
 }
 
-// TestDiscover_MRNsSurviveTheServer is the invariant that makes lineage
-// work. Marmot rebuilds an asset's MRN from its type, first provider and
-// name when a run reaches the server, so a plugin whose MRN is built any
-// other way emits lineage pointing at MRNs that never get created.
+// TestDiscover_MRNsSurviveTheServer is the invariant that makes an asset
+// reachable. Marmot keeps the MRN a plugin declares, and the UI builds
+// every link by splitting that MRN back into type, service and name,
+// which /assets/lookup then feeds to mrn.New again. So the MRN has to
+// survive that round trip unchanged, or the asset exists but its page
+// 404s.
+//
+// Note this is NOT a constraint that Name reproduce the MRN. Name is the
+// object's own name, for reading; the MRN carries the qualified path.
 func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
 	result := discover(t, everyEntityKind(), nil)
 	require.NotEmpty(t, result.Assets)
@@ -234,9 +240,27 @@ func TestDiscover_MRNsSurviveTheServer(t *testing.T) {
 		require.NotNil(t, asset.Name)
 		require.NotEmpty(t, asset.Providers)
 
-		assert.Equal(t, mrn.New(asset.Type, asset.Providers[0], *asset.Name), *asset.MRN,
-			"asset %q must be addressable by the MRN the server rebuilds", *asset.Name)
+		parts := strings.SplitN(strings.TrimPrefix(*asset.MRN, "mrn://"), "/", 3)
+		require.Len(t, parts, 3, "malformed MRN %q", *asset.MRN)
+
+		assert.Equal(t, *asset.MRN, mrn.New(parts[0], parts[1], parts[2]),
+			"asset %q is not reachable: its MRN changes when the server rebuilds it from its own parts", *asset.MRN)
 	}
+}
+
+// TestDiscover_NamesAreTheObjectsOwnName pins the other half: what people
+// read is the plain name, not the path that identifies it.
+func TestDiscover_NamesAreTheObjectsOwnName(t *testing.T) {
+	result := discover(t, newFakeOM().with("tables",
+		tableEntity("sf", "Snowflake", "sf.sales.public.orders", "Regular")), nil)
+
+	table := findAsset(result, "Table", "sales.public.orders")
+	require.NotNil(t, table)
+
+	assert.Equal(t, "mrn://table/snowflake/sales.public.orders", *table.MRN,
+		"identity keeps the whole path, so two databases stay apart")
+	assert.Equal(t, "orders", *table.Name,
+		"but the catalog reads orders, the way ClickHouse and Iceberg already do")
 }
 
 // TestDiscover_LineagePointsAtRealAssets guards the other half of the
@@ -292,7 +316,7 @@ func everyEntityKind() *fakeOM {
 }
 
 func TestMeta_AdvertisesEverythingThePluginProduces(t *testing.T) {
-	assert.Equal(t, []string{"Assets", "Lineage", "Run History"}, Meta().Features)
+	assert.Equal(t, []string{"Assets", "Lineage", "Run History", "Glossary"}, Meta().Features)
 }
 
 func TestValidate_ReplacesExplicitZerosWithDefaults(t *testing.T) {

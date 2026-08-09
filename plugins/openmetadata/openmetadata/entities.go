@@ -329,6 +329,24 @@ type apiEndpoint struct {
 	RequestMethod string    `json:"requestMethod"`
 }
 
+// glossary is a named vocabulary. OpenMetadata names a glossary by its
+// name alone, so its fully qualified name is the prefix every term
+// below it carries.
+type glossary struct {
+	entityBase
+}
+
+// glossaryTerm is one business definition. Glossary holds the vocabulary
+// it belongs to, and Parent the term it sits under, which is absent for
+// a term at the top of its glossary.
+type glossaryTerm struct {
+	entityBase
+	Glossary     entityRef   `json:"glossary"`
+	Parent       *entityRef  `json:"parent"`
+	Synonyms     []string    `json:"synonyms"`
+	RelatedTerms []entityRef `json:"relatedTerms"`
+}
+
 // listResponse is the envelope every OpenMetadata list endpoint returns.
 type listResponse[T any] struct {
 	Data   []T `json:"data"`

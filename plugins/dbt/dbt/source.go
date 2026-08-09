@@ -33,7 +33,7 @@ func Meta() pluginsdk.Meta {
 
 // Config for DBT plugin
 type Config struct {
-	pluginsdk.BaseConfig        `json:",inline"`
+	pluginsdk.BaseConfig         `json:",inline"`
 	*filesource.FileSourceConfig `json:",inline"`
 
 	TargetPath string `json:"target_path" description:"Path to DBT target directory containing manifest.json, catalog.json, etc. (local path, s3://bucket/prefix or git::url)" validate:"required"`
@@ -602,7 +602,10 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 	allTags := append([]string{}, node.Tags...)
 	allTags = append(allTags, s.config.Tags...)
 
-	mrnValue := mrn.New(assetType, provider, tableFQN)
+	// The MRN uses the shape the plugin that owns this table uses, so dbt
+	// merges with it instead of filing the table twice. tableFQN stays the
+	// full dbt path for metadata and display.
+	mrnValue := mrn.New(mrnType(assetType), mrnService(provider), adapter.MRNName(node.Database, node.Schema, tableName))
 
 	var description *string
 	if node.Description != "" {
@@ -674,7 +677,7 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 	if outputType == "Ephemeral" {
 		return lineages
 	}
-	outputMRN := mrn.New(outputType, provider, targetFQN)
+	outputMRN := mrn.New(mrnType(outputType), mrnService(provider), adapter.MRNName(node.Database, node.Schema, tableName))
 
 	for _, depNodeID := range node.DependsOn.Nodes {
 		var depNode ManifestNode
@@ -703,12 +706,21 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 		if depNode.Alias != "" {
 			depName = depNode.Alias
 		}
-		sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
+		// A source node only becomes an asset when discover_sources is on.
+		// With discover_models on and discover_sources off, an edge here
+		// would point at an MRN the run never creates.
+		if resourceType == "source" && !s.config.DiscoverSources {
+			log.Debug().Str("node", depNodeID).
+				Msg("Skipping DEPENDS_ON edge, sources are not being discovered")
+			continue
+		}
+
+		depMRNName := adapter.MRNName(depNode.Database, depNode.Schema, depName)
 
 		var sourceMRN string
 		switch {
 		case resourceType == "source" || resourceType == "seed":
-			sourceMRN = mrn.New("Table", provider, sourceFQN)
+			sourceMRN = mrn.New("Table", mrnService(provider), depMRNName)
 		case resourceType == "model":
 			depMaterialization := s.getMaterialization(depNode)
 			if depMaterialization == "" {
@@ -718,9 +730,9 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 			if depType == "Ephemeral" {
 				depType = "Table"
 			}
-			sourceMRN = mrn.New(depType, provider, sourceFQN)
+			sourceMRN = mrn.New(mrnType(depType), mrnService(provider), depMRNName)
 		default:
-			sourceMRN = mrn.New("Table", provider, sourceFQN)
+			sourceMRN = mrn.New("Table", mrnService(provider), depMRNName)
 		}
 
 		lineages = append(lineages, pluginsdk.LineageEdge{
@@ -757,7 +769,9 @@ func (s *Source) createSourceAsset(node ManifestNode) pluginsdk.Asset {
 	}
 
 	tableFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
-	provider := s.getProviderName()
+	adapter := s.getAdapter()
+	provider := adapter.Name()
+	mrnName := adapter.MRNName(node.Database, node.Schema, tableName)
 
 	metadata := make(map[string]interface{})
 	metadata["dbt_unique_id"] = node.UniqueID
@@ -793,7 +807,7 @@ func (s *Source) createSourceAsset(node ManifestNode) pluginsdk.Asset {
 	allTags = append(allTags, s.config.Tags...)
 	allTags = append(allTags, "dbt-source")
 
-	mrnValue := mrn.New("Table", provider, tableFQN)
+	mrnValue := mrn.New("Table", mrnService(provider), mrnName)
 	var description *string
 	if node.Description != "" {
 		description = &node.Description
@@ -841,7 +855,9 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) pluginsdk.Ass
 	}
 
 	tableFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, seedName)
-	provider := s.getProviderName()
+	adapter := s.getAdapter()
+	provider := adapter.Name()
+	mrnName := adapter.MRNName(node.Database, node.Schema, seedName)
 
 	metadata := make(map[string]interface{})
 	metadata["dbt_unique_id"] = node.UniqueID
@@ -881,7 +897,7 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) pluginsdk.Ass
 	allTags = append(allTags, s.config.Tags...)
 	allTags = append(allTags, "dbt-seed")
 
-	mrnValue := mrn.New("Table", provider, tableFQN)
+	mrnValue := mrn.New("Table", mrnService(provider), mrnName)
 	var description *string
 	if node.Description != "" {
 		description = &node.Description
@@ -906,4 +922,3 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) pluginsdk.Ass
 		}},
 	}
 }
-

@@ -18,20 +18,21 @@ import "strings"
 // Marmot's vocabulary.
 type projection struct {
 	// Provider is the Marmot provider string for the technology. It is
-	// also the service component of every MRN: Marmot rebuilds an
-	// asset's MRN from its type, first provider and name when the run
-	// reaches the server, so a plugin that addresses an asset under
-	// anything else emits lineage pointing at MRNs that do not exist.
+	// also the service component of every MRN built here, with spaces
+	// dropped by mrnService. A plugin declares the MRN it wants and
+	// Marmot keeps it, so two runs only reach the same asset when they
+	// agree on that component: this has to be the word the technology's
+	// own plugin passes to mrn.New, not a prettier synonym.
 	Provider string
 
 	// TableName builds the MRN name for a table, view or stored
 	// procedure from the parts of its OpenMetadata FQN below the
 	// service. nil means database.schema.name.
 	//
-	// Note this must match the Name the native plugin sets, not the MRN
-	// it builds: Marmot rebuilds the MRN from the name on ingest, so a
-	// native plugin that sets a bare name and a qualified MRN is
-	// effectively addressing its assets by the bare name.
+	// This must match the name the native plugin passes to mrn.New, not
+	// the Name it displays. The MRN is the identity and ingest carries a
+	// declared MRN through untouched; Name is a display field, and most
+	// plugins set it to the object's own bare name.
 	TableName func(database, schema, name string) string
 
 	// TableTypes overrides the Marmot asset type for an OpenMetadata
@@ -102,24 +103,24 @@ func join(parts ...string) string {
 //
 // The naming rule follows two rules, in order:
 //
-//  1. Where Marmot has a native plugin for the technology, copy that
-//     plugin's MRN format so the two runs land on the same asset. This
-//     is why Postgres tables are named by the bare table name and
-//     BigQuery tables by the bare table id.
+//  1. Where Marmot has a native plugin for the technology, copy the MRN
+//     that plugin declares so the two runs land on the same asset. This
+//     is why a Postgres table is schema.table and a BigQuery table is
+//     dataset.table, and why Athena is catalogued as Glue.
 //  2. Otherwise use every level OpenMetadata knows that the engine
 //     actually has, so two same-named tables in different databases stay
 //     apart. Snowflake tables are database.schema.table; MySQL tables,
 //     whose OpenMetadata database level is a placeholder, are not.
 var projections = map[string]projection{
 	// Relational databases
-	"Postgres":    {Provider: "PostgreSQL", TableName: nameOnly},
-	"Mysql":       {Provider: "MySQL", TableName: nameOnly, TableGroup: groupSchema},
-	"MariaDB":     {Provider: "MariaDB", TableName: schemaQualified, TableGroup: groupSchema},
+	"Postgres":    {Provider: "PostgreSQL", TableName: fullyQualified},
+	"Mysql":       {Provider: "MySQL", TableName: schemaQualified, TableGroup: groupSchema},
+	"MariaDB":     {Provider: "MariaDB", TableName: nameOnly, TableGroup: groupSchema},
 	"Mssql":       {Provider: "SQL Server", TableName: fullyQualified},
 	"Oracle":      {Provider: "Oracle", TableName: schemaQualified, TableGroup: groupSchema},
 	"Db2":         {Provider: "Db2", TableName: fullyQualified},
-	"Clickhouse":  {Provider: "ClickHouse", TableName: nameOnly, TableGroup: groupSchema},
-	"SingleStore": {Provider: "SingleStore", TableName: schemaQualified, TableGroup: groupSchema},
+	"Clickhouse":  {Provider: "ClickHouse", TableName: schemaQualified, TableGroup: groupSchema},
+	"SingleStore": {Provider: "SingleStore", TableName: nameOnly, TableGroup: groupSchema},
 	"Vertica":     {Provider: "Vertica", TableName: fullyQualified},
 	"Teradata":    {Provider: "Teradata", TableName: schemaQualified, TableGroup: groupSchema},
 	"Greenplum":   {Provider: "Greenplum", TableName: fullyQualified},
@@ -128,30 +129,34 @@ var projections = map[string]projection{
 	"Exasol":      {Provider: "Exasol", TableName: schemaQualified, TableGroup: groupSchema},
 
 	// Cloud warehouses and lakehouses
-	"Snowflake":    {Provider: "Snowflake", TableName: fullyQualified, TableTypes: map[string]string{"External": "ExternalTable"}},
-	"BigQuery":     {Provider: "BigQuery", TableName: nameOnly, TableGroup: groupSchema, TableGroupType: "Dataset", TableTypes: map[string]string{"External": "ExternalTable"}},
-	"Redshift":     {Provider: "Redshift", TableName: fullyQualified, TableTypes: map[string]string{"External": "ExternalTable"}},
-	"Athena":       {Provider: "Athena", TableName: schemaQualified, TableGroup: groupSchema},
+	"Snowflake": {Provider: "Snowflake", TableName: fullyQualified, TableTypes: map[string]string{"External": "ExternalTable"}},
+	"BigQuery":  {Provider: "BigQuery", TableName: schemaQualified, TableGroup: groupSchema, TableGroupType: "Dataset", TableTypes: map[string]string{"External": "ExternalTable"}},
+	"Redshift":  {Provider: "Redshift", TableName: fullyQualified, TableTypes: map[string]string{"External": "ExternalTable"}},
+	// Athena keeps no catalog of its own: it reads the Glue Data
+	// Catalog, which plugins/glue already catalogues as database.table
+	// under the Glue provider. Naming it Athena would file one table
+	// twice, once per route.
+	"Athena":       {Provider: "Glue", TableName: schemaQualified, TableGroup: groupSchema},
 	"Databricks":   {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"UnityCatalog": {Provider: "Databricks", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"AzureSQL":     {Provider: "SQL Server", TableName: fullyQualified},
 	"Synapse":      {Provider: "Azure Synapse", TableName: fullyQualified},
-	"Iceberg":      {Provider: "Iceberg", TableName: nameOnly, TableGroup: groupSchema, TableGroupType: "Namespace"},
+	"Iceberg":      {Provider: "Iceberg", TableName: schemaQualified, TableGroup: groupSchema, TableGroupType: "Namespace"},
 	"DeltaLake":    {Provider: "Delta Lake", TableName: nameOnly, TableGroup: groupNone},
-	"Hive":         {Provider: "Hive", TableName: schemaQualified, TableGroup: groupSchema},
+	"Hive":         {Provider: "Hive", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"Impala":       {Provider: "Impala", TableName: schemaQualified, TableGroup: groupSchema},
 	"Trino":        {Provider: "Trino", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"Presto":       {Provider: "Presto", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"Dremio":       {Provider: "Dremio", TableName: fullyQualified, TableGroupType: "Catalog"},
-	"Glue":         {Provider: "Glue", TableName: nameOnly, TableGroup: groupSchema},
+	"Glue":         {Provider: "Glue", TableName: schemaQualified, TableGroup: groupSchema},
 	"Doris":        {Provider: "Doris", TableName: schemaQualified, TableGroup: groupSchema},
-	"Druid":        {Provider: "Druid", TableName: nameOnly, TableGroup: groupNone},
+	"Druid":        {Provider: "Druid", TableName: schemaQualified, TableGroup: groupSchema},
 	"PinotDB":      {Provider: "Pinot", TableName: nameOnly, TableGroup: groupNone},
 
 	// Document, key-value and wide-column stores
-	"MongoDB":   {Provider: "MongoDB", TableName: nameOnly, TableGroup: groupSchema, TableTypes: map[string]string{"Regular": "Collection"}},
+	"MongoDB":   {Provider: "MongoDB", TableName: schemaQualified, TableGroup: groupSchema, TableTypes: map[string]string{"Regular": "Collection"}},
 	"DynamoDB":  {Provider: "DynamoDB", TableName: nameOnly, TableGroup: groupNone},
-	"Cassandra": {Provider: "Cassandra", TableName: schemaQualified, TableGroup: groupSchema},
+	"Cassandra": {Provider: "Cassandra", TableName: schemaQualified, TableGroup: groupSchema, TableGroupType: "Keyspace"},
 	"Couchbase": {Provider: "Couchbase", TableName: fullyQualified, TableGroupType: "Bucket", TableTypes: map[string]string{"Regular": "Collection"}},
 
 	// SaaS and application sources
@@ -223,15 +228,23 @@ var projections = map[string]projection{
 	// Technologies Marmot has no plugin for yet. Modelled as a native
 	// plugin should model them, so that when one is written the two runs
 	// land on the same asset rather than two.
-	"Timescale":       {Provider: "PostgreSQL", TableName: nameOnly},
+	"Timescale":       {Provider: "PostgreSQL", TableName: fullyQualified},
 	"QuestDB":         {Provider: "QuestDB", TableName: nameOnly, TableGroup: groupNone},
 	"SapHana":         {Provider: "SAP HANA", TableName: fullyQualified},
 	"SapErp":          {Provider: "SAP ERP", TableName: nameOnly, TableGroup: groupNone},
 	"StarRocks":       {Provider: "StarRocks", TableName: schemaQualified, TableGroup: groupSchema},
 	"Iomete":          {Provider: "IOMETE", TableName: fullyQualified, TableGroupType: "Catalog"},
 	"MicrosoftFabric": {Provider: "Microsoft Fabric", TableName: fullyQualified},
-	"BigTable":        {Provider: "Bigtable", TableName: fullyQualified, TableGroup: groupSchema},
-	"BurstIQ":         {Provider: "BurstIQ", TableName: nameOnly, TableGroup: groupNone},
+	// OpenMetadata puts the GCP project at the database level and the
+	// instance at the schema level. The project stays out of the name for
+	// the same reason it does in BigQuery: a container asset is always
+	// named by its own bare level, so keeping the project in the table
+	// name would leave the Instance asset named by the instance alone and
+	// no longer a prefix of its tables. plugins/bigquery settles the
+	// question for GCP by taking one required project_id and leaving the
+	// project out of the MRN entirely.
+	"BigTable": {Provider: "Bigtable", TableName: schemaQualified, TableGroup: groupSchema, TableGroupType: "Instance"},
+	"BurstIQ":  {Provider: "BurstIQ", TableName: nameOnly, TableGroup: groupNone},
 	// A data lake service reads files out of object storage, so its
 	// objects are addressed bucket/key. groupNone keeps it from minting a
 	// Bucket that would shadow the one the native S3 and GCS plugins make.

@@ -35,11 +35,11 @@ func Meta() pluginsdk.Meta {
 	return pluginsdk.Meta{
 		ID:          "openmetadata",
 		Name:        "OpenMetadata",
-		Description: "Import tables, topics, dashboards, pipelines, models and lineage from an OpenMetadata instance",
+		Description: "Import tables, topics, dashboards, pipelines, models, glossary and lineage from an OpenMetadata instance",
 		Icon:        "openmetadata",
 		Category:    "catalog",
 		Status:      "experimental",
-		Features:    []string{"Assets", "Lineage", "Run History"},
+		Features:    []string{"Assets", "Lineage", "Run History", "Glossary"},
 		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
 	}
 }
@@ -66,23 +66,28 @@ type Config struct {
 	IncludeStoredProcedures bool `json:"include_stored_procedures" description:"Import stored procedures as functions" default:"true"`
 	IncludeTopics           bool `json:"include_topics" description:"Import messaging topics" default:"true"`
 	IncludeContainers       bool `json:"include_containers" description:"Import object storage buckets and containers" default:"true"`
-	IncludeDrives           bool `json:"include_drives" description:"Import drive directories, files, spreadsheets and worksheets" default:"true"`
-	IncludeDashboards       bool `json:"include_dashboards" description:"Import dashboards, charts and dashboard data models" default:"true"`
-	IncludePipelines        bool `json:"include_pipelines" description:"Import orchestration pipelines" default:"true"`
-	IncludeTasks            bool `json:"include_tasks" description:"Import the individual tasks of each pipeline" default:"true"`
-	IncludeRunHistory       bool `json:"include_run_history" description:"Import recent pipeline executions as run history" default:"true"`
-	RunHistoryDays          int  `json:"run_history_days" description:"How many days of pipeline executions to import" default:"7" validate:"omitempty,min=1"`
-	RunHistoryLimit         int  `json:"run_history_limit" description:"Maximum executions to import per pipeline" default:"50" validate:"omitempty,min=1,max=1000"`
-	IncludeMLModels         bool `json:"include_mlmodels" label:"Include ML Models" description:"Import machine learning models" default:"true"`
-	IncludeSearchIndexes    bool `json:"include_search_indexes" description:"Import search indices" default:"true"`
-	IncludeAPIs             bool `json:"include_apis" label:"Include APIs" description:"Import API collections and endpoints" default:"true"`
-	IncludeColumns          bool `json:"include_columns" description:"Import column, field and feature definitions" default:"true"`
-	IncludeLineage          bool `json:"include_lineage" description:"Import lineage between imported assets" default:"true"`
+	// Off by default because Marmot's own S3, GCS and Azure Blob plugins
+	// stop at the bucket, so an imported prefix is an asset no later
+	// native run would ever touch again.
+	IncludeContainerPrefixes bool `json:"include_container_prefixes" description:"Also import the prefixes and folders inside a storage container. Marmot's own object storage plugins catalogue only the container itself" default:"false"`
+	IncludeDrives            bool `json:"include_drives" description:"Import drive directories, files, spreadsheets and worksheets" default:"true"`
+	IncludeDashboards        bool `json:"include_dashboards" description:"Import dashboards, charts and dashboard data models" default:"true"`
+	IncludePipelines         bool `json:"include_pipelines" description:"Import orchestration pipelines" default:"true"`
+	IncludeTasks             bool `json:"include_tasks" description:"Import the individual tasks of each pipeline" default:"true"`
+	IncludeRunHistory        bool `json:"include_run_history" description:"Import recent pipeline executions as run history" default:"true"`
+	RunHistoryDays           int  `json:"run_history_days" description:"How many days of pipeline executions to import" default:"7" validate:"omitempty,min=1"`
+	RunHistoryLimit          int  `json:"run_history_limit" description:"Maximum executions to import per pipeline" default:"50" validate:"omitempty,min=1,max=1000"`
+	IncludeMLModels          bool `json:"include_mlmodels" label:"Include ML Models" description:"Import machine learning models" default:"true"`
+	IncludeSearchIndexes     bool `json:"include_search_indexes" description:"Import search indices" default:"true"`
+	IncludeAPIs              bool `json:"include_apis" label:"Include APIs" description:"Import API collections and endpoints" default:"true"`
+	IncludeColumns           bool `json:"include_columns" description:"Import column, field and feature definitions" default:"true"`
+	IncludeLineage           bool `json:"include_lineage" description:"Import lineage between imported assets" default:"true"`
+	IncludeGlossary          bool `json:"include_glossary" description:"Import the business glossary as Marmot glossary terms, and assign them to the assets they are curated onto" default:"true"`
 
 	// How to import
 	Naming               string `json:"naming" description:"native names assets the way Marmot's own plugin for each technology names them, so a later native run merges with the imported assets. qualified uses the full OpenMetadata path, which keeps two services of the same technology apart" default:"native" validate:"omitempty,oneof=native qualified"`
 	TagsFromOpenMetadata bool   `json:"tags_from_openmetadata" description:"Copy OpenMetadata classification tags onto assets" default:"true"`
-	GlossaryTermsAsTags  bool   `json:"glossary_terms_as_tags" description:"Copy assigned glossary terms onto assets as tags" default:"true"`
+	GlossaryTermsAsTags  bool   `json:"glossary_terms_as_tags" description:"Also copy assigned glossary terms onto assets as tags. They are imported as glossary terms either way" default:"false"`
 	LinkToOpenMetadata   bool   `json:"link_to_openmetadata" label:"Link to OpenMetadata" description:"Add a link back to the entity in OpenMetadata on every asset" default:"true"`
 	SourcePriority       int    `json:"source_priority" description:"Priority of OpenMetadata against other sources of the same asset. Lower wins" default:"2" validate:"omitempty,min=1"`
 
@@ -162,9 +167,10 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	c.report()
 
 	return &pluginsdk.DiscoveryResult{
-		Assets:     c.assets,
-		Lineage:    c.lineage,
-		RunHistory: c.runHistory,
+		Assets:        c.assets,
+		Lineage:       c.lineage,
+		RunHistory:    c.runHistory,
+		GlossaryTerms: c.terms,
 	}, nil
 }
 
@@ -173,6 +179,14 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 // catalog import should be gentle on the OpenMetadata server it is
 // reading; the parallelism that matters is in the lineage pass.
 func (s *Source) collect(ctx context.Context, client *client, c *collector) error {
+	// The glossary is read first because it is the vocabulary the assets
+	// that follow are described in.
+	if s.config.IncludeGlossary {
+		if err := c.discoverGlossary(ctx, client); err != nil {
+			return err
+		}
+	}
+
 	if s.config.IncludeTables || s.config.IncludeStoredProcedures {
 		groups, err := c.discoverDatabases(ctx, client)
 		if err != nil {

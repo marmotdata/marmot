@@ -21,17 +21,6 @@ type KafkaTopicFields struct {
 	ValueSchema        string `json:"value_schema" metadata:"value_schema" description:"Value schema definition"`
 	KeySchemaId        int    `json:"key_schema_id" metadata:"key_schema_id" description:"ID of the key schema in Schema Registry"`
 	KeySchemaVersion   int    `json:"key_schema_version" metadata:"key_schema_version" description:"Version of the key schema"`
-	KeySchemaType     string `json:"key_schema_type" metadata:"key_schema_type" description:"Type of the key schema (AVRO, JSON, etc.)"`
-	KeySchema         string `json:"key_schema" metadata:"key_schema" description:"Key schema definition"`
-}
-
-// KafkaConsumerGroupFields describes the metadata fields for a Kafka
-// consumer group asset.
-type KafkaConsumerGroupFields struct {
-	GroupId          string   `json:"group_id" metadata:"group_id" description:"Consumer group ID"`
-	State            string   `json:"state" metadata:"state" description:"Current state of the consumer group"`
-	Protocol         string   `json:"protocol" metadata:"protocol" description:"Rebalance protocol"`
-	ProtocolType     string   `json:"protocol_type" metadata:"protocol_type" description:"Protocol type"`
-	SubscribedTopics []string `json:"subscribed_topics" metadata:"subscribed_topics" description:"Topics the group is subscribed to"`
-	Members          []string `json:"members" metadata:"members" description:"Members of the consumer group"`
+	KeySchemaType      string `json:"key_schema_type" metadata:"key_schema_type" description:"Type of the key schema (AVRO, JSON, etc.)"`
+	KeySchema          string `json:"key_schema" metadata:"key_schema" description:"Key schema definition"`
 }

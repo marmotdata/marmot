@@ -188,13 +188,3 @@ The following configuration options are available:
 | key_schema_type | string | Type of the key schema (AVRO, JSON, etc.) |
 | key_schema | string | Key schema definition |
 
-### Consumer Group
-
-| Field | Type | Description |
-|-------|------|-------------|
-| group_id | string | Consumer group ID |
-| state | string | Current state of the consumer group |
-| protocol | string | Rebalance protocol |
-| protocol_type | string | Protocol type |
-| subscribed_topics | []string | Topics the group is subscribed to |
-| members | []string | Members of the consumer group |

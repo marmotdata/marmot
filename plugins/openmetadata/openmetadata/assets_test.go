@@ -19,7 +19,7 @@ func TestDiscover_CarriesTheDescription(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	asset := findAsset(result, "Table", "orders")
+	asset := findAsset(result, "Table", "shop.public.orders")
 	require.NotNil(t, asset)
 	require.NotNil(t, asset.Description)
 	assert.Equal(t, "One row per customer order", *asset.Description)
@@ -33,20 +33,21 @@ func TestDiscover_CarriesClassificationTags(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	assert.Equal(t, []string{"PII.Sensitive"}, findAsset(result, "Table", "orders").Tags)
+	assert.Equal(t, []string{"PII.Sensitive"}, findAsset(result, "Table", "shop.public.orders").Tags)
 }
 
-func TestDiscover_CarriesGlossaryTermsAsTags(t *testing.T) {
-	// Marmot ingestion runs cannot create glossary terms, so the terms
-	// curated onto an asset travel with it as tags instead.
+func TestDiscover_CanAlsoCarryGlossaryTermsAsTags(t *testing.T) {
+	// A term is imported as a term of its own, so this is an extra copy
+	// on the tags for catalogs that are browsed by tag.
 	orders := tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")
 	orders["tags"] = []map[string]interface{}{
 		{"tagFQN": "Business.Customer", "source": "Glossary", "state": "Confirmed"},
 	}
 
-	result := discover(t, newFakeOM().with("tables", orders), nil)
+	result := discover(t, newFakeOM().with("tables", orders),
+		pluginsdk.RawConfig{"glossary_terms_as_tags": true})
 
-	asset := findAsset(result, "Table", "orders")
+	asset := findAsset(result, "Table", "shop.public.orders")
 	assert.Equal(t, []string{"Business.Customer"}, asset.Tags)
 	assert.Equal(t, []string{"Business.Customer"}, asset.Metadata["glossary_terms"])
 }
@@ -59,7 +60,7 @@ func TestDiscover_SkipsSuggestedTags(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	assert.Empty(t, findAsset(result, "Table", "orders").Tags,
+	assert.Empty(t, findAsset(result, "Table", "shop.public.orders").Tags,
 		"a suggestion nobody accepted is not a fact about the asset")
 }
 
@@ -73,7 +74,7 @@ func TestDiscover_CanLeaveOpenMetadataTagsBehind(t *testing.T) {
 	result := discover(t, newFakeOM().with("tables", orders),
 		pluginsdk.RawConfig{"tags_from_openmetadata": false, "glossary_terms_as_tags": false})
 
-	assert.Empty(t, findAsset(result, "Table", "orders").Tags)
+	assert.Empty(t, findAsset(result, "Table", "shop.public.orders").Tags)
 }
 
 func TestDiscover_AppliesConfiguredTags(t *testing.T) {
@@ -81,7 +82,7 @@ func TestDiscover_AppliesConfiguredTags(t *testing.T) {
 		with("tables", tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")),
 		pluginsdk.RawConfig{"tags": []string{"imported"}})
 
-	assert.Contains(t, findAsset(result, "Table", "orders").Tags, "imported")
+	assert.Contains(t, findAsset(result, "Table", "shop.public.orders").Tags, "imported")
 }
 
 func TestDiscover_RecordsOwnersDomainsAndDataProducts(t *testing.T) {
@@ -92,7 +93,7 @@ func TestDiscover_RecordsOwnersDomainsAndDataProducts(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	asset := findAsset(result, "Table", "orders")
+	asset := findAsset(result, "Table", "shop.public.orders")
 	assert.Equal(t, []string{"Data Engineering"}, asset.Metadata["owners"])
 	assert.Equal(t, []string{"Commerce"}, asset.Metadata["domains"])
 	assert.Equal(t, []string{"Orders API"}, asset.Metadata["data_products"])
@@ -103,7 +104,7 @@ func TestDiscover_RecordsWhereTheAssetCameFrom(t *testing.T) {
 		with("tables", tableEntity("pg_prod", "Postgres", "pg_prod.shop.public.orders", "Regular")),
 		nil)
 
-	om, ok := findAsset(result, "Table", "orders").Metadata["openmetadata"].(map[string]interface{})
+	om, ok := findAsset(result, "Table", "shop.public.orders").Metadata["openmetadata"].(map[string]interface{})
 	require.True(t, ok)
 	assert.Equal(t, "pg_prod.shop.public.orders", om["fqn"])
 	assert.Equal(t, "pg_prod", om["service"])
@@ -117,7 +118,7 @@ func TestDiscover_RecordsOpenMetadataAsTheSource(t *testing.T) {
 		with("tables", tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")),
 		nil)
 
-	sources := findAsset(result, "Table", "orders").Sources
+	sources := findAsset(result, "Table", "shop.public.orders").Sources
 	require.Len(t, sources, 1)
 	assert.Equal(t, "OpenMetadata", sources[0].Name)
 	assert.Equal(t, 2, sources[0].Priority)
@@ -128,7 +129,7 @@ func TestDiscover_LinksBackToOpenMetadata(t *testing.T) {
 		with("tables", tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")),
 		nil)
 
-	links := findAsset(result, "Table", "orders").ExternalLinks
+	links := findAsset(result, "Table", "shop.public.orders").ExternalLinks
 	require.NotEmpty(t, links)
 	assert.Equal(t, "OpenMetadata", links[0].Name)
 	assert.Contains(t, links[0].URL, "/table/pg.shop.public.orders")
@@ -151,7 +152,7 @@ func TestDiscover_CanLeaveOutTheOpenMetadataLink(t *testing.T) {
 		with("tables", tableEntity("pg", "Postgres", "pg.shop.public.orders", "Regular")),
 		pluginsdk.RawConfig{"link_to_openmetadata": false})
 
-	assert.Empty(t, findAsset(result, "Table", "orders").ExternalLinks)
+	assert.Empty(t, findAsset(result, "Table", "shop.public.orders").ExternalLinks)
 }
 
 func TestDiscover_RecordsColumns(t *testing.T) {
@@ -163,7 +164,7 @@ func TestDiscover_RecordsColumns(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	columns := decodeColumns(t, findAsset(result, "Table", "orders"))
+	columns := decodeColumns(t, findAsset(result, "Table", "shop.public.orders"))
 	require.Len(t, columns, 2)
 	assert.Equal(t, "id", columns[0]["column_name"])
 	assert.Equal(t, true, columns[0]["is_primary_key"])
@@ -180,7 +181,7 @@ func TestDiscover_FlattensNestedColumns(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	columns := decodeColumns(t, findAsset(result, "Table", "orders"))
+	columns := decodeColumns(t, findAsset(result, "Table", "shop.public.orders"))
 	children, ok := columns[0]["children"].([]interface{})
 	require.True(t, ok)
 	require.Len(t, children, 1)
@@ -194,7 +195,7 @@ func TestDiscover_CanLeaveOutColumns(t *testing.T) {
 	result := discover(t, newFakeOM().with("tables", orders),
 		pluginsdk.RawConfig{"include_columns": false})
 
-	assert.Empty(t, findAsset(result, "Table", "orders").Schema["columns"])
+	assert.Empty(t, findAsset(result, "Table", "shop.public.orders").Schema["columns"])
 }
 
 func TestDiscover_RecordsTableProfileMetrics(t *testing.T) {
@@ -203,7 +204,7 @@ func TestDiscover_RecordsTableProfileMetrics(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	metadata := findAsset(result, "Table", "orders").Metadata
+	metadata := findAsset(result, "Table", "shop.public.orders").Metadata
 	assert.Equal(t, int64(4200), metadata["row_count"])
 	assert.Equal(t, int64(8192), metadata["size"])
 }
@@ -214,22 +215,65 @@ func TestDiscover_CarriesStoredProcedureCodeAsAQuery(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("storedProcedures", procedure), nil)
 
-	asset := findAsset(result, "Function", "refresh_orders")
+	asset := findAsset(result, "Function", "shop.public.refresh_orders")
 	require.NotNil(t, asset)
 	require.NotNil(t, asset.Query)
 	assert.Equal(t, "BEGIN END", *asset.Query)
 	assert.Equal(t, "SQL", *asset.QueryLanguage)
 }
 
-func TestDiscover_CataloguesTopLevelContainersAsBuckets(t *testing.T) {
-	child := entity("s3", "S3", "s3.raw.events")
-	child["parent"] = map[string]interface{}{"fullyQualifiedName": "s3.raw"}
+// containerFixture is an S3 service holding one bucket with a prefix
+// inside it, which is how OpenMetadata models object storage.
+func containerFixture() *fakeOM {
+	prefix := entity("s3", "S3", "s3.raw.events")
+	prefix["parent"] = map[string]interface{}{"fullyQualifiedName": "s3.raw"}
 
-	result := discover(t, newFakeOM().with("containers", entity("s3", "S3", "s3.raw"), child), nil)
+	return newFakeOM().with("containers", entity("s3", "S3", "s3.raw"), prefix)
+}
+
+func TestDiscover_CataloguesTopLevelContainersAsBuckets(t *testing.T) {
+	result := discover(t, containerFixture(), nil)
+
+	assert.NotNil(t, findAsset(result, "Bucket", "raw"))
+}
+
+func TestDiscover_LeavesOutThePrefixesInsideAContainer(t *testing.T) {
+	// Marmot's S3 plugin catalogues buckets and nothing below them, so a
+	// prefix imported here would never be updated by a later native run.
+	result := discover(t, containerFixture(), nil)
+
+	require.Len(t, result.Assets, 1)
+	assert.Nil(t, findAsset(result, "Container", "raw/events"))
+	assert.Empty(t, result.Lineage, "there is nothing left for the bucket to contain")
+}
+
+func TestDiscover_CanImportThePrefixesInsideAContainer(t *testing.T) {
+	// Someone cataloguing a bucket only through OpenMetadata still wants
+	// the hierarchy.
+	result := discover(t, containerFixture(), pluginsdk.RawConfig{"include_container_prefixes": true})
 
 	assert.NotNil(t, findAsset(result, "Bucket", "raw"))
 	assert.NotNil(t, findAsset(result, "Container", "raw/events"))
 	assert.True(t, hasEdge(result, "mrn://bucket/s3/raw", "mrn://container/s3/raw-events", "CONTAINS"))
+}
+
+func TestDiscover_TreatsAContainerWithNoParentButANestedPathAsNested(t *testing.T) {
+	// OpenMetadata states the hierarchy twice and the two can disagree.
+	// Trusting the missing parent alone would mint a bucket called
+	// raw/events, which is not a bucket anyone can open.
+	orphan := entity("s3", "S3", "s3.raw.events")
+
+	result := discover(t, newFakeOM().with("containers", orphan), nil)
+
+	assert.Empty(t, result.Assets)
+}
+
+func TestDiscover_CataloguesAnADLSContainerWithAzuresOwnWord(t *testing.T) {
+	// Marmot's Azure Blob plugin calls a top level container a Container,
+	// so the import has to as well or the two runs make two assets.
+	result := discover(t, newFakeOM().with("containers", entity("adls", "ADLS", "adls.landing")), nil)
+
+	assert.NotNil(t, findAsset(result, "Container", "landing"))
 }
 
 func TestDiscover_LinksDashboardsToTheirCharts(t *testing.T) {
@@ -293,7 +337,7 @@ func TestDiscover_DecodesATableThatHasARetentionPeriod(t *testing.T) {
 
 	result := discover(t, newFakeOM().with("tables", orders), nil)
 
-	assert.NotNil(t, findAsset(result, "Table", "orders"))
+	assert.NotNil(t, findAsset(result, "Table", "shop.public.orders"))
 }
 
 func TestDiscover_LinksATableWhoseDatabaseNameContainsADot(t *testing.T) {
@@ -306,7 +350,7 @@ func TestDiscover_LinksATableWhoseDatabaseNameContainsADot(t *testing.T) {
 	result := discover(t, newFakeOM().with("databases", db).with("tables", orders), nil)
 
 	assert.True(t, hasEdge(result,
-		"mrn://database/postgresql/my.shop", "mrn://table/postgresql/orders", "CONTAINS"))
+		"mrn://database/postgresql/my.shop", "mrn://table/postgresql/my.shop.public.orders", "CONTAINS"))
 }
 
 func TestDiscover_LinksToTheUIEvenWhenTheHostIsTheAPIRoot(t *testing.T) {
@@ -391,6 +435,24 @@ func TestDiscover_NestsDriveEntities(t *testing.T) {
 		"mrn://spreadsheet/googledrive/marketing-annual_budget_2024", "CONTAINS"))
 	assert.True(t, hasEdge(result, "mrn://spreadsheet/googledrive/marketing-annual_budget_2024",
 		"mrn://table/googledrive/marketing-annual_budget_2024-q1", "CONTAINS"))
+}
+
+func TestDiscover_NestsADriveButNotABucket(t *testing.T) {
+	// The two hierarchies look alike in OpenMetadata but are not the same
+	// thing. Marmot's GoogleDrive plugin really does catalogue a tree of
+	// folders, so the drive keeps its nesting; the S3 plugin stops at the
+	// bucket, so the prefixes below it are left out.
+	prefix := entity("s3", "S3", "s3.raw.events")
+	prefix["parent"] = map[string]interface{}{"fullyQualifiedName": "s3.raw"}
+
+	result := discover(t, driveFixture().with("containers", entity("s3", "S3", "s3.raw"), prefix), nil)
+
+	assert.True(t, hasEdge(result, "mrn://folder/googledrive/marketing",
+		"mrn://folder/googledrive/marketing-campaigns_2024", "CONTAINS"))
+	assert.NotNil(t, findAsset(result, "File", "Marketing/plan.pdf"))
+
+	assert.NotNil(t, findAsset(result, "Bucket", "raw"))
+	assert.Nil(t, findAsset(result, "Container", "raw/events"))
 }
 
 func TestDiscover_RecordsWorksheetColumns(t *testing.T) {

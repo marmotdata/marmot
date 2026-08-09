@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/require"
 )
 
@@ -119,11 +120,36 @@ func discover(t *testing.T, f *fakeOM, overrides pluginsdk.RawConfig) *pluginsdk
 	return result
 }
 
-// findAsset returns the asset with the given type and name.
+// findAsset looks an asset up by the qualified name that identifies it,
+// not by the name shown in the UI. Those are deliberately different: the
+// MRN carries the full path, while Name is the object's own name.
 func findAsset(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
+	for i, asset := range result.Assets {
+		if asset.Type != assetType || asset.MRN == nil || len(asset.Providers) == 0 {
+			continue
+		}
+		if *asset.MRN == mrn.New(assetType, asset.Providers[0], name) {
+			return &result.Assets[i]
+		}
+	}
+	return nil
+}
+
+// findByDisplayName looks an asset up by what the UI shows.
+func findByDisplayName(result *pluginsdk.DiscoveryResult, assetType, name string) *pluginsdk.Asset {
 	for i, asset := range result.Assets {
 		if asset.Type == assetType && asset.Name != nil && *asset.Name == name {
 			return &result.Assets[i]
+		}
+	}
+	return nil
+}
+
+// findTerm returns the imported glossary term with the given name.
+func findTerm(result *pluginsdk.DiscoveryResult, name string) *pluginsdk.GlossaryTerm {
+	for i, term := range result.GlossaryTerms {
+		if term.Name == name {
+			return &result.GlossaryTerms[i]
 		}
 	}
 	return nil
@@ -148,6 +174,31 @@ func tableEntity(service, serviceType, fqn, tableType string) map[string]interfa
 		"tableType":          tableType,
 		"serviceType":        serviceType,
 		"service":            map[string]interface{}{"name": service, "type": "databaseService"},
+	}
+}
+
+// glossaryEntity builds a glossary for a fake server. A glossary has no
+// service: it belongs to the catalog rather than to a system, and its
+// fully qualified name is its own name.
+func glossaryEntity(name string) map[string]interface{} {
+	return map[string]interface{}{
+		"id":                 "id-" + name,
+		"name":               name,
+		"fullyQualifiedName": name,
+		"href":               "https://om.example.com/api/v1/glossaries/id-" + name,
+	}
+}
+
+// termEntity builds a glossary term for a fake server, named by the
+// fully qualified name OpenMetadata gives it: the glossary, then every
+// term above it, then its own name.
+func termEntity(glossaryName, fqn string) map[string]interface{} {
+	return map[string]interface{}{
+		"id":                 "id-" + fqn,
+		"name":               fqn[strings.LastIndex(fqn, ".")+1:],
+		"fullyQualifiedName": fqn,
+		"glossary":           map[string]interface{}{"name": glossaryName, "fullyQualifiedName": glossaryName},
+		"href":               "https://om.example.com/api/v1/glossaryTerms/id-" + fqn,
 	}
 }
 

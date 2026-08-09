@@ -44,16 +44,32 @@ type CreateRunHistoryRequest struct {
 } // @name CreateRunHistoryRequest
 
 type BatchCreateRequest struct {
-	Assets        []CreateAssetRequest      `json:"assets" validate:"required,min=1"`
-	Lineage       []CreateLineageRequest    `json:"lineage"`
-	Documentation []CreateDocRequest        `json:"documentation"`
-	Statistics    []CreateStatRequest       `json:"statistics"`
-	RunHistory    []CreateRunHistoryRequest `json:"run_history"`
-	Config        plugin.RawPluginConfig    `json:"config"`
-	PipelineName  string                    `json:"pipeline_name" validate:"required"`
-	SourceName    string                    `json:"source_name" validate:"required"`
-	RunID         string                    `json:"run_id" validate:"required"`
+	Assets        []CreateAssetRequest        `json:"assets" validate:"required,min=1"`
+	Lineage       []CreateLineageRequest      `json:"lineage"`
+	Documentation []CreateDocRequest          `json:"documentation"`
+	Statistics    []CreateStatRequest         `json:"statistics"`
+	RunHistory    []CreateRunHistoryRequest   `json:"run_history"`
+	GlossaryTerms []CreateGlossaryTermRequest `json:"glossary_terms,omitempty"`
+	Config        plugin.RawPluginConfig      `json:"config"`
+	PipelineName  string                      `json:"pipeline_name" validate:"required"`
+	SourceName    string                      `json:"source_name" validate:"required"`
+	RunID         string                      `json:"run_id" validate:"required"`
 } // @name BatchCreateRequest
+
+// CreateGlossaryTermRequest is one business term the source system
+// curates. Terms are identified by Name, so Parent carries the name of
+// the term this one sits under rather than an id the plugin cannot know.
+// A server that predates this field ignores it, as does a plugin that
+// never sends one.
+type CreateGlossaryTermRequest struct {
+	Name        string                 `json:"name"`
+	Definition  string                 `json:"definition"`
+	Description string                 `json:"description,omitempty"`
+	Parent      string                 `json:"parent,omitempty"`
+	Synonyms    []string               `json:"synonyms,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+} // @name CreateGlossaryTermRequest
 
 type DestroyRunResponse struct {
 	AssetsDeleted        int      `json:"assets_deleted"`
@@ -97,7 +113,10 @@ type DocumentationResult struct {
 } // @name DocumentationResult
 
 type CreateAssetRequest struct {
-	Name          string                 `json:"name"`
+	Name string `json:"name"`
+	// MRN is the identity the plugin assigned. Empty means the server
+	// derives one from the type, first provider and name.
+	MRN           string                 `json:"mrn,omitempty"`
 	Type          string                 `json:"type"`
 	Providers     []string               `json:"providers"`
 	Description   *string                `json:"description"`
@@ -106,6 +125,8 @@ type CreateAssetRequest struct {
 	Tags          []string               `json:"tags"`
 	Sources       []string               `json:"sources"`
 	ExternalLinks []map[string]string    `json:"external_links"`
+	// Terms are the names of glossary terms assigned to this asset.
+	Terms []string `json:"terms,omitempty"`
 } // @name RunCreateAssetRequest
 
 type BatchCreateResponse struct {
@@ -239,6 +260,7 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 	for i, asset := range req.Assets {
 		assets[i] = runs.CreateAssetInput{
 			Name:          asset.Name,
+			MRN:           optionalString(asset.MRN),
 			Type:          asset.Type,
 			Providers:     asset.Providers,
 			Description:   asset.Description,
@@ -247,6 +269,7 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 			Tags:          asset.Tags,
 			Sources:       asset.Sources,
 			ExternalLinks: asset.ExternalLinks,
+			Terms:         asset.Terms,
 		}
 	}
 	lineageRequests := make([]runs.LineageInput, len(req.Lineage))
@@ -274,7 +297,19 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 			Value:      stat.Value,
 		}
 	}
-	response, err := h.runService.ProcessEntities(r.Context(), req.RunID, assets, lineageRequests, docRequests, statsRequests, req.PipelineName, req.SourceName)
+	termRequests := make([]runs.GlossaryTermInput, len(req.GlossaryTerms))
+	for i, term := range req.GlossaryTerms {
+		termRequests[i] = runs.GlossaryTermInput{
+			Name:        term.Name,
+			Definition:  term.Definition,
+			Description: term.Description,
+			Parent:      term.Parent,
+			Synonyms:    term.Synonyms,
+			Tags:        term.Tags,
+			Metadata:    term.Metadata,
+		}
+	}
+	response, err := h.runService.ProcessEntities(r.Context(), req.RunID, assets, lineageRequests, docRequests, statsRequests, termRequests, req.PipelineName, req.SourceName)
 	if err != nil {
 		common.RespondError(w, http.StatusInternalServerError, fmt.Sprintf("Failed to process entities: %v", err))
 		return
@@ -502,4 +537,13 @@ func (h *Handler) getRun(w http.ResponseWriter, r *http.Request) {
 	}
 
 	common.RespondJSON(w, http.StatusOK, run)
+}
+
+// optionalString turns an empty string into a nil pointer, so an absent
+// field stays absent rather than becoming an empty value.
+func optionalString(v string) *string {
+	if v == "" {
+		return nil
+	}
+	return &v
 }

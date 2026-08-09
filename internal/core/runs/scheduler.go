@@ -447,6 +447,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 			ExternalLinks: convertAssetExternalLinks(a.ExternalLinks),
 			Query:         a.Query,
 			QueryLanguage: a.QueryLanguage,
+			Terms:         a.Terms,
 		})
 	}
 
@@ -477,6 +478,19 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		})
 	}
 
+	termsInput := make([]GlossaryTermInput, 0, len(result.GlossaryTerms))
+	for _, t := range result.GlossaryTerms {
+		termsInput = append(termsInput, GlossaryTermInput{
+			Name:        t.Name,
+			Definition:  t.Definition,
+			Description: t.Description,
+			Parent:      t.Parent,
+			Synonyms:    t.Synonyms,
+			Tags:        t.Tags,
+			Metadata:    t.Metadata,
+		})
+	}
+
 	response, err := w.runsService.ProcessEntities(
 		ctx,
 		pluginRun.RunID,
@@ -484,6 +498,7 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		lineageInput,
 		docsInput,
 		statsInput,
+		termsInput,
 		schedule.Name,
 		schedule.PluginID,
 	)
@@ -555,6 +570,11 @@ func (w *worker) executeJob(ctx context.Context, run *JobRun) error {
 		LineageCreated:     lineageCreated,
 		DocumentationAdded: docsAdded,
 		TotalEntities:      len(result.Assets) + len(result.Lineage) + len(result.Documentation),
+	}
+	if response.Glossary != nil {
+		summary.GlossaryTermsCreated = response.Glossary.TermsCreated
+		summary.GlossaryTermsUpdated = response.Glossary.TermsUpdated
+		summary.AssetsTermsLinked = response.Glossary.AssetsLinked
 	}
 	_ = w.runsService.CompleteRun(ctx, pluginRun.RunID, plugin.StatusCompleted, summary, "")
 

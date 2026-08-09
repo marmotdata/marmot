@@ -21,7 +21,9 @@ var (
 type Repository interface {
 	Create(ctx context.Context, term *GlossaryTerm, owners []OwnerInput) error
 	Get(ctx context.Context, id string) (*GlossaryTerm, error)
+	GetByName(ctx context.Context, name string) (*GlossaryTerm, error)
 	Update(ctx context.Context, term *GlossaryTerm, owners []OwnerInput) error
+	SetParent(ctx context.Context, termID string, parentTermID *string) error
 	List(ctx context.Context, offset, limit int) (*ListResult, error)
 	Search(ctx context.Context, filter SearchFilter) (*ListResult, error)
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
@@ -116,6 +118,9 @@ func (r *PostgresRepository) Create(ctx context.Context, term *GlossaryTerm, own
 	}
 	defer tx.Rollback(ctx)
 
+	// user_definition is deliberately absent: no write path in the
+	// repository can set it, so no run can lose a person's wording by
+	// accident.
 	query := `
 		INSERT INTO glossary_terms (
 			name, definition, description, parent_term_id,
@@ -157,7 +162,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 	start := time.Now()
 
 	query := `
-		SELECT id, name, definition, description, parent_term_id,
+		SELECT id, name, definition, user_definition, description, parent_term_id,
 			   metadata, tags, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		WHERE id = $1`
@@ -166,7 +171,7 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 	var metadataJSON []byte
 
 	err := r.db.QueryRow(ctx, query, id).Scan(
-		&term.ID, &term.Name, &term.Definition,
+		&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
 		&term.Description, &term.ParentTermID,
 		&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 	)
@@ -197,6 +202,72 @@ func (r *PostgresRepository) Get(ctx context.Context, id string) (*GlossaryTerm,
 	return &term, nil
 }
 
+// GetByName looks a term up by the name a source system knows it by.
+// Nothing stops two rows sharing a name, so the oldest wins and stays
+// the one an ingestion keeps writing to. Owners are left unloaded: this
+// is the hot path of a sync, which only needs identity and content.
+func (r *PostgresRepository) GetByName(ctx context.Context, name string) (*GlossaryTerm, error) {
+	start := time.Now()
+
+	query := `
+		SELECT id, name, definition, user_definition, description, parent_term_id,
+			   metadata, tags, created_at, updated_at, deleted_at
+		FROM glossary_terms
+		WHERE name = $1 AND deleted_at IS NULL
+		ORDER BY created_at ASC
+		LIMIT 1`
+
+	var term GlossaryTerm
+	var metadataJSON []byte
+
+	err := r.db.QueryRow(ctx, query, name).Scan(
+		&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
+		&term.Description, &term.ParentTermID,
+		&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
+	)
+
+	duration := time.Since(start)
+
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			r.recorder.RecordDBQuery(ctx, "glossary_get_by_name", duration, true)
+			return nil, ErrNotFound
+		}
+		r.recorder.RecordDBQuery(ctx, "glossary_get_by_name", duration, false)
+		return nil, fmt.Errorf("getting glossary term by name: %w", err)
+	}
+
+	if err := json.Unmarshal(metadataJSON, &term.Metadata); err != nil {
+		r.recorder.RecordDBQuery(ctx, "glossary_get_by_name", duration, false)
+		return nil, fmt.Errorf("unmarshaling metadata: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "glossary_get_by_name", duration, true)
+	return &term, nil
+}
+
+// SetParent moves a term under another one without touching the rest of
+// the row, so resolving a hierarchy cannot undo a concurrent edit.
+func (r *PostgresRepository) SetParent(ctx context.Context, termID string, parentTermID *string) error {
+	start := time.Now()
+
+	query := `
+		UPDATE glossary_terms
+		SET parent_term_id = $1, updated_at = NOW()
+		WHERE id = $2 AND parent_term_id IS DISTINCT FROM $1`
+
+	_, err := r.db.Exec(ctx, query, parentTermID, termID)
+	duration := time.Since(start)
+
+	if err != nil {
+		r.recorder.RecordDBQuery(ctx, "glossary_set_parent", duration, false)
+		return fmt.Errorf("setting parent term: %w", err)
+	}
+
+	r.recorder.RecordDBQuery(ctx, "glossary_set_parent", duration, true)
+	return nil
+}
+
 func (r *PostgresRepository) Update(ctx context.Context, term *GlossaryTerm, owners []OwnerInput) error {
 	start := time.Now()
 
@@ -213,6 +284,7 @@ func (r *PostgresRepository) Update(ctx context.Context, term *GlossaryTerm, own
 	}
 	defer tx.Rollback(ctx)
 
+	// user_definition is deliberately absent, as in Create.
 	query := `
 		UPDATE glossary_terms
 		SET name = $1, definition = $2, description = $3, parent_term_id = $4,
@@ -264,7 +336,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 	}
 
 	query := `
-		SELECT id, name, definition, description, parent_term_id,
+		SELECT id, name, definition, user_definition, description, parent_term_id,
 			   metadata, tags, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		WHERE deleted_at IS NULL
@@ -284,7 +356,7 @@ func (r *PostgresRepository) List(ctx context.Context, offset, limit int) (*List
 		var metadataJSON []byte
 
 		if err := rows.Scan(
-			&term.ID, &term.Name, &term.Definition,
+			&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
 			&term.Description, &term.ParentTermID,
 			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 		); err != nil {
@@ -362,7 +434,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 	}
 
 	query := fmt.Sprintf(`
-		SELECT id, name, definition, description, parent_term_id,
+		SELECT id, name, definition, user_definition, description, parent_term_id,
 			   metadata, tags, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		%s
@@ -384,7 +456,7 @@ func (r *PostgresRepository) Search(ctx context.Context, filter SearchFilter) (*
 		var metadataJSON []byte
 
 		if err := rows.Scan(
-			&term.ID, &term.Name, &term.Definition,
+			&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
 			&term.Description, &term.ParentTermID,
 			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 		); err != nil {
@@ -420,7 +492,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 	start := time.Now()
 
 	query := `
-		SELECT id, name, definition, description, parent_term_id,
+		SELECT id, name, definition, user_definition, description, parent_term_id,
 			   metadata, tags, created_at, updated_at, deleted_at
 		FROM glossary_terms
 		WHERE parent_term_id = $1 AND deleted_at IS NULL
@@ -439,7 +511,7 @@ func (r *PostgresRepository) GetChildren(ctx context.Context, parentID string) (
 		var metadataJSON []byte
 
 		if err := rows.Scan(
-			&term.ID, &term.Name, &term.Definition,
+			&term.ID, &term.Name, &term.Definition, &term.UserDefinition,
 			&term.Description, &term.ParentTermID,
 			&metadataJSON, &term.Tags, &term.CreatedAt, &term.UpdatedAt, &term.DeletedAt,
 		); err != nil {

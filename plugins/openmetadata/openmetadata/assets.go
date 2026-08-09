@@ -25,6 +25,7 @@ type collector struct {
 	assets     []pluginsdk.Asset
 	lineage    []pluginsdk.LineageEdge
 	runHistory []pluginsdk.AssetRunHistory
+	terms      []pluginsdk.GlossaryTerm
 
 	// mrnByID resolves an OpenMetadata entity id to the MRN of the asset
 	// it produced. Lineage edges reference entities by id.
@@ -115,9 +116,17 @@ func (c *collector) mrnName(native, fqn string) string {
 // description, the OpenMetadata provenance metadata, tags, and links
 // back to OpenMetadata and to the system the entity lives in.
 func (c *collector) newAsset(base entityBase, kind, assetType string, p projection, name string, metadata map[string]interface{}) pluginsdk.Asset {
-	// Marmot rebuilds this MRN from the type, first provider and name
-	// when the run reaches the server, so all three must agree with it.
-	mrnValue := mrn.New(assetType, p.Provider, name)
+	// name is the qualified path that identifies the asset, so it is what
+	// the MRN is built from. What people read is the object's own name:
+	// a table is "orders", not "sales.public.orders". Marmot keeps the
+	// two apart, and every link is built from the MRN rather than from
+	// the name, the same way the ClickHouse, Iceberg and dbt plugins do.
+	mrnValue := mrn.New(assetType, mrnService(p.Provider), name)
+
+	displayName := strings.TrimSpace(base.Name)
+	if displayName == "" {
+		displayName = name
+	}
 
 	if metadata == nil {
 		metadata = make(map[string]interface{})
@@ -126,13 +135,14 @@ func (c *collector) newAsset(base entityBase, kind, assetType string, p projecti
 	c.trackForLineage(kind, base.ID)
 
 	asset := pluginsdk.Asset{
-		Name:          &name,
+		Name:          &displayName,
 		MRN:           &mrnValue,
 		Type:          assetType,
 		Providers:     []string{p.Provider},
 		Metadata:      metadata,
 		Schema:        make(map[string]string),
 		Tags:          c.tagsFor(base, metadata),
+		Terms:         c.termsFor(base),
 		ExternalLinks: c.linksFor(base, kind),
 		Sources: []pluginsdk.AssetSource{{
 			Name:       sourceName,
@@ -180,11 +190,10 @@ func (c *collector) stampProvenance(base entityBase, metadata map[string]interfa
 	}
 }
 
-// tagsFor turns OpenMetadata's classification tags and glossary term
-// assignments into Marmot tags, then appends the run's configured tags.
-// Glossary terms are not first class in a Marmot ingestion run, so
-// carrying them as tags is what keeps that vocabulary attached to the
-// assets it was curated onto.
+// tagsFor turns OpenMetadata's classification tags into Marmot tags,
+// then appends the run's configured tags. An assigned glossary term is
+// a term rather than a tag, and only appears here when the run asks for
+// a copy of it on the tags as well.
 func (c *collector) tagsFor(base entityBase, metadata map[string]interface{}) []string {
 	var tags []string
 
@@ -327,12 +336,28 @@ func tagNames(tags []tagLabel) []string {
 	return names
 }
 
+// termsFor is the glossary terms curated onto an entity. OpenMetadata
+// records an assignment as a tag label sourced from the glossary; in
+// Marmot the term is an object of its own, so the assignment travels as
+// a term. A run that leaves the glossary behind assigns nothing, because
+// the terms it would point at were never imported.
+func (c *collector) termsFor(base entityBase) []string {
+	if !c.config.IncludeGlossary {
+		return nil
+	}
+	return glossaryTerms(base.Tags)
+}
+
+// glossaryTerms is the fully qualified names of the glossary terms
+// assigned to an entity. A suggestion nobody accepted is not an
+// assignment, the same rule tagsFor applies to tags.
 func glossaryTerms(tags []tagLabel) []string {
 	var terms []string
 	for _, tag := range tags {
-		if tag.Source == "Glossary" {
-			terms = append(terms, tag.TagFQN)
+		if tag.Source != "Glossary" || tag.State == "Suggested" {
+			continue
 		}
+		terms = append(terms, tag.TagFQN)
 	}
 	return terms
 }
@@ -361,4 +386,14 @@ func putIf(metadata map[string]interface{}, key string, value interface{}) {
 		return
 	}
 	metadata[key] = value
+}
+
+// mrnService is the service component of an MRN for a provider. mrn.New
+// sanitizes the name it is given but not the service, so a provider with
+// a space in it would put that space into the MRN and into every URL
+// built from it. Spaces are dropped rather than hyphenated so that
+// "Delta Lake" addresses the same assets as the Delta Lake plugin, which
+// slugs itself "DeltaLake".
+func mrnService(provider string) string {
+	return strings.ReplaceAll(provider, " ", "")
 }

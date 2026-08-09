@@ -106,7 +106,18 @@ func (s *Source) Discover(ctx context.Context, rawConfig pluginsdk.RawConfig) (*
 	}
 
 	if s.config.DiscoverDatasets {
-		datasetAssets, datasetLineages, err := s.discoverDatasets(ctx)
+		// Dataset lineage points at the DAG and Task assets discovered
+		// above. Those only exist when discover_dags is on, and a paused DAG
+		// is filtered out by only_active while datasets still reference it,
+		// so the edges have to be checked against what this run emitted.
+		created := make(map[string]struct{}, len(assets))
+		for _, a := range assets {
+			if a.MRN != nil {
+				created[*a.MRN] = struct{}{}
+			}
+		}
+
+		datasetAssets, datasetLineages, err := s.discoverDatasets(ctx, created)
 		if err != nil {
 			log.Warn().Err(err).Msg("Failed to discover datasets (requires Airflow 2.4+)")
 		} else {
@@ -221,7 +232,7 @@ func (s *Source) discoverTasks(ctx context.Context, dagID string) ([]pluginsdk.A
 }
 
 // discoverDatasets discovers Airflow Datasets and creates lineage.
-func (s *Source) discoverDatasets(ctx context.Context) ([]pluginsdk.Asset, []pluginsdk.LineageEdge, error) {
+func (s *Source) discoverDatasets(ctx context.Context, created map[string]struct{}) ([]pluginsdk.Asset, []pluginsdk.LineageEdge, error) {
 	var assets []pluginsdk.Asset
 	var lineages []pluginsdk.LineageEdge
 
@@ -241,6 +252,11 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]pluginsdk.Asset, []plu
 
 		for _, consumer := range dataset.ConsumingDags {
 			dagMRN := mrn.New("Pipeline", "Airflow", consumer.DagID)
+			if _, ok := created[dagMRN]; !ok {
+				log.Debug().Str("dag_id", consumer.DagID).Str("dataset", dataset.URI).
+					Msg("Skipping FEEDS edge, consuming DAG not discovered")
+				continue
+			}
 			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: datasetMRN,
 				Target: dagMRN,
@@ -249,9 +265,26 @@ func (s *Source) discoverDatasets(ctx context.Context) ([]pluginsdk.Asset, []plu
 		}
 
 		for _, producer := range dataset.ProducingTasks {
+			// Airflow names the producing task, not just its DAG, so the edge
+			// starts at the Task asset when this run created one. Falling back
+			// to the DAG keeps the edge useful when discover_tasks is off.
+			taskMRN := mrn.New("Task", "Airflow", fmt.Sprintf("%s.%s", producer.DagID, producer.TaskID))
 			dagMRN := mrn.New("Pipeline", "Airflow", producer.DagID)
+
+			var sourceMRN string
+			switch {
+			case containsMRN(created, taskMRN):
+				sourceMRN = taskMRN
+			case containsMRN(created, dagMRN):
+				sourceMRN = dagMRN
+			default:
+				log.Debug().Str("dag_id", producer.DagID).Str("task_id", producer.TaskID).
+					Str("dataset", dataset.URI).Msg("Skipping PRODUCES edge, producing DAG not discovered")
+				continue
+			}
+
 			lineages = append(lineages, pluginsdk.LineageEdge{
-				Source: dagMRN,
+				Source: sourceMRN,
 				Target: datasetMRN,
 				Type:   "PRODUCES",
 			})
@@ -470,13 +503,46 @@ func (s *Source) createTaskAsset(dagID string, task Task) pluginsdk.Asset {
 	}
 }
 
+// containsMRN reports whether this run emitted an asset with that MRN.
+func containsMRN(created map[string]struct{}, mrnValue string) bool {
+	_, ok := created[mrnValue]
+	return ok
+}
+
+// relationalTableName turns the path of a relational dataset URI into the
+// name the Marmot plugin that owns the table uses. Airflow writes these as
+// authority/database/schema/table; the first segment after "://" is the
+// authority by URI syntax and is never part of a table's identity. levels
+// is how many trailing levels the owning plugin keeps: plugins/postgresql,
+// plugins/mysql and plugins/bigquery keep two, warehouses with no Marmot
+// plugin keep three.
+func relationalTableName(path string, levels int) string {
+	var segments []string
+	for _, seg := range strings.Split(path, "/") {
+		if seg != "" {
+			segments = append(segments, seg)
+		}
+	}
+	if len(segments) == 0 {
+		return path
+	}
+	// Drop the authority (host:port, account, project).
+	if len(segments) > 1 {
+		segments = segments[1:]
+	}
+	if len(segments) > levels {
+		segments = segments[len(segments)-levels:]
+	}
+	return strings.Join(segments, ".")
+}
+
 // parseDatasetURI parses an Airflow Dataset URI and returns provider, asset type, and name.
 func parseDatasetURI(uri string) (provider, assetType, name string) {
 	provider = "Airflow"
 	assetType = "Dataset"
 	name = uri
 
-	if idx := strings.Index(uri, "://"); idx != -1 {
+	if idx := strings.Index(uri, "://"); idx > 0 {
 		scheme := strings.ToLower(uri[:idx])
 		path := uri[idx+3:]
 
@@ -500,26 +566,31 @@ func parseDatasetURI(uri string) (provider, assetType, name string) {
 			} else {
 				name = path
 			}
+		// The relational schemes name a table some other Marmot plugin
+		// already owns, so they are addressed the way that plugin addresses
+		// them rather than by the whole URI path.
 		case "postgresql", "postgres":
 			provider = "PostgreSQL"
 			assetType = "Table"
-			name = path
+			name = relationalTableName(path, 2)
 		case "mysql":
 			provider = "MySQL"
 			assetType = "Table"
-			name = path
+			name = relationalTableName(path, 2)
 		case "bigquery", "bq":
 			provider = "BigQuery"
 			assetType = "Table"
-			name = path
+			name = relationalTableName(path, 2)
+		// No Marmot plugin owns these two, so all three levels stay, which
+		// is also what the OpenMetadata projection does for them.
 		case "snowflake":
 			provider = "Snowflake"
 			assetType = "Table"
-			name = path
+			name = relationalTableName(path, 3)
 		case "redshift":
 			provider = "Redshift"
 			assetType = "Table"
-			name = path
+			name = relationalTableName(path, 3)
 		case "http", "https":
 			provider = "HTTP"
 			assetType = "Endpoint"

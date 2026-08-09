@@ -152,7 +152,12 @@ func (c *collector) addWorksheets(ctx context.Context, spreadsheets []spreadshee
 			putIf(sheetMetadata, "row_count", tab.RowCount)
 			putIf(sheetMetadata, "hidden", tab.Hidden)
 
-			asset := c.newAsset(s.item, "Table", sheetName, sheetMetadata)
+			// The sheet is its own object, so it reads as its own tab
+			// title rather than the spreadsheet's name.
+			sheetItem := s.item
+			sheetItem.Name = tab.Title
+
+			asset := c.newAsset(sheetItem, "Table", sheetName, sheetMetadata)
 			setColumns(&asset, tab.Columns)
 			c.record(asset)
 
@@ -206,9 +211,15 @@ func (c *collector) add(f driveItem, assetType, name string, metadata map[string
 }
 
 func (c *collector) newAsset(f driveItem, assetType, name string, metadata map[string]interface{}) pluginsdk.Asset {
-	// Marmot rebuilds this MRN from the type, first provider and name
-	// when the run reaches the server, so all three must agree with it.
+	// name is the item's path, which is what identifies it: two folders
+	// can each hold a "notes.md". What people read is the item's own
+	// name, and the Contents tab supplies the folder it sits in.
 	mrnValue := mrn.New(assetType, provider, name)
+
+	displayName := f.Name
+	if displayName == "" {
+		displayName = name
+	}
 
 	if metadata == nil {
 		metadata = map[string]interface{}{}
@@ -219,7 +230,7 @@ func (c *collector) newAsset(f driveItem, assetType, name string, metadata map[s
 	}
 
 	asset := pluginsdk.Asset{
-		Name:      &name,
+		Name:      &displayName,
 		MRN:       &mrnValue,
 		Type:      assetType,
 		Providers: []string{provider},
