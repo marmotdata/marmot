@@ -524,6 +524,12 @@ func (s *Source) discoverAliases(ctx context.Context, clusterName string) ([]plu
 		})
 
 		for _, indexName := range info.indices {
+			// An alias can point at a system index that discoverIndices
+			// skipped, which would leave this edge referencing an MRN the run
+			// never creates. Same filter as index and data stream discovery.
+			if !s.config.IncludeSystemIndices && strings.HasPrefix(indexName, ".") {
+				continue
+			}
 			indexMRN := mrn.New("table", "opensearch", indexName)
 			lineages = append(lineages, pluginsdk.LineageEdge{
 				Source: mrnValue,

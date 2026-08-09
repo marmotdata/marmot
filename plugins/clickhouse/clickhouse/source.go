@@ -27,8 +27,10 @@ func Meta() pluginsdk.Meta {
 		Icon:        "clickhouse",
 		Category:    "database",
 		Status:      "experimental",
-		Features:    []string{"Assets"},
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		// Discover returns a CONTAINS edge for every table it finds, so the
+		// manifest has to declare Lineage the way postgresql and mysql do.
+		Features:   []string{"Assets", "Lineage"},
+		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
 	}
 }
 

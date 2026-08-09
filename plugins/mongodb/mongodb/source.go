@@ -9,7 +9,6 @@ import (
 	"time"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
-	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -155,25 +154,7 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 				assets = append(assets, collectionAssets...)
 				log.Debug().Str("database", dbName).Int("count", len(collectionAssets)).Msg("Discovered collections")
 
-				for _, collAsset := range collectionAssets {
-					lineages = append(lineages, pluginsdk.LineageEdge{
-						Source: *dbAsset.MRN,
-						Target: *collAsset.MRN,
-						Type:   "CONTAINS",
-					})
-
-					if collAsset.Type == "View" {
-						viewOn, ok := collAsset.Metadata["view_on"].(string)
-						if ok && viewOn != "" {
-							sourceCollMRN := mrn.New("Collection", "MongoDB", viewOn)
-							lineages = append(lineages, pluginsdk.LineageEdge{
-								Source: sourceCollMRN,
-								Target: *collAsset.MRN,
-								Type:   "VIEW_OF",
-							})
-						}
-					}
-				}
+				lineages = append(lineages, buildCollectionLineage(dbName, dbAsset, collectionAssets)...)
 			}
 		}
 	}
@@ -182,4 +163,61 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 		Assets:  assets,
 		Lineage: lineages,
 	}, nil
+}
+
+// buildCollectionLineage links a database to the collections and views
+// discovered inside it, and each view to the collection or view it reads
+// from.
+//
+// Every edge is resolved against the assets this run actually built. A
+// view can be defined on another view, which this plugin catalogues as
+// type View rather than Collection, so the source's asset type cannot be
+// guessed from the name alone; and a source that was filtered out has no
+// asset at all. The server silently discards an edge whose endpoints do
+// not exist, so a guessed MRN loses the lineage without any error.
+func buildCollectionLineage(dbName string, dbAsset pluginsdk.Asset, collectionAssets []pluginsdk.Asset) []pluginsdk.LineageEdge {
+	var lineages []pluginsdk.LineageEdge
+
+	collectionMRNs := make(map[string]string, len(collectionAssets))
+	for _, collAsset := range collectionAssets {
+		if collAsset.Name != nil && collAsset.MRN != nil {
+			collectionMRNs[*collAsset.Name] = *collAsset.MRN
+		}
+	}
+
+	for _, collAsset := range collectionAssets {
+		if collAsset.MRN == nil {
+			continue
+		}
+
+		lineages = append(lineages, pluginsdk.LineageEdge{
+			Source: *dbAsset.MRN,
+			Target: *collAsset.MRN,
+			Type:   "CONTAINS",
+		})
+
+		if collAsset.Type != "View" {
+			continue
+		}
+
+		viewOn, ok := collAsset.Metadata["view_on"].(string)
+		if !ok || viewOn == "" {
+			continue
+		}
+
+		sourceCollMRN, found := collectionMRNs[viewOn]
+		if !found {
+			log.Debug().Str("database", dbName).Str("view_on", viewOn).
+				Msg("Skipping VIEW_OF edge, source collection not discovered")
+			continue
+		}
+
+		lineages = append(lineages, pluginsdk.LineageEdge{
+			Source: sourceCollMRN,
+			Target: *collAsset.MRN,
+			Type:   "VIEW_OF",
+		})
+	}
+
+	return lineages
 }

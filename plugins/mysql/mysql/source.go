@@ -102,12 +102,26 @@ func (s *Source) Discover(ctx context.Context, pluginConfig pluginsdk.RawConfig)
 	var assets []pluginsdk.Asset
 	var lineages []pluginsdk.LineageEdge
 
+	// The database is an asset in its own right, the way it is for the
+	// PostgreSQL, ClickHouse and MongoDB plugins. It is also what an
+	// OpenMetadata import already creates for a MySQL service, so leaving
+	// it out would strand that asset the day this plugin takes over.
+	dbAsset := s.databaseAsset()
+	assets = append(assets, dbAsset)
+
 	log.Debug().Str("database", s.config.Database).Msg("Starting table and view discovery")
 	objectAssets, err := s.discoverTablesAndViews(ctx, s.config.Database)
 	if err != nil {
 		log.Warn().Err(err).Str("database", s.config.Database).Msg("Failed to discover tables and views")
 	} else {
 		assets = append(assets, objectAssets...)
+		for _, objAsset := range objectAssets {
+			lineages = append(lineages, pluginsdk.LineageEdge{
+				Source: *dbAsset.MRN,
+				Target: *objAsset.MRN,
+				Type:   "CONTAINS",
+			})
+		}
 		log.Debug().Int("count", len(objectAssets)).Msg("Discovered tables and views")
 	}
 
@@ -288,7 +302,10 @@ func (s *Source) discoverTablesAndViews(ctx context.Context, dbName string) ([]p
 			assetDesc = fmt.Sprintf("MySQL table %s.%s in database %s", schemaName, objectName, dbName)
 		}
 
-		mrnValue := mrn.New(assetType, "MySQL", objectName)
+		// One server holds many databases, and each can hold a table of the
+		// same name, so the database belongs in the identity. Name stays the
+		// bare object name.
+		mrnValue := assetMRN(assetType, schemaName, objectName)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
@@ -381,8 +398,21 @@ func (s *Source) discoverForeignKeys(ctx context.Context, dbName string) ([]plug
 			Str("constraint", constraintName).
 			Msg("Found foreign key relationship")
 
-		sourceMRN := mrn.New("Table", "MySQL", sourceTable)
-		targetMRN := mrn.New("Table", "MySQL", targetTable.String)
+		// A foreign key may reference a table in another database. This run
+		// only discovers the configured one, so an edge to it would point at
+		// an asset that is never created.
+		if targetSchema.String != dbName {
+			log.Debug().
+				Str("constraint", constraintName).
+				Str("references", targetSchema.String+"."+targetTable.String).
+				Msg("Skipping foreign key to a table outside the configured database")
+			continue
+		}
+
+		// Must match the identity the table assets were given above, or the
+		// edge points at an MRN that is never created.
+		sourceMRN := assetMRN("Table", sourceSchema, sourceTable)
+		targetMRN := assetMRN("Table", targetSchema.String, targetTable.String)
 
 		if sourceMRN == targetMRN {
 			continue
@@ -523,5 +553,41 @@ func convertMySQLValue(val interface{}) interface{} {
 	default:
 		// For other types, return as is
 		return val
+	}
+}
+
+// assetMRN is what identifies an object in this catalog. One server holds many databases, each able to hold the same table name.
+// The name shown in the UI stays the object's own name; only the MRN
+// carries the path.
+func assetMRN(assetType, parent, name string) string {
+	return mrn.New(assetType, "MySQL", parent+"."+name)
+}
+
+// databaseAsset is the container the discovered tables and views hang
+// from. Its MRN matches what an OpenMetadata import produces for the same
+// database, so the two land on one asset.
+func (s *Source) databaseAsset() pluginsdk.Asset {
+	name := s.config.Database
+	mrnValue := mrn.New("Database", "MySQL", name)
+
+	metadata := map[string]interface{}{
+		"host":     s.config.Host,
+		"port":     s.config.Port,
+		"database": name,
+	}
+
+	return pluginsdk.Asset{
+		Name:      &name,
+		MRN:       &mrnValue,
+		Type:      "Database",
+		Providers: []string{"MySQL"},
+		Metadata:  metadata,
+		Tags:      pluginsdk.InterpolateTags(s.config.Tags, metadata),
+		Sources: []pluginsdk.AssetSource{{
+			Name:       "MySQL",
+			LastSyncAt: time.Now(),
+			Properties: metadata,
+			Priority:   1,
+		}},
 	}
 }

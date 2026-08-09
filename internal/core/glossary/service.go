@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	validator "github.com/go-playground/validator/v10"
@@ -19,17 +20,23 @@ type Owner struct {
 } // @name GlossaryOwner
 
 type GlossaryTerm struct {
-	ID           string                 `json:"id"`
-	Name         string                 `json:"name"`
-	Definition   string                 `json:"definition"`
-	Description  *string                `json:"description,omitempty"`
-	ParentTermID *string                `json:"parent_term_id,omitempty"`
-	Owners       []Owner                `json:"owners"`
-	Metadata     map[string]interface{} `json:"metadata,omitempty"`
-	Tags         []string               `json:"tags,omitempty"`
-	CreatedAt    time.Time              `json:"created_at"`
-	UpdatedAt    time.Time              `json:"updated_at"`
-	DeletedAt    *time.Time             `json:"deleted_at,omitempty"`
+	ID   string `json:"id"`
+	Name string `json:"name"`
+	// Definition is what the last run wrote. On a term a person has
+	// worded themselves the read path serves UserDefinition here instead,
+	// so a caller always gets the wording the catalog stands behind.
+	Definition string `json:"definition"`
+	// UserDefinition is the wording a person gave the term. Ingestion
+	// reads it and never writes it, so it survives every run.
+	UserDefinition *string                `json:"user_definition,omitempty"`
+	Description    *string                `json:"description,omitempty"`
+	ParentTermID   *string                `json:"parent_term_id,omitempty"`
+	Owners         []Owner                `json:"owners"`
+	Metadata       map[string]interface{} `json:"metadata,omitempty"`
+	Tags           []string               `json:"tags,omitempty"`
+	CreatedAt      time.Time              `json:"created_at"`
+	UpdatedAt      time.Time              `json:"updated_at"`
+	DeletedAt      *time.Time             `json:"deleted_at,omitempty"`
 } // @name GlossaryTerm
 
 type OwnerInput struct {
@@ -86,6 +93,7 @@ type Service interface {
 	Search(ctx context.Context, filter SearchFilter) (*ListResult, error)
 	GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error)
 	GetAncestors(ctx context.Context, termID string) ([]*GlossaryTerm, error)
+	SyncTerms(ctx context.Context, source string, inputs []TermInput) (*SyncResult, error)
 	SetSearchObserver(observer SearchObserver)
 }
 
@@ -174,6 +182,17 @@ func (s *service) Create(ctx context.Context, input CreateTermInput) (*GlossaryT
 }
 
 func (s *service) Get(ctx context.Context, id string) (*GlossaryTerm, error) {
+	term, err := s.load(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return asRead(term), nil
+}
+
+// load fetches a term as it is stored, for the paths that write it back.
+// Serving a term goes through Get instead, which resolves the wording.
+func (s *service) load(ctx context.Context, id string) (*GlossaryTerm, error) {
 	term, err := s.repo.Get(ctx, id)
 	if err != nil {
 		return nil, err
@@ -186,12 +205,41 @@ func (s *service) Get(ctx context.Context, id string) (*GlossaryTerm, error) {
 	return term, nil
 }
 
+// asRead returns the term a reader should see: a definition a person
+// wrote wins over the one the last run brought in.
+//
+// This is the one place the preference lives, and it sits between the
+// repository and every caller that serves a term, so the columns stay
+// what they are on the way in. Doing it in SQL instead would feed the
+// resolved wording back to the sync, which compares what it read against
+// what the source says, and to Update and Delete, which write the row
+// back whole: a person's wording would end up in the definition column
+// and be lost on the next run.
+func asRead(term *GlossaryTerm) *GlossaryTerm {
+	if term == nil || term.UserDefinition == nil || strings.TrimSpace(*term.UserDefinition) == "" {
+		return term
+	}
+
+	resolved := *term
+	resolved.Definition = *term.UserDefinition
+	return &resolved
+}
+
+// allAsRead resolves a page of terms in place, since the slice was built
+// for this caller.
+func allAsRead(terms []*GlossaryTerm) []*GlossaryTerm {
+	for i, term := range terms {
+		terms[i] = asRead(term)
+	}
+	return terms
+}
+
 func (s *service) Update(ctx context.Context, id string, input UpdateTermInput) (*GlossaryTerm, error) {
 	if err := s.validator.Struct(input); err != nil {
 		return nil, fmt.Errorf("%w: %v", ErrInvalidInput, err)
 	}
 
-	existing, err := s.Get(ctx, id)
+	existing, err := s.load(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +316,7 @@ func (s *service) checkCircularReference(ctx context.Context, termID, newParentI
 }
 
 func (s *service) Delete(ctx context.Context, id string) error {
-	term, err := s.Get(ctx, id)
+	term, err := s.load(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -298,7 +346,13 @@ func (s *service) List(ctx context.Context, offset, limit int) (*ListResult, err
 		offset = 0
 	}
 
-	return s.repo.List(ctx, offset, limit)
+	result, err := s.repo.List(ctx, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	result.Terms = allAsRead(result.Terms)
+	return result, nil
 }
 
 func (s *service) Search(ctx context.Context, filter SearchFilter) (*ListResult, error) {
@@ -315,19 +369,30 @@ func (s *service) Search(ctx context.Context, filter SearchFilter) (*ListResult,
 		filter.Offset = 0
 	}
 
-	return s.repo.Search(ctx, filter)
-}
-
-func (s *service) GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error) {
-	if _, err := s.Get(ctx, parentID); err != nil {
+	result, err := s.repo.Search(ctx, filter)
+	if err != nil {
 		return nil, err
 	}
 
-	return s.repo.GetChildren(ctx, parentID)
+	result.Terms = allAsRead(result.Terms)
+	return result, nil
+}
+
+func (s *service) GetChildren(ctx context.Context, parentID string) ([]*GlossaryTerm, error) {
+	if _, err := s.load(ctx, parentID); err != nil {
+		return nil, err
+	}
+
+	children, err := s.repo.GetChildren(ctx, parentID)
+	if err != nil {
+		return nil, err
+	}
+
+	return allAsRead(children), nil
 }
 
 func (s *service) GetAncestors(ctx context.Context, termID string) ([]*GlossaryTerm, error) {
-	term, err := s.Get(ctx, termID)
+	term, err := s.load(ctx, termID)
 	if err != nil {
 		return nil, err
 	}
@@ -356,5 +421,5 @@ func (s *service) GetAncestors(ctx context.Context, termID string) ([]*GlossaryT
 		}
 	}
 
-	return ancestors, nil
+	return allAsRead(ancestors), nil
 }

@@ -49,6 +49,20 @@ type DiscoveryResult struct {
 	Documentation []assetdocs.Documentation `json:"documentation"`
 	Statistics    []Statistic               `json:"statistics"`
 	RunHistory    []AssetRunHistory         `json:"run_history,omitempty"`
+	GlossaryTerms []GlossaryTerm            `json:"glossary_terms,omitempty"`
+}
+
+// GlossaryTerm mirrors pluginsdk.GlossaryTerm: a business definition the
+// source system curates. A term is identified by Name, which the plugin
+// makes unique and stable, so Parent refers to another term's Name.
+type GlossaryTerm struct {
+	Name        string                 `json:"name"`
+	Definition  string                 `json:"definition"`
+	Description string                 `json:"description,omitempty"`
+	Parent      string                 `json:"parent,omitempty"`
+	Synonyms    []string               `json:"synonyms,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
 }
 
 // AssetRunHistory contains run history events for an asset
@@ -109,6 +123,11 @@ type RunSummary struct {
 	ErrorsCount        int `json:"errors_count"`
 	TotalEntities      int `json:"total_entities"`
 	DurationSeconds    int `json:"duration_seconds"`
+	// Glossary counts are absent from runs that predate them, and from
+	// sources that curate no business terms.
+	GlossaryTermsCreated int `json:"glossary_terms_created,omitempty"`
+	GlossaryTermsUpdated int `json:"glossary_terms_updated,omitempty"`
+	AssetsTermsLinked    int `json:"assets_terms_linked,omitempty"`
 } // @name RunSummary
 
 // RunCheckpoint tracks what entities were processed in a run

@@ -132,7 +132,9 @@ func (s *Source) discoverCollections(ctx context.Context, dbName string) ([]plug
 			assetDesc = fmt.Sprintf("MongoDB collection %s.%s", dbName, collName)
 		}
 
-		mrnValue := mrn.New(assetType, "MongoDB", collName)
+		// Two databases can each hold an "events" collection, so the
+		// database is part of the identity. Name stays the collection name.
+		mrnValue := assetMRN(assetType, dbName, collName)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 		assets = append(assets, pluginsdk.Asset{
@@ -180,4 +182,11 @@ func shardKeyToString(shardKey bson.D) string {
 		parts = append(parts, fmt.Sprintf("%s:%d", elem.Key, elem.Value))
 	}
 	return strings.Join(parts, ",")
+}
+
+// assetMRN is what identifies an object in this catalog. Two databases can each hold an events collection.
+// The name shown in the UI stays the object's own name; only the MRN
+// carries the path.
+func assetMRN(assetType, parent, name string) string {
+	return mrn.New(assetType, "MongoDB", parent+"."+name)
 }

@@ -155,11 +155,17 @@ func TestConnectorMRNNames(t *testing.T) {
 		table     string
 		wantName  string
 	}{
-		{"postgresql table only", "postgresql", "pg", "public", "products", "products"},
-		{"mysql table only", "mysql", "my", "mydb", "users", "users"},
+		{"postgresql catalog.schema.table", "postgresql", "pg", "public", "products", "pg.public.products"},
+		{"mysql database.table", "mysql", "my", "mydb", "users", "mydb.users"},
 		{"clickhouse schema.table", "clickhouse", "ch", "analytics", "events", "analytics.events"},
-		{"mongodb table only", "mongodb", "mongo", "mydb", "users", "users"},
-		{"iceberg full path", "iceberg", "ice", "warehouse", "orders", "ice.warehouse.orders"},
+		{"mongodb database.collection", "mongodb", "mongo", "mydb", "users", "mydb.users"},
+		// Iceberg and Delta Lake follow their own Marmot plugin, which
+		// knows nothing about the Trino catalog the table is mounted under.
+		{"iceberg namespace.table", "iceberg", "ice", "warehouse", "orders", "warehouse.orders"},
+		{"delta lake bare table", "delta_lake", "dl", "default", "events", "events"},
+		// Hive has no Marmot plugin, so Trino stays the authority and keeps
+		// the catalog.
+		{"hive full path", "hive", "hv", "warehouse", "orders", "hv.warehouse.orders"},
 	}
 
 	for _, tt := range tests {
@@ -196,7 +202,7 @@ func TestCreateTableAsset_NativeProvider(t *testing.T) {
 			catalog:      "pg",
 			schema:       "public",
 			table:        "products",
-			wantMRN:      "mrn://table/postgresql/products",
+			wantMRN:      "mrn://table/postgresql/pg.public.products",
 			wantName:     "products",
 			wantProvider: "PostgreSQL",
 		},
@@ -207,7 +213,7 @@ func TestCreateTableAsset_NativeProvider(t *testing.T) {
 			schema:       "analytics",
 			table:        "events",
 			wantMRN:      "mrn://table/clickhouse/analytics.events",
-			wantName:     "analytics.events",
+			wantName:     "events",
 			wantProvider: "ClickHouse",
 		},
 		{
@@ -216,9 +222,19 @@ func TestCreateTableAsset_NativeProvider(t *testing.T) {
 			catalog:      "ice",
 			schema:       "warehouse",
 			table:        "orders",
-			wantMRN:      "mrn://table/iceberg/ice.warehouse.orders",
-			wantName:     "ice.warehouse.orders",
+			wantMRN:      "mrn://table/iceberg/warehouse.orders",
+			wantName:     "orders",
 			wantProvider: "Iceberg",
+		},
+		{
+			name:         "delta lake produces native MRN",
+			connector:    "delta_lake",
+			catalog:      "dl",
+			schema:       "default",
+			table:        "events",
+			wantMRN:      "mrn://table/deltalake/events",
+			wantName:     "events",
+			wantProvider: "Delta Lake",
 		},
 	}
 
@@ -241,7 +257,7 @@ func TestCreateTableAsset_NativeProvider(t *testing.T) {
 		info := connectorMap["postgresql"]
 		a := s.createTableAsset("pg", "public", "my_view", "VIEW", info)
 		assert.Equal(t, "View", a.Type)
-		assert.Equal(t, "mrn://view/postgresql/my_view", *a.MRN)
+		assert.Equal(t, "mrn://view/postgresql/pg.public.my_view", *a.MRN)
 	})
 }
 

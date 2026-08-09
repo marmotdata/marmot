@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	"net/url"
-	"strings"
 
 	"github.com/apache/iceberg-go/catalog"
 	gluecat "github.com/apache/iceberg-go/catalog/glue"
@@ -247,24 +246,20 @@ func buildContainsLineage(tableAssets, viewAssets []pluginsdk.Asset) []pluginsdk
 	return edges
 }
 
-// namespaceFromAssetMRN derives the parent namespace MRN from a table/view MRN.
+// namespaceFromAssetMRN returns the MRN of the Namespace asset that
+// contains a table or view. It reads the namespace the discovery pass
+// recorded rather than re-splitting the child's MRN: a table identifier
+// can contain a dot, and cutting at the last one would point the edge at a
+// Namespace no run ever creates, which fails the lineage foreign key.
 func namespaceFromAssetMRN(a pluginsdk.Asset) string {
 	if a.MRN == nil || a.Metadata == nil {
 		return ""
 	}
 
-	mrnStr := *a.MRN
-	parts := strings.SplitN(mrnStr, "/iceberg/", 2)
-	if len(parts) != 2 {
+	nsPath, ok := a.Metadata["namespace"].(string)
+	if !ok || nsPath == "" {
 		return ""
 	}
 
-	fullName := parts[1]
-	lastDot := strings.LastIndex(fullName, ".")
-	if lastDot < 0 {
-		return ""
-	}
-
-	nsPath := fullName[:lastDot]
 	return mrn.New("Namespace", "Iceberg", nsPath)
 }

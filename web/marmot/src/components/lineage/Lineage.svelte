@@ -20,12 +20,16 @@
 	let loading = $state(true);
 	let error = $state<string | null>(null);
 	let mounted = false;
-	let lineageData: LineageResponse | null = $state(null);
+	let lineageData = $state<LineageResponse | null>(null);
 	let depth = $state(10);
 	// Observed edges (e.g. AGENT_LOOKUP) default-on for agent-focused views,
 	// off elsewhere so chatty agents don't pollute pipeline lineage graphs.
 	let isAgentAsset = $derived(currentAsset.type?.toLowerCase() === 'agent');
 	let showObserved = $state(false);
+	// CONTAINS edges say a database holds a table, not that data moved.
+	// They are the bulk of most graphs, so they can be hidden to leave
+	// just the flow.
+	let showStructure = $state(true);
 
 	// Add lineage modal state
 	let showAddLineageModal = $state(false);
@@ -40,6 +44,13 @@
 
 	let nodes = $state.raw<Node[]>([]);
 	let edges = $state.raw<Edge[]>([]);
+
+	// Structural edges describe containment rather than data movement.
+	const STRUCTURAL_EDGE_TYPES = new Set(['CONTAINS']);
+
+	function isStructuralEdge(edge: { type?: string }): boolean {
+		return STRUCTURAL_EDGE_TYPES.has((edge.type ?? '').toUpperCase());
+	}
 
 	function getNodeIconType(node: LineageNode): string {
 		if (
@@ -264,6 +275,9 @@
 				if (edge.origin === 'observed' && !showObserved) {
 					return;
 				}
+				if (isStructuralEdge(edge) && !showStructure) {
+					return;
+				}
 				const isObserved = edge.origin === 'observed';
 				const stroke = isObserved
 					? 'stroke: #607b60; stroke-width: 1.5px; stroke-dasharray: 5,4; opacity: 0.75;'
@@ -374,6 +388,17 @@
 			}
 			return edge;
 		});
+
+		// Hiding an edge kind can leave nodes attached to nothing. Drop
+		// them so the graph does not fill with floating assets.
+		if (!showStructure) {
+			const connected = new Set<string>([focalId]);
+			for (const edge of finalEdges) {
+				connected.add(edge.source);
+				connected.add(edge.target);
+			}
+			finalNodes = finalNodes.filter((node) => connected.has(node.id));
+		}
 
 		const allNodes = [...finalNodes, ...Array.from(cycleReturnNodes.values())];
 		const layoutedNodes = getLayoutedElements(allNodes, finalEdges);
@@ -823,6 +848,7 @@
 	// reassigning nodes/edges would re-trigger the effect itself.
 	$effect(() => {
 		void showObserved;
+		void showStructure;
 		untrack(() => {
 			if (lineageData && nodes.length > 0) {
 				const elements = generateElements(lineageData);
@@ -834,6 +860,10 @@
 
 	let observedEdgeCount = $derived(
 		(lineageData?.edges ?? []).filter((e) => e.origin === 'observed').length
+	);
+
+	let structuralEdgeCount = $derived(
+		(lineageData?.edges ?? []).filter((e) => isStructuralEdge(e)).length
 	);
 
 	let isFullscreen = $state(false);
@@ -946,6 +976,38 @@
 				<span
 					class="w-3.5 h-3.5 inline-flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-semibold text-gray-500 dark:text-gray-400 cursor-help"
 					title="Runtime-observed access — captured from real execution, not declared data flow."
+				>
+					?
+				</span>
+			</label>
+		{/if}
+
+		{#if structuralEdgeCount > 0}
+			<label
+				class="absolute left-4 {observedEdgeCount > 0
+					? 'top-[calc(6rem+2.25rem)]'
+					: 'top-24'} z-[5] flex items-center gap-2 px-2.5 py-1.5 rounded-full border border-earthy-green-200 dark:border-earthy-green-800/50 bg-white dark:bg-gray-800 shadow-sm cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/40 transition-colors"
+			>
+				<input
+					type="checkbox"
+					bind:checked={showStructure}
+					class="rounded border-gray-300 dark:border-gray-600 text-earthy-green-700 focus:ring-earthy-green-700"
+				/>
+				<IconifyIcon
+					icon="material-symbols:account-tree-outline"
+					class="w-3.5 h-3.5 text-earthy-green-700 dark:text-earthy-green-500"
+				/>
+				<span
+					class="text-[11px] font-semibold uppercase tracking-wider text-earthy-green-800 dark:text-earthy-green-300"
+				>
+					Structure
+				</span>
+				<span class="text-[11px] text-earthy-green-700 dark:text-earthy-green-500 font-mono">
+					{structuralEdgeCount}
+				</span>
+				<span
+					class="w-3.5 h-3.5 inline-flex items-center justify-center rounded-full border border-gray-300 dark:border-gray-600 text-[10px] font-semibold text-gray-500 dark:text-gray-400 cursor-help"
+					title="Containment — a database holding a table, a dashboard holding a chart. Turn off to see only how data moves."
 				>
 					?
 				</span>

@@ -47,11 +47,15 @@ type Asset struct {
 	QueryLanguage   *string                `json:"query_language,omitempty"`
 	IsStub          bool                   `json:"is_stub"`
 	ExternalLinks   []ExternalLink         `json:"external_links,omitempty"`
-	HasRunHistory   bool                   `json:"has_run_history"`
-	CreatedAt       time.Time              `json:"created_at,omitempty"`
-	UpdatedAt       time.Time              `json:"updated_at,omitempty"`
-	LastSyncAt      time.Time              `json:"last_sync_at,omitempty"`
-	CreatedBy       string                 `json:"created_by,omitempty"`
+	// Terms carries glossary term names a discovery assigned to this
+	// asset. It is input only: the links live in asset_terms, so reading
+	// an asset back from the database never fills this in.
+	Terms         []string  `json:"terms,omitempty"`
+	HasRunHistory bool      `json:"has_run_history"`
+	CreatedAt     time.Time `json:"created_at,omitempty"`
+	UpdatedAt     time.Time `json:"updated_at,omitempty"`
+	LastSyncAt    time.Time `json:"last_sync_at,omitempty"`
+	CreatedBy     string    `json:"created_by,omitempty"`
 } // @name Asset
 
 type Environment struct {

@@ -37,7 +37,11 @@ func Meta() pluginsdk.Meta {
 		Description: "Discover schemas, tables, views and foreign key relationships from DuckDB database files",
 		Icon:        "duckdb",
 		Category:    "database",
-		ConfigSpec:  pluginsdk.GenerateConfigSpec(Config{}),
+		Status:      "experimental",
+		// Discover returns CONTAINS edges for schemas and DEPENDS_ON edges
+		// for foreign keys, so the manifest declares Lineage.
+		Features:   []string{"Assets", "Lineage"},
+		ConfigSpec: pluginsdk.GenerateConfigSpec(Config{}),
 	}
 }
 
@@ -229,8 +233,6 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]pluginsdk.Asset,
 			continue
 		}
 
-		qualifiedName := fmt.Sprintf("%s.%s", schemaName, tableName)
-
 		metadata := map[string]interface{}{
 			"path":        s.config.Path,
 			"schema":      schemaName,
@@ -238,7 +240,7 @@ func (s *Source) discoverTablesAndViews(ctx context.Context) ([]pluginsdk.Asset,
 			"object_type": tableType,
 		}
 
-		mrnValue := mrn.New(assetType, "DuckDB", qualifiedName)
+		mrnValue := assetMRN(assetType, schemaName, tableName)
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 		a := pluginsdk.Asset{
@@ -453,8 +455,8 @@ func (s *Source) discoverForeignKeys(ctx context.Context) ([]pluginsdk.LineageEd
 			Str("constraint", constraintName).
 			Msg("Found foreign key relationship")
 
-		sourceMRN := mrn.New("Table", "DuckDB", fmt.Sprintf("%s.%s", sourceSchema, sourceTable))
-		targetMRN := mrn.New("Table", "DuckDB", fmt.Sprintf("%s.%s", targetSchema, targetTable))
+		sourceMRN := assetMRN("Table", sourceSchema, sourceTable)
+		targetMRN := assetMRN("Table", targetSchema, targetTable)
 
 		if sourceMRN == targetMRN {
 			continue
@@ -539,4 +541,18 @@ func (s *Source) collectTableStatistics(ctx context.Context, assets []pluginsdk.
 	}
 
 	return statistics
+}
+
+// assetName is how this catalog addresses a table: one file holds many
+// schemas, each able to hold the same table name. The name shown in the UI
+// stays the table's own name; only the MRN carries the schema.
+func assetName(schema, table string) string {
+	return fmt.Sprintf("%s.%s", schema, table)
+}
+
+// assetMRN is the single place a DuckDB MRN is built. The asset pass and
+// the foreign key pass both go through it so the two can never drift into
+// addressing the same table differently.
+func assetMRN(assetType, schema, table string) string {
+	return mrn.New(assetType, "DuckDB", assetName(schema, table))
 }

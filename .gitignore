@@ -69,3 +69,4 @@ testenv
 web/marmot/src/lib/icon-bundle.ts
 
 logs/
+/.idea

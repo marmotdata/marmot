@@ -235,8 +235,14 @@ func TestSource_Discover(t *testing.T) {
 	// - 2 DAG contains task (example_dag -> task_1, example_dag -> task_2)
 	// - 1 task dependency (task_1 -> task_2)
 	// - 1 dataset triggers DAG (dataset -> example_dag)
-	// - 1 task produces dataset (producer_dag.produce_task -> dataset)
-	assert.Len(t, result.Lineage, 5)
+	//
+	// The dataset also names producer_dag.produce_task as a producer, but
+	// this fixture's /dags response never returns producer_dag, so no asset
+	// backs it. That edge is dropped rather than emitted: the server
+	// silently discards edges whose endpoints do not exist, so emitting it
+	// would only hide the gap.
+	assert.Len(t, result.Lineage, 4)
+	assertLineageOnlyReferencesDiscoveredAssets(t, result)
 }
 
 func TestSource_DiscoverWithFilter(t *testing.T) {
@@ -542,10 +548,14 @@ func TestParseDatasetURI(t *testing.T) {
 		{"gs://gcs-bucket/data", "GCS", "Bucket", "gcs-bucket"},
 		{"kafka://broker/topic-name", "Kafka", "Topic", "topic-name"},
 		{"kafka://localhost:9092/events", "Kafka", "Topic", "events"},
-		{"postgresql://host/db/schema/table", "PostgreSQL", "Table", "host/db/schema/table"},
-		{"mysql://host/db/table", "MySQL", "Table", "host/db/table"},
-		{"bigquery://project/dataset/table", "BigQuery", "Table", "project/dataset/table"},
-		{"snowflake://account/db/schema/table", "Snowflake", "Table", "account/db/schema/table"},
+		// The relational schemes address a table the way the Marmot plugin
+		// that owns it does, so a dataset and the table itself are one asset.
+		{"postgresql://host:5432/db/public/users", "PostgreSQL", "Table", "public.users"},
+		{"postgresql://host/db/schema/table", "PostgreSQL", "Table", "schema.table"},
+		{"mysql://host/db/table", "MySQL", "Table", "db.table"},
+		{"bigquery://project/dataset/table", "BigQuery", "Table", "dataset.table"},
+		// No Marmot plugin owns Snowflake, so all three levels stay.
+		{"snowflake://account/db/schema/table", "Snowflake", "Table", "db.schema.table"},
 		{"http://api.example.com/data", "HTTP", "Endpoint", "http://api.example.com/data"},
 		{"file:///path/to/file.csv", "File", "File", "/path/to/file.csv"},
 		{"custom://some/path", "Custom", "Dataset", "some/path"},
@@ -560,4 +570,184 @@ func TestParseDatasetURI(t *testing.T) {
 			assert.Equal(t, tt.wantName, name)
 		})
 	}
+}
+
+// A URI whose scheme is empty used to index scheme[:1] and panic, taking
+// the whole discovery run down.
+func TestParseDatasetURI_EmptySchemeDoesNotPanic(t *testing.T) {
+	assert.NotPanics(t, func() {
+		provider, assetType, name := parseDatasetURI("://host/db/table")
+		assert.Equal(t, "Airflow", provider)
+		assert.Equal(t, "Dataset", assetType)
+		assert.Equal(t, "://host/db/table", name)
+	})
+}
+
+// assertLineageOnlyReferencesDiscoveredAssets is the guard for the bug
+// class this plugin family kept reproducing: an edge naming an MRN the
+// same run never emits is silently dropped by the server, so the lineage
+// just disappears instead of failing loudly.
+func assertLineageOnlyReferencesDiscoveredAssets(t *testing.T, result *pluginsdk.DiscoveryResult) {
+	t.Helper()
+
+	emitted := make(map[string]struct{}, len(result.Assets))
+	for _, a := range result.Assets {
+		if a.MRN != nil {
+			emitted[*a.MRN] = struct{}{}
+		}
+	}
+
+	for _, edge := range result.Lineage {
+		assert.Contains(t, emitted, edge.Source,
+			"lineage edge source %q has no asset behind it", edge.Source)
+		assert.Contains(t, emitted, edge.Target,
+			"lineage edge target %q has no asset behind it", edge.Target)
+	}
+}
+
+// A dataset can name a DAG that only_active filtered out, or that
+// discover_dags never fetched at all. Neither may leave a dangling edge.
+func TestDiscover_DatasetLineageSkipsUndiscoveredDAGs(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		switch r.URL.Path {
+		case "/api/v1/dags":
+			// Only one DAG is active; paused_dag is filtered out upstream.
+			_ = json.NewEncoder(w).Encode(DAGCollection{
+				DAGs:       []DAG{{DagID: "active_dag", IsActive: true}},
+				TotalCount: 1,
+			})
+		case "/api/v1/dags/active_dag/tasks":
+			_ = json.NewEncoder(w).Encode(TaskCollection{
+				Tasks:      []Task{{TaskID: "writer"}},
+				TotalCount: 1,
+			})
+		case "/api/v1/datasets":
+			_ = json.NewEncoder(w).Encode(DatasetCollection{
+				Datasets: []Dataset{{
+					URI: "s3://analytics/events",
+					// active_dag exists, paused_dag does not.
+					ConsumingDags: []DagRef{{DagID: "active_dag"}, {DagID: "paused_dag"}},
+					ProducingTasks: []TaskRef{
+						{DagID: "active_dag", TaskID: "writer"},
+						{DagID: "paused_dag", TaskID: "writer"},
+					},
+				}},
+				TotalCount: 1,
+			})
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	s := &Source{}
+	result, err := s.Discover(context.Background(), pluginsdk.RawConfig{
+		"host":              server.URL,
+		"username":          "u",
+		"password":          "p",
+		"discover_dags":     true,
+		"discover_tasks":    true,
+		"discover_datasets": true,
+	})
+	require.NoError(t, err)
+
+	assertLineageOnlyReferencesDiscoveredAssets(t, result)
+
+	// The edges for the DAG that does exist must still be there.
+	var kinds []string
+	for _, e := range result.Lineage {
+		if e.Type == "FEEDS" || e.Type == "PRODUCES" {
+			kinds = append(kinds, e.Type)
+		}
+	}
+	assert.ElementsMatch(t, []string{"FEEDS", "PRODUCES"}, kinds,
+		"the discovered DAG should keep exactly one FEEDS and one PRODUCES edge")
+}
+
+// With discover_dags off there are no Pipeline assets at all, so every
+// dataset edge must be dropped rather than left dangling.
+func TestDiscover_DatasetLineageDroppedWhenDAGsNotDiscovered(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		if r.URL.Path == "/api/v1/datasets" {
+			_ = json.NewEncoder(w).Encode(DatasetCollection{
+				Datasets: []Dataset{{
+					URI:            "s3://analytics/events",
+					ConsumingDags:  []DagRef{{DagID: "some_dag"}},
+					ProducingTasks: []TaskRef{{DagID: "some_dag", TaskID: "writer"}},
+				}},
+				TotalCount: 1,
+			})
+			return
+		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer server.Close()
+
+	s := &Source{}
+	result, err := s.Discover(context.Background(), pluginsdk.RawConfig{
+		"host":              server.URL,
+		"username":          "u",
+		"password":          "p",
+		"discover_dags":     false,
+		"discover_datasets": true,
+	})
+	require.NoError(t, err)
+
+	assertLineageOnlyReferencesDiscoveredAssets(t, result)
+	assert.Empty(t, result.Lineage, "no Pipeline assets exist, so no dataset edge can be emitted")
+}
+
+// The producing task is named by the API and its asset already exists, so
+// the edge should start at the Task rather than the whole DAG.
+func TestDiscover_ProducesEdgeStartsAtTheProducingTask(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+
+		switch r.URL.Path {
+		case "/api/v1/dags":
+			_ = json.NewEncoder(w).Encode(DAGCollection{
+				DAGs:       []DAG{{DagID: "etl", IsActive: true}},
+				TotalCount: 1,
+			})
+		case "/api/v1/dags/etl/tasks":
+			_ = json.NewEncoder(w).Encode(TaskCollection{
+				Tasks:      []Task{{TaskID: "load"}},
+				TotalCount: 1,
+			})
+		case "/api/v1/datasets":
+			_ = json.NewEncoder(w).Encode(DatasetCollection{
+				Datasets: []Dataset{{
+					URI:            "s3://warehouse/out",
+					ProducingTasks: []TaskRef{{DagID: "etl", TaskID: "load"}},
+				}},
+				TotalCount: 1,
+			})
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	}))
+	defer server.Close()
+
+	s := &Source{}
+	result, err := s.Discover(context.Background(), pluginsdk.RawConfig{
+		"host":              server.URL,
+		"username":          "u",
+		"password":          "p",
+		"discover_dags":     true,
+		"discover_tasks":    true,
+		"discover_datasets": true,
+	})
+	require.NoError(t, err)
+
+	var produces []string
+	for _, e := range result.Lineage {
+		if e.Type == "PRODUCES" {
+			produces = append(produces, e.Source)
+		}
+	}
+	assert.Equal(t, []string{"mrn://task/airflow/etl.load"}, produces)
 }

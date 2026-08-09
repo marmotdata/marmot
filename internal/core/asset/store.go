@@ -1338,13 +1338,21 @@ func (r *PostgresRepository) AddTerms(ctx context.Context, assetID string, termI
 	}
 	defer tx.Rollback(ctx)
 
+	// An ingestion has no person to attribute the link to, and the column
+	// is a user reference, so an empty author has to reach the database
+	// as NULL rather than as an unparseable id.
+	var author *string
+	if createdBy != "" {
+		author = &createdBy
+	}
+
 	for _, termID := range termIDs {
 		query := `
 			INSERT INTO asset_terms (asset_id, glossary_term_id, source, created_by, created_at)
 			VALUES ($1, $2, $3, $4, NOW())
 			ON CONFLICT (asset_id, glossary_term_id) DO NOTHING`
 
-		_, err := tx.Exec(ctx, query, assetID, termID, source, createdBy)
+		_, err := tx.Exec(ctx, query, assetID, termID, source, author)
 		if err != nil {
 			return fmt.Errorf("inserting asset term: %w", err)
 		}

@@ -665,7 +665,8 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 
 	if channel.HasBinding("solace") {
 		binding, _ := asyncapi.ParseBindings[solace.OperationBinding](channel.Bindings, "solace")
-		if binding != nil && len(binding.Destinations) > 0 {
+		before := len(mrns)
+		if binding != nil {
 			for _, dest := range binding.Destinations {
 				if dest.Queue != nil && dest.Queue.Name != "" {
 					mrns = append(mrns, mrn.New("Queue", "Solace", dest.Queue.Name))
@@ -679,7 +680,13 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 					mrns = append(mrns, mrn.New("Topic", "Solace", name))
 				}
 			}
-		} else {
+		}
+		// createSolaceAssets falls back to a generic topic whenever the loop
+		// above produced no asset, which is not the same as having no
+		// destinations: a destination can match neither branch. The condition
+		// here has to be that same "produced nothing" test, or the generic
+		// asset gets created with no edge pointing at it.
+		if len(mrns) == before {
 			name := channelName
 			if channel.Address != "" {
 				name = channel.Address
@@ -691,6 +698,7 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 	if channel.HasBinding("ibmmq") {
 		binding, _ := asyncapi.ParseBindings[ibmmq.ChannelBinding](channel.Bindings, "ibmmq")
 		if binding != nil {
+			before := len(mrns)
 			if binding.Queue != nil && binding.Queue.ObjectName != "" {
 				mrns = append(mrns, mrn.New("Queue", "IBMMQ", binding.Queue.ObjectName))
 			}
@@ -701,7 +709,10 @@ func (s *Source) getChannelAssetMRNs(channelName string, channel *asyncapi3.Chan
 				}
 				mrns = append(mrns, mrn.New("Topic", "IBMMQ", name))
 			}
-			if binding.Queue == nil && binding.Topic == nil {
+			// createIBMMQAssets falls back on "produced nothing", not on
+			// "both bindings absent": a Queue with an empty ObjectName also
+			// reaches the fallback. Mirror the same test.
+			if len(mrns) == before {
 				name := channelName
 				if channel.Address != "" {
 					name = channel.Address

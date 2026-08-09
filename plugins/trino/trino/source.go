@@ -59,8 +59,8 @@ var internalConnectors = map[string]bool{
 // Connectors absent from this map (and not internal) use a default mapping.
 var connectorMap = map[string]connectorInfo{
 	// Relational databases
-	"postgresql":  {Provider: "PostgreSQL", MRNName: func(_, _, table string) string { return table }},
-	"mysql":       {Provider: "MySQL", MRNName: func(_, _, table string) string { return table }},
+	"postgresql":  {Provider: "PostgreSQL", MRNName: defaultMRNName},
+	"mysql":       {Provider: "MySQL", MRNName: func(_, schema, table string) string { return schema + "." + table }},
 	"mariadb":     {Provider: "MariaDB", MRNName: func(_, _, table string) string { return table }},
 	"sqlserver":   {Provider: "SQL Server", MRNName: func(_, schema, table string) string { return schema + "." + table }},
 	"oracle":      {Provider: "Oracle", MRNName: func(_, schema, table string) string { return schema + "." + table }},
@@ -69,15 +69,23 @@ var connectorMap = map[string]connectorInfo{
 	"redshift":    {Provider: "Redshift", MRNName: func(_, schema, table string) string { return schema + "." + table }},
 
 	// Cloud warehouses / lakehouses
-	"snowflake":  {Provider: "Snowflake", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"bigquery":   {Provider: "BigQuery", MRNName: func(_, schema, table string) string { return schema + "." + table }},
-	"iceberg":    {Provider: "Iceberg", MRNName: defaultMRNName},
-	"delta_lake": {Provider: "Delta Lake", MRNName: defaultMRNName},
-	"hive":       {Provider: "Hive", MRNName: defaultMRNName},
-	"hudi":       {Provider: "Hudi", MRNName: defaultMRNName},
+	"snowflake": {Provider: "Snowflake", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"bigquery":  {Provider: "BigQuery", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	// Iceberg and Delta Lake both have a real Marmot plugin, so this map
+	// follows them rather than the catalog.schema.table default: an
+	// Iceberg table is namespace.table (plugins/iceberg/iceberg/table.go)
+	// and a Delta Lake table is the bare directory name
+	// (plugins/deltalake/deltalake/table.go). The Trino catalog name is a
+	// local mount point, not part of the table's identity.
+	"iceberg":    {Provider: "Iceberg", MRNName: func(_, schema, table string) string { return schema + "." + table }},
+	"delta_lake": {Provider: "Delta Lake", MRNName: func(_, _, table string) string { return table }},
+	// Hive and Hudi have no Marmot plugin, so Trino stays the authority
+	// for them and keeps the catalog in the name.
+	"hive": {Provider: "Hive", MRNName: defaultMRNName},
+	"hudi": {Provider: "Hudi", MRNName: defaultMRNName},
 
 	// NoSQL / document / key-value
-	"mongodb":   {Provider: "MongoDB", MRNName: func(_, _, table string) string { return table }},
+	"mongodb":   {Provider: "MongoDB", MRNName: func(_, schema, table string) string { return schema + "." + table }},
 	"cassandra": {Provider: "Cassandra", MRNName: func(_, schema, table string) string { return schema + "." + table }},
 	"redis":     {Provider: "Redis", MRNName: func(_, _, table string) string { return table }},
 	"accumulo":  {Provider: "Accumulo", MRNName: func(_, schema, table string) string { return schema + "." + table }},
@@ -870,13 +878,18 @@ func (s *Source) createTableAsset(catalog, schema, tableName, tableType string, 
 		assetType = "View"
 	}
 
+	// The qualified path identifies the table; the table's own name is
+	// what the catalog shows. Keeping them apart is what lets a Trino
+	// view of a table and the technology's own plugin land on one asset
+	// while still reading as "products" rather than "public.products".
 	name := info.MRNName(catalog, schema, tableName)
-	mrnValue := mrn.New(assetType, info.Provider, name)
+	mrnValue := mrn.New(assetType, mrnService(info.Provider), name)
+	displayName := tableName
 
 	processedTags := pluginsdk.InterpolateTags(s.config.Tags, metadata)
 
 	return pluginsdk.Asset{
-		Name:      &name,
+		Name:      &displayName,
 		MRN:       &mrnValue,
 		Type:      assetType,
 		Providers: []string{info.Provider},
@@ -928,4 +941,14 @@ func quoteIdentifier(id string) string {
 func escapeString(s string) string {
 	s = strings.ReplaceAll(s, "\x00", "")
 	return strings.ReplaceAll(s, "'", "''")
+}
+
+// mrnService is the service component of an MRN for a provider. mrn.New
+// sanitizes the name it is given but not the service, so a provider with
+// a space in it would put that space into the MRN and into every URL
+// built from it. Spaces are dropped rather than hyphenated so that
+// "Delta Lake" addresses the same assets as the Delta Lake plugin, which
+// slugs itself "DeltaLake".
+func mrnService(provider string) string {
+	return strings.ReplaceAll(provider, " ", "")
 }

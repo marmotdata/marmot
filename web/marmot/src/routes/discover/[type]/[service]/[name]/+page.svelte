@@ -9,6 +9,7 @@
 	import AssetSources from '$components/asset/AssetSources.svelte';
 	import MetadataView from '$components/shared/MetadataView.svelte';
 	import Lineage from '$components/lineage/Lineage.svelte';
+	import AssetContents from '$components/asset/AssetContents.svelte';
 	import SchemaEditor from '$components/schema/SchemaEditor.svelte';
 	import AssetEnvironmentsView from '$components/asset/AssetEnvironmentsView.svelte';
 	import RunHistory from '$components/runs/RunHistory.svelte';
@@ -43,6 +44,9 @@
 
 	let owners: Owner[] = $state([]);
 	let loadingOwners = $state(false);
+	let children: Asset[] = $state([]);
+	let parents: Asset[] = $state([]);
+	let loadingChildren = $state(false);
 
 	let userDescription = $state('');
 	let isEditingDescription = $state(false);
@@ -101,6 +105,50 @@
 			return asset.providers[0];
 		}
 		return asset.type || '';
+	}
+
+	// Containment is stored as CONTAINS lineage, so an asset's children
+	// are the immediate targets of its CONTAINS edges.
+	async function fetchChildren() {
+		if (!asset?.id || !asset?.mrn) {
+			children = [];
+			parents = [];
+			return;
+		}
+
+		loadingChildren = true;
+		try {
+			const response = await fetchApi(`/lineage/assets/${asset.id}?limit=1`);
+			if (!response.ok) throw new Error('Failed to fetch contents');
+			const data = await response.json();
+
+			const contains = (data.edges || []).filter(
+				(edge: { type?: string }) => (edge.type || '').toUpperCase() === 'CONTAINS'
+			);
+			const childMrns = new Set(
+				contains
+					.filter((edge: { source?: string }) => edge.source === asset?.mrn)
+					.map((edge: { target: string }) => edge.target)
+			);
+			const parentMrns = new Set(
+				contains
+					.filter((edge: { target?: string }) => edge.target === asset?.mrn)
+					.map((edge: { source: string }) => edge.source)
+			);
+
+			const assets: Asset[] = (data.nodes || [])
+				.map((node: { asset?: Asset }) => node.asset)
+				.filter((a: Asset | undefined): a is Asset => !!a);
+
+			children = assets.filter((a) => childMrns.has(a.mrn));
+			parents = assets.filter((a) => parentMrns.has(a.mrn));
+		} catch (error) {
+			console.error('Failed to fetch contents:', error);
+			children = [];
+			parents = [];
+		} finally {
+			loadingChildren = false;
+		}
 	}
 
 	async function fetchOwners() {
@@ -208,8 +256,12 @@
 		{ id: 'environments', label: 'Environments', icon: 'material-symbols:deployed-code' },
 		{ id: 'schema', label: 'Schema', icon: 'material-symbols:table' },
 		{ id: 'run-history', label: 'Run History', icon: 'material-symbols:history' },
-		{ id: 'lineage', label: 'Lineage', icon: 'material-symbols:account-tree' }
+		{ id: 'lineage', label: 'Lineage', icon: 'material-symbols:account-tree' },
+		{ id: 'contents', label: 'Contents', icon: 'material-symbols:folder-open-outline' }
 	];
+
+	// Providers whose assets form a drive tree worth browsing as folders.
+	const driveProviders = new Set(['googledrive', 'sharepoint']);
 
 	let visibleTabs = $derived(
 		allTabs.filter((tab) => {
@@ -222,6 +274,13 @@
 			if (tab.id === 'preview' && (!isTableAsset(asset) || !$tablePreviewEnabled)) return false;
 			if (tab.id === 'run-history' && !asset?.has_run_history) return false;
 			if (tab.id === 'runs' && !isAgent) return false;
+			// Contents is for drives, where a folder tree is how people
+			// navigate. Other providers nest too, but their structure is
+			// better read from Lineage.
+			if (tab.id === 'contents') {
+				if (!driveProviders.has((asset?.providers?.[0] ?? '').toLowerCase())) return false;
+				if (children.length === 0 && parents.length === 0) return false;
+			}
 			return true;
 		})
 	);
@@ -235,6 +294,7 @@
 	$effect(() => {
 		if (asset?.id) {
 			fetchOwners();
+			fetchChildren();
 			userDescription = asset.user_description || '';
 
 			// Fetch preview data if asset is a table and preview is enabled
@@ -534,6 +594,8 @@
 							<div class="mt-6">
 								<RunHistory assetId={asset.id} />
 							</div>
+						{:else if activeTab === 'contents'}
+							<AssetContents {children} {parents} loading={loadingChildren} />
 						{:else if activeTab === 'lineage'}
 							<div class="mt-6">
 								<Lineage currentAsset={asset} />

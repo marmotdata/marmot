@@ -12,6 +12,7 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 	"github.com/marmotdata/marmot/internal/core/asset"
+	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/metrics"
 	"github.com/marmotdata/marmot/internal/mrn"
@@ -45,6 +46,31 @@ type CreateAssetInput struct {
 	ExternalLinks []map[string]string    `json:"external_links"`
 	Query         *string                `json:"query,omitempty"`
 	QueryLanguage *string                `json:"query_language,omitempty"`
+	// Terms are the names of glossary terms this asset was assigned.
+	// Empty means the source has nothing to say about terms, which is
+	// not the same as saying the asset has none.
+	Terms []string `json:"terms,omitempty"`
+}
+
+// GlossaryTermInput is one business term a run discovered. Identity is
+// Name, so Parent names another term in the same batch or one an earlier
+// run already stored.
+type GlossaryTermInput struct {
+	Name        string                 `json:"name"`
+	Definition  string                 `json:"definition"`
+	Description string                 `json:"description,omitempty"`
+	Parent      string                 `json:"parent,omitempty"`
+	Synonyms    []string               `json:"synonyms,omitempty"`
+	Tags        []string               `json:"tags,omitempty"`
+	Metadata    map[string]interface{} `json:"metadata,omitempty"`
+}
+
+// GlossaryResult reports what a run did to the glossary.
+type GlossaryResult struct {
+	TermsCreated   int `json:"terms_created"`
+	TermsUpdated   int `json:"terms_updated"`
+	TermsUnchanged int `json:"terms_unchanged"`
+	AssetsLinked   int `json:"assets_linked"`
 }
 
 type ProcessAssetsResponse struct {
@@ -52,6 +78,7 @@ type ProcessAssetsResponse struct {
 	Lineage              []LineageResult       `json:"lineage"`
 	Documentation        []DocumentationResult `json:"documentation"`
 	StaleEntitiesRemoved []string              `json:"stale_entities_removed,omitempty"`
+	Glossary             *GlossaryResult       `json:"glossary,omitempty"`
 }
 
 type AssetResult struct {
@@ -83,6 +110,7 @@ type LineageInput struct {
 	Source string `json:"source"`
 	Target string `json:"target"`
 	Type   string `json:"type"`
+	JobMRN string `json:"job_mrn,omitempty"`
 }
 
 type DocumentationInput struct {
@@ -119,7 +147,7 @@ type Service interface {
 	StartRun(ctx context.Context, pipelineName, sourceName, createdBy string, config plugin.RawPluginConfig) (*plugin.Run, error)
 	CompleteRun(ctx context.Context, runID string, status plugin.RunStatus, summary *plugin.RunSummary, errorMessage string) error
 	ProcessAssets(ctx context.Context, runID string, assets []CreateAssetInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
-	ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, stats []StatisticInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
+	ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, stats []StatisticInput, terms []GlossaryTermInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error)
 	ProcessRunHistory(ctx context.Context, runHistory []RunHistoryInput) (int, error)
 	AddCheckpoint(ctx context.Context, runID, entityType, entityMRN, operation string, sourceFields []string) error
 	GetLastRunCheckpoints(ctx context.Context, pipelineName, sourceName string) (map[string]*plugin.RunCheckpoint, error)
@@ -139,20 +167,28 @@ type RunCompletionObserver interface {
 	OnRunCompleted(ctx context.Context, run *plugin.Run)
 }
 
+// GlossarySyncer upserts the terms a run discovered and reports where
+// they landed. It is the glossary service narrowed to what a run needs.
+type GlossarySyncer interface {
+	SyncTerms(ctx context.Context, source string, inputs []glossary.TermInput) (*glossary.SyncResult, error)
+}
+
 type service struct {
 	repo               Repository
 	assetService       asset.Service
 	lineageService     lineage.Service
+	glossaryService    GlossarySyncer
 	metricsRecorder    metrics.Recorder
 	validator          *validator.Validate
 	completionObserver RunCompletionObserver
 }
 
-func NewService(repo Repository, assetService asset.Service, lineageService lineage.Service, metricsRecorder metrics.Recorder) Service {
+func NewService(repo Repository, assetService asset.Service, lineageService lineage.Service, glossaryService GlossarySyncer, metricsRecorder metrics.Recorder) Service {
 	return &service{
 		repo:            repo,
 		assetService:    assetService,
 		lineageService:  lineageService,
+		glossaryService: glossaryService,
 		metricsRecorder: metricsRecorder,
 		validator:       validator.New(),
 	}
@@ -237,7 +273,7 @@ func (s *service) CompleteRun(ctx context.Context, runID string, status plugin.R
 	return nil
 }
 
-func (s *service) ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, stats []StatisticInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error) {
+func (s *service) ProcessEntities(ctx context.Context, runID string, assets []CreateAssetInput, lineage []LineageInput, docs []DocumentationInput, stats []StatisticInput, terms []GlossaryTermInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error) {
 	run, err := s.repo.GetByRunID(ctx, runID)
 	if err != nil {
 		return nil, fmt.Errorf("getting run: %w", err)
@@ -251,6 +287,10 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		Documentation: make([]DocumentationResult, 0, len(docs)),
 	}
 
+	// The glossary is synced before the assets so that an asset can be
+	// linked to its terms the moment it is written.
+	termIDsByName := s.syncGlossary(ctx, sourceName, terms, response)
+
 	currentMRNs := make([]string, 0, len(assets))
 	for _, ast := range assets {
 		var assetMRN string
@@ -263,6 +303,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 
 		assetHash := s.hashAsset(ast)
 
+		assetError := ""
 		status := StatusCreated
 		if checkpoint, exists := lastCheckpoints[assetMRN]; exists && checkpoint.Operation != StatusDeleted {
 			if len(checkpoint.SourceFields) > 0 && checkpoint.SourceFields[0] == assetHash {
@@ -271,6 +312,10 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				status = StatusUpdated
 			}
 		}
+
+		// The asset's own id, needed to attach glossary terms. Each
+		// branch below already knows it, so nothing is looked up twice.
+		assetID := ""
 
 		if status == StatusCreated {
 			createInput := asset.CreateInput{
@@ -287,11 +332,29 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				QueryLanguage: ast.QueryLanguage,
 				CreatedBy:     run.CreatedBy,
 			}
-			if _, err := s.assetService.Create(ctx, createInput); err != nil {
+			created, err := s.assetService.Create(ctx, createInput)
+			if created != nil {
+				assetID = created.ID
+			}
+
+			// The asset can already exist even though this pipeline has
+			// never seen it: another source discovered the same thing
+			// first. That is how a catalog imported from elsewhere hands
+			// over to the native plugin for the same technology, so the
+			// second source adopts the asset rather than failing on it.
+			if errors.Is(err, asset.ErrAlreadyExists) {
+				status = StatusUpdated
+				err = nil
+			}
+
+			if err != nil {
 				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to create asset")
+				assetError = err.Error()
 				status = StatusFailed
 			}
-		} else if status == StatusUpdated {
+		}
+
+		if status == StatusUpdated {
 			updateInput := asset.UpdateInput{
 				Name:             &ast.Name,
 				Type:             ast.Type,
@@ -308,12 +371,31 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			existingAsset, err := s.assetService.GetByMRN(ctx, assetMRN)
 			if err != nil {
 				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to get existing asset for update")
+				assetError = err.Error()
 				status = StatusFailed
 			} else {
+				assetID = existingAsset.ID
 				if _, err := s.assetService.Update(ctx, existingAsset.ID, updateInput); err != nil {
 					log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to update asset")
+					assetError = err.Error()
 					status = StatusFailed
 				}
+			}
+		}
+
+		if status != StatusFailed && len(ast.Terms) > 0 {
+			// An unchanged asset was never fetched, but a term the source
+			// added since the last run still has to reach it.
+			if assetID == "" {
+				existingAsset, err := s.assetService.GetByMRN(ctx, assetMRN)
+				if err != nil {
+					log.Warn().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to get asset for glossary terms")
+				} else {
+					assetID = existingAsset.ID
+				}
+			}
+			if assetID != "" && s.linkTerms(ctx, assetID, ast.Terms, termIDsByName, sourceName) && response.Glossary != nil {
+				response.Glossary.AssetsLinked++
 			}
 		}
 
@@ -324,6 +406,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 			MRN:      assetMRN,
 			Status:   status,
 			Asset:    ast,
+			Error:    assetError,
 		}
 		response.Assets = append(response.Assets, result)
 
@@ -382,7 +465,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 		}
 
 		if status == StatusCreated {
-			if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target, lin.Type); err != nil {
+			if _, err := s.lineageService.CreateDirectLineage(ctx, lin.Source, lin.Target, lin.Type, lin.JobMRN); err != nil {
 				log.Error().Err(err).Str("source", lin.Source).Str("target", lin.Target).Str("type", lin.Type).Msg("Failed to create lineage")
 				status = StatusFailed
 			}
@@ -454,6 +537,83 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 	return response, nil
 }
 
+// syncGlossary upserts the terms a run discovered and returns their ids
+// by name, ready for the assets that reference them. A glossary is
+// supporting detail: failing to write it is reported but never fails the
+// run, so an ingestion still lands its assets.
+func (s *service) syncGlossary(ctx context.Context, sourceName string, terms []GlossaryTermInput, response *ProcessAssetsResponse) map[string]string {
+	if len(terms) == 0 || s.glossaryService == nil {
+		return nil
+	}
+
+	inputs := make([]glossary.TermInput, 0, len(terms))
+	for _, term := range terms {
+		inputs = append(inputs, glossary.TermInput{
+			Name:        term.Name,
+			Definition:  term.Definition,
+			Description: term.Description,
+			Parent:      term.Parent,
+			Synonyms:    term.Synonyms,
+			Tags:        term.Tags,
+			Metadata:    term.Metadata,
+		})
+	}
+
+	result, err := s.glossaryService.SyncTerms(ctx, sourceName, inputs)
+	if err != nil {
+		log.Error().Err(err).Str("source", sourceName).Msg("Failed to sync glossary terms")
+		return nil
+	}
+
+	response.Glossary = &GlossaryResult{
+		TermsCreated:   result.Created,
+		TermsUpdated:   result.Updated,
+		TermsUnchanged: result.Unchanged,
+	}
+
+	return result.IDsByName
+}
+
+// linkTerms attaches an asset to the glossary terms it names, and
+// reports whether any link was written. Existing links survive: the
+// write only adds rows, so a term someone attached by hand stays put
+// with its own source on it.
+func (s *service) linkTerms(ctx context.Context, assetID string, names []string, idsByName map[string]string, sourceName string) bool {
+	termIDs := resolveTermIDs(names, idsByName)
+	if len(termIDs) == 0 {
+		return false
+	}
+
+	if err := s.assetService.AddTerms(ctx, assetID, termIDs, sourceName, ""); err != nil {
+		log.Error().Err(err).Str("asset_id", assetID).Msg("Failed to attach glossary terms to asset")
+		return false
+	}
+
+	return true
+}
+
+// resolveTermIDs turns the term names an asset carries into term ids,
+// dropping duplicates and any name this run's glossary does not know.
+func resolveTermIDs(names []string, idsByName map[string]string) []string {
+	termIDs := make([]string, 0, len(names))
+	seen := make(map[string]bool, len(names))
+
+	for _, name := range names {
+		termID, ok := idsByName[strings.TrimSpace(name)]
+		if !ok {
+			log.Debug().Str("term", name).Msg("Asset references an unknown glossary term")
+			continue
+		}
+		if seen[termID] {
+			continue
+		}
+		seen[termID] = true
+		termIDs = append(termIDs, termID)
+	}
+
+	return termIDs
+}
+
 func (s *service) processStatistics(ctx context.Context, statistics []StatisticInput) {
 	if len(statistics) == 0 {
 		return
@@ -499,7 +659,7 @@ func convertToAssetExternalLinks(links []map[string]string) []asset.ExternalLink
 }
 
 func (s *service) ProcessAssets(ctx context.Context, runID string, assets []CreateAssetInput, pipelineName, sourceName string) (*ProcessAssetsResponse, error) {
-	return s.ProcessEntities(ctx, runID, assets, nil, nil, nil, pipelineName, sourceName)
+	return s.ProcessEntities(ctx, runID, assets, nil, nil, nil, nil, pipelineName, sourceName)
 }
 
 func (s *service) AddCheckpoint(ctx context.Context, runID, entityType, entityMRN, operation string, sourceFields []string) error {

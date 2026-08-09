@@ -207,30 +207,53 @@ func TestSource_ValidateDefaultBoolFields(t *testing.T) {
 	})
 }
 
+// namespaceFromAssetMRN reads the namespace the discovery pass recorded on
+// the asset. It used to cut the child's MRN at its last dot, which named a
+// namespace that does not exist whenever a table identifier contained one.
 func TestNamespaceFromAssetMRN(t *testing.T) {
 	tests := []struct {
 		name     string
 		mrn      string
+		metadata map[string]interface{}
 		expected string
 	}{
 		{
 			name:     "single namespace",
 			mrn:      "mrn://table/iceberg/db.orders",
+			metadata: map[string]interface{}{"namespace": "db"},
 			expected: "mrn://namespace/iceberg/db",
 		},
 		{
 			name:     "nested namespace",
 			mrn:      "mrn://table/iceberg/catalog.schema.orders",
+			metadata: map[string]interface{}{"namespace": "catalog.schema"},
 			expected: "mrn://namespace/iceberg/catalog.schema",
 		},
 		{
 			name:     "view MRN",
 			mrn:      "mrn://view/iceberg/db.my_view",
+			metadata: map[string]interface{}{"namespace": "db"},
 			expected: "mrn://namespace/iceberg/db",
 		},
 		{
-			name:     "no namespace separator",
+			// Splitting the MRN at its last dot would have produced
+			// mrn://namespace/iceberg/db.orders, a Namespace no run creates,
+			// which fails the lineage foreign key rather than being dropped.
+			name:     "table identifier containing a dot",
+			mrn:      "mrn://table/iceberg/db.orders.2024",
+			metadata: map[string]interface{}{"namespace": "db"},
+			expected: "mrn://namespace/iceberg/db",
+		},
+		{
+			name:     "table at the catalog root has no namespace",
 			mrn:      "mrn://table/iceberg/tablename",
+			metadata: map[string]interface{}{"namespace": ""},
+			expected: "",
+		},
+		{
+			name:     "asset without the namespace key yields no parent",
+			mrn:      "mrn://table/iceberg/db.orders",
+			metadata: map[string]interface{}{},
 			expected: "",
 		},
 	}
@@ -239,10 +262,19 @@ func TestNamespaceFromAssetMRN(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			a := pluginsdk.Asset{
 				MRN:      &tt.mrn,
-				Metadata: map[string]interface{}{},
+				Metadata: tt.metadata,
 			}
 			result := namespaceFromAssetMRN(a)
 			assert.Equal(t, tt.expected, result)
 		})
 	}
+}
+
+// namespacePath is what createTableAsset and createViewAsset record, so it
+// has to be the levels above the object's own name.
+func TestNamespacePath_IsEveryLevelAboveTheObject(t *testing.T) {
+	assert.Equal(t, "db", namespacePath([]string{"db", "orders"}))
+	assert.Equal(t, "catalog.schema", namespacePath([]string{"catalog", "schema", "orders"}))
+	assert.Equal(t, "", namespacePath([]string{"orders"}),
+		"a table at the catalog root has no namespace")
 }

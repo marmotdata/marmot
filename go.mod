@@ -14,7 +14,7 @@ require (
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/jackc/tern/v2 v2.3.5
 	github.com/marmotdata/marmot/sdk/go v0.0.0-00010101000000-000000000000
-	github.com/marmotdata/plugin-sdk v0.0.0-20260807074119-e2083bf8d8cf
+	github.com/marmotdata/plugin-sdk v0.0.0-20260808201944-87df44e04332
 	github.com/modelcontextprotocol/go-sdk v1.4.1
 	github.com/olekukonko/tablewriter v1.1.4
 	github.com/opencontainers/go-digest v1.0.0
@@ -231,3 +231,5 @@ require (
 )
 
 replace github.com/marmotdata/marmot/sdk/go => ./sdk/go
+
+// Local development against the in-progress SDK. Re-pin before release.

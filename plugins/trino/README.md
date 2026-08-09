@@ -18,4 +18,4 @@ When your Trino instance has [AI functions](https://trino.io/docs/current/functi
 3. Enable `ai_generate_descriptions` and/or `ai_classify_tables`
 4. Optionally customise `ai_classify_labels` and `ai_max_enrichments`
 
-AI enrichment is best-effort - failures are logged as warnings but do not prevent normal discovery from completing.re logged as warnings but do not prevent normal discovery from completing.
+AI enrichment is best-effort - failures are logged as warnings but do not prevent normal discovery from completing.

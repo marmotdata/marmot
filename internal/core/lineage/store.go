@@ -14,7 +14,7 @@ import (
 
 type Repository interface {
 	GetAssetLineage(ctx context.Context, assetID string, limit int, direction string) (*LineageResponse, error)
-	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string) (string, error)
+	CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error)
 	BatchObservedLineage(ctx context.Context, edges []ObservedEdge) error
 	EdgeExists(ctx context.Context, source, target string) (bool, error)
 	DeleteDirectLineage(ctx context.Context, edgeID string) error
@@ -161,7 +161,7 @@ func (r *PostgresRepository) DeleteDirectLineage(ctx context.Context, edgeID str
 	return tx.Commit(ctx)
 }
 
-func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string) (string, error) {
+func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN string, targetMRN string, lineageType string, jobMRN string) (string, error) {
 	// Check if edge already exists
 	exists, err := r.EdgeExists(ctx, sourceMRN, targetMRN)
 	if err != nil {
@@ -225,10 +225,17 @@ func (r *PostgresRepository) CreateDirectLineage(ctx context.Context, sourceMRN 
 		return "", err
 	}
 
+	// job_mrn records which job moved the data. It is optional: most
+	// declared lineage is a plain relationship with no job behind it.
+	var job *string
+	if jobMRN != "" {
+		job = &jobMRN
+	}
+
 	_, err = tx.Exec(ctx, `
-        INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id, type, origin)
-        VALUES ($1, $2, $3, $4, $5, 'declared')`,
-		edgeID, sourceMRN, targetMRN, eventID, lineageType,
+        INSERT INTO lineage_edges (id, source_mrn, target_mrn, event_id, type, origin, job_mrn)
+        VALUES ($1, $2, $3, $4, $5, 'declared', $6)`,
+		edgeID, sourceMRN, targetMRN, eventID, lineageType, job,
 	)
 	if err != nil {
 		return "", fmt.Errorf("inserting lineage edge: %w", err)

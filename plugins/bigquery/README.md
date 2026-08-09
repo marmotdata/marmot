@@ -1,4 +1,4 @@
-The BigQuery plugin discovers datasets, tables, and views from Google BigQuery projects. It captures schemas, statistics, and lineage relationships.
+The BigQuery plugin discovers datasets, tables, views, and external tables from Google BigQuery projects. It captures schemas, statistics, and lineage relationships.
 
 ## Required Permissions
 

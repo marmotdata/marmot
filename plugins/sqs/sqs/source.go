@@ -243,15 +243,8 @@ func (s *Source) discoverDLQLineage(ctx context.Context, queues []string, queueA
 			sourceName := extractQueueName(queueURL)
 			targetName := extractQueueNameFromArn(policy.DeadLetterTargetArn)
 
-			if _, ok := queueArns[sourceName]; ok {
-				sourceMRN := mrn.New("Queue", "SQS", sourceName)
-				targetMRN := mrn.New("Queue", "SQS", targetName)
-
-				lineages = append(lineages, pluginsdk.LineageEdge{
-					Source: sourceMRN,
-					Target: targetMRN,
-					Type:   "DLQ",
-				})
+			if edge, ok := dlqEdge(sourceName, targetName, queueArns); ok {
+				lineages = append(lineages, edge)
 			}
 		}
 	}
@@ -267,4 +260,29 @@ func extractQueueName(queueURL string) string {
 func extractQueueNameFromArn(arn string) string {
 	parts := strings.Split(arn, ":")
 	return parts[len(parts)-1]
+}
+
+// dlqEdge builds the DLQ lineage edge between a queue and its dead letter
+// queue, and reports whether it should be emitted at all.
+//
+// Both ends have to be queues this run discovered. A redrive policy can
+// name a DLQ in another account or region, which is normal for a
+// centralised DLQ, and the server silently discards an edge whose
+// endpoints have no asset behind them.
+func dlqEdge(sourceName, targetName string, queueArns map[string]string) (pluginsdk.LineageEdge, bool) {
+	_, haveSource := queueArns[sourceName]
+	_, haveTarget := queueArns[targetName]
+
+	if !haveSource || !haveTarget {
+		log.Debug().Str("queue", sourceName).Str("dlq", targetName).
+			Bool("source_discovered", haveSource).Bool("dlq_discovered", haveTarget).
+			Msg("Skipping DLQ edge, both queues must be discovered in this run")
+		return pluginsdk.LineageEdge{}, false
+	}
+
+	return pluginsdk.LineageEdge{
+		Source: mrn.New("Queue", "SQS", sourceName),
+		Target: mrn.New("Queue", "SQS", targetName),
+		Type:   "DLQ",
+	}, true
 }

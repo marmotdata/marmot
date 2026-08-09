@@ -239,7 +239,12 @@ func (s *Source) createEndpointAssets(spec *libopenapi.DocumentModel[v3.Document
 	for path, item := range spec.Model.Paths.PathItems.FromOldest() {
 		for httpMethod, op := range item.GetOperations().FromOldest() {
 			pathWithMethod := fmt.Sprintf("%s %s", strings.ToUpper(httpMethod), path)
-			mrnValue := mrn.New(typeEndpoint, serviceName, pathWithMethod)
+			// The service component is the literal "openapi", the same word
+			// serviceMrnValue uses for the Service asset these endpoints hang
+			// off. The spec title is operator-supplied prose: a space in it
+			// would land in the MRN and a slash would make mrn.Parse reject
+			// the MRN outright, leaving the asset unreachable from the UI.
+			mrnValue := mrn.New(typeEndpoint, "openapi", pathWithMethod)
 			description := op.Summary
 			if len(description) == 0 {
 				description = op.Description
