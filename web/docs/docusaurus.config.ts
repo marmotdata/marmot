@@ -240,6 +240,11 @@ const config: Config = {
       },
       items: [
         { to: "/docs/introduction", label: "Docs", position: "left" },
+        {
+          href: "https://plugins.marmotdata.io",
+          label: "Plugins",
+          position: "left",
+        },
         { to: "/pricing", label: "Pricing", position: "left" },
         { to: "/resources", label: "Resources", position: "left" },
         { to: "/blog", label: "Blog", position: "left" },
