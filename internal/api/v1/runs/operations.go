@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/marmotdata/marmot/internal/core/asset"
 	"net/http"
 	"strconv"
 	"strings"
@@ -123,7 +124,7 @@ type CreateAssetRequest struct {
 	Metadata      map[string]interface{} `json:"metadata"`
 	Schema        map[string]interface{} `json:"schema"`
 	Tags          []string               `json:"tags"`
-	Sources       []string               `json:"sources"`
+	Sources       []asset.AssetSource    `json:"sources"`
 	ExternalLinks []map[string]string    `json:"external_links"`
 	// Terms are the names of glossary terms assigned to this asset.
 	Terms []string `json:"terms,omitempty"`

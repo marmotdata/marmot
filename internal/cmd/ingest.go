@@ -102,18 +102,29 @@ type CreateAssetRequest struct {
 	// Name because the two differ: a table is identified by its whole
 	// path and read by its own name. A server that predates this field
 	// ignores it and derives the MRN from Name, as before.
-	MRN           string                 `json:"mrn,omitempty"`
-	Type          string                 `json:"type"`
-	Providers     []string               `json:"providers"`
-	Description   *string                `json:"description"`
-	Metadata      map[string]interface{} `json:"metadata"`
-	Schema        map[string]interface{} `json:"schema"`
-	Tags          []string               `json:"tags"`
-	Sources       []string               `json:"sources"`
-	ExternalLinks []map[string]string    `json:"external_links"`
+	MRN         string                 `json:"mrn,omitempty"`
+	Type        string                 `json:"type"`
+	Providers   []string               `json:"providers"`
+	Description *string                `json:"description"`
+	Metadata    map[string]interface{} `json:"metadata"`
+	Schema      map[string]interface{} `json:"schema"`
+	Tags        []string               `json:"tags"`
+	// Sources carry the provenance a plugin recorded: which run wrote the
+	// asset, when, with what properties and at what priority. Sending only
+	// the names left the Sources panel permanently blank for every
+	// plugin-ingested asset.
+	Sources       []AssetSource       `json:"sources"`
+	ExternalLinks []map[string]string `json:"external_links"`
 	// Terms are the names of glossary terms the source assigned to this
 	// asset. An older server ignores them, so an asset still lands.
 	Terms []string `json:"terms,omitempty"`
+}
+
+type AssetSource struct {
+	Name       string                 `json:"name"`
+	LastSyncAt time.Time              `json:"last_sync_at"`
+	Properties map[string]interface{} `json:"properties,omitempty"`
+	Priority   int                    `json:"priority"`
 }
 
 type CreateLineageRequest struct {
@@ -526,9 +537,14 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 					schema[k] = v
 				}
 
-				sources := make([]string, len(asset.Sources))
+				sources := make([]AssetSource, len(asset.Sources))
 				for j, source := range asset.Sources {
-					sources[j] = source.Name
+					sources[j] = AssetSource{
+						Name:       source.Name,
+						LastSyncAt: source.LastSyncAt,
+						Properties: source.Properties,
+						Priority:   source.Priority,
+					}
 				}
 
 				assetMRN := ""

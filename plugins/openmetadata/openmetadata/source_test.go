@@ -319,27 +319,30 @@ func TestMeta_AdvertisesEverythingThePluginProduces(t *testing.T) {
 	assert.Equal(t, []string{"Assets", "Lineage", "Run History", "Glossary"}, Meta().Features)
 }
 
-func TestValidate_ReplacesExplicitZerosWithDefaults(t *testing.T) {
-	// A zero concurrency would build an unbuffered semaphore and hang the
-	// lineage pass. ApplyDefaults cannot catch it: the key is present.
+func TestValidate_RejectsAnExplicitZeroRatherThanRewritingIt(t *testing.T) {
+	// These fields all carry a default, so an absent value is filled in.
+	// A value someone actually typed is theirs: rewriting a 0 behind their
+	// back hides the mistake, and 0 concurrency used to deadlock the run.
 	source := &Source{}
 	_, err := source.Validate(pluginsdk.RawConfig{
-		"host": "https://om.example.com", "jwt_token": "t",
-		"concurrency": 0, "page_size": 0, "timeout_seconds": 0,
-		"source_priority": 0, "run_history_days": 0, "run_history_limit": 0,
+		"host": "https://om.example.com", "jwt_token": "t", "concurrency": 0,
 	})
-	require.NoError(t, err)
 
-	assert.Equal(t, 8, source.config.Concurrency)
-	assert.Equal(t, 250, source.config.PageSize)
-	assert.Equal(t, 60, source.config.TimeoutSeconds)
-	assert.Equal(t, 2, source.config.SourcePriority)
-	assert.Equal(t, 7, source.config.RunHistoryDays)
-	assert.Equal(t, 50, source.config.RunHistoryLimit)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "concurrency must be at least 1")
 }
 
-func TestDiscover_CompletesWithAZeroConcurrency(t *testing.T) {
-	result := discover(t, lineageFixture(), pluginsdk.RawConfig{"concurrency": 0})
+func TestDiscover_NeverBuildsAnUnbufferedSemaphore(t *testing.T) {
+	// A zero here made make(chan struct{}, 0), whose only receiver runs
+	// after a successful send, so the run hung forever with no timeout
+	// around it. Validation now refuses the value instead.
+	source := &Source{}
+	_, err := source.Validate(pluginsdk.RawConfig{
+		"host": "https://om.example.com", "jwt_token": "t", "concurrency": 0,
+	})
+	require.Error(t, err)
 
-	assert.NotEmpty(t, result.Lineage)
+	_, err = source.Validate(pluginsdk.RawConfig{"host": "https://om.example.com", "jwt_token": "t"})
+	require.NoError(t, err)
+	assert.Equal(t, 8, source.config.Concurrency, "an absent value still defaults")
 }

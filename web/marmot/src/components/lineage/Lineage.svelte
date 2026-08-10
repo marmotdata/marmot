@@ -392,7 +392,7 @@
 		// Hiding an edge kind can leave nodes attached to nothing. Drop
 		// them so the graph does not fill with floating assets.
 		if (!showStructure) {
-			const connected = new Set<string>([focalId]);
+			const connected = new SvelteSet<string>([focalId]);
 			for (const edge of finalEdges) {
 				connected.add(edge.source);
 				connected.add(edge.target);

@@ -265,11 +265,18 @@ deduped AS (
     FROM combined
     ORDER BY id
 )
-SELECT id, old_mrn, new_mrn, new_provider, new_type
+-- assets.mrn is UNIQUE, and this runs inside one transaction that the
+-- migrator propagates out of Initialize, so a single duplicate would stop
+-- the server from starting. Two rows can compute the same new MRN when
+-- their old names differed only by something mrn.New folds away: case, or
+-- a slash against a hyphen. Keep the oldest of any such group and leave
+-- the rest on their existing MRN rather than aborting the upgrade.
+SELECT DISTINCT ON (new_mrn) id, old_mrn, new_mrn, new_provider, new_type
 FROM deduped
 WHERE new_mrn <> old_mrn
   -- never move a row onto an MRN that is already taken
-  AND NOT EXISTS (SELECT 1 FROM assets other WHERE other.mrn = deduped.new_mrn);
+  AND NOT EXISTS (SELECT 1 FROM assets other WHERE other.mrn = deduped.new_mrn)
+ORDER BY new_mrn, id;
 
 UPDATE lineage_edges e
 SET source_mrn = r.new_mrn

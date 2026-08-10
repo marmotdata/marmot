@@ -15,8 +15,8 @@ import (
 	"github.com/marmotdata/marmot/internal/core/glossary"
 	"github.com/marmotdata/marmot/internal/core/lineage"
 	"github.com/marmotdata/marmot/internal/metrics"
-	"github.com/marmotdata/marmot/internal/mrn"
 	"github.com/marmotdata/marmot/internal/plugin"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/rs/zerolog/log"
 )
 
@@ -42,7 +42,7 @@ type CreateAssetInput struct {
 	Metadata      map[string]interface{} `json:"metadata"`
 	Schema        map[string]interface{} `json:"schema"`
 	Tags          []string               `json:"tags"`
-	Sources       []string               `json:"sources"`
+	Sources       []asset.AssetSource    `json:"sources"`
 	ExternalLinks []map[string]string    `json:"external_links"`
 	Query         *string                `json:"query,omitempty"`
 	QueryLanguage *string                `json:"query_language,omitempty"`
@@ -330,6 +330,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				ExternalLinks: convertToAssetExternalLinks(ast.ExternalLinks),
 				Query:         ast.Query,
 				QueryLanguage: ast.QueryLanguage,
+				Sources:       ast.Sources,
 				CreatedBy:     run.CreatedBy,
 			}
 			created, err := s.assetService.Create(ctx, createInput)
@@ -952,6 +953,14 @@ func (s *service) ListRunEntities(ctx context.Context, runID, entityType, status
 }
 
 func (s *service) hashAsset(asset CreateAssetInput) string {
+	// Only the names take part in the hash. Widening it to the whole source
+	// would change every existing asset's hash and mark the entire catalog
+	// as modified on the next run.
+	sourceNames := make([]string, len(asset.Sources))
+	for i, src := range asset.Sources {
+		sourceNames[i] = src.Name
+	}
+
 	normalized := struct {
 		Name          string                 `json:"name"`
 		Type          string                 `json:"type"`
@@ -970,7 +979,7 @@ func (s *service) hashAsset(asset CreateAssetInput) string {
 		Metadata:      asset.Metadata,
 		Schema:        asset.Schema,
 		Tags:          asset.Tags,
-		Sources:       asset.Sources,
+		Sources:       sourceNames,
 		ExternalLinks: asset.ExternalLinks,
 	}
 

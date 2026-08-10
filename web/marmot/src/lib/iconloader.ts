@@ -330,7 +330,11 @@ export const providerIconMap: Record<
 	sharepoint: { default: SharePointIcon, class: 'text-[#038387]', displayName: 'SharePoint' },
 	onedrive: { default: OneDriveIcon, displayName: 'OneDrive' },
 	doris: { default: DorisIcon, class: 'text-[#1E90FF]', displayName: 'Doris' },
-	matillion: { default: MatillionIcon, class: 'text-[#19232D] dark:text-gray-100', displayName: 'Matillion' }
+	matillion: {
+		default: MatillionIcon,
+		class: 'text-[#19232D] dark:text-gray-100',
+		displayName: 'Matillion'
+	}
 };
 
 // Type icons with display names

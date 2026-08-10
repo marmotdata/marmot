@@ -51,7 +51,7 @@ type Config struct {
 	// Connection
 	Host               string `json:"host" description:"OpenMetadata server URL, for example https://openmetadata.company.com" validate:"required,url"`
 	JWTToken           string `json:"jwt_token" label:"JWT Token" description:"Bot token or personal access token from OpenMetadata" sensitive:"true" validate:"required"`
-	TimeoutSeconds     int    `json:"timeout_seconds" description:"Per-request timeout" default:"60" validate:"omitempty,min=1"`
+	TimeoutSeconds     int    `json:"timeout_seconds" description:"Per-request timeout" default:"60" validate:"min=1"`
 	InsecureSkipVerify bool   `json:"insecure_skip_verify" description:"Skip TLS certificate verification" default:"false"`
 
 	// Scope
@@ -75,8 +75,8 @@ type Config struct {
 	IncludePipelines         bool `json:"include_pipelines" description:"Import orchestration pipelines" default:"true"`
 	IncludeTasks             bool `json:"include_tasks" description:"Import the individual tasks of each pipeline" default:"true"`
 	IncludeRunHistory        bool `json:"include_run_history" description:"Import recent pipeline executions as run history" default:"true"`
-	RunHistoryDays           int  `json:"run_history_days" description:"How many days of pipeline executions to import" default:"7" validate:"omitempty,min=1"`
-	RunHistoryLimit          int  `json:"run_history_limit" description:"Maximum executions to import per pipeline" default:"50" validate:"omitempty,min=1,max=1000"`
+	RunHistoryDays           int  `json:"run_history_days" description:"How many days of pipeline executions to import" default:"7" validate:"min=1"`
+	RunHistoryLimit          int  `json:"run_history_limit" description:"Maximum executions to import per pipeline" default:"50" validate:"min=1,max=1000"`
 	IncludeMLModels          bool `json:"include_mlmodels" label:"Include ML Models" description:"Import machine learning models" default:"true"`
 	IncludeSearchIndexes     bool `json:"include_search_indexes" description:"Import search indices" default:"true"`
 	IncludeAPIs              bool `json:"include_apis" label:"Include APIs" description:"Import API collections and endpoints" default:"true"`
@@ -89,11 +89,11 @@ type Config struct {
 	TagsFromOpenMetadata bool   `json:"tags_from_openmetadata" description:"Copy OpenMetadata classification tags onto assets" default:"true"`
 	GlossaryTermsAsTags  bool   `json:"glossary_terms_as_tags" description:"Also copy assigned glossary terms onto assets as tags. They are imported as glossary terms either way" default:"false"`
 	LinkToOpenMetadata   bool   `json:"link_to_openmetadata" label:"Link to OpenMetadata" description:"Add a link back to the entity in OpenMetadata on every asset" default:"true"`
-	SourcePriority       int    `json:"source_priority" description:"Priority of OpenMetadata against other sources of the same asset. Lower wins" default:"2" validate:"omitempty,min=1"`
+	SourcePriority       int    `json:"source_priority" description:"Priority of OpenMetadata against other sources of the same asset. Lower wins" default:"2" validate:"min=1"`
 
 	// Performance
-	PageSize    int `json:"page_size" description:"Entities per API request" default:"250" validate:"omitempty,min=1,max=1000"`
-	Concurrency int `json:"concurrency" description:"Parallel lineage requests" default:"8" validate:"omitempty,min=1,max=64"`
+	PageSize    int `json:"page_size" description:"Entities per API request" default:"250" validate:"min=1,max=1000"`
+	Concurrency int `json:"concurrency" description:"Parallel lineage requests" default:"8" validate:"min=1,max=64"`
 }
 
 // Example configuration for the plugin
@@ -127,12 +127,6 @@ func (s *Source) Validate(rawConfig pluginsdk.RawConfig) (pluginsdk.RawConfig, e
 	// explicit zero reaches here. A zero concurrency would build an
 	// unbuffered semaphore and deadlock the lineage pass; the rest would
 	// just behave nonsensically.
-	applyFloor(&config.Concurrency, 8)
-	applyFloor(&config.PageSize, 250)
-	applyFloor(&config.TimeoutSeconds, 60)
-	applyFloor(&config.SourcePriority, 2)
-	applyFloor(&config.RunHistoryDays, 7)
-	applyFloor(&config.RunHistoryLimit, 50)
 
 	if err := pluginsdk.ValidateStruct(config); err != nil {
 		return nil, err
@@ -329,13 +323,6 @@ func openMetadataFQN(metadata map[string]interface{}) string {
 	}
 	fqn, _ := om["fqn"].(string)
 	return fqn
-}
-
-// applyFloor replaces a zero or negative setting with its default.
-func applyFloor(value *int, fallback int) {
-	if *value <= 0 {
-		*value = fallback
-	}
 }
 
 func containsFold(haystack []string, needle string) bool {
