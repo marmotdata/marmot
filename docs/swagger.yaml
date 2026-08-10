@@ -165,6 +165,14 @@ definitions:
         items:
           type: string
         type: array
+      terms:
+        description: |-
+          Terms carries glossary term names a discovery assigned to this
+          asset. It is input only: the links live in asset_terms, so reading
+          an asset back from the database never fills this in.
+        items:
+          type: string
+        type: array
       type:
         type: string
       updated_at:
@@ -419,12 +427,20 @@ definitions:
         items:
           $ref: '#/definitions/CreateDocRequest'
         type: array
+      glossary_terms:
+        items:
+          $ref: '#/definitions/CreateGlossaryTermRequest'
+        type: array
       lineage:
         items:
           $ref: '#/definitions/CreateLineageRequest'
         type: array
       pipeline_name:
         type: string
+      run_history:
+        items:
+          $ref: '#/definitions/CreateRunHistoryRequest'
+        type: array
       run_id:
         type: string
       source_name:
@@ -626,13 +642,58 @@ definitions:
       type:
         type: string
     type: object
+  CreateGlossaryTermRequest:
+    properties:
+      definition:
+        type: string
+      description:
+        type: string
+      metadata:
+        additionalProperties: true
+        type: object
+      name:
+        type: string
+      parent:
+        type: string
+      synonyms:
+        items:
+          type: string
+        type: array
+      tags:
+        items:
+          type: string
+        type: array
+    type: object
   CreateLineageRequest:
     properties:
+      job_mrn:
+        type: string
       source:
         type: string
       target:
         type: string
       type:
+        type: string
+    type: object
+  CreateRunHistoryRequest:
+    properties:
+      asset_mrn:
+        type: string
+      event_time:
+        type: string
+      event_type:
+        type: string
+      job_facets:
+        additionalProperties: true
+        type: object
+      job_name:
+        type: string
+      job_namespace:
+        type: string
+      run_facets:
+        additionalProperties: true
+        type: object
+      run_id:
         type: string
     type: object
   CreateSSOMappingRequest:
@@ -1107,6 +1168,10 @@ definitions:
       created_at:
         type: string
       definition:
+        description: |-
+          Definition is what the last run wrote. On a term a person has
+          worded themselves the read path serves UserDefinition here instead,
+          so a caller always gets the wording the catalog stands behind.
         type: string
       deleted_at:
         type: string
@@ -1130,6 +1195,11 @@ definitions:
           type: string
         type: array
       updated_at:
+        type: string
+      user_definition:
+        description: |-
+          UserDefinition is the wording a person gave the term. Ingestion
+          reads it and never writes it, so it survives every run.
         type: string
     type: object
   HistogramBucket:
@@ -1682,6 +1752,11 @@ definitions:
       metadata:
         additionalProperties: true
         type: object
+      mrn:
+        description: |-
+          MRN is the identity the plugin assigned. Empty means the server
+          derives one from the type, first provider and name.
+        type: string
       name:
         type: string
       providers:
@@ -1693,9 +1768,14 @@ definitions:
         type: object
       sources:
         items:
-          type: string
+          $ref: '#/definitions/AssetSource'
         type: array
       tags:
+        items:
+          type: string
+        type: array
+      terms:
+        description: Terms are the names of glossary terms assigned to this asset.
         items:
           type: string
         type: array
@@ -1811,6 +1891,8 @@ definitions:
         type: integer
       assets_deleted:
         type: integer
+      assets_terms_linked:
+        type: integer
       assets_updated:
         type: integer
       documentation_added:
@@ -1818,6 +1900,13 @@ definitions:
       duration_seconds:
         type: integer
       errors_count:
+        type: integer
+      glossary_terms_created:
+        description: |-
+          Glossary counts are absent from runs that predate them, and from
+          sources that curate no business terms.
+        type: integer
+      glossary_terms_updated:
         type: integer
       lineage_created:
         type: integer
@@ -4539,6 +4628,11 @@ paths:
         - both
         in: query
         name: direction
+        type: string
+      - description: Comma separated edge types to leave out, for example CONTAINS
+          to see data flow without structure
+        in: query
+        name: exclude_types
         type: string
       produces:
       - application/json

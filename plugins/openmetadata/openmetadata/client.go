@@ -9,9 +9,13 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
+
+	"github.com/rs/zerolog/log"
 )
 
 // client talks to the OpenMetadata REST API. OpenMetadata authenticates
@@ -21,6 +25,12 @@ type client struct {
 	baseURL string
 	token   string
 	http    *http.Client
+
+	// fieldCache remembers the fields each endpoint accepts. Older
+	// OpenMetadata releases 400 on fields newer ones added (`domains`,
+	// `dataProducts`), so the plugin probes once per endpoint.
+	fieldCache map[string]string
+	fieldMu    sync.Mutex
 }
 
 func newClient(host, token string, timeout time.Duration, insecure bool) *client {
@@ -40,6 +50,7 @@ func newClient(host, token string, timeout time.Duration, insecure bool) *client
 			Timeout:   timeout,
 			Transport: transport,
 		},
+		fieldCache: make(map[string]string),
 	}
 }
 
@@ -103,26 +114,38 @@ func (e *apiError) Error() string {
 	return fmt.Sprintf("%s: %s: %s", e.Path, http.StatusText(e.Status), e.Body)
 }
 
-// unsupported reports whether the server simply does not have this
-// endpoint. Only a 404 counts: a 400 means the request itself was
-// wrong, for example a field name this OpenMetadata does not know, and
-// swallowing that would drop a whole entity kind without saying so.
+// unsupported reports whether the server does not have this endpoint.
+// Some older OpenMetadata releases wrap a missing endpoint in a 500
+// with "HTTP 404 Not Found" in the body instead of returning a clean
+// 404. A plain 400 is not unsupported: it means the request itself was
+// wrong, and treating it as absent would silently drop entity kinds.
 func (e *apiError) unsupported() bool {
-	return e.Status == http.StatusNotFound
+	if e.Status == http.StatusNotFound {
+		return true
+	}
+	if e.Status == http.StatusInternalServerError && strings.Contains(e.Body, "HTTP 404 Not Found") {
+		return true
+	}
+	return false
 }
 
 // listAll pages through an OpenMetadata list endpoint and returns every
 // entity. OpenMetadata pages with an opaque `after` cursor rather than
 // an offset, and only returns the fields asked for in `fields`.
 func listAll[T any](ctx context.Context, c *client, path, fields string, pageSize int, includeDeleted bool) ([]T, error) {
+	accepted, err := c.resolveFields(ctx, path, fields, includeDeleted)
+	if err != nil {
+		return nil, err
+	}
+
 	var all []T
 	after := ""
 
 	for {
 		query := url.Values{}
 		query.Set("limit", strconv.Itoa(pageSize))
-		if fields != "" {
-			query.Set("fields", fields)
+		if accepted != "" {
+			query.Set("fields", accepted)
 		}
 		if includeDeleted {
 			query.Set("include", "all")
@@ -144,6 +167,81 @@ func listAll[T any](ctx context.Context, c *client, path, fields string, pageSiz
 		}
 		after = page.Paging.After
 	}
+}
+
+// unknownFieldRe matches e.g. `{"message":"Invalid field name domains"}`.
+var unknownFieldRe = regexp.MustCompile(`Invalid field name (\w+)`)
+
+// resolveFields returns the subset of wanted that path accepts,
+// probing with limit=1 and dropping any field OpenMetadata names in a
+// 400. The result is cached per (path, wanted). Errors other than an
+// unknown-field 400 are surfaced so the caller sees the real problem.
+func (c *client) resolveFields(ctx context.Context, path, wanted string, includeDeleted bool) (string, error) {
+	if wanted == "" {
+		return "", nil
+	}
+
+	key := path + "|" + wanted
+	c.fieldMu.Lock()
+	if cached, ok := c.fieldCache[key]; ok {
+		c.fieldMu.Unlock()
+		return cached, nil
+	}
+	c.fieldMu.Unlock()
+
+	current := wanted
+	for i := 0; i < 10; i++ {
+		query := url.Values{}
+		query.Set("limit", "1")
+		if current != "" {
+			query.Set("fields", current)
+		}
+		if includeDeleted {
+			query.Set("include", "all")
+		}
+
+		var probe listResponse[json.RawMessage]
+		err := c.get(ctx, path, query, &probe)
+		if err == nil {
+			break
+		}
+
+		var apiErr *apiError
+		if !errors.As(err, &apiErr) || apiErr.Status != http.StatusBadRequest {
+			return "", err
+		}
+
+		m := unknownFieldRe.FindStringSubmatch(apiErr.Body)
+		if len(m) < 2 {
+			return "", err
+		}
+
+		next := dropField(current, m[1])
+		if next == current {
+			// Server named a field we did not ask for; nothing to strip.
+			return "", err
+		}
+
+		log.Debug().Str("path", path).Str("field", m[1]).Msg("OpenMetadata rejected field, dropping and retrying")
+		current = next
+	}
+
+	c.fieldMu.Lock()
+	c.fieldCache[key] = current
+	c.fieldMu.Unlock()
+	return current, nil
+}
+
+func dropField(list, name string) string {
+	parts := strings.Split(list, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if strings.TrimSpace(p) == name {
+			continue
+		}
+		out = append(out, p)
+	}
+	return strings.Join(out, ",")
 }
 
 // pipelineRuns returns a pipeline's recent executions, newest first.

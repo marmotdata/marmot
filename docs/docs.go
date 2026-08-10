@@ -3063,6 +3063,12 @@ const docTemplate = `{
                         "description": "Direction of lineage (upstream, downstream, or both)",
                         "name": "direction",
                         "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Comma separated edge types to leave out, for example CONTAINS to see data flow without structure",
+                        "name": "exclude_types",
+                        "in": "query"
                     }
                 ],
                 "responses": {
@@ -7296,6 +7302,13 @@ const docTemplate = `{
                         "type": "string"
                     }
                 },
+                "terms": {
+                    "description": "Terms carries glossary term names a discovery assigned to this\nasset. It is input only: the links live in asset_terms, so reading\nan asset back from the database never fills this in.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "type": {
                     "type": "string"
                 },
@@ -7689,6 +7702,12 @@ const docTemplate = `{
                         "$ref": "#/definitions/CreateDocRequest"
                     }
                 },
+                "glossary_terms": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CreateGlossaryTermRequest"
+                    }
+                },
                 "lineage": {
                     "type": "array",
                     "items": {
@@ -7697,6 +7716,12 @@ const docTemplate = `{
                 },
                 "pipeline_name": {
                     "type": "string"
+                },
+                "run_history": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/CreateRunHistoryRequest"
+                    }
                 },
                 "run_id": {
                     "type": "string"
@@ -7995,9 +8020,45 @@ const docTemplate = `{
                 }
             }
         },
+        "CreateGlossaryTermRequest": {
+            "type": "object",
+            "properties": {
+                "definition": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "name": {
+                    "type": "string"
+                },
+                "parent": {
+                    "type": "string"
+                },
+                "synonyms": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
         "CreateLineageRequest": {
             "type": "object",
             "properties": {
+                "job_mrn": {
+                    "type": "string"
+                },
                 "source": {
                     "type": "string"
                 },
@@ -8005,6 +8066,37 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "CreateRunHistoryRequest": {
+            "type": "object",
+            "properties": {
+                "asset_mrn": {
+                    "type": "string"
+                },
+                "event_time": {
+                    "type": "string"
+                },
+                "event_type": {
+                    "type": "string"
+                },
+                "job_facets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "job_name": {
+                    "type": "string"
+                },
+                "job_namespace": {
+                    "type": "string"
+                },
+                "run_facets": {
+                    "type": "object",
+                    "additionalProperties": true
+                },
+                "run_id": {
                     "type": "string"
                 }
             }
@@ -8719,6 +8811,7 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "definition": {
+                    "description": "Definition is what the last run wrote. On a term a person has\nworded themselves the read path serves UserDefinition here instead,\nso a caller always gets the wording the catalog stands behind.",
                     "type": "string"
                 },
                 "deleted_at": {
@@ -8753,6 +8846,10 @@ const docTemplate = `{
                     }
                 },
                 "updated_at": {
+                    "type": "string"
+                },
+                "user_definition": {
+                    "description": "UserDefinition is the wording a person gave the term. Ingestion\nreads it and never writes it, so it survives every run.",
                     "type": "string"
                 }
             }
@@ -9587,6 +9684,10 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
+                "mrn": {
+                    "description": "MRN is the identity the plugin assigned. Empty means the server\nderives one from the type, first provider and name.",
+                    "type": "string"
+                },
                 "name": {
                     "type": "string"
                 },
@@ -9603,10 +9704,17 @@ const docTemplate = `{
                 "sources": {
                     "type": "array",
                     "items": {
-                        "type": "string"
+                        "$ref": "#/definitions/AssetSource"
                     }
                 },
                 "tags": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "terms": {
+                    "description": "Terms are the names of glossary terms assigned to this asset.",
                     "type": "array",
                     "items": {
                         "type": "string"
@@ -9780,6 +9888,9 @@ const docTemplate = `{
                 "assets_deleted": {
                     "type": "integer"
                 },
+                "assets_terms_linked": {
+                    "type": "integer"
+                },
                 "assets_updated": {
                     "type": "integer"
                 },
@@ -9790,6 +9901,13 @@ const docTemplate = `{
                     "type": "integer"
                 },
                 "errors_count": {
+                    "type": "integer"
+                },
+                "glossary_terms_created": {
+                    "description": "Glossary counts are absent from runs that predate them, and from\nsources that curate no business terms.",
+                    "type": "integer"
+                },
+                "glossary_terms_updated": {
                     "type": "integer"
                 },
                 "lineage_created": {
