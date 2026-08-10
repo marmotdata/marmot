@@ -72,7 +72,7 @@ spec:
               {{- end }}
             {{- end }}
 
-            # ---- Database subchart overrides (env vars take priority over config file) ----
+            # ---- Embedded database overrides (env vars take priority over config file) ----
             {{- if .Values.cnpg.enabled }}
             - name: MARMOT_DATABASE_HOST
               {{- if .Values.cnpg.pooler.enabled }}
@@ -88,11 +88,7 @@ spec:
               value: {{ .Values.cnpg.database | default "marmot" | quote }}
             {{- else if .Values.postgresql.enabled }}
             - name: MARMOT_DATABASE_HOST
-              {{- if eq (.Values.postgresql.architecture | default "standalone") "replication" }}
-              value: {{ include "marmot.fullname" . }}-postgresql-primary
-              {{- else }}
-              value: {{ include "marmot.fullname" . }}-postgresql
-              {{- end }}
+              value: {{ include "marmot.postgresqlName" . }}
             - name: MARMOT_DATABASE_PORT
               value: "5432"
             - name: MARMOT_DATABASE_USER
@@ -112,8 +108,8 @@ spec:
             - name: MARMOT_DATABASE_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: {{ include "marmot.fullname" . }}-postgresql
-                  key: password
+                  name: {{ include "marmot.postgresqlSecretName" . }}
+                  key: {{ .Values.postgresql.auth.passwordKey }}
             {{- else if .Values.config.database.passwordSecretRef }}
             - name: MARMOT_DATABASE_PASSWORD
               valueFrom:
