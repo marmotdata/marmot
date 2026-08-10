@@ -9,6 +9,9 @@ metadata:
 spec:
   serviceName: {{ include "marmot.postgresqlHeadlessServiceName" . }}
   replicas: 1
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Delete
+    whenScaled: Retain
   selector:
     matchLabels:
       {{- include "marmot.selectorLabels" . | nindent 6 }}
