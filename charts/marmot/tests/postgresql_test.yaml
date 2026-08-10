@@ -38,6 +38,14 @@ tests:
           value: docker.io/postgres@sha256:9b18b78397054fce88a9552e9d5a3ad5bb7fd258c5b3cc1c5028e46373d6ea8f
         template: postgresql-statefulset.yaml
       - equal:
+          path: spec.template.spec.containers[0].env[0].name
+          value: PGDATA
+        template: postgresql-statefulset.yaml
+      - equal:
+          path: spec.template.spec.containers[0].env[0].value
+          value: /var/lib/postgresql/data/pgdata
+        template: postgresql-statefulset.yaml
+      - equal:
           path: spec.template.spec.initContainers[0].securityContext.capabilities.add[0]
           value: CHOWN
         template: postgresql-statefulset.yaml
@@ -68,8 +76,19 @@ tests:
           value: postgres-credentials
         template: postgresql-statefulset.yaml
       - equal:
-          path: spec.template.spec.containers[0].env[2].value
+          path: spec.template.spec.containers[0].env[3].value
           value: /run/secrets/postgresql/postgres-password
+        template: postgresql-statefulset.yaml
+
+  - it: should forward imagePullSecrets to the StatefulSet pod spec
+    set:
+      postgresql.enabled: true
+      imagePullSecrets:
+        - name: my-registry-secret
+    asserts:
+      - equal:
+          path: spec.template.spec.imagePullSecrets[0].name
+          value: my-registry-secret
         template: postgresql-statefulset.yaml
 
   - it: should use emptyDir storage when persistence is disabled

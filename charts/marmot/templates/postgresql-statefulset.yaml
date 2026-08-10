@@ -20,6 +20,10 @@ spec:
         app.kubernetes.io/component: postgresql
     spec:
       automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- with .Values.postgresql.podSecurityContext }}
       securityContext:
         {{- toYaml . | nindent 8 }}
@@ -43,7 +47,14 @@ spec:
           command:
             - /bin/sh
             - -ec
-            - chown 999:999 /var/lib/postgresql/data && chmod 700 /var/lib/postgresql/data
+            - |
+              mkdir -p /var/lib/postgresql/data/pgdata
+              chown 999:999 /var/lib/postgresql/data/pgdata
+              chmod 700 /var/lib/postgresql/data/pgdata
+          resources:
+            limits:
+              cpu: 100m
+              memory: 64Mi
           volumeMounts:
             - name: data
               mountPath: /var/lib/postgresql/data
@@ -56,6 +67,8 @@ spec:
             {{- toYaml . | nindent 12 }}
           {{- end }}
           env:
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
             - name: POSTGRES_USER
               value: {{ .Values.postgresql.auth.username | quote }}
             - name: POSTGRES_DB
