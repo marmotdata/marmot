@@ -57,7 +57,7 @@ tests:
           path: data["config.yaml"]
           pattern: "clientSecretRef"
 
-  - it: should always use raw config.database values (subchart overrides are env vars)
+  - it: should always use raw config.database values (embedded database overrides are env vars)
     set:
       postgresql.enabled: true
       postgresql.auth.username: "testuser"

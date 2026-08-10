@@ -56,7 +56,7 @@ tests:
           any: true
         template: deployment.yaml
 
-  - it: should override database connection via env vars when postgresql subchart is enabled
+  - it: should override database connection via env vars when embedded postgresql is enabled
     set:
       postgresql.enabled: true
       postgresql.auth.username: "testuser"

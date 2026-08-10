@@ -1,0 +1,11 @@
+suite: test chart validation
+templates:
+  - validation.yaml
+tests:
+  - it: should reject enabling embedded PostgreSQL and CloudNativePG together
+    set:
+      postgresql.enabled: true
+      cnpg.enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: postgresql.enabled and cnpg.enabled cannot both be true

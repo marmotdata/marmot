@@ -83,6 +83,16 @@ helm install marmot marmotdata/marmot \
   --set postgresql.enabled=true
 ```
 
+The chart generates a PostgreSQL password Secret named `<release>-postgresql`
+with a `password` key and reuses it on upgrades. To use an existing Secret:
+
+```yaml
+postgresql:
+  auth:
+    existingSecret: marmot-postgres-credentials
+    passwordKey: password
+```
+
   </TabPanel>
   <TabPanel>
 

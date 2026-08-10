@@ -60,3 +60,24 @@ Create the name of the service account to use
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
 {{- end }}
+
+{{/*
+Create the name of the embedded PostgreSQL resources.
+*/}}
+{{- define "marmot.postgresqlName" -}}
+{{- printf "%s-postgresql" (include "marmot.fullname" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Create the name of the embedded PostgreSQL headless service.
+*/}}
+{{- define "marmot.postgresqlHeadlessServiceName" -}}
+{{- printf "%s-hl" (include "marmot.postgresqlName" .) | trunc 63 | trimSuffix "-" }}
+{{- end }}
+
+{{/*
+Resolve the Secret used for embedded PostgreSQL credentials.
+*/}}
+{{- define "marmot.postgresqlSecretName" -}}
+{{- default (include "marmot.postgresqlName" .) .Values.postgresql.auth.existingSecret }}
+{{- end }}

@@ -1,0 +1,3 @@
+{{- if and .Values.postgresql.enabled .Values.cnpg.enabled }}
+{{- fail "postgresql.enabled and cnpg.enabled cannot both be true" }}
+{{- end }}

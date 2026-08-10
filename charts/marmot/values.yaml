@@ -14,6 +14,7 @@ fullnameOverride: ""
 serviceAccount:
   # Specifies whether a service account should be created
   create: true
+  automount: true
   # Annotations to add to the service account
   annotations: {}
   # The name of the service account to use
@@ -115,7 +116,7 @@ config:
   # Database configuration
   database:
     # When postgresql.enabled or cnpg.enabled, host/port/user/name are
-    # automatically overridden by the subchart values.
+    # automatically overridden by the embedded database values.
     host: "postgresql"
     port: 5432
     user: "marmot"
@@ -127,11 +128,11 @@ config:
     # Connection pool settings
     max_conns: 100
     idle_conns: 20
-    conn_lifetime: 30 # minutes
+    conn_lifetime: 30  # minutes
 
   # Search configuration
   search:
-    timeout: 10 # seconds
+    timeout: 10  # seconds
     # Elasticsearch backend (optional, uses built-in search by default)
     # elasticsearch:
     #   enabled: false
@@ -244,16 +245,16 @@ config:
     banner:
       enabled: false
       dismissible: true
-      variant: "info" # info, warning, error, success
+      variant: "info"  # info, warning, error, success
       message: ""
       id: "banner-1"
 
   # Pipeline/ingestion configuration
   pipelines:
     max_workers: 10
-    scheduler_interval: 60 # seconds
-    lease_expiry: 300 # seconds
-    claim_expiry: 30 # seconds
+    scheduler_interval: 60  # seconds
+    lease_expiry: 300  # seconds
+    claim_expiry: 30  # seconds
 
   # OpenLineage configuration
   openlineage:
@@ -284,11 +285,11 @@ operator:
       cpu: 100m
       memory: 128Mi
   leaderElect: true
-  watchNamespace: "" # empty = all namespaces
+  watchNamespace: ""  # empty = all namespaces
   metricsBindAddress: ":8090"
   healthProbeBindAddress: ":8091"
   marmot:
-    url: "" # auto-detected from service
+    url: ""  # auto-detected from service
   # Default resources for ingestion Job pods (overridable per-CRD)
   jobDefaults:
     resources:
@@ -314,24 +315,46 @@ monitoring:
 # Additional environment variables
 env: {}
 
-# Bitnami PostgreSQL subchart
-# https://github.com/bitnami/charts/tree/main/bitnami/postgresql
+# Embedded PostgreSQL is intended for fresh development and test installs only.
+# Use external PostgreSQL or CloudNativePG for production deployments.
 postgresql:
   enabled: false
+  image:
+    registry: docker.io
+    repository: postgres
+    tag: 17.10-bookworm
+    digest: sha256:9b18b78397054fce88a9552e9d5a3ad5bb7fd258c5b3cc1c5028e46373d6ea8f
+    pullPolicy: IfNotPresent
   auth:
     username: "marmot"
     database: "marmot"
-  primary:
-    persistence:
-      enabled: true
-      size: 8Gi
-    resources:
-      limits:
-        cpu: 500m
-        memory: 512Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
+    existingSecret: ""
+    passwordKey: password
+  persistence:
+    enabled: true
+    size: 8Gi
+    storageClass: ""
+    accessModes:
+      - ReadWriteOnce
+  podSecurityContext:
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+    readOnlyRootFilesystem: true
+    runAsGroup: 999
+    runAsNonRoot: true
+    runAsUser: 999
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
 
 # CloudNativePG configuration
 # Requires the CNPG operator to be installed separately
