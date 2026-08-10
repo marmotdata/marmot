@@ -318,6 +318,14 @@ env: {}
 # https://github.com/bitnami/charts/tree/main/bitnami/postgresql
 postgresql:
   enabled: false
+  global:
+    security:
+      # Required by the Bitnami subchart when using the documented legacy archive.
+      allowInsecureImages: true
+  image:
+    # Bitnami moved historical versioned images to its legacy archive.
+    repository: bitnamilegacy/postgresql
+    tag: 17.5.0-debian-12-r8
   auth:
     username: "marmot"
     database: "marmot"
