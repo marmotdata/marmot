@@ -203,8 +203,8 @@
 		return value?.toString() || '';
 	}
 
-	function isMultilineString(value: unknown): value is string {
-		return typeof value === 'string' && value.includes('\n');
+	function isExpandableString(value: unknown): value is string {
+		return typeof value === 'string' && (value.includes('\n') || value.length > 200);
 	}
 
 	function truncateValue(value: string): string {
@@ -282,8 +282,20 @@
 										</span>
 									{/if}
 								</div>
-							{:else if isMultilineString(value)}
-								<pre class="font-mono whitespace-pre-wrap break-all">{truncateValue(value)}</pre>
+							{:else if isExpandableString(value)}
+								<details class="group">
+									<summary
+										class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center"
+									>
+										<Arrow expanded={false} />
+										<span class="ml-1">View text</span>
+									</summary>
+									<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded">
+										<pre class="font-mono whitespace-pre-wrap break-all">{formatDisplayValue(
+												value
+											)}</pre>
+									</div>
+								</details>
 							{:else}
 								<span class="font-mono break-all">{truncateValue(formatDisplayValue(value))}</span>
 							{/if}
@@ -411,8 +423,24 @@
 													</span>
 												{/each}
 											</div>
-										{:else if isMultilineString(value)}
-											<pre class="font-mono whitespace-pre-wrap break-all">{value}</pre>
+										{:else if isExpandableString(value)}
+											<details
+												class="group/details"
+												open={expandedDetails[key]}
+												ontoggle={(e) => (expandedDetails[key] = e.currentTarget.open)}
+											>
+												<summary
+													class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center text-sm"
+												>
+													<Arrow expanded={expandedDetails[key]} />
+													<span class="ml-1">View text</span>
+												</summary>
+												<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs">
+													<pre class="font-mono whitespace-pre-wrap break-all">{formatDisplayValue(
+															value
+														)}</pre>
+												</div>
+											</details>
 										{:else}
 											<span class="px-2 py-1 text-sm rounded-full {getValueClass(value)}">
 												{formatDisplayValue(value)}
