@@ -85,7 +85,7 @@
 		return typeof value === 'object' && value !== null && !Array.isArray(value);
 	}
 
-	function isArray(value: unknown): boolean {
+	function isArray(value: unknown): value is unknown[] {
 		return Array.isArray(value);
 	}
 
@@ -196,6 +196,17 @@
 		return String(value);
 	}
 
+	function formatDisplayValue(value: unknown): string {
+		if (isObject(value)) {
+			return JSON.stringify(value, null, 2);
+		}
+		return value?.toString() || '';
+	}
+
+	function isMultilineString(value: unknown): value is string {
+		return typeof value === 'string' && value.includes('\n');
+	}
+
 	function truncateValue(value: string): string {
 		if (!maxCharLength || value.length <= maxCharLength) return value;
 		return value.slice(0, maxCharLength) + '...';
@@ -259,9 +270,9 @@
 									{#each value as item, i (i)}
 										{#if i < 5}
 											<span
-												class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded"
+												class="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded whitespace-pre-wrap break-all"
 											>
-												{truncateValue(item?.toString() || '')}
+												{truncateValue(formatDisplayValue(item))}
 											</span>
 										{/if}
 									{/each}
@@ -271,10 +282,10 @@
 										</span>
 									{/if}
 								</div>
+							{:else if isMultilineString(value)}
+								<pre class="font-mono whitespace-pre-wrap break-all">{truncateValue(value)}</pre>
 							{:else}
-								<span class="font-mono break-all">
-									{truncateValue(value?.toString() || '')}
-								</span>
+								<span class="font-mono break-all">{truncateValue(formatDisplayValue(value))}</span>
 							{/if}
 						</dd>
 					</div>
@@ -394,15 +405,17 @@
 											<div class="flex flex-wrap gap-1.5">
 												{#each value as item, i (i)}
 													<span
-														class="px-2 py-0.5 text-xs bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 rounded"
+														class="px-2 py-0.5 text-xs bg-earthy-terracotta-100 dark:bg-earthy-terracotta-900 text-earthy-terracotta-700 dark:text-earthy-terracotta-100 rounded whitespace-pre-wrap break-all"
 													>
-														{item?.toString() || ''}
+														{formatDisplayValue(item)}
 													</span>
 												{/each}
 											</div>
+										{:else if isMultilineString(value)}
+											<pre class="font-mono whitespace-pre-wrap break-all">{value}</pre>
 										{:else}
 											<span class="px-2 py-1 text-sm rounded-full {getValueClass(value)}">
-												{value?.toString() || ''}
+												{formatDisplayValue(value)}
 											</span>
 										{/if}
 									</td>
