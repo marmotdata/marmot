@@ -89,6 +89,10 @@
 		return Array.isArray(value);
 	}
 
+	function containsObject(value: unknown[]): boolean {
+		return value.some((item) => isObject(item));
+	}
+
 	function getValueClass(value: unknown): string {
 		if (typeof value === 'boolean') {
 			return value
@@ -265,6 +269,23 @@
 											)}</pre>
 									</div>
 								</details>
+							{:else if isArray(value) && containsObject(value)}
+								<details class="group">
+									<summary
+										class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center"
+									>
+										<Arrow expanded={false} />
+										<span class="ml-1">View array</span>
+									</summary>
+									<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded">
+										<pre
+											class="text-xs text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(
+												value,
+												null,
+												2
+											)}</pre>
+									</div>
+								</details>
 							{:else if isArray(value)}
 								<div class="flex flex-wrap gap-1">
 									{#each value as item, i (i)}
@@ -403,6 +424,27 @@
 												>
 													<Arrow expanded={expandedDetails[key]} />
 													<span class="ml-1">View object</span>
+												</summary>
+												<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs">
+													<pre
+														class="text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(
+															value,
+															null,
+															2
+														)}</pre>
+												</div>
+											</details>
+										{:else if isArray(value) && containsObject(value)}
+											<details
+												class="group/details"
+												open={expandedDetails[key]}
+												ontoggle={(e) => (expandedDetails[key] = e.currentTarget.open)}
+											>
+												<summary
+													class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center text-sm"
+												>
+													<Arrow expanded={expandedDetails[key]} />
+													<span class="ml-1">View array</span>
 												</summary>
 												<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs">
 													<pre
