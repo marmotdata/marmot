@@ -200,11 +200,37 @@
 		return String(value);
 	}
 
+	function formatJson(value: unknown): string {
+		return JSON.stringify(value, null, 2);
+	}
+
 	function formatDisplayValue(value: unknown): string {
 		if (isObject(value)) {
-			return JSON.stringify(value, null, 2);
+			return formatJson(value);
 		}
 		return value?.toString() || '';
+	}
+
+	function truncatePreview(value: string, maxLength = 160): string {
+		return value.length > maxLength ? `${value.slice(0, maxLength)}...` : value;
+	}
+
+	function getObjectPreview(value: unknown): string {
+		const lines = formatJson(value).split('\n');
+		return truncatePreview(lines.slice(0, 4).join('\n') + (lines.length > 4 ? '\n...' : ''));
+	}
+
+	function getArrayPreview(value: unknown[]): string {
+		const preview = value
+			.slice(0, 2)
+			.map((item) => formatDisplayValue(item).replace(/\s+/g, ' '))
+			.join(' | ');
+		return truncatePreview(preview + (value.length > 2 ? ' | ...' : ''));
+	}
+
+	function getStringPreview(value: string): string {
+		const lines = value.split('\n');
+		return truncatePreview(lines.slice(0, 2).join('\n') + (lines.length > 2 ? '\n...' : ''));
 	}
 
 	function isExpandableString(value: unknown): value is string {
@@ -235,6 +261,41 @@
 	const metadataEntries = $derived(Object.entries(metadata));
 </script>
 
+{#snippet metadataDisclosure(
+	key: string,
+	label: string,
+	preview: string,
+	content: string,
+	compact = false
+)}
+	<details
+		class="group/details"
+		open={expandedDetails[key]}
+		ontoggle={(e) => (expandedDetails[key] = e.currentTarget.open)}
+	>
+		<summary
+			class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-start {compact
+				? 'text-sm'
+				: ''}"
+		>
+			<Arrow expanded={expandedDetails[key]} />
+			<span class="ml-1 min-w-0">
+				<span class="block">{label}</span>
+				<span
+					class="metadata-preview block max-w-full {preview.includes('\n')
+						? 'line-clamp-2 whitespace-pre-line'
+						: 'truncate'} break-all font-mono text-xs text-gray-500 dark:text-gray-400"
+				>
+					{preview}
+				</span>
+			</span>
+		</summary>
+		<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded {compact ? 'text-xs' : ''}">
+			<pre class="font-mono whitespace-pre-wrap break-all">{content}</pre>
+		</div>
+	</details>
+{/snippet}
+
 {#if isReadOnly}
 	<!-- Read-Only Mode -->
 	<div class="space-y-2">
@@ -253,39 +314,19 @@
 						</dt>
 						<dd class="text-sm text-gray-900 dark:text-gray-100 flex-1 min-w-0">
 							{#if isObject(value)}
-								<details class="group">
-									<summary
-										class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center"
-									>
-										<Arrow expanded={false} />
-										<span class="ml-1">View Details</span>
-									</summary>
-									<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded">
-										<pre
-											class="text-xs text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(
-												value,
-												null,
-												2
-											)}</pre>
-									</div>
-								</details>
+								{@render metadataDisclosure(
+									key,
+									'View Details',
+									getObjectPreview(value),
+									formatJson(value)
+								)}
 							{:else if isArray(value) && containsObject(value)}
-								<details class="group">
-									<summary
-										class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center"
-									>
-										<Arrow expanded={false} />
-										<span class="ml-1">View array</span>
-									</summary>
-									<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded">
-										<pre
-											class="text-xs text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(
-												value,
-												null,
-												2
-											)}</pre>
-									</div>
-								</details>
+								{@render metadataDisclosure(
+									key,
+									'View array',
+									getArrayPreview(value),
+									formatJson(value)
+								)}
 							{:else if isArray(value)}
 								<div class="flex flex-wrap gap-1">
 									{#each value as item, i (i)}
@@ -304,19 +345,12 @@
 									{/if}
 								</div>
 							{:else if isExpandableString(value)}
-								<details class="group">
-									<summary
-										class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center"
-									>
-										<Arrow expanded={false} />
-										<span class="ml-1">View text</span>
-									</summary>
-									<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded">
-										<pre class="font-mono whitespace-pre-wrap break-all">{formatDisplayValue(
-												value
-											)}</pre>
-									</div>
-								</details>
+								{@render metadataDisclosure(
+									key,
+									'View text',
+									getStringPreview(value),
+									formatDisplayValue(value)
+								)}
 							{:else}
 								<span class="font-mono break-all">{truncateValue(formatDisplayValue(value))}</span>
 							{/if}
@@ -414,47 +448,21 @@
 												</div>
 											</div>
 										{:else if isObject(value)}
-											<details
-												class="group/details"
-												open={expandedDetails[key]}
-												ontoggle={(e) => (expandedDetails[key] = e.currentTarget.open)}
-											>
-												<summary
-													class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center text-sm"
-												>
-													<Arrow expanded={expandedDetails[key]} />
-													<span class="ml-1">View object</span>
-												</summary>
-												<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs">
-													<pre
-														class="text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(
-															value,
-															null,
-															2
-														)}</pre>
-												</div>
-											</details>
+											{@render metadataDisclosure(
+												key,
+												'View object',
+												getObjectPreview(value),
+												formatJson(value),
+												true
+											)}
 										{:else if isArray(value) && containsObject(value)}
-											<details
-												class="group/details"
-												open={expandedDetails[key]}
-												ontoggle={(e) => (expandedDetails[key] = e.currentTarget.open)}
-											>
-												<summary
-													class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center text-sm"
-												>
-													<Arrow expanded={expandedDetails[key]} />
-													<span class="ml-1">View array</span>
-												</summary>
-												<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs">
-													<pre
-														class="text-gray-800 dark:text-gray-200 overflow-x-auto">{JSON.stringify(
-															value,
-															null,
-															2
-														)}</pre>
-												</div>
-											</details>
+											{@render metadataDisclosure(
+												key,
+												'View array',
+												getArrayPreview(value),
+												formatJson(value),
+												true
+											)}
 										{:else if isArray(value)}
 											<div class="flex flex-wrap gap-1.5">
 												{#each value as item, i (i)}
@@ -466,23 +474,13 @@
 												{/each}
 											</div>
 										{:else if isExpandableString(value)}
-											<details
-												class="group/details"
-												open={expandedDetails[key]}
-												ontoggle={(e) => (expandedDetails[key] = e.currentTarget.open)}
-											>
-												<summary
-													class="cursor-pointer text-earthy-terracotta-700 dark:text-earthy-terracotta-500 hover:text-earthy-terracotta-800 dark:hover:text-earthy-terracotta-600 flex items-center text-sm"
-												>
-													<Arrow expanded={expandedDetails[key]} />
-													<span class="ml-1">View text</span>
-												</summary>
-												<div class="mt-2 p-2 bg-gray-50 dark:bg-gray-900 rounded text-xs">
-													<pre class="font-mono whitespace-pre-wrap break-all">{formatDisplayValue(
-															value
-														)}</pre>
-												</div>
-											</details>
+											{@render metadataDisclosure(
+												key,
+												'View text',
+												getStringPreview(value),
+												formatDisplayValue(value),
+												true
+											)}
 										{:else}
 											<span class="px-2 py-1 text-sm rounded-full {getValueClass(value)}">
 												{formatDisplayValue(value)}
@@ -581,3 +579,9 @@
 	onConfirm={confirmDeleteMetadata}
 	onCancel={cancelDeleteMetadata}
 />
+
+<style>
+	details[open] .metadata-preview {
+		display: none;
+	}
+</style>
