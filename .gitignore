@@ -1,3 +1,7 @@
+# .env
+.env
+
+# Docs
 docs/.openapi3.yaml
 
 # Binaries for programs and plugins
@@ -16,7 +20,7 @@ docs/.openapi3.yaml
 # Go workspace file
 go.work
 
-
+# SvelteKit
 .svelte-kit/
 package
 
@@ -40,6 +44,7 @@ tags
 # Persistent undo
 [._]*.un~
 
+# VScode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
@@ -47,26 +52,27 @@ tags
 !.vscode/extensions.json
 !.vscode/*.code-snippets
 
-.history/
-
+# Editor and IDE
 *.vsix
-
-.history
+.history/
 .ionide
 
-node_modules
-
-test/e2e/internal/client/
-
+# Dependencies and build output
 bin/
-
 internal/staticfiles/build/
-
-.DS_Store
-
+node_modules
+test/e2e/internal/client/
 testenv
 
+# Local machine artifacts
+.DS_Store
+
+# Generated sources
 web/marmot/src/lib/icon-bundle.ts
 
+# Logs
 logs/
+
+# JetBrains IDE
 /.idea
+
