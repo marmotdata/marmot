@@ -291,21 +291,29 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 	// linked to its terms the moment it is written.
 	termIDsByName := s.syncGlossary(ctx, sourceName, terms, response)
 
-	currentMRNs := make([]string, 0, len(assets))
-	for _, ast := range assets {
-		var assetMRN string
+	// Indexed by position so that currentMRNs[i] always belongs to assets[i],
+	// which the loop below relies on.
+	currentMRNs := make([]string, len(assets))
+	for i, ast := range assets {
 		if ast.MRN != nil && *ast.MRN != "" {
-			assetMRN = *ast.MRN
-		} else {
-			assetMRN = mrn.New(ast.Type, ast.Providers[0], ast.Name)
+			currentMRNs[i] = *ast.MRN
+			continue
 		}
-		currentMRNs = append(currentMRNs, assetMRN)
+		currentMRNs[i] = mrn.New(ast.Type, ast.Providers[0], ast.Name)
+	}
 
+	existingAssets, err := s.assetService.GetByMRNs(ctx, currentMRNs)
+	if err != nil {
+		return nil, fmt.Errorf("fetching existing assets: %w", err)
+	}
+
+	for i, ast := range assets {
+		assetMRN := currentMRNs[i]
 		assetHash := s.hashAsset(ast)
 
 		assetError := ""
 		status := StatusCreated
-		if checkpoint, exists := lastCheckpoints[assetMRN]; exists && checkpoint.Operation != StatusDeleted {
+		if checkpoint, exists := lastCheckpoints[assetMRN]; exists && checkpoint.Operation != StatusDeleted && existingAssets[assetMRN] != nil {
 			if len(checkpoint.SourceFields) > 0 && checkpoint.SourceFields[0] == assetHash {
 				status = StatusUnchanged
 			} else {
@@ -369,7 +377,12 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				QueryLanguage:    ast.QueryLanguage,
 				SkipNotification: true,
 			}
-			existingAsset, err := s.assetService.GetByMRN(ctx, assetMRN)
+			// Not cached when another writer created the asset after the fetch above.
+			existingAsset := existingAssets[assetMRN]
+			var err error
+			if existingAsset == nil {
+				existingAsset, err = s.assetService.GetByMRN(ctx, assetMRN)
+			}
 			if err != nil {
 				log.Error().Err(err).Str("asset_mrn", assetMRN).Msg("Failed to get existing asset for update")
 				assetError = err.Error()
