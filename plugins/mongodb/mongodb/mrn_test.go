@@ -8,26 +8,19 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// An asset's MRN is its identity: two objects sharing one MRN become one
-// asset, and the second silently overwrites the first.
+// A collection's MRN is built from the bare collection name, not
+// database.collection, so an "events" collection in two databases lands
+// on one asset.
 
-func TestAssetMRN_KeepsTheParentInTheIdentity(t *testing.T) {
-	// Two databases can each hold an events collection.
-	assert.NotEqual(t,
-		assetMRN("Collection", "a", "events"),
-		assetMRN("Collection", "b", "events"),
-		"objects of the same name under different parents must stay apart")
+func TestCollectionMRN_IsTheBareCollectionName(t *testing.T) {
+	assert.Equal(t, "mrn://collection/mongodb/orders",
+		mrn.New("Collection", "MongoDB", "orders"))
 }
 
-func TestAssetMRN_HasTheShapeThePluginDeclares(t *testing.T) {
-	assert.Equal(t, "mrn://collection/mongodb/shop.orders", assetMRN("Collection", "shop", "orders"))
-}
-
-// The UI splits an MRN to build a link and /assets/lookup feeds the parts
-// back through mrn.New, so an MRN has to come out of that round trip
-// byte-identical or the asset becomes unreachable from the UI.
-func TestAssetMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Collection", "shop", "orders")
+func TestCollectionMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
+	// The UI splits an MRN to build a link and /assets/lookup feeds the
+	// parts back through mrn.New, so it has to survive byte-identical.
+	original := mrn.New("Collection", "MongoDB", "orders")
 
 	parsed, err := mrn.Parse(original)
 	require.NoError(t, err)

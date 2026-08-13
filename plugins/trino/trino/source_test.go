@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	pluginsdk "github.com/marmotdata/plugin-sdk"
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -155,16 +156,19 @@ func TestConnectorMRNNames(t *testing.T) {
 		table     string
 		wantName  string
 	}{
-		{"postgresql catalog.schema.table", "postgresql", "pg", "public", "products", "pg.public.products"},
-		{"mysql database.table", "mysql", "my", "mydb", "users", "mydb.users"},
+		// PostgreSQL, MySQL and MongoDB all have a Marmot plugin that
+		// names a table by its bare object name, so this map matches them
+		// and the two sources land on one asset. See the mrn_test.go in
+		// each of those plugins for why they stay bare.
+		{"postgresql bare table", "postgresql", "pg", "public", "products", "products"},
+		{"mysql bare table", "mysql", "my", "mydb", "users", "users"},
+		{"mongodb bare collection", "mongodb", "mongo", "mydb", "users", "users"},
+		// ClickHouse's plugin declares schema.table, so this follows it.
 		{"clickhouse schema.table", "clickhouse", "ch", "analytics", "events", "analytics.events"},
-		{"mongodb database.collection", "mongodb", "mongo", "mydb", "users", "mydb.users"},
-		// Iceberg and Delta Lake follow their own Marmot plugin, which
-		// knows nothing about the Trino catalog the table is mounted under.
-		{"iceberg namespace.table", "iceberg", "ice", "warehouse", "orders", "warehouse.orders"},
-		{"delta lake bare table", "delta_lake", "dl", "default", "events", "events"},
-		// Hive has no Marmot plugin, so Trino stays the authority and keeps
-		// the catalog.
+		// Connectors with no matching convention fall back to the full
+		// catalog.schema.table path, with Trino as the authority.
+		{"iceberg full path", "iceberg", "ice", "warehouse", "orders", "ice.warehouse.orders"},
+		{"delta lake full path", "delta_lake", "dl", "default", "events", "dl.default.events"},
 		{"hive full path", "hive", "hv", "warehouse", "orders", "hv.warehouse.orders"},
 	}
 
@@ -202,7 +206,7 @@ func TestCreateTableAsset_NativeProvider(t *testing.T) {
 			catalog:      "pg",
 			schema:       "public",
 			table:        "products",
-			wantMRN:      "mrn://table/postgresql/pg.public.products",
+			wantMRN:      "mrn://table/postgresql/products",
 			wantName:     "products",
 			wantProvider: "PostgreSQL",
 		},
@@ -213,28 +217,18 @@ func TestCreateTableAsset_NativeProvider(t *testing.T) {
 			schema:       "analytics",
 			table:        "events",
 			wantMRN:      "mrn://table/clickhouse/analytics.events",
-			wantName:     "events",
+			wantName:     "analytics.events",
 			wantProvider: "ClickHouse",
 		},
 		{
-			name:         "iceberg produces native MRN",
+			name:         "iceberg falls back to the full path",
 			connector:    "iceberg",
 			catalog:      "ice",
 			schema:       "warehouse",
 			table:        "orders",
-			wantMRN:      "mrn://table/iceberg/warehouse.orders",
-			wantName:     "orders",
+			wantMRN:      "mrn://table/iceberg/ice.warehouse.orders",
+			wantName:     "ice.warehouse.orders",
 			wantProvider: "Iceberg",
-		},
-		{
-			name:         "delta lake produces native MRN",
-			connector:    "delta_lake",
-			catalog:      "dl",
-			schema:       "default",
-			table:        "events",
-			wantMRN:      "mrn://table/deltalake/events",
-			wantName:     "events",
-			wantProvider: "Delta Lake",
 		},
 	}
 
@@ -257,8 +251,38 @@ func TestCreateTableAsset_NativeProvider(t *testing.T) {
 		info := connectorMap["postgresql"]
 		a := s.createTableAsset("pg", "public", "my_view", "VIEW", info)
 		assert.Equal(t, "View", a.Type)
-		assert.Equal(t, "mrn://view/postgresql/pg.public.my_view", *a.MRN)
+		assert.Equal(t, "mrn://view/postgresql/my_view", *a.MRN)
 	})
+}
+
+func TestCreateTableAsset_NameIsTheStringTheMRNIsBuiltFrom(t *testing.T) {
+	// Name and the MRN's name segment carry the same string, even where
+	// that means a Trino asset reads as "analytics.events".
+	s := &Source{config: &Config{Host: "trino.example.com", Port: 8080}}
+
+	for _, connector := range []string{"postgresql", "clickhouse", "iceberg", "hive"} {
+		info := connectorMap[connector]
+		a := s.createTableAsset("cat", "sch", "orders", "BASE TABLE", info)
+
+		require.NotNil(t, a.Name)
+		require.NotNil(t, a.MRN)
+		assert.Equal(t, mrn.New("Table", a.Providers[0], *a.Name), *a.MRN,
+			"%s: MRN and Name must agree", connector)
+	}
+}
+
+func TestCreateTableAsset_ProviderWithASpaceLandsInTheMRN(t *testing.T) {
+	// mrn.New sanitizes the name it is given but not the service, so
+	// "Delta Lake" puts a literal space in the MRN. This is ugly and it is
+	// deliberate: it is what the published Trino plugin already emits, and
+	// slugging it here would rename every Delta Lake asset a previous run
+	// wrote without a migration to move them.
+	s := &Source{config: &Config{Host: "trino.example.com", Port: 8080}}
+
+	a := s.createTableAsset("dl", "default", "events", "BASE TABLE", connectorMap["delta_lake"])
+
+	assert.Equal(t, "mrn://table/delta lake/dl.default.events", *a.MRN)
+	assert.Equal(t, []string{"Delta Lake"}, a.Providers)
 }
 
 func TestConnectorInfoForName(t *testing.T) {

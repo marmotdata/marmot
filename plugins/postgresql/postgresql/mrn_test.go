@@ -3,30 +3,30 @@ package postgresql
 import (
 	"testing"
 
+	"github.com/marmotdata/plugin-sdk/mrn"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-// An asset's MRN is its identity: two objects sharing one become a single
-// asset, and the second silently overwrites the first.
+// A table's MRN is built from the bare object name, not
+// database.schema.table, so public.users and staging.users land on one
+// asset.
 
-func TestAssetMRN_KeepsTheDatabaseAndSchemaInTheIdentity(t *testing.T) {
-	// Discover walks every non-template database on the server, so both
-	// levels have to be in the name. Without the database,
-	// app_db.public.users and analytics_db.public.users collapse into one.
-	assert.NotEqual(t,
-		assetMRN("Table", "app_db", "public", "users"),
-		assetMRN("Table", "analytics_db", "public", "users"),
-		"the same table name in two databases must stay apart")
+func TestTableMRN_IsTheBareObjectName(t *testing.T) {
+	objectName := "orders"
 
-	assert.NotEqual(t,
-		assetMRN("Table", "app_db", "public", "users"),
-		assetMRN("Table", "app_db", "staging", "users"),
-		"the same table name in two schemas must stay apart")
+	assert.Equal(t, "mrn://table/postgresql/orders",
+		mrn.New("Table", "PostgreSQL", objectName))
 }
 
-func TestAssetMRN_IsStableWhenTheServerRebuildsIt(t *testing.T) {
-	// The UI splits the MRN to build a link and /assets/lookup feeds the
-	// parts back through mrn.New, so the MRN must survive that unchanged.
-	assert.Equal(t, "mrn://table/postgresql/shop.public.orders",
-		assetMRN("Table", "shop", "public", "orders"))
+func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
+	// The UI splits an MRN to build a link and /assets/lookup feeds the
+	// parts back through mrn.New, so an MRN has to survive that unchanged
+	// or the asset becomes unreachable from the UI.
+	original := mrn.New("Table", "PostgreSQL", "orders")
+
+	parsed, err := mrn.Parse(original)
+	require.NoError(t, err)
+
+	assert.Equal(t, original, mrn.New(parsed.Type, parsed.Service, parsed.Name))
 }

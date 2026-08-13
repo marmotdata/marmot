@@ -97,12 +97,7 @@ type CreateGlossaryTermRequest struct {
 }
 
 type CreateAssetRequest struct {
-	Name string `json:"name"`
-	// MRN is the identity the plugin assigned. It is sent separately from
-	// Name because the two differ: a table is identified by its whole
-	// path and read by its own name. A server that predates this field
-	// ignores it and derives the MRN from Name, as before.
-	MRN         string                 `json:"mrn,omitempty"`
+	Name        string                 `json:"name"`
 	Type        string                 `json:"type"`
 	Providers   []string               `json:"providers"`
 	Description *string                `json:"description"`
@@ -547,14 +542,8 @@ func executeRun(ctx context.Context, run plugin.SourceRun, client *apiClient, ov
 					}
 				}
 
-				assetMRN := ""
-				if asset.MRN != nil {
-					assetMRN = *asset.MRN
-				}
-
 				assets = append(assets, CreateAssetRequest{
 					Name:          name,
-					MRN:           assetMRN,
 					Type:          asset.Type,
 					Providers:     asset.Providers,
 					Description:   asset.Description,

@@ -8,26 +8,18 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// An asset's MRN is its identity: two objects sharing one MRN become one
-// asset, and the second silently overwrites the first.
+// A table's MRN is built from the bare table id, not dataset.table, so
+// staging.events and prod.events land on one asset.
 
-func TestAssetMRN_KeepsTheParentInTheIdentity(t *testing.T) {
-	// A table belongs to a dataset: staging.events is not prod.events.
-	assert.NotEqual(t,
-		assetMRN("Table", "a", "events"),
-		assetMRN("Table", "b", "events"),
-		"objects of the same name under different parents must stay apart")
+func TestTableMRN_IsTheBareTableID(t *testing.T) {
+	assert.Equal(t, "mrn://table/bigquery/orders",
+		mrn.New("Table", "BigQuery", "orders"))
 }
 
-func TestAssetMRN_HasTheShapeThePluginDeclares(t *testing.T) {
-	assert.Equal(t, "mrn://table/bigquery/analytics.orders", assetMRN("Table", "analytics", "orders"))
-}
-
-// The UI splits an MRN to build a link and /assets/lookup feeds the parts
-// back through mrn.New, so an MRN has to come out of that round trip
-// byte-identical or the asset becomes unreachable from the UI.
-func TestAssetMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
-	original := assetMRN("Table", "analytics", "orders")
+func TestTableMRN_IsStableUnderTheServersRoundTrip(t *testing.T) {
+	// The UI splits an MRN to build a link and /assets/lookup feeds the
+	// parts back through mrn.New, so it has to survive byte-identical.
+	original := mrn.New("Table", "BigQuery", "orders")
 
 	parsed, err := mrn.Parse(original)
 	require.NoError(t, err)

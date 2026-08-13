@@ -9684,10 +9684,6 @@ const docTemplate = `{
                     "type": "object",
                     "additionalProperties": true
                 },
-                "mrn": {
-                    "description": "MRN is the identity the plugin assigned. Empty means the server\nderives one from the type, first provider and name.",
-                    "type": "string"
-                },
                 "name": {
                     "type": "string"
                 },
