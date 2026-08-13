@@ -22,7 +22,7 @@ import { CalloutCard } from '@site/src/components/DocCard';
   <img src="/img/marmot-openmetadata-banner.png" alt="Marmot importing an OpenMetadata catalog" style={{maxWidth: '100%', borderRadius: '8px'}} />
 </div>
 
-This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](/docs/Plugins/OpenMetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. And this is where we get to walk the walk: Marmot runs for free what OpenMetadata makes you pay to keep running.
+This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](/docs/Plugins/OpenMetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. Marmot runs for free what OpenMetadata makes you pay to keep running.
 
 Don't take our word for it, see for yourself:
 
