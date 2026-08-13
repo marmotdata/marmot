@@ -111,11 +111,11 @@ func TestDiscover_ImportsTheGlossaryOfAScopedRun(t *testing.T) {
 func TestDiscover_AssignsTermsToTheAssetTheyWereCuratedOnto(t *testing.T) {
 	result := discover(t, businessGlossary(), nil)
 
-	customers := findAsset(result, "Table", "shop.public.customers")
+	customers := findAsset(result, "Table", "customers")
 	require.NotNil(t, customers)
 	assert.Equal(t, []string{"BusinessTerms.Customer"}, customers.Terms)
 
-	orders := findAsset(result, "Table", "shop.public.orders")
+	orders := findAsset(result, "Table", "orders")
 	require.NotNil(t, orders)
 	assert.Equal(t, []string{"BusinessTerms.Order"}, orders.Terms,
 		"the term on one table must not spread to the other")
@@ -154,7 +154,7 @@ func TestDiscover_SkipsSuggestedTermAssignments(t *testing.T) {
 		with("tables", orders),
 		nil)
 
-	assert.Empty(t, findAsset(result, "Table", "shop.public.orders").Terms,
+	assert.Empty(t, findAsset(result, "Table", "orders").Terms,
 		"a suggestion nobody accepted is not an assignment")
 }
 
@@ -163,7 +163,7 @@ func TestDiscover_KeepsAssignedTermsOffTheTags(t *testing.T) {
 	// is opt in rather than the default it once was.
 	result := discover(t, businessGlossary(), nil)
 
-	customers := findAsset(result, "Table", "shop.public.customers")
+	customers := findAsset(result, "Table", "customers")
 	require.NotNil(t, customers)
 	assert.Empty(t, customers.Tags)
 	assert.Equal(t, []string{"BusinessTerms.Customer"}, customers.Terms)
@@ -173,7 +173,7 @@ func TestDiscover_LeavesTheGlossaryBehindWhenTurnedOff(t *testing.T) {
 	result := discover(t, businessGlossary(), pluginsdk.RawConfig{"include_glossary": false})
 
 	assert.Empty(t, result.GlossaryTerms)
-	assert.Empty(t, findAsset(result, "Table", "shop.public.customers").Terms,
+	assert.Empty(t, findAsset(result, "Table", "customers").Terms,
 		"an assignment to a term nobody imported points at nothing")
 }
 
@@ -183,7 +183,7 @@ func TestDiscover_SurvivesAnOpenMetadataWithoutAGlossary(t *testing.T) {
 	result := discover(t, businessGlossary().without("glossaries", "glossaryTerms"), nil)
 
 	assert.Empty(t, result.GlossaryTerms)
-	assert.NotNil(t, findAsset(result, "Table", "shop.public.customers"))
+	assert.NotNil(t, findAsset(result, "Table", "customers"))
 }
 
 func TestDiscover_SurvivesAGlossaryWithoutTerms(t *testing.T) {

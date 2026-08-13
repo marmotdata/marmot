@@ -211,15 +211,10 @@ func (c *collector) add(f driveItem, assetType, name string, metadata map[string
 }
 
 func (c *collector) newAsset(f driveItem, assetType, name string, metadata map[string]interface{}) pluginsdk.Asset {
-	// name is the item's path, which is what identifies it: two folders
-	// can each hold a "notes.md". What people read is the item's own
-	// name, and the Contents tab supplies the folder it sits in.
+	// Name and MRN are the same string on purpose. name is the item's
+	// path, which is what identifies it: two folders can each hold a
+	// "notes.md". The Contents tab supplies the folder it sits in.
 	mrnValue := mrn.New(assetType, provider, name)
-
-	displayName := f.Name
-	if displayName == "" {
-		displayName = name
-	}
 
 	if metadata == nil {
 		metadata = map[string]interface{}{}
@@ -230,7 +225,7 @@ func (c *collector) newAsset(f driveItem, assetType, name string, metadata map[s
 	}
 
 	asset := pluginsdk.Asset{
-		Name:      &displayName,
+		Name:      &name,
 		MRN:       &mrnValue,
 		Type:      assetType,
 		Providers: []string{provider},

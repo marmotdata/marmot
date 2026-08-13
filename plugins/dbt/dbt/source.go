@@ -602,10 +602,7 @@ func (s *Source) createMaterializedTableAsset(node ManifestNode, nodeID string) 
 	allTags := append([]string{}, node.Tags...)
 	allTags = append(allTags, s.config.Tags...)
 
-	// The MRN uses the shape the plugin that owns this table uses, so dbt
-	// merges with it instead of filing the table twice. tableFQN stays the
-	// full dbt path for metadata and display.
-	mrnValue := mrn.New(mrnType(assetType), mrnService(provider), adapter.MRNName(node.Database, node.Schema, tableName))
+	mrnValue := mrn.New(assetType, provider, tableFQN)
 
 	var description *string
 	if node.Description != "" {
@@ -677,7 +674,7 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 	if outputType == "Ephemeral" {
 		return lineages
 	}
-	outputMRN := mrn.New(mrnType(outputType), mrnService(provider), adapter.MRNName(node.Database, node.Schema, tableName))
+	outputMRN := mrn.New(outputType, provider, targetFQN)
 
 	for _, depNodeID := range node.DependsOn.Nodes {
 		var depNode ManifestNode
@@ -715,12 +712,12 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 			continue
 		}
 
-		depMRNName := adapter.MRNName(depNode.Database, depNode.Schema, depName)
+		sourceFQN := fmt.Sprintf("%s.%s.%s", depNode.Database, depNode.Schema, depName)
 
 		var sourceMRN string
 		switch {
 		case resourceType == "source" || resourceType == "seed":
-			sourceMRN = mrn.New("Table", mrnService(provider), depMRNName)
+			sourceMRN = mrn.New("Table", provider, sourceFQN)
 		case resourceType == "model":
 			depMaterialization := s.getMaterialization(depNode)
 			if depMaterialization == "" {
@@ -730,9 +727,9 @@ func (s *Source) createModelLineage(node ManifestNode, nodeID string) []pluginsd
 			if depType == "Ephemeral" {
 				depType = "Table"
 			}
-			sourceMRN = mrn.New(mrnType(depType), mrnService(provider), depMRNName)
+			sourceMRN = mrn.New(depType, provider, sourceFQN)
 		default:
-			sourceMRN = mrn.New("Table", mrnService(provider), depMRNName)
+			sourceMRN = mrn.New("Table", provider, sourceFQN)
 		}
 
 		lineages = append(lineages, pluginsdk.LineageEdge{
@@ -769,9 +766,7 @@ func (s *Source) createSourceAsset(node ManifestNode) pluginsdk.Asset {
 	}
 
 	tableFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, tableName)
-	adapter := s.getAdapter()
-	provider := adapter.Name()
-	mrnName := adapter.MRNName(node.Database, node.Schema, tableName)
+	provider := s.getProviderName()
 
 	metadata := make(map[string]interface{})
 	metadata["dbt_unique_id"] = node.UniqueID
@@ -807,7 +802,7 @@ func (s *Source) createSourceAsset(node ManifestNode) pluginsdk.Asset {
 	allTags = append(allTags, s.config.Tags...)
 	allTags = append(allTags, "dbt-source")
 
-	mrnValue := mrn.New("Table", mrnService(provider), mrnName)
+	mrnValue := mrn.New("Table", provider, tableFQN)
 	var description *string
 	if node.Description != "" {
 		description = &node.Description
@@ -855,9 +850,7 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) pluginsdk.Ass
 	}
 
 	tableFQN := fmt.Sprintf("%s.%s.%s", node.Database, node.Schema, seedName)
-	adapter := s.getAdapter()
-	provider := adapter.Name()
-	mrnName := adapter.MRNName(node.Database, node.Schema, seedName)
+	provider := s.getProviderName()
 
 	metadata := make(map[string]interface{})
 	metadata["dbt_unique_id"] = node.UniqueID
@@ -897,7 +890,7 @@ func (s *Source) createSeedAsset(node ManifestNode, nodeID string) pluginsdk.Ass
 	allTags = append(allTags, s.config.Tags...)
 	allTags = append(allTags, "dbt-seed")
 
-	mrnValue := mrn.New("Table", mrnService(provider), mrnName)
+	mrnValue := mrn.New("Table", provider, tableFQN)
 	var description *string
 	if node.Description != "" {
 		description = &node.Description

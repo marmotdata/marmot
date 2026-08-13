@@ -114,17 +114,14 @@ type DocumentationResult struct {
 } // @name DocumentationResult
 
 type CreateAssetRequest struct {
-	Name string `json:"name"`
-	// MRN is the identity the plugin assigned. Empty means the server
-	// derives one from the type, first provider and name.
-	MRN           string                 `json:"mrn,omitempty"`
+	Name          string                 `json:"name"`
 	Type          string                 `json:"type"`
 	Providers     []string               `json:"providers"`
 	Description   *string                `json:"description"`
 	Metadata      map[string]interface{} `json:"metadata"`
 	Schema        map[string]interface{} `json:"schema"`
 	Tags          []string               `json:"tags"`
-	Sources       []asset.AssetSource    `json:"sources"`
+	Sources       AssetSources           `json:"sources"`
 	ExternalLinks []map[string]string    `json:"external_links"`
 	// Terms are the names of glossary terms assigned to this asset.
 	Terms []string `json:"terms,omitempty"`
@@ -261,7 +258,6 @@ func (h *Handler) batchCreateAssets(w http.ResponseWriter, r *http.Request) {
 	for i, asset := range req.Assets {
 		assets[i] = runs.CreateAssetInput{
 			Name:          asset.Name,
-			MRN:           optionalString(asset.MRN),
 			Type:          asset.Type,
 			Providers:     asset.Providers,
 			Description:   asset.Description,
@@ -540,11 +536,33 @@ func (h *Handler) getRun(w http.ResponseWriter, r *http.Request) {
 	common.RespondJSON(w, http.StatusOK, run)
 }
 
-// optionalString turns an empty string into a nil pointer, so an absent
-// field stays absent rather than becoming an empty value.
-func optionalString(v string) *string {
-	if v == "" {
+// AssetSources is the provenance a run reports for an asset: which source
+// wrote it, when, and with what properties.
+//
+// It decodes two shapes. Current clients send an array of objects. Clients
+// built before provenance carried more than a label send an array of bare
+// strings, and those are read as a name with no other detail. Rejecting them
+// would mean an upgraded server could not accept a batch from a plugin that
+// had not been upgraded with it, which is the ordinary state of a deployment
+// between releases.
+type AssetSources []asset.AssetSource
+
+func (a *AssetSources) UnmarshalJSON(data []byte) error {
+	var objects []asset.AssetSource
+	if err := json.Unmarshal(data, &objects); err == nil {
+		*a = objects
 		return nil
 	}
-	return &v
+
+	var names []string
+	if err := json.Unmarshal(data, &names); err != nil {
+		return fmt.Errorf("sources must be an array of names or of source objects: %w", err)
+	}
+
+	converted := make([]asset.AssetSource, 0, len(names))
+	for _, name := range names {
+		converted = append(converted, asset.AssetSource{Name: name})
+	}
+	*a = converted
+	return nil
 }

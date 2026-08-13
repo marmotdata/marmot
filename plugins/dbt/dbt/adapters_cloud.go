@@ -16,7 +16,7 @@ func (a *DatabricksAdapter) AssetTypeForMaterialization(materialization string) 
 	case "table", "incremental":
 		return "Table"
 	case "materialized_view":
-		return "View"
+		return "Materialized View"
 	case "streaming_table":
 		return "Streaming Table"
 	case "ephemeral":
@@ -40,16 +40,8 @@ type AthenaAdapter struct {
 	BaseAdapter
 }
 
-// Name is "Glue" for the same reason the OpenMetadata projection maps
-// Athena onto Glue: Athena keeps no catalog of its own, its tables are
-// Glue Data Catalog tables, and plugins/glue already catalogues them.
 func (a *AthenaAdapter) Name() string {
-	return "Glue"
-}
-
-// MRNName matches plugins/glue/glue/source.go: database.table.
-func (a *AthenaAdapter) MRNName(_, database, table string) string {
-	return joinNonEmpty(database, table)
+	return "Athena"
 }
 
 func (a *AthenaAdapter) AssetTypeForMaterialization(materialization string) string {
@@ -72,16 +64,8 @@ type GlueAdapter struct {
 	BaseAdapter
 }
 
-// Name is "Glue", not "AWS Glue": plugins/glue passes "Glue" to mrn.New,
-// and the spaced form would also put a raw space in the MRN.
 func (a *GlueAdapter) Name() string {
-	return "Glue"
-}
-
-// MRNName matches plugins/glue/glue/source.go, which identifies a table as
-// database.table.
-func (a *GlueAdapter) MRNName(_, database, table string) string {
-	return joinNonEmpty(database, table)
+	return "AWS Glue"
 }
 
 // FabricAdapter handles Microsoft Fabric Data Warehouse

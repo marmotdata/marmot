@@ -88,9 +88,9 @@ Moving off OpenMetadata is not a single switch, so this plugin is built to run o
 
 ## Running it Alongside Marmot's Own Plugins
 
-By default an imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://table/postgresql/public.orders` whether Marmot read it from OpenMetadata or from the database itself, so whichever run happens next updates the asset that is already there.
+By default an imported asset lands on the same MRN the technology's native Marmot plugin would use, so the two runs contribute to one asset instead of creating two. A Postgres table becomes `mrn://table/postgresql/orders` whether Marmot read it from OpenMetadata or from the database itself, so whichever run happens next updates the asset that is already there.
 
-That means names drop the levels the native plugin does not use, so two OpenMetadata services holding the same table name resolve to one asset. The run reports every entity it merged this way. Set `naming: qualified` to keep them apart instead, at the cost of no longer merging with native runs, which also gives up the handover described above:
+That means names drop the levels the native plugin does not use. Marmot's own plugins for Postgres, MySQL, BigQuery, MongoDB, ClickHouse, Glue and Iceberg all name a table by its bare name, so `public.orders` and `staging.orders` resolve to one asset, as do two OpenMetadata services holding the same table name. The run reports every entity it merged this way. Set `naming: qualified` to keep them apart instead, at the cost of no longer merging with native runs, which also gives up the handover described above:
 
 ```yaml
 runs:

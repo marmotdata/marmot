@@ -1752,11 +1752,6 @@ definitions:
       metadata:
         additionalProperties: true
         type: object
-      mrn:
-        description: |-
-          MRN is the identity the plugin assigned. Empty means the server
-          derives one from the type, first provider and name.
-        type: string
       name:
         type: string
       providers:

@@ -432,9 +432,7 @@ func (s *Source) discoverTables(ctx context.Context, datasetID string) ([]plugin
 			continue
 		}
 
-		// A table is identified by its dataset too: staging.events and
-		// prod.events are different tables. Name stays the bare table id.
-		mrnValue := assetMRN(assetType, datasetID, tableID)
+		mrnValue := mrn.New(assetType, "BigQuery", tableID)
 
 		processedTags := pluginsdk.InterpolateTags(s.config.Tags, assetMetadata)
 
@@ -730,11 +728,4 @@ func convertBigQueryValue(val interface{}) interface{} {
 	default:
 		return val
 	}
-}
-
-// assetMRN is what identifies an object in this catalog. A table belongs to a dataset: staging.events is not prod.events.
-// The name shown in the UI stays the object's own name; only the MRN
-// carries the path.
-func assetMRN(assetType, parent, name string) string {
-	return mrn.New(assetType, "BigQuery", parent+"."+name)
 }

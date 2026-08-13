@@ -11,13 +11,16 @@ import (
 
 func ptr(s string) *string { return &s }
 
+// collection and view mirror collection.go, which names both by the bare
+// object name so the MRN matches what the server derives from Name. The
+// database is not part of the identity; see mrn_test.go for why.
 func collection(name string) pluginsdk.Asset {
-	m := assetMRN("Collection", "shop", name)
+	m := mrn.New("Collection", "MongoDB", name)
 	return pluginsdk.Asset{Name: ptr(name), MRN: &m, Type: "Collection"}
 }
 
 func view(name, viewOn string) pluginsdk.Asset {
-	m := assetMRN("View", "shop", name)
+	m := mrn.New("View", "MongoDB", name)
 	return pluginsdk.Asset{
 		Name:     ptr(name),
 		MRN:      &m,
@@ -26,8 +29,6 @@ func view(name, viewOn string) pluginsdk.Asset {
 	}
 }
 
-// database mirrors database.go, which names a Database by the bare
-// database name rather than through assetMRN.
 func database(name string) pluginsdk.Asset {
 	m := mrn.New("Database", "MongoDB", name)
 	return pluginsdk.Asset{Name: ptr(name), MRN: &m, Type: "Database"}
@@ -107,7 +108,7 @@ func TestBuildCollectionLineage_ViewOnViewUsesTheViewMRN(t *testing.T) {
 			source = e.Source
 		}
 	}
-	assert.Equal(t, "mrn://view/mongodb/shop.recent_orders", source,
+	assert.Equal(t, "mrn://view/mongodb/recent_orders", source,
 		"the source is itself a view, so the edge must use the View MRN")
 	assertLineageOnlyReferencesDiscoveredAssets(t, append(colls, db), edges)
 }
