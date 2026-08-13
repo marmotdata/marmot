@@ -22,7 +22,7 @@ import { CalloutCard } from '@site/src/components/DocCard';
   <img src="/img/marmot-openmetadata-banner.png" alt="Marmot importing an OpenMetadata catalog" style={{maxWidth: '100%', borderRadius: '8px'}} />
 </div>
 
-This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](/docs/Plugins/OpenMetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. Marmot runs for free what OpenMetadata makes you pay to keep running.
+This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](https://plugins.marmotdata.io/marmotdata/openmetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. Marmot runs for free what OpenMetadata makes you pay to keep running.
 
 Don't take our word for it, see for yourself:
 
@@ -52,7 +52,7 @@ Point the plugin at your OpenMetadata host and one run imports tables, topics, b
   />
 </div>
 
-Descriptions, columns, tags, owners and domains come across on each asset, and nothing loses its trail. Every asset gets an OpenMetadata link that jumps straight to the entity it was imported from, and an `openmetadata` metadata object carrying the fully qualified name, the service and when the entity last changed, so mid-migration any asset in Marmot traces back to its source in one click. The glossary stays a first-class glossary rather than being flattened into tags, and lineage keeps the pipeline that moved the data on each edge. The [plugin docs](/docs/Plugins/OpenMetadata) hold the exact entity-by-entity mapping.
+Descriptions, columns, tags, owners and domains come across on each asset, and nothing loses its trail. Every asset gets an OpenMetadata link that jumps straight to the entity it was imported from, and an `openmetadata` metadata object carrying the fully qualified name, the service and when the entity last changed, so mid-migration any asset in Marmot traces back to its source in one click. The glossary stays a first-class glossary rather than being flattened into tags, and lineage keeps the pipeline that moved the data on each edge. The [plugin docs](https://plugins.marmotdata.io/marmotdata/openmetadata) hold the exact entity-by-entity mapping.
 
 <div style={{textAlign: 'center', margin: '2rem 0'}}>
   <ThemedImg
@@ -86,7 +86,7 @@ resource "marmot_pipeline" "openmetadata" {
 
 For injecting the token securely, use [ephemeral values and resources](https://www.hashicorp.com/en/blog/ephemeral-values-in-terraform), so the token never lands in your state or plan files.
 
-Everything is imported by default; the [configuration reference](/docs/Plugins/OpenMetadata) covers scoping down to specific services, and the same config works from the UI wizard, CLI, Pulumi and the REST API.
+Everything is imported by default; the [configuration reference](https://plugins.marmotdata.io/marmotdata/openmetadata) covers scoping down to specific services, and the same config works from the UI wizard, CLI, Pulumi and the REST API.
 
 ### 2. Keep working in both catalogs
 
@@ -94,7 +94,7 @@ Each scheduled run brings across whatever changed in OpenMetadata, so the two st
 
 ### 3. Adopt native plugins one system at a time
 
-When you are ready to catalog a system directly, add its own pipeline, for example the [PostgreSQL plugin](/docs/Plugins/PostgreSQL) against the database OpenMetadata was describing. Imported assets carry the same identity the native plugin uses, so the native run takes over the existing assets instead of creating a second copy. Nothing gets deleted or re-pointed, and the descriptions people wrote stay put. Work through your systems at whatever pace suits.
+When you are ready to catalog a system directly, add its own pipeline, for example the [PostgreSQL plugin](https://plugins.marmotdata.io/marmotdata/postgresql) against the database OpenMetadata was describing. Imported assets carry the same identity the native plugin uses, so the native run takes over the existing assets instead of creating a second copy. Nothing gets deleted or re-pointed, and the descriptions people wrote stay put. Work through your systems at whatever pace suits.
 
 ### 4. Switch OpenMetadata off
 
