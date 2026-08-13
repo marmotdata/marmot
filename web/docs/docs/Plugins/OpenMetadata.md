@@ -29,7 +29,9 @@ import { CalloutCard } from '@site/src/components/DocCard';
 
 The OpenMetadata plugin imports an entire OpenMetadata instance in one run: tables, views, stored procedures, topics, buckets, dashboards, charts, pipelines, models, search indices, API endpoints, drive files and spreadsheets, the business glossary, and the lineage between them.
 
-OpenMetadata is a catalog, so everything in it describes something that lives somewhere else. This plugin catalogues each entity as the technology it belongs to rather than as an OpenMetadata thing: a table under a Postgres service becomes a PostgreSQL asset in Marmot, addressed exactly as Marmot's own PostgreSQL plugin would address it. Point Marmot at OpenMetadata and the result looks like a catalog Marmot built itself.
+OpenMetadata is a catalog, so everything in it describes something that lives somewhere else. The plugin catalogues each entity as the technology it actually describes rather than as an OpenMetadata thing: a table under a Postgres service becomes a PostgreSQL asset in Marmot, addressed exactly as Marmot's own PostgreSQL plugin would address it. Technologies Marmot has no plugin for yet, such as Snowflake or Looker, come across under their own provider name. Point Marmot at OpenMetadata and the result looks like a catalog Marmot built itself.
+
+OpenMetadata 1.4 or newer is supported. The plugin negotiates the field list with the server on the first call to each endpoint, so one plugin binary works across every version in that range, and entity kinds a server predates (drives, API collections, and so on) are skipped without failing the run.
 
 ## What it imports
 
@@ -55,29 +57,29 @@ OpenMetadata is a catalog, so everything in it describes something that lives so
 | entity lineage | Lineage, carrying the pipeline that moved the data |
 | pipeline executions | Run History |
 
-Descriptions, columns, classification tags, owners, domains and data products come across on the assets. Every asset gets a link back to the entity in OpenMetadata, and to the underlying system when OpenMetadata knows that address.
+Descriptions, columns, classification tags, owners, domains and data products come across on each asset, and nothing loses its trail: every asset gets an OpenMetadata link that jumps straight to the entity it was imported from, and an `openmetadata` metadata object carrying the fully qualified name, the service and when the entity last changed. Mid-migration, any asset in Marmot traces back to its source in one click.
 
-The glossary comes across as glossary terms rather than as tags, so a term keeps its definition, its synonyms and the terms below it, and the assets it was curated onto are assigned it. Terms are identified by their OpenMetadata fully qualified name, so two glossaries can each hold a Customer without becoming one term. Set `glossary_terms_as_tags: true` to also copy each assigned term onto the asset's tags, or `include_glossary: false` to leave the glossary behind entirely.
+The glossary comes across as glossary terms rather than as tags, so a term keeps its definition, its synonyms and the terms below it, and the assets it was curated onto are assigned it. Terms are identified by their OpenMetadata fully qualified name, so two glossaries can each hold a `Customer` without becoming one term. Set `glossary_terms_as_tags: true` to also copy each assigned term onto the asset's tags, or `include_glossary: false` to leave the glossary behind entirely.
 
-Object storage comes across as the bucket alone. OpenMetadata models the prefixes inside a bucket as containers of their own, but Marmot's S3, GCS and Azure Blob plugins catalogue the bucket and nothing below it, so an imported prefix would sit in the catalog forever without a native run ever updating it. Each run reports how many it left out. Set `include_container_prefixes: true` to import the hierarchy anyway, which is worth doing when nothing else is going to catalogue that bucket. Drive folders are a different case and still come across in full: a drive really is a tree of folders, and Marmot's GoogleDrive plugin catalogues it as one.
+Object storage comes across as the bucket alone. OpenMetadata models the prefixes inside a bucket as containers of their own, but Marmot's S3, GCS and Azure Blob plugins catalogue the bucket and nothing below it, so an imported prefix would sit in the catalog forever without a native run ever updating it. Each run reports how many it left out. Set `include_container_prefixes: true` to import the hierarchy anyway, which is worth doing when nothing else is going to catalogue that bucket.
 
-The drive itself is catalogued, and the folders at the top of it are linked to it, so a drive is browsable from its root. Drive documents are placed by their path rather than their OpenMetadata name, because OpenMetadata files some of them under the service instead of the folder they live in. Any folder named by a path that OpenMetadata holds no directory for is created too, marked `inferred_from_path`, so nothing is left sitting under a folder that is missing from the catalog.
+Drives are different and come across in full: a drive really is a tree of folders, and Marmot's GoogleDrive plugin catalogues it as one. The drive itself is catalogued, folders are linked up to its root, and documents are placed by their path rather than their OpenMetadata name, because OpenMetadata files some of them under the service instead of the folder they live in. Folders that exist only in a path are created too, marked `inferred_from_path`, so nothing dangles.
 
-Columns are part of the asset in Marmot rather than entities of their own, so a table with two hundred columns is one asset carrying two hundred columns, not two hundred and one things. OpenMetadata counts them separately, which is why its own totals are far larger than the number of assets an import produces.
+Columns are part of the asset in Marmot rather than entities of their own, so a table with two hundred columns is one asset carrying two hundred columns, not two hundred and one things. That is why OpenMetadata's own totals are far larger than the number of assets an import produces.
 
-Marmot ingestion runs cannot create teams, users, domains or data products as objects of their own, so those stay on the assets as metadata rather than becoming first class objects in Marmot. Data quality test cases and OpenMetadata's own usage analytics have no Marmot equivalent and are not imported.
+Marmot ingestion runs cannot create teams, users, domains or data products as objects of their own, so those stay on the assets as metadata. Data quality test cases and OpenMetadata's own usage analytics have no Marmot equivalent and are not imported.
 
-## Cutting Over from OpenMetadata
+## The Migration
 
-Moving off OpenMetadata is not a single switch, so this plugin is built to run on a schedule for as long as the move takes.
+A catalog migration fails when it has to happen all at once. This plugin is built to run on a schedule for as long as the move takes, so no single day has to be the day everything switches.
 
-**During the cutover, run it like any other pipeline.** Each run brings across whatever changed in OpenMetadata, so the two catalogs stay in step while people are still working in both. Re-running is safe: assets that have not changed are left alone.
+**1. Schedule the import.** Set it up as a recurring pipeline through the UI wizard, the CLI, Terraform, Pulumi or the REST API; the [Populating docs](/docs/Populating/) cover each. Everything is imported by default, and the configuration below covers scoping down to specific services or service types.
 
-**Anything written in Marmot survives every re-sync.** A description edited in Marmot is stored separately from the one the run imported, so the next sync refreshes the imported side and never overwrites the edit. The same holds for tags, owners and glossary terms added in Marmot.
+**2. Keep working in both catalogs.** Each run brings across whatever changed in OpenMetadata, so the two stay in step while people are still working in both. Re-running is safe: assets that have not changed are left alone. Anything written in Marmot survives every re-sync, because a description edited in Marmot is stored separately from the imported one, so the next sync refreshes the imported side and never overwrites the edit. The same holds for tags, owners and glossary terms added in Marmot.
 
-**Adopt each system as you go.** When you are ready to catalogue a system directly, add its own pipeline, for example the PostgreSQL plugin against the database OpenMetadata was describing. The imported assets and the native ones share an MRN, so the native run takes over the assets that are already there instead of creating a second copy of everything. Nothing needs to be deleted or re-pointed, and the descriptions people wrote stay put.
+**3. Adopt native plugins one system at a time.** When you are ready to catalogue a system directly, add its own pipeline, for example the [PostgreSQL plugin](/docs/Plugins/PostgreSQL) against the database OpenMetadata was describing. Imported and native assets share an identity, so the native run takes over the assets that are already there instead of creating a second copy. Nothing needs to be deleted or re-pointed, and the descriptions people wrote stay put.
 
-**When you are done, stop scheduling the run.** The imported assets stay exactly as they are.
+**4. Switch OpenMetadata off.** When nothing depends on it anymore, stop scheduling the run. The imported assets stay exactly as they are.
 
 <CalloutCard
   title="Stop the schedule, do not destroy the pipeline"
@@ -99,8 +101,6 @@ runs:
       jwt_token: "eyJraWQiOiJHYjM4OWEtOWY3Ni1nZGpzLWE5..."
       naming: qualified
 ```
-
-Technologies Marmot has no plugin for yet, such as Snowflake or Looker, are imported under their own provider name. Nothing is invented: an entity is only imported when Marmot already has an asset type that means the same thing.
 
 ## Getting a Token
 
