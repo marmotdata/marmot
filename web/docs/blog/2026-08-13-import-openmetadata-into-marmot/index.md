@@ -22,9 +22,19 @@ import { CalloutCard } from '@site/src/components/DocCard';
   <img src="/img/marmot-openmetadata-banner.png" alt="Marmot importing an OpenMetadata catalog" style={{maxWidth: '100%', borderRadius: '8px'}} />
 </div>
 
-This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](/docs/Plugins/OpenMetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. And this is where we get to walk the walk: Marmot runs for free what OpenMetadata makes you pay to keep running. The search cluster, the Airflow deployment, the fleet of services behind the catalog: gone. One Go binary on Postgres, and trying it costs you nothing. No big bang, no re-cataloging, nothing to undo if you walk away.
+This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](/docs/Plugins/OpenMetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. And this is where we get to walk the walk: Marmot runs for free what OpenMetadata makes you pay to keep running.
 
-We can make that promise because of what a catalog actually is. The most valuable thing in one is not the software, it is the years of curation inside it: the descriptions, the owners, the glossary the business argued over, the lineage. That work is yours, and it should be portable. This plugin is us acting like it.
+Don't take our word for it, see for yourself:
+
+<div style={{textAlign: 'center', margin: '2rem 0'}}>
+  <ThemedImg
+    lightSrc="/img/marmot-openmetadata-import-light.gif"
+    darkSrc="/img/marmot-openmetadata-import-dark.gif"
+    alt="One OpenMetadata import run filling an empty Marmot catalog with assets"
+  />
+</div>
+
+We built this plugin so you can try Marmot on your own catalog instead of a demo dataset. Everything you spent years curating in OpenMetadata, the descriptions, the owners, the glossary the business argued over, the lineage, is extracted in seconds and yours to play with in Marmot. If Marmot is not for you, turn it off and you have lost nothing.
 
 This post is the migration, start to finish.
 
@@ -73,6 +83,8 @@ resource "marmot_pipeline" "openmetadata" {
   cron_expression = "0 * * * *" # hourly
 }
 ```
+
+For injecting the token securely, use [ephemeral values and resources](https://www.hashicorp.com/en/blog/ephemeral-values-in-terraform), so the token never lands in your state or plan files.
 
 Everything is imported by default; the [configuration reference](/docs/Plugins/OpenMetadata) covers scoping down to specific services, and the same config works from the UI wizard, CLI, Pulumi and the REST API.
 
