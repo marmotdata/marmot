@@ -91,7 +91,7 @@
 			href: '/discover'
 		},
 		{
-			label: 'Data Sources',
+			label: 'Source Types',
 			value: Object.keys(summary.providers).length,
 			icon: 'material-symbols:cloud',
 			href: '/discover'
@@ -327,7 +327,7 @@
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 			{#each quickStats as stat (stat.label)}
-				<div class="glass-card rounded-xl p-6">
+				<a href={resolve(stat.href)} class="group glass-card-interactive rounded-xl p-6 block">
 					<div class="flex items-center justify-between mb-2">
 						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
 					</div>
@@ -338,8 +338,12 @@
 					{:else}
 						<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>
 					{/if}
-					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
-				</div>
+					<p
+						class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
+					>
+						{stat.label}
+					</p>
+				</a>
 			{/each}
 		</div>
 
@@ -616,7 +620,7 @@
 		<!-- Quick Stats -->
 		<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
 			{#each quickStats as stat (stat.label)}
-				<div class="glass-card rounded-xl p-6">
+				<a href={resolve(stat.href)} class="group glass-card-interactive rounded-xl p-6 block">
 					<div class="flex items-center justify-between mb-2">
 						<Icon icon={stat.icon} class="w-8 h-8 text-gray-400 dark:text-gray-500" />
 					</div>
@@ -627,8 +631,12 @@
 					{:else}
 						<div class="w-20 h-9 bg-gray-200 dark:bg-gray-700 animate-pulse rounded mb-1"></div>
 					{/if}
-					<p class="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.label}</p>
-				</div>
+					<p
+						class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-earthy-terracotta-700 dark:group-hover:text-earthy-terracotta-500 transition-colors"
+					>
+						{stat.label}
+					</p>
+				</a>
 			{/each}
 		</div>
 
