@@ -1179,6 +1179,64 @@ html[data-theme="dark"] .arch-marmot-card {
 }
 
 /* ============================================
+   Homepage context diagram
+
+   Tailwind's preflight is disabled, so its `border-*` utilities set a width
+   with no style and render nothing. Anything on the homepage that needs a
+   real line declares it here.
+   ============================================ */
+
+.diagram-hub {
+  border: 1px solid rgba(210, 90, 48, 0.22);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04),
+    0 10px 34px rgba(210, 90, 48, 0.07);
+}
+
+html[data-theme="dark"] .diagram-hub {
+  border-color: rgba(247, 136, 94, 0.28);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+}
+
+/* Vertical dashed connector, mobile diagram only */
+.diagram-rule-v {
+  width: 1px;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(232, 111, 66, 0.7) 50%,
+    transparent 50%
+  );
+  background-size: 1px 7px;
+  background-repeat: repeat-y;
+}
+
+html[data-theme="dark"] .diagram-rule-v {
+  background-image: linear-gradient(
+    to bottom,
+    rgba(247, 136, 94, 0.6) 50%,
+    transparent 50%
+  );
+}
+
+.plugin-chip {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.plugin-chip:hover {
+  border-color: rgba(210, 90, 48, 0.35);
+  background-color: rgba(210, 90, 48, 0.04);
+}
+
+html[data-theme="dark"] .plugin-chip {
+  border-color: rgba(255, 255, 255, 0.09);
+}
+
+html[data-theme="dark"] .plugin-chip:hover {
+  border-color: rgba(247, 136, 94, 0.35);
+  background-color: rgba(247, 136, 94, 0.07);
+}
+
+/* ============================================
    Section divider gradient
    ============================================ */
 
@@ -1355,6 +1413,17 @@ html[data-theme="dark"] .typing-dot {
 
 /* Reduced motion: show all messages immediately, no typing */
 @media (prefers-reduced-motion: reduce) {
+  .animate-flow,
+  .animate-flow-glow {
+    animation: none;
+  }
+
+  [data-animate] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
   .chat-animated .chat-msg {
     opacity: 1;
     transform: none;
