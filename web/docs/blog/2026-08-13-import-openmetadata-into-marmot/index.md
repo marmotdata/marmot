@@ -22,7 +22,7 @@ import { CalloutCard } from '@site/src/components/DocCard';
   <img src="/img/marmot-openmetadata-banner.png" alt="Marmot importing an OpenMetadata catalog" style={{maxWidth: '100%', borderRadius: '8px'}} />
 </div>
 
-This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](https://plugins.marmotdata.io/marmotdata/openmetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. Marmot runs for free what OpenMetadata makes you pay to keep running.
+This one is for everyone running OpenMetadata and curious about Marmot. The new [OpenMetadata plugin](https://plugins.marmotdata.io/marmotdata/openmetadata) imports your entire instance in one run, about five minutes of setup, and keeps syncing from OpenMetadata until the day you switch it off. Marmot does all of it for free.
 
 Don't take our word for it, see for yourself:
 
@@ -66,6 +66,8 @@ Descriptions, columns, tags, owners and domains come across on each asset, and n
 
 ## The migration
 
+If you do not have Marmot running yet, the [quick start](/docs/quick-start) gets you there with Docker Compose in a couple of minutes.
+
 ### 1. Schedule the import
 
 Grab a token in OpenMetadata under **Settings**, then **Bots**, and set the import up as a recurring pipeline, for example with the [Terraform provider](https://registry.terraform.io/providers/marmotdata/marmot/latest/docs):
@@ -90,7 +92,7 @@ Everything is imported by default; the [configuration reference](https://plugins
 
 ### 2. Keep working in both catalogs
 
-Each scheduled run brings across whatever changed in OpenMetadata, so the two stay in step for as long as the move takes. Re-running is safe, and anything written in Marmot survives every re-sync: an edited description is stored separately from the imported one, so the next run refreshes the imported side without touching the edit. The same holds for tags, owners and glossary terms added in Marmot. Curation never pauses for the migration.
+Each scheduled run brings across whatever changed in OpenMetadata, so the two stay in step for as long as the move takes. Re-running is safe, and anything written in Marmot stays as you left it: an edited description is stored separately from the imported one, so the next run refreshes the imported side without touching the edit. The same holds for tags, owners and glossary terms added in Marmot. Curation never pauses for the migration.
 
 ### 3. Adopt native plugins one system at a time
 
@@ -106,7 +108,7 @@ One warning for that last day: retire the plugin by removing its schedule, not w
 
 ## What you end up with
 
-The whole catalog in one graph, whichever system each piece came from. Here the path OpenMetadata held, a PostgreSQL table and a Kafka topic feeding a Snowflake mart feeding a Looker dashboard, survives the import intact:
+The whole catalog in one graph, whichever system each piece came from. Here is the path OpenMetadata held, a PostgreSQL table and a Kafka topic feeding a Snowflake mart feeding a Looker dashboard, rendered in Marmot:
 
 <div style={{textAlign: 'center', margin: '2rem 0'}}>
   <ThemedImg
@@ -128,7 +130,7 @@ And the glossary your business spent months agreeing on, with definitions, synon
 
 All of it runs on one Go binary and a Postgres database, browsable in the UI and served to Claude, Cursor or any other assistant over [MCP](/docs/MCP/). If you are still weighing the move itself, the [full comparison](/resources/marmot-vs-openmetadata) covers footprint, MCP and connectors line by line.
 
-The plugin is experimental for now. If you run it against a real OpenMetadata instance, I want to hear what came across wrong and what got skipped that should not have been. The fastest way to reach us is Discord.
+The plugin is experimental for now. If you run it against a real OpenMetadata instance, we want to hear what came across wrong and what got skipped that should not have been. The fastest way to reach us is Discord.
 
 <CalloutCard
   title="Join the Community"
