@@ -383,6 +383,7 @@ func (s *service) ProcessEntities(ctx context.Context, runID string, assets []Cr
 				ExternalLinks:    convertToAssetExternalLinks(ast.ExternalLinks),
 				Query:            ast.Query,
 				QueryLanguage:    ast.QueryLanguage,
+				Sources:          ast.Sources,
 				SkipNotification: true,
 			}
 			// Not cached when another writer created the asset after the fetch above.
