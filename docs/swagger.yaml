@@ -7281,4 +7281,14 @@ paths:
       summary: Update user password
       tags:
       - users
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-API-KEY
+    type: apiKey
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT.
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"
