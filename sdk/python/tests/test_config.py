@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from marmot._config import (
+from marmot.config import (
     config_dir,
     load_cached_token,
     load_contexts,
@@ -84,7 +84,7 @@ def test_load_cached_token_parses_go_rfc3339(isolated_config: Path) -> None:
     )
     cached = load_cached_token("prod")
     assert cached is not None
-    assert cached.access_token == "cached-jwt"
+    assert cached.token == "cached-jwt"
     assert not cached.is_expired()
 
 
@@ -109,18 +109,18 @@ def test_cached_token_is_expired(isolated_config: Path) -> None:
 
 
 def test_resolve_context_explicit_wins(monkeypatch: pytest.MonkeyPatch) -> None:
-    from marmot._config import Context
+    from marmot.config import Context
 
     contexts = {
         "prod": Context(name="prod", host="https://prod"),
         "stg": Context(name="stg", host="https://stg"),
     }
     monkeypatch.setenv("MARMOT_CONTEXT", "stg")
-    assert resolve_context(explicit="prod", contexts=contexts, active="stg") == contexts["prod"]
+    assert resolve_context(context_name="prod", contexts=contexts, active="stg") == contexts["prod"]
 
 
 def test_resolve_context_env_over_active(monkeypatch: pytest.MonkeyPatch) -> None:
-    from marmot._config import Context
+    from marmot.config import Context
 
     contexts = {
         "prod": Context(name="prod", host="https://prod"),
@@ -133,7 +133,7 @@ def test_resolve_context_env_over_active(monkeypatch: pytest.MonkeyPatch) -> Non
 
 
 def test_resolve_context_falls_back_to_active() -> None:
-    from marmot._config import Context
+    from marmot.config import Context
 
     contexts = {"prod": Context(name="prod", host="https://prod")}
     assert resolve_context(contexts=contexts, active="prod", env={}) == contexts["prod"]

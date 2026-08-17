@@ -19,6 +19,9 @@ from typing import Any
 
 import yaml
 
+ENVIRONMENT_MARMOT_CONTEXT = "MARMOT_CONTEXT"
+ENVIRONMENT_HOST = "MARMOT_HOST"
+
 
 @dataclass(frozen=True)
 class Context:
@@ -32,8 +35,8 @@ class Context:
 class CachedToken:
     """An OAuth token cached by `marmot login` for a given context."""
 
-    access_token: str
-    token_type: str
+    token: str
+    token_scheme: str
     expires_at: datetime
 
     def is_expired(self, *, leeway_seconds: int = 30) -> bool:
@@ -115,10 +118,10 @@ def load_cached_token(context_name: str) -> CachedToken | None:
     if not isinstance(entry, dict):
         return None
 
-    access = entry.get("access_token")
+    token = entry.get("access_token")
     token_type = entry.get("token_type") or "Bearer"
     expires_raw = entry.get("expires_at")
-    if not isinstance(access, str) or not isinstance(expires_raw, str):
+    if not isinstance(token, str) or not isinstance(expires_raw, str):
         return None
 
     try:
@@ -126,12 +129,11 @@ def load_cached_token(context_name: str) -> CachedToken | None:
     except ValueError:
         return None
 
-    return CachedToken(access_token=access, token_type=token_type, expires_at=expires_at)
+    return CachedToken(token=token, token_scheme=token_type, expires_at=expires_at)
 
 
 def resolve_context(
-    *,
-    explicit: str | None = None,
+    context_name: str | None = None,
     contexts: dict[str, Context] | None = None,
     active: str | None = None,
     env: dict[str, str] | None = None,
@@ -145,7 +147,7 @@ def resolve_context(
     if env is None:
         env = dict(os.environ)
 
-    name = explicit or env.get("MARMOT_CONTEXT") or active
+    name = context_name or env.get(ENVIRONMENT_MARMOT_CONTEXT) or active
     if not name:
         return None
     return contexts.get(name)

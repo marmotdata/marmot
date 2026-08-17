@@ -17,7 +17,7 @@ import pytest
 from marmot.auth import Credential
 from marmot.client import Client
 from marmot.integrations.claude_agent import MarmotAgentTracker
-from marmot.integrations.claude_agent._transcript import summarize_transcript
+from marmot.integrations.claude_agent.transcript import summarize_transcript
 
 
 @pytest.fixture

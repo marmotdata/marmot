@@ -20,7 +20,8 @@ import sys
 
 from claude_agent_sdk import ClaudeAgentOptions, ClaudeSDKClient
 
-from marmot import Client, resolve
+from marmot import Client
+from marmot.auth.credential import auth_resolver
 from marmot.integrations.claude_agent import MarmotAgentTracker
 
 DEFAULT_PROMPT = (
@@ -32,7 +33,7 @@ DEFAULT_PROMPT = (
 async def main() -> None:
     prompt = " ".join(sys.argv[1:]) or DEFAULT_PROMPT
 
-    base_url, credential = resolve(base_url=None)
+    base_url, credential = auth_resolver(base_url=None)
     client = Client(base_url=base_url, credential=credential)
     tracker = MarmotAgentTracker(
         client,

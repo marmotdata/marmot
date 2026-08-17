@@ -1,106 +1,128 @@
-"""Public client surface for the Marmot SDK."""
+"""Bridge between the public auth surface and the generated client.
+
+- Two auth schemes (X-API-Key for keys, Bearer for OAuth/workload tokens)
+- Refresh-on-401
+
+Both are handled by customizing the generated ``ApiClient``
+"""
 
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any, Final
 
-import httpx
+from typing_extensions import Self
 
-from marmot._adapter import make_gen_client, make_marmot_auth
-from marmot.auth import Credential, resolve
-from marmot.auth.workload import WorkloadIdentitySource
-from marmot.resources.admin import AdminResource
-from marmot.resources.agent_runs import AgentRunsResource
-from marmot.resources.api_keys import APIKeysResource
-from marmot.resources.assets import AssetsResource
-from marmot.resources.glossary import GlossaryResource
-from marmot.resources.lineage import LineageResource
-from marmot.resources.metrics import MetricsResource
-from marmot.resources.owners import OwnersResource
-from marmot.resources.runs import RunsResource
-from marmot.resources.search import SearchResource
-from marmot.resources.teams import TeamsResource
-from marmot.resources.users import UsersResource
+from marmot.auth import (
+    Credential,
+    Refreshable,
+    SecurityScheme,
+    resolve_credential,
+    resolve_host,
+)
+from marmot.errors import get_exception_type
+from marmot.generated import ApiClient, ApiException, ApiResponse, Configuration, rest
+from marmot.generated.api_response import T as ApiResponseT
 
-_USER_AGENT = "marmot-sdk-py"
+if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from marmot.auth.workload import WorkloadIdentitySource
+
+_SCHEME_PREFIXES: Final[dict[SecurityScheme, str]] = {
+    SecurityScheme.apikey: "",
+    SecurityScheme.bearer: "Bearer",
+}
 
 
-class Client:
-    """Marmot client.
-
-    Construct via :func:`connect`. Each resource is exposed as an attribute
-    (``client.assets``, ``client.glossary``, ...). ``client.search`` is a
-    callable shortcut for ``client.search.query``.
-    """
-
+class AuthenticatedApiClient(ApiClient):
     def __init__(
         self,
-        *,
-        base_url: str,
+        host: str,
         credential: Credential,
-        timeout: float = 30.0,
-        http_client: httpx.Client | None = None,
+        configuration: Configuration | None = None,
+        **kwargs: Any,
     ) -> None:
-        self._base_url = base_url.rstrip("/")
-        self._http = http_client if http_client is not None else httpx.Client(timeout=timeout)
-        self._owns_http = http_client is None
-        self._http.auth = make_marmot_auth(credential)
-        self._http.base_url = httpx.URL(f"{self._base_url}/api/v1")
-        self._http.headers.setdefault("User-Agent", _USER_AGENT)
-        self._gen = make_gen_client(self._base_url, self._http)
-        self.admin = AdminResource(self._gen)
-        self.agent_runs = AgentRunsResource(self._gen)
-        self.api_keys = APIKeysResource(self._gen)
-        self.assets = AssetsResource(self._gen)
-        self.glossary = GlossaryResource(self._gen)
-        self.lineage = LineageResource(self._gen)
-        self.metrics = MetricsResource(self._gen)
-        self.owners = OwnersResource(self._gen)
-        self.runs = RunsResource(self._gen)
-        self.search = SearchResource(self._gen)
-        self.teams = TeamsResource(self._gen)
-        self.users = UsersResource(self._gen)
+        if configuration is None:
+            configuration = Configuration(host=host)
+        configuration.api_key_prefix[credential.scheme] = _SCHEME_PREFIXES[credential.scheme]
 
-    @property
-    def base_url(self) -> str:
-        return self._base_url
+        super().__init__(configuration, **kwargs)
+        self.credential = credential
+        self._store_token(credential.get_token())
 
-    def close(self) -> None:
-        if self._owns_http:
-            self._http.close()
+    @classmethod
+    def connect(
+        cls,
+        host: str | None = None,
+        api_key: str | None = None,
+        token: str | None = None,
+        context_name: str | None = None,
+        api_client: ApiClient | None = None,
+        sources: Sequence[WorkloadIdentitySource] | None = None,
+        **kwargs: Any,
+    ) -> Self:
+        """Build a client from the first credential that resolves. See :func:`resolve_credential`."""
 
-    def __enter__(self) -> Client:
-        return self
+        resolved_host = resolve_host(host, context_name)
+        credential = resolve_credential(
+            resolved_host,
+            api_key=api_key,
+            token=token,
+            context_name=context_name,
+            api_client=api_client,
+            sources=sources,
+        )
+        return cls(resolved_host, credential, **kwargs)
 
-    def __exit__(self, *_: Any) -> None:
-        self.close()
+    async def call_api(
+        self,
+        method: str,
+        url: str,
+        header_params: dict[str, str] | None = None,
+        *args: Any,
+        **kwargs: Any,
+    ) -> rest.RESTResponse:
+        refreshable = self.credential if isinstance(self.credential, Refreshable) else None
+        if refreshable is not None and refreshable.is_stale:
+            await self._refresh_into(refreshable, header_params)
 
+        response = await super().call_api(method, url, header_params, *args, **kwargs)
+        if response.status != 401 or refreshable is None:
+            return response
 
-def connect(
-    *,
-    base_url: str | None = None,
-    token: str | None = None,
-    api_key: str | None = None,
-    context: str | None = None,
-    timeout: float = 30.0,
-    workload_sources: list[WorkloadIdentitySource] | None = None,
-) -> Client:
-    """Construct a Marmot client with credentials resolved from the standard chain.
+        await response.read()  # type: ignore[no-untyped-call]  # drain before discarding
+        await self._refresh_into(refreshable, header_params)
+        return await super().call_api(method, url, header_params, *args, **kwargs)
 
-    Resolution order:
+    def response_deserialize(
+        self,
+        response_data: rest.RESTResponse,
+        response_types_map: dict[str, ApiResponseT] | None = None,
+    ) -> ApiResponse[ApiResponseT]:
+        try:
+            return super().response_deserialize(response_data, response_types_map)
+        except ApiException as e:
+            raise get_exception_type(e.status)(
+                message=e.reason or str(e), status_code=e.status
+            ) from e
 
-    1. Explicit ``api_key`` / ``token`` kwargs
-    2. Env vars: ``MARMOT_API_KEY``, ``MARMOT_TOKEN``, ``MARMOT_HOST``, ``MARMOT_CONTEXT``
-    3. Cached OAuth token in ``~/.config/marmot/credentials.json`` (written by ``marmot login``)
-    4. Workload identity → RFC 8693 token exchange
+    async def _refresh_into(
+        self, credential: Refreshable, header_params: dict[str, str] | None
+    ) -> None:
+        self._store_token(await credential.refresh())
+        self._reapply_auth_headers(header_params)
 
-    Raises :class:`marmot.AuthError` if no credential resolves.
-    """
-    resolved_url, cred = resolve(
-        base_url=base_url,
-        api_key=api_key,
-        token=token,
-        context=context,
-        workload_sources=workload_sources,
-    )
-    return Client(base_url=resolved_url, credential=cred, timeout=timeout)
+    def _store_token(self, token: str) -> None:
+        self.configuration.api_key[self.credential.scheme] = token
+
+    def _reapply_auth_headers(self, header_params: dict[str, str] | None) -> None:
+        """Replace the token ``param_serialize`` applied before we refreshed it.
+
+        Only headers already present are updated: whether an operation sends a
+        credential at all is decided from its ``security`` requirement, upstream.
+        """
+        if header_params is None:
+            return
+        for setting in self.configuration.auth_settings().values():
+            if setting["in"] == "header" and setting["value"] and setting["key"] in header_params:
+                header_params[setting["key"]] = setting["value"]
