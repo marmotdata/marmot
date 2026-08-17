@@ -74,6 +74,16 @@ import (
 // @BasePath /api/v1
 // @license.name MIT
 // @license.url https://opensource.org/license/MIT
+
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-API-KEY
+
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Type "Bearer" followed by a space and JWT.
+
 type Server struct {
 	config         *config.Config
 	metricsService *metrics.Service
