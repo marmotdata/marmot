@@ -112,28 +112,38 @@ sdk-py-install: sdk-py-deps
 	cd $(SDK_PY_DIR) && uv sync --all-extras
 
 sdk-py-generate: swagger sdk-py-install $(SDK_OPENAPI3)
-	cd $(SDK_PY_DIR) && rm -rf src/marmot/_gen && \
-		uv run openapi-python-client generate \
-			--path ../../$(SDK_OPENAPI3) \
-			--config codegen.yaml \
-			--overwrite \
-			--meta none \
-			--output-path src/marmot/_gen
+# when bumping openapi-generator-cli, check for any changes in dependencies:
+# generate to tmp path with `generateSourceCodeOnly=true` and cross-reference marmots/generated pyproject.toml
+# when adding an API version, add namespacing
+	rm -rf sdk/python/src/marmot/generated && \
+	docker run --rm -v "$${PWD}:/local" openapitools/openapi-generator-cli:v7.24.0 generate \
+		-i /local/$(SDK_OPENAPI3) \
+		-g python \
+		-o /local/_tmp \
+		--http-user-agent marmot-sdk-py \
+		--library httpx \
+		--additional-properties=lazyImports=true,generateSourceCodeOnly=true,packageName=marmot.generated
+	mv _tmp/marmot/generated sdk/python/src/marmot/ && rm -rf _tmp/
+	make sdk-py-format
 
-sdk-py-lint: sdk-py-generate
+sdk-py-format:
+	cd $(SDK_PY_DIR) && uv run ruff check . --fix --unsafe-fixes
+	cd $(SDK_PY_DIR) && uv run ruff format
+
+sdk-py-lint:
 	cd $(SDK_PY_DIR) && uv run ruff check .
 	cd $(SDK_PY_DIR) && uv run ruff format --check .
 	cd $(SDK_PY_DIR) && uv run mypy src/marmot
 	cd $(SDK_PY_DIR) && uv run pip-audit --skip-editable
 
-sdk-py-test: sdk-py-generate
+sdk-py-test:
 	cd $(SDK_PY_DIR) && uv run pytest
 
-sdk-py-build: sdk-py-generate
+sdk-py-build:
 	cd $(SDK_PY_DIR) && uv build
 
 sdk-py-clean:
-	rm -rf $(SDK_PY_DIR)/src/marmot/_gen $(SDK_PY_DIR)/dist $(SDK_PY_DIR)/.venv
+	rm -rf $(SDK_PY_DIR)/dist
 
 sdk-ts-deps:
 	@command -v pnpm >/dev/null 2>&1 || (echo "pnpm not installed; install via 'npm i -g pnpm' or corepack" && exit 1)
