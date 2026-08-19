@@ -31,7 +31,7 @@ class OwnerRequest(BaseModel):
     __properties: ClassVar[list[str]] = ["id", "type"]
 
     @field_validator("type")
-    def type_validate_enum(self, value):
+    def type_validate_enum(cls, value):
         """Validates the enum"""
         if value not in set(["user", "team"]):
             raise ValueError("must be one of enum values ('user', 'team')")
