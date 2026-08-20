@@ -21,7 +21,9 @@ type GlossaryTerm struct {
 	// created at
 	CreatedAt string `json:"created_at,omitempty"`
 
-	// definition
+	// Definition is what the last run wrote. On a term a person has
+	// worded themselves the read path serves UserDefinition here instead,
+	// so a caller always gets the wording the catalog stands behind.
 	Definition string `json:"definition,omitempty"`
 
 	// deleted at
@@ -50,6 +52,10 @@ type GlossaryTerm struct {
 
 	// updated at
 	UpdatedAt string `json:"updated_at,omitempty"`
+
+	// UserDefinition is the wording a person gave the term. Ingestion
+	// reads it and never writes it, so it survives every run.
+	UserDefinition string `json:"user_definition,omitempty"`
 }
 
 // Validate validates this glossary term

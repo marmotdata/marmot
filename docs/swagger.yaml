@@ -2748,100 +2748,6 @@ paths:
       summary: Record agent run
       tags:
       - agents
-  /api/v1/assets/preview/{id}:
-    get:
-      description: Fetches sample data from the asset's data source. Requires assets:preview
-        permission.
-      parameters:
-      - description: Asset ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/PreviewResponse'
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "403":
-          description: Missing assets:preview permission
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "404":
-          description: Not Found
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "501":
-          description: Data preview not supported for this asset
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Get preview data for an asset
-      tags:
-      - assets
-  /api/v1/lineage:
-    post:
-      consumes:
-      - application/json
-      description: Process OpenLineage run events and update assets/lineage accordingly
-      parameters:
-      - description: OpenLineage run event
-        in: body
-        name: event
-        required: true
-        schema:
-          $ref: '#/definitions/RunEvent'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: Event processed successfully
-        "400":
-          description: Bad Request
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-        "500":
-          description: Internal Server Error
-          schema:
-            $ref: '#/definitions/ErrorResponse'
-      summary: Ingest OpenLineage event
-      tags:
-      - lineage
-  /api/v1/plugins:
-    get:
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/ListPluginsResponse'
-      summary: List registered plugins
-      tags:
-      - plugins
-  /api/v1/plugins/aws/credentials/status:
-    get:
-      description: Detects if AWS credentials are available from environment or config
-        files
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/AWSCredentialStatus'
-      summary: Get AWS credential detection status
-      tags:
-      - plugins
   /asset-rules:
     post:
       consumes:
@@ -3528,6 +3434,46 @@ paths:
           schema:
             $ref: '#/definitions/ErrorResponse'
       summary: Get user's assets
+      tags:
+      - assets
+  /assets/preview/{id}:
+    get:
+      description: Fetches sample data from the asset's data source. Requires assets:preview
+        permission.
+      parameters:
+      - description: Asset ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/PreviewResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "403":
+          description: Missing assets:preview permission
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "501":
+          description: Data preview not supported for this asset
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Get preview data for an asset
       tags:
       - assets
   /assets/qualified-name/{qualifiedName}:
@@ -4598,6 +4544,34 @@ paths:
       summary: Validate plugin configuration
       tags:
       - ingestion
+  /lineage:
+    post:
+      consumes:
+      - application/json
+      description: Process OpenLineage run events and update assets/lineage accordingly
+      parameters:
+      - description: OpenLineage run event
+        in: body
+        name: event
+        required: true
+        schema:
+          $ref: '#/definitions/RunEvent'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Event processed successfully
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/ErrorResponse'
+      summary: Ingest OpenLineage event
+      tags:
+      - lineage
   /lineage/assets/{id}:
     get:
       consumes:
@@ -5072,6 +5046,32 @@ paths:
       summary: Destroy pipeline
       tags:
       - pipelines
+  /plugins:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/ListPluginsResponse'
+      summary: List registered plugins
+      tags:
+      - plugins
+  /plugins/aws/credentials/status:
+    get:
+      description: Detects if AWS credentials are available from environment or config
+        files
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/AWSCredentialStatus'
+      summary: Get AWS credential detection status
+      tags:
+      - plugins
   /products/:
     post:
       consumes:
