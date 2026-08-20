@@ -21,6 +21,8 @@ type AssetSummaryResponse struct {
 // @Tags assets
 // @Accept json
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetSummaryResponse
 // @Failure 500 {object} common.ErrorResponse
 // @Router /assets/summary [get]

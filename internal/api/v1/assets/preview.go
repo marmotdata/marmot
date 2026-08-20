@@ -28,13 +28,15 @@ type PreviewResponse struct {
 // @Tags assets
 // @Produce json
 // @Param id path string true "Asset ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} PreviewResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 403 {object} common.ErrorResponse "Missing assets:preview permission"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 501 {object} common.ErrorResponse "Data preview not supported for this asset"
 // @Failure 500 {object} common.ErrorResponse
-// @Router /api/v1/assets/preview/{id} [get]
+// @Router /assets/preview/{id} [get]
 func (h *Handler) getAssetPreview(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	assetID := r.PathValue("id")

@@ -21,6 +21,14 @@ const docTemplate = `{
     "paths": {
         "/admin/search/reindex": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Check whether a search reindex is currently running and whether Elasticsearch is configured.",
                 "produces": [
                     "application/json"
@@ -51,6 +59,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Trigger a full reindex from PostgreSQL to Elasticsearch. The reindex runs asynchronously in the background. Only one reindex can run at a time.",
                 "produces": [
                     "application/json"
@@ -95,6 +111,14 @@ const docTemplate = `{
         },
         "/agents/runs": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -128,6 +152,14 @@ const docTemplate = `{
         },
         "/agents/{asset_id}/activity": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -162,6 +194,14 @@ const docTemplate = `{
         },
         "/agents/{asset_id}/runs": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -202,6 +242,14 @@ const docTemplate = `{
         },
         "/agents/{asset_id}/stats": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -234,149 +282,16 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/assets/preview/{id}": {
-            "get": {
-                "description": "Fetches sample data from the asset's data source. Requires assets:preview permission.",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Get preview data for an asset",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Asset ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/PreviewResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Missing assets:preview permission",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "501": {
-                        "description": "Data preview not supported for this asset",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/lineage": {
-            "post": {
-                "description": "Process OpenLineage run events and update assets/lineage accordingly",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "lineage"
-                ],
-                "summary": "Ingest OpenLineage event",
-                "parameters": [
-                    {
-                        "description": "OpenLineage run event",
-                        "name": "event",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/RunEvent"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Event processed successfully"
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/plugins": {
-            "get": {
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "plugins"
-                ],
-                "summary": "List registered plugins",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/ListPluginsResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/api/v1/plugins/aws/credentials/status": {
-            "get": {
-                "description": "Detects if AWS credentials are available from environment or config files",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "plugins"
-                ],
-                "summary": "Get AWS credential detection status",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/AWSCredentialStatus"
-                        }
-                    }
-                }
-            }
-        },
         "/asset-rules": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new asset rule that applies enrichments to matching assets",
                 "consumes": [
                     "application/json"
@@ -429,6 +344,14 @@ const docTemplate = `{
         },
         "/asset-rules/assets/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the list of asset IDs matched by an asset rule",
                 "produces": [
                     "application/json"
@@ -485,6 +408,14 @@ const docTemplate = `{
         },
         "/asset-rules/list": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "List all asset rules with pagination",
                 "produces": [
                     "application/json"
@@ -527,6 +458,14 @@ const docTemplate = `{
         },
         "/asset-rules/preview": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Preview which assets would match a rule configuration",
                 "consumes": [
                     "application/json"
@@ -573,6 +512,14 @@ const docTemplate = `{
         },
         "/asset-rules/search": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Search asset rules by name",
                 "produces": [
                     "application/json"
@@ -621,6 +568,14 @@ const docTemplate = `{
         },
         "/asset-rules/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get an asset rule by ID",
                 "produces": [
                     "application/json"
@@ -660,6 +615,14 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an existing asset rule",
                 "consumes": [
                     "application/json"
@@ -723,6 +686,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an asset rule by ID",
                 "tags": [
                     "asset-rules"
@@ -758,6 +729,14 @@ const docTemplate = `{
         },
         "/assets": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new asset in the system",
                 "consumes": [
                     "application/json"
@@ -810,6 +789,14 @@ const docTemplate = `{
         },
         "/assets/by-glossary-term/{term_id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve all assets associated with a specific glossary term",
                 "produces": [
                     "application/json"
@@ -860,6 +847,14 @@ const docTemplate = `{
         },
         "/assets/documentation": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create or update documentation for an asset",
                 "consumes": [
                     "application/json"
@@ -906,6 +901,14 @@ const docTemplate = `{
         },
         "/assets/documentation/batch": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create or update documentation for multiple assets",
                 "consumes": [
                     "application/json"
@@ -952,6 +955,14 @@ const docTemplate = `{
         },
         "/assets/documentation/{mrn}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get documentation for a specific asset",
                 "produces": [
                     "application/json"
@@ -997,6 +1008,14 @@ const docTemplate = `{
         },
         "/assets/lookup/{type}/{service}/{name}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get an asset by its type, service (provider), and name",
                 "produces": [
                     "application/json"
@@ -1052,6 +1071,14 @@ const docTemplate = `{
         },
         "/assets/match-pattern": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Find assets matching a pattern",
                 "produces": [
                     "application/json"
@@ -1103,6 +1130,14 @@ const docTemplate = `{
         },
         "/assets/my-assets": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get assets owned by the current user or their teams",
                 "produces": [
                     "application/json"
@@ -1149,8 +1184,83 @@ const docTemplate = `{
                 }
             }
         },
+        "/assets/preview/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Fetches sample data from the asset's data source. Requires assets:preview permission.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get preview data for an asset",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/PreviewResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Missing assets:preview permission",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "501": {
+                        "description": "Data preview not supported for this asset",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/assets/qualified-name/{qualifiedName}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get detailed information about a specific asset using its qualified name",
                 "consumes": [
                     "application/json"
@@ -1195,6 +1305,14 @@ const docTemplate = `{
         },
         "/assets/search": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Search for assets using query string and filters",
                 "consumes": [
                     "application/json"
@@ -1289,6 +1407,14 @@ const docTemplate = `{
         },
         "/assets/suggestions/metadata/fields": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get suggestions for metadata fields and their types",
                 "produces": [
                     "application/json"
@@ -1318,6 +1444,14 @@ const docTemplate = `{
         },
         "/assets/suggestions/metadata/values": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get suggestions for values of a specific metadata field",
                 "produces": [
                     "application/json"
@@ -1375,6 +1509,14 @@ const docTemplate = `{
         },
         "/assets/suggestions/tags": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get suggestions for asset tags",
                 "produces": [
                     "application/json"
@@ -1419,6 +1561,14 @@ const docTemplate = `{
         },
         "/assets/summary": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the total count of assets by type",
                 "consumes": [
                     "application/json"
@@ -1448,6 +1598,14 @@ const docTemplate = `{
         },
         "/assets/tags/{id}": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Add a new tag to an existing asset",
                 "consumes": [
                     "application/json"
@@ -1499,6 +1657,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Remove a tag from an existing asset",
                 "consumes": [
                     "application/json"
@@ -1552,6 +1718,14 @@ const docTemplate = `{
         },
         "/assets/terms/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve all glossary terms associated with an asset",
                 "produces": [
                     "application/json"
@@ -1588,6 +1762,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Associate one or more glossary terms with an asset",
                 "consumes": [
                     "application/json"
@@ -1642,6 +1824,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Remove a glossary term association from an asset",
                 "consumes": [
                     "application/json"
@@ -1698,6 +1888,14 @@ const docTemplate = `{
         },
         "/assets/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get detailed information about a specific asset",
                 "consumes": [
                     "application/json"
@@ -1740,6 +1938,14 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an existing asset's information",
                 "consumes": [
                     "application/json"
@@ -1797,6 +2003,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an asset from the system",
                 "consumes": [
                     "application/json"
@@ -1844,6 +2058,14 @@ const docTemplate = `{
         },
         "/assets/{id}/run-history": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get paginated run history for a specific asset",
                 "produces": [
                     "application/json"
@@ -1905,6 +2127,14 @@ const docTemplate = `{
         },
         "/assets/{id}/run-history/histogram": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get histogram data for asset run history over specified period",
                 "produces": [
                     "application/json"
@@ -2081,6 +2311,14 @@ const docTemplate = `{
         },
         "/glossary/": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new glossary term with name, definition, and optional metadata",
                 "consumes": [
                     "application/json"
@@ -2139,6 +2377,14 @@ const docTemplate = `{
         },
         "/glossary/ancestors/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve all ancestor terms of a glossary term (parent chain)",
                 "produces": [
                     "application/json"
@@ -2187,6 +2433,14 @@ const docTemplate = `{
         },
         "/glossary/children/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve all child terms of a glossary term",
                 "produces": [
                     "application/json"
@@ -2235,6 +2489,14 @@ const docTemplate = `{
         },
         "/glossary/list": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve a paginated list of all glossary terms",
                 "produces": [
                     "application/json"
@@ -2277,6 +2539,14 @@ const docTemplate = `{
         },
         "/glossary/search": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Search for glossary terms by query string and filters",
                 "produces": [
                     "application/json"
@@ -2337,6 +2607,14 @@ const docTemplate = `{
         },
         "/glossary/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve a glossary term by its ID",
                 "produces": [
                     "application/json"
@@ -2382,6 +2660,14 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an existing glossary term by its ID",
                 "consumes": [
                     "application/json"
@@ -2439,6 +2725,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a glossary term by its ID",
                 "produces": [
                     "application/json"
@@ -2489,6 +2783,14 @@ const docTemplate = `{
         },
         "/ingestion/runs": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2546,6 +2848,14 @@ const docTemplate = `{
         },
         "/ingestion/runs/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2592,6 +2902,14 @@ const docTemplate = `{
         },
         "/ingestion/runs/{id}/cancel": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "tags": [
                     "ingestion"
                 ],
@@ -2632,6 +2950,14 @@ const docTemplate = `{
         },
         "/ingestion/runs/{id}/entities": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2691,6 +3017,14 @@ const docTemplate = `{
         },
         "/ingestion/schedules": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2740,6 +3074,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -2791,6 +3133,14 @@ const docTemplate = `{
         },
         "/ingestion/schedules/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -2835,6 +3185,14 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -2897,6 +3255,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "tags": [
                     "ingestion"
                 ],
@@ -2937,6 +3303,14 @@ const docTemplate = `{
         },
         "/ingestion/schedules/{id}/trigger": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "tags": [
                     "ingestion"
                 ],
@@ -2980,6 +3354,14 @@ const docTemplate = `{
         },
         "/ingestion/validate": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "consumes": [
                     "application/json"
                 ],
@@ -3023,8 +3405,67 @@ const docTemplate = `{
                 }
             }
         },
+        "/lineage": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Process OpenLineage run events and update assets/lineage accordingly",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "lineage"
+                ],
+                "summary": "Ingest OpenLineage event",
+                "parameters": [
+                    {
+                        "description": "OpenLineage run event",
+                        "name": "event",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RunEvent"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Event processed successfully"
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/lineage/assets/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get upstream and downstream lineage for a specific asset",
                 "consumes": [
                     "application/json"
@@ -3101,6 +3542,14 @@ const docTemplate = `{
         },
         "/lineage/batch": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create lineage edges in batch",
                 "consumes": [
                     "application/json"
@@ -3147,6 +3596,14 @@ const docTemplate = `{
         },
         "/lineage/direct": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a direct lineage connection between two assets and returns the created edge",
                 "consumes": [
                     "application/json"
@@ -3193,6 +3650,14 @@ const docTemplate = `{
         },
         "/lineage/direct/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a specific direct lineage connection by its ID",
                 "consumes": [
                     "application/json"
@@ -3236,6 +3701,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a direct lineage connection by its ID",
                 "consumes": [
                     "application/json"
@@ -3278,6 +3751,14 @@ const docTemplate = `{
         },
         "/metrics": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get aggregated metrics for dashboard display",
                 "consumes": [
                     "application/json"
@@ -3364,6 +3845,14 @@ const docTemplate = `{
         },
         "/metrics/assets/by-owner": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get asset counts grouped by owner",
                 "produces": [
                     "application/json"
@@ -3384,6 +3873,14 @@ const docTemplate = `{
         },
         "/metrics/assets/by-provider": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get asset counts grouped by provider",
                 "produces": [
                     "application/json"
@@ -3404,6 +3901,14 @@ const docTemplate = `{
         },
         "/metrics/assets/by-type": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get asset counts grouped by type",
                 "produces": [
                     "application/json"
@@ -3424,6 +3929,14 @@ const docTemplate = `{
         },
         "/metrics/assets/total": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the total number of assets",
                 "produces": [
                     "application/json"
@@ -3444,6 +3957,14 @@ const docTemplate = `{
         },
         "/metrics/assets/with-schemas": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the count of assets that have schemas defined",
                 "produces": [
                     "application/json"
@@ -3464,6 +3985,14 @@ const docTemplate = `{
         },
         "/metrics/top-assets": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the most viewed assets",
                 "produces": [
                     "application/json"
@@ -3510,6 +4039,14 @@ const docTemplate = `{
         },
         "/metrics/top-queries": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the most popular search queries",
                 "produces": [
                     "application/json"
@@ -3618,6 +4155,14 @@ const docTemplate = `{
         },
         "/owners/search": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Search for asset owners (users and teams)",
                 "consumes": [
                     "application/json"
@@ -3669,6 +4214,14 @@ const docTemplate = `{
         },
         "/permissions": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "List all defined permissions grouped by resource type",
                 "produces": [
                     "application/json"
@@ -3698,6 +4251,14 @@ const docTemplate = `{
         },
         "/pipelines/{pipelineName}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete all resources ever created by a pipeline (across all sources)",
                 "produces": [
                     "application/json"
@@ -3725,8 +4286,55 @@ const docTemplate = `{
                 }
             }
         },
+        "/plugins": {
+            "get": {
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugins"
+                ],
+                "summary": "List registered plugins",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/ListPluginsResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/plugins/aws/credentials/status": {
+            "get": {
+                "description": "Detects if AWS credentials are available from environment or config files",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "plugins"
+                ],
+                "summary": "Get AWS credential detection status",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AWSCredentialStatus"
+                        }
+                    }
+                }
+            }
+        },
         "/products/": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new data product with owners and optional membership rules",
                 "consumes": [
                     "application/json"
@@ -3785,6 +4393,14 @@ const docTemplate = `{
         },
         "/products/assets/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the manually added assets of a data product",
                 "produces": [
                     "application/json"
@@ -3844,6 +4460,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Manually add assets to a data product",
                 "consumes": [
                     "application/json"
@@ -3912,6 +4536,14 @@ const docTemplate = `{
         },
         "/products/assets/{id}/{assetId}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Remove a manually added asset from a data product",
                 "produces": [
                     "application/json"
@@ -3969,6 +4601,14 @@ const docTemplate = `{
         },
         "/products/images/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "List all images for a data product",
                 "produces": [
                     "application/json"
@@ -4011,6 +4651,14 @@ const docTemplate = `{
         },
         "/products/images/{id}/{purpose}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get an icon or header image for a data product",
                 "produces": [
                     "image/jpeg",
@@ -4060,6 +4708,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Upload an icon or header image for a data product",
                 "consumes": [
                     "multipart/form-data"
@@ -4122,6 +4778,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an icon or header image for a data product",
                 "produces": [
                     "application/json"
@@ -4173,6 +4837,14 @@ const docTemplate = `{
         },
         "/products/list": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Retrieve a paginated list of data products",
                 "produces": [
                     "application/json"
@@ -4215,6 +4887,14 @@ const docTemplate = `{
         },
         "/products/resolved-assets/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all assets of a data product, both manually added and matched by rules",
                 "produces": [
                     "application/json"
@@ -4276,6 +4956,14 @@ const docTemplate = `{
         },
         "/products/rule-preview": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Preview which assets would match a rule configuration",
                 "consumes": [
                     "application/json"
@@ -4329,6 +5017,14 @@ const docTemplate = `{
         },
         "/products/rules/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the membership rules of a data product",
                 "produces": [
                     "application/json"
@@ -4374,6 +5070,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a membership rule for a data product",
                 "consumes": [
                     "application/json"
@@ -4433,6 +5137,14 @@ const docTemplate = `{
         },
         "/products/rules/{id}/{ruleId}": {
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a membership rule of a data product",
                 "consumes": [
                     "application/json"
@@ -4497,6 +5209,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a membership rule from a data product",
                 "produces": [
                     "application/json"
@@ -4554,6 +5274,14 @@ const docTemplate = `{
         },
         "/products/search": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Search data products by name, description, and tags",
                 "produces": [
                     "application/json"
@@ -4614,6 +5342,14 @@ const docTemplate = `{
         },
         "/products/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a data product by ID",
                 "produces": [
                     "application/json"
@@ -4659,6 +5395,14 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an existing data product",
                 "consumes": [
                     "application/json"
@@ -4722,6 +5466,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a data product by ID",
                 "produces": [
                     "application/json"
@@ -4772,6 +5524,14 @@ const docTemplate = `{
         },
         "/roles": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "List all active roles with user counts and permissions",
                 "produces": [
                     "application/json"
@@ -4799,6 +5559,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new role with optional initial permissions",
                 "consumes": [
                     "application/json"
@@ -4845,6 +5613,14 @@ const docTemplate = `{
         },
         "/roles/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a role by ID with its permissions",
                 "produces": [
                     "application/json"
@@ -4878,6 +5654,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Soft-delete a role. Fails if the role is a system role or has active user assignments.",
                 "produces": [
                     "application/json"
@@ -4914,6 +5698,14 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a role's name or description. System roles cannot be renamed.",
                 "consumes": [
                     "application/json"
@@ -4973,6 +5765,14 @@ const docTemplate = `{
         },
         "/roles/{id}/permissions": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Atomically replace all permissions on a role. System roles enforce a minimum permission floor.",
                 "consumes": [
                     "application/json"
@@ -5032,6 +5832,14 @@ const docTemplate = `{
         },
         "/runs": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get paginated list of runs with filtering",
                 "produces": [
                     "application/json"
@@ -5103,6 +5911,14 @@ const docTemplate = `{
         },
         "/runs/assets/batch": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create/update assets within a run",
                 "consumes": [
                     "application/json"
@@ -5137,6 +5953,14 @@ const docTemplate = `{
         },
         "/runs/cleanup": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Mark runs as failed if they've been running too long without updates",
                 "tags": [
                     "runs"
@@ -5157,6 +5981,14 @@ const docTemplate = `{
         },
         "/runs/complete": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Complete a run with results",
                 "consumes": [
                     "application/json"
@@ -5194,6 +6026,14 @@ const docTemplate = `{
         },
         "/runs/start": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Start a new run for tracking",
                 "consumes": [
                     "application/json"
@@ -5228,6 +6068,14 @@ const docTemplate = `{
         },
         "/runs/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a specific run by ID",
                 "produces": [
                     "application/json"
@@ -5257,6 +6105,14 @@ const docTemplate = `{
         },
         "/runs/{id}/entities": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get paginated list of entities for a specific run",
                 "produces": [
                     "application/json"
@@ -5312,6 +6168,14 @@ const docTemplate = `{
         },
         "/search": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Search across assets, glossary terms, teams, and users",
                 "produces": [
                     "application/json"
@@ -5377,6 +6241,14 @@ const docTemplate = `{
         },
         "/service-accounts": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all service accounts",
                 "produces": [
                     "application/json"
@@ -5404,6 +6276,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new service account",
                 "consumes": [
                     "application/json"
@@ -5444,6 +6324,14 @@ const docTemplate = `{
         },
         "/service-accounts/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a service account by ID",
                 "produces": [
                     "application/json"
@@ -5477,6 +6365,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Soft-delete a service account",
                 "tags": [
                     "service_accounts"
@@ -5504,6 +6400,14 @@ const docTemplate = `{
                 }
             },
             "patch": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a service account",
                 "consumes": [
                     "application/json"
@@ -5551,6 +6455,14 @@ const docTemplate = `{
         },
         "/service-accounts/{id}/api-keys": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all API keys for a service account",
                 "produces": [
                     "application/json"
@@ -5581,6 +6493,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new API key. The plaintext key is only returned once.",
                 "consumes": [
                     "application/json"
@@ -5628,6 +6548,14 @@ const docTemplate = `{
         },
         "/service-accounts/{id}/api-keys/{keyId}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an API key for a service account",
                 "tags": [
                     "service_accounts"
@@ -5664,6 +6592,14 @@ const docTemplate = `{
         },
         "/sso-providers": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Read-only view of SSO providers wired via server config. Editing is done in config.yaml.",
                 "produces": [
                     "application/json"
@@ -5684,6 +6620,14 @@ const docTemplate = `{
         },
         "/sso/team-mappings": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a list of SSO group to team mappings",
                 "consumes": [
                     "application/json"
@@ -5719,6 +6663,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new SSO group to team mapping",
                 "consumes": [
                     "application/json"
@@ -5771,6 +6723,14 @@ const docTemplate = `{
         },
         "/sso/team-mappings/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get an SSO team mapping by its ID",
                 "consumes": [
                     "application/json"
@@ -5813,6 +6773,14 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update an SSO team mapping by its ID",
                 "consumes": [
                     "application/json"
@@ -5870,6 +6838,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an SSO team mapping by its ID",
                 "consumes": [
                     "application/json"
@@ -5914,6 +6890,14 @@ const docTemplate = `{
         },
         "/teams": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a paginated list of teams",
                 "consumes": [
                     "application/json"
@@ -5957,6 +6941,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new team",
                 "consumes": [
                     "application/json"
@@ -6009,6 +7001,14 @@ const docTemplate = `{
         },
         "/teams/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a team by its ID",
                 "consumes": [
                     "application/json"
@@ -6051,6 +7051,14 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update a team's fields by its ID",
                 "consumes": [
                     "application/json"
@@ -6120,6 +7128,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a team by its ID",
                 "consumes": [
                     "application/json"
@@ -6170,6 +7186,14 @@ const docTemplate = `{
         },
         "/teams/{id}/members": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get the members of a team",
                 "consumes": [
                     "application/json"
@@ -6206,6 +7230,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Add a user as a member of a team",
                 "consumes": [
                     "application/json"
@@ -6271,6 +7303,14 @@ const docTemplate = `{
         },
         "/teams/{id}/members/{userId}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Remove a user from a team",
                 "consumes": [
                     "application/json"
@@ -6322,6 +7362,14 @@ const docTemplate = `{
         },
         "/teams/{id}/members/{userId}/convert-to-manual": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Convert an SSO-managed team member to a manually managed member",
                 "consumes": [
                     "application/json"
@@ -6373,6 +7421,14 @@ const docTemplate = `{
         },
         "/teams/{id}/members/{userId}/role": {
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update the role of a team member",
                 "consumes": [
                     "application/json"
@@ -6459,6 +7515,14 @@ const docTemplate = `{
         },
         "/users": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get a list of users with optional filtering",
                 "consumes": [
                     "application/json"
@@ -6524,6 +7588,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new user in the system",
                 "consumes": [
                     "application/json"
@@ -6570,6 +7642,14 @@ const docTemplate = `{
         },
         "/users/apikeys": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get all API keys for a user",
                 "consumes": [
                     "application/json"
@@ -6600,6 +7680,14 @@ const docTemplate = `{
                 }
             },
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Create a new API key for a user",
                 "consumes": [
                     "application/json"
@@ -6640,6 +7728,14 @@ const docTemplate = `{
         },
         "/users/apikeys/{id}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete an API key",
                 "consumes": [
                     "application/json"
@@ -6723,6 +7819,9 @@ const docTemplate = `{
             "get": {
                 "security": [
                     {
+                        "ApiKeyAuth": []
+                    },
+                    {
                         "BearerAuth": []
                     }
                 ],
@@ -6755,6 +7854,14 @@ const docTemplate = `{
         },
         "/users/oauth/link": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Link an OAuth account to an existing user",
                 "consumes": [
                     "application/json"
@@ -6792,6 +7899,14 @@ const docTemplate = `{
         },
         "/users/oauth/unlink/{id}/{provider}": {
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Unlink an OAuth account from a user",
                 "consumes": [
                     "application/json"
@@ -6834,6 +7949,14 @@ const docTemplate = `{
         },
         "/users/preferences": {
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update preferences for the current user",
                 "consumes": [
                     "application/json"
@@ -6872,6 +7995,14 @@ const docTemplate = `{
         },
         "/users/update-password": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update current user's password",
                 "consumes": [
                     "application/json"
@@ -6918,6 +8049,14 @@ const docTemplate = `{
         },
         "/users/{id}": {
             "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Get detailed information about a specific user",
                 "consumes": [
                     "application/json"
@@ -6960,6 +8099,14 @@ const docTemplate = `{
                 }
             },
             "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Update user information",
                 "consumes": [
                     "application/json"
@@ -7011,6 +8158,14 @@ const docTemplate = `{
                 }
             },
             "delete": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
                 "description": "Delete a user from the system",
                 "consumes": [
                     "application/json"

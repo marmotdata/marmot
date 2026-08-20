@@ -74,11 +74,11 @@ type ClientService interface {
 	// GetLineageDirectIDContext get direct lineage by ID.
 	GetLineageDirectIDContext(ctx context.Context, params *GetLineageDirectIDParams, opts ...ClientOption) (*GetLineageDirectIDOK, error)
 
-	// PostAPIV1Lineage ingest open lineage event.
-	PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error)
+	// PostLineage ingest open lineage event.
+	PostLineage(params *PostLineageParams, opts ...ClientOption) (*PostLineageOK, error)
 
-	// PostAPIV1LineageContext ingest open lineage event.
-	PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error)
+	// PostLineageContext ingest open lineage event.
+	PostLineageContext(ctx context.Context, params *PostLineageParams, opts ...ClientOption) (*PostLineageOK, error)
 
 	// PostLineageBatch batch create lineage edges.
 	PostLineageBatch(params *PostLineageBatchParams, opts ...ClientOption) (*PostLineageBatchOK, error)
@@ -293,15 +293,15 @@ func (a *Client) GetLineageDirectIDContext(ctx context.Context, params *GetLinea
 	panic(msg)
 }
 
-// PostAPIV1Lineage ingests open lineage event.
+// PostLineage ingests open lineage event.
 //
 // Process OpenLineage run events and update assets/lineage accordingly.
 //
 // This method does not support injected context.
 // However, timeout and opentracing contexts are honored whenever enabled.
 //
-// If you need to pass a specific context, use [Client.PostAPIV1LineageContext] instead.
-func (a *Client) PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error) {
+// If you need to pass a specific context, use [Client.PostLineageContext] instead.
+func (a *Client) PostLineage(params *PostLineageParams, opts ...ClientOption) (*PostLineageOK, error) {
 	var ctx context.Context
 	if params.inner.ctx != nil {
 		ctx = params.inner.ctx
@@ -309,29 +309,29 @@ func (a *Client) PostAPIV1Lineage(params *PostAPIV1LineageParams, opts ...Client
 		ctx = context.Background()
 	}
 
-	return a.PostAPIV1LineageContext(ctx, params, opts...)
+	return a.PostLineageContext(ctx, params, opts...)
 }
 
-// PostAPIV1LineageContext ingests open lineage event.
+// PostLineageContext ingests open lineage event.
 //
 // Process OpenLineage run events and update assets/lineage accordingly.
 //
-// Do not use the deprecated [PostAPIV1LineageParams.Context] with this method: it would be ignored.
-func (a *Client) PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1LineageParams, opts ...ClientOption) (*PostAPIV1LineageOK, error) {
+// Do not use the deprecated [PostLineageParams.Context] with this method: it would be ignored.
+func (a *Client) PostLineageContext(ctx context.Context, params *PostLineageParams, opts ...ClientOption) (*PostLineageOK, error) {
 	// NOTE: parameters are not validated before sending
 	if params == nil {
-		params = NewPostAPIV1LineageParams()
+		params = NewPostLineageParams()
 	}
 
 	op := &runtime.ClientOperation{
-		ID:                 "PostAPIV1Lineage",
+		ID:                 "PostLineage",
 		Method:             "POST",
-		PathPattern:        "/api/v1/lineage",
+		PathPattern:        "/lineage",
 		ProducesMediaTypes: []string{"application/json"},
 		ConsumesMediaTypes: []string{"application/json"},
 		Schemes:            []string{"http"},
 		Params:             params,
-		Reader:             &PostAPIV1LineageReader{formats: a.formats},
+		Reader:             &PostLineageReader{formats: a.formats},
 		Client:             params.HTTPClient,
 	}
 
@@ -345,7 +345,7 @@ func (a *Client) PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1L
 	}
 
 	// only one success response has to be checked
-	success, ok := result.(*PostAPIV1LineageOK)
+	success, ok := result.(*PostLineageOK)
 	if ok {
 		return success, nil
 	}
@@ -355,7 +355,7 @@ func (a *Client) PostAPIV1LineageContext(ctx context.Context, params *PostAPIV1L
 	// no default response is defined.
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for PostAPIV1Lineage: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	msg := fmt.Sprintf("unexpected success response for PostLineage: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

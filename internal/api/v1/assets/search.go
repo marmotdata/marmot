@@ -40,6 +40,8 @@ type SearchResponse struct {
 // @Param limit query int false "Number of items to return" default(50)
 // @Param offset query int false "Number of items to skip" default(0)
 // @Param calculateCounts query bool false "Calculate filter counts" default(false)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} SearchResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -110,6 +112,8 @@ func (h *Handler) searchAssets(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param pattern query string true "Asset pattern to match"
 // @Param type query string true "Asset type"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -193,6 +197,8 @@ func parseFilter(r *http.Request) (asset.Filter, error) {
 // @Param type path string true "Asset type"
 // @Param service path string true "Service/Provider name"
 // @Param name path string true "Asset name"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} asset.Asset
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse

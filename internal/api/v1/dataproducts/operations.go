@@ -65,6 +65,8 @@ type RulesResponse struct {
 // @Accept json
 // @Produce json
 // @Param product body CreateRequest true "Data product to create"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} dataproduct.DataProduct
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
@@ -144,6 +146,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Produce json
 // @Param id path string true "Data Product ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.DataProduct
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -180,6 +184,8 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param product body UpdateRequest true "Fields to update"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.DataProduct
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -243,6 +249,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Produce json
 // @Param id path string true "Data Product ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -276,6 +284,8 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param limit query int false "Maximum number of data products to return" default(20)
 // @Param offset query int false "Number of data products to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.ListResult
 // @Failure 500 {object} common.ErrorResponse
 // @Router /products/list [get]
@@ -301,6 +311,8 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 // @Param tags query string false "Comma-separated list of tags to filter by"
 // @Param limit query int false "Maximum number of data products to return" default(20)
 // @Param offset query int false "Number of data products to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.ListResult
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -344,6 +356,8 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Data Product ID"
 // @Param limit query int false "Maximum number of assets to return" default(20)
 // @Param offset query int false "Number of assets to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.AssetsResult
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -381,6 +395,8 @@ func (h *Handler) getAssets(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param assets body AddAssetsRequest true "Asset IDs to add"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
@@ -429,6 +445,8 @@ func (h *Handler) addAssets(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param assetId path string true "Asset ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -466,6 +484,8 @@ func (h *Handler) removeAsset(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Produce json
 // @Param id path string true "Data Product ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} RulesResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -503,6 +523,8 @@ func (h *Handler) getRules(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param rule body RuleRequest true "Rule to create"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} dataproduct.Rule
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -558,6 +580,8 @@ func (h *Handler) createRule(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Data Product ID"
 // @Param ruleId path string true "Rule ID"
 // @Param rule body RuleRequest true "Rule fields to update"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.Rule
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -613,6 +637,8 @@ func (h *Handler) updateRule(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param ruleId path string true "Rule ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -649,6 +675,8 @@ func (h *Handler) deleteRule(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param rule body RuleRequest true "Rule to preview"
 // @Param limit query int false "Maximum number of matching assets to return" default(20)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.RulePreview
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -691,6 +719,8 @@ func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Data Product ID"
 // @Param limit query int false "Maximum number of assets to return" default(20)
 // @Param offset query int false "Number of assets to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.ResolvedAssets
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -737,6 +767,8 @@ func extractIDFromPath(path, prefix string) string {
 // @Param id path string true "Data Product ID"
 // @Param purpose path string true "Image purpose (icon or header)"
 // @Param file formData file true "Image file"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} dataproduct.ProductImageMeta
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -826,6 +858,8 @@ func (h *Handler) uploadImage(w http.ResponseWriter, r *http.Request) {
 // @Produce image/jpeg,image/png,image/gif,image/webp
 // @Param id path string true "Data Product ID"
 // @Param purpose path string true "Image purpose (icon or header)"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {file} binary
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -878,6 +912,8 @@ func (h *Handler) getImage(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Data Product ID"
 // @Param purpose path string true "Image purpose (icon or header)"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -915,6 +951,8 @@ func (h *Handler) deleteImage(w http.ResponseWriter, r *http.Request) {
 // @Tags products
 // @Produce json
 // @Param id path string true "Data Product ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse

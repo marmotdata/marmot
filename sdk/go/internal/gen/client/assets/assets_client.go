@@ -74,12 +74,6 @@ type ClientService interface {
 	// DeleteAssetsTermsIDContext remove glossary term from asset.
 	DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteAssetsTermsIDParams, opts ...ClientOption) (*DeleteAssetsTermsIDOK, error)
 
-	// GetAPIV1AssetsPreviewID get preview data for an asset.
-	GetAPIV1AssetsPreviewID(params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error)
-
-	// GetAPIV1AssetsPreviewIDContext get preview data for an asset.
-	GetAPIV1AssetsPreviewIDContext(ctx context.Context, params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error)
-
 	// GetAssetsByGlossaryTermTermID get assets by glossary term.
 	GetAssetsByGlossaryTermTermID(params *GetAssetsByGlossaryTermTermIDParams, opts ...ClientOption) (*GetAssetsByGlossaryTermTermIDOK, error)
 
@@ -127,6 +121,12 @@ type ClientService interface {
 
 	// GetAssetsMyAssetsContext get user s assets.
 	GetAssetsMyAssetsContext(ctx context.Context, params *GetAssetsMyAssetsParams, opts ...ClientOption) (*GetAssetsMyAssetsOK, error)
+
+	// GetAssetsPreviewID get preview data for an asset.
+	GetAssetsPreviewID(params *GetAssetsPreviewIDParams, opts ...ClientOption) (*GetAssetsPreviewIDOK, error)
+
+	// GetAssetsPreviewIDContext get preview data for an asset.
+	GetAssetsPreviewIDContext(ctx context.Context, params *GetAssetsPreviewIDParams, opts ...ClientOption) (*GetAssetsPreviewIDOK, error)
 
 	// GetAssetsQualifiedNameQualifiedName get an asset by qualified name.
 	GetAssetsQualifiedNameQualifiedName(params *GetAssetsQualifiedNameQualifiedNameParams, opts ...ClientOption) (*GetAssetsQualifiedNameQualifiedNameOK, error)
@@ -404,72 +404,6 @@ func (a *Client) DeleteAssetsTermsIDContext(ctx context.Context, params *DeleteA
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for DeleteAssetsTermsID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
-	panic(msg)
-}
-
-// GetAPIV1AssetsPreviewID gets preview data for an asset.
-//
-// Fetches sample data from the asset's data source. Requires assets:preview permission..
-//
-// This method does not support injected context.
-// However, timeout and opentracing contexts are honored whenever enabled.
-//
-// If you need to pass a specific context, use [Client.GetAPIV1AssetsPreviewIDContext] instead.
-func (a *Client) GetAPIV1AssetsPreviewID(params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error) {
-	var ctx context.Context
-	if params.inner.ctx != nil {
-		ctx = params.inner.ctx
-	} else {
-		ctx = context.Background()
-	}
-
-	return a.GetAPIV1AssetsPreviewIDContext(ctx, params, opts...)
-}
-
-// GetAPIV1AssetsPreviewIDContext gets preview data for an asset.
-//
-// Fetches sample data from the asset's data source. Requires assets:preview permission..
-//
-// Do not use the deprecated [GetAPIV1AssetsPreviewIDParams.Context] with this method: it would be ignored.
-func (a *Client) GetAPIV1AssetsPreviewIDContext(ctx context.Context, params *GetAPIV1AssetsPreviewIDParams, opts ...ClientOption) (*GetAPIV1AssetsPreviewIDOK, error) {
-	// NOTE: parameters are not validated before sending
-	if params == nil {
-		params = NewGetAPIV1AssetsPreviewIDParams()
-	}
-
-	op := &runtime.ClientOperation{
-		ID:                 "GetAPIV1AssetsPreviewID",
-		Method:             "GET",
-		PathPattern:        "/api/v1/assets/preview/{id}",
-		ProducesMediaTypes: []string{"application/json"},
-		ConsumesMediaTypes: []string{"application/json"},
-		Schemes:            []string{"http"},
-		Params:             params,
-		Reader:             &GetAPIV1AssetsPreviewIDReader{formats: a.formats},
-		Client:             params.HTTPClient,
-	}
-
-	for _, opt := range opts {
-		opt(op)
-	}
-
-	result, err := a.transport.SubmitContext(ctx, op)
-	if err != nil {
-		return nil, err
-	}
-
-	// only one success response has to be checked
-	success, ok := result.(*GetAPIV1AssetsPreviewIDOK)
-	if ok {
-		return success, nil
-	}
-
-	// unexpected success response.
-
-	// no default response is defined.
-	//
-	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
-	msg := fmt.Sprintf("unexpected success response for GetAPIV1AssetsPreviewID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 
@@ -998,6 +932,72 @@ func (a *Client) GetAssetsMyAssetsContext(ctx context.Context, params *GetAssets
 	//
 	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
 	msg := fmt.Sprintf("unexpected success response for GetAssetsMyAssets: API contract not enforced by server. Client expected to get an error, but got: %T", result)
+	panic(msg)
+}
+
+// GetAssetsPreviewID gets preview data for an asset.
+//
+// Fetches sample data from the asset's data source. Requires assets:preview permission..
+//
+// This method does not support injected context.
+// However, timeout and opentracing contexts are honored whenever enabled.
+//
+// If you need to pass a specific context, use [Client.GetAssetsPreviewIDContext] instead.
+func (a *Client) GetAssetsPreviewID(params *GetAssetsPreviewIDParams, opts ...ClientOption) (*GetAssetsPreviewIDOK, error) {
+	var ctx context.Context
+	if params.inner.ctx != nil {
+		ctx = params.inner.ctx
+	} else {
+		ctx = context.Background()
+	}
+
+	return a.GetAssetsPreviewIDContext(ctx, params, opts...)
+}
+
+// GetAssetsPreviewIDContext gets preview data for an asset.
+//
+// Fetches sample data from the asset's data source. Requires assets:preview permission..
+//
+// Do not use the deprecated [GetAssetsPreviewIDParams.Context] with this method: it would be ignored.
+func (a *Client) GetAssetsPreviewIDContext(ctx context.Context, params *GetAssetsPreviewIDParams, opts ...ClientOption) (*GetAssetsPreviewIDOK, error) {
+	// NOTE: parameters are not validated before sending
+	if params == nil {
+		params = NewGetAssetsPreviewIDParams()
+	}
+
+	op := &runtime.ClientOperation{
+		ID:                 "GetAssetsPreviewID",
+		Method:             "GET",
+		PathPattern:        "/assets/preview/{id}",
+		ProducesMediaTypes: []string{"application/json"},
+		ConsumesMediaTypes: []string{"application/json"},
+		Schemes:            []string{"http"},
+		Params:             params,
+		Reader:             &GetAssetsPreviewIDReader{formats: a.formats},
+		Client:             params.HTTPClient,
+	}
+
+	for _, opt := range opts {
+		opt(op)
+	}
+
+	result, err := a.transport.SubmitContext(ctx, op)
+	if err != nil {
+		return nil, err
+	}
+
+	// only one success response has to be checked
+	success, ok := result.(*GetAssetsPreviewIDOK)
+	if ok {
+		return success, nil
+	}
+
+	// unexpected success response.
+
+	// no default response is defined.
+	//
+	// safeguard: normally, in the absence of a default response, unknown success responses return an error above: so this is a codegen issue
+	msg := fmt.Sprintf("unexpected success response for GetAssetsPreviewID: API contract not enforced by server. Client expected to get an error, but got: %T", result)
 	panic(msg)
 }
 

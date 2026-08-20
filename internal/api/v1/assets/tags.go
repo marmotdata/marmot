@@ -21,6 +21,8 @@ type TagRequest struct {
 // @Produce json
 // @Param id path string true "Asset ID"
 // @Param tag body TagRequest true "Tag to add"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -67,6 +69,8 @@ func (h *Handler) addTag(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Asset ID"
 // @Param tag body TagRequest true "Tag to remove"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -110,6 +114,8 @@ func (h *Handler) removeTag(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param prefix query string false "Tag prefix to filter by"
 // @Param limit query int false "Maximum number of suggestions" default(10)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} string
 // @Failure 500 {object} common.ErrorResponse
 // @Router /assets/suggestions/tags [get]

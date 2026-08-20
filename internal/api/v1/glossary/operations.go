@@ -44,6 +44,8 @@ type UpdateTermRequest struct {
 // @Accept json
 // @Produce json
 // @Param term body CreateTermRequest true "Glossary term to create"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} glossary.GlossaryTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
@@ -109,6 +111,8 @@ func (h *Handler) createTerm(w http.ResponseWriter, r *http.Request) {
 // @Tags glossary
 // @Produce json
 // @Param id path string true "Glossary Term ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} glossary.GlossaryTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -146,6 +150,8 @@ func (h *Handler) getTerm(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Glossary Term ID"
 // @Param term body UpdateTermRequest true "Glossary term update data"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} glossary.GlossaryTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -211,6 +217,8 @@ func (h *Handler) updateTerm(w http.ResponseWriter, r *http.Request) {
 // @Tags glossary
 // @Produce json
 // @Param id path string true "Glossary Term ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]string
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -245,6 +253,8 @@ func (h *Handler) deleteTerm(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param limit query int false "Maximum number of terms to return" default(20)
 // @Param offset query int false "Number of terms to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} glossary.ListResult
 // @Failure 500 {object} common.ErrorResponse
 // @Router /glossary/list [get]
@@ -278,6 +288,8 @@ func (h *Handler) listTerms(w http.ResponseWriter, r *http.Request) {
 // @Param parent_term_id query string false "Filter by parent term ID"
 // @Param limit query int false "Maximum number of terms to return" default(20)
 // @Param offset query int false "Number of terms to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} glossary.ListResult
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -319,6 +331,8 @@ func (h *Handler) searchTerms(w http.ResponseWriter, r *http.Request) {
 // @Tags glossary
 // @Produce json
 // @Param id path string true "Parent Term ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -356,6 +370,8 @@ func (h *Handler) getChildren(w http.ResponseWriter, r *http.Request) {
 // @Tags glossary
 // @Produce json
 // @Param id path string true "Term ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse

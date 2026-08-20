@@ -30,12 +30,18 @@ type BatchCreateRequest struct {
 	// documentation
 	Documentation []*CreateDocRequest `json:"documentation"`
 
+	// glossary terms
+	GlossaryTerms []*CreateGlossaryTermRequest `json:"glossary_terms"`
+
 	// lineage
 	Lineage []*CreateLineageRequest `json:"lineage"`
 
 	// pipeline name
 	// Required: true
 	PipelineName *string `json:"pipeline_name"`
+
+	// run history
+	RunHistory []*CreateRunHistoryRequest `json:"run_history"`
 
 	// run id
 	// Required: true
@@ -61,11 +67,19 @@ func (m *BatchCreateRequest) Validate(formats strfmt.Registry) error {
 		res = append(res, err)
 	}
 
+	if err := m.validateGlossaryTerms(formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.validateLineage(formats); err != nil {
 		res = append(res, err)
 	}
 
 	if err := m.validatePipelineName(formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.validateRunHistory(formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -154,6 +168,36 @@ func (m *BatchCreateRequest) validateDocumentation(formats strfmt.Registry) erro
 	return nil
 }
 
+func (m *BatchCreateRequest) validateGlossaryTerms(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.GlossaryTerms) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.GlossaryTerms); i++ {
+		if typeutils.IsZero(m.GlossaryTerms[i]) { // not required
+			continue
+		}
+
+		if m.GlossaryTerms[i] != nil {
+			if err := m.GlossaryTerms[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("glossary_terms" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("glossary_terms" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *BatchCreateRequest) validateLineage(formats strfmt.Registry) error {
 	if typeutils.IsZero(m.Lineage) { // not required
 		return nil
@@ -188,6 +232,36 @@ func (m *BatchCreateRequest) validatePipelineName(formats strfmt.Registry) error
 
 	if err := validate.Required("pipeline_name", "body", m.PipelineName); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (m *BatchCreateRequest) validateRunHistory(formats strfmt.Registry) error {
+	if typeutils.IsZero(m.RunHistory) { // not required
+		return nil
+	}
+
+	for i := 0; i < len(m.RunHistory); i++ {
+		if typeutils.IsZero(m.RunHistory[i]) { // not required
+			continue
+		}
+
+		if m.RunHistory[i] != nil {
+			if err := m.RunHistory[i].Validate(formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("run_history" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("run_history" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
 	}
 
 	return nil
@@ -253,7 +327,15 @@ func (m *BatchCreateRequest) ContextValidate(ctx context.Context, formats strfmt
 		res = append(res, err)
 	}
 
+	if err := m.contextValidateGlossaryTerms(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
 	if err := m.contextValidateLineage(ctx, formats); err != nil {
+		res = append(res, err)
+	}
+
+	if err := m.contextValidateRunHistory(ctx, formats); err != nil {
 		res = append(res, err)
 	}
 
@@ -325,6 +407,35 @@ func (m *BatchCreateRequest) contextValidateDocumentation(ctx context.Context, f
 	return nil
 }
 
+func (m *BatchCreateRequest) contextValidateGlossaryTerms(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.GlossaryTerms); i++ {
+
+		if m.GlossaryTerms[i] != nil {
+
+			if typeutils.IsZero(m.GlossaryTerms[i]) { // not required
+				return nil
+			}
+
+			if err := m.GlossaryTerms[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("glossary_terms" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("glossary_terms" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
 func (m *BatchCreateRequest) contextValidateLineage(ctx context.Context, formats strfmt.Registry) error {
 
 	for i := 0; i < len(m.Lineage); i++ {
@@ -343,6 +454,35 @@ func (m *BatchCreateRequest) contextValidateLineage(ctx context.Context, formats
 				ce := new(errors.CompositeError)
 				if stderrors.As(err, &ce) {
 					return ce.ValidateName("lineage" + "." + strconv.Itoa(i))
+				}
+
+				return err
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func (m *BatchCreateRequest) contextValidateRunHistory(ctx context.Context, formats strfmt.Registry) error {
+
+	for i := 0; i < len(m.RunHistory); i++ {
+
+		if m.RunHistory[i] != nil {
+
+			if typeutils.IsZero(m.RunHistory[i]) { // not required
+				return nil
+			}
+
+			if err := m.RunHistory[i].ContextValidate(ctx, formats); err != nil {
+				ve := new(errors.Validation)
+				if stderrors.As(err, &ve) {
+					return ve.ValidateName("run_history" + "." + strconv.Itoa(i))
+				}
+				ce := new(errors.CompositeError)
+				if stderrors.As(err, &ce) {
+					return ce.ValidateName("run_history" + "." + strconv.Itoa(i))
 				}
 
 				return err

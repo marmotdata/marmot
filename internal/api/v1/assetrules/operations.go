@@ -57,6 +57,8 @@ type PreviewRequest struct {
 // @Accept json
 // @Produce json
 // @Param rule body CreateRequest true "Asset rule creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} assetrule.AssetRule
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
@@ -110,6 +112,8 @@ func (h *Handler) create(w http.ResponseWriter, r *http.Request) {
 // @Tags asset-rules
 // @Produce json
 // @Param id path string true "Asset rule ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} assetrule.AssetRule
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -142,6 +146,8 @@ func (h *Handler) get(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Asset rule ID"
 // @Param rule body UpdateRequest true "Asset rule update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} assetrule.AssetRule
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -201,6 +207,8 @@ func (h *Handler) update(w http.ResponseWriter, r *http.Request) {
 // @Description Delete an asset rule by ID
 // @Tags asset-rules
 // @Param id path string true "Asset rule ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -232,6 +240,8 @@ func (h *Handler) delete(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param limit query int false "Number of items to return" default(50)
 // @Param offset query int false "Number of items to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} assetrule.ListResult
 // @Failure 500 {object} common.ErrorResponse
 // @Router /asset-rules/list [get]
@@ -256,6 +266,8 @@ func (h *Handler) list(w http.ResponseWriter, r *http.Request) {
 // @Param query query string false "Search query"
 // @Param limit query int false "Number of items to return" default(50)
 // @Param offset query int false "Number of items to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} assetrule.ListResult
 // @Failure 500 {object} common.ErrorResponse
 // @Router /asset-rules/search [get]
@@ -285,6 +297,8 @@ func (h *Handler) search(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param rule body PreviewRequest true "Rule preview request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} assetrule.RulePreview
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -321,6 +335,8 @@ func (h *Handler) previewRule(w http.ResponseWriter, r *http.Request) {
 // @Param id path string true "Asset rule ID"
 // @Param limit query int false "Number of items to return" default(50)
 // @Param offset query int false "Number of items to skip" default(0)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse

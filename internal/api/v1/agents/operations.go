@@ -57,6 +57,8 @@ type ActivityResponse struct {
 // @Accept   json
 // @Produce  json
 // @Param    request body RecordRunRequest true "Agent run record"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success  201 {object} agent.Run
 // @Router   /agents/runs [post]
 func (h *Handler) recordRun(w http.ResponseWriter, r *http.Request) {
@@ -109,6 +111,8 @@ func (h *Handler) recordRun(w http.ResponseWriter, r *http.Request) {
 // @Param    asset_id path  string true "Agent asset id"
 // @Param    period   query string false "Lookback window (e.g. 24h, 7d). Default 24h."
 // @Param    limit    query int    false "Max number of runs to return"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success  200 {object} RunsResponse
 // @Router   /agents/{asset_id}/runs [get]
 func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
@@ -143,6 +147,8 @@ func (h *Handler) listRuns(w http.ResponseWriter, r *http.Request) {
 // @Produce  json
 // @Param    asset_id path  string true  "Agent asset id"
 // @Param    period   query string false "Lookback window (e.g. 24h, 7d). Default 24h."
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success  200 {object} agent.Stats
 // @Router   /agents/{asset_id}/stats [get]
 func (h *Handler) getStats(w http.ResponseWriter, r *http.Request) {
@@ -171,6 +177,8 @@ func (h *Handler) getStats(w http.ResponseWriter, r *http.Request) {
 // @Produce  json
 // @Param    asset_id path  string true  "Agent asset id"
 // @Param    period   query string false "Lookback window (e.g. 24h, 7d). Default 24h."
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success  200 {object} ActivityResponse
 // @Router   /agents/{asset_id}/activity [get]
 func (h *Handler) getActivity(w http.ResponseWriter, r *http.Request) {
