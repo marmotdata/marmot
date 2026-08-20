@@ -227,7 +227,7 @@ func (h *Handler) getAssetLineage(w http.ResponseWriter, r *http.Request) {
 // @Success 200 "Event processed successfully"
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /api/v1/lineage [post]
+// @Router /lineage [post]
 func (h *Handler) ingestOpenLineageEvent(w http.ResponseWriter, r *http.Request) {
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
