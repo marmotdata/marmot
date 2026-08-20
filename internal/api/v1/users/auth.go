@@ -96,6 +96,8 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param link body OAuthLinkRequest true "OAuth account link request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 "OK"
 // @Failure 400 {object} common.ErrorResponse
 // @Router /users/oauth/link [post]
@@ -126,6 +128,8 @@ func (h *Handler) linkOAuthAccount(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "User ID"
 // @Param provider path string true "OAuth provider"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 400 {object} common.ErrorResponse
 // @Router /users/oauth/unlink/{id}/{provider} [delete]
@@ -158,6 +162,8 @@ func (h *Handler) unlinkOAuthAccount(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param request body UpdatePasswordRequest true "Password update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} TokenResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse

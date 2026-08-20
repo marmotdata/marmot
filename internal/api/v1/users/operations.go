@@ -38,6 +38,8 @@ type SearchUsersResponse struct {
 // @Param query query string false "Search query for username or email"
 // @Param role_ids query []string false "Filter by role IDs"
 // @Param active query bool false "Filter by active status"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ListUsersResponse
 // @Failure 500 {object} common.ErrorResponse
 // @Router /users [get]
@@ -84,6 +86,8 @@ func (h *Handler) listUsers(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param user body user.CreateUserInput true "User creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} user.User
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
@@ -118,6 +122,8 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} user.User
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -151,6 +157,8 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "User ID"
 // @Param user body user.UpdateUserInput true "User update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} user.User
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -191,6 +199,8 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "User ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse

@@ -34,6 +34,8 @@ type GetMetricsResponse struct {
 // @Param metric_names query []string false "Filter by metric names"
 // @Param aggregation query string false "Aggregation type" Enums(avg,sum,max,min) default(avg)
 // @Param bucket_size query string false "Time bucket size" Enums(1m,5m,1h,1d)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} GetMetricsResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
@@ -147,6 +149,8 @@ func parseBucketSize(s string) (time.Duration, error) {
 // @Param start query string true "Start time (ISO 8601)"
 // @Param end query string true "End time (ISO 8601)"
 // @Param limit query int false "Number of results" default(10)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} []metrics.QueryCount
 // @Router /metrics/top-queries [get]
 func (h *Handler) getTopQueries(w http.ResponseWriter, r *http.Request) {
@@ -199,6 +203,8 @@ func (h *Handler) getTopQueries(w http.ResponseWriter, r *http.Request) {
 // @Param start query string true "Start time (ISO 8601)"
 // @Param end query string true "End time (ISO 8601)"
 // @Param limit query int false "Number of results" default(10)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} []metrics.AssetCount
 // @Router /metrics/top-assets [get]
 func (h *Handler) getTopAssets(w http.ResponseWriter, r *http.Request) {
@@ -252,6 +258,8 @@ type TotalAssetsResponse struct {
 // @Description Get the total number of assets
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} TotalAssetsResponse
 // @Router /metrics/assets/total [get]
 func (h *Handler) getTotalAssets(w http.ResponseWriter, r *http.Request) {
@@ -273,6 +281,8 @@ type AssetsByTypeResponse struct {
 // @Description Get asset counts grouped by type
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetsByTypeResponse
 // @Router /metrics/assets/by-type [get]
 func (h *Handler) getAssetsByType(w http.ResponseWriter, r *http.Request) {
@@ -294,6 +304,8 @@ type AssetsByProviderResponse struct {
 // @Description Get asset counts grouped by provider
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetsByProviderResponse
 // @Router /metrics/assets/by-provider [get]
 func (h *Handler) getAssetsByProvider(w http.ResponseWriter, r *http.Request) {
@@ -317,6 +329,8 @@ type AssetsWithSchemasResponse struct {
 // @Description Get the count of assets that have schemas defined
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetsWithSchemasResponse
 // @Router /metrics/assets/with-schemas [get]
 func (h *Handler) getAssetsWithSchemas(w http.ResponseWriter, r *http.Request) {
@@ -356,6 +370,8 @@ type AssetsByOwnerResponse struct {
 // @Description Get asset counts grouped by owner
 // @Tags metrics
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} AssetsByOwnerResponse
 // @Router /metrics/assets/by-owner [get]
 func (h *Handler) getAssetsByOwner(w http.ResponseWriter, r *http.Request) {

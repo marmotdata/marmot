@@ -13,6 +13,8 @@ import (
 // @Description Get suggestions for metadata fields and their types
 // @Tags assets
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} asset.MetadataFieldSuggestion
 // @Failure 500 {object} common.ErrorResponse
 // @Router /assets/suggestions/metadata/fields [get]
@@ -46,6 +48,8 @@ func (h *Handler) getMetadataFieldSuggestions(w http.ResponseWriter, r *http.Req
 // @Param field query string true "Metadata field name"
 // @Param prefix query string false "Value prefix to filter by"
 // @Param limit query int false "Maximum number of suggestions" default(10)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} asset.MetadataValueSuggestion
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse

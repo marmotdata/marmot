@@ -14,6 +14,8 @@ import (
 // @Description List all active roles with user counts and permissions
 // @Tags roles
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} role.Role
 // @Failure 500 {object} common.ErrorResponse
 // @Router /roles [get]
@@ -32,6 +34,8 @@ func (h *Handler) listRoles(w http.ResponseWriter, r *http.Request) {
 // @Tags roles
 // @Produce json
 // @Param id path string true "Role ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} role.Role
 // @Failure 404 {object} common.ErrorResponse
 // @Router /roles/{id} [get]
@@ -68,6 +72,8 @@ type createRoleRequest struct {
 // @Accept json
 // @Produce json
 // @Param role body createRoleRequest true "Role creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} role.Role
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
@@ -113,6 +119,8 @@ type updateRoleRequest struct {
 // @Produce json
 // @Param id path string true "Role ID"
 // @Param role body updateRoleRequest true "Role update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} role.Role
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -156,6 +164,8 @@ func (h *Handler) updateRole(w http.ResponseWriter, r *http.Request) {
 // @Tags roles
 // @Produce json
 // @Param id path string true "Role ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 422 {object} common.ErrorResponse
@@ -197,6 +207,8 @@ type replacePermissionsRequest struct {
 // @Produce json
 // @Param id path string true "Role ID"
 // @Param body body replacePermissionsRequest true "Permission IDs to assign"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} role.Role
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -242,6 +254,8 @@ func (h *Handler) replacePermissions(w http.ResponseWriter, r *http.Request) {
 // @Description List all defined permissions grouped by resource type
 // @Tags roles
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} role.Permission
 // @Failure 500 {object} common.ErrorResponse
 // @Router /permissions [get]

@@ -34,6 +34,8 @@ type createAPIKeyRequest struct {
 // @Description Get all service accounts
 // @Tags service_accounts
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} serviceaccount.ServiceAccount
 // @Failure 500 {object} common.ErrorResponse
 // @Router /service-accounts [get]
@@ -56,6 +58,8 @@ func (h *Handler) listServiceAccounts(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param account body createServiceAccountRequest true "Service account"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} serviceaccount.ServiceAccount
 // @Failure 400 {object} common.ErrorResponse
 // @Router /service-accounts [post]
@@ -98,6 +102,8 @@ func (h *Handler) createServiceAccount(w http.ResponseWriter, r *http.Request) {
 // @Tags service_accounts
 // @Produce json
 // @Param id path string true "Service account ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} serviceaccount.ServiceAccount
 // @Failure 404 {object} common.ErrorResponse
 // @Router /service-accounts/{id} [get]
@@ -129,6 +135,8 @@ func (h *Handler) getServiceAccount(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Service account ID"
 // @Param account body updateServiceAccountRequest true "Update fields"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} serviceaccount.ServiceAccount
 // @Failure 404 {object} common.ErrorResponse
 // @Router /service-accounts/{id} [patch]
@@ -172,6 +180,8 @@ func (h *Handler) updateServiceAccount(w http.ResponseWriter, r *http.Request) {
 // @Description Soft-delete a service account
 // @Tags service_accounts
 // @Param id path string true "Service account ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Router /service-accounts/{id} [delete]
@@ -200,6 +210,8 @@ func (h *Handler) deleteServiceAccount(w http.ResponseWriter, r *http.Request) {
 // @Tags service_accounts
 // @Produce json
 // @Param id path string true "Service account ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} serviceaccount.APIKey
 // @Router /service-accounts/{id}/api-keys [get]
 func (h *Handler) listAPIKeys(w http.ResponseWriter, r *http.Request) {
@@ -228,6 +240,8 @@ func (h *Handler) listAPIKeys(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Service account ID"
 // @Param key body createAPIKeyRequest true "API key details"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} serviceaccount.APIKey
 // @Failure 400 {object} common.ErrorResponse
 // @Router /service-accounts/{id}/api-keys [post]
@@ -281,6 +295,8 @@ func (h *Handler) createAPIKey(w http.ResponseWriter, r *http.Request) {
 // @Tags service_accounts
 // @Param id path string true "Service account ID"
 // @Param keyId path string true "API key ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Router /service-accounts/{id}/api-keys/{keyId} [delete]

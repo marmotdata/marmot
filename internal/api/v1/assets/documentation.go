@@ -38,6 +38,8 @@ type BatchDocumentationResult struct {
 // @Accept json
 // @Produce json
 // @Param request body DocumentationCreateRequest true "Documentation creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} assetdocs.Documentation
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -71,6 +73,8 @@ func (h *Handler) createAssetDocumentation(w http.ResponseWriter, r *http.Reques
 // @Tags assets
 // @Produce json
 // @Param mrn path string true "Asset MRN" format(url)
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {array} assetdocs.Documentation
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -109,6 +113,8 @@ func (h *Handler) getAssetDocumentation(w http.ResponseWriter, r *http.Request) 
 // @Accept json
 // @Produce json
 // @Param request body BatchDocumentationRequest true "Batch documentation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} BatchDocumentationResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse

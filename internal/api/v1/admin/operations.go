@@ -24,6 +24,8 @@ type ReindexStatusResponse struct {
 // @Description Trigger a full reindex from PostgreSQL to Elasticsearch. The reindex runs asynchronously in the background. Only one reindex can run at a time.
 // @Tags admin
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 202 {object} ReindexAcceptedResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 403 {object} common.ErrorResponse
@@ -61,6 +63,8 @@ func (h *Handler) startReindex(w http.ResponseWriter, r *http.Request) {
 // @Description Check whether a search reindex is currently running and whether Elasticsearch is configured.
 // @Tags admin
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ReindexStatusResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 403 {object} common.ErrorResponse

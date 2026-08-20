@@ -54,6 +54,8 @@ type UpdateRequest struct {
 // @Accept json
 // @Produce json
 // @Param asset body CreateRequest true "Asset creation request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 201 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
@@ -139,6 +141,8 @@ func (h *Handler) enrichAssetResponse(r *http.Request, result *asset.Asset) *Ass
 // @Accept json
 // @Produce json
 // @Param id path string true "Asset ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} asset.Asset
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
@@ -175,6 +179,8 @@ func (h *Handler) getAsset(w http.ResponseWriter, r *http.Request) {
 // @Produce json
 // @Param id path string true "Asset ID"
 // @Param asset body UpdateRequest true "Asset update request"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} asset.Asset
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
@@ -230,6 +236,8 @@ func (h *Handler) updateAsset(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param id path string true "Asset ID"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
@@ -265,6 +273,8 @@ func (h *Handler) deleteAsset(w http.ResponseWriter, r *http.Request) {
 // @Accept json
 // @Produce json
 // @Param qualifiedName path string true "Asset qualified name"
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} asset.Asset
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse

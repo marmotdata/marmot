@@ -40,6 +40,8 @@ type ssoProvidersResponse struct {
 // @Description Read-only view of SSO providers wired via server config. Editing is done in config.yaml.
 // @Tags auth
 // @Produce json
+// @Security ApiKeyAuth
+// @Security BearerAuth
 // @Success 200 {object} ssoProvidersResponse
 // @Router /sso-providers [get]
 func (h *Handler) getSSOProviders(w http.ResponseWriter, r *http.Request) {
