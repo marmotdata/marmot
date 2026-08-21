@@ -40,7 +40,7 @@ func (o *DeleteUsersIDReader) ReadResponse(response runtime.ClientResponse, cons
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /users/{id}] DeleteUsersID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/users/{id}] deleteUsersID", response, response.Code())
 	}
 }
 
@@ -86,11 +86,11 @@ func (o *DeleteUsersIDNoContent) Code() int {
 }
 
 func (o *DeleteUsersIDNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /users/{id}][%d] deleteUsersIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/users/{id}][%d] deleteUsersIdNoContent", 204)
 }
 
 func (o *DeleteUsersIDNoContent) String() string {
-	return fmt.Sprintf("[DELETE /users/{id}][%d] deleteUsersIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/users/{id}][%d] deleteUsersIdNoContent", 204)
 }
 
 func (o *DeleteUsersIDNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -142,12 +142,12 @@ func (o *DeleteUsersIDNotFound) Code() int {
 
 func (o *DeleteUsersIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /users/{id}][%d] deleteUsersIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/{id}][%d] deleteUsersIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteUsersIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /users/{id}][%d] deleteUsersIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/{id}][%d] deleteUsersIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteUsersIDNotFound) GetPayload() *models.ErrorResponse {
@@ -210,12 +210,12 @@ func (o *DeleteUsersIDInternalServerError) Code() int {
 
 func (o *DeleteUsersIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /users/{id}][%d] deleteUsersIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/{id}][%d] deleteUsersIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteUsersIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /users/{id}][%d] deleteUsersIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/users/{id}][%d] deleteUsersIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteUsersIDInternalServerError) GetPayload() *models.ErrorResponse {

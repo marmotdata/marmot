@@ -39,7 +39,8 @@ type GetMetricsResponse struct {
 // @Success 200 {object} GetMetricsResponse
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 401 {object} common.ErrorResponse
-// @Router /metrics [get]
+// @ID getMetrics
+// @Router /api/v1/metrics [get]
 func (h *Handler) getMetrics(w http.ResponseWriter, r *http.Request) {
 	req := GetMetricsRequest{
 		Start:           r.URL.Query().Get("start"),
@@ -152,7 +153,8 @@ func parseBucketSize(s string) (time.Duration, error) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} []metrics.QueryCount
-// @Router /metrics/top-queries [get]
+// @ID getMetricsTopQueries
+// @Router /api/v1/metrics/top-queries [get]
 func (h *Handler) getTopQueries(w http.ResponseWriter, r *http.Request) {
 	start := r.URL.Query().Get("start")
 	end := r.URL.Query().Get("end")
@@ -206,7 +208,8 @@ func (h *Handler) getTopQueries(w http.ResponseWriter, r *http.Request) {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} []metrics.AssetCount
-// @Router /metrics/top-assets [get]
+// @ID getMetricsTopAssets
+// @Router /api/v1/metrics/top-assets [get]
 func (h *Handler) getTopAssets(w http.ResponseWriter, r *http.Request) {
 	start := r.URL.Query().Get("start")
 	end := r.URL.Query().Get("end")
@@ -261,7 +264,8 @@ type TotalAssetsResponse struct {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} TotalAssetsResponse
-// @Router /metrics/assets/total [get]
+// @ID getMetricsAssetsTotal
+// @Router /api/v1/metrics/assets/total [get]
 func (h *Handler) getTotalAssets(w http.ResponseWriter, r *http.Request) {
 	count, err := h.metricsService.GetTotalAssets(r.Context())
 	if err != nil {
@@ -284,7 +288,8 @@ type AssetsByTypeResponse struct {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} AssetsByTypeResponse
-// @Router /metrics/assets/by-type [get]
+// @ID getMetricsAssetsByType
+// @Router /api/v1/metrics/assets/by-type [get]
 func (h *Handler) getAssetsByType(w http.ResponseWriter, r *http.Request) {
 	assets, err := h.metricsService.GetAssetsByType(r.Context())
 	if err != nil {
@@ -307,7 +312,8 @@ type AssetsByProviderResponse struct {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} AssetsByProviderResponse
-// @Router /metrics/assets/by-provider [get]
+// @ID getMetricsAssetsByProvider
+// @Router /api/v1/metrics/assets/by-provider [get]
 func (h *Handler) getAssetsByProvider(w http.ResponseWriter, r *http.Request) {
 	assets, err := h.metricsService.GetAssetsByProvider(r.Context())
 	if err != nil {
@@ -332,7 +338,8 @@ type AssetsWithSchemasResponse struct {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} AssetsWithSchemasResponse
-// @Router /metrics/assets/with-schemas [get]
+// @ID getMetricsAssetsWithSchemas
+// @Router /api/v1/metrics/assets/with-schemas [get]
 func (h *Handler) getAssetsWithSchemas(w http.ResponseWriter, r *http.Request) {
 	schemasCount, err := h.metricsService.GetAssetsWithSchemas(r.Context())
 	if err != nil {
@@ -373,7 +380,8 @@ type AssetsByOwnerResponse struct {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} AssetsByOwnerResponse
-// @Router /metrics/assets/by-owner [get]
+// @ID getMetricsAssetsByOwner
+// @Router /api/v1/metrics/assets/by-owner [get]
 func (h *Handler) getAssetsByOwner(w http.ResponseWriter, r *http.Request) {
 	assets, err := h.metricsService.GetAssetsByOwner(r.Context(), h.config.Metrics.OwnerMetadataFields)
 	if err != nil {

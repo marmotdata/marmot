@@ -29,7 +29,8 @@ type RunHistoryResponse struct {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/{id}/run-history [get]
+// @ID getAssetsIDRunHistory
+// @Router /api/v1/assets/run-history/{id} [get]
 func (h *Handler) getRunHistory(w http.ResponseWriter, r *http.Request) {
 	assetID := r.PathValue("id")
 	if assetID == "" {
@@ -85,7 +86,8 @@ type HistogramResponse struct {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/{id}/run-history/histogram [get]
+// @ID getAssetsIDRunHistoryHistogram
+// @Router /api/v1/assets/run-history-histogram/{id} [get]
 func (h *Handler) getRunHistoryHistogram(w http.ResponseWriter, r *http.Request) {
 	assetID := r.PathValue("id")
 	if assetID == "" {

@@ -40,7 +40,7 @@ func (o *PostUsersReader) ReadResponse(response runtime.ClientResponse, consumer
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /users] PostUsers", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/users] postUsers", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *PostUsersOK) Code() int {
 
 func (o *PostUsersOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users][%d] postUsersOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/users][%d] postUsersOK %s", 200, payload)
 }
 
 func (o *PostUsersOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users][%d] postUsersOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/users][%d] postUsersOK %s", 200, payload)
 }
 
 func (o *PostUsersOK) GetPayload() *models.User {
@@ -156,12 +156,12 @@ func (o *PostUsersBadRequest) Code() int {
 
 func (o *PostUsersBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users][%d] postUsersBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users][%d] postUsersBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users][%d] postUsersBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users][%d] postUsersBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *PostUsersConflict) Code() int {
 
 func (o *PostUsersConflict) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users][%d] postUsersConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/users][%d] postUsersConflict %s", 409, payload)
 }
 
 func (o *PostUsersConflict) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users][%d] postUsersConflict %s", 409, payload)
+	return fmt.Sprintf("[POST /api/v1/users][%d] postUsersConflict %s", 409, payload)
 }
 
 func (o *PostUsersConflict) GetPayload() *models.ErrorResponse {

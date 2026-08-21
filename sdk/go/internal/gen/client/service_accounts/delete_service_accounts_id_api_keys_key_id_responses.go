@@ -34,7 +34,7 @@ func (o *DeleteServiceAccountsIDAPIKeysKeyIDReader) ReadResponse(response runtim
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /service-accounts/{id}/api-keys/{keyId}] DeleteServiceAccountsIDAPIKeysKeyID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/service-accounts/{id}/api-keys/{keyId}] deleteServiceAccountsIDAPIKeysKeyID", response, response.Code())
 	}
 }
 
@@ -80,11 +80,11 @@ func (o *DeleteServiceAccountsIDAPIKeysKeyIDNoContent) Code() int {
 }
 
 func (o *DeleteServiceAccountsIDAPIKeysKeyIDNoContent) Error() string {
-	return fmt.Sprintf("[DELETE /service-accounts/{id}/api-keys/{keyId}][%d] deleteServiceAccountsIdApiKeysKeyIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/service-accounts/{id}/api-keys/{keyId}][%d] deleteServiceAccountsIdApiKeysKeyIdNoContent", 204)
 }
 
 func (o *DeleteServiceAccountsIDAPIKeysKeyIDNoContent) String() string {
-	return fmt.Sprintf("[DELETE /service-accounts/{id}/api-keys/{keyId}][%d] deleteServiceAccountsIdApiKeysKeyIdNoContent", 204)
+	return fmt.Sprintf("[DELETE /api/v1/service-accounts/{id}/api-keys/{keyId}][%d] deleteServiceAccountsIdApiKeysKeyIdNoContent", 204)
 }
 
 func (o *DeleteServiceAccountsIDAPIKeysKeyIDNoContent) readResponse(response runtime.ClientResponse, consumer runtime.Consumer, formats strfmt.Registry) error {
@@ -136,12 +136,12 @@ func (o *DeleteServiceAccountsIDAPIKeysKeyIDNotFound) Code() int {
 
 func (o *DeleteServiceAccountsIDAPIKeysKeyIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /service-accounts/{id}/api-keys/{keyId}][%d] deleteServiceAccountsIdApiKeysKeyIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/service-accounts/{id}/api-keys/{keyId}][%d] deleteServiceAccountsIdApiKeysKeyIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteServiceAccountsIDAPIKeysKeyIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /service-accounts/{id}/api-keys/{keyId}][%d] deleteServiceAccountsIdApiKeysKeyIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/service-accounts/{id}/api-keys/{keyId}][%d] deleteServiceAccountsIdApiKeysKeyIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteServiceAccountsIDAPIKeysKeyIDNotFound) GetPayload() *models.ErrorResponse {

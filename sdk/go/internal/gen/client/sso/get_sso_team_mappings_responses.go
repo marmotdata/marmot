@@ -34,7 +34,7 @@ func (o *GetSsoTeamMappingsReader) ReadResponse(response runtime.ClientResponse,
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /sso/team-mappings] GetSsoTeamMappings", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/sso/team-mappings] getSsoTeamMappings", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetSsoTeamMappingsOK) Code() int {
 
 func (o *GetSsoTeamMappingsOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings][%d] getSsoTeamMappingsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings][%d] getSsoTeamMappingsOK %s", 200, payload)
 }
 
 func (o *GetSsoTeamMappingsOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings][%d] getSsoTeamMappingsOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings][%d] getSsoTeamMappingsOK %s", 200, payload)
 }
 
 func (o *GetSsoTeamMappingsOK) GetPayload() *models.ListSSOMappingsResponse {
@@ -150,12 +150,12 @@ func (o *GetSsoTeamMappingsInternalServerError) Code() int {
 
 func (o *GetSsoTeamMappingsInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings][%d] getSsoTeamMappingsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings][%d] getSsoTeamMappingsInternalServerError %s", 500, payload)
 }
 
 func (o *GetSsoTeamMappingsInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /sso/team-mappings][%d] getSsoTeamMappingsInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/sso/team-mappings][%d] getSsoTeamMappingsInternalServerError %s", 500, payload)
 }
 
 func (o *GetSsoTeamMappingsInternalServerError) GetPayload() *models.ErrorResponse {

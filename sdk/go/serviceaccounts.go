@@ -43,7 +43,7 @@ type ServiceAccountsService struct {
 // List returns all service accounts.
 func (s *ServiceAccountsService) List(ctx context.Context) ([]*ServiceAccount, error) {
 	p := service_accounts.NewGetServiceAccountsParams().WithContext(ctx)
-	resp, err := s.gen.ServiceAccounts.GetServiceAccountsContext(ctx, p)
+	resp, err := s.gen.ServiceAccounts.GetServiceAccountsContext(ctx, p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -53,7 +53,7 @@ func (s *ServiceAccountsService) List(ctx context.Context) ([]*ServiceAccount, e
 // Get fetches a service account by ID.
 func (s *ServiceAccountsService) Get(ctx context.Context, id string) (*ServiceAccount, error) {
 	p := service_accounts.NewGetServiceAccountsIDParams().WithContext(ctx).WithID(id)
-	resp, err := s.gen.ServiceAccounts.GetServiceAccountsIDContext(ctx, p)
+	resp, err := s.gen.ServiceAccounts.GetServiceAccountsIDContext(ctx, p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -68,7 +68,7 @@ func (s *ServiceAccountsService) Create(ctx context.Context, in CreateServiceAcc
 		RoleIds:     in.RoleIDs,
 	}
 	p := service_accounts.NewPostServiceAccountsParams().WithContext(ctx).WithAccount(body)
-	resp, err := s.gen.ServiceAccounts.PostServiceAccountsContext(ctx, p)
+	resp, err := s.gen.ServiceAccounts.PostServiceAccountsContext(ctx, p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -84,7 +84,7 @@ func (s *ServiceAccountsService) Update(ctx context.Context, id string, in Updat
 		RoleIds:     in.RoleIDs,
 	}
 	p := service_accounts.NewPatchServiceAccountsIDParams().WithContext(ctx).WithID(id).WithAccount(body)
-	resp, err := s.gen.ServiceAccounts.PatchServiceAccountsIDContext(ctx, p)
+	resp, err := s.gen.ServiceAccounts.PatchServiceAccountsIDContext(ctx, p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -94,14 +94,14 @@ func (s *ServiceAccountsService) Update(ctx context.Context, id string, in Updat
 // Delete soft-deletes a service account.
 func (s *ServiceAccountsService) Delete(ctx context.Context, id string) error {
 	p := service_accounts.NewDeleteServiceAccountsIDParams().WithContext(ctx).WithID(id)
-	_, err := s.gen.ServiceAccounts.DeleteServiceAccountsIDContext(ctx, p)
+	_, err := s.gen.ServiceAccounts.DeleteServiceAccountsIDContext(ctx, p, nil)
 	return mapErr(err)
 }
 
 // ListAPIKeys returns all API keys for a service account.
 func (s *ServiceAccountsService) ListAPIKeys(ctx context.Context, saID string) ([]*ServiceAccountAPIKey, error) {
 	p := service_accounts.NewGetServiceAccountsIDAPIKeysParams().WithContext(ctx).WithID(saID)
-	resp, err := s.gen.ServiceAccounts.GetServiceAccountsIDAPIKeysContext(ctx, p)
+	resp, err := s.gen.ServiceAccounts.GetServiceAccountsIDAPIKeysContext(ctx, p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -115,7 +115,7 @@ func (s *ServiceAccountsService) CreateAPIKey(ctx context.Context, saID string, 
 		ExpiresInDays: in.ExpiresInDays,
 	}
 	p := service_accounts.NewPostServiceAccountsIDAPIKeysParams().WithContext(ctx).WithID(saID).WithKey(body)
-	resp, err := s.gen.ServiceAccounts.PostServiceAccountsIDAPIKeysContext(ctx, p)
+	resp, err := s.gen.ServiceAccounts.PostServiceAccountsIDAPIKeysContext(ctx, p, nil)
 	if err != nil {
 		return nil, mapErr(err)
 	}
@@ -125,6 +125,6 @@ func (s *ServiceAccountsService) CreateAPIKey(ctx context.Context, saID string, 
 // DeleteAPIKey deletes an API key from a service account.
 func (s *ServiceAccountsService) DeleteAPIKey(ctx context.Context, saID, keyID string) error {
 	p := service_accounts.NewDeleteServiceAccountsIDAPIKeysKeyIDParams().WithContext(ctx).WithID(saID).WithKeyID(keyID)
-	_, err := s.gen.ServiceAccounts.DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx, p)
+	_, err := s.gen.ServiceAccounts.DeleteServiceAccountsIDAPIKeysKeyIDContext(ctx, p, nil)
 	return mapErr(err)
 }

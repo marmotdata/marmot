@@ -40,7 +40,7 @@ func (o *GetLineageDirectIDReader) ReadResponse(response runtime.ClientResponse,
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /lineage/direct/{id}] GetLineageDirectID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/lineage/direct/{id}] getLineageDirectID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetLineageDirectIDOK) Code() int {
 
 func (o *GetLineageDirectIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/direct/{id}][%d] getLineageDirectIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/direct/{id}][%d] getLineageDirectIdOK %s", 200, payload)
 }
 
 func (o *GetLineageDirectIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/direct/{id}][%d] getLineageDirectIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/direct/{id}][%d] getLineageDirectIdOK %s", 200, payload)
 }
 
 func (o *GetLineageDirectIDOK) GetPayload() *models.LineageEdge {
@@ -156,12 +156,12 @@ func (o *GetLineageDirectIDNotFound) Code() int {
 
 func (o *GetLineageDirectIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/direct/{id}][%d] getLineageDirectIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/direct/{id}][%d] getLineageDirectIdNotFound %s", 404, payload)
 }
 
 func (o *GetLineageDirectIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/direct/{id}][%d] getLineageDirectIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/direct/{id}][%d] getLineageDirectIdNotFound %s", 404, payload)
 }
 
 func (o *GetLineageDirectIDNotFound) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetLineageDirectIDInternalServerError) Code() int {
 
 func (o *GetLineageDirectIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/direct/{id}][%d] getLineageDirectIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/direct/{id}][%d] getLineageDirectIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetLineageDirectIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /lineage/direct/{id}][%d] getLineageDirectIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/lineage/direct/{id}][%d] getLineageDirectIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetLineageDirectIDInternalServerError) GetPayload() *models.ErrorResponse {

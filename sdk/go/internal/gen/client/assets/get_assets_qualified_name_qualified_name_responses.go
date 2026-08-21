@@ -40,7 +40,7 @@ func (o *GetAssetsQualifiedNameQualifiedNameReader) ReadResponse(response runtim
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/qualified-name/{qualifiedName}] GetAssetsQualifiedNameQualifiedName", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/qualified-name/{name}] getAssetsQualifiedNameQualifiedName", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetAssetsQualifiedNameQualifiedNameOK) Code() int {
 
 func (o *GetAssetsQualifiedNameQualifiedNameOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/qualified-name/{qualifiedName}][%d] getAssetsQualifiedNameQualifiedNameOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/qualified-name/{name}][%d] getAssetsQualifiedNameQualifiedNameOK %s", 200, payload)
 }
 
 func (o *GetAssetsQualifiedNameQualifiedNameOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/qualified-name/{qualifiedName}][%d] getAssetsQualifiedNameQualifiedNameOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/qualified-name/{name}][%d] getAssetsQualifiedNameQualifiedNameOK %s", 200, payload)
 }
 
 func (o *GetAssetsQualifiedNameQualifiedNameOK) GetPayload() *models.Asset {
@@ -156,12 +156,12 @@ func (o *GetAssetsQualifiedNameQualifiedNameNotFound) Code() int {
 
 func (o *GetAssetsQualifiedNameQualifiedNameNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/qualified-name/{qualifiedName}][%d] getAssetsQualifiedNameQualifiedNameNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/qualified-name/{name}][%d] getAssetsQualifiedNameQualifiedNameNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsQualifiedNameQualifiedNameNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/qualified-name/{qualifiedName}][%d] getAssetsQualifiedNameQualifiedNameNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/qualified-name/{name}][%d] getAssetsQualifiedNameQualifiedNameNotFound %s", 404, payload)
 }
 
 func (o *GetAssetsQualifiedNameQualifiedNameNotFound) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetAssetsQualifiedNameQualifiedNameInternalServerError) Code() int {
 
 func (o *GetAssetsQualifiedNameQualifiedNameInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/qualified-name/{qualifiedName}][%d] getAssetsQualifiedNameQualifiedNameInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/qualified-name/{name}][%d] getAssetsQualifiedNameQualifiedNameInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsQualifiedNameQualifiedNameInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/qualified-name/{qualifiedName}][%d] getAssetsQualifiedNameQualifiedNameInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/qualified-name/{name}][%d] getAssetsQualifiedNameQualifiedNameInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsQualifiedNameQualifiedNameInternalServerError) GetPayload() *models.ErrorResponse {

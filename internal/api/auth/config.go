@@ -16,6 +16,7 @@ type AuthConfig struct {
 // @Tags auth
 // @Produce json
 // @Success 200 {object} AuthConfig
+// @ID getAuthProviders
 // @Router /auth-providers [get]
 func (h *Handler) getAuthConfig(w http.ResponseWriter, r *http.Request) {
 	config := AuthConfig{
@@ -43,7 +44,8 @@ type ssoProvidersResponse struct {
 // @Security ApiKeyAuth
 // @Security BearerAuth
 // @Success 200 {object} ssoProvidersResponse
-// @Router /sso-providers [get]
+// @ID getSsoProviders
+// @Router /api/v1/sso-providers [get]
 func (h *Handler) getSSOProviders(w http.ResponseWriter, r *http.Request) {
 	out := ssoProvidersResponse{Providers: []SSOProvider{}}
 	for _, p := range h.oauthManager.GetProviders() {

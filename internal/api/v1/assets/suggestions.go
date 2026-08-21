@@ -17,7 +17,8 @@ import (
 // @Security BearerAuth
 // @Success 200 {array} asset.MetadataFieldSuggestion
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/suggestions/metadata/fields [get]
+// @ID getAssetsSuggestionsMetadataFields
+// @Router /api/v1/assets/suggestions/metadata/fields [get]
 func (h *Handler) getMetadataFieldSuggestions(w http.ResponseWriter, r *http.Request) {
 	var queryContext *asset.MetadataContext
 	if contextQuery := r.URL.Query().Get("context"); contextQuery != "" {
@@ -53,7 +54,8 @@ func (h *Handler) getMetadataFieldSuggestions(w http.ResponseWriter, r *http.Req
 // @Success 200 {array} asset.MetadataValueSuggestion
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/suggestions/metadata/values [get]
+// @ID getAssetsSuggestionsMetadataValues
+// @Router /api/v1/assets/suggestions/metadata/values [get]
 func (h *Handler) getMetadataValueSuggestions(w http.ResponseWriter, r *http.Request) {
 	field := r.URL.Query().Get("field")
 	if field == "" {

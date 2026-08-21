@@ -18,7 +18,8 @@ import (
 // @Security BearerAuth
 // @Success 200 {array} role.Role
 // @Failure 500 {object} common.ErrorResponse
-// @Router /roles [get]
+// @ID getRoles
+// @Router /api/v1/roles [get]
 func (h *Handler) listRoles(w http.ResponseWriter, r *http.Request) {
 	roles, err := h.roleService.List(r.Context())
 	if err != nil {
@@ -38,7 +39,8 @@ func (h *Handler) listRoles(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 200 {object} role.Role
 // @Failure 404 {object} common.ErrorResponse
-// @Router /roles/{id} [get]
+// @ID getRolesID
+// @Router /api/v1/roles/{id} [get]
 func (h *Handler) getRole(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -77,7 +79,8 @@ type createRoleRequest struct {
 // @Success 200 {object} role.Role
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
-// @Router /roles [post]
+// @ID postRoles
+// @Router /api/v1/roles [post]
 func (h *Handler) createRole(w http.ResponseWriter, r *http.Request) {
 	var req createRoleRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -125,7 +128,8 @@ type updateRoleRequest struct {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 422 {object} common.ErrorResponse
-// @Router /roles/{id} [patch]
+// @ID patchRolesID
+// @Router /api/v1/roles/{id} [patch]
 func (h *Handler) updateRole(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -169,7 +173,8 @@ func (h *Handler) updateRole(w http.ResponseWriter, r *http.Request) {
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 422 {object} common.ErrorResponse
-// @Router /roles/{id} [delete]
+// @ID deleteRolesID
+// @Router /api/v1/roles/{id} [delete]
 func (h *Handler) deleteRole(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -213,7 +218,8 @@ type replacePermissionsRequest struct {
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 422 {object} common.ErrorResponse
-// @Router /roles/{id}/permissions [post]
+// @ID postRolesIDPermissions
+// @Router /api/v1/roles/{id}/permissions [post]
 func (h *Handler) replacePermissions(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -258,7 +264,8 @@ func (h *Handler) replacePermissions(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 200 {array} role.Permission
 // @Failure 500 {object} common.ErrorResponse
-// @Router /permissions [get]
+// @ID getPermissions
+// @Router /api/v1/permissions [get]
 func (h *Handler) listPermissions(w http.ResponseWriter, r *http.Request) {
 	perms, err := h.roleService.ListPermissions(r.Context())
 	if err != nil {

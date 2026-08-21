@@ -19,7 +19,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/admin/search/reindex": {
+        "/api/v1/admin/search/reindex": {
             "get": {
                 "security": [
                     {
@@ -37,6 +37,7 @@ const docTemplate = `{
                     "admin"
                 ],
                 "summary": "Get reindex status",
+                "operationId": "getAdminSearchReindex",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -75,6 +76,7 @@ const docTemplate = `{
                     "admin"
                 ],
                 "summary": "Start search reindex",
+                "operationId": "postAdminSearchReindex",
                 "responses": {
                     "202": {
                         "description": "Accepted",
@@ -109,7 +111,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/agents/runs": {
+        "/api/v1/agents/runs": {
             "post": {
                 "security": [
                     {
@@ -129,6 +131,7 @@ const docTemplate = `{
                     "agents"
                 ],
                 "summary": "Record agent run",
+                "operationId": "postAgentsRuns",
                 "parameters": [
                     {
                         "description": "Agent run record",
@@ -150,7 +153,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/agents/{asset_id}/activity": {
+        "/api/v1/agents/{asset_id}/activity": {
             "get": {
                 "security": [
                     {
@@ -167,6 +170,7 @@ const docTemplate = `{
                     "agents"
                 ],
                 "summary": "Agent activity",
+                "operationId": "getAgentsAssetIDActivity",
                 "parameters": [
                     {
                         "type": "string",
@@ -192,7 +196,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/agents/{asset_id}/runs": {
+        "/api/v1/agents/{asset_id}/runs": {
             "get": {
                 "security": [
                     {
@@ -209,6 +213,7 @@ const docTemplate = `{
                     "agents"
                 ],
                 "summary": "List agent runs",
+                "operationId": "getAgentsAssetIDRuns",
                 "parameters": [
                     {
                         "type": "string",
@@ -240,7 +245,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/agents/{asset_id}/stats": {
+        "/api/v1/agents/{asset_id}/stats": {
             "get": {
                 "security": [
                     {
@@ -257,6 +262,7 @@ const docTemplate = `{
                     "agents"
                 ],
                 "summary": "Agent stats",
+                "operationId": "getAgentsAssetIDStats",
                 "parameters": [
                     {
                         "type": "string",
@@ -282,7 +288,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/asset-rules": {
+        "/api/v1/asset-rules/": {
             "post": {
                 "security": [
                     {
@@ -303,6 +309,7 @@ const docTemplate = `{
                     "asset-rules"
                 ],
                 "summary": "Create an asset rule",
+                "operationId": "postAssetRules",
                 "parameters": [
                     {
                         "description": "Asset rule creation request",
@@ -342,7 +349,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/asset-rules/assets/{id}": {
+        "/api/v1/asset-rules/assets/{id}": {
             "get": {
                 "security": [
                     {
@@ -360,6 +367,7 @@ const docTemplate = `{
                     "asset-rules"
                 ],
                 "summary": "Get assets matched by a rule",
+                "operationId": "getAssetRulesAssetsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -406,7 +414,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/asset-rules/list": {
+        "/api/v1/asset-rules/list": {
             "get": {
                 "security": [
                     {
@@ -424,6 +432,7 @@ const docTemplate = `{
                     "asset-rules"
                 ],
                 "summary": "List asset rules",
+                "operationId": "getAssetRulesList",
                 "parameters": [
                     {
                         "type": "integer",
@@ -456,7 +465,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/asset-rules/preview": {
+        "/api/v1/asset-rules/preview": {
             "post": {
                 "security": [
                     {
@@ -477,6 +486,7 @@ const docTemplate = `{
                     "asset-rules"
                 ],
                 "summary": "Preview an asset rule",
+                "operationId": "postAssetRulesPreview",
                 "parameters": [
                     {
                         "description": "Rule preview request",
@@ -510,7 +520,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/asset-rules/search": {
+        "/api/v1/asset-rules/search": {
             "get": {
                 "security": [
                     {
@@ -528,6 +538,7 @@ const docTemplate = `{
                     "asset-rules"
                 ],
                 "summary": "Search asset rules",
+                "operationId": "getAssetRulesSearch",
                 "parameters": [
                     {
                         "type": "string",
@@ -566,7 +577,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/asset-rules/{id}": {
+        "/api/v1/asset-rules/{id}": {
             "get": {
                 "security": [
                     {
@@ -584,6 +595,7 @@ const docTemplate = `{
                     "asset-rules"
                 ],
                 "summary": "Get an asset rule",
+                "operationId": "getAssetRulesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -634,6 +646,7 @@ const docTemplate = `{
                     "asset-rules"
                 ],
                 "summary": "Update an asset rule",
+                "operationId": "putAssetRulesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -699,6 +712,7 @@ const docTemplate = `{
                     "asset-rules"
                 ],
                 "summary": "Delete an asset rule",
+                "operationId": "deleteAssetRulesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -727,7 +741,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets": {
+        "/api/v1/assets/": {
             "post": {
                 "security": [
                     {
@@ -748,6 +762,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Create a new asset",
+                "operationId": "postAssets",
                 "parameters": [
                     {
                         "description": "Asset creation request",
@@ -787,7 +802,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/by-glossary-term/{term_id}": {
+        "/api/v1/assets/by-glossary-term/{term_id}": {
             "get": {
                 "security": [
                     {
@@ -805,6 +820,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get assets by glossary term",
+                "operationId": "getAssetsByGlossaryTermTermID",
                 "parameters": [
                     {
                         "type": "string",
@@ -845,7 +861,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/documentation": {
+        "/api/v1/assets/documentation/": {
             "post": {
                 "security": [
                     {
@@ -866,6 +882,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Create asset documentation",
+                "operationId": "postAssetsDocumentation",
                 "parameters": [
                     {
                         "description": "Documentation creation request",
@@ -899,7 +916,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/documentation/batch": {
+        "/api/v1/assets/documentation/batch": {
             "post": {
                 "security": [
                     {
@@ -920,6 +937,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Batch create documentation",
+                "operationId": "postAssetsDocumentationBatch",
                 "parameters": [
                     {
                         "description": "Batch documentation request",
@@ -953,7 +971,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/documentation/{mrn}": {
+        "/api/v1/assets/documentation/{mrn}": {
             "get": {
                 "security": [
                     {
@@ -971,6 +989,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get asset documentation",
+                "operationId": "getAssetsDocumentationMrn",
                 "parameters": [
                     {
                         "type": "string",
@@ -1006,7 +1025,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/lookup/{type}/{service}/{name}": {
+        "/api/v1/assets/lookup/{type}/{service}/{name}": {
             "get": {
                 "security": [
                     {
@@ -1024,6 +1043,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Lookup asset by type, service, and name",
+                "operationId": "getAssetsLookupTypeServiceName",
                 "parameters": [
                     {
                         "type": "string",
@@ -1069,7 +1089,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/match-pattern": {
+        "/api/v1/assets/match-pattern/": {
             "get": {
                 "security": [
                     {
@@ -1087,6 +1107,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Match asset pattern",
+                "operationId": "getAssetsMatchPattern",
                 "parameters": [
                     {
                         "type": "string",
@@ -1128,7 +1149,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/my-assets": {
+        "/api/v1/assets/my-assets": {
             "get": {
                 "security": [
                     {
@@ -1146,6 +1167,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get user's assets",
+                "operationId": "getAssetsMyAssets",
                 "parameters": [
                     {
                         "type": "integer",
@@ -1184,7 +1206,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/preview/{id}": {
+        "/api/v1/assets/preview/{id}": {
             "get": {
                 "security": [
                     {
@@ -1202,6 +1224,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get preview data for an asset",
+                "operationId": "getAssetsPreviewID",
                 "parameters": [
                     {
                         "type": "string",
@@ -1251,7 +1274,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/qualified-name/{qualifiedName}": {
+        "/api/v1/assets/qualified-name/{name}": {
             "get": {
                 "security": [
                     {
@@ -1272,11 +1295,12 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get an asset by qualified name",
+                "operationId": "getAssetsQualifiedNameQualifiedName",
                 "parameters": [
                     {
                         "type": "string",
                         "description": "Asset qualified name",
-                        "name": "qualifiedName",
+                        "name": "name",
                         "in": "path",
                         "required": true
                     }
@@ -1303,7 +1327,140 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/search": {
+        "/api/v1/assets/run-history-histogram/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get histogram data for asset run history over specified period",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get asset run history histogram",
+                "operationId": "getAssetsIDRunHistoryHistogram",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "30d",
+                        "description": "Time period (7d, 30d, 90d)",
+                        "name": "period",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/HistogramResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/assets/run-history/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    },
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Get paginated run history for a specific asset",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "assets"
+                ],
+                "summary": "Get asset run history",
+                "operationId": "getAssetsIDRunHistory",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Asset ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "integer",
+                        "default": 10,
+                        "description": "Number of items per page",
+                        "name": "limit",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "default": 0,
+                        "description": "Number of items to skip",
+                        "name": "offset",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/RunHistoryResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/assets/search": {
             "get": {
                 "security": [
                     {
@@ -1324,6 +1481,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Search assets",
+                "operationId": "getAssetsSearch",
                 "parameters": [
                     {
                         "type": "string",
@@ -1405,7 +1563,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/suggestions/metadata/fields": {
+        "/api/v1/assets/suggestions/metadata/fields": {
             "get": {
                 "security": [
                     {
@@ -1423,6 +1581,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get metadata field suggestions",
+                "operationId": "getAssetsSuggestionsMetadataFields",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1442,7 +1601,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/suggestions/metadata/values": {
+        "/api/v1/assets/suggestions/metadata/values": {
             "get": {
                 "security": [
                     {
@@ -1460,6 +1619,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get metadata value suggestions",
+                "operationId": "getAssetsSuggestionsMetadataValues",
                 "parameters": [
                     {
                         "type": "string",
@@ -1507,7 +1667,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/suggestions/tags": {
+        "/api/v1/assets/suggestions/tags": {
             "get": {
                 "security": [
                     {
@@ -1525,6 +1685,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get tag suggestions",
+                "operationId": "getAssetsSuggestionsTags",
                 "parameters": [
                     {
                         "type": "string",
@@ -1559,7 +1720,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/summary": {
+        "/api/v1/assets/summary": {
             "get": {
                 "security": [
                     {
@@ -1580,6 +1741,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get asset summary",
+                "operationId": "getAssetsSummary",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -1596,7 +1758,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/tags/{id}": {
+        "/api/v1/assets/tags/{id}": {
             "post": {
                 "security": [
                     {
@@ -1617,6 +1779,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Add tag to asset",
+                "operationId": "postAssetsTagsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -1676,6 +1839,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Remove tag from asset",
+                "operationId": "deleteAssetsTagsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -1716,7 +1880,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/terms/{id}": {
+        "/api/v1/assets/terms/{id}": {
             "get": {
                 "security": [
                     {
@@ -1734,6 +1898,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get asset's glossary terms",
+                "operationId": "getAssetsTermsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -1781,6 +1946,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Add glossary terms to asset",
+                "operationId": "postAssetsTermsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -1843,6 +2009,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Remove glossary term from asset",
+                "operationId": "deleteAssetsTermsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -1886,7 +2053,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/{id}": {
+        "/api/v1/assets/{id}": {
             "get": {
                 "security": [
                     {
@@ -1907,6 +2074,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Get an asset by ID",
+                "operationId": "getAssetsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -1957,6 +2125,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Update an asset",
+                "operationId": "putAssetsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2022,6 +2191,7 @@ const docTemplate = `{
                     "assets"
                 ],
                 "summary": "Delete an asset",
+                "operationId": "deleteAssetsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2056,260 +2226,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/assets/{id}/run-history": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    },
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get paginated run history for a specific asset",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Get asset run history",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Asset ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "integer",
-                        "default": 10,
-                        "description": "Number of items per page",
-                        "name": "limit",
-                        "in": "query"
-                    },
-                    {
-                        "type": "integer",
-                        "default": 0,
-                        "description": "Number of items to skip",
-                        "name": "offset",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/RunHistoryResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/assets/{id}/run-history/histogram": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    },
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Get histogram data for asset run history over specified period",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "assets"
-                ],
-                "summary": "Get asset run history histogram",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "Asset ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "default": "30d",
-                        "description": "Time period (7d, 30d, 90d)",
-                        "name": "period",
-                        "in": "query"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/HistogramResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth-providers": {
-            "get": {
-                "description": "Returns the enabled auth providers without sensitive data",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Get auth configuration",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/AuthConfig"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/{provider}/callback": {
-            "get": {
-                "description": "Processes the OAuth callback from any provider",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Handle OAuth callback",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "OAuth provider (okta, google, github, etc.)",
-                        "name": "provider",
-                        "in": "path",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Authorization code",
-                        "name": "code",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "State parameter for CSRF protection",
-                        "name": "state",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "307": {
-                        "description": "Temporary Redirect",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/auth/{provider}/login": {
-            "get": {
-                "description": "Redirects the user to the OAuth provider for authentication",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "Initiate OAuth login",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "OAuth provider (okta, google, github, etc.)",
-                        "name": "provider",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "307": {
-                        "description": "Temporary Redirect",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/ErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/glossary/": {
+        "/api/v1/glossary/": {
             "post": {
                 "security": [
                     {
@@ -2330,6 +2247,7 @@ const docTemplate = `{
                     "glossary"
                 ],
                 "summary": "Create glossary term",
+                "operationId": "postGlossary",
                 "parameters": [
                     {
                         "description": "Glossary term to create",
@@ -2375,7 +2293,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/glossary/ancestors/{id}": {
+        "/api/v1/glossary/ancestors/{id}": {
             "get": {
                 "security": [
                     {
@@ -2393,6 +2311,7 @@ const docTemplate = `{
                     "glossary"
                 ],
                 "summary": "Get ancestor terms",
+                "operationId": "getGlossaryAncestorsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2431,7 +2350,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/glossary/children/{id}": {
+        "/api/v1/glossary/children/{id}": {
             "get": {
                 "security": [
                     {
@@ -2449,6 +2368,7 @@ const docTemplate = `{
                     "glossary"
                 ],
                 "summary": "Get child terms",
+                "operationId": "getGlossaryChildrenID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2487,7 +2407,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/glossary/list": {
+        "/api/v1/glossary/list": {
             "get": {
                 "security": [
                     {
@@ -2505,6 +2425,7 @@ const docTemplate = `{
                     "glossary"
                 ],
                 "summary": "List glossary terms",
+                "operationId": "getGlossaryList",
                 "parameters": [
                     {
                         "type": "integer",
@@ -2537,7 +2458,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/glossary/search": {
+        "/api/v1/glossary/search": {
             "get": {
                 "security": [
                     {
@@ -2555,6 +2476,7 @@ const docTemplate = `{
                     "glossary"
                 ],
                 "summary": "Search glossary terms",
+                "operationId": "getGlossarySearch",
                 "parameters": [
                     {
                         "type": "string",
@@ -2605,7 +2527,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/glossary/{id}": {
+        "/api/v1/glossary/{id}": {
             "get": {
                 "security": [
                     {
@@ -2623,6 +2545,7 @@ const docTemplate = `{
                     "glossary"
                 ],
                 "summary": "Get glossary term",
+                "operationId": "getGlossaryID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2679,6 +2602,7 @@ const docTemplate = `{
                     "glossary"
                 ],
                 "summary": "Update glossary term",
+                "operationId": "putGlossaryID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2741,6 +2665,7 @@ const docTemplate = `{
                     "glossary"
                 ],
                 "summary": "Delete glossary term",
+                "operationId": "deleteGlossaryID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2781,7 +2706,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ingestion/runs": {
+        "/api/v1/ingestion/runs": {
             "get": {
                 "security": [
                     {
@@ -2798,6 +2723,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "List ingestion job runs",
+                "operationId": "getIngestionRuns",
                 "parameters": [
                     {
                         "type": "string",
@@ -2846,7 +2772,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ingestion/runs/{id}": {
+        "/api/v1/ingestion/runs/{id}": {
             "get": {
                 "security": [
                     {
@@ -2863,6 +2789,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "Get a job run by ID",
+                "operationId": "getIngestionRunsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -2900,7 +2827,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ingestion/runs/{id}/cancel": {
+        "/api/v1/ingestion/runs/{id}/cancel": {
             "post": {
                 "security": [
                     {
@@ -2914,6 +2841,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "Cancel a running job",
+                "operationId": "postIngestionRunsIDCancel",
                 "parameters": [
                     {
                         "type": "string",
@@ -2948,7 +2876,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ingestion/runs/{id}/entities": {
+        "/api/v1/ingestion/runs/{id}/entities": {
             "get": {
                 "security": [
                     {
@@ -2965,6 +2893,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "Get entities for a job run",
+                "operationId": "getIngestionRunsIDEntities",
                 "parameters": [
                     {
                         "type": "string",
@@ -3015,7 +2944,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ingestion/schedules": {
+        "/api/v1/ingestion/schedules": {
             "get": {
                 "security": [
                     {
@@ -3032,6 +2961,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "List ingestion schedules",
+                "operationId": "getIngestionSchedules",
                 "parameters": [
                     {
                         "type": "boolean",
@@ -3092,6 +3022,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "Create a new ingestion schedule",
+                "operationId": "postIngestionSchedules",
                 "parameters": [
                     {
                         "description": "Schedule configuration",
@@ -3131,7 +3062,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ingestion/schedules/{id}": {
+        "/api/v1/ingestion/schedules/{id}": {
             "get": {
                 "security": [
                     {
@@ -3148,6 +3079,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "Get an ingestion schedule by ID",
+                "operationId": "getIngestionSchedulesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -3203,6 +3135,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "Update an ingestion schedule",
+                "operationId": "putIngestionSchedulesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -3267,6 +3200,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "Delete an ingestion schedule",
+                "operationId": "deleteIngestionSchedulesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -3301,7 +3235,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ingestion/schedules/{id}/trigger": {
+        "/api/v1/ingestion/schedules/{id}/trigger": {
             "post": {
                 "security": [
                     {
@@ -3315,6 +3249,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "Manually trigger an ingestion schedule",
+                "operationId": "postIngestionSchedulesIDTrigger",
                 "parameters": [
                     {
                         "type": "string",
@@ -3352,7 +3287,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ingestion/validate": {
+        "/api/v1/ingestion/validate": {
             "post": {
                 "security": [
                     {
@@ -3372,6 +3307,7 @@ const docTemplate = `{
                     "ingestion"
                 ],
                 "summary": "Validate plugin configuration",
+                "operationId": "postIngestionValidate",
                 "parameters": [
                     {
                         "description": "Config to validate",
@@ -3405,7 +3341,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/lineage": {
+        "/api/v1/lineage": {
             "post": {
                 "security": [
                     {
@@ -3426,6 +3362,7 @@ const docTemplate = `{
                     "lineage"
                 ],
                 "summary": "Ingest OpenLineage event",
+                "operationId": "postLineage",
                 "parameters": [
                     {
                         "description": "OpenLineage run event",
@@ -3456,7 +3393,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/lineage/assets/{id}": {
+        "/api/v1/lineage/assets/{id}": {
             "get": {
                 "security": [
                     {
@@ -3477,6 +3414,7 @@ const docTemplate = `{
                     "lineage"
                 ],
                 "summary": "Get asset lineage",
+                "operationId": "getLineageAssetsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -3540,7 +3478,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/lineage/batch": {
+        "/api/v1/lineage/batch": {
             "post": {
                 "security": [
                     {
@@ -3561,6 +3499,7 @@ const docTemplate = `{
                     "lineage"
                 ],
                 "summary": "Batch create lineage edges",
+                "operationId": "postLineageBatch",
                 "parameters": [
                     {
                         "description": "Array of lineage edges to create",
@@ -3594,7 +3533,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/lineage/direct": {
+        "/api/v1/lineage/direct": {
             "post": {
                 "security": [
                     {
@@ -3615,6 +3554,7 @@ const docTemplate = `{
                     "lineage"
                 ],
                 "summary": "Create direct lineage",
+                "operationId": "postLineageDirect",
                 "parameters": [
                     {
                         "description": "Lineage edge to create",
@@ -3648,7 +3588,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/lineage/direct/{id}": {
+        "/api/v1/lineage/direct/{id}": {
             "get": {
                 "security": [
                     {
@@ -3669,6 +3609,7 @@ const docTemplate = `{
                     "lineage"
                 ],
                 "summary": "Get direct lineage by ID",
+                "operationId": "getLineageDirectID",
                 "parameters": [
                     {
                         "type": "string",
@@ -3720,6 +3661,7 @@ const docTemplate = `{
                     "lineage"
                 ],
                 "summary": "Delete direct lineage",
+                "operationId": "deleteLineageDirectID",
                 "parameters": [
                     {
                         "type": "string",
@@ -3749,7 +3691,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics": {
+        "/api/v1/metrics": {
             "get": {
                 "security": [
                     {
@@ -3770,6 +3712,7 @@ const docTemplate = `{
                     "metrics"
                 ],
                 "summary": "Get metrics for UI",
+                "operationId": "getMetrics",
                 "parameters": [
                     {
                         "type": "string",
@@ -3843,7 +3786,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/assets/by-owner": {
+        "/api/v1/metrics/assets/by-owner": {
             "get": {
                 "security": [
                     {
@@ -3861,6 +3804,7 @@ const docTemplate = `{
                     "metrics"
                 ],
                 "summary": "Get assets by owner",
+                "operationId": "getMetricsAssetsByOwner",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3871,7 +3815,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/assets/by-provider": {
+        "/api/v1/metrics/assets/by-provider": {
             "get": {
                 "security": [
                     {
@@ -3889,6 +3833,7 @@ const docTemplate = `{
                     "metrics"
                 ],
                 "summary": "Get assets by provider",
+                "operationId": "getMetricsAssetsByProvider",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3899,7 +3844,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/assets/by-type": {
+        "/api/v1/metrics/assets/by-type": {
             "get": {
                 "security": [
                     {
@@ -3917,6 +3862,7 @@ const docTemplate = `{
                     "metrics"
                 ],
                 "summary": "Get assets by type",
+                "operationId": "getMetricsAssetsByType",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3927,7 +3873,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/assets/total": {
+        "/api/v1/metrics/assets/total": {
             "get": {
                 "security": [
                     {
@@ -3945,6 +3891,7 @@ const docTemplate = `{
                     "metrics"
                 ],
                 "summary": "Get total assets count",
+                "operationId": "getMetricsAssetsTotal",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3955,7 +3902,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/assets/with-schemas": {
+        "/api/v1/metrics/assets/with-schemas": {
             "get": {
                 "security": [
                     {
@@ -3973,6 +3920,7 @@ const docTemplate = `{
                     "metrics"
                 ],
                 "summary": "Get assets with schemas count",
+                "operationId": "getMetricsAssetsWithSchemas",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -3983,7 +3931,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/top-assets": {
+        "/api/v1/metrics/top-assets": {
             "get": {
                 "security": [
                     {
@@ -4001,6 +3949,7 @@ const docTemplate = `{
                     "metrics"
                 ],
                 "summary": "Get top viewed assets",
+                "operationId": "getMetricsTopAssets",
                 "parameters": [
                     {
                         "type": "string",
@@ -4037,7 +3986,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/metrics/top-queries": {
+        "/api/v1/metrics/top-queries": {
             "get": {
                 "security": [
                     {
@@ -4055,6 +4004,7 @@ const docTemplate = `{
                     "metrics"
                 ],
                 "summary": "Get top search queries",
+                "operationId": "getMetricsTopQueries",
                 "parameters": [
                     {
                         "type": "string",
@@ -4091,69 +4041,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/oauth/token": {
-            "post": {
-                "description": "Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).\nFor token-exchange, supported subject_token_type values are\nurn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token.",
-                "consumes": [
-                    "application/x-www-form-urlencoded"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "auth"
-                ],
-                "summary": "OAuth token endpoint",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "authorization_code or urn:ietf:params:oauth:grant-type:token-exchange",
-                        "name": "grant_type",
-                        "in": "formData",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Token to exchange (token-exchange grant only)",
-                        "name": "subject_token",
-                        "in": "formData"
-                    },
-                    {
-                        "type": "string",
-                        "description": "id_token or access_token URI (token-exchange grant only)",
-                        "name": "subject_token_type",
-                        "in": "formData"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/TokenExchangeResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/OAuthErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/OAuthErrorResponse"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "$ref": "#/definitions/OAuthErrorResponse"
-                        }
-                    }
-                }
-            }
-        },
-        "/owners/search": {
+        "/api/v1/owners/search": {
             "get": {
                 "security": [
                     {
@@ -4174,6 +4062,7 @@ const docTemplate = `{
                     "owners"
                 ],
                 "summary": "Search owners",
+                "operationId": "getOwnersSearch",
                 "parameters": [
                     {
                         "type": "string",
@@ -4212,7 +4101,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/permissions": {
+        "/api/v1/permissions": {
             "get": {
                 "security": [
                     {
@@ -4230,6 +4119,7 @@ const docTemplate = `{
                     "roles"
                 ],
                 "summary": "List all permissions",
+                "operationId": "getPermissions",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4249,7 +4139,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/pipelines/{pipelineName}": {
+        "/api/v1/pipelines/{pipelineName}": {
             "delete": {
                 "security": [
                     {
@@ -4267,6 +4157,7 @@ const docTemplate = `{
                     "pipelines"
                 ],
                 "summary": "Destroy pipeline",
+                "operationId": "deletePipelinesPipelineName",
                 "parameters": [
                     {
                         "type": "string",
@@ -4286,7 +4177,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/plugins": {
+        "/api/v1/plugins": {
             "get": {
                 "produces": [
                     "application/json"
@@ -4295,6 +4186,7 @@ const docTemplate = `{
                     "plugins"
                 ],
                 "summary": "List registered plugins",
+                "operationId": "getPlugins",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4305,7 +4197,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/plugins/aws/credentials/status": {
+        "/api/v1/plugins/aws/credentials/status": {
             "get": {
                 "description": "Detects if AWS credentials are available from environment or config files",
                 "produces": [
@@ -4315,6 +4207,7 @@ const docTemplate = `{
                     "plugins"
                 ],
                 "summary": "Get AWS credential detection status",
+                "operationId": "getPluginsAwsCredentialsStatus",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -4325,7 +4218,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/": {
+        "/api/v1/products/": {
             "post": {
                 "security": [
                     {
@@ -4346,6 +4239,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Create data product",
+                "operationId": "postProducts",
                 "parameters": [
                     {
                         "description": "Data product to create",
@@ -4391,7 +4285,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/assets/{id}": {
+        "/api/v1/products/assets/{id}": {
             "get": {
                 "security": [
                     {
@@ -4409,6 +4303,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Get data product assets",
+                "operationId": "getProductsAssetsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -4479,6 +4374,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Add data product assets",
+                "operationId": "postProductsAssetsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -4534,7 +4430,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/assets/{id}/{assetId}": {
+        "/api/v1/products/assets/{id}/{assetId}": {
             "delete": {
                 "security": [
                     {
@@ -4552,6 +4448,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Remove data product asset",
+                "operationId": "deleteProductsAssetsIDAssetID",
                 "parameters": [
                     {
                         "type": "string",
@@ -4599,7 +4496,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/images/{id}": {
+        "/api/v1/products/images/{id}": {
             "get": {
                 "security": [
                     {
@@ -4617,6 +4514,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "List product images",
+                "operationId": "getProductsImagesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -4649,7 +4547,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/images/{id}/{purpose}": {
+        "/api/v1/products/images/{id}/{purpose}": {
             "get": {
                 "security": [
                     {
@@ -4670,6 +4568,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Get product image",
+                "operationId": "getProductsImagesIDPurpose",
                 "parameters": [
                     {
                         "type": "string",
@@ -4727,6 +4626,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Upload product image",
+                "operationId": "postProductsImagesIDPurpose",
                 "parameters": [
                     {
                         "type": "string",
@@ -4794,6 +4694,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Delete product image",
+                "operationId": "deleteProductsImagesIDPurpose",
                 "parameters": [
                     {
                         "type": "string",
@@ -4835,7 +4736,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/list": {
+        "/api/v1/products/list": {
             "get": {
                 "security": [
                     {
@@ -4853,6 +4754,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "List data products",
+                "operationId": "getProductsList",
                 "parameters": [
                     {
                         "type": "integer",
@@ -4885,7 +4787,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/resolved-assets/{id}": {
+        "/api/v1/products/resolved-assets/{id}": {
             "get": {
                 "security": [
                     {
@@ -4903,6 +4805,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Get resolved data product assets",
+                "operationId": "getProductsResolvedAssetsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -4954,7 +4857,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/rule-preview": {
+        "/api/v1/products/rule-preview": {
             "post": {
                 "security": [
                     {
@@ -4975,6 +4878,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Preview data product rule",
+                "operationId": "postProductsRulePreview",
                 "parameters": [
                     {
                         "description": "Rule to preview",
@@ -5015,7 +4919,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/rules/{id}": {
+        "/api/v1/products/rules/{id}": {
             "get": {
                 "security": [
                     {
@@ -5033,6 +4937,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Get data product rules",
+                "operationId": "getProductsRulesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5089,6 +4994,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Create data product rule",
+                "operationId": "postProductsRulesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5135,7 +5041,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/rules/{id}/{ruleId}": {
+        "/api/v1/products/rules/{id}/{ruleId}": {
             "put": {
                 "security": [
                     {
@@ -5156,6 +5062,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Update data product rule",
+                "operationId": "putProductsRulesIDRuleID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5225,6 +5132,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Delete data product rule",
+                "operationId": "deleteProductsRulesIDRuleID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5272,7 +5180,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/search": {
+        "/api/v1/products/search": {
             "get": {
                 "security": [
                     {
@@ -5290,6 +5198,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Search data products",
+                "operationId": "getProductsSearch",
                 "parameters": [
                     {
                         "type": "string",
@@ -5340,7 +5249,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/products/{id}": {
+        "/api/v1/products/{id}": {
             "get": {
                 "security": [
                     {
@@ -5358,6 +5267,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Get data product",
+                "operationId": "getProductsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5414,6 +5324,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Update data product",
+                "operationId": "putProductsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5482,6 +5393,7 @@ const docTemplate = `{
                     "products"
                 ],
                 "summary": "Delete data product",
+                "operationId": "deleteProductsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5522,7 +5434,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/roles": {
+        "/api/v1/roles": {
             "get": {
                 "security": [
                     {
@@ -5540,6 +5452,7 @@ const docTemplate = `{
                     "roles"
                 ],
                 "summary": "List roles",
+                "operationId": "getRoles",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -5578,6 +5491,7 @@ const docTemplate = `{
                     "roles"
                 ],
                 "summary": "Create a role",
+                "operationId": "postRoles",
                 "parameters": [
                     {
                         "description": "Role creation request",
@@ -5611,7 +5525,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/roles/{id}": {
+        "/api/v1/roles/{id}": {
             "get": {
                 "security": [
                     {
@@ -5629,6 +5543,7 @@ const docTemplate = `{
                     "roles"
                 ],
                 "summary": "Get a role",
+                "operationId": "getRolesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5670,6 +5585,7 @@ const docTemplate = `{
                     "roles"
                 ],
                 "summary": "Delete a role",
+                "operationId": "deleteRolesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5717,6 +5633,7 @@ const docTemplate = `{
                     "roles"
                 ],
                 "summary": "Update a role",
+                "operationId": "patchRolesID",
                 "parameters": [
                     {
                         "type": "string",
@@ -5763,7 +5680,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/roles/{id}/permissions": {
+        "/api/v1/roles/{id}/permissions": {
             "post": {
                 "security": [
                     {
@@ -5784,6 +5701,7 @@ const docTemplate = `{
                     "roles"
                 ],
                 "summary": "Replace role permissions",
+                "operationId": "postRolesIDPermissions",
                 "parameters": [
                     {
                         "type": "string",
@@ -5830,7 +5748,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/runs": {
+        "/api/v1/runs": {
             "get": {
                 "security": [
                     {
@@ -5848,6 +5766,7 @@ const docTemplate = `{
                     "runs"
                 ],
                 "summary": "List runs",
+                "operationId": "getRuns",
                 "parameters": [
                     {
                         "type": "string",
@@ -5909,7 +5828,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/runs/assets/batch": {
+        "/api/v1/runs/assets/batch": {
             "post": {
                 "security": [
                     {
@@ -5930,6 +5849,7 @@ const docTemplate = `{
                     "runs"
                 ],
                 "summary": "Batch create assets",
+                "operationId": "postRunsAssetsBatch",
                 "parameters": [
                     {
                         "description": "Batch create request",
@@ -5951,7 +5871,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/runs/cleanup": {
+        "/api/v1/runs/cleanup": {
             "post": {
                 "security": [
                     {
@@ -5966,6 +5886,7 @@ const docTemplate = `{
                     "runs"
                 ],
                 "summary": "Cleanup stale runs",
+                "operationId": "postRunsCleanup",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -5979,7 +5900,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/runs/complete": {
+        "/api/v1/runs/complete": {
             "post": {
                 "security": [
                     {
@@ -6000,6 +5921,7 @@ const docTemplate = `{
                     "runs"
                 ],
                 "summary": "Complete run",
+                "operationId": "postRunsComplete",
                 "parameters": [
                     {
                         "description": "Complete run request",
@@ -6024,7 +5946,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/runs/start": {
+        "/api/v1/runs/start": {
             "post": {
                 "security": [
                     {
@@ -6045,6 +5967,7 @@ const docTemplate = `{
                     "runs"
                 ],
                 "summary": "Start run",
+                "operationId": "postRunsStart",
                 "parameters": [
                     {
                         "description": "Start run request",
@@ -6066,7 +5989,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/runs/{id}": {
+        "/api/v1/runs/{id}": {
             "get": {
                 "security": [
                     {
@@ -6084,6 +6007,7 @@ const docTemplate = `{
                     "runs"
                 ],
                 "summary": "Get run",
+                "operationId": "getRunsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -6103,7 +6027,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/runs/{id}/entities": {
+        "/api/v1/runs/{id}/entities": {
             "get": {
                 "security": [
                     {
@@ -6121,6 +6045,7 @@ const docTemplate = `{
                     "runs"
                 ],
                 "summary": "Get run entities",
+                "operationId": "getRunsIDEntities",
                 "parameters": [
                     {
                         "type": "string",
@@ -6166,7 +6091,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/search": {
+        "/api/v1/search": {
             "get": {
                 "security": [
                     {
@@ -6184,6 +6109,7 @@ const docTemplate = `{
                     "search"
                 ],
                 "summary": "Unified search",
+                "operationId": "getSearch",
                 "parameters": [
                     {
                         "type": "string",
@@ -6239,7 +6165,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/service-accounts": {
+        "/api/v1/service-accounts": {
             "get": {
                 "security": [
                     {
@@ -6257,6 +6183,7 @@ const docTemplate = `{
                     "service_accounts"
                 ],
                 "summary": "List service accounts",
+                "operationId": "getServiceAccounts",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -6295,6 +6222,7 @@ const docTemplate = `{
                     "service_accounts"
                 ],
                 "summary": "Create service account",
+                "operationId": "postServiceAccounts",
                 "parameters": [
                     {
                         "description": "Service account",
@@ -6322,7 +6250,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/service-accounts/{id}": {
+        "/api/v1/service-accounts/{id}": {
             "get": {
                 "security": [
                     {
@@ -6340,6 +6268,7 @@ const docTemplate = `{
                     "service_accounts"
                 ],
                 "summary": "Get service account",
+                "operationId": "getServiceAccountsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -6378,6 +6307,7 @@ const docTemplate = `{
                     "service_accounts"
                 ],
                 "summary": "Delete service account",
+                "operationId": "deleteServiceAccountsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -6419,6 +6349,7 @@ const docTemplate = `{
                     "service_accounts"
                 ],
                 "summary": "Update service account",
+                "operationId": "patchServiceAccountsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -6453,7 +6384,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/service-accounts/{id}/api-keys": {
+        "/api/v1/service-accounts/{id}/api-keys": {
             "get": {
                 "security": [
                     {
@@ -6471,6 +6402,7 @@ const docTemplate = `{
                     "service_accounts"
                 ],
                 "summary": "List API keys for a service account",
+                "operationId": "getServiceAccountsIDAPIKeys",
                 "parameters": [
                     {
                         "type": "string",
@@ -6512,6 +6444,7 @@ const docTemplate = `{
                     "service_accounts"
                 ],
                 "summary": "Create API key for a service account",
+                "operationId": "postServiceAccountsIDAPIKeys",
                 "parameters": [
                     {
                         "type": "string",
@@ -6546,7 +6479,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/service-accounts/{id}/api-keys/{keyId}": {
+        "/api/v1/service-accounts/{id}/api-keys/{keyId}": {
             "delete": {
                 "security": [
                     {
@@ -6561,6 +6494,7 @@ const docTemplate = `{
                     "service_accounts"
                 ],
                 "summary": "Delete an API key",
+                "operationId": "deleteServiceAccountsIDAPIKeysKeyID",
                 "parameters": [
                     {
                         "type": "string",
@@ -6590,7 +6524,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/sso-providers": {
+        "/api/v1/sso-providers": {
             "get": {
                 "security": [
                     {
@@ -6608,6 +6542,7 @@ const docTemplate = `{
                     "auth"
                 ],
                 "summary": "List configured SSO providers (admin)",
+                "operationId": "getSsoProviders",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -6618,7 +6553,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/sso/team-mappings": {
+        "/api/v1/sso/team-mappings": {
             "get": {
                 "security": [
                     {
@@ -6639,6 +6574,7 @@ const docTemplate = `{
                     "sso"
                 ],
                 "summary": "List SSO team mappings",
+                "operationId": "getSsoTeamMappings",
                 "parameters": [
                     {
                         "type": "string",
@@ -6682,6 +6618,7 @@ const docTemplate = `{
                     "sso"
                 ],
                 "summary": "Create an SSO team mapping",
+                "operationId": "postSsoTeamMappings",
                 "parameters": [
                     {
                         "description": "SSO mapping creation request",
@@ -6721,7 +6658,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/sso/team-mappings/{id}": {
+        "/api/v1/sso/team-mappings/{id}": {
             "get": {
                 "security": [
                     {
@@ -6742,6 +6679,7 @@ const docTemplate = `{
                     "sso"
                 ],
                 "summary": "Get an SSO team mapping",
+                "operationId": "getSsoTeamMappingsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -6792,6 +6730,7 @@ const docTemplate = `{
                     "sso"
                 ],
                 "summary": "Update an SSO team mapping",
+                "operationId": "putSsoTeamMappingsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -6857,6 +6796,7 @@ const docTemplate = `{
                     "sso"
                 ],
                 "summary": "Delete an SSO team mapping",
+                "operationId": "deleteSsoTeamMappingsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -6888,7 +6828,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams": {
+        "/api/v1/teams": {
             "get": {
                 "security": [
                     {
@@ -6909,6 +6849,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "List teams",
+                "operationId": "getTeams",
                 "parameters": [
                     {
                         "type": "integer",
@@ -6960,6 +6901,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "Create a team",
+                "operationId": "postTeams",
                 "parameters": [
                     {
                         "description": "Team creation request",
@@ -6999,7 +6941,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams/{id}": {
+        "/api/v1/teams/{id}": {
             "get": {
                 "security": [
                     {
@@ -7020,6 +6962,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "Get a team",
+                "operationId": "getTeamsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -7070,6 +7013,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "Update a team",
+                "operationId": "putTeamsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -7147,6 +7091,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "Delete a team",
+                "operationId": "deleteTeamsID",
                 "parameters": [
                     {
                         "type": "string",
@@ -7184,7 +7129,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams/{id}/members": {
+        "/api/v1/teams/{id}/members": {
             "get": {
                 "security": [
                     {
@@ -7205,6 +7150,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "List team members",
+                "operationId": "getTeamsIDMembers",
                 "parameters": [
                     {
                         "type": "string",
@@ -7249,6 +7195,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "Add a team member",
+                "operationId": "postTeamsIDMembers",
                 "parameters": [
                     {
                         "type": "string",
@@ -7301,7 +7248,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams/{id}/members/{userId}": {
+        "/api/v1/teams/{id}/members/{userId}": {
             "delete": {
                 "security": [
                     {
@@ -7322,6 +7269,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "Remove a team member",
+                "operationId": "deleteTeamsIDMembersUserID",
                 "parameters": [
                     {
                         "type": "string",
@@ -7360,7 +7308,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams/{id}/members/{userId}/convert-to-manual": {
+        "/api/v1/teams/{id}/members/{userId}/convert-to-manual": {
             "post": {
                 "security": [
                     {
@@ -7381,6 +7329,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "Convert member to manual",
+                "operationId": "postTeamsIDMembersUserIDConvertToManual",
                 "parameters": [
                     {
                         "type": "string",
@@ -7419,7 +7368,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/teams/{id}/members/{userId}/role": {
+        "/api/v1/teams/{id}/members/{userId}/role": {
             "put": {
                 "security": [
                     {
@@ -7440,6 +7389,7 @@ const docTemplate = `{
                     "teams"
                 ],
                 "summary": "Update member role",
+                "operationId": "putTeamsIDMembersUserIDRole",
                 "parameters": [
                     {
                         "type": "string",
@@ -7493,7 +7443,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/ui/config": {
+        "/api/v1/ui/config": {
             "get": {
                 "description": "Get UI configuration including banner settings",
                 "produces": [
@@ -7503,6 +7453,7 @@ const docTemplate = `{
                     "ui"
                 ],
                 "summary": "Get UI configuration",
+                "operationId": "getUIConfig",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -7513,7 +7464,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users": {
+        "/api/v1/users": {
             "get": {
                 "security": [
                     {
@@ -7534,6 +7485,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "List users",
+                "operationId": "getUsers",
                 "parameters": [
                     {
                         "type": "integer",
@@ -7607,6 +7559,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Create a new user",
+                "operationId": "postUsers",
                 "parameters": [
                     {
                         "description": "User creation request",
@@ -7640,7 +7593,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/apikeys": {
+        "/api/v1/users/apikeys": {
             "get": {
                 "security": [
                     {
@@ -7661,6 +7614,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "List API keys",
+                "operationId": "getUsersApikeys",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -7699,6 +7653,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Create API key",
+                "operationId": "postUsersApikeys",
                 "parameters": [
                     {
                         "description": "API key creation request",
@@ -7726,7 +7681,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/apikeys/{id}": {
+        "/api/v1/users/apikeys/{id}": {
             "delete": {
                 "security": [
                     {
@@ -7747,6 +7702,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Delete API key",
+                "operationId": "deleteUsersApikeysID",
                 "parameters": [
                     {
                         "type": "string",
@@ -7769,7 +7725,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/login": {
+        "/api/v1/users/login": {
             "post": {
                 "description": "Authenticate a user with username/email and password",
                 "consumes": [
@@ -7782,6 +7738,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Login user",
+                "operationId": "postUsersLogin",
                 "parameters": [
                     {
                         "description": "Login credentials",
@@ -7815,7 +7772,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/me": {
+        "/api/v1/users/me": {
             "get": {
                 "security": [
                     {
@@ -7836,6 +7793,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Get current user profile",
+                "operationId": "getUsersMe",
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -7852,7 +7810,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/oauth/link": {
+        "/api/v1/users/oauth/link": {
             "post": {
                 "security": [
                     {
@@ -7873,6 +7831,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Link OAuth account",
+                "operationId": "postUsersOauthLink",
                 "parameters": [
                     {
                         "description": "OAuth account link request",
@@ -7897,7 +7856,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/oauth/unlink/{id}/{provider}": {
+        "/api/v1/users/oauth/unlink/{id}/{provider}": {
             "delete": {
                 "security": [
                     {
@@ -7918,6 +7877,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Unlink OAuth account",
+                "operationId": "deleteUsersOauthUnlinkIDProvider",
                 "parameters": [
                     {
                         "type": "string",
@@ -7947,7 +7907,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/preferences": {
+        "/api/v1/users/preferences": {
             "put": {
                 "security": [
                     {
@@ -7968,6 +7928,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Update user preferences",
+                "operationId": "putUsersPreferences",
                 "parameters": [
                     {
                         "description": "User preferences",
@@ -7993,7 +7954,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/update-password": {
+        "/api/v1/users/update-password": {
             "post": {
                 "security": [
                     {
@@ -8014,6 +7975,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Update user password",
+                "operationId": "postUsersUpdatePassword",
                 "parameters": [
                     {
                         "description": "Password update request",
@@ -8047,7 +8009,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/users/{id}": {
+        "/api/v1/users/{id}": {
             "get": {
                 "security": [
                     {
@@ -8068,6 +8030,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Get a user by ID",
+                "operationId": "getUsersID",
                 "parameters": [
                     {
                         "type": "string",
@@ -8118,6 +8081,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Update a user",
+                "operationId": "putUsersID",
                 "parameters": [
                     {
                         "type": "string",
@@ -8177,6 +8141,7 @@ const docTemplate = `{
                     "users"
                 ],
                 "summary": "Delete a user",
+                "operationId": "deleteUsersID",
                 "parameters": [
                     {
                         "type": "string",
@@ -8200,6 +8165,194 @@ const docTemplate = `{
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth-providers": {
+            "get": {
+                "description": "Returns the enabled auth providers without sensitive data",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Get auth configuration",
+                "operationId": "getAuthProviders",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/AuthConfig"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/{provider}/callback": {
+            "get": {
+                "description": "Processes the OAuth callback from any provider",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Handle OAuth callback",
+                "operationId": "getAuthProviderCallback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth provider (okta, google, github, etc.)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Authorization code",
+                        "name": "code",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "State parameter for CSRF protection",
+                        "name": "state",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "307": {
+                        "description": "Temporary Redirect",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/auth/{provider}/login": {
+            "get": {
+                "description": "Redirects the user to the OAuth provider for authentication",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Initiate OAuth login",
+                "operationId": "getAuthProviderLogin",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "OAuth provider (okta, google, github, etc.)",
+                        "name": "provider",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "307": {
+                        "description": "Temporary Redirect",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/oauth/token": {
+            "post": {
+                "description": "Handles authorization_code grants (with PKCE) and token exchange (RFC 8693).\nFor token-exchange, supported subject_token_type values are\nurn:ietf:params:oauth:token-type:id_token and urn:ietf:params:oauth:token-type:access_token.",
+                "consumes": [
+                    "application/x-www-form-urlencoded"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "OAuth token endpoint",
+                "operationId": "postOauthToken",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "authorization_code or urn:ietf:params:oauth:grant-type:token-exchange",
+                        "name": "grant_type",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Token to exchange (token-exchange grant only)",
+                        "name": "subject_token",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "description": "id_token or access_token URI (token-exchange grant only)",
+                        "name": "subject_token_type",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/TokenExchangeResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/OAuthErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/OAuthErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/OAuthErrorResponse"
                         }
                     }
                 }
@@ -12131,7 +12284,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "0.1",
 	Host:             "",
-	BasePath:         "/api/v1",
+	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "Marmot API",
 	Description:      "API for interacting with Marmot",

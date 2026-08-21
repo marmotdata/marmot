@@ -40,7 +40,7 @@ func (o *GetAssetsMatchPatternReader) ReadResponse(response runtime.ClientRespon
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /assets/match-pattern] GetAssetsMatchPattern", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/assets/match-pattern/] getAssetsMatchPattern", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetAssetsMatchPatternOK) Code() int {
 
 func (o *GetAssetsMatchPatternOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/match-pattern][%d] getAssetsMatchPatternOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/match-pattern/][%d] getAssetsMatchPatternOK %s", 200, payload)
 }
 
 func (o *GetAssetsMatchPatternOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/match-pattern][%d] getAssetsMatchPatternOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/match-pattern/][%d] getAssetsMatchPatternOK %s", 200, payload)
 }
 
 func (o *GetAssetsMatchPatternOK) GetPayload() []*models.Asset {
@@ -154,12 +154,12 @@ func (o *GetAssetsMatchPatternBadRequest) Code() int {
 
 func (o *GetAssetsMatchPatternBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/match-pattern][%d] getAssetsMatchPatternBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/match-pattern/][%d] getAssetsMatchPatternBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsMatchPatternBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/match-pattern][%d] getAssetsMatchPatternBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/match-pattern/][%d] getAssetsMatchPatternBadRequest %s", 400, payload)
 }
 
 func (o *GetAssetsMatchPatternBadRequest) GetPayload() *models.ErrorResponse {
@@ -222,12 +222,12 @@ func (o *GetAssetsMatchPatternInternalServerError) Code() int {
 
 func (o *GetAssetsMatchPatternInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/match-pattern][%d] getAssetsMatchPatternInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/match-pattern/][%d] getAssetsMatchPatternInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsMatchPatternInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /assets/match-pattern][%d] getAssetsMatchPatternInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/assets/match-pattern/][%d] getAssetsMatchPatternInternalServerError %s", 500, payload)
 }
 
 func (o *GetAssetsMatchPatternInternalServerError) GetPayload() *models.ErrorResponse {

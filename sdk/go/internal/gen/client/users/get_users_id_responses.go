@@ -40,7 +40,7 @@ func (o *GetUsersIDReader) ReadResponse(response runtime.ClientResponse, consume
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /users/{id}] GetUsersID", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/users/{id}] getUsersID", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetUsersIDOK) Code() int {
 
 func (o *GetUsersIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/{id}][%d] getUsersIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/users/{id}][%d] getUsersIdOK %s", 200, payload)
 }
 
 func (o *GetUsersIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/{id}][%d] getUsersIdOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/users/{id}][%d] getUsersIdOK %s", 200, payload)
 }
 
 func (o *GetUsersIDOK) GetPayload() *models.User {
@@ -156,12 +156,12 @@ func (o *GetUsersIDNotFound) Code() int {
 
 func (o *GetUsersIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/{id}][%d] getUsersIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/users/{id}][%d] getUsersIdNotFound %s", 404, payload)
 }
 
 func (o *GetUsersIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/{id}][%d] getUsersIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[GET /api/v1/users/{id}][%d] getUsersIdNotFound %s", 404, payload)
 }
 
 func (o *GetUsersIDNotFound) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetUsersIDInternalServerError) Code() int {
 
 func (o *GetUsersIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/{id}][%d] getUsersIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/users/{id}][%d] getUsersIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetUsersIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/{id}][%d] getUsersIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/users/{id}][%d] getUsersIdInternalServerError %s", 500, payload)
 }
 
 func (o *GetUsersIDInternalServerError) GetPayload() *models.ErrorResponse {

@@ -42,7 +42,8 @@ type SearchUsersResponse struct {
 // @Security BearerAuth
 // @Success 200 {object} ListUsersResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /users [get]
+// @ID getUsers
+// @Router /api/v1/users [get]
 func (h *Handler) listUsers(w http.ResponseWriter, r *http.Request) {
 	filter := user.Filter{
 		Limit:  50,
@@ -91,7 +92,8 @@ func (h *Handler) listUsers(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} user.User
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
-// @Router /users [post]
+// @ID postUsers
+// @Router /api/v1/users [post]
 func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 	var input user.CreateUserInput
 	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
@@ -127,7 +129,8 @@ func (h *Handler) createUser(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} user.User
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /users/{id} [get]
+// @ID getUsersID
+// @Router /api/v1/users/{id} [get]
 func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/users/")
 	if id == "" {
@@ -162,7 +165,8 @@ func (h *Handler) getUser(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} user.User
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /users/{id} [put]
+// @ID putUsersID
+// @Router /api/v1/users/{id} [put]
 func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/users/")
 	if id == "" {
@@ -204,7 +208,8 @@ func (h *Handler) updateUser(w http.ResponseWriter, r *http.Request) {
 // @Success 204 "No Content"
 // @Failure 404 {object} common.ErrorResponse
 // @Failure 500 {object} common.ErrorResponse
-// @Router /users/{id} [delete]
+// @ID deleteUsersID
+// @Router /api/v1/users/{id} [delete]
 func (h *Handler) deleteUser(w http.ResponseWriter, r *http.Request) {
 	id := strings.TrimPrefix(r.URL.Path, "/api/v1/users/")
 	if id == "" {

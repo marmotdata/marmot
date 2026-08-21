@@ -38,7 +38,7 @@ const (
 	// DefaultHost is the default Host found in Meta (info) section of spec file.
 	DefaultHost string = "localhost"
 	// DefaultBasePath is the default BasePath found in Meta (info) section of spec file.
-	DefaultBasePath string = "/api/v1"
+	DefaultBasePath string = "/"
 )
 
 // DefaultSchemes are the default schemes found in Meta (info) section of spec file.

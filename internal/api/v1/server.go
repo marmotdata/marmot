@@ -71,7 +71,6 @@ import (
 // @title Marmot API
 // @version 0.1
 // @description API for interacting with Marmot
-// @BasePath /api/v1
 // @license.name MIT
 // @license.url https://opensource.org/license/MIT
 

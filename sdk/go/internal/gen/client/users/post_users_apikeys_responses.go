@@ -34,7 +34,7 @@ func (o *PostUsersApikeysReader) ReadResponse(response runtime.ClientResponse, c
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /users/apikeys] PostUsersApikeys", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/users/apikeys] postUsersApikeys", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *PostUsersApikeysOK) Code() int {
 
 func (o *PostUsersApikeysOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/apikeys][%d] postUsersApikeysOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/users/apikeys][%d] postUsersApikeysOK %s", 200, payload)
 }
 
 func (o *PostUsersApikeysOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/apikeys][%d] postUsersApikeysOK %s", 200, payload)
+	return fmt.Sprintf("[POST /api/v1/users/apikeys][%d] postUsersApikeysOK %s", 200, payload)
 }
 
 func (o *PostUsersApikeysOK) GetPayload() *models.APIKey {
@@ -150,12 +150,12 @@ func (o *PostUsersApikeysBadRequest) Code() int {
 
 func (o *PostUsersApikeysBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/apikeys][%d] postUsersApikeysBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users/apikeys][%d] postUsersApikeysBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersApikeysBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /users/apikeys][%d] postUsersApikeysBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/users/apikeys][%d] postUsersApikeysBadRequest %s", 400, payload)
 }
 
 func (o *PostUsersApikeysBadRequest) GetPayload() *models.ErrorResponse {

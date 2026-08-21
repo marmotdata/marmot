@@ -31,7 +31,8 @@ type ReindexStatusResponse struct {
 // @Failure 403 {object} common.ErrorResponse
 // @Failure 409 {object} common.ErrorResponse
 // @Failure 503 {object} common.ErrorResponse
-// @Router /admin/search/reindex [post]
+// @ID postAdminSearchReindex
+// @Router /api/v1/admin/search/reindex [post]
 func (h *Handler) startReindex(w http.ResponseWriter, r *http.Request) {
 	if h.reindexer == nil {
 		common.RespondError(w, http.StatusServiceUnavailable, "Elasticsearch is not configured")
@@ -68,7 +69,8 @@ func (h *Handler) startReindex(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {object} ReindexStatusResponse
 // @Failure 401 {object} common.ErrorResponse
 // @Failure 403 {object} common.ErrorResponse
-// @Router /admin/search/reindex [get]
+// @ID getAdminSearchReindex
+// @Router /api/v1/admin/search/reindex [get]
 func (h *Handler) getReindexStatus(w http.ResponseWriter, r *http.Request) {
 	running := false
 	if h.reindexer != nil {

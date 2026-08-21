@@ -46,7 +46,7 @@ func (o *PostIngestionSchedulesReader) ReadResponse(response runtime.ClientRespo
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[POST /ingestion/schedules] PostIngestionSchedules", response, response.Code())
+		return nil, runtime.NewAPIError("[POST /api/v1/ingestion/schedules] postIngestionSchedules", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *PostIngestionSchedulesCreated) Code() int {
 
 func (o *PostIngestionSchedulesCreated) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules][%d] postIngestionSchedulesCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules][%d] postIngestionSchedulesCreated %s", 201, payload)
 }
 
 func (o *PostIngestionSchedulesCreated) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules][%d] postIngestionSchedulesCreated %s", 201, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules][%d] postIngestionSchedulesCreated %s", 201, payload)
 }
 
 func (o *PostIngestionSchedulesCreated) GetPayload() *models.Schedule {
@@ -162,12 +162,12 @@ func (o *PostIngestionSchedulesBadRequest) Code() int {
 
 func (o *PostIngestionSchedulesBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules][%d] postIngestionSchedulesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules][%d] postIngestionSchedulesBadRequest %s", 400, payload)
 }
 
 func (o *PostIngestionSchedulesBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules][%d] postIngestionSchedulesBadRequest %s", 400, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules][%d] postIngestionSchedulesBadRequest %s", 400, payload)
 }
 
 func (o *PostIngestionSchedulesBadRequest) GetPayload() *models.ErrorResponse {
@@ -230,12 +230,12 @@ func (o *PostIngestionSchedulesUnauthorized) Code() int {
 
 func (o *PostIngestionSchedulesUnauthorized) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules][%d] postIngestionSchedulesUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules][%d] postIngestionSchedulesUnauthorized %s", 401, payload)
 }
 
 func (o *PostIngestionSchedulesUnauthorized) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules][%d] postIngestionSchedulesUnauthorized %s", 401, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules][%d] postIngestionSchedulesUnauthorized %s", 401, payload)
 }
 
 func (o *PostIngestionSchedulesUnauthorized) GetPayload() *models.ErrorResponse {
@@ -298,12 +298,12 @@ func (o *PostIngestionSchedulesInternalServerError) Code() int {
 
 func (o *PostIngestionSchedulesInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules][%d] postIngestionSchedulesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules][%d] postIngestionSchedulesInternalServerError %s", 500, payload)
 }
 
 func (o *PostIngestionSchedulesInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[POST /ingestion/schedules][%d] postIngestionSchedulesInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[POST /api/v1/ingestion/schedules][%d] postIngestionSchedulesInternalServerError %s", 500, payload)
 }
 
 func (o *PostIngestionSchedulesInternalServerError) GetPayload() *models.ErrorResponse {

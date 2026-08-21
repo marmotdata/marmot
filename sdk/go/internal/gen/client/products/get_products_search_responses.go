@@ -40,7 +40,7 @@ func (o *GetProductsSearchReader) ReadResponse(response runtime.ClientResponse, 
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /products/search] GetProductsSearch", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/products/search] getProductsSearch", response, response.Code())
 	}
 }
 
@@ -88,12 +88,12 @@ func (o *GetProductsSearchOK) Code() int {
 
 func (o *GetProductsSearchOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/search][%d] getProductsSearchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/products/search][%d] getProductsSearchOK %s", 200, payload)
 }
 
 func (o *GetProductsSearchOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/search][%d] getProductsSearchOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/products/search][%d] getProductsSearchOK %s", 200, payload)
 }
 
 func (o *GetProductsSearchOK) GetPayload() *models.DataProductListResult {
@@ -156,12 +156,12 @@ func (o *GetProductsSearchBadRequest) Code() int {
 
 func (o *GetProductsSearchBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/search][%d] getProductsSearchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/products/search][%d] getProductsSearchBadRequest %s", 400, payload)
 }
 
 func (o *GetProductsSearchBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/search][%d] getProductsSearchBadRequest %s", 400, payload)
+	return fmt.Sprintf("[GET /api/v1/products/search][%d] getProductsSearchBadRequest %s", 400, payload)
 }
 
 func (o *GetProductsSearchBadRequest) GetPayload() *models.ErrorResponse {
@@ -224,12 +224,12 @@ func (o *GetProductsSearchInternalServerError) Code() int {
 
 func (o *GetProductsSearchInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/search][%d] getProductsSearchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/products/search][%d] getProductsSearchInternalServerError %s", 500, payload)
 }
 
 func (o *GetProductsSearchInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /products/search][%d] getProductsSearchInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/products/search][%d] getProductsSearchInternalServerError %s", 500, payload)
 }
 
 func (o *GetProductsSearchInternalServerError) GetPayload() *models.ErrorResponse {

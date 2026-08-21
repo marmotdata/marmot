@@ -34,7 +34,7 @@ func (o *GetUsersApikeysReader) ReadResponse(response runtime.ClientResponse, co
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[GET /users/apikeys] GetUsersApikeys", response, response.Code())
+		return nil, runtime.NewAPIError("[GET /api/v1/users/apikeys] getUsersApikeys", response, response.Code())
 	}
 }
 
@@ -82,12 +82,12 @@ func (o *GetUsersApikeysOK) Code() int {
 
 func (o *GetUsersApikeysOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/apikeys][%d] getUsersApikeysOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/users/apikeys][%d] getUsersApikeysOK %s", 200, payload)
 }
 
 func (o *GetUsersApikeysOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/apikeys][%d] getUsersApikeysOK %s", 200, payload)
+	return fmt.Sprintf("[GET /api/v1/users/apikeys][%d] getUsersApikeysOK %s", 200, payload)
 }
 
 func (o *GetUsersApikeysOK) GetPayload() []*models.APIKey {
@@ -148,12 +148,12 @@ func (o *GetUsersApikeysInternalServerError) Code() int {
 
 func (o *GetUsersApikeysInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/apikeys][%d] getUsersApikeysInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/users/apikeys][%d] getUsersApikeysInternalServerError %s", 500, payload)
 }
 
 func (o *GetUsersApikeysInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[GET /users/apikeys][%d] getUsersApikeysInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[GET /api/v1/users/apikeys][%d] getUsersApikeysInternalServerError %s", 500, payload)
 }
 
 func (o *GetUsersApikeysInternalServerError) GetPayload() *models.ErrorResponse {

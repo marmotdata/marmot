@@ -32,7 +32,8 @@ type RemoveTermRequest struct {
 // @Success 200 {array} asset.AssetTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/terms/{id} [post]
+// @ID postAssetsTermsID
+// @Router /api/v1/assets/terms/{id} [post]
 func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -92,7 +93,8 @@ func (h *Handler) addTerms(w http.ResponseWriter, r *http.Request) {
 // @Success 200 {array} asset.AssetTerm
 // @Failure 400 {object} common.ErrorResponse
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/terms/{id} [delete]
+// @ID deleteAssetsTermsID
+// @Router /api/v1/assets/terms/{id} [delete]
 func (h *Handler) removeTerm(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -142,7 +144,8 @@ func (h *Handler) removeTerm(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 200 {array} asset.AssetTerm
 // @Failure 404 {object} common.ErrorResponse
-// @Router /assets/terms/{id} [get]
+// @ID getAssetsTermsID
+// @Router /api/v1/assets/terms/{id} [get]
 func (h *Handler) getAssetTerms(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -171,7 +174,8 @@ func (h *Handler) getAssetTerms(w http.ResponseWriter, r *http.Request) {
 // @Security BearerAuth
 // @Success 200 {object} map[string]interface{}
 // @Failure 500 {object} common.ErrorResponse
-// @Router /assets/by-glossary-term/{term_id} [get]
+// @ID getAssetsByGlossaryTermTermID
+// @Router /api/v1/assets/by-glossary-term/{term_id} [get]
 func (h *Handler) getAssetsByTerm(w http.ResponseWriter, r *http.Request) {
 	termID := r.PathValue("term_id")
 	if termID == "" {

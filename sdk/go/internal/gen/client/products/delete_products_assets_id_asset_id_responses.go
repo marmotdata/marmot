@@ -46,7 +46,7 @@ func (o *DeleteProductsAssetsIDAssetIDReader) ReadResponse(response runtime.Clie
 		}
 		return nil, result
 	default:
-		return nil, runtime.NewAPIError("[DELETE /products/assets/{id}/{assetId}] DeleteProductsAssetsIDAssetID", response, response.Code())
+		return nil, runtime.NewAPIError("[DELETE /api/v1/products/assets/{id}/{assetId}] deleteProductsAssetsIDAssetID", response, response.Code())
 	}
 }
 
@@ -94,12 +94,12 @@ func (o *DeleteProductsAssetsIDAssetIDOK) Code() int {
 
 func (o *DeleteProductsAssetsIDAssetIDOK) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdOK %s", 200, payload)
 }
 
 func (o *DeleteProductsAssetsIDAssetIDOK) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdOK %s", 200, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdOK %s", 200, payload)
 }
 
 func (o *DeleteProductsAssetsIDAssetIDOK) GetPayload() map[string]string {
@@ -160,12 +160,12 @@ func (o *DeleteProductsAssetsIDAssetIDBadRequest) Code() int {
 
 func (o *DeleteProductsAssetsIDAssetIDBadRequest) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteProductsAssetsIDAssetIDBadRequest) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdBadRequest %s", 400, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdBadRequest %s", 400, payload)
 }
 
 func (o *DeleteProductsAssetsIDAssetIDBadRequest) GetPayload() *models.ErrorResponse {
@@ -228,12 +228,12 @@ func (o *DeleteProductsAssetsIDAssetIDNotFound) Code() int {
 
 func (o *DeleteProductsAssetsIDAssetIDNotFound) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteProductsAssetsIDAssetIDNotFound) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdNotFound %s", 404, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdNotFound %s", 404, payload)
 }
 
 func (o *DeleteProductsAssetsIDAssetIDNotFound) GetPayload() *models.ErrorResponse {
@@ -296,12 +296,12 @@ func (o *DeleteProductsAssetsIDAssetIDInternalServerError) Code() int {
 
 func (o *DeleteProductsAssetsIDAssetIDInternalServerError) Error() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteProductsAssetsIDAssetIDInternalServerError) String() string {
 	payload, _ := json.Marshal(o.Payload)
-	return fmt.Sprintf("[DELETE /products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdInternalServerError %s", 500, payload)
+	return fmt.Sprintf("[DELETE /api/v1/products/assets/{id}/{assetId}][%d] deleteProductsAssetsIdAssetIdInternalServerError %s", 500, payload)
 }
 
 func (o *DeleteProductsAssetsIDAssetIDInternalServerError) GetPayload() *models.ErrorResponse {
