@@ -1,11 +1,11 @@
-import type { paths } from "../_gen/schema.js";
+import type { operations } from "../_gen/schema.js";
 import type { Transport } from "../_http.js";
 import type { PluginRun, RunEntitiesResponse } from "../_models.js";
 import { API_PREFIX } from "./index.js";
 
-/** Response shape for `GET /runs`. Path-derived because the schema doesn't name it. */
+/** Response shape for `GET /api/v1/runs`. Keyed by operationId, so it survives path changes. */
 export type ListRunsResponse =
-  paths["/runs"]["get"]["responses"][200]["content"]["application/json"];
+  operations["getRuns"]["responses"][200]["content"]["application/json"];
 
 export interface ListRunsOptions {
   /** Comma-separated list of pipeline names. */
