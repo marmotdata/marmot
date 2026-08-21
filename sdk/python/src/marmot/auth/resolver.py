@@ -62,7 +62,7 @@ def resolve_host(host: str | None = None, context_name: str | None = None) -> st
         raise AuthError(
             f"no Marmot host configured. Set {ENVIRONMENT_HOST}, pass it explicitly, or run `marmot login` first."
         )
-    return host
+    return host.rstrip("/")
 
 
 def resolve_credential(
@@ -96,10 +96,10 @@ def _exchanged_credential(
     api_client: ApiClient | None,
     sources: Sequence[WorkloadIdentitySource] | None,
 ) -> Credential:
-    # `/oauth/token` is served at the root, not under the API base path.
+    root = host.rstrip("/")
     credential = OIDCCredential(
-        api_client=api_client or ApiClient(Configuration(host=host.rstrip("/"))),
-        audience=host,
+        api_client=api_client or ApiClient(Configuration(host=root)),
+        audience=root,
         sources=sources,
     )
     credential.get_token()  # exchange now so a failure is reported by the chain

@@ -1,7 +1,7 @@
 """Python SDK for Marmot."""
 
 from marmot.auth import ENVIRONMENT_API_KEY, ENVIRONMENT_BEARER_TOKEN, Credential, SecurityScheme
-from marmot.client import AuthenticatedApiClient
+from marmot.client import AuthenticatedApiClient, mcp_url
 from marmot.config import ENVIRONMENT_HOST, ENVIRONMENT_MARMOT_CONTEXT
 from marmot.errors import (
     AuthError,
@@ -45,6 +45,7 @@ __all__ = [  # noqa: RUF022 — grouped by origin, not alphabetised
     "ENVIRONMENT_HOST",
     "ENVIRONMENT_MARMOT_CONTEXT",
     "AuthenticatedApiClient",
+    "mcp_url",
     "SecurityScheme",
     # Generated
     "AdminApi",

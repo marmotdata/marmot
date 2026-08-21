@@ -9,7 +9,11 @@ from marmot.auth.credential import (
     StaticCredential,
 )
 from marmot.auth.oidc import OIDCCredential
-from marmot.auth.resolver import CredentialChain, resolve_credential, resolve_host
+from marmot.auth.resolver import (
+    CredentialChain,
+    resolve_credential,
+    resolve_host,
+)
 
 __all__ = [
     "ENVIRONMENT_API_KEY",

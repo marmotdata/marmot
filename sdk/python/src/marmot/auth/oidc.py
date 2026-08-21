@@ -60,7 +60,7 @@ class OIDCCredential:
         """
         subject = self._subject_token()
         try:
-            response = await self.auth_api.oauth_token_post_with_http_info(
+            response = await self.auth_api.post_oauth_token_with_http_info(
                 grant_type=GRANT_TYPE_TOKEN_EXCHANGE,
                 subject_token=subject.token,
                 subject_token_type=subject.token_type,

@@ -20,15 +20,13 @@ from marmot.auth import (
     resolve_host,
 )
 from marmot.errors import get_exception_type
-from marmot.generated import ApiClient, ApiException, ApiResponse, Configuration, rest
+from marmot.generated import ApiClient, ApiException, ApiResponse, Configuration, McpApi, rest
 from marmot.generated.api_response import T as ApiResponseT
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from marmot.auth.workload import WorkloadIdentitySource
-
-API_BASE_PATH = "/api/v1"
 
 _SCHEME_PREFIXES: Final[dict[SecurityScheme, str]] = {
     SecurityScheme.apikey: "",
@@ -45,7 +43,7 @@ class AuthenticatedApiClient(ApiClient):
         **kwargs: Any,
     ) -> None:
         if configuration is None:
-            configuration = Configuration(host=api_base_url(host))
+            configuration = Configuration(host=host.rstrip("/"))
         configuration.api_key_prefix[credential.scheme] = _SCHEME_PREFIXES[credential.scheme]
 
         super().__init__(configuration, **kwargs)
@@ -121,12 +119,18 @@ class AuthenticatedApiClient(ApiClient):
                 header_params[setting["key"]] = setting["value"]
 
 
-def api_base_url(host: str) -> str:
-    """Add the API base path to a bare host.
+def mcp_url(api_client: ApiClient) -> str:
+    """The URL of Marmot's MCP endpoint, for an MCP client's own configuration.
 
-    ``marmot login`` and ``MARMOT_HOST`` hold the server address, while the
-    generated ``Configuration`` wants the full base URL, so the two are joined
-    here. Hosts that already carry the base path are left alone.
+    Read from the generated client so the path stays written down in one place,
+    the spec. The generated code keeps each operation's path inside a private
+    serializer, hence serializing a request here rather than sending one.
     """
-    trimmed = host.rstrip("/")
-    return trimmed if trimmed.endswith(API_BASE_PATH) else f"{trimmed}{API_BASE_PATH}"
+    _, url, *_ = McpApi(api_client)._post_mcp_serialize(
+        request_body=None,
+        _request_auth=None,
+        _content_type=None,
+        _headers=None,
+        _host_index=0,
+    )
+    return url
